@@ -1,0 +1,39 @@
+{
+  "name": "gkill",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build --force",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "go_mod": "rimraf src/app/go.mod && rimraf src/app/go.sum && cd src/app && go mod init github.com/mt3hr/gkill/src/app && cd main/gkill && go mod tidy",
+    "clean_app_embed": "rimraf src/app/gkill/gkill/embed/html",
+    "copy_dist_to_app_embed": "mkdirp src/app/gkill/gkill_server_api/embed/html && copyfiles -u 1 \"dist/**/*\" src/app/gkill/gkill_server_api/embed/html",
+    "preparate_install": "npm run clean_app_embed && npm run build && npm run copy_dist_to_app_embed",
+    "install_app": "npm run preparate_install && cd src/app/main/gkill && go install -ldflags \"-H windowsgui\"",
+    "install_server": "npm run preparate_install && cd src/app/main/gkill_server && go install"
+  },
+  "dependencies": {
+    "vue": "^3.4.29",
+    "vue-router": "^4.3.3"
+  },
+  "devDependencies": {
+    "@rushstack/eslint-patch": "^1.8.0",
+    "@tsconfig/node20": "^20.1.4",
+    "@types/node": "^20.14.5",
+    "@vitejs/plugin-vue": "^5.0.5",
+    "@vue/eslint-config-typescript": "^13.0.0",
+    "@vue/tsconfig": "^0.5.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.23.0",
+    "npm-run-all2": "^6.2.0",
+    "typescript": "~5.4.0",
+    "vite": "^5.3.1",
+    "vite-plugin-vue-devtools": "^7.3.1",
+    "vue-tsc": "^2.0.21"
+  }
+}
