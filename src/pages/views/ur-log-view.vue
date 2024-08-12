@@ -1,3 +1,7 @@
+<template>
+
+</template>
+<script setup lang="ts">
 // ˅
 'use strict';
 
@@ -28,3 +32,6 @@ export class URLogView {
 // ˅
 
 // ˄
+
+</script>
+<style scoped></style>
