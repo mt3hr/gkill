@@ -173,6 +173,8 @@ export class GkillAPI {
 
     add_kyou_info_address: string;
 
+    add_rekyou_address: string;
+
     update_tag_address: string;
 
     update_text_address: string;
@@ -191,6 +193,8 @@ export class GkillAPI {
 
     update_kyou_info_address: string;
 
+    update_rekyou_address: string;
+
     get_kyous_address: string;
 
     get_kyou_address: string;
@@ -202,6 +206,8 @@ export class GkillAPI {
     get_nlogs_address: string;
 
     get_timeiss_address: string;
+
+    get_rekyous_address: string;
 
     get_mis_address: string;
 
@@ -219,6 +225,12 @@ export class GkillAPI {
 
     get_lantana_address: string;
 
+    get_rekyou_address: string;
+
+    get_git_commit_log_address: string;
+
+    get_git_commit_logs_address: string;
+
     get_mi_board_list_address: string;
 
     get_plaing_timeis_address: string;
@@ -231,7 +243,7 @@ export class GkillAPI {
 
     get_texts_by_target_id_address: string;
 
-    get_text_histories_by_text_id: string;
+    get_text_histories_by_text_id_address: string;
 
     get_application_config_address: string;
 
@@ -253,7 +265,25 @@ export class GkillAPI {
 
     update_user_reps_address: string;
 
+    add_account_address: string;
+
     generate_tls_file_address: string;
+
+    get_gps_log_address: string;
+
+    get_kftl_template_addredd: string;
+
+    get_gkill_info_address: string;
+
+    get_share_mi_task_list_infos_address: string;
+
+    add_share_mi_task_list_info_address: string;
+
+    update_share_mi_task_list_info_address: string;
+
+    delete_share_mi_task_list_infos_address: string;
+
+    get_mi_shared_tasks_address: string;
 
     login_method: string;
 
@@ -281,6 +311,8 @@ export class GkillAPI {
 
     add_kyou_info_method: string;
 
+    add_rekyou_method: string;
+
     update_tag_method: string;
 
     update_text_method: string;
@@ -299,9 +331,17 @@ export class GkillAPI {
 
     update_kyou_info_method: string;
 
+    update_rekyou_method: string;
+
     get_kyous_method: string;
 
     get_kyou_method: string;
+
+    get_rekyou_method: string;
+
+    get_rekyous_method: string;
+
+    get_git_commit_logs_method: string;
 
     get_mi_board_list_method: string;
 
@@ -337,7 +377,25 @@ export class GkillAPI {
 
     update_user_reps_method: string;
 
+    add_account_method: string;
+
     generate_tls_file_method: string;
+
+    get_gps_log_method: string;
+
+    get_kftl_template_method: string;
+
+    get_gkill_info_method: string;
+
+    get_share_mi_task_list_infos_method: string;
+
+    add_share_mi_task_list_info_method: string;
+
+    update_share_mi_task_list_info_method: string;
+
+    delete_share_mi_task_list_infos_method: string;
+
+    get_mi_shared_tasks_method: string;
 
     constructor() {
         // ˅
@@ -354,6 +412,7 @@ export class GkillAPI {
         this.add_mi_address = "/api/add_mi";
         this.add_lantana_address = "/api/add_lantana";
         this.add_kyou_info_address = "/api/add_kyou_info";
+        this.add_rekyou_address = "/api/add_rekyou";
         this.update_tag_address = "/api/update_tag";
         this.update_text_address = "/api/update_text";
         this.update_kmemo_address = "/api/update_kmemo";
@@ -363,12 +422,14 @@ export class GkillAPI {
         this.update_lantana_address = "/api/update_lantana";
         this.update_mi_address = "/api/update_mi";
         this.update_kyou_info_address = "/api/update_kyou_info";
+        this.update_rekyou_address = "/api/update_rekyou";
         this.get_kyous_address = "/api/get_kyous";
         this.get_kyou_address = "/api/get_kyou";
         this.get_kmemos_address = "/api/get_kmemos";
         this.get_urlogs_address = "/api/get_urlogs";
         this.get_nlogs_address = "/api/get_nlogs";
         this.get_timeiss_address = "/api/get_timeiss";
+        this.get_rekyous_address = "/api/get_rekyous";
         this.get_mis_address = "/api/get_mis";
         this.get_lantanas_address = "/api/get_lantanas";
         this.get_kmemo_address = "/api/get_kmemo";
@@ -377,13 +438,16 @@ export class GkillAPI {
         this.get_timeis_address = "/api/get_timeis";
         this.get_mi_address = "/api/get_mi";
         this.get_lantana_address = "/api/get_lantana";
+        this.get_rekyou_address = "/api/get_rekyou";
+        this.get_git_commit_log_address = "/api/get_git_commit_log";
+        this.get_git_commit_logs_address = "/api/get_git_commit_logs";
         this.get_mi_board_list_address = "/api/get_mi_board_list";
         this.get_plaing_timeis_address = "/api/get_plaing_timeis";
         this.get_all_tag_names_address = "/api/get_all_tag_names";
         this.get_tags_by_target_id_address = "/api/get_tags_by_id";
         this.get_tag_histories_by_tag_id_address = "/api/get_tag_histories_by_tag_id";
         this.get_texts_by_target_id_address = "/api/get_texts_by_id";
-        this.get_text_histories_by_text_id = "/api/get_text_histories_by_text_id";
+        this.get_text_histories_by_text_id_address = "/api/get_text_histories_by_text_id";
         this.get_application_config_address = "/api/get_application_config";
         this.get_server_config_address = "/api/get_server_config";
         this.upload_files_address = "/api/upload_files";
@@ -394,7 +458,16 @@ export class GkillAPI {
         this.update_rep_type_struct_address = "/api/update_rep_struct";
         this.update_account_status_address = "/api/update_account_status";
         this.update_user_reps_address = "/api/update_user_reps";
+        this.add_account_address = "/api/add_user";
         this.generate_tls_file_address = "/api/generate_tls_file";
+        this.get_gps_log_address = "/api/get_gps_log";
+        this.get_kftl_template_addredd = "/api/get_kftl_template";
+        this.get_gkill_info_address = "/api/get_gkill_info";
+        this.get_share_mi_task_list_infos_address = "/api/get_share_mi_task_list_infos";
+        this.add_share_mi_task_list_info_address = "/api/add_share_mi_task_list_info";
+        this.update_share_mi_task_list_info_address = "/api/update_share_mi_task_list_info";
+        this.delete_share_mi_task_list_infos_address = "/api/delete_share_mi_task_list_infos";
+        this.get_mi_shared_tasks_address = "/api/get_mi_shared_tasks";
         this.login_method = "POST";
         this.logout_method = "POST";
         this.reset_password_method = "POST";
@@ -408,6 +481,7 @@ export class GkillAPI {
         this.add_mi_method = "POST";
         this.add_lantana_method = "POST";
         this.add_kyou_info_method = "POST";
+        this.add_rekyou_method = "POST";
         this.update_tag_method = "POST";
         this.update_text_method = "POST";
         this.update_kmemo_method = "POST";
@@ -417,8 +491,12 @@ export class GkillAPI {
         this.update_mi_method = "POST";
         this.update_lantana_method = "POST";
         this.update_kyou_info_method = "POST";
+        this.update_rekyou_method = "POST";
         this.get_kyous_method = "POST";
         this.get_kyou_method = "POST";
+        this.get_rekyou_method = "POST";
+        this.get_rekyous_method = "POST";
+        this.get_git_commit_logs_method = "POST";
         this.get_mi_board_list_method = "POST";
         this.get_plaing_timeis_method = "POST";
         this.get_all_tag_names_method = "POST";
@@ -436,7 +514,16 @@ export class GkillAPI {
         this.update_rep_type_struct_method = "POST";
         this.update_account_status_method = "POST";
         this.update_user_reps_method = "POST";
+        this.add_account_method = "POST";
         this.generate_tls_file_method = "POST";
+        this.get_gps_log_method = "POST";
+        this.get_kftl_template_method = "POST";
+        this.get_gkill_info_method = "POST";
+        this.get_share_mi_task_list_infos_method = "POST";
+        this.add_share_mi_task_list_info_method = "POST";
+        this.update_share_mi_task_list_info_method = "POST";
+        this.delete_share_mi_task_list_infos_method = "POST";
+        this.get_mi_shared_tasks_method = "POST";
         
         // ˄
     }
@@ -497,6 +584,7 @@ export class GkillAPI {
 
     async add_timeis(req: AddTimeisRequest): Promise<AddTimeisResponse> {
         // ˅
+        print()
         throw new Error('Not implemented');
         // ˄
     }
