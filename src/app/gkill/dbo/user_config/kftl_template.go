@@ -5,14 +5,14 @@ package user_config
 
 type KFTLTemplate struct {
 	// ˅
-	
+
 	// ˄
 
 	ID string
 
 	UserID string
 
-	Title: string string
+	Title string
 
 	Template string
 
@@ -21,7 +21,7 @@ type KFTLTemplate struct {
 	Seq int
 
 	// ˅
-	
+
 	// ˄
 }
 

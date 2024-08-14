@@ -20,33 +20,33 @@ type GPSLogRepositories struct {
 	// ˄
 }
 
-func (g *GPSLogRepositories) GetAllGPSLogs(ctx context.Context) []*GPSLog {
+func (g *GPSLogRepositories) GetAllGPSLogs(ctx context.Context) ([]*GPSLog, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (g *GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime time.Time, endTime time.Time) []*GPSLog {
+func (g *GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime time.Time, endTime time.Time) ([]*GPSLog, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (g *GPSLogRepositories) GetPath(ctx context.Context, id string) string {
+func (g *GPSLogRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (g *GPSLogRepositories) GetRepName(ctx context.Context) string {
+func (g *GPSLogRepositories) GetRepName(ctx context.Context) (string, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (g *GPSLogRepositories) UpdateCache(ctx context.Context) {
+func (g *GPSLogRepositories) UpdateCache(ctx context.Context) error {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 

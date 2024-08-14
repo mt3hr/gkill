@@ -6,19 +6,19 @@ import "context"
 // ˄
 
 type Repository interface {
-	FindKyous(ctx context.Context, queryJSON string) []*Kyou
+	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
 
-	GetKyou(ctx context.Context, id string) *Kyou
+	GetKyou(ctx context.Context, id string) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) []*Kyou
+	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
 
-	GetPath(ctx context.Context, id string) string
+	GetPath(ctx context.Context, id string) (string, error)
 
-	GetRepName(ctx context.Context) string
+	GetRepName(ctx context.Context) (string, error)
 
-	UpdateCache(ctx context.Context)
+	UpdateCache(ctx context.Context) error
 
-	Close(ctx context.Context)
+	Close(ctx context.Context) error
 
 	// ˅
 

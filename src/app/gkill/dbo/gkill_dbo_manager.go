@@ -1,6 +1,8 @@
 // ˅
 package dbo
 
+import "github.com/mt3hr/gkill/src/app/gkill/dbo/reps"
+
 // ˄
 
 type GkillDBOManager struct {
@@ -8,7 +10,7 @@ type GkillDBOManager struct {
 
 	// ˄
 
-	gkillRepositoriesList []*GkillRepositories
+	gkillRepositoriesList []*reps.GkillRepositories
 
 	ConfigDAOs *ConfigDAOs
 
@@ -17,15 +19,15 @@ type GkillDBOManager struct {
 	// ˄
 }
 
-func (g *GkillDBOManager) GetRepositories(userID string, device string) *GkillRepositories {
+func (g *GkillDBOManager) GetRepositories(userID string, device string) (*reps.GkillRepositories, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (g *GkillDBOManager) CloseUserRepositories(userID string, device string) bool {
+func (g *GkillDBOManager) CloseUserRepositories(userID string, device string) (bool, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 

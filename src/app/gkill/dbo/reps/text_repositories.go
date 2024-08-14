@@ -17,51 +17,51 @@ type TextRepositories struct {
 	// ˄
 }
 
-func (t *TextRepositories) FindTexts(ctx context.Context, queryJSON string) []*Text {
+func (t *TextRepositories) FindTexts(ctx context.Context, queryJSON string) ([]*Text, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (t *TextRepositories) Close(ctx context.Context) {
+func (t *TextRepositories) Close(ctx context.Context) error {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (t *TextRepositories) GetText(ctx context.Context, id string) *Text {
+func (t *TextRepositories) GetText(ctx context.Context, id string) (*Text, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (t *TextRepositories) GetTextsByTargetID(ctx context.Context, target_id string) []*Text {
+func (t *TextRepositories) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (t *TextRepositories) UpdateCache(ctx context.Context) {
+func (t *TextRepositories) UpdateCache(ctx context.Context) error {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (t *TextRepositories) GetPath(ctx context.Context, id string) string {
+func (t *TextRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (t *TextRepositories) GetRepName(ctx context.Context) string {
+func (t *TextRepositories) GetRepName(ctx context.Context) (string, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 
-func (t *TextRepositories) GetTextHistories(ctx context.Context, id string) []*Text {
+func (t *TextRepositories) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 

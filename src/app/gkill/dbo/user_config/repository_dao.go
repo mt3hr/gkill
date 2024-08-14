@@ -6,15 +6,15 @@ import "context"
 // ˄
 
 type RepositoryDAO interface {
-	GetAllRepositories(ctx context.Context) []*Repository
+	GetAllRepositories(ctx context.Context) ([]*Repository, error)
 
-	GetRepositories(ctx context.Context, userID string, device string) []*Repository
+	GetRepositories(ctx context.Context, userID string, device string) ([]*Repository, error)
 
-	AddRepository(ctx context.Context, repository *Repository) bool
+	AddRepository(ctx context.Context, repository *Repository) (bool, error)
 
-	UpdateRepository(ctx context.Context, repository *Repository) bool
+	UpdateRepository(ctx context.Context, repository *Repository) (bool, error)
 
-	DeleteRepository(ctx context.Context, id string) bool
+	DeleteRepository(ctx context.Context, id string) (bool, error)
 
 	// ˅
 

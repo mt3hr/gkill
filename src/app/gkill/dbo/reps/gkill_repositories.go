@@ -65,9 +65,9 @@ type GkillRepositories struct {
 	// ˄
 }
 
-func (g *GkillRepositories) GetUserID(ctx context.Context) string {
+func (g *GkillRepositories) GetUserID(ctx context.Context) (string, error) {
 	// ˅
-
+	panic("notImplements")
 	// ˄
 }
 

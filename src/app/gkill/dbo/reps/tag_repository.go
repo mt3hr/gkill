@@ -6,23 +6,23 @@ import "context"
 // ˄
 
 type TagRepository interface {
-	FindTags(ctx context.Context, queryJSON string) []*Tag
+	FindTags(ctx context.Context, queryJSON string) ([]*Tag, error)
 
-	Close(ctx context.Context)
+	Close(ctx context.Context) error
 
-	GetTag(ctx context.Context, id string) *Tag
+	GetTag(ctx context.Context, id string) (*Tag, error)
 
-	GetTagsByTagName(ctx context.Context, tagname string) []*Tag
+	GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error)
 
-	GetTagsByTargetID(ctx context.Context, target_id string) []*Tag
+	GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error)
 
-	UpdateCache(ctx context.Context)
+	UpdateCache(ctx context.Context) error
 
-	GetPath(ctx context.Context, id string) string
+	GetPath(ctx context.Context, id string) (string, error)
 
-	GetRepName(ctx context.Context) string
+	GetRepName(ctx context.Context) (string, error)
 
-	GetTagHistories(ctx context.Context, id string) []*Tag
+	GetTagHistories(ctx context.Context, id string) ([]*Tag, error)
 
 	// ˅
 
