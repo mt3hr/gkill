@@ -1,6 +1,8 @@
 // ˅
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/api"
+
 // ˄
 
 type AddAccountResponse struct {
@@ -8,7 +10,7 @@ type AddAccountResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*api.GkillMessage
 
 	Errors []*GkillError
 

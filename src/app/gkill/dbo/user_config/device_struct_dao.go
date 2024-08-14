@@ -6,19 +6,19 @@ import "context"
 // ˄
 
 type DeviceStructDAO interface {
-	GetAllDeviceStructs(ctx context.Context) []*DeviceStruct
+	GetAllDeviceStructs(ctx context.Context) ([]*DeviceStruct, error)
 
-	GetDeviceStructs(ctx context.Context, userID string, device string) []*DeviceStruct
+	GetDeviceStructs(ctx context.Context, userID string, device string) ([]*DeviceStruct, error)
 
-	AddDeviceStruct(ctx context.Context, deviceStruct *DeviceStruct) bool
+	AddDeviceStruct(ctx context.Context, deviceStruct *DeviceStruct) (bool, error)
 
-	AddDeviceStructs(ctx context.Context, deviceStructs []*DeviceStruct) bool
+	AddDeviceStructs(ctx context.Context, deviceStructs []*DeviceStruct) (bool, error)
 
-	UpdateDeviceStruct(ctx context.Context, deviceStruct *DeviceStruct) bool
+	UpdateDeviceStruct(ctx context.Context, deviceStruct *DeviceStruct) (bool, error)
 
-	DeleteDeviceStruct(ctx context.Context, id string) bool
+	DeleteDeviceStruct(ctx context.Context, id string) (bool, error)
 
-	DeleteUsersDeviceStructs(ctx context.Context, userID string) bool
+	DeleteUsersDeviceStructs(ctx context.Context, userID string) (bool, error)
 
 	// ˅
 

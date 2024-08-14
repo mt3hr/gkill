@@ -6,27 +6,27 @@ import "context"
 // ˄
 
 type URLogRepository interface {
-	FindKyous(ctx context.Context, queryJSON string) []*Kyou
+	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
 
-	GetKyou(ctx context.Context, id string) *Kyou
+	GetKyou(ctx context.Context, id string) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) []*Kyou
+	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
 
-	GetPath(ctx context.Context, id string) string
+	GetPath(ctx context.Context, id string) (string, error)
 
-	UpdateCache(ctx context.Context)
+	UpdateCache(ctx context.Context) error
 
-	GetRepName(ctx context.Context) string
+	GetRepName(ctx context.Context) (string, error)
 
-	Close(ctx context.Context)
+	Close(ctx context.Context) error
 
-	FindURLog(ctx context.Context, queryJSON string) []*URLog
+	FindURLog(ctx context.Context, queryJSON string) ([]*URLog, error)
 
-	GetURLog(ctx context.Context, id string) *URLog
+	GetURLog(ctx context.Context, id string) (*URLog, error)
 
-	GetURLogHistories(ctx context.Context, id string) []*URLog
+	GetURLogHistories(ctx context.Context, id string) ([]*URLog, error)
 
-	AddURLogInfo(ctx context.Context, urlog *URLog)
+	AddURLogInfo(ctx context.Context, urlog *URLog) error
 
 	// ˅
 

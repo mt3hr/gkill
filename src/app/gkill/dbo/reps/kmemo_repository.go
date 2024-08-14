@@ -6,27 +6,27 @@ import "context"
 // ˄
 
 type KmemoRepository interface {
-	FindKyous(ctx context.Context, queryJSON string) []*Kyou
+	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
 
-	GetKyou(ctx context.Context, id string) *Kyou
+	GetKyou(ctx context.Context, id string) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) []*Kyou
+	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
 
-	GetPath(ctx context.Context, id string) string
+	GetPath(ctx context.Context, id string) (string, error)
 
-	UpdateCache(ctx context.Context)
+	UpdateCache(ctx context.Context) error
 
-	GetRepName(ctx context.Context) string
+	GetRepName(ctx context.Context) (string, error)
 
-	Close(ctx context.Context)
+	Close(ctx context.Context) error
 
-	FindKmemo(ctx context.Context, queryJSON string) []*Kmemo
+	FindKmemo(ctx context.Context, queryJSON string) ([]*Kmemo, error)
 
-	GetKmemo(ctx context.Context, id string) *Kmemo
+	GetKmemo(ctx context.Context, id string) (*Kmemo, error)
 
-	GetKmemoHistories(ctx context.Context, id string) []*Kmemo
+	GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error)
 
-	AddKmemoInfo(ctx context.Context, kmemo *Kmemo)
+	AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error
 
 	// ˅
 

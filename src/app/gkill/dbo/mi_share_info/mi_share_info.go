@@ -5,7 +5,7 @@ package mi_share_info
 
 type MiShareInfo struct {
 	// ˅
-	
+
 	// ˄
 
 	ID string
@@ -18,12 +18,12 @@ type MiShareInfo struct {
 
 	IsShareDetail string
 
-	ShareID: string
+	ShareID string
 
 	FindQueryJSON string
 
 	// ˅
-	
+
 	// ˄
 }
 

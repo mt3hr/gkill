@@ -9,15 +9,15 @@ import (
 // ˄
 
 type GPSLogRepository interface {
-	GetAllGPSLogs(ctx context.Context) []*GPSLog
+	GetAllGPSLogs(ctx context.Context) ([]*GPSLog, error)
 
-	GetGPSLogs(ctx context.Context, startTime time.Time, endTime time.Time) []*GPSLog
+	GetGPSLogs(ctx context.Context, startTime time.Time, endTime time.Time) ([]*GPSLog, error)
 
-	GetPath(ctx context.Context, id string) string
+	GetPath(ctx context.Context, id string) (string, error)
 
-	GetRepName(ctx context.Context) string
+	GetRepName(ctx context.Context) (string, error)
 
-	UpdateCache(ctx context.Context)
+	UpdateCache(ctx context.Context) error
 
 	// ˅
 

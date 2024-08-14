@@ -1,6 +1,14 @@
 // ˅
 package dbo
 
+import (
+	"github.com/mt3hr/gkill/src/app/gkill/dbo/account"
+	"github.com/mt3hr/gkill/src/app/gkill/dbo/account_state"
+	"github.com/mt3hr/gkill/src/app/gkill/dbo/mi_share_info"
+	"github.com/mt3hr/gkill/src/app/gkill/dbo/server_config"
+	"github.com/mt3hr/gkill/src/app/gkill/dbo/user_config"
+)
+
 // ˄
 
 type ConfigDAOs struct {
@@ -8,29 +16,29 @@ type ConfigDAOs struct {
 
 	// ˄
 
-	AccountDAO AccountDAO
+	AccountDAO account.AccountDAO
 
-	LoginSessionDAO LoginSessionDAO
+	LoginSessionDAO account_state.LoginSessionDAO
 
-	FileUploadHistoryDAO FileUploadHistoryDAO
+	FileUploadHistoryDAO account_state.FileUploadHistoryDAO
 
-	MiShareInfoDAO MiShareInfoDAO
+	MiShareInfoDAO mi_share_info.MiShareInfoDAO
 
-	ServerConfigDAO ServerConfigDAO
+	ServerConfigDAO server_config.ServerConfigDAO
 
-	AppllicationConfigDAO ApplicationConfigDAO
+	AppllicationConfigDAO user_config.ApplicationConfigDAO
 
-	RepositoryDAO RepositoryDAO
+	RepositoryDAO user_config.RepositoryDAO
 
-	KFTLTemplateDAO KFTLTemplateDAO
+	KFTLTemplateDAO user_config.KFTLTemplateDAO
 
-	TagStructDAO TagStructDAO
+	TagStructDAO user_config.TagStructDAO
 
-	RepStructDAO RepStructDAO
+	RepStructDAO user_config.RepStructDAO
 
-	DeviceStructDAO DeviceStructDAO
+	DeviceStructDAO user_config.DeviceStructDAO
 
-	RepTypeStructDAO RepTypeStructDAO
+	RepTypeStructDAO user_config.RepTypeStructDAO
 
 	// ˅
 
