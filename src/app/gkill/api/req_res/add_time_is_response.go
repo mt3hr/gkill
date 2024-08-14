@@ -5,7 +5,7 @@ package req_res
 
 type AddTimeIsResponse struct {
 	// ˅
-	
+
 	// ˄
 
 	Messages []*GkillMessage
@@ -14,10 +14,10 @@ type AddTimeIsResponse struct {
 
 	AddedTimeis *TimeIs
 
-	+AddedTimeisKyou *Kyou
+	AddedTimeisKyou *Kyou
 
 	// ˅
-	
+
 	// ˄
 }
 

@@ -6,27 +6,27 @@ import "context"
 // ˄
 
 type MiRepository interface {
-	FindKyous(ctx context.Context, queryJSON string) []*Kyou
+	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
 
-	GetKyou(ctx context.Context, id string) *Kyou
+	GetKyou(ctx context.Context, id string) (*Kyou, error)
 
-	GetKyouHistories(ctx context.Context, id string) []*Kyou
+	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
 
-	GetPath(ctx context.Context, id string) string
+	GetPath(ctx context.Context, id string) (string, error)
 
-	UpdateCache(ctx context.Context)
+	UpdateCache(ctx context.Context) error
 
-	GetRepName(ctx context.Context) string
+	GetRepName(ctx context.Context) (string, error)
 
-	Close(ctx context.Context)
+	Close(ctx context.Context) error
 
-	FindMi(ctx context.Context, queryJSON string) []*Mi
+	FindMi(ctx context.Context, queryJSON string) ([]*Mi, error)
 
-	GetMi(ctx context.Context, id string) *Mi
+	GetMi(ctx context.Context, id string) (*Mi, error)
 
-	GetMiHistories(ctx context.Context, id string) []*Mi
+	GetMiHistories(ctx context.Context, id string) ([]*Mi, error)
 
-	AddMiInfo(ctx context.Context, mi *Mi)
+	AddMiInfo(ctx context.Context, mi *Mi) error
 
 	// ˅
 

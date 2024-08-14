@@ -6,19 +6,19 @@ import "context"
 // ˄
 
 type KFTLTemplateDAO interface {
-	GetAllKFTLTemplates(ctx context.Context) []*KFTLTemplate
+	GetAllKFTLTemplates(ctx context.Context) ([]*KFTLTemplate, error)
 
-	GetKFTLTemplates(ctx context.Context, userID string, device string) []*KFTLTemplate
+	GetKFTLTemplates(ctx context.Context, userID string, device string) ([]*KFTLTemplate, error)
 
-	AddKFTLTemplate(ctx context.Context, kftlTemplate *KFTLTemplate) bool
+	AddKFTLTemplate(ctx context.Context, kftlTemplate *KFTLTemplate) (bool, error)
 
-	AddKFTLTemplates(ctx context.Context, kftlTemplates []*KFTLTemplate) bool
+	AddKFTLTemplates(ctx context.Context, kftlTemplates []*KFTLTemplate) (bool, error)
 
-	UpdateKFTLTemplate(ctx context.Context, kftlTemplate *KFTLTemplate) bool
+	UpdateKFTLTemplate(ctx context.Context, kftlTemplate *KFTLTemplate) (bool, error)
 
-	DeleteKFTLTemplate(ctx context.Context, id string) bool
+	DeleteKFTLTemplate(ctx context.Context, id string) (bool, error)
 
-	DeleteUsersKFTLTemplates(ctx context.Context, userID string) bool
+	DeleteUsersKFTLTemplates(ctx context.Context, userID string) (bool, error)
 
 	// ˅
 

@@ -6,19 +6,19 @@ import "context"
 // ˄
 
 type TagStructDAO interface {
-	GetAllTagStructs(ctx context.Context) []*TagStruct
+	GetAllTagStructs(ctx context.Context) ([]*TagStruct, error)
 
-	GetTagStructs(ctx context.Context, userID string, device string) []*TagStruct
+	GetTagStructs(ctx context.Context, userID string, device string) ([]*TagStruct, error)
 
-	AddTagStruct(ctx context.Context, tagStruct *TagStruct) bool
+	AddTagStruct(ctx context.Context, tagStruct *TagStruct) (bool, error)
 
-	AddTagStructs(ctx context.Context, tagStructs []*TagStruct) bool
+	AddTagStructs(ctx context.Context, tagStructs []*TagStruct) (bool, error)
 
-	UpdateTagStruct(ctx context.Context, tagStruct *TagStruct) bool
+	UpdateTagStruct(ctx context.Context, tagStruct *TagStruct) (bool, error)
 
-	DeleteTagStruct(ctx context.Context, id string) bool
+	DeleteTagStruct(ctx context.Context, id string) (bool, error)
 
-	DeleteUsersTagStructs(ctx context.Context, userID string) bool
+	DeleteUsersTagStructs(ctx context.Context, userID string) (bool, error)
 
 	// ˅
 

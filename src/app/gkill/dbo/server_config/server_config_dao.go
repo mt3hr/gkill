@@ -6,15 +6,15 @@ import "context"
 // ˄
 
 type ServerConfigDAO interface {
-	GetAllServerConfigs(ctx context.Context) []*ServerConfig
+	GetAllServerConfigs(ctx context.Context) ([]*ServerConfig, error)
 
-	GetServerConfig(ctx context.Context, device string) *ServerConfig
+	GetServerConfig(ctx context.Context, device string) (*ServerConfig, error)
 
-	AddServerConfig(ctx context.Context, serverConfig *ServerConfig) bool
+	AddServerConfig(ctx context.Context, serverConfig *ServerConfig) (bool, error)
 
-	UpdateServerConfig(ctx context.Context, serverConfig *ServerConfig) bool
+	UpdateServerConfig(ctx context.Context, serverConfig *ServerConfig) (bool, error)
 
-	DeleteServerConfig(ctx context.Context, id string) bool
+	DeleteServerConfig(ctx context.Context, id string) (bool, error)
 
 	// ˅
 
