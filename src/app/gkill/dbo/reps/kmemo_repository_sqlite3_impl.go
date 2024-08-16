@@ -607,6 +607,7 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  CONTENT,
   ? AS REP_NAME
 FROM KMEMO
 WHERE ID = ?
@@ -645,6 +646,7 @@ ORDER BY UPDATE_TIME DESC
 				kmemo.UpdateApp,
 				kmemo.UpdateDevice,
 				kmemo.UpdateUser,
+				kmemo.Content,
 				kmemo.RepName,
 			)
 
