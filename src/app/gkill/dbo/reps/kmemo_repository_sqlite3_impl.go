@@ -142,7 +142,7 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("CONTENT LIKE '%s'", word))
+				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -157,7 +157,7 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("CONTENT LIKE '%s'", word))
+				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -177,7 +177,7 @@ WHERE
 			if whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("CONTENT NOT LIKE '%s'", notWord))
+			sql += sqlite3impl.EscapeSQLite("CONTENT NOT LIKE '%" + notWord + "%'")
 			if i == len(words)-1 {
 				sql += " ) "
 			}
@@ -452,7 +452,7 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("CONTENT LIKE '%s'", word))
+				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -467,7 +467,7 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("CONTENT LIKE '%s'", word))
+				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -713,7 +713,7 @@ VASLUES(
 		kmemo.UpdateUser,
 	)
 	if err != nil {
-		err = fmt.Errorf("error at select from KMEMO %s: %w", kmemo.ID, err)
+		err = fmt.Errorf("error at insert in to KMEMO %s: %w", kmemo.ID, err)
 		return err
 	}
 	return nil
