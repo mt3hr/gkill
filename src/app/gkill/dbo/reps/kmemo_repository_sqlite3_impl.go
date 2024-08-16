@@ -35,18 +35,18 @@ func NewKmemoRepositorySQLite3Impl(ctx context.Context, filename string) (KmemoR
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "KMEMO" (
-  IS_DELETED,
-  ID,
-  CONTENT,
-  RELATED_TIME,
-  CREATE_TIME,
-  CREATE_APP,
-  CREATE_USER,
-  CREATE_DEVICE,
-  UPDATE_TIME,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER
+  IS_DELETED NOT NULL,
+  ID NOT NULL,
+  CONTENT NOT NULL,
+  RELATED_TIME NOT NULL,
+  CREATE_TIME NOT NULL,
+  CREATE_APP NOT NULL,
+  CREATE_USER NOT NULL,
+  CREATE_DEVICE NOT NULL,
+  UPDATE_TIME NOT NULL,
+  UPDATE_APP NOT NULL,
+  UPDATE_DEVICE NOT NULL,
+  UPDATE_USER NOT NULL 
 );`
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -102,7 +102,8 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM KMEMO
 WHERE
 `
@@ -203,7 +204,8 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		return nil, err
 	}
 
-	rows, err := stmt.QueryContext(ctx, repName)
+	dataType := "kmemo"
+	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
 		return nil, err
@@ -231,6 +233,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 				kyou.UpdateDevice,
 				kyou.UpdateUser,
 				kyou.RepName,
+				kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -290,7 +293,8 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM KMEMO
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
@@ -301,7 +305,8 @@ ORDER BY UPDATE_TIME DESC
 		return nil, err
 	}
 
-	rows, err := stmt.QueryContext(ctx, repName, id)
+	dataType := "kmemo"
+	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from KMEMO %s: %w", id, err)
 		return nil, err
@@ -329,6 +334,7 @@ ORDER BY UPDATE_TIME DESC
 				kyou.UpdateDevice,
 				kyou.UpdateUser,
 				kyou.RepName,
+				kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)

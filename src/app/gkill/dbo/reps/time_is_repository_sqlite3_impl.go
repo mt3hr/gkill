@@ -8,6 +8,9 @@ package reps
 // use_plaing
 // plaing_time
 
+//TODO include_end_timeis
+// endを検索するかどうか
+
 import (
 	"context"
 	"database/sql"
@@ -44,19 +47,19 @@ func NewTimeIsRepositorySQLite3Impl(ctx context.Context, filename string) (TimeI
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "TIMEIS" (
-  IS_DELETED,
-  ID,
-  TITLE,
-  START_TIME,
+  IS_DELETED NOT NULL,
+  ID NOT NULL,
+  TITLE NOT NULL,
+  START_TIME NOT NULL,
   END_TIME
-  CREATE_TIME,
-  CREATE_APP,
-  CREATE_USER,
-  CREATE_DEVICE,
-  UPDATE_TIME,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER
+  CREATE_TIME NOT NULL,
+  CREATE_APP NOT NULL,
+  CREATE_USER NOT NULL,
+  CREATE_DEVICE NOT NULL,
+  UPDATE_TIME NOT NULL,
+  UPDATE_APP NOT NULL,
+  UPDATE_DEVICE NOT NULL,
+  UPDATE_USER NOT NULL
 );`
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -111,7 +114,8 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  'timeis_start' AS DATA_TYPE
 FROM TIMEIS 
 `
 	sqlEndTimeIs := `
@@ -127,174 +131,28 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  'timeis_end' AS DATA_TYPE
 FROM TIMEIS 
 `
 
-	sqlWhere := ""
-
-	whereSQLGenerator := func(forStartTime bool) (string, error) {
-		whereCounter := 0
-		var err error
-		sql := ""
-
-		// jsonからパースする
-		queryMap := map[string]string{}
-		err = json.Unmarshal([]byte(queryJSON), &queryMap)
-		if err != nil {
-			err = fmt.Errorf("error at parse query json %s: %w", queryJSON, err)
-			return "", err
-		}
-
-		// 日付範囲指定ありの場合
-		if queryMap["use_calendar"] == fmt.Sprintf("%t", true) {
-			// 開始日時を指定するSQLを追記
-			columnName := ""
-			if forStartTime {
-				columnName = "START_TIME"
-			} else {
-				columnName = "END_TIME"
-			}
-			if queryMap["calendar_start_date"] != "" {
-				startDate := &time.Time{}
-				err = json.Unmarshal([]byte(queryMap["calendar_start_date"]), startDate)
-				if err != nil {
-					err = fmt.Errorf("error at parse calendar start date %s: %w", queryMap["calendar_start_date"])
-					return "", err
-				}
-
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("datetime("+columnName+", 'localtime') >= datetime('%s', 'localtime')", startDate.Format(sqlite3impl.TimeLayout)))
-				whereCounter++
-			}
-
-			// 終了日時を指定するSQLを追記
-			if queryMap["calendar_end_date"] != "" {
-				endDate := &time.Time{}
-				err = json.Unmarshal([]byte(queryMap["calendar_end_date"]), endDate)
-				if err != nil {
-					err = fmt.Errorf("error at parse calendar end date %s: %w", queryMap["calendar_end_date"])
-					return "", err
-				}
-
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("datetime("+columnName+", 'localtime') <= datetime('%s', 'localtime')", endDate.Format(sqlite3impl.TimeLayout)))
-				whereCounter++
-			}
-		}
-		// ワードand検索である場合のSQL追記
-		if queryMap["use_word"] == fmt.Sprintf("%t", true) {
-			// ワードを解析
-			words := []string{}
-			err = json.Unmarshal([]byte(queryMap["words"]), &words)
-			if err != nil {
-				err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-				return "", err
-			}
-			notWords := []string{}
-			err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-			if err != nil {
-				err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-				return "", err
-			}
-
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-
-			if queryMap["words_and"] == fmt.Sprintf("%t", true) {
-				for i, word := range words {
-					if i == 0 {
-						sqlWhere += " ( "
-					}
-					if whereCounter != 0 {
-						sqlWhere += " AND "
-					}
-					sqlWhere += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-					if i == len(words)-1 {
-						sqlWhere += " ) "
-					}
-					whereCounter++
-				}
-			} else {
-				// ワードor検索である場合のSQL追記
-				for i, word := range words {
-					if i == 0 {
-						sqlWhere += " ( "
-					}
-					if whereCounter != 0 {
-						sqlWhere += " AND "
-					}
-					sqlWhere += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-					if i == len(words)-1 {
-						sqlWhere += " ) "
-					}
-					whereCounter++
-				}
-			}
-
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-
-			// notワードを除外するSQLを追記
-			for i, notWord := range notWords {
-				if i == 0 {
-					sqlWhere += " ( "
-				}
-				if whereCounter != 0 {
-					sqlWhere += " AND "
-				}
-				sqlWhere += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
-				if i == len(words)-1 {
-					sqlWhere += " ) "
-				}
-				whereCounter++
-			}
-		}
-		// plaingの場合
-		if queryMap["use_plaing"] == fmt.Sprintf("%t", true) {
-			plaingTimeStr := ""
-			err = json.Unmarshal([]byte(queryMap["plaing_time"]), &plaingTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse plaing_time %s: %w", queryMap["plaing_time"], err)
-				return "", err
-			}
-			plaingTime, err := time.Parse(sqlite3impl.TimeLayout, plaingTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse plaing_time %s: %w", queryMap["plaing_time"], err)
-				return err
-			}
-
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-			sql += fmt.Sprintf("(datetime('"+plaingTime.Format(sqlite3impl.TimeLayout)+"', 'localtime') BETWEEN datetime(START_TIME, 'localtime') AND datetime(START_TIME, 'localtime'))", plaingTime.Format(sqlite3impl.TimeLayout))
-		}
-		// UPDATE_TIMEが一番上のものだけを抽出
-		sqlWhere += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
-		sqlWhere += `;`
-
-		return sql, nil
+	sqlWhereFilterEndTimeIs := ""
+	if queryMap["include_end_timeis"] == fmt.Sprintf("%t", true) {
+		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end')"
+	} else {
+		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
-	sqlWhereForStart, err := whereSQLGenerator(true)
+	sqlWhereForStart, err := t.whereSQLGenerator(true, queryJSON)
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForEnd, err := whereSQLGenerator(false)
+	sqlWhereForEnd, err := t.whereSQLGenerator(false, queryJSON)
 	if err != nil {
 		return nil, err
 	}
 
-	sql := fmt.Sprintf("SELECT * FROM ((SELECT * FROM (%s) %s) UNION (SELECT * FROM (%s) %s)) WHERE %s", sqlStartTimeIs, sqlWhereForStart, sqlEndTimeIs, sqlWhereForEnd)
+	sql := fmt.Sprintf("SELECT * FROM ((SELECT * FROM %s WHERE %s) UNION (SELECT * FROM %s WHERE %s)) WHERE %s", sqlStartTimeIs, sqlWhereForStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterEndTimeIs)
 
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -336,6 +194,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 				kyou.UpdateDevice,
 				kyou.UpdateUser,
 				kyou.RepName,
+				kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -396,7 +255,8 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  'timeis_start' AS DATA_TYPE
 FROM TIMEIS 
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
@@ -435,6 +295,7 @@ ORDER BY UPDATE_TIME DESC
 				kyou.UpdateDevice,
 				kyou.UpdateUser,
 				kyou.RepName,
+				kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -517,190 +378,23 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  'timeis_start' AS DATA_TYPE
 FROM TIMEIS 
 `
-	sqlEndTimeIs := `
-SELECT 
-  IS_DELETED,
-  ID,
-  END_TIME AS 'RELATED_TIME',
-  CREATE_TIME,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_TIME,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  ? AS REP_NAME
-FROM TIMEIS 
-`
-
-	sqlWhere := ""
-
-	whereSQLGenerator := func(forStartTime bool) (string, error) {
-		whereCounter := 0
-		var err error
-		sql := ""
-
-		// jsonからパースする
-		queryMap := map[string]string{}
-		err = json.Unmarshal([]byte(queryJSON), &queryMap)
-		if err != nil {
-			err = fmt.Errorf("error at parse query json %s: %w", queryJSON, err)
-			return "", err
-		}
-
-		// 日付範囲指定ありの場合
-		if queryMap["use_calendar"] == fmt.Sprintf("%t", true) {
-			// 開始日時を指定するSQLを追記
-			columnName := ""
-			if forStartTime {
-				columnName = "START_TIME"
-			} else {
-				columnName = "END_TIME"
-			}
-			if queryMap["calendar_start_date"] != "" {
-				startDate := &time.Time{}
-				err = json.Unmarshal([]byte(queryMap["calendar_start_date"]), startDate)
-				if err != nil {
-					err = fmt.Errorf("error at parse calendar start date %s: %w", queryMap["calendar_start_date"])
-					return "", err
-				}
-
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("datetime("+columnName+", 'localtime') >= datetime('%s', 'localtime')", startDate.Format(sqlite3impl.TimeLayout)))
-				whereCounter++
-			}
-
-			// 終了日時を指定するSQLを追記
-			if queryMap["calendar_end_date"] != "" {
-				endDate := &time.Time{}
-				err = json.Unmarshal([]byte(queryMap["calendar_end_date"]), endDate)
-				if err != nil {
-					err = fmt.Errorf("error at parse calendar end date %s: %w", queryMap["calendar_end_date"])
-					return "", err
-				}
-
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("datetime("+columnName+", 'localtime') <= datetime('%s', 'localtime')", endDate.Format(sqlite3impl.TimeLayout)))
-				whereCounter++
-			}
-		}
-		// ワードand検索である場合のSQL追記
-		if queryMap["use_word"] == fmt.Sprintf("%t", true) {
-			// ワードを解析
-			words := []string{}
-			err = json.Unmarshal([]byte(queryMap["words"]), &words)
-			if err != nil {
-				err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-				return "", err
-			}
-			notWords := []string{}
-			err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-			if err != nil {
-				err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-				return "", err
-			}
-
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-
-			if queryMap["words_and"] == fmt.Sprintf("%t", true) {
-				for i, word := range words {
-					if i == 0 {
-						sqlWhere += " ( "
-					}
-					if whereCounter != 0 {
-						sqlWhere += " AND "
-					}
-					sqlWhere += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-					if i == len(words)-1 {
-						sqlWhere += " ) "
-					}
-					whereCounter++
-				}
-			} else {
-				// ワードor検索である場合のSQL追記
-				for i, word := range words {
-					if i == 0 {
-						sqlWhere += " ( "
-					}
-					if whereCounter != 0 {
-						sqlWhere += " AND "
-					}
-					sqlWhere += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-					if i == len(words)-1 {
-						sqlWhere += " ) "
-					}
-					whereCounter++
-				}
-			}
-
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-
-			// notワードを除外するSQLを追記
-			for i, notWord := range notWords {
-				if i == 0 {
-					sqlWhere += " ( "
-				}
-				if whereCounter != 0 {
-					sqlWhere += " AND "
-				}
-				sqlWhere += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
-				if i == len(words)-1 {
-					sqlWhere += " ) "
-				}
-				whereCounter++
-			}
-		}
-		// plaingの場合
-		if queryMap["use_plaing"] == fmt.Sprintf("%t", true) {
-			plaingTimeStr := ""
-			err = json.Unmarshal([]byte(queryMap["plaing_time"]), &plaingTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse plaing_time %s: %w", queryMap["plaing_time"], err)
-				return "", err
-			}
-			plaingTime, err := time.Parse(sqlite3impl.TimeLayout, plaingTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse plaing_time %s: %w", queryMap["plaing_time"], err)
-				return err
-			}
-
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-			sql += fmt.Sprintf("(datetime('"+plaingTime.Format(sqlite3impl.TimeLayout)+"', 'localtime') BETWEEN datetime(START_TIME, 'localtime') AND datetime(START_TIME, 'localtime'))", plaingTime.Format(sqlite3impl.TimeLayout))
-		}
-		// UPDATE_TIMEが一番上のものだけを抽出
-		sqlWhere += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
-		sqlWhere += `;`
-
-		return sql, nil
+	sqlWhereFilterEndTimeIs := ""
+	if queryMap["include_end_timeis"] == fmt.Sprintf("%t", true) {
+		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end')"
+	} else {
+		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
-	sqlWhereForStart, err := whereSQLGenerator(true)
-	if err != nil {
-		return nil, err
-	}
-	sqlWhereForEnd, err := whereSQLGenerator(false)
+	sqlWhereForStart, err := t.whereSQLGenerator(true, queryJSON)
 	if err != nil {
 		return nil, err
 	}
 
-	sql := fmt.Sprintf("SELECT * FROM ((SELECT * FROM (%s) %s) UNION (SELECT * FROM (%s) %s)) WHERE %s", sqlStartTimeIs, sqlWhereForStart, sqlEndTimeIs, sqlWhereForEnd)
+	sql := fmt.Sprintf("SELECT * FROM ((SELECT * FROM %s WHERE %s)) WHERE %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterEndTimeIs)
 
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -746,13 +440,9 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 				timeis.UpdateDevice,
 				timeis.UpdateUser,
 				timeis.RepName,
+				timeis.DataType,
 			)
 
-			timeis.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in TIMEIS: %w", relatedTimeStr, err)
-				return nil, err
-			}
 			timeis.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse create time %s in TIMEIS: %w", createTimeStr, err)
@@ -865,11 +555,6 @@ ORDER BY UPDATE_TIME DESC
 				timeis.RepName,
 			)
 
-			timeis.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in TIMEIS: %w", relatedTimeStr, err)
-				return nil, err
-			}
 			timeis.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse create time %s in TIMEIS: %w", createTimeStr, err)
@@ -933,12 +618,17 @@ VASLUES(
 		return err
 	}
 
+	var endTimeStr interface{}
+	if timeis.EndTime == nil {
+		endTimeStr = nil
+	} else {
+		endTimeStr = timeis.EndTime.Format(sqlite3impl.TimeLayout)
+	}
 	_, err = stmt.ExecContext(ctx,
 		timeis.IsDeleted,
 		timeis.ID,
 		timeis.StartTime.Format(sqlite3impl.TimeLayout),
-		timeis.EndTime.Format(sqlite3impl.TimeLayout),
-		timeis.RelatedTime.Format(sqlite3impl.TimeLayout),
+		endTimeStr,
 		timeis.CreateTime.Format(sqlite3impl.TimeLayout),
 		timeis.CreateApp,
 		timeis.CreateDevice,
@@ -953,6 +643,158 @@ VASLUES(
 		return err
 	}
 	return nil
+}
+
+func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, queryJSON string) (string, error) {
+	sqlWhere := ""
+	whereCounter := 0
+	var err error
+
+	// jsonからパースする
+	queryMap := map[string]string{}
+	err = json.Unmarshal([]byte(queryJSON), &queryMap)
+	if err != nil {
+		err = fmt.Errorf("error at parse query json %s: %w", queryJSON, err)
+		return "", err
+	}
+
+	// 日付範囲指定ありの場合
+	if queryMap["use_calendar"] == fmt.Sprintf("%t", true) {
+		// 開始日時を指定するSQLを追記
+		columnName := ""
+		if forStartTime {
+			columnName = "START_TIME"
+		} else {
+			columnName = "END_TIME"
+		}
+		if queryMap["calendar_start_date"] != "" {
+			startDate := &time.Time{}
+			err = json.Unmarshal([]byte(queryMap["calendar_start_date"]), startDate)
+			if err != nil {
+				err = fmt.Errorf("error at parse calendar start date %s: %w", queryMap["calendar_start_date"])
+				return "", err
+			}
+
+			if whereCounter != 0 {
+				sqlWhere += " AND "
+			}
+			sqlWhere += sqlite3impl.EscapeSQLite(fmt.Sprintf("datetime("+columnName+", 'localtime') >= datetime('%s', 'localtime')", startDate.Format(sqlite3impl.TimeLayout)))
+			whereCounter++
+		}
+
+		// 終了日時を指定するSQLを追記
+		if queryMap["calendar_end_date"] != "" {
+			endDate := &time.Time{}
+			err = json.Unmarshal([]byte(queryMap["calendar_end_date"]), endDate)
+			if err != nil {
+				err = fmt.Errorf("error at parse calendar end date %s: %w", queryMap["calendar_end_date"])
+				return "", err
+			}
+
+			if whereCounter != 0 {
+				sqlWhere += " AND "
+			}
+			sqlWhere += sqlite3impl.EscapeSQLite(fmt.Sprintf("datetime("+columnName+", 'localtime') <= datetime('%s', 'localtime')", endDate.Format(sqlite3impl.TimeLayout)))
+			whereCounter++
+		}
+	}
+	// ワードand検索である場合のSQL追記
+	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
+		// ワードを解析
+		words := []string{}
+		err = json.Unmarshal([]byte(queryMap["words"]), &words)
+		if err != nil {
+			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
+			return "", err
+		}
+		notWords := []string{}
+		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
+		if err != nil {
+			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
+			return "", err
+		}
+
+		if whereCounter != 0 {
+			sqlWhere += " AND "
+		}
+
+		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+			for i, word := range words {
+				if i == 0 {
+					sqlWhere += " ( "
+				}
+				if whereCounter != 0 {
+					sqlWhere += " AND "
+				}
+				sqlWhere += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
+				if i == len(words)-1 {
+					sqlWhere += " ) "
+				}
+				whereCounter++
+			}
+		} else {
+			// ワードor検索である場合のSQL追記
+			for i, word := range words {
+				if i == 0 {
+					sqlWhere += " ( "
+				}
+				if whereCounter != 0 {
+					sqlWhere += " AND "
+				}
+				sqlWhere += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
+				if i == len(words)-1 {
+					sqlWhere += " ) "
+				}
+				whereCounter++
+			}
+		}
+
+		if whereCounter != 0 {
+			sqlWhere += " AND "
+		}
+
+		// notワードを除外するSQLを追記
+		for i, notWord := range notWords {
+			if i == 0 {
+				sqlWhere += " ( "
+			}
+			if whereCounter != 0 {
+				sqlWhere += " AND "
+			}
+			sqlWhere += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
+			if i == len(words)-1 {
+				sqlWhere += " ) "
+			}
+			whereCounter++
+		}
+	}
+	// plaingの場合
+	if queryMap["use_plaing"] == fmt.Sprintf("%t", true) {
+		plaingTimeStr := ""
+		err = json.Unmarshal([]byte(queryMap["plaing_time"]), &plaingTimeStr)
+		if err != nil {
+			err = fmt.Errorf("error at parse plaing_time %s: %w", queryMap["plaing_time"], err)
+			return "", err
+		}
+		plaingTime, err := time.Parse(sqlite3impl.TimeLayout, plaingTimeStr)
+		if err != nil {
+			err = fmt.Errorf("error at parse plaing_time %s: %w", queryMap["plaing_time"], err)
+			return "", err
+		}
+
+		if whereCounter != 0 {
+			sqlWhere += " AND "
+		}
+		sqlWhere += fmt.Sprintf("(datetime('"+plaingTime.Format(sqlite3impl.TimeLayout)+"', 'localtime') BETWEEN datetime(START_TIME, 'localtime') AND datetime(START_TIME, 'localtime'))", plaingTime.Format(sqlite3impl.TimeLayout))
+	}
+	// UPDATE_TIMEが一番上のものだけを抽出
+	sqlWhere += `
+GROUP BY ID
+HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
+`
+	sqlWhere += `;`
+
+	return sqlWhere, nil
 }
 
 // ˄

@@ -35,22 +35,22 @@ func NewURLogRepositorySQLite3Impl(ctx context.Context, filename string) (URLogR
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "URLOG" (
-  IS_DELETED,
-  ID,
-  URL,
-  TITLE,
-  DESCRIPTION,
-  FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
-  RELATED_TIME,
-  CREATE_TIME,
-  CREATE_APP,
-  CREATE_USER,
-  CREATE_DEVICE,
-  UPDATE_TIME,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER
+  IS_DELETED NOT NULL,
+  ID NOT NULL,
+  URL NOT NULL,
+  TITLE NOT NULL,
+  DESCRIPTION NOT NULL,
+  FAVICON_IMAGE NOT NULL,
+  THUMBNAIL_IMAGE NOT NULL,
+  RELATED_TIME NOT NULL,
+  CREATE_TIME NOT NULL,
+  CREATE_APP NOT NULL,
+  CREATE_USER NOT NULL,
+  CREATE_DEVICE NOT NULL,
+  UPDATE_TIME NOT NULL,
+  UPDATE_APP NOT NULL,
+  UPDATE_DEVICE NOT NULL,
+  UPDATE_USER NOT NULL
 );`
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -106,7 +106,8 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM URLOG
 WHERE
 `
@@ -149,6 +150,8 @@ WHERE
 				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
 				sql += sqlite3impl.EscapeSQLite(" OR ")
 				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -166,6 +169,8 @@ WHERE
 				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
 				sql += sqlite3impl.EscapeSQLite(" OR ")
 				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -213,7 +218,8 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		return nil, err
 	}
 
-	rows, err := stmt.QueryContext(ctx, repName)
+	dataType := "urlog"
+	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from URLOG%s: %w", err)
 		return nil, err
@@ -241,6 +247,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 				kyou.UpdateDevice,
 				kyou.UpdateUser,
 				kyou.RepName,
+				kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -300,7 +307,8 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM URLOG 
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
@@ -311,7 +319,8 @@ ORDER BY UPDATE_TIME DESC
 		return nil, err
 	}
 
-	rows, err := stmt.QueryContext(ctx, repName, id)
+	dataType := "urlog"
+	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from URLOG %s: %w", id, err)
 		return nil, err
@@ -469,6 +478,8 @@ WHERE
 				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
 				sql += sqlite3impl.EscapeSQLite(" OR ")
 				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -486,6 +497,8 @@ WHERE
 				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
 				sql += sqlite3impl.EscapeSQLite(" OR ")
 				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
