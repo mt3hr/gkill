@@ -16,8 +16,6 @@ type TimeIs struct {
 
 	RepName string
 
-	RelatedTime time.Time
-
 	DataType string
 
 	CreateTime time.Time

@@ -16,8 +16,6 @@ type Mi struct {
 
 	RepName string
 
-	RelatedTime time.Time
-
 	DataType string
 
 	CreateTime time.Time
@@ -39,6 +37,8 @@ type Mi struct {
 	Title string
 
 	IsChecked bool
+
+	CheckedTime *time.Time
 
 	BoardName string
 
