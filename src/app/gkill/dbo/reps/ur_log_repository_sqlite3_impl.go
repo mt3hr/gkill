@@ -193,6 +193,8 @@ WHERE
 			sql += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
 			sql += sqlite3impl.EscapeSQLite(" AND ")
 			sql += sqlite3impl.EscapeSQLite("DESCRIPTION NOT LIKE '%" + notWord + "%'")
+			sql += sqlite3impl.EscapeSQLite(" AND ")
+			sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + notWord + "%'")
 			if i == len(words)-1 {
 				sql += " ) "
 			}
