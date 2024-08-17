@@ -24,6 +24,8 @@ type TagRepository interface {
 
 	GetTagHistories(ctx context.Context, id string) ([]*Tag, error)
 
+	AddTagInfo(ctx context.Context, tag *Tag) error
+
 	// ˅
 
 	// ˄

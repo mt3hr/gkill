@@ -13,6 +13,12 @@ export class FindTimeIsQuery extends FindQueryBase {
 
     plaing_only: boolean;
 
+    use_plaing: boolean;
+
+    plaing_time: Date;
+
+    include_end_timeis: boolean;
+
     async clone(): Promise<FindTimeIsQuery> {
         // ˅
         throw new Error('Not implemented');

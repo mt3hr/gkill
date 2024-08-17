@@ -71,6 +71,12 @@ func (t *TagRepositories) GetTagHistories(ctx context.Context, id string) ([]*Ta
 	// ˄
 }
 
+func (t *TagRepositories) AddTagInfo(ctx context.Context, tag *Tag) error {
+	// ˅
+	panic("notImplements")
+	// ˄
+}
+
 // ˅
 
 // ˄
