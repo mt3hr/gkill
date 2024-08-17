@@ -13,6 +13,14 @@ export class FindMiQuery extends FindQueryBase {
     
     // ˄
 
+    include_check_mi: boolean;
+
+    include_limit_mi: boolean;
+
+    include_start_mi: boolean;
+
+    include_end_mi: boolean;
+
     sort_type: MiSortType;
 
     check_state: MiCheckState;

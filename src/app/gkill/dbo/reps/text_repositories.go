@@ -65,6 +65,12 @@ func (t *TextRepositories) GetTextHistories(ctx context.Context, id string) ([]*
 	// ˄
 }
 
+func (t *TextRepositories) AddTextInfo(ctx context.Context, text *Text) error {
+	// ˅
+	panic("notImplements")
+	// ˄
+}
+
 // ˅
 
 // ˄
