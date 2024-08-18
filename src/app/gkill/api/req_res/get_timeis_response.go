@@ -8,11 +8,11 @@ type GetTimeisResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	TimeisHistories []*TimeIs
+	TimeisHistories []*TimeIs `json:"timeis_histories"`
 
 	// ˅
 

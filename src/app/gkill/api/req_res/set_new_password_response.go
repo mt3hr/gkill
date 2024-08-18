@@ -8,9 +8,9 @@ type SetNewPasswordResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
 	// ˅
 

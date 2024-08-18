@@ -8,11 +8,11 @@ type UpdateAccountStatusRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	TargetUserID string
+	TargetUserID string `json:"target_user_id"`
 
-	Enable bool
+	Enable bool `json:"enable"`
 
 	// ˅
 

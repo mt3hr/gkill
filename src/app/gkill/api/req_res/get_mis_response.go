@@ -8,11 +8,11 @@ type GetMisResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	Mis []*Mi
+	Mis []*Mi `json:"mis"`
 
 	// ˅
 

@@ -8,9 +8,9 @@ type UpdateRepStructRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	RepStruct []*RepStruct
+	RepStruct []*RepStruct `json:"rep_struct"`
 
 	// ˅
 

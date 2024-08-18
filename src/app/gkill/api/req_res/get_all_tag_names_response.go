@@ -8,11 +8,11 @@ type GetAllTagNamesResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	TagNames []*string
+	TagNames []*string `json:"tag_names"`
 
 	// ˅
 

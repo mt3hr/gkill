@@ -8,13 +8,13 @@ type AddMiResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	AddedMi *Mi
+	AddedMi *Mi `json:"added_mi"`
 
-	AddedMiKyou *Kyou
+	AddedMiKyou *Kyou `json:"added_mi_kyou"`
 
 	// ˅
 

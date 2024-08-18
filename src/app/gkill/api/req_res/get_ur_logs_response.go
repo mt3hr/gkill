@@ -8,11 +8,11 @@ type GetURLogsResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	URLogs []*URLog
+	URLogs []*URLog `json:"urlogs"`
 
 	// ˅
 

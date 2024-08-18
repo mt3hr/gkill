@@ -8,9 +8,9 @@ type UpdateTextRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	Text *Text
+	Text *Text `json:"text"`
 
 	// ˅
 

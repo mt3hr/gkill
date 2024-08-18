@@ -8,9 +8,9 @@ type Words struct {
 
 	// ˄
 
-	Words string
+	Words string `json:"words"`
 
-	NoWords string
+	NoWords string `json:"no_words"`
 
 	// ˅
 

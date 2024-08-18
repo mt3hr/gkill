@@ -8,9 +8,9 @@ type AddNlogRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	Nlog *Nlog
+	Nlog *Nlog `json:"nlog"`
 
 	// ˅
 

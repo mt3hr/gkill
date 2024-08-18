@@ -8,9 +8,9 @@ type UpdateKmemoRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	Kmemo *Kmemo
+	Kmemo *Kmemo `json:"kmemo"`
 
 	// ˅
 

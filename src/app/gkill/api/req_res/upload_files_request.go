@@ -8,9 +8,9 @@ type UploadFilesRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	Files []*FileData
+	Files []*FileData `json:"files"`
 
 	// ˅
 

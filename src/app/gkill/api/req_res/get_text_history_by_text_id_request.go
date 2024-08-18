@@ -8,9 +8,9 @@ type GetTextHistoryByTextIDRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	ID string
+	ID string `json:"id"`
 
 	// ˅
 

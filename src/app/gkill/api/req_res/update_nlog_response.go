@@ -8,13 +8,13 @@ type UpdateNlogResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	UpdatedNlog *Nlog
+	UpdatedNlog *Nlog `json:"updated_nlog"`
 
-	UpdatedNlogKyou *Kyou
+	UpdatedNlogKyou *Kyou `json:"updated_nlog_kyou"`
 
 	// ˅
 

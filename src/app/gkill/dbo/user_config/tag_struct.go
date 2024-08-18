@@ -8,19 +8,19 @@ type TagStruct struct {
 
 	// ˄
 
-	ID string
+	ID string `json:"id"`
 
-	UserID string
+	UserID string `json:"user_id"`
 
-	TagName string
+	TagName string `json:"tag_name"`
 
-	ParentFolderID string
+	ParentFolderID string `json:"parent_folder_id"`
 
-	Seq int
+	Seq int `json:"seq"`
 
-	CheckWhenInited bool
+	CheckWhenInited bool `json:"check_when_inited"`
 
-	IsForceHide bool
+	IsForceHide bool `json:"is_force_hide"`
 
 	// ˅
 

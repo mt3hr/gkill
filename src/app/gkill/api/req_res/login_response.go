@@ -8,11 +8,11 @@ type LoginResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
 	// ˅
 

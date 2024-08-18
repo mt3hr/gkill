@@ -8,21 +8,21 @@ type Repository struct {
 
 	// ˄
 
-	ID string
+	ID string `json:"id"`
 
-	UserID string
+	UserID string `json:"user_id"`
 
-	Device string
+	Device string `json:"device"`
 
-	Type string
+	Type string `json:"type"`
 
-	File string
+	File string `json:"file"`
 
-	UseToWrite string
+	UseToWrite string `json:"use_to_write"`
 
-	IsExecuteIDFWhenReload bool
+	IsExecuteIDFWhenReload bool `json:"is_execute_idf_when_reload"`
 
-	IsEnable bool
+	IsEnable bool `json:"is_enable"`
 
 	// ˅
 

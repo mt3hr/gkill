@@ -8,11 +8,11 @@ type GetLantanaResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	LantanaHistories []*Lantana
+	LantanaHistories []*Lantana `json:"lantana_histories"`
 
 	// ˅
 

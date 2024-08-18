@@ -8,7 +8,7 @@ type GetSharedMiTasksRequest struct {
 
 	// ˄
 
-	SharedID string
+	SharedID string `json:"shared_id"`
 
 	// ˅
 

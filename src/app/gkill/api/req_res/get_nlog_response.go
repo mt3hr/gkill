@@ -8,11 +8,11 @@ type GetNlogResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	NlogHistories []*Nlog
+	NlogHistories []*Nlog `json:"nlog_histories"`
 
 	// ˅
 

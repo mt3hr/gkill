@@ -8,9 +8,9 @@ type DeleteShareMiTaskListInfoRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	ShareMiTaskListInfo *ShareMiTaskListInfo
+	ShareMiTaskListInfo *ShareMiTaskListInfo `json:"share_mi_task_list_info"`
 
 	// ˅
 

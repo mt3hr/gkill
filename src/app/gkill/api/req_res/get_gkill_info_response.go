@@ -8,13 +8,13 @@ type GetGkillInfoResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	UserID string
+	UserID string `json:"user_id"`
 
-	Device string
+	Device string `json:"device"`
 
 	// ˅
 

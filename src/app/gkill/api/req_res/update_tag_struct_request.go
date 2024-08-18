@@ -8,9 +8,9 @@ type UpdateTagStructRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	TagStruct []*TagStruct
+	TagStruct []*TagStruct `json:"tag_struct"`
 
 	// ˅
 
