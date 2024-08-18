@@ -8,11 +8,11 @@ type GetKmemoResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	KmemoHistories []*Kmemo
+	KmemoHistories []*Kmemo `json:"kmemo_histories"`
 
 	// ˅
 

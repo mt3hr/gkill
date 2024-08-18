@@ -8,11 +8,11 @@ type GetServerConfigResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	ServerConfig *ServerConfig
+	ServerConfig *ServerConfig `json:"server_config"`
 
 	// ˅
 

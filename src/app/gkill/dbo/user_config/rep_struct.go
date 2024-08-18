@@ -8,19 +8,19 @@ type RepStruct struct {
 
 	// ˄
 
-	ID string
+	ID string `json:"id"`
 
-	UserID string
+	UserID string `json:"user_id"`
 
-	RepName string
+	RepName string `json:"rep_name"`
 
-	ParentFolderID string
+	ParentFolderID string `json:"parent_folder_id"`
 
-	Seq int
+	Seq int `json:"seq"`
 
-	CheckWhenInited bool
+	CheckWhenInited bool `json:"check_when_inited"`
 
-	IgnoreCheckRepRykv bool
+	IgnoreCheckRepRykv bool `json:"ignore_check_rep_rykv"`
 
 	// ˅
 

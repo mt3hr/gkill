@@ -8,11 +8,11 @@ type GetTagsByTargetIDResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	Tags []*Tag
+	Tags []*Tag `json:"tags"`
 
 	// ˅
 

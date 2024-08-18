@@ -8,9 +8,9 @@ type AddKyouInfoRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	Kyou *Kyou
+	Kyou *Kyou `json:"kyou"`
 
 	// ˅
 

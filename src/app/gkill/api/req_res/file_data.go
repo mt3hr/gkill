@@ -8,9 +8,9 @@ type FileData struct {
 
 	// ˄
 
-	FileName string
+	FileName string `json:"file_name"`
 
-	DataBase64 string
+	DataBase64 string `json:"data_base64"`
 
 	// ˅
 

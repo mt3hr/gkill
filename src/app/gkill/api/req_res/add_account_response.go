@@ -10,11 +10,11 @@ type AddAccountResponse struct {
 
 	// ˄
 
-	Messages []*api.GkillMessage
+	Messages []*api.GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	AddedAccountInfo *Account
+	AddedAccountInfo *Account `json:"added_account_info"`
 
 	// ˅
 

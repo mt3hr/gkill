@@ -8,11 +8,11 @@ type GetReKyousResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	ReKyous []*ReKyou
+	ReKyous []*ReKyou `json:"rekyous"`
 
 	// ˅
 

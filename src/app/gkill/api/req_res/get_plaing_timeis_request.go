@@ -10,9 +10,9 @@ type GetPlaingTimeisRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	Time time.Time
+	Time time.Time `json:"time"`
 
 	// ˅
 

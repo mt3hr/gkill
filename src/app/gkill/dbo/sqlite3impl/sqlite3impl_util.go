@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const TimeLayout = time.RFC3339
@@ -60,4 +62,8 @@ func GenerateFindSQLCommon(queryJSON string, whereCounter *int) (string, error) 
 		}
 	}
 	return sql, nil
+}
+
+func GenerateNewID() string {
+	return uuid.New().String()
 }

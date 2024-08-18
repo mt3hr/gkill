@@ -8,13 +8,13 @@ type UpdateMiResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	UpdatedMi *Mi
+	UpdatedMi *Mi `json:"updated_mi"`
 
-	UpdatedMiKyou *Kyou
+	UpdatedMiKyou *Kyou `json:"updated_mi_kyou"`
 
 	// ˅
 

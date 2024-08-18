@@ -8,11 +8,11 @@ type UpdateShareMiTaskListInfoResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	ShareMiTaskListInfos ShareMiTaskListInfo
+	ShareMiTaskListInfos ShareMiTaskListInfo `json:"share_mi_task_list_infos"`
 
 	// ˅
 

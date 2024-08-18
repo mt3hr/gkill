@@ -8,7 +8,7 @@ type GetShareMiTaskListInfosRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
 	// ˅
 

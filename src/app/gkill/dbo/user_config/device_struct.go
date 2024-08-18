@@ -8,17 +8,17 @@ type DeviceStruct struct {
 
 	// ˄
 
-	ID string
+	ID string `json:"id"`
 
-	UserID string
+	UserID string `json:"user_id"`
 
-	Device string
+	Device string `json:"device"`
 
-	ParentFolderID string
+	ParentFolderID string `json:"parent_folder_id"`
 
-	Seq int
+	Seq int `json:"seq"`
 
-	CheckWhenInited bool
+	CheckWhenInited bool `json:"check_when_inited"`
 
 	// ˅
 

@@ -8,9 +8,9 @@ type UpdateMiRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	Mi *Mi
+	Mi *Mi `json:"mi"`
 
 	// ˅
 

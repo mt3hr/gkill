@@ -8,13 +8,13 @@ type UpdateURLogResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	UpdatedURLog *URLog
+	UpdatedURLog *URLog `json:"updated_urlog"`
 
-	UpdatedURLogKyou *Kyou
+	UpdatedURLogKyou *Kyou `json:"updated_urlog_kyou"`
 
 	// ˅
 

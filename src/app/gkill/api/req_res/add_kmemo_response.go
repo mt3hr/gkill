@@ -8,13 +8,13 @@ type AddKmemoResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	AddedKmemo *Kmemo
+	AddedKmemo *Kmemo `json:"added_kmemo"`
 
-	AddedKmemoKyou *Kyou
+	AddedKmemoKyou *Kyou `json:"added_kmemo_kyou"`
 
 	// ˅
 

@@ -8,11 +8,11 @@ type UpdateTagResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	UpdatedTag *Tag
+	UpdatedTag *Tag `json:"updated_tag"`
 
 	// ˅
 

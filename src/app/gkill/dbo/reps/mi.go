@@ -10,43 +10,43 @@ type Mi struct {
 
 	// ˄
 
-	IsDeleted bool
+	IsDeleted bool `json:"is_deleted"`
 
-	ID string
+	ID string `json:"id"`
 
-	RepName string
+	RepName string `json:"rep_name"`
 
-	DataType string
+	DataType string `json:"data_type"`
 
-	CreateTime time.Time
+	CreateTime time.Time `json:"create_time"`
 
-	CreateApp string
+	CreateApp string `json:"create_app"`
 
-	CreateDevice string
+	CreateDevice string `json:"create_device"`
 
-	CreateUser string
+	CreateUser string `json:"create_user"`
 
-	UpdateTime time.Time
+	UpdateTime time.Time `json:"update_time"`
 
-	UpdateApp string
+	UpdateApp string `json:"update_app"`
 
-	UpdateUser string
+	UpdateUser string `json:"update_user"`
 
-	UpdateDevice string
+	UpdateDevice string `json:"update_device"`
 
-	Title string
+	Title string `json:"title"`
 
-	IsChecked bool
+	IsChecked bool `json:"is_checked"`
 
-	CheckedTime *time.Time
+	CheckedTime *time.Time `json:"checked_time"`
 
-	BoardName string
+	BoardName string `json:"board_name"`
 
-	LimitTime *time.Time
+	LimitTime *time.Time `json:"limit_time"`
 
-	EstimateStartTime *time.Time
+	EstimateStartTime *time.Time `json:"estimate_start_time"`
 
-	EstimateEndTime *time.Time
+	EstimateEndTime *time.Time `json:"estimate_end_time"`
 
 	// ˅
 

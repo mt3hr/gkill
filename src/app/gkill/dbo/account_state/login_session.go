@@ -10,23 +10,23 @@ type LoginSession struct {
 
 	// ˄
 
-	ID string
+	ID string `json:"id"`
 
-	UserID string
+	UserID string `json:"user_id"`
 
-	Device string
+	Device string `json:"device"`
 
-	ApplicationName string
+	ApplicationName string `json:"application_name"`
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	ClientIPAddress string
+	ClientIPAddress string `json:"client_ip_address"`
 
-	LoginTime time.Time
+	LoginTime time.Time `json:"login_time"`
 
-	ExpirationTime time.Time
+	ExpirationTime time.Time `json:"expiration_time"`
 
-	IsLocalAppUser bool
+	IsLocalAppUser bool `json:"is_local_app_user"`
 
 	// ˅
 

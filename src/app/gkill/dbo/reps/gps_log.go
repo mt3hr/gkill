@@ -10,11 +10,11 @@ type GPSLog struct {
 
 	// ˄
 
-	RelatedTime time.Time
+	RelatedTime time.Time `json:"related_time"`
 
-	Longitude float64
+	Longitude float64 `json:"longitude"`
 
-	Latitude float64
+	Latitude float64 `json:"latitude"`
 
 	// ˅
 

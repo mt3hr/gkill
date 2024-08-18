@@ -3,12 +3,12 @@ package api
 
 // ˄
 
-type TagFilterMode int
+type TagFilterMode string
 
 const (
-	Or TagFilterMode = iota + 1
+	Or TagFilterMode = "or"
 
-	And
+	And TagFilterMode = "and"
 
 	// ˅
 

@@ -8,11 +8,11 @@ type Account struct {
 
 	// ˄
 
-	UserID string
+	UserID string `json:"user_id"`
 
-	IsAdmin bool
+	IsAdmin bool `json:"is_admin"`
 
-	IsEnable bool
+	IsEnable bool `json:"is_enable"`
 
 	// ˅
 

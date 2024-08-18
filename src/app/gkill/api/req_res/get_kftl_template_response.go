@@ -8,11 +8,11 @@ type GetKFTLTemplateResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	KFTLTemplates []*KFTLTemplate
+	KFTLTemplates []*KFTLTemplate `json:"kftl_templates"`
 
 	// ˅
 

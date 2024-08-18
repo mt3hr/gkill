@@ -8,13 +8,13 @@ type UpdateReKyouResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	UpdatedReKyou *ReKyou
+	UpdatedReKyou *ReKyou `json:"updated_rekyou"`
 
-	UpdatedReKyouKyou *Kyou
+	UpdatedReKyouKyou *Kyou `json:"updated_rekyou_kyou"`
 
 	// ˅
 

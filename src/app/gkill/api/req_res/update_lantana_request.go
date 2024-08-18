@@ -8,9 +8,9 @@ type UpdateLantanaRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	Lantana *Lantana
+	Lantana *Lantana `json:"lantana"`
 
 	// ˅
 

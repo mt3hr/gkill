@@ -8,9 +8,9 @@ type UpdateDeviceStructRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	DeviceStruct []*DeviceStruct
+	DeviceStruct []*DeviceStruct `json:"device_struct"`
 
 	// ˅
 

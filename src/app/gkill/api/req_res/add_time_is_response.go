@@ -8,13 +8,13 @@ type AddTimeIsResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	AddedTimeis *TimeIs
+	AddedTimeis *TimeIs `json:"added_timeis"`
 
-	AddedTimeisKyou *Kyou
+	AddedTimeisKyou *Kyou `json:"added_timeis_kyou"`
 
 	// ˅
 

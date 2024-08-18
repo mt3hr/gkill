@@ -10,19 +10,19 @@ type FileUploadHistory struct {
 
 	// ˄
 
-	UserID string
+	UserID string `json:"user_id"`
 
-	Device string
+	Device string `json:"device"`
 
-	FileName string
+	FileName string `json:"file_name"`
 
-	FileSizeByte string
+	FileSizeByte string `json:"file_size_byte"`
 
-	Successed bool
+	Successed bool `json:"successed"`
 
-	SourceAddress string
+	SourceAddress string `json:"source_address"`
 
-	UploadTime time.Time
+	UploadTime time.Time `json:"upload_time"`
 
 	// ˅
 

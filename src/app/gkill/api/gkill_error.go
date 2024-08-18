@@ -8,9 +8,9 @@ type GkillError struct {
 
 	// ˄
 
-	ErrorCode string
+	ErrorCode string `json:"error_code"`
 
-	ErrorMessage string
+	ErrorMessage string `json:"error_message"`
 
 	// ˅
 

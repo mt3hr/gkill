@@ -8,9 +8,9 @@ type UpdateTimeisRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	TimeIs *TimeIs
+	TimeIs *TimeIs `json:"time_is"`
 
 	// ˅
 

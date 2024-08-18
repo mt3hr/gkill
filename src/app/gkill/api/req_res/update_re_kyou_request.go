@@ -8,9 +8,9 @@ type UpdateReKyouRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	ReKyou *ReKyou
+	ReKyou *ReKyou `json:"rekyou"`
 
 	// ˅
 

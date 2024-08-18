@@ -8,11 +8,11 @@ type GetPlaingTimeisResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	PlaingTimeIss []*TimeIs
+	PlaingTimeIss []*TimeIs `json:"plaing_timeiss"`
 
 	// ˅
 

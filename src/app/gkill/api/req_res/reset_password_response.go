@@ -8,11 +8,11 @@ type ResetPasswordResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	PasswordResetPathWithoutHost string
+	PasswordResetPathWithoutHost string `json:"password_reset_path_without_host"`
 
 	// ˅
 

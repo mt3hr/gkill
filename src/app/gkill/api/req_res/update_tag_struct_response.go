@@ -8,11 +8,11 @@ type UpdateTagStructResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	ApplicationConfig *ApplicationConfig
+	ApplicationConfig *ApplicationConfig `json:"application_config"`
 
 	// ˅
 
