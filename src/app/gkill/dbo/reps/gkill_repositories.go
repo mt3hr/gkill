@@ -67,7 +67,7 @@ type GkillRepositories struct {
 
 func (g *GkillRepositories) GetUserID(ctx context.Context) (string, error) {
 	// ˅
-	panic("notImplements")
+	return g.userID, nil
 	// ˄
 }
 
