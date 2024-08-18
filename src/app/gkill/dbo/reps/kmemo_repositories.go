@@ -126,7 +126,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyous: %w", e)
+			err = fmt.Errorf("error at get kyou: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -192,7 +192,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
+			err = fmt.Errorf("error at get kyou histories: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -275,7 +275,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
+			err = fmt.Errorf("error at update cache: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -323,7 +323,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
+			err = fmt.Errorf("error at close: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -369,7 +369,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
+			err = fmt.Errorf("error at find kmemo: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -449,7 +449,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kyous: %w", e)
+			err = fmt.Errorf("error at get kmemo: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -515,7 +515,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
+			err = fmt.Errorf("error at find get kmemo histories: %w", e)
 			existErr = true
 		default:
 			break errloop
