@@ -8,11 +8,11 @@ type AddTagResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	AddedTag *Tag
+	AddedTag *Tag `json:"added_tag"`
 
 	// ˅
 

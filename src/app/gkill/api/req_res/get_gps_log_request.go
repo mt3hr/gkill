@@ -10,11 +10,11 @@ type GetGPSLogRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	StartDate time.Time
+	StartDate time.Time `json:"start_date"`
 
-	EndDate time.Time
+	EndDate time.Time `json:"end_date"`
 
 	// ˅
 

@@ -8,9 +8,9 @@ type GetURLogsRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	Query string
+	Query string `json:"query"`
 
 	// ˅
 

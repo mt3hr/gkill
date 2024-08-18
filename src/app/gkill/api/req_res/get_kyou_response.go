@@ -8,11 +8,11 @@ type GetKyouResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	KyouHistories []*Kyou
+	KyouHistories []*Kyou `json:"kyou_histories"`
 
 	// ˅
 

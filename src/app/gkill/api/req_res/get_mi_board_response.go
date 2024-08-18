@@ -8,11 +8,11 @@ type GetMiBoardResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	Boards []*string
+	Boards []*string `json:"boards"`
 
 	// ˅
 

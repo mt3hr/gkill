@@ -10,31 +10,31 @@ type Tag struct {
 
 	// ˄
 
-	IsDeleted bool
+	IsDeleted bool `json:"is_deleted"`
 
-	ID string
+	ID string `json:"id"`
 
-	TargetID string
+	TargetID string `json:"target_id"`
 
-	RelatedTime time.Time
+	RelatedTime time.Time `json:"related_time"`
 
-	CreateTime time.Time
+	CreateTime time.Time `json:"create_time"`
 
-	CreateApp string
+	CreateApp string `json:"create_app"`
 
-	CreateDevice string
+	CreateDevice string `json:"create_device"`
 
-	CreateUser string
+	CreateUser string `json:"create_user"`
 
-	UpdateTime time.Time
+	UpdateTime time.Time `json:"update_time"`
 
-	UpdateApp string
+	UpdateApp string `json:"update_app"`
 
-	UpdateDevice string
+	UpdateDevice string `json:"update_device"`
 
-	UpdateUser string
+	UpdateUser string `json:"update_user"`
 
-	Tag string
+	Tag string `json:"tag"`
 
 	// ˅
 

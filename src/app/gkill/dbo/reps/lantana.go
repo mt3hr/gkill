@@ -10,33 +10,33 @@ type Lantana struct {
 
 	// ˄
 
-	IsDeleted bool
+	IsDeleted bool `json:"is_deleted"`
 
-	ID string
+	ID string `json:"id"`
 
-	RepName string
+	RepName string `json:"rep_name"`
 
-	RelatedTime time.Time
+	RelatedTime time.Time `json:"related_time"`
 
-	DataType string
+	DataType string `json:"data_type"`
 
-	CreateTime time.Time
+	CreateTime time.Time `json:"create_time"`
 
-	CreateApp string
+	CreateApp string `json:"create_app"`
 
-	CreateDevice string
+	CreateDevice string `json:"create_device"`
 
-	CreateUser string
+	CreateUser string `json:"create_user"`
 
-	UpdateTime time.Time
+	UpdateTime time.Time `json:"update_time"`
 
-	UpdateApp string
+	UpdateApp string `json:"update_app"`
 
-	UpdateUser string
+	UpdateUser string `json:"update_user"`
 
-	UpdateDevice string
+	UpdateDevice string `json:"update_device"`
 
-	Mood int
+	Mood int `json:"mood"`
 
 	// ˅
 

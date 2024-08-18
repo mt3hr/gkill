@@ -8,9 +8,9 @@ type UploadGPSLogFilesRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	GPSLogFiles []*FileData
+	GPSLogFiles []*FileData `json:"gps_log_files"`
 
 	// ˅
 

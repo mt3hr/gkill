@@ -8,11 +8,11 @@ type GetSharedMiTasksResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	MiKyous []*Kyou
+	MiKyous []*Kyou `json:"mi_kyous"`
 
 	// ˅
 

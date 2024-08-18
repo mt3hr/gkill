@@ -8,11 +8,11 @@ type AddAccountRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	AccountInfo *Account
+	AccountInfo *Account `json:"account_info"`
 
-	DoInitialize bool
+	DoInitialize bool `json:"do_initialize"`
 
 	// ˅
 

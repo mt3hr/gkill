@@ -8,11 +8,11 @@ type GetGitCommitLogsResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	GitCommitLogs []*GitCommitLog
+	GitCommitLogs []*GitCommitLog `json:"git_commit_logs"`
 
 	// ˅
 

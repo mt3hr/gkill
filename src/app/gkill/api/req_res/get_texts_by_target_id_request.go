@@ -8,9 +8,9 @@ type GetTextsByTargetIDRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	TargetID string
+	TargetID string `json:"target_id"`
 
 	// ˅
 

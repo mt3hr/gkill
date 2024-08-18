@@ -8,9 +8,9 @@ type GkillMessage struct {
 
 	// ˄
 
-	MessageCode string
+	MessageCode string `json:"message_code"`
 
-	Message string
+	Message string `json:"message"`
 
 	// ˅
 

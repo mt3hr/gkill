@@ -8,7 +8,7 @@ type GenerateTLSFileRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
 	// ˅
 

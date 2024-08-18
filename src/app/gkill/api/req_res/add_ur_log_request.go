@@ -8,9 +8,9 @@ type AddURLogRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	URLog *URLog
+	URLog *URLog `json:"urlog"`
 
 	// ˅
 

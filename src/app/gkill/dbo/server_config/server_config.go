@@ -10,29 +10,29 @@ type ServerConfig struct {
 
 	// ˄
 
-	Device string
+	Device string `json:"device"`
 
-	IsLocalOnlyAccess bool
+	IsLocalOnlyAccess bool `json:"is_local_only_access"`
 
-	Address string
+	Address string `json:"address"`
 
-	EnableTLS bool
+	EnableTLS bool `json:"enable_tls"`
 
-	TLSCertFile string
+	TLSCertFile string `json:"tls_cert_file"`
 
-	TLSKeyFile string
+	TLSKeyFile string `json:"tls_key_file"`
 
-	OpenDirectoryCommand string
+	OpenDirectoryCommand string `json:"open_directory_command"`
 
-	OpenFileCommand string
+	OpenFileCommand string `json:"open_file_command"`
 
-	URLogTimeout time.Duration
+	URLogTimeout time.Duration `json:"ur_log_timeout"`
 
-	URLogUserAgent string
+	URLogUserAgent string `json:"ur_log_user_agent"`
 
-	UploadSizeLimitMonth int
+	UploadSizeLimitMonth int `json:"upload_size_limit_month"`
 
-	UserDataDirectory string
+	UserDataDirectory string `json:"user_data_directory"`
 
 	// ˅
 

@@ -8,11 +8,11 @@ type GetTextHistoryByTextIDResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage
+	Messages []*GkillMessage `json:"messages"`
 
-	Errors []*GkillError
+	Errors []*GkillError `json:"errors"`
 
-	TextHistories []*Text
+	TextHistories []*Text `json:"text_histories"`
 
 	// ˅
 

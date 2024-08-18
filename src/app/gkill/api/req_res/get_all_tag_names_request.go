@@ -8,7 +8,7 @@ type GetAllTagNamesRequest struct {
 
 	// ˄
 
-	SessionID string
+	SessionID string `json:"session_id"`
 
 	// ˅
 
