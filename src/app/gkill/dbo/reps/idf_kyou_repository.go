@@ -28,6 +28,10 @@ type IDFKyouRepository interface {
 
 	// ˅
 
+	IDF(ctx context.Context) error
+
+	AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error
+
 	// ˄
 }
 
