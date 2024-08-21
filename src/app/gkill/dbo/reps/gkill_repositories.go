@@ -32,7 +32,7 @@ type GkillRepositories struct {
 
 	IDFKyouReps IDFKyouRepositories
 
-	ReKyouReps ReKyouRepositories
+	ReKyouReps *ReKyouRepositories
 
 	GitCommitLogReps GitCommitLogRepositories
 
