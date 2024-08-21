@@ -83,6 +83,12 @@ func (r *ReKyouRepositories) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) 
 	// ˄
 }
 
+func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
+	// ˅
+	panic("notImplements")
+	// ˄
+}
+
 // ˅
 
 // ˄

@@ -27,6 +27,41 @@ func GenerateFindSQLCommon(queryJSON string, whereCounter *int) (string, error) 
 		return "", err
 	}
 
+	// 削除済みであるかどうかのSQL追記
+	if queryMap["is_deleted"] == fmt.Sprintf("%t", true) {
+		if *whereCounter != 0 {
+			sql += " AND "
+		}
+		sql += "IS_DELETED = 'TRUE'"
+	} else {
+		if *whereCounter != 0 {
+			sql += " AND "
+		}
+		sql += "IS_DELETED = 'FALSE'"
+	}
+
+	// id検索である場合のSQL追記
+	if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+		ids := []string{}
+		err := json.Unmarshal([]byte(queryMap["ids"]), ids)
+		if err != nil {
+			err = fmt.Errorf("error at parse ids %s: %w", ids, err)
+			return "", nil
+		}
+
+		if *whereCounter != 0 {
+			sql += " AND "
+		}
+		sql += "ID IN ("
+		for i, id := range ids {
+			sql += fmt.Sprintf("'%s'", id)
+			if i != len(ids)-1 {
+				sql += ", "
+			}
+		}
+		sql += ")"
+	}
+
 	// 日付範囲指定ありの場合
 	if queryMap["use_calendar"] == fmt.Sprintf("%t", true) {
 		// 開始日時を指定するSQLを追記
