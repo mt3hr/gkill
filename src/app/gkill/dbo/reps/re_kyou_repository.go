@@ -28,6 +28,8 @@ type ReKyouRepository interface {
 
 	AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error
 
+	GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error)
+
 	// ˅
 
 	// ˄
