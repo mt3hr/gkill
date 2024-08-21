@@ -66,6 +66,34 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, queryJS
 	logs.ForEach(func(commit *object.Commit) error {
 		// 判定
 		match := true
+
+		// 削除済みであるかどうかの判定
+		if queryMap["is_deleted"] == fmt.Sprintf("%t", true) {
+			match = false
+			if !match {
+				return nil
+			}
+		}
+
+		// id検索である場合のSQL追記
+		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+			ids := []string{}
+			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
+			if err != nil {
+				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
+				return nil
+			}
+			for _, id := range ids {
+				match = id == fmt.Sprintf("%s", commit.Hash)
+				if match {
+					break
+				}
+			}
+			if !match {
+				return nil
+			}
+		}
+
 		// ワードand検索である場合の判定
 		if queryMap["use_word"] == fmt.Sprintf("%t", true) {
 			match = false
@@ -232,6 +260,26 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 	logs.ForEach(func(commit *object.Commit) error {
 		// 判定
 		match := true
+
+		// id検索である場合のSQL追記
+		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+			ids := []string{}
+			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
+			if err != nil {
+				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
+				return nil
+			}
+			for _, id := range ids {
+				match = id == fmt.Sprintf("%s", commit.Hash)
+				if match {
+					break
+				}
+			}
+			if !match {
+				return nil
+			}
+		}
+
 		// ワードand検索である場合の判定
 		if queryMap["use_word"] == fmt.Sprintf("%t", true) {
 			match = false

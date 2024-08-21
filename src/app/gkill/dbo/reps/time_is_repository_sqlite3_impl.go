@@ -658,6 +658,41 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 		return "", err
 	}
 
+	// 削除済みであるかどうかのSQL追記
+	if queryMap["is_deleted"] == fmt.Sprintf("%t", true) {
+		if whereCounter != 0 {
+			sqlWhere += " AND "
+		}
+		sqlWhere += "IS_DELETED = 'TRUE'"
+	} else {
+		if whereCounter != 0 {
+			sqlWhere += " AND "
+		}
+		sqlWhere += "IS_DELETED = 'FALSE'"
+	}
+
+	// id検索である場合のSQL追記
+	if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+		ids := []string{}
+		err := json.Unmarshal([]byte(queryMap["ids"]), ids)
+		if err != nil {
+			err = fmt.Errorf("error at parse ids %s: %w", ids, err)
+			return "", nil
+		}
+
+		if whereCounter != 0 {
+			sqlWhere += " AND "
+		}
+		sqlWhere += "ID IN ("
+		for i, id := range ids {
+			sqlWhere += fmt.Sprintf("'%s'", id)
+			if i != len(ids)-1 {
+				sqlWhere += ", "
+			}
+		}
+		sqlWhere += ")"
+	}
+
 	// 日付範囲指定ありの場合
 	if queryMap["use_calendar"] == fmt.Sprintf("%t", true) {
 		// 開始日時を指定するSQLを追記
