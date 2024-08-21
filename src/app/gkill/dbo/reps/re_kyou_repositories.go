@@ -18,7 +18,7 @@ type ReKyouRepositories struct {
 	repositories       *Repositories
 }
 
-func (r ReKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (r *ReKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
 	matchKyous := []*Kyou{}
 
 	// 未削除ReKyouを抽出
@@ -87,7 +87,7 @@ func (r ReKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([]
 	return matchKyous, nil
 }
 
-func (r ReKyouRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
 	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
@@ -154,7 +154,7 @@ loop:
 	// ˄
 }
 
-func (r ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (r *ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
@@ -234,14 +234,14 @@ loop:
 	// ˄
 }
 
-func (r ReKyouRepositories) GetPath(ctx context.Context, id string) (string, error) {
+func (r *ReKyouRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// ˅
 	err := fmt.Errorf("not implements ReKyouReps.GetPath")
 	return "", err
 	// ˄
 }
 
-func (r ReKyouRepositories) UpdateCache(ctx context.Context) error {
+func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
 	// ˅
 	existErr := false
 	var err error
@@ -283,13 +283,13 @@ errloop:
 	// ˄
 }
 
-func (r ReKyouRepositories) GetRepName(ctx context.Context) (string, error) {
+func (r *ReKyouRepositories) GetRepName(ctx context.Context) (string, error) {
 	// ˅
 	return "ReKyouReps", nil
 	// ˄
 }
 
-func (r ReKyouRepositories) Close(ctx context.Context) error {
+func (r *ReKyouRepositories) Close(ctx context.Context) error {
 	// ˅
 	existErr := false
 	var err error
@@ -331,7 +331,7 @@ errloop:
 	// ˄
 }
 
-func (r ReKyouRepositories) FindReKyou(ctx context.Context, queryJSON string) ([]*ReKyou, error) {
+func (r *ReKyouRepositories) FindReKyou(ctx context.Context, queryJSON string) ([]*ReKyou, error) {
 	matchReKyous := []*ReKyou{}
 
 	// 未削除ReKyouを抽出
@@ -386,7 +386,7 @@ func (r ReKyouRepositories) FindReKyou(ctx context.Context, queryJSON string) ([
 	return matchReKyous, nil
 }
 
-func (r ReKyouRepositories) GetReKyou(ctx context.Context, id string) (*ReKyou, error) {
+func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string) (*ReKyou, error) {
 	// ˅
 	matchReKyou := &ReKyou{}
 	matchReKyou = nil
@@ -453,7 +453,7 @@ loop:
 	// ˄
 }
 
-func (r ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
+func (r *ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
 	// ˅
 	kyouHistories := map[string]*ReKyou{}
 	existErr := false
@@ -533,14 +533,14 @@ loop:
 	// ˄
 }
 
-func (r ReKyouRepositories) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
+func (r *ReKyouRepositories) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
 	// ˅
 	err := fmt.Errorf("not implements ReKyouReps.AddReKyouInfo")
 	return err
 	// ˄
 }
 
-func (r ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
+func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
 	// ˅
 	matchReKyous := map[string]*ReKyou{}
 	existErr := false
@@ -619,7 +619,7 @@ loop:
 	// ˄
 }
 
-func (r ReKyouRepositories) GetRepositories(ctx context.Context) (*Repositories, error) {
+func (r *ReKyouRepositories) GetRepositories(ctx context.Context) (*Repositories, error) {
 	return r.repositories, nil
 }
 
