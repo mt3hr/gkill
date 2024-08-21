@@ -102,8 +102,14 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON s
 	}
 	queryJSONForFindKyouTemplate = string(marshaledJSONb)
 
+	reps, err := r.GetRepositories(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories: %w", err)
+		return nil, err
+	}
+
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := r.reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
+		kyous, err := reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -290,8 +296,14 @@ func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, queryJSON 
 	}
 	queryJSONForFindKyouTemplate = string(marshaledJSONb)
 
+	reps, err := r.GetRepositories(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories: %w", err)
+		return nil, err
+	}
+
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := r.reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
+		kyous, err := reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -468,6 +480,7 @@ VASLUES(
 	return nil
 	// ˄
 }
+
 func (r *reKyouRepositorySQLite3Impl) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
 	var err error
 
@@ -562,6 +575,10 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		}
 	}
 	return reKyous, nil
+}
+
+func (r *reKyouRepositorySQLite3Impl) GetRepositories(ctx context.Context) (*Repositories, error) {
+	return r.reps, nil
 }
 
 // ˄
