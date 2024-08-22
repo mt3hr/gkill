@@ -1,16 +1,6 @@
 // ˅
 package reps
 
-//TODO plaingの対応
-// サーバサイドAPI反映
-// フロント型反映
-// 設計書反映
-// use_plaing
-// plaing_time
-
-//TODO include_end_timeis
-// endを検索するかどうか
-
 import (
 	"context"
 	"database/sql"
