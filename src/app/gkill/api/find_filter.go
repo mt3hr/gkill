@@ -4,8 +4,8 @@ package api
 import (
 	"context"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dbo"
-	"github.com/mt3hr/gkill/src/app/gkill/dbo/reps"
+	"github.com/mt3hr/gkill/src/app/gkill/dao"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 )
 
 // ˄
@@ -20,7 +20,7 @@ type FindFilter struct {
 	// ˄
 }
 
-func (f *FindFilter) FindKyous(gkillDBOManager dbo.GkillDBOManager, queryJSON string) ([]*reps.Kyou, error) {
+func (f *FindFilter) FindKyous(gkillDAOManager dao.GkillDAOManager, queryJSON string) ([]*reps.Kyou, error) {
 	// ˅
 	panic("notImplements")
 	// ˄

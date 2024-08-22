@@ -1,7 +1,7 @@
 // ˅
 package api
 
-import "github.com/mt3hr/gkill/src/app/gkill/dbo/reps"
+import "github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 
 // ˄
 
