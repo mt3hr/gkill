@@ -6,6 +6,8 @@ import (
 	"database/sql"
 	"fmt"
 	"sync"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // ˄
