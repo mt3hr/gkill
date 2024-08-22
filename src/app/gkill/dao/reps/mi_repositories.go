@@ -7,29 +7,29 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dbo/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 // ˄
 
-type KmemoRepositories []KmemoRepository
+type MiRepositories []MiRepository
 
-func (k KmemoRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (m MiRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
 	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(k))
-	errch := make(chan error, len(k))
+	ch := make(chan []*Kyou, len(m))
+	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range k {
+	for _, rep := range m {
 		wg.Add(1)
 		rep := rep
-		go func(rep KmemoRepository) {
+		go func(rep MiRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
 			if err != nil {
@@ -93,23 +93,23 @@ loop:
 	// ˄
 }
 
-func (k KmemoRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (m MiRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
 	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan *Kyou, len(k))
-	errch := make(chan error, len(k))
+	ch := make(chan *Kyou, len(m))
+	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range k {
+	for _, rep := range m {
 		wg.Add(1)
 		rep := rep
-		go func(rep KmemoRepository) {
+		go func(rep MiRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
 			if err != nil {
@@ -160,22 +160,22 @@ loop:
 	// ˄
 }
 
-func (k KmemoRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (m MiRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(k))
-	errch := make(chan error, len(k))
+	ch := make(chan []*Kyou, len(m))
+	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range k {
+	for _, rep := range m {
 		wg.Add(1)
 		rep := rep
-		go func(rep KmemoRepository) {
+		go func(rep MiRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -240,26 +240,26 @@ loop:
 	// ˄
 }
 
-func (k KmemoRepositories) GetPath(ctx context.Context, id string) (string, error) {
+func (m MiRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// ˅
-	err := fmt.Errorf("not implements KmemoReps.GetPath")
+	err := fmt.Errorf("not implements MiReps.GetPath")
 	return "", err
 	// ˄
 }
 
-func (k KmemoRepositories) UpdateCache(ctx context.Context) error {
+func (m MiRepositories) UpdateCache(ctx context.Context) error {
 	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(k))
+	errch := make(chan error, len(m))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range k {
+	for _, rep := range m {
 		wg.Add(1)
 		rep := rep
-		go func(rep KmemoRepository) {
+		go func(rep MiRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -289,25 +289,25 @@ errloop:
 	// ˄
 }
 
-func (k KmemoRepositories) GetRepName(ctx context.Context) (string, error) {
+func (m MiRepositories) GetRepName(ctx context.Context) (string, error) {
 	// ˅
-	return "KmemoReps", nil
+	return "MiReps", nil
 	// ˄
 }
 
-func (k KmemoRepositories) Close(ctx context.Context) error {
+func (m MiRepositories) Close(ctx context.Context) error {
 	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(k))
+	errch := make(chan error, len(m))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range k {
+	for _, rep := range m {
 		wg.Add(1)
 		rep := rep
-		go func(rep KmemoRepository) {
+		go func(rep MiRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -337,29 +337,29 @@ errloop:
 	// ˄
 }
 
-func (k KmemoRepositories) FindKmemo(ctx context.Context, queryJSON string) ([]*Kmemo, error) {
+func (m MiRepositories) FindMi(ctx context.Context, queryJSON string) ([]*Mi, error) {
 	// ˅
-	matchKmemos := map[string]*Kmemo{}
+	matchMis := map[string]*Mi{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kmemo, len(k))
-	errch := make(chan error, len(k))
+	ch := make(chan []*Mi, len(m))
+	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range k {
+	for _, rep := range m {
 		wg.Add(1)
 		rep := rep
-		go func(rep KmemoRepository) {
+		go func(rep MiRepository) {
 			defer wg.Done()
-			matchKmemosInRep, err := rep.FindKmemo(ctx, queryJSON)
+			matchMisInRep, err := rep.FindMi(ctx, queryJSON)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- matchKmemosInRep
+			ch <- matchMisInRep
 		}(rep)
 	}
 	wg.Wait()
@@ -369,7 +369,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find kmemo: %w", e)
+			err = fmt.Errorf("error at find mi: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -379,21 +379,21 @@ errloop:
 		return nil, err
 	}
 
-	// Kmemo集約。UpdateTimeが最新のものを収める
+	// Mi集約。UpdateTimeが最新のものを収める
 loop:
 	for {
 		select {
-		case matchKmemosInRep := <-ch:
-			if matchKmemosInRep == nil {
+		case matchMisInRep := <-ch:
+			if matchMisInRep == nil {
 				continue loop
 			}
-			for _, kyou := range matchKmemosInRep {
-				if existKmemo, exist := matchKmemos[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existKmemo.UpdateTime) {
-						matchKmemos[kyou.ID] = kyou
+			for _, kyou := range matchMisInRep {
+				if existMi, exist := matchMis[kyou.ID]; exist {
+					if kyou.UpdateTime.Before(existMi.UpdateTime) {
+						matchMis[kyou.ID] = kyou
 					}
 				} else {
-					matchKmemos[kyou.ID] = kyou
+					matchMis[kyou.ID] = kyou
 				}
 			}
 		default:
@@ -401,45 +401,45 @@ loop:
 		}
 	}
 
-	matchKmemosList := []*Kmemo{}
-	for _, kyou := range matchKmemos {
+	matchMisList := []*Mi{}
+	for _, kyou := range matchMis {
 		if kyou == nil {
 			continue
 		}
-		matchKmemosList = append(matchKmemosList, kyou)
+		matchMisList = append(matchMisList, kyou)
 	}
 
-	sort.Slice(matchKmemosList, func(i, j int) bool {
-		return matchKmemosList[i].RelatedTime.After(matchKmemosList[j].RelatedTime)
+	sort.Slice(matchMisList, func(i, j int) bool {
+		return matchMisList[i].CreateTime.After(matchMisList[j].CreateTime)
 	})
-	return matchKmemosList, nil
+	return matchMisList, nil
 	// ˄
 }
 
-func (k KmemoRepositories) GetKmemo(ctx context.Context, id string) (*Kmemo, error) {
+func (m MiRepositories) GetMi(ctx context.Context, id string) (*Mi, error) {
 	// ˅
-	matchKmemo := &Kmemo{}
-	matchKmemo = nil
+	matchMi := &Mi{}
+	matchMi = nil
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan *Kmemo, len(k))
-	errch := make(chan error, len(k))
+	ch := make(chan *Mi, len(m))
+	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range k {
+	for _, rep := range m {
 		wg.Add(1)
 		rep := rep
-		go func(rep KmemoRepository) {
+		go func(rep MiRepository) {
 			defer wg.Done()
-			matchKmemoInRep, err := rep.GetKmemo(ctx, id)
+			matchMiInRep, err := rep.GetMi(ctx, id)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- matchKmemoInRep
+			ch <- matchMiInRep
 		}(rep)
 	}
 	wg.Wait()
@@ -449,7 +449,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get kmemo: %w", e)
+			err = fmt.Errorf("error at get mi: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -459,53 +459,53 @@ errloop:
 		return nil, err
 	}
 
-	// Kmemo集約。UpdateTimeが最新のものを収める
+	// Mi集約。UpdateTimeが最新のものを収める
 loop:
 	for {
 		select {
-		case matchKmemoInRep := <-ch:
-			if matchKmemoInRep == nil {
+		case matchMiInRep := <-ch:
+			if matchMiInRep == nil {
 				continue loop
 			}
-			if matchKmemo != nil {
-				if matchKmemoInRep.UpdateTime.Before(matchKmemo.UpdateTime) {
-					matchKmemo = matchKmemoInRep
+			if matchMi != nil {
+				if matchMiInRep.UpdateTime.Before(matchMi.UpdateTime) {
+					matchMi = matchMiInRep
 				}
 			} else {
-				matchKmemo = matchKmemoInRep
+				matchMi = matchMiInRep
 			}
 		default:
 			break loop
 		}
 	}
 
-	return matchKmemo, nil
+	return matchMi, nil
 	// ˄
 }
 
-func (k KmemoRepositories) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
+func (m MiRepositories) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
 	// ˅
-	kyouHistories := map[string]*Kmemo{}
+	kyouHistories := map[string]*Mi{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kmemo, len(k))
-	errch := make(chan error, len(k))
+	ch := make(chan []*Mi, len(m))
+	errch := make(chan error, len(m))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range k {
+	for _, rep := range m {
 		wg.Add(1)
 		rep := rep
-		go func(rep KmemoRepository) {
+		go func(rep MiRepository) {
 			defer wg.Done()
-			matchKmemosInRep, err := rep.GetKmemoHistories(ctx, id)
+			matchMisInRep, err := rep.GetMiHistories(ctx, id)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- matchKmemosInRep
+			ch <- matchMisInRep
 		}(rep)
 	}
 	wg.Wait()
@@ -515,7 +515,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get kmemo histories: %w", e)
+			err = fmt.Errorf("error at find get mi histories: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -525,17 +525,17 @@ errloop:
 		return nil, err
 	}
 
-	// Kmemo集約。UpdateTimeが最新のものを収める
+	// Mi集約。UpdateTimeが最新のものを収める
 loop:
 	for {
 		select {
-		case matchKmemosInRep := <-ch:
-			if matchKmemosInRep == nil {
+		case matchMisInRep := <-ch:
+			if matchMisInRep == nil {
 				continue loop
 			}
-			for _, kyou := range matchKmemosInRep {
-				if existKmemo, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existKmemo.UpdateTime) {
+			for _, kyou := range matchMisInRep {
+				if existMi, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.Before(existMi.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
@@ -547,7 +547,7 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Kmemo{}
+	kyouHistoriesList := []*Mi{}
 	for _, kyou := range kyouHistories {
 		if kyou == nil {
 			continue
@@ -563,9 +563,9 @@ loop:
 	// ˄
 }
 
-func (k KmemoRepositories) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
+func (m MiRepositories) AddMiInfo(ctx context.Context, mi *Mi) error {
 	// ˅
-	err := fmt.Errorf("not implements KmemoReps.AddKmemoInfo")
+	err := fmt.Errorf("not implements MiReps.AddMiInfo")
 	return err
 	// ˄
 }

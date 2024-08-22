@@ -4,7 +4,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dbo"
+	"github.com/mt3hr/gkill/src/app/gkill/dao"
 )
 
 // ˄
@@ -16,7 +16,7 @@ type GkillServerAPI struct {
 
 	API_ADDRESS *GkillServerAPIAddress
 
-	GkillDBOManager *dbo.GkillDBOManager
+	GkillDAOManager *dao.GkillDAOManager
 
 	FindFilter *FindFilter
 

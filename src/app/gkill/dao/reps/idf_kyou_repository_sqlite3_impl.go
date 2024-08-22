@@ -18,7 +18,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/mt3hr/gkill/src/app/gkill/dbo/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 // ˄

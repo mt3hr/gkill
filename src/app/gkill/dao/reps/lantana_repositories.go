@@ -7,29 +7,29 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dbo/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 // ˄
 
-type MiRepositories []MiRepository
+type LantanaRepositories []LantanaRepository
 
-func (m MiRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (l LantanaRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
 	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(m))
-	errch := make(chan error, len(m))
+	ch := make(chan []*Kyou, len(l))
+	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range m {
+	for _, rep := range l {
 		wg.Add(1)
 		rep := rep
-		go func(rep MiRepository) {
+		go func(rep LantanaRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
 			if err != nil {
@@ -93,23 +93,23 @@ loop:
 	// ˄
 }
 
-func (m MiRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (l LantanaRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
 	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan *Kyou, len(m))
-	errch := make(chan error, len(m))
+	ch := make(chan *Kyou, len(l))
+	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range m {
+	for _, rep := range l {
 		wg.Add(1)
 		rep := rep
-		go func(rep MiRepository) {
+		go func(rep LantanaRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
 			if err != nil {
@@ -160,22 +160,22 @@ loop:
 	// ˄
 }
 
-func (m MiRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (l LantanaRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(m))
-	errch := make(chan error, len(m))
+	ch := make(chan []*Kyou, len(l))
+	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range m {
+	for _, rep := range l {
 		wg.Add(1)
 		rep := rep
-		go func(rep MiRepository) {
+		go func(rep LantanaRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -240,26 +240,26 @@ loop:
 	// ˄
 }
 
-func (m MiRepositories) GetPath(ctx context.Context, id string) (string, error) {
+func (l LantanaRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// ˅
-	err := fmt.Errorf("not implements MiReps.GetPath")
+	err := fmt.Errorf("not implements LantanaReps.GetPath")
 	return "", err
 	// ˄
 }
 
-func (m MiRepositories) UpdateCache(ctx context.Context) error {
+func (l LantanaRepositories) UpdateCache(ctx context.Context) error {
 	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(m))
+	errch := make(chan error, len(l))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range m {
+	for _, rep := range l {
 		wg.Add(1)
 		rep := rep
-		go func(rep MiRepository) {
+		go func(rep LantanaRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -289,25 +289,25 @@ errloop:
 	// ˄
 }
 
-func (m MiRepositories) GetRepName(ctx context.Context) (string, error) {
+func (l LantanaRepositories) GetRepName(ctx context.Context) (string, error) {
 	// ˅
-	return "MiReps", nil
+	return "LantanaReps", nil
 	// ˄
 }
 
-func (m MiRepositories) Close(ctx context.Context) error {
+func (l LantanaRepositories) Close(ctx context.Context) error {
 	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(m))
+	errch := make(chan error, len(l))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range m {
+	for _, rep := range l {
 		wg.Add(1)
 		rep := rep
-		go func(rep MiRepository) {
+		go func(rep LantanaRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -337,29 +337,29 @@ errloop:
 	// ˄
 }
 
-func (m MiRepositories) FindMi(ctx context.Context, queryJSON string) ([]*Mi, error) {
+func (l LantanaRepositories) FindLantana(ctx context.Context, queryJSON string) ([]*Lantana, error) {
 	// ˅
-	matchMis := map[string]*Mi{}
+	matchLantanas := map[string]*Lantana{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Mi, len(m))
-	errch := make(chan error, len(m))
+	ch := make(chan []*Lantana, len(l))
+	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range m {
+	for _, rep := range l {
 		wg.Add(1)
 		rep := rep
-		go func(rep MiRepository) {
+		go func(rep LantanaRepository) {
 			defer wg.Done()
-			matchMisInRep, err := rep.FindMi(ctx, queryJSON)
+			matchLantanasInRep, err := rep.FindLantana(ctx, queryJSON)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- matchMisInRep
+			ch <- matchLantanasInRep
 		}(rep)
 	}
 	wg.Wait()
@@ -369,7 +369,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find mi: %w", e)
+			err = fmt.Errorf("error at find lantana: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -379,21 +379,21 @@ errloop:
 		return nil, err
 	}
 
-	// Mi集約。UpdateTimeが最新のものを収める
+	// Lantana集約。UpdateTimeが最新のものを収める
 loop:
 	for {
 		select {
-		case matchMisInRep := <-ch:
-			if matchMisInRep == nil {
+		case matchLantanasInRep := <-ch:
+			if matchLantanasInRep == nil {
 				continue loop
 			}
-			for _, kyou := range matchMisInRep {
-				if existMi, exist := matchMis[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existMi.UpdateTime) {
-						matchMis[kyou.ID] = kyou
+			for _, kyou := range matchLantanasInRep {
+				if existLantana, exist := matchLantanas[kyou.ID]; exist {
+					if kyou.UpdateTime.Before(existLantana.UpdateTime) {
+						matchLantanas[kyou.ID] = kyou
 					}
 				} else {
-					matchMis[kyou.ID] = kyou
+					matchLantanas[kyou.ID] = kyou
 				}
 			}
 		default:
@@ -401,45 +401,45 @@ loop:
 		}
 	}
 
-	matchMisList := []*Mi{}
-	for _, kyou := range matchMis {
+	matchLantanasList := []*Lantana{}
+	for _, kyou := range matchLantanas {
 		if kyou == nil {
 			continue
 		}
-		matchMisList = append(matchMisList, kyou)
+		matchLantanasList = append(matchLantanasList, kyou)
 	}
 
-	sort.Slice(matchMisList, func(i, j int) bool {
-		return matchMisList[i].CreateTime.After(matchMisList[j].CreateTime)
+	sort.Slice(matchLantanasList, func(i, j int) bool {
+		return matchLantanasList[i].RelatedTime.After(matchLantanasList[j].RelatedTime)
 	})
-	return matchMisList, nil
+	return matchLantanasList, nil
 	// ˄
 }
 
-func (m MiRepositories) GetMi(ctx context.Context, id string) (*Mi, error) {
+func (l LantanaRepositories) GetLantana(ctx context.Context, id string) (*Lantana, error) {
 	// ˅
-	matchMi := &Mi{}
-	matchMi = nil
+	matchLantana := &Lantana{}
+	matchLantana = nil
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan *Mi, len(m))
-	errch := make(chan error, len(m))
+	ch := make(chan *Lantana, len(l))
+	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range m {
+	for _, rep := range l {
 		wg.Add(1)
 		rep := rep
-		go func(rep MiRepository) {
+		go func(rep LantanaRepository) {
 			defer wg.Done()
-			matchMiInRep, err := rep.GetMi(ctx, id)
+			matchLantanaInRep, err := rep.GetLantana(ctx, id)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- matchMiInRep
+			ch <- matchLantanaInRep
 		}(rep)
 	}
 	wg.Wait()
@@ -449,7 +449,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get mi: %w", e)
+			err = fmt.Errorf("error at get lantana: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -459,53 +459,53 @@ errloop:
 		return nil, err
 	}
 
-	// Mi集約。UpdateTimeが最新のものを収める
+	// Lantana集約。UpdateTimeが最新のものを収める
 loop:
 	for {
 		select {
-		case matchMiInRep := <-ch:
-			if matchMiInRep == nil {
+		case matchLantanaInRep := <-ch:
+			if matchLantanaInRep == nil {
 				continue loop
 			}
-			if matchMi != nil {
-				if matchMiInRep.UpdateTime.Before(matchMi.UpdateTime) {
-					matchMi = matchMiInRep
+			if matchLantana != nil {
+				if matchLantanaInRep.UpdateTime.Before(matchLantana.UpdateTime) {
+					matchLantana = matchLantanaInRep
 				}
 			} else {
-				matchMi = matchMiInRep
+				matchLantana = matchLantanaInRep
 			}
 		default:
 			break loop
 		}
 	}
 
-	return matchMi, nil
+	return matchLantana, nil
 	// ˄
 }
 
-func (m MiRepositories) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
+func (l LantanaRepositories) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
 	// ˅
-	kyouHistories := map[string]*Mi{}
+	kyouHistories := map[string]*Lantana{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Mi, len(m))
-	errch := make(chan error, len(m))
+	ch := make(chan []*Lantana, len(l))
+	errch := make(chan error, len(l))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range m {
+	for _, rep := range l {
 		wg.Add(1)
 		rep := rep
-		go func(rep MiRepository) {
+		go func(rep LantanaRepository) {
 			defer wg.Done()
-			matchMisInRep, err := rep.GetMiHistories(ctx, id)
+			matchLantanasInRep, err := rep.GetLantanaHistories(ctx, id)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- matchMisInRep
+			ch <- matchLantanasInRep
 		}(rep)
 	}
 	wg.Wait()
@@ -515,7 +515,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get mi histories: %w", e)
+			err = fmt.Errorf("error at find get lantana histories: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -525,17 +525,17 @@ errloop:
 		return nil, err
 	}
 
-	// Mi集約。UpdateTimeが最新のものを収める
+	// Lantana集約。UpdateTimeが最新のものを収める
 loop:
 	for {
 		select {
-		case matchMisInRep := <-ch:
-			if matchMisInRep == nil {
+		case matchLantanasInRep := <-ch:
+			if matchLantanasInRep == nil {
 				continue loop
 			}
-			for _, kyou := range matchMisInRep {
-				if existMi, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existMi.UpdateTime) {
+			for _, kyou := range matchLantanasInRep {
+				if existLantana, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.Before(existLantana.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
@@ -547,7 +547,7 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*Mi{}
+	kyouHistoriesList := []*Lantana{}
 	for _, kyou := range kyouHistories {
 		if kyou == nil {
 			continue
@@ -563,9 +563,9 @@ loop:
 	// ˄
 }
 
-func (m MiRepositories) AddMiInfo(ctx context.Context, mi *Mi) error {
+func (l LantanaRepositories) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
 	// ˅
-	err := fmt.Errorf("not implements MiReps.AddMiInfo")
+	err := fmt.Errorf("not implements LantanaReps.AddLantanaInfo")
 	return err
 	// ˄
 }

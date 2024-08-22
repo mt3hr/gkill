@@ -7,29 +7,29 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dbo/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 // ˄
 
-type TimeIsRepositories []TimeIsRepository
+type URLogRepositories []URLogRepository
 
-func (t TimeIsRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (u URLogRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
 	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(t))
-	errch := make(chan error, len(t))
+	ch := make(chan []*Kyou, len(u))
+	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range t {
+	for _, rep := range u {
 		wg.Add(1)
 		rep := rep
-		go func(rep TimeIsRepository) {
+		go func(rep URLogRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
 			if err != nil {
@@ -93,23 +93,23 @@ loop:
 	// ˄
 }
 
-func (t TimeIsRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (u URLogRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
 	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan *Kyou, len(t))
-	errch := make(chan error, len(t))
+	ch := make(chan *Kyou, len(u))
+	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range t {
+	for _, rep := range u {
 		wg.Add(1)
 		rep := rep
-		go func(rep TimeIsRepository) {
+		go func(rep URLogRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
 			if err != nil {
@@ -160,22 +160,22 @@ loop:
 	// ˄
 }
 
-func (t TimeIsRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (u URLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(t))
-	errch := make(chan error, len(t))
+	ch := make(chan []*Kyou, len(u))
+	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range t {
+	for _, rep := range u {
 		wg.Add(1)
 		rep := rep
-		go func(rep TimeIsRepository) {
+		go func(rep URLogRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -240,26 +240,26 @@ loop:
 	// ˄
 }
 
-func (t TimeIsRepositories) GetPath(ctx context.Context, id string) (string, error) {
+func (u URLogRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	// ˅
-	err := fmt.Errorf("not implements TimeIsReps.GetPath")
+	err := fmt.Errorf("not implements URLogReps.GetPath")
 	return "", err
 	// ˄
 }
 
-func (t TimeIsRepositories) UpdateCache(ctx context.Context) error {
+func (u URLogRepositories) UpdateCache(ctx context.Context) error {
 	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(t))
+	errch := make(chan error, len(u))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range t {
+	for _, rep := range u {
 		wg.Add(1)
 		rep := rep
-		go func(rep TimeIsRepository) {
+		go func(rep URLogRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -289,25 +289,25 @@ errloop:
 	// ˄
 }
 
-func (t TimeIsRepositories) GetRepName(ctx context.Context) (string, error) {
+func (u URLogRepositories) GetRepName(ctx context.Context) (string, error) {
 	// ˅
-	return "TimeIsReps", nil
+	return "URLogReps", nil
 	// ˄
 }
 
-func (t TimeIsRepositories) Close(ctx context.Context) error {
+func (u URLogRepositories) Close(ctx context.Context) error {
 	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(t))
+	errch := make(chan error, len(u))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range t {
+	for _, rep := range u {
 		wg.Add(1)
 		rep := rep
-		go func(rep TimeIsRepository) {
+		go func(rep URLogRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -337,29 +337,29 @@ errloop:
 	// ˄
 }
 
-func (t TimeIsRepositories) FindTimeIs(ctx context.Context, queryJSON string) ([]*TimeIs, error) {
+func (u URLogRepositories) FindURLog(ctx context.Context, queryJSON string) ([]*URLog, error) {
 	// ˅
-	matchTimeIss := map[string]*TimeIs{}
+	matchURLogs := map[string]*URLog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*TimeIs, len(t))
-	errch := make(chan error, len(t))
+	ch := make(chan []*URLog, len(u))
+	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range t {
+	for _, rep := range u {
 		wg.Add(1)
 		rep := rep
-		go func(rep TimeIsRepository) {
+		go func(rep URLogRepository) {
 			defer wg.Done()
-			matchTimeIssInRep, err := rep.FindTimeIs(ctx, queryJSON)
+			matchURLogsInRep, err := rep.FindURLog(ctx, queryJSON)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- matchTimeIssInRep
+			ch <- matchURLogsInRep
 		}(rep)
 	}
 	wg.Wait()
@@ -369,7 +369,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find timeis: %w", e)
+			err = fmt.Errorf("error at find urlog: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -379,21 +379,21 @@ errloop:
 		return nil, err
 	}
 
-	// TimeIs集約。UpdateTimeが最新のものを収める
+	// URLog集約。UpdateTimeが最新のものを収める
 loop:
 	for {
 		select {
-		case matchTimeIssInRep := <-ch:
-			if matchTimeIssInRep == nil {
+		case matchURLogsInRep := <-ch:
+			if matchURLogsInRep == nil {
 				continue loop
 			}
-			for _, kyou := range matchTimeIssInRep {
-				if existTimeIs, exist := matchTimeIss[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existTimeIs.UpdateTime) {
-						matchTimeIss[kyou.ID] = kyou
+			for _, kyou := range matchURLogsInRep {
+				if existURLog, exist := matchURLogs[kyou.ID]; exist {
+					if kyou.UpdateTime.Before(existURLog.UpdateTime) {
+						matchURLogs[kyou.ID] = kyou
 					}
 				} else {
-					matchTimeIss[kyou.ID] = kyou
+					matchURLogs[kyou.ID] = kyou
 				}
 			}
 		default:
@@ -401,45 +401,45 @@ loop:
 		}
 	}
 
-	matchTimeIssList := []*TimeIs{}
-	for _, kyou := range matchTimeIss {
+	matchURLogsList := []*URLog{}
+	for _, kyou := range matchURLogs {
 		if kyou == nil {
 			continue
 		}
-		matchTimeIssList = append(matchTimeIssList, kyou)
+		matchURLogsList = append(matchURLogsList, kyou)
 	}
 
-	sort.Slice(matchTimeIssList, func(i, j int) bool {
-		return matchTimeIssList[i].StartTime.After(matchTimeIssList[j].StartTime)
+	sort.Slice(matchURLogsList, func(i, j int) bool {
+		return matchURLogsList[i].RelatedTime.After(matchURLogsList[j].RelatedTime)
 	})
-	return matchTimeIssList, nil
+	return matchURLogsList, nil
 	// ˄
 }
 
-func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string) (*TimeIs, error) {
+func (u URLogRepositories) GetURLog(ctx context.Context, id string) (*URLog, error) {
 	// ˅
-	matchTimeIs := &TimeIs{}
-	matchTimeIs = nil
+	matchURLog := &URLog{}
+	matchURLog = nil
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan *TimeIs, len(t))
-	errch := make(chan error, len(t))
+	ch := make(chan *URLog, len(u))
+	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range t {
+	for _, rep := range u {
 		wg.Add(1)
 		rep := rep
-		go func(rep TimeIsRepository) {
+		go func(rep URLogRepository) {
 			defer wg.Done()
-			matchTimeIsInRep, err := rep.GetTimeIs(ctx, id)
+			matchURLogInRep, err := rep.GetURLog(ctx, id)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- matchTimeIsInRep
+			ch <- matchURLogInRep
 		}(rep)
 	}
 	wg.Wait()
@@ -449,7 +449,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at get timeis: %w", e)
+			err = fmt.Errorf("error at get urlog: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -459,53 +459,53 @@ errloop:
 		return nil, err
 	}
 
-	// TimeIs集約。UpdateTimeが最新のものを収める
+	// URLog集約。UpdateTimeが最新のものを収める
 loop:
 	for {
 		select {
-		case matchTimeIsInRep := <-ch:
-			if matchTimeIsInRep == nil {
+		case matchURLogInRep := <-ch:
+			if matchURLogInRep == nil {
 				continue loop
 			}
-			if matchTimeIs != nil {
-				if matchTimeIsInRep.UpdateTime.Before(matchTimeIs.UpdateTime) {
-					matchTimeIs = matchTimeIsInRep
+			if matchURLog != nil {
+				if matchURLogInRep.UpdateTime.Before(matchURLog.UpdateTime) {
+					matchURLog = matchURLogInRep
 				}
 			} else {
-				matchTimeIs = matchTimeIsInRep
+				matchURLog = matchURLogInRep
 			}
 		default:
 			break loop
 		}
 	}
 
-	return matchTimeIs, nil
+	return matchURLog, nil
 	// ˄
 }
 
-func (t TimeIsRepositories) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
+func (u URLogRepositories) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
 	// ˅
-	kyouHistories := map[string]*TimeIs{}
+	kyouHistories := map[string]*URLog{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*TimeIs, len(t))
-	errch := make(chan error, len(t))
+	ch := make(chan []*URLog, len(u))
+	errch := make(chan error, len(u))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range t {
+	for _, rep := range u {
 		wg.Add(1)
 		rep := rep
-		go func(rep TimeIsRepository) {
+		go func(rep URLogRepository) {
 			defer wg.Done()
-			matchTimeIssInRep, err := rep.GetTimeIsHistories(ctx, id)
+			matchURLogsInRep, err := rep.GetURLogHistories(ctx, id)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- matchTimeIssInRep
+			ch <- matchURLogsInRep
 		}(rep)
 	}
 	wg.Wait()
@@ -515,7 +515,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get timeis histories: %w", e)
+			err = fmt.Errorf("error at find get urlog histories: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -525,17 +525,17 @@ errloop:
 		return nil, err
 	}
 
-	// TimeIs集約。UpdateTimeが最新のものを収める
+	// URLog集約。UpdateTimeが最新のものを収める
 loop:
 	for {
 		select {
-		case matchTimeIssInRep := <-ch:
-			if matchTimeIssInRep == nil {
+		case matchURLogsInRep := <-ch:
+			if matchURLogsInRep == nil {
 				continue loop
 			}
-			for _, kyou := range matchTimeIssInRep {
-				if existTimeIs, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existTimeIs.UpdateTime) {
+			for _, kyou := range matchURLogsInRep {
+				if existURLog, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.Before(existURLog.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
@@ -547,7 +547,7 @@ loop:
 		}
 	}
 
-	kyouHistoriesList := []*TimeIs{}
+	kyouHistoriesList := []*URLog{}
 	for _, kyou := range kyouHistories {
 		if kyou == nil {
 			continue
@@ -563,9 +563,9 @@ loop:
 	// ˄
 }
 
-func (t TimeIsRepositories) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
+func (u URLogRepositories) AddURLogInfo(ctx context.Context, urlog *URLog) error {
 	// ˅
-	err := fmt.Errorf("not implements TimeIsReps.AddTimeIsInfo")
+	err := fmt.Errorf("not implements URLogReps.AddURLogInfo")
 	return err
 	// ˄
 }

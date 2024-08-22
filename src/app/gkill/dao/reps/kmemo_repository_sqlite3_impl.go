@@ -11,12 +11,12 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/mt3hr/gkill/src/app/gkill/dbo/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 // ˄
 
-type nlogRepositorySQLite3Impl struct {
+type kmemoRepositorySQLite3Impl struct {
 	// ˅
 	filename string
 	db       *sql.DB
@@ -25,7 +25,7 @@ type nlogRepositorySQLite3Impl struct {
 }
 
 // ˅
-func NewNlogRepositorySQLite3Impl(ctx context.Context, filename string) (NlogRepository, error) {
+func NewKmemoRepositorySQLite3Impl(ctx context.Context, filename string) (KmemoRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
 	if err != nil {
@@ -34,12 +34,10 @@ func NewNlogRepositorySQLite3Impl(ctx context.Context, filename string) (NlogRep
 	}
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "NLOG" (
+CREATE TABLE IF NOT EXISTS "KMEMO" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
-  SHOP NOT NULL,
-  TITLE NOT NULL,
-  AMOUNT NOT NULL,
+  CONTENT NOT NULL,
   RELATED_TIME NOT NULL,
   CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
@@ -52,38 +50,39 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 );`
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create NLOG table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create KMEMO table statement %s: %w", filename, err)
 		return nil, err
 	}
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create NLOG table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create KMEMO table to %s: %w", filename, err)
 		return nil, err
 	}
 
-	return &nlogRepositorySQLite3Impl{
+	return &kmemoRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
 		m:        &sync.Mutex{},
 	}, nil
 }
-func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+
+func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
 	var err error
 
 	// jsonからパースする
 	queryMap := map[string]string{}
 	err = json.Unmarshal([]byte(queryJSON), &queryMap)
 	if err != nil {
-		err = fmt.Errorf("error at parse query json at NLOG %s: %w", queryJSON, err)
+		err = fmt.Errorf("error at parse query json at kmemo %s: %w", queryJSON, err)
 		return nil, err
 	}
 
 	// update_cacheであればキャッシュを更新する
 	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
-		err = n.UpdateCache(ctx)
+		err = k.UpdateCache(ctx)
 		if err != nil {
-			repName, _ := n.GetRepName(ctx)
+			repName, _ := k.GetRepName(ctx)
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
@@ -105,7 +104,7 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM NLOG 
+FROM KMEMO
 WHERE
 `
 
@@ -144,9 +143,7 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("SHOP LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -161,9 +158,7 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("SHOP LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -183,9 +178,7 @@ WHERE
 			if whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
-			sql += sqlite3impl.EscapeSQLite(" AND ")
-			sql += sqlite3impl.EscapeSQLite("SHOP LIKE '%" + notWord + "%'")
+			sql += sqlite3impl.EscapeSQLite("CONTENT NOT LIKE '%" + notWord + "%'")
 			if i == len(words)-1 {
 				sql += " ) "
 			}
@@ -199,22 +192,22 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
 	sql += `;`
 
-	stmt, err := n.db.PrepareContext(ctx, sql)
+	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
 
-	repName, err := n.GetRepName(ctx)
+	repName, err := k.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at NLOG: %w", err)
+		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
 		return nil, err
 	}
 
-	dataType := "nlog"
+	dataType := "kmemo"
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
-		err = fmt.Errorf("error at select from NLOG %s: %w", err)
+		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
 		return nil, err
 	}
 
@@ -245,17 +238,17 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in NLOG: %w", relatedTimeStr, err)
+				err = fmt.Errorf("error at parse related time %s in KMEMO: %w", relatedTimeStr, err)
 				return nil, err
 			}
 			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in NLOG: %w", createTimeStr, err)
+				err = fmt.Errorf("error at parse create time %s in KMEMO: %w", createTimeStr, err)
 				return nil, err
 			}
 			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in NLOG: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse update time %s in KMEMO: %w", updateTimeStr, err)
 				return nil, err
 			}
 			kyous = append(kyous, kyou)
@@ -264,11 +257,11 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	return kyous, nil
 }
 
-func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (k *kmemoRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
 	// 最新のデータを返す
-	kyouHistories, err := n.GetKyouHistories(ctx, id)
+	kyouHistories, err := k.GetKyouHistories(ctx, id)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from NLOG%s: %w", id, err)
+		err = fmt.Errorf("error at get kyou histories from KMEMO %s: %w", id, err)
 		return nil, err
 	}
 
@@ -280,10 +273,10 @@ func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Ky
 	return kyouHistories[0], nil
 }
 
-func (n *nlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	repName, err := n.GetRepName(ctx)
+func (k *kmemoRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	repName, err := k.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at NLOG: %w", err)
+		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
 		return nil, err
 	}
 
@@ -302,20 +295,20 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM NLOG
+FROM KMEMO
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
-	stmt, err := n.db.PrepareContext(ctx, sql)
+	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
 
-	dataType := "nlog"
+	dataType := "kmemo"
 	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
 	if err != nil {
-		err = fmt.Errorf("error at select from NLOG %s: %w", id, err)
+		err = fmt.Errorf("error at select from KMEMO %s: %w", id, err)
 		return nil, err
 	}
 
@@ -346,17 +339,17 @@ ORDER BY UPDATE_TIME DESC
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in NLOG: %w", relatedTimeStr, id, err)
+				err = fmt.Errorf("error at parse related time %s at %s in KMEMO: %w", relatedTimeStr, id, err)
 				return nil, err
 			}
 			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in NLOG: %w", createTimeStr, id, err)
+				err = fmt.Errorf("error at parse create time %s at %s in KMEMO: %w", createTimeStr, id, err)
 				return nil, err
 			}
 			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in NLOG: %w", updateTimeStr, id, err)
+				err = fmt.Errorf("error at parse update time %s at %s in KMEMO: %w", updateTimeStr, id, err)
 				return nil, err
 			}
 			kyous = append(kyous, kyou)
@@ -365,18 +358,18 @@ ORDER BY UPDATE_TIME DESC
 	return kyous, nil
 }
 
-func (n *nlogRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return filepath.Abs(n.filename)
+func (k *kmemoRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return filepath.Abs(k.filename)
 }
 
-func (n *nlogRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (k *kmemoRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
-func (n *nlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := n.GetPath(ctx, "")
+func (k *kmemoRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	path, err := k.GetPath(ctx, "")
 	if err != nil {
-		err = fmt.Errorf("error at get path nlog rep: %w", err)
+		err = fmt.Errorf("error at get path kmemo rep: %w", err)
 		return "", err
 	}
 	base := filepath.Base(path)
@@ -385,26 +378,26 @@ func (n *nlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, err
 	return withoutExt, nil
 }
 
-func (n *nlogRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return n.db.Close()
+func (k *kmemoRepositorySQLite3Impl) Close(ctx context.Context) error {
+	return k.db.Close()
 }
 
-func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, queryJSON string) ([]*Nlog, error) {
+func (k *kmemoRepositorySQLite3Impl) FindKmemo(ctx context.Context, queryJSON string) ([]*Kmemo, error) {
 	var err error
 
 	// jsonからパースする
 	queryMap := map[string]string{}
 	err = json.Unmarshal([]byte(queryJSON), &queryMap)
 	if err != nil {
-		err = fmt.Errorf("error at parse query json at nlog %s: %w", queryJSON, err)
+		err = fmt.Errorf("error at parse query json at kmemo %s: %w", queryJSON, err)
 		return nil, err
 	}
 
 	// update_cacheであればキャッシュを更新する
 	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
-		err = n.UpdateCache(ctx)
+		err = k.UpdateCache(ctx)
 		if err != nil {
-			repName, _ := n.GetRepName(ctx)
+			repName, _ := k.GetRepName(ctx)
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
@@ -424,11 +417,9 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  SHOP,
-  TITLE,
-  AMOUNT,
+  CONTENT,
   ? AS REP_NAME
-FROM NLOG
+FROM KMEMO
 WHERE
 `
 
@@ -516,92 +507,90 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
 	sql += `;`
 
-	stmt, err := n.db.PrepareContext(ctx, sql)
+	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
 
-	repName, err := n.GetRepName(ctx)
+	repName, err := k.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at NLOG: %w", err)
+		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
 		return nil, err
 	}
 
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
-		err = fmt.Errorf("error at select from NLOG %s: %w", err)
+		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
 		return nil, err
 	}
 
-	nlogs := []*Nlog{}
+	kmemos := []*Kmemo{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			nlog := &Nlog{}
-			nlog.RepName = repName
+			kmemo := &Kmemo{}
+			kmemo.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(nlog.IsDeleted,
-				nlog.ID,
+			err = rows.Scan(kmemo.IsDeleted,
+				kmemo.ID,
 				relatedTimeStr,
 				createTimeStr,
-				nlog.CreateApp,
-				nlog.CreateDevice,
-				nlog.CreateUser,
+				kmemo.CreateApp,
+				kmemo.CreateDevice,
+				kmemo.CreateUser,
 				updateTimeStr,
-				nlog.UpdateApp,
-				nlog.UpdateDevice,
-				nlog.UpdateUser,
-				nlog.Shop,
-				nlog.Title,
-				nlog.Amount,
-				nlog.RepName,
+				kmemo.UpdateApp,
+				kmemo.UpdateDevice,
+				kmemo.UpdateUser,
+				kmemo.Content,
+				kmemo.RepName,
 			)
 
-			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in NLOG: %w", relatedTimeStr, err)
+				err = fmt.Errorf("error at parse related time %s in KMEMO: %w", relatedTimeStr, err)
 				return nil, err
 			}
-			nlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			kmemo.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in NLOG: %w", createTimeStr, err)
+				err = fmt.Errorf("error at parse create time %s in KMEMO: %w", createTimeStr, err)
 				return nil, err
 			}
-			nlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			kmemo.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in NLOG: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse update time %s in KMEMO: %w", updateTimeStr, err)
 				return nil, err
 			}
-			nlogs = append(nlogs, nlog)
+			kmemos = append(kmemos, kmemo)
 		}
 	}
-	return nlogs, nil
+	return kmemos, nil
 }
 
-func (n *nlogRepositorySQLite3Impl) GetNlog(ctx context.Context, id string) (*Nlog, error) {
+func (k *kmemoRepositorySQLite3Impl) GetKmemo(ctx context.Context, id string) (*Kmemo, error) {
 	// 最新のデータを返す
-	nlogHistories, err := n.GetNlogHistories(ctx, id)
+	kmemoHistories, err := k.GetKmemoHistories(ctx, id)
 	if err != nil {
-		err = fmt.Errorf("error at get nlog histories from NLOG%s: %w", id, err)
+		err = fmt.Errorf("error at get kmemo histories from KMEMO %s: %w", id, err)
 		return nil, err
 	}
 
 	// なければnilを返す
-	if len(nlogHistories) == 0 {
+	if len(kmemoHistories) == 0 {
 		return nil, nil
 	}
 
-	return nlogHistories[0], nil
+	return kmemoHistories[0], nil
 }
 
-func (n *nlogRepositorySQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
-	repName, err := n.GetRepName(ctx)
+func (k *kmemoRepositorySQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
+	repName, err := k.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at nlog: %w", err)
+		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
 		return nil, err
 	}
 
@@ -618,17 +607,15 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  SHOP,
-  TITLE,
-  AMOUNT
+  CONTENT,
   ? AS REP_NAME
-FROM NLOG 
+FROM KMEMO
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
-	stmt, err := n.db.PrepareContext(ctx, sql)
+	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get nlog histories sql %s: %w", id, err)
+		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
 		return nil, err
 	}
 
@@ -638,62 +625,58 @@ ORDER BY UPDATE_TIME DESC
 		return nil, err
 	}
 
-	nlogs := []*Nlog{}
+	kmemos := []*Kmemo{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			nlog := &Nlog{}
-			nlog.RepName = repName
+			kmemo := &Kmemo{}
+			kmemo.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(nlog.IsDeleted,
-				nlog.ID,
+			err = rows.Scan(kmemo.IsDeleted,
+				kmemo.ID,
 				relatedTimeStr,
 				createTimeStr,
-				nlog.CreateApp,
-				nlog.CreateDevice,
-				nlog.CreateUser,
+				kmemo.CreateApp,
+				kmemo.CreateDevice,
+				kmemo.CreateUser,
 				updateTimeStr,
-				nlog.UpdateApp,
-				nlog.UpdateDevice,
-				nlog.UpdateUser,
-				nlog.Shop,
-				nlog.Title,
-				nlog.Amount,
-				nlog.RepName,
+				kmemo.UpdateApp,
+				kmemo.UpdateDevice,
+				kmemo.UpdateUser,
+				kmemo.Content,
+				kmemo.RepName,
 			)
 
-			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in NLOG: %w", relatedTimeStr, id, err)
+				err = fmt.Errorf("error at parse related time %s at %s in KMEMO: %w", relatedTimeStr, id, err)
 				return nil, err
 			}
-			nlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			kmemo.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in NLOG: %w", createTimeStr, id, err)
+				err = fmt.Errorf("error at parse create time %s at %s in KMEMO: %w", createTimeStr, id, err)
 				return nil, err
 			}
-			nlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			kmemo.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in NLOG: %w", updateTimeStr, id, err)
+				err = fmt.Errorf("error at parse update time %s at %s in KMEMO: %w", updateTimeStr, id, err)
 				return nil, err
 			}
-			nlogs = append(nlogs, nlog)
+			kmemos = append(kmemos, kmemo)
 		}
 	}
-	return nlogs, nil
+	return kmemos, nil
 }
 
-func (n *nlogRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
+func (k *kmemoRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
 	sql := `
-INSERT INTO NLOG
+INSERT INTO KMEMO
   IS_DELETED,
   ID,
-  SHOP,
-  TITLE,
-  AMOUNT,
+  CONTENT,
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
@@ -715,34 +698,30 @@ VASLUES(
   ?,
   ?,
   ?,
-  ?,
-  ?,
   ?
 )`
-	stmt, err := n.db.PrepareContext(ctx, sql)
+	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at add nlog sql %s: %w", nlog.ID, err)
+		err = fmt.Errorf("error at add kmemo sql %s: %w", kmemo.ID, err)
 		return err
 	}
 
 	_, err = stmt.ExecContext(ctx,
-		nlog.IsDeleted,
-		nlog.ID,
-		nlog.Shop,
-		nlog.Title,
-		nlog.Amount,
-		nlog.RelatedTime.Format(sqlite3impl.TimeLayout),
-		nlog.CreateTime.Format(sqlite3impl.TimeLayout),
-		nlog.CreateApp,
-		nlog.CreateDevice,
-		nlog.CreateUser,
-		nlog.UpdateTime.Format(sqlite3impl.TimeLayout),
-		nlog.UpdateApp,
-		nlog.UpdateDevice,
-		nlog.UpdateUser,
+		kmemo.IsDeleted,
+		kmemo.ID,
+		kmemo.Content,
+		kmemo.RelatedTime.Format(sqlite3impl.TimeLayout),
+		kmemo.CreateTime.Format(sqlite3impl.TimeLayout),
+		kmemo.CreateApp,
+		kmemo.CreateDevice,
+		kmemo.CreateUser,
+		kmemo.UpdateTime.Format(sqlite3impl.TimeLayout),
+		kmemo.UpdateApp,
+		kmemo.UpdateDevice,
+		kmemo.UpdateUser,
 	)
 	if err != nil {
-		err = fmt.Errorf("error at insert in to NLOG %s: %w", nlog.ID, err)
+		err = fmt.Errorf("error at insert in to KMEMO %s: %w", kmemo.ID, err)
 		return err
 	}
 	return nil

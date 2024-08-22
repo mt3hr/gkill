@@ -11,12 +11,12 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/mt3hr/gkill/src/app/gkill/dbo/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 // ˄
 
-type kmemoRepositorySQLite3Impl struct {
+type urlogRepositorySQLite3Impl struct {
 	// ˅
 	filename string
 	db       *sql.DB
@@ -25,7 +25,7 @@ type kmemoRepositorySQLite3Impl struct {
 }
 
 // ˅
-func NewKmemoRepositorySQLite3Impl(ctx context.Context, filename string) (KmemoRepository, error) {
+func NewURLogRepositorySQLite3Impl(ctx context.Context, filename string) (URLogRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
 	if err != nil {
@@ -34,10 +34,14 @@ func NewKmemoRepositorySQLite3Impl(ctx context.Context, filename string) (KmemoR
 	}
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "KMEMO" (
+CREATE TABLE IF NOT EXISTS "URLOG" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
-  CONTENT NOT NULL,
+  URL NOT NULL,
+  TITLE NOT NULL,
+  DESCRIPTION NOT NULL,
+  FAVICON_IMAGE NOT NULL,
+  THUMBNAIL_IMAGE NOT NULL,
   RELATED_TIME NOT NULL,
   CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
@@ -46,43 +50,43 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL 
+  UPDATE_USER NOT NULL
 );`
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create KMEMO table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create URLOG table statement %s: %w", filename, err)
 		return nil, err
 	}
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create KMEMO table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create URLOG table to %s: %w", filename, err)
 		return nil, err
 	}
 
-	return &kmemoRepositorySQLite3Impl{
+	return &urlogRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
 		m:        &sync.Mutex{},
 	}, nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (u *urlogRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
 	var err error
 
 	// jsonからパースする
 	queryMap := map[string]string{}
 	err = json.Unmarshal([]byte(queryJSON), &queryMap)
 	if err != nil {
-		err = fmt.Errorf("error at parse query json at kmemo %s: %w", queryJSON, err)
+		err = fmt.Errorf("error at parse query json at URLOG%s: %w", queryJSON, err)
 		return nil, err
 	}
 
 	// update_cacheであればキャッシュを更新する
 	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
-		err = k.UpdateCache(ctx)
+		err = u.UpdateCache(ctx)
 		if err != nil {
-			repName, _ := k.GetRepName(ctx)
+			repName, _ := u.GetRepName(ctx)
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
@@ -104,7 +108,7 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM KMEMO
+FROM URLOG
 WHERE
 `
 
@@ -143,7 +147,11 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -158,7 +166,11 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -178,7 +190,11 @@ WHERE
 			if whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += sqlite3impl.EscapeSQLite("CONTENT NOT LIKE '%" + notWord + "%'")
+			sql += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
+			sql += sqlite3impl.EscapeSQLite(" AND ")
+			sql += sqlite3impl.EscapeSQLite("DESCRIPTION NOT LIKE '%" + notWord + "%'")
+			sql += sqlite3impl.EscapeSQLite(" AND ")
+			sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + notWord + "%'")
 			if i == len(words)-1 {
 				sql += " ) "
 			}
@@ -192,22 +208,22 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
 	sql += `;`
 
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
 
-	repName, err := k.GetRepName(ctx)
+	repName, err := u.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
+		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
 		return nil, err
 	}
 
-	dataType := "kmemo"
+	dataType := "urlog"
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
-		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
+		err = fmt.Errorf("error at select from URLOG%s: %w", err)
 		return nil, err
 	}
 
@@ -238,17 +254,17 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in KMEMO: %w", relatedTimeStr, err)
+				err = fmt.Errorf("error at parse related time %s in URLOG: %w", relatedTimeStr, err)
 				return nil, err
 			}
 			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in KMEMO: %w", createTimeStr, err)
+				err = fmt.Errorf("error at parse create time %s in URLOG: %w", createTimeStr, err)
 				return nil, err
 			}
 			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in KMEMO: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse update time %s in URLOG: %w", updateTimeStr, err)
 				return nil, err
 			}
 			kyous = append(kyous, kyou)
@@ -257,11 +273,11 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	return kyous, nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (u *urlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
 	// 最新のデータを返す
-	kyouHistories, err := k.GetKyouHistories(ctx, id)
+	kyouHistories, err := u.GetKyouHistories(ctx, id)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from KMEMO %s: %w", id, err)
+		err = fmt.Errorf("error at get kyou histories from URLOG %s: %w", id, err)
 		return nil, err
 	}
 
@@ -273,10 +289,10 @@ func (k *kmemoRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*K
 	return kyouHistories[0], nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	repName, err := k.GetRepName(ctx)
+func (u *urlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	repName, err := u.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
+		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
 		return nil, err
 	}
 
@@ -295,20 +311,20 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM KMEMO
+FROM URLOG 
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
 
-	dataType := "kmemo"
+	dataType := "urlog"
 	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
 	if err != nil {
-		err = fmt.Errorf("error at select from KMEMO %s: %w", id, err)
+		err = fmt.Errorf("error at select from URLOG %s: %w", id, err)
 		return nil, err
 	}
 
@@ -334,22 +350,21 @@ ORDER BY UPDATE_TIME DESC
 				kyou.UpdateDevice,
 				kyou.UpdateUser,
 				kyou.RepName,
-				kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in KMEMO: %w", relatedTimeStr, id, err)
+				err = fmt.Errorf("error at parse related time %s at %s in URLOG: %w", relatedTimeStr, id, err)
 				return nil, err
 			}
 			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in KMEMO: %w", createTimeStr, id, err)
+				err = fmt.Errorf("error at parse create time %s at %s in URLOG: %w", createTimeStr, id, err)
 				return nil, err
 			}
 			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in KMEMO: %w", updateTimeStr, id, err)
+				err = fmt.Errorf("error at parse update time %s at %s in URLOG: %w", updateTimeStr, id, err)
 				return nil, err
 			}
 			kyous = append(kyous, kyou)
@@ -358,46 +373,47 @@ ORDER BY UPDATE_TIME DESC
 	return kyous, nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return filepath.Abs(k.filename)
+func (u *urlogRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return filepath.Abs(u.filename)
 }
 
-func (k *kmemoRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (u *urlogRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := k.GetPath(ctx, "")
+func (u *urlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	path, err := u.GetPath(ctx, "")
 	if err != nil {
-		err = fmt.Errorf("error at get path kmemo rep: %w", err)
+		err = fmt.Errorf("error at get path urlog rep: %w", err)
 		return "", err
 	}
 	base := filepath.Base(path)
 	ext := filepath.Ext(base)
 	withoutExt := base[:len(base)-len(ext)]
 	return withoutExt, nil
+
 }
 
-func (k *kmemoRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return k.db.Close()
+func (u *urlogRepositorySQLite3Impl) Close(ctx context.Context) error {
+	return u.db.Close()
 }
 
-func (k *kmemoRepositorySQLite3Impl) FindKmemo(ctx context.Context, queryJSON string) ([]*Kmemo, error) {
+func (u *urlogRepositorySQLite3Impl) FindURLog(ctx context.Context, queryJSON string) ([]*URLog, error) {
 	var err error
 
 	// jsonからパースする
 	queryMap := map[string]string{}
 	err = json.Unmarshal([]byte(queryJSON), &queryMap)
 	if err != nil {
-		err = fmt.Errorf("error at parse query json at kmemo %s: %w", queryJSON, err)
+		err = fmt.Errorf("error at parse query json at URLOG  %s: %w", queryJSON, err)
 		return nil, err
 	}
 
 	// update_cacheであればキャッシュを更新する
 	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
-		err = k.UpdateCache(ctx)
+		err = u.UpdateCache(ctx)
 		if err != nil {
-			repName, _ := k.GetRepName(ctx)
+			repName, _ := u.GetRepName(ctx)
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
@@ -417,9 +433,12 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  CONTENT,
+  TITLE,
+  DESCRIPTION,
+  FAVICON_IMAGE,
+  THUMBNAIL_IMAGE,
   ? AS REP_NAME
-FROM KMEMO
+FROM URLOG
 WHERE
 `
 
@@ -458,7 +477,11 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -473,7 +496,11 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite(" OR ")
+				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -493,13 +520,16 @@ WHERE
 			if whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("CONTENT NOT LIKE '%s'", notWord))
+			sql += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
+			sql += sqlite3impl.EscapeSQLite(" AND ")
+			sql += sqlite3impl.EscapeSQLite("DESCRIPTION NOT LIKE '%" + notWord + "%'")
 			if i == len(words)-1 {
 				sql += " ) "
 			}
 			whereCounter++
 		}
 	}
+
 	// UPDATE_TIMEが一番上のものだけを抽出
 	sql += `
 GROUP BY ID
@@ -507,90 +537,94 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
 	sql += `;`
 
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
 
-	repName, err := k.GetRepName(ctx)
+	repName, err := u.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
+		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
 		return nil, err
 	}
 
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
-		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
+		err = fmt.Errorf("error at select from URLOG %s: %w", err)
 		return nil, err
 	}
 
-	kmemos := []*Kmemo{}
+	urlogs := []*URLog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kmemo := &Kmemo{}
-			kmemo.RepName = repName
+			urlog := &URLog{}
+			urlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(kmemo.IsDeleted,
-				kmemo.ID,
+			err = rows.Scan(urlog.IsDeleted,
+				urlog.ID,
 				relatedTimeStr,
 				createTimeStr,
-				kmemo.CreateApp,
-				kmemo.CreateDevice,
-				kmemo.CreateUser,
+				urlog.CreateApp,
+				urlog.CreateDevice,
+				urlog.CreateUser,
 				updateTimeStr,
-				kmemo.UpdateApp,
-				kmemo.UpdateDevice,
-				kmemo.UpdateUser,
-				kmemo.Content,
-				kmemo.RepName,
+				urlog.UpdateApp,
+				urlog.UpdateDevice,
+				urlog.UpdateUser,
+				urlog.URL,
+				urlog.Title,
+				urlog.Description,
+				urlog.FaviconImage,
+				urlog.ThumbnailImage,
+				urlog.RepName,
 			)
 
-			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			urlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in KMEMO: %w", relatedTimeStr, err)
+				err = fmt.Errorf("error at parse related time %s in URLOG: %w", relatedTimeStr, err)
 				return nil, err
 			}
-			kmemo.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			urlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in KMEMO: %w", createTimeStr, err)
+				err = fmt.Errorf("error at parse create time %s in URLOG: %w", createTimeStr, err)
 				return nil, err
 			}
-			kmemo.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			urlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in KMEMO: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse update time %s in URLOG: %w", updateTimeStr, err)
 				return nil, err
 			}
-			kmemos = append(kmemos, kmemo)
+			urlogs = append(urlogs, urlog)
 		}
 	}
-	return kmemos, nil
+	return urlogs, nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) GetKmemo(ctx context.Context, id string) (*Kmemo, error) {
+func (u *urlogRepositorySQLite3Impl) GetURLog(ctx context.Context, id string) (*URLog, error) {
 	// 最新のデータを返す
-	kmemoHistories, err := k.GetKmemoHistories(ctx, id)
+	urlogHistories, err := u.GetURLogHistories(ctx, id)
 	if err != nil {
-		err = fmt.Errorf("error at get kmemo histories from KMEMO %s: %w", id, err)
+		err = fmt.Errorf("error at get urlog histories from URLog %s: %w", id, err)
 		return nil, err
 	}
 
 	// なければnilを返す
-	if len(kmemoHistories) == 0 {
+	if len(urlogHistories) == 0 {
 		return nil, nil
 	}
 
-	return kmemoHistories[0], nil
+	return urlogHistories[0], nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
-	repName, err := k.GetRepName(ctx)
+func (u *urlogRepositorySQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
+	repName, err := u.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
+		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
 		return nil, err
 	}
 
@@ -607,13 +641,16 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  CONTENT,
+  TITLE,
+  DESCRIPTION,
+  FAVICON_IMAGE,
+  THUMBNAIL_IMAGE,
   ? AS REP_NAME
-FROM KMEMO
+FROM URLOG
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
 		return nil, err
@@ -625,58 +662,65 @@ ORDER BY UPDATE_TIME DESC
 		return nil, err
 	}
 
-	kmemos := []*Kmemo{}
+	urlogs := []*URLog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kmemo := &Kmemo{}
-			kmemo.RepName = repName
+			urlog := &URLog{}
+			urlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(kmemo.IsDeleted,
-				kmemo.ID,
+			err = rows.Scan(urlog.IsDeleted,
+				urlog.ID,
 				relatedTimeStr,
 				createTimeStr,
-				kmemo.CreateApp,
-				kmemo.CreateDevice,
-				kmemo.CreateUser,
+				urlog.CreateApp,
+				urlog.CreateDevice,
+				urlog.CreateUser,
 				updateTimeStr,
-				kmemo.UpdateApp,
-				kmemo.UpdateDevice,
-				kmemo.UpdateUser,
-				kmemo.Content,
-				kmemo.RepName,
+				urlog.UpdateApp,
+				urlog.UpdateDevice,
+				urlog.UpdateUser,
+				urlog.URL,
+				urlog.Title,
+				urlog.Description,
+				urlog.FaviconImage,
+				urlog.ThumbnailImage,
+				urlog.RepName,
 			)
 
-			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			urlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse related time %s at %s in KMEMO: %w", relatedTimeStr, id, err)
 				return nil, err
 			}
-			kmemo.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			urlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse create time %s at %s in KMEMO: %w", createTimeStr, id, err)
 				return nil, err
 			}
-			kmemo.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			urlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse update time %s at %s in KMEMO: %w", updateTimeStr, id, err)
 				return nil, err
 			}
-			kmemos = append(kmemos, kmemo)
+			urlogs = append(urlogs, urlog)
 		}
 	}
-	return kmemos, nil
+	return urlogs, nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
+func (u *urlogRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog) error {
 	sql := `
-INSERT INTO KMEMO
+INSERT INTO URLOG
   IS_DELETED,
   ID,
-  CONTENT,
+  TITLE,
+  DESCRIPTION,
+  FAVICON_IMAGE,
+  THUMBNAIL_IMAGE,
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
@@ -698,30 +742,36 @@ VASLUES(
   ?,
   ?,
   ?,
+  ?,
+  ?,
+  ?,
   ?
 )`
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at add kmemo sql %s: %w", kmemo.ID, err)
+		err = fmt.Errorf("error at add urlog sql %s: %w", urlog.ID, err)
 		return err
 	}
 
 	_, err = stmt.ExecContext(ctx,
-		kmemo.IsDeleted,
-		kmemo.ID,
-		kmemo.Content,
-		kmemo.RelatedTime.Format(sqlite3impl.TimeLayout),
-		kmemo.CreateTime.Format(sqlite3impl.TimeLayout),
-		kmemo.CreateApp,
-		kmemo.CreateDevice,
-		kmemo.CreateUser,
-		kmemo.UpdateTime.Format(sqlite3impl.TimeLayout),
-		kmemo.UpdateApp,
-		kmemo.UpdateDevice,
-		kmemo.UpdateUser,
+		urlog.IsDeleted,
+		urlog.ID,
+		urlog.Title,
+		urlog.Description,
+		urlog.FaviconImage,
+		urlog.ThumbnailImage,
+		urlog.RelatedTime.Format(sqlite3impl.TimeLayout),
+		urlog.CreateTime.Format(sqlite3impl.TimeLayout),
+		urlog.CreateApp,
+		urlog.CreateDevice,
+		urlog.CreateUser,
+		urlog.UpdateTime.Format(sqlite3impl.TimeLayout),
+		urlog.UpdateApp,
+		urlog.UpdateDevice,
+		urlog.UpdateUser,
 	)
 	if err != nil {
-		err = fmt.Errorf("error at insert in to KMEMO %s: %w", kmemo.ID, err)
+		err = fmt.Errorf("error at insert in to URLog %s: %w", urlog.ID, err)
 		return err
 	}
 	return nil

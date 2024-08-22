@@ -11,12 +11,12 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/mt3hr/gkill/src/app/gkill/dbo/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 // ˄
 
-type urlogRepositorySQLite3Impl struct {
+type nlogRepositorySQLite3Impl struct {
 	// ˅
 	filename string
 	db       *sql.DB
@@ -25,7 +25,7 @@ type urlogRepositorySQLite3Impl struct {
 }
 
 // ˅
-func NewURLogRepositorySQLite3Impl(ctx context.Context, filename string) (URLogRepository, error) {
+func NewNlogRepositorySQLite3Impl(ctx context.Context, filename string) (NlogRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
 	if err != nil {
@@ -34,14 +34,12 @@ func NewURLogRepositorySQLite3Impl(ctx context.Context, filename string) (URLogR
 	}
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "URLOG" (
+CREATE TABLE IF NOT EXISTS "NLOG" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
-  URL NOT NULL,
+  SHOP NOT NULL,
   TITLE NOT NULL,
-  DESCRIPTION NOT NULL,
-  FAVICON_IMAGE NOT NULL,
-  THUMBNAIL_IMAGE NOT NULL,
+  AMOUNT NOT NULL,
   RELATED_TIME NOT NULL,
   CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
@@ -50,43 +48,42 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL
+  UPDATE_USER NOT NULL 
 );`
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create URLOG table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create NLOG table statement %s: %w", filename, err)
 		return nil, err
 	}
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create URLOG table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create NLOG table to %s: %w", filename, err)
 		return nil, err
 	}
 
-	return &urlogRepositorySQLite3Impl{
+	return &nlogRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
 		m:        &sync.Mutex{},
 	}, nil
 }
-
-func (u *urlogRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
 	var err error
 
 	// jsonからパースする
 	queryMap := map[string]string{}
 	err = json.Unmarshal([]byte(queryJSON), &queryMap)
 	if err != nil {
-		err = fmt.Errorf("error at parse query json at URLOG%s: %w", queryJSON, err)
+		err = fmt.Errorf("error at parse query json at NLOG %s: %w", queryJSON, err)
 		return nil, err
 	}
 
 	// update_cacheであればキャッシュを更新する
 	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
-		err = u.UpdateCache(ctx)
+		err = n.UpdateCache(ctx)
 		if err != nil {
-			repName, _ := u.GetRepName(ctx)
+			repName, _ := n.GetRepName(ctx)
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
@@ -108,7 +105,7 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM URLOG
+FROM NLOG 
 WHERE
 `
 
@@ -149,9 +146,7 @@ WHERE
 				}
 				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
 				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite("SHOP LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -168,9 +163,7 @@ WHERE
 				}
 				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
 				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite("SHOP LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -192,9 +185,7 @@ WHERE
 			}
 			sql += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
 			sql += sqlite3impl.EscapeSQLite(" AND ")
-			sql += sqlite3impl.EscapeSQLite("DESCRIPTION NOT LIKE '%" + notWord + "%'")
-			sql += sqlite3impl.EscapeSQLite(" AND ")
-			sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + notWord + "%'")
+			sql += sqlite3impl.EscapeSQLite("SHOP LIKE '%" + notWord + "%'")
 			if i == len(words)-1 {
 				sql += " ) "
 			}
@@ -208,22 +199,22 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
 	sql += `;`
 
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := n.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
 
-	repName, err := u.GetRepName(ctx)
+	repName, err := n.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
+		err = fmt.Errorf("error at get rep name at NLOG: %w", err)
 		return nil, err
 	}
 
-	dataType := "urlog"
+	dataType := "nlog"
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
-		err = fmt.Errorf("error at select from URLOG%s: %w", err)
+		err = fmt.Errorf("error at select from NLOG %s: %w", err)
 		return nil, err
 	}
 
@@ -254,17 +245,17 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in URLOG: %w", relatedTimeStr, err)
+				err = fmt.Errorf("error at parse related time %s in NLOG: %w", relatedTimeStr, err)
 				return nil, err
 			}
 			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in URLOG: %w", createTimeStr, err)
+				err = fmt.Errorf("error at parse create time %s in NLOG: %w", createTimeStr, err)
 				return nil, err
 			}
 			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in URLOG: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse update time %s in NLOG: %w", updateTimeStr, err)
 				return nil, err
 			}
 			kyous = append(kyous, kyou)
@@ -273,11 +264,11 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	return kyous, nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
 	// 最新のデータを返す
-	kyouHistories, err := u.GetKyouHistories(ctx, id)
+	kyouHistories, err := n.GetKyouHistories(ctx, id)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from URLOG %s: %w", id, err)
+		err = fmt.Errorf("error at get kyou histories from NLOG%s: %w", id, err)
 		return nil, err
 	}
 
@@ -289,10 +280,10 @@ func (u *urlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*K
 	return kyouHistories[0], nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	repName, err := u.GetRepName(ctx)
+func (n *nlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	repName, err := n.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
+		err = fmt.Errorf("error at get rep name at NLOG: %w", err)
 		return nil, err
 	}
 
@@ -311,20 +302,20 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM URLOG 
+FROM NLOG
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := n.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
 
-	dataType := "urlog"
+	dataType := "nlog"
 	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
 	if err != nil {
-		err = fmt.Errorf("error at select from URLOG %s: %w", id, err)
+		err = fmt.Errorf("error at select from NLOG %s: %w", id, err)
 		return nil, err
 	}
 
@@ -350,21 +341,22 @@ ORDER BY UPDATE_TIME DESC
 				kyou.UpdateDevice,
 				kyou.UpdateUser,
 				kyou.RepName,
+				kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in URLOG: %w", relatedTimeStr, id, err)
+				err = fmt.Errorf("error at parse related time %s at %s in NLOG: %w", relatedTimeStr, id, err)
 				return nil, err
 			}
 			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in URLOG: %w", createTimeStr, id, err)
+				err = fmt.Errorf("error at parse create time %s at %s in NLOG: %w", createTimeStr, id, err)
 				return nil, err
 			}
 			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in URLOG: %w", updateTimeStr, id, err)
+				err = fmt.Errorf("error at parse update time %s at %s in NLOG: %w", updateTimeStr, id, err)
 				return nil, err
 			}
 			kyous = append(kyous, kyou)
@@ -373,47 +365,46 @@ ORDER BY UPDATE_TIME DESC
 	return kyous, nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return filepath.Abs(u.filename)
+func (n *nlogRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return filepath.Abs(n.filename)
 }
 
-func (u *urlogRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (n *nlogRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 	return nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := u.GetPath(ctx, "")
+func (n *nlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	path, err := n.GetPath(ctx, "")
 	if err != nil {
-		err = fmt.Errorf("error at get path urlog rep: %w", err)
+		err = fmt.Errorf("error at get path nlog rep: %w", err)
 		return "", err
 	}
 	base := filepath.Base(path)
 	ext := filepath.Ext(base)
 	withoutExt := base[:len(base)-len(ext)]
 	return withoutExt, nil
-
 }
 
-func (u *urlogRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return u.db.Close()
+func (n *nlogRepositorySQLite3Impl) Close(ctx context.Context) error {
+	return n.db.Close()
 }
 
-func (u *urlogRepositorySQLite3Impl) FindURLog(ctx context.Context, queryJSON string) ([]*URLog, error) {
+func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, queryJSON string) ([]*Nlog, error) {
 	var err error
 
 	// jsonからパースする
 	queryMap := map[string]string{}
 	err = json.Unmarshal([]byte(queryJSON), &queryMap)
 	if err != nil {
-		err = fmt.Errorf("error at parse query json at URLOG  %s: %w", queryJSON, err)
+		err = fmt.Errorf("error at parse query json at nlog %s: %w", queryJSON, err)
 		return nil, err
 	}
 
 	// update_cacheであればキャッシュを更新する
 	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
-		err = u.UpdateCache(ctx)
+		err = n.UpdateCache(ctx)
 		if err != nil {
-			repName, _ := u.GetRepName(ctx)
+			repName, _ := n.GetRepName(ctx)
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
@@ -433,12 +424,11 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  SHOP,
   TITLE,
-  DESCRIPTION,
-  FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
+  AMOUNT,
   ? AS REP_NAME
-FROM URLOG
+FROM NLOG
 WHERE
 `
 
@@ -477,11 +467,7 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -496,11 +482,7 @@ WHERE
 				if whereCounter != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
+				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -520,16 +502,13 @@ WHERE
 			if whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
-			sql += sqlite3impl.EscapeSQLite(" AND ")
-			sql += sqlite3impl.EscapeSQLite("DESCRIPTION NOT LIKE '%" + notWord + "%'")
+			sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("CONTENT NOT LIKE '%s'", notWord))
 			if i == len(words)-1 {
 				sql += " ) "
 			}
 			whereCounter++
 		}
 	}
-
 	// UPDATE_TIMEが一番上のものだけを抽出
 	sql += `
 GROUP BY ID
@@ -537,94 +516,92 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
 	sql += `;`
 
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := n.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
 
-	repName, err := u.GetRepName(ctx)
+	repName, err := n.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
+		err = fmt.Errorf("error at get rep name at NLOG: %w", err)
 		return nil, err
 	}
 
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
-		err = fmt.Errorf("error at select from URLOG %s: %w", err)
+		err = fmt.Errorf("error at select from NLOG %s: %w", err)
 		return nil, err
 	}
 
-	urlogs := []*URLog{}
+	nlogs := []*Nlog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			urlog := &URLog{}
-			urlog.RepName = repName
+			nlog := &Nlog{}
+			nlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(urlog.IsDeleted,
-				urlog.ID,
+			err = rows.Scan(nlog.IsDeleted,
+				nlog.ID,
 				relatedTimeStr,
 				createTimeStr,
-				urlog.CreateApp,
-				urlog.CreateDevice,
-				urlog.CreateUser,
+				nlog.CreateApp,
+				nlog.CreateDevice,
+				nlog.CreateUser,
 				updateTimeStr,
-				urlog.UpdateApp,
-				urlog.UpdateDevice,
-				urlog.UpdateUser,
-				urlog.URL,
-				urlog.Title,
-				urlog.Description,
-				urlog.FaviconImage,
-				urlog.ThumbnailImage,
-				urlog.RepName,
+				nlog.UpdateApp,
+				nlog.UpdateDevice,
+				nlog.UpdateUser,
+				nlog.Shop,
+				nlog.Title,
+				nlog.Amount,
+				nlog.RepName,
 			)
 
-			urlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in URLOG: %w", relatedTimeStr, err)
+				err = fmt.Errorf("error at parse related time %s in NLOG: %w", relatedTimeStr, err)
 				return nil, err
 			}
-			urlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			nlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in URLOG: %w", createTimeStr, err)
+				err = fmt.Errorf("error at parse create time %s in NLOG: %w", createTimeStr, err)
 				return nil, err
 			}
-			urlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			nlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in URLOG: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse update time %s in NLOG: %w", updateTimeStr, err)
 				return nil, err
 			}
-			urlogs = append(urlogs, urlog)
+			nlogs = append(nlogs, nlog)
 		}
 	}
-	return urlogs, nil
+	return nlogs, nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetURLog(ctx context.Context, id string) (*URLog, error) {
+func (n *nlogRepositorySQLite3Impl) GetNlog(ctx context.Context, id string) (*Nlog, error) {
 	// 最新のデータを返す
-	urlogHistories, err := u.GetURLogHistories(ctx, id)
+	nlogHistories, err := n.GetNlogHistories(ctx, id)
 	if err != nil {
-		err = fmt.Errorf("error at get urlog histories from URLog %s: %w", id, err)
+		err = fmt.Errorf("error at get nlog histories from NLOG%s: %w", id, err)
 		return nil, err
 	}
 
 	// なければnilを返す
-	if len(urlogHistories) == 0 {
+	if len(nlogHistories) == 0 {
 		return nil, nil
 	}
 
-	return urlogHistories[0], nil
+	return nlogHistories[0], nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
-	repName, err := u.GetRepName(ctx)
+func (n *nlogRepositorySQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
+	repName, err := n.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
+		err = fmt.Errorf("error at get rep name at nlog: %w", err)
 		return nil, err
 	}
 
@@ -641,18 +618,17 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  SHOP,
   TITLE,
-  DESCRIPTION,
-  FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
+  AMOUNT
   ? AS REP_NAME
-FROM URLOG
+FROM NLOG 
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := n.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
+		err = fmt.Errorf("error at get nlog histories sql %s: %w", id, err)
 		return nil, err
 	}
 
@@ -662,65 +638,62 @@ ORDER BY UPDATE_TIME DESC
 		return nil, err
 	}
 
-	urlogs := []*URLog{}
+	nlogs := []*Nlog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			urlog := &URLog{}
-			urlog.RepName = repName
+			nlog := &Nlog{}
+			nlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(urlog.IsDeleted,
-				urlog.ID,
+			err = rows.Scan(nlog.IsDeleted,
+				nlog.ID,
 				relatedTimeStr,
 				createTimeStr,
-				urlog.CreateApp,
-				urlog.CreateDevice,
-				urlog.CreateUser,
+				nlog.CreateApp,
+				nlog.CreateDevice,
+				nlog.CreateUser,
 				updateTimeStr,
-				urlog.UpdateApp,
-				urlog.UpdateDevice,
-				urlog.UpdateUser,
-				urlog.URL,
-				urlog.Title,
-				urlog.Description,
-				urlog.FaviconImage,
-				urlog.ThumbnailImage,
-				urlog.RepName,
+				nlog.UpdateApp,
+				nlog.UpdateDevice,
+				nlog.UpdateUser,
+				nlog.Shop,
+				nlog.Title,
+				nlog.Amount,
+				nlog.RepName,
 			)
 
-			urlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in KMEMO: %w", relatedTimeStr, id, err)
+				err = fmt.Errorf("error at parse related time %s at %s in NLOG: %w", relatedTimeStr, id, err)
 				return nil, err
 			}
-			urlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			nlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in KMEMO: %w", createTimeStr, id, err)
+				err = fmt.Errorf("error at parse create time %s at %s in NLOG: %w", createTimeStr, id, err)
 				return nil, err
 			}
-			urlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			nlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in KMEMO: %w", updateTimeStr, id, err)
+				err = fmt.Errorf("error at parse update time %s at %s in NLOG: %w", updateTimeStr, id, err)
 				return nil, err
 			}
-			urlogs = append(urlogs, urlog)
+			nlogs = append(nlogs, nlog)
 		}
 	}
-	return urlogs, nil
+	return nlogs, nil
 }
 
-func (u *urlogRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog) error {
+func (n *nlogRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
 	sql := `
-INSERT INTO URLOG
+INSERT INTO NLOG
   IS_DELETED,
   ID,
+  SHOP,
   TITLE,
-  DESCRIPTION,
-  FAVICON_IMAGE,
-  THUMBNAIL_IMAGE,
+  AMOUNT,
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
@@ -744,34 +717,32 @@ VASLUES(
   ?,
   ?,
   ?,
-  ?,
   ?
 )`
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := n.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at add urlog sql %s: %w", urlog.ID, err)
+		err = fmt.Errorf("error at add nlog sql %s: %w", nlog.ID, err)
 		return err
 	}
 
 	_, err = stmt.ExecContext(ctx,
-		urlog.IsDeleted,
-		urlog.ID,
-		urlog.Title,
-		urlog.Description,
-		urlog.FaviconImage,
-		urlog.ThumbnailImage,
-		urlog.RelatedTime.Format(sqlite3impl.TimeLayout),
-		urlog.CreateTime.Format(sqlite3impl.TimeLayout),
-		urlog.CreateApp,
-		urlog.CreateDevice,
-		urlog.CreateUser,
-		urlog.UpdateTime.Format(sqlite3impl.TimeLayout),
-		urlog.UpdateApp,
-		urlog.UpdateDevice,
-		urlog.UpdateUser,
+		nlog.IsDeleted,
+		nlog.ID,
+		nlog.Shop,
+		nlog.Title,
+		nlog.Amount,
+		nlog.RelatedTime.Format(sqlite3impl.TimeLayout),
+		nlog.CreateTime.Format(sqlite3impl.TimeLayout),
+		nlog.CreateApp,
+		nlog.CreateDevice,
+		nlog.CreateUser,
+		nlog.UpdateTime.Format(sqlite3impl.TimeLayout),
+		nlog.UpdateApp,
+		nlog.UpdateDevice,
+		nlog.UpdateUser,
 	)
 	if err != nil {
-		err = fmt.Errorf("error at insert in to URLog %s: %w", urlog.ID, err)
+		err = fmt.Errorf("error at insert in to NLOG %s: %w", nlog.ID, err)
 		return err
 	}
 	return nil
