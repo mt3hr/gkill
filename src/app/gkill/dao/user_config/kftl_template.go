@@ -12,6 +12,8 @@ type KFTLTemplate struct {
 
 	UserID string `json:"user_id"`
 
+	Device string `json:"device"`
+
 	Title string `json:"title"`
 
 	Template string `json:"template"`
