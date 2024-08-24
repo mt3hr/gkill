@@ -12,6 +12,8 @@ type DeviceStruct struct {
 
 	UserID string `json:"user_id"`
 
+	DeviceName string `json:"device_name"`
+
 	Device string `json:"device"`
 
 	ParentFolderID string `json:"parent_folder_id"`

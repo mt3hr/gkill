@@ -12,6 +12,8 @@ type RepStruct struct {
 
 	UserID string `json:"user_id"`
 
+	Device string `json:"device"`
+
 	RepName string `json:"rep_name"`
 
 	ParentFolderID string `json:"parent_folder_id"`

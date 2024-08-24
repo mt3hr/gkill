@@ -12,6 +12,8 @@ type TagStruct struct {
 
 	UserID string `json:"user_id"`
 
+	Device string `json:"device"`
+
 	TagName string `json:"tag_name"`
 
 	ParentFolderID string `json:"parent_folder_id"`
