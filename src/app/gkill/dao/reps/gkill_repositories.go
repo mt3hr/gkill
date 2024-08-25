@@ -65,6 +65,10 @@ type GkillRepositories struct {
 	// ˄
 }
 
+func NewGkillRepositories(userID string) *GkillRepositories {
+	return &GkillRepositories{userID: userID}
+}
+
 func (g *GkillRepositories) GetUserID(ctx context.Context) (string, error) {
 	// ˅
 	return g.userID, nil
@@ -72,5 +76,86 @@ func (g *GkillRepositories) GetUserID(ctx context.Context) (string, error) {
 }
 
 // ˅
+
+func (g *GkillRepositories) Close(ctx context.Context) error {
+	for _, rep := range g.TagReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.TextReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.KmemoReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.URLogReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, rep := range g.NlogReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.TimeIsReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.MiReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.LantanaReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.IDFKyouReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.ReKyouReps.ReKyouRepositories {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.GitCommitLogReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	/*
+		for _, rep := range g.GPSLogReps {
+			err := rep.Close(ctx)
+			if err != nil {
+				return err
+			}
+		}
+	*/
+	g.userID = ""
+
+	return nil
+}
 
 // ˄

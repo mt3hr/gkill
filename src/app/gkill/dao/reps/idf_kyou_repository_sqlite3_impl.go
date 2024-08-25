@@ -26,7 +26,7 @@ import (
 
 type idfKyouRepositorySQLite3Impl struct {
 	// ˅
-	repositoriesRef *Repositories
+	repositoriesRef *GkillRepositories
 	idDBFile        string
 	contentDir      string
 	rootAddress     string
@@ -57,7 +57,7 @@ type fileinfo struct {
 // autoIDF: trueにするとGetAllKyous()が呼び出されるたびにidfする
 // idfIgnore: autoIDFが有効なとき、idfの対象にしないファイル名パターン
 // idfRecurse: autoIDFが有効なとき、サブディレクトリなどに対してもidfをする場合はtrueを指定する
-func NewIDFDirRep(ctx context.Context, dir, dbFilename string, r *mux.Router, autoIDF *bool, idfIgnore *[]string, repositoriesRef *Repositories) (IDFKyouRepository, error) {
+func NewIDFDirRep(ctx context.Context, dir, dbFilename string, r *mux.Router, autoIDF *bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
 	filename := dbFilename
 
 	db, err := sql.Open("sqlite3", filename)
@@ -221,7 +221,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 
 			// 対象IDFRepsからファイルURLを取得
 			var targetRep Repository
-			for _, rep := range i.repositoriesRef.repositories {
+			for _, rep := range i.repositoriesRef.Reps {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -455,7 +455,7 @@ ORDER BY UPDATE_TIME DESC
 			)
 			idf.FileName = filepath.Base(targetFile)
 
-			for _, rep := range i.repositoriesRef.repositories {
+			for _, rep := range i.repositoriesRef.Reps {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -648,7 +648,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 
 			// 対象IDFRepsからファイルURLを取得
 			var targetRep Repository
-			for _, rep := range i.repositoriesRef.repositories {
+			for _, rep := range i.repositoriesRef.Reps {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -867,7 +867,7 @@ ORDER BY UPDATE_TIME DESC
 			)
 			idf.FileName = filepath.Base(targetFile)
 
-			for _, rep := range i.repositoriesRef.repositories {
+			for _, rep := range i.repositoriesRef.Reps {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
