@@ -21,12 +21,12 @@ type reKyouRepositorySQLite3Impl struct {
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	reps     *Repositories
+	reps     *GkillRepositories
 	// ˄
 }
 
 // ˅
-func NewReKyouRepositorySQLite3Impl(ctx context.Context, filename string, reps *Repositories) (ReKyouRepository, error) {
+func NewReKyouRepositorySQLite3Impl(ctx context.Context, filename string, reps *GkillRepositories) (ReKyouRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
 	if err != nil {
@@ -110,7 +110,7 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON s
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
+		kyous, err := reps.Reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -304,7 +304,7 @@ func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, queryJSON 
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
+		kyous, err := reps.Reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -578,7 +578,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	return reKyous, nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetRepositories(ctx context.Context) (*Repositories, error) {
+func (r *reKyouRepositorySQLite3Impl) GetRepositories(ctx context.Context) (*GkillRepositories, error) {
 	return r.reps, nil
 }
 

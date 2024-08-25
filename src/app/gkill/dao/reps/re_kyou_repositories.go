@@ -14,8 +14,8 @@ import (
 // ˄
 
 type ReKyouRepositories struct {
-	reKyouRepositories []ReKyouRepository
-	repositories       *Repositories
+	ReKyouRepositories []ReKyouRepository
+	repositories       *GkillRepositories
 }
 
 func (r *ReKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
@@ -60,7 +60,7 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
+		kyous, err := reps.Reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -94,13 +94,13 @@ func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string) (*Kyou, err
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan *Kyou, len(r.reKyouRepositories))
-	errch := make(chan error, len(r.reKyouRepositories))
+	ch := make(chan *Kyou, len(r.ReKyouRepositories))
+	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range r.reKyouRepositories {
+	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 		rep := rep
 		go func(rep ReKyouRepository) {
@@ -160,13 +160,13 @@ func (r *ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(r.reKyouRepositories))
-	errch := make(chan error, len(r.reKyouRepositories))
+	ch := make(chan []*Kyou, len(r.ReKyouRepositories))
+	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range r.reKyouRepositories {
+	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 		rep := rep
 		go func(rep ReKyouRepository) {
@@ -246,11 +246,11 @@ func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(r.reKyouRepositories))
+	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range r.reKyouRepositories {
+	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 		rep := rep
 		go func(rep ReKyouRepository) {
@@ -294,11 +294,11 @@ func (r *ReKyouRepositories) Close(ctx context.Context) error {
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(r.reKyouRepositories))
+	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range r.reKyouRepositories {
+	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 		rep := rep
 		go func(rep ReKyouRepository) {
@@ -373,7 +373,7 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, queryJSON string) (
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
+		kyous, err := reps.Reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -393,13 +393,13 @@ func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string) (*ReKyou,
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan *ReKyou, len(r.reKyouRepositories))
-	errch := make(chan error, len(r.reKyouRepositories))
+	ch := make(chan *ReKyou, len(r.ReKyouRepositories))
+	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range r.reKyouRepositories {
+	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 		rep := rep
 		go func(rep ReKyouRepository) {
@@ -459,13 +459,13 @@ func (r *ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) 
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*ReKyou, len(r.reKyouRepositories))
-	errch := make(chan error, len(r.reKyouRepositories))
+	ch := make(chan []*ReKyou, len(r.ReKyouRepositories))
+	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range r.reKyouRepositories {
+	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 		rep := rep
 		go func(rep ReKyouRepository) {
@@ -546,13 +546,13 @@ func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*ReKyou, len(r.reKyouRepositories))
-	errch := make(chan error, len(r.reKyouRepositories))
+	ch := make(chan []*ReKyou, len(r.ReKyouRepositories))
+	errch := make(chan error, len(r.ReKyouRepositories))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range r.reKyouRepositories {
+	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 		rep := rep
 		go func(rep ReKyouRepository) {
@@ -619,7 +619,7 @@ loop:
 	// ˄
 }
 
-func (r *ReKyouRepositories) GetRepositories(ctx context.Context) (*Repositories, error) {
+func (r *ReKyouRepositories) GetRepositories(ctx context.Context) (*GkillRepositories, error) {
 	return r.repositories, nil
 }
 
