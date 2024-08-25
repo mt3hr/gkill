@@ -30,7 +30,7 @@ type ReKyouRepository interface {
 
 	GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error)
 
-	GetRepositories(ctx context.Context) (*Repositories, error)
+	GetRepositories(ctx context.Context) (*GkillRepositories, error)
 
 	// ˅
 

@@ -18,7 +18,7 @@ type Repository struct {
 
 	File string `json:"file"`
 
-	UseToWrite string `json:"use_to_write"`
+	UseToWrite bool `json:"use_to_write"`
 
 	IsExecuteIDFWhenReload bool `json:"is_execute_idf_when_reload"`
 
