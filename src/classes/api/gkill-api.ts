@@ -271,7 +271,7 @@ export class GkillAPI {
 
     get_gps_log_address: string;
 
-    get_kftl_template_addredd: string;
+    get_kftl_template_address: string;
 
     get_gkill_info_address: string;
 
@@ -461,7 +461,7 @@ export class GkillAPI {
         this.add_account_address = "/api/add_user";
         this.generate_tls_file_address = "/api/generate_tls_file";
         this.get_gps_log_address = "/api/get_gps_log";
-        this.get_kftl_template_addredd = "/api/get_kftl_template";
+        this.get_kftl_template_address = "/api/get_kftl_template";
         this.get_gkill_info_address = "/api/get_gkill_info";
         this.get_share_mi_task_list_infos_address = "/api/get_share_mi_task_list_infos";
         this.add_share_mi_task_list_info_address = "/api/add_share_mi_task_list_info";
