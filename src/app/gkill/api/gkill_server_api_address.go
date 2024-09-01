@@ -262,7 +262,7 @@ type GkillServerAPIAddress struct {
 func NewGKillAPIAddress() *GkillServerAPIAddress {
 	// ˅
 
-	gkillAPIAddress = &GkillAPIAddress{}
+	gkillAPIAddress := &GkillServerAPIAddress{}
 	gkillAPIAddress.LoginAddress = "/api/login"
 	gkillAPIAddress.LogoutAddress = "/api/logout"
 	gkillAPIAddress.ResetPasswordAddress = "/api/reset_password"
@@ -387,6 +387,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateShareMiTaskListInfoMethod = "POST"
 	gkillAPIAddress.DeleteShareMiTaskListInfosMethod = "POST"
 
+	return gkillAPIAddress
 	// ˄
 }
 

@@ -1,30 +1,55 @@
 // ˅
 package api
 
-import "github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+import (
+	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+)
 
 // ˄
 
 type FindKyouContext struct {
 	// ˅
 
+	RawQueryJSON string //TODO モデル反映
+
+	ParsedQuery map[string]string //TODO モデル反映
+
 	// ˄
+	Repositories *reps.GkillRepositories //TODO モデル反映
 
-	MatchReps []reps.Repository
+	MatchReps map[string]reps.Repository
 
-	AllKyousWhenDateInRep []*reps.Kyou
+	// TODO モデル反映 AllKyousWhenDateInRep []*reps.Kyou
 
-	MatchKyousAtFilterWords []*reps.Kyou
+	// TODO モデル反映 MatchKyousAtFilterWords []*reps.Kyou
 
-	MatchKyousAtFilterTags []*reps.Kyou
+	AllTags map[string]*reps.Tag //TODO モデル反映
 
-	MatchKyousAtFilterTimeIs []*reps.Kyou
+	MatchTags map[string]*reps.Tag //TODO モデル反映
 
-	MatchKyousAtFilterLocation []*reps.Kyou
+	MatchTexts map[string]*reps.Text //TODO モデル反映
+
+	MatchTimeIssAtFindTimeIs map[string]*reps.TimeIs //TODO モデル反映
+
+	MatchTimeIssAtFilterTags map[string]*reps.TimeIs //TODO モデル反映
+
+	MatchTimeIsTags map[string]*reps.Tag //TODO モデル反映
+
+	MatchTimeIsTexts map[string]*reps.Text //TODO モデル反映
+
+	MatchKyousCurrent map[string]*reps.Kyou //TODO モデル反映
+
+	MatchKyousAtFindKyou map[string]*reps.Kyou //TODO モデル反映
+
+	MatchKyousAtFilterTags map[string]*reps.Kyou
+
+	MatchKyousAtFilterTimeIs map[string]*reps.Kyou
+
+	MatchKyousAtFilterLocation map[string]*reps.Kyou
 
 	ResultKyous []*reps.Kyou
 
-	Words *Words
+	// TODO モデル反映 Words *Words
 
 	TagFilterMode *TagFilterMode
 
