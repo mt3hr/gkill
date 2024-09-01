@@ -33,9 +33,6 @@ type FindFilter struct {
 	// ˄
 }
 
-// func (f *FindFilter) FindKyous(gkillDAOManager dao.GkillDAOManager, queryJSON string) ([]*reps.Kyou, error) {
-
-// TODO モデル反映
 func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string, gkillDAOManager *dao.GkillDAOManager, queryJSON string) ([]*reps.Kyou, []*GkillError, error) {
 	// ˅
 	findKyouContext := &FindKyouContext{}
@@ -254,13 +251,6 @@ errloop:
 	return nil, nil
 	// ˄
 }
-
-/* //TODO モデル反映
-func (f *FindFilter) parseWordsFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*GkillError, error) {
-	// ˅
-	// ˄
-}
-*/
 
 func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) ([]*GkillError, error) {
 	// ˅
@@ -578,18 +568,6 @@ func (f *FindFilter) parseTimeIsTagFilterModeFromQuery(ctx context.Context, find
 	return nil, nil
 	// ˄
 }
-
-/* //TODO モデル反映
-func (f *FindFilter) getAllKyousWhenDateInRep(ctx context.Context, findCtx *FindKyouContext) ([]*GkillError, error) {
-	// ˅
-	// ˄
-}
-
-func (f *FindFilter) filterWordsKyous(ctx context.Context, findCtx *FindKyouContext) ([]*GkillError, error) {
-	// ˅
-	// ˄
-}
-*/
 
 func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([]*GkillError, error) {
 	// ˅

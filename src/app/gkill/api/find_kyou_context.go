@@ -10,36 +10,33 @@ import (
 type FindKyouContext struct {
 	// ˅
 
-	RawQueryJSON string //TODO モデル反映
-
-	ParsedQuery map[string]string //TODO モデル反映
-
 	// ˄
-	Repositories *reps.GkillRepositories //TODO モデル反映
+
+	RawQueryJSON string
+
+	ParsedQuery map[string]string
+
+	Repositories *reps.GkillRepositories
 
 	MatchReps map[string]reps.Repository
 
-	// TODO モデル反映 AllKyousWhenDateInRep []*reps.Kyou
+	AllTags map[string]*reps.Tag
 
-	// TODO モデル反映 MatchKyousAtFilterWords []*reps.Kyou
+	MatchTags map[string]*reps.Tag
 
-	AllTags map[string]*reps.Tag //TODO モデル反映
+	MatchTexts map[string]*reps.Text
 
-	MatchTags map[string]*reps.Tag //TODO モデル反映
+	MatchTimeIssAtFindTimeIs map[string]*reps.TimeIs
 
-	MatchTexts map[string]*reps.Text //TODO モデル反映
+	MatchTimeIssAtFilterTags map[string]*reps.TimeIs
 
-	MatchTimeIssAtFindTimeIs map[string]*reps.TimeIs //TODO モデル反映
+	MatchTimeIsTags map[string]*reps.Tag
 
-	MatchTimeIssAtFilterTags map[string]*reps.TimeIs //TODO モデル反映
+	MatchTimeIsTexts map[string]*reps.Text
 
-	MatchTimeIsTags map[string]*reps.Tag //TODO モデル反映
+	MatchKyousCurrent map[string]*reps.Kyou
 
-	MatchTimeIsTexts map[string]*reps.Text //TODO モデル反映
-
-	MatchKyousCurrent map[string]*reps.Kyou //TODO モデル反映
-
-	MatchKyousAtFindKyou map[string]*reps.Kyou //TODO モデル反映
+	MatchKyousAtFindKyou map[string]*reps.Kyou
 
 	MatchKyousAtFilterTags map[string]*reps.Kyou
 
@@ -48,8 +45,6 @@ type FindKyouContext struct {
 	MatchKyousAtFilterLocation map[string]*reps.Kyou
 
 	ResultKyous []*reps.Kyou
-
-	// TODO モデル反映 Words *Words
 
 	TagFilterMode *TagFilterMode
 
