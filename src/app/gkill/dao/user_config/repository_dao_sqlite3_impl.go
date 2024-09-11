@@ -24,11 +24,19 @@ func (r *repositoryDAOSQLite3Impl) AddRepository(ctx context.Context, repository
 	panic("notImplements")
 }
 
+func (r *repositoryDAOSQLite3Impl) AddRepositories(ctx context.Context, repository []*Repository) (bool, error) {
+	panic("notImplements")
+}
+
 func (r *repositoryDAOSQLite3Impl) UpdateRepository(ctx context.Context, repository *Repository) (bool, error) {
 	panic("notImplements")
 }
 
 func (r *repositoryDAOSQLite3Impl) DeleteRepository(ctx context.Context, id string) (bool, error) {
+	panic("notImplements")
+}
+
+func (r *repositoryDAOSQLite3Impl) DeleteAllRepositoriesByUser(ctx context.Context, userID string, device string) (bool, error) {
 	panic("notImplements")
 }
 

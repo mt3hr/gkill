@@ -8,17 +8,17 @@ type ShareMiTaskListInfo struct {
 
 	// ˄
 
-	UserID string `json:"user_id"`
+	UserID string
 
-	Device string `json:"device"`
+	Device string
 
-	ShareTitle string `json:"share_title"`
+	ShareTitle string
 
-	IsShareDetail bool `json:"is_share_detail"`
+	IsShareDetail bool
 
-	ShareID string `json:"share_id"`
+	ShareID string
 
-	FindQueryJSON string `json:"find_query_json"`
+	FindQueryJSON string
 
 	// ˅
 

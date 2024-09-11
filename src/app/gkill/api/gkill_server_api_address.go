@@ -60,19 +60,19 @@ type GkillServerAPIAddress struct {
 
 	GetKyouAddress string
 
-	GetKmemosAddress string
+	// GetKmemosAddress string
 
-	GetURLogsAddress string
+	// GetURLogsAddress string
 
-	GetNlogsAddress string
+	// GetNlogsAddress string
 
-	GetTimeissAddress string
+	// GetTimeissAddress string
 
-	GetRekyousAddress string
+	// GetRekyousAddress string
 
-	GetMisAddress string
+	// GetMisAddress string
 
-	GetLantanasAddress string
+	// GetLantanasAddress string
 
 	GetKmemoAddress string
 
@@ -150,6 +150,8 @@ type GkillServerAPIAddress struct {
 
 	LogoutMethod string
 
+	ResetPasswordMethod string
+
 	SetNewPasswordMethod string
 
 	AddTagMethod string
@@ -194,15 +196,29 @@ type GkillServerAPIAddress struct {
 
 	GetKyousMethod string
 
-	GetKyouMethod string
+	GetKmemoMethod string
+
+	GetURLogMethod string
+
+	GetNlogMethod string
+
+	GetTimeisMethod string
+
+	GetMiMethod string
+
+	GetLantanaMethod string
 
 	GetRekyouMethod string
 
+	GetKyouMethod string
+
 	GetRekyousMethod string
+
+	GetGitCommitLogMethod string
 
 	GetGitCommitLogsMethod string
 
-	GetMiNoardListMethod string
+	GetMiBoardListMethod string
 
 	GetPlaingTimeisMethod string
 
@@ -254,6 +270,8 @@ type GkillServerAPIAddress struct {
 
 	DeleteShareMiTaskListInfosMethod string
 
+	GetMiSharedTasksMethod string
+
 	// ˅
 
 	// ˄
@@ -289,13 +307,13 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateRekyouAddress = "/api/update_rekyou"
 	gkillAPIAddress.GetKyousAddress = "/api/get_kyous"
 	gkillAPIAddress.GetKyouAddress = "/api/get_kyou"
-	gkillAPIAddress.GetKmemosAddress = "/api/get_kmemos"
-	gkillAPIAddress.GetURLogsAddress = "/api/get_urlogs"
-	gkillAPIAddress.GetNlogsAddress = "/api/get_nlogs"
-	gkillAPIAddress.GetTimeissAddress = "/api/get_timeiss"
-	gkillAPIAddress.GetRekyousAddress = "/api/get_rekyous"
-	gkillAPIAddress.GetMisAddress = "/api/get_mis"
-	gkillAPIAddress.GetLantanasAddress = "/api/get_lantanas"
+	// gkillAPIAddress.GetKmemosAddress = "/api/get_kmemos"
+	// gkillAPIAddress.GetURLogsAddress = "/api/get_urlogs"
+	// gkillAPIAddress.GetNlogsAddress = "/api/get_nlogs"
+	// gkillAPIAddress.GetTimeissAddress = "/api/get_timeiss"
+	// gkillAPIAddress.GetRekyousAddress = "/api/get_rekyous"
+	// gkillAPIAddress.GetMisAddress = "/api/get_mis"
+	// gkillAPIAddress.GetLantanasAddress = "/api/get_lantanas"
 	gkillAPIAddress.GetKmemoAddress = "/api/get_kmemo"
 	gkillAPIAddress.GetURLogAddress = "/api/get_urlog"
 	gkillAPIAddress.GetNlogAddress = "/api/get_nlog"
@@ -334,6 +352,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetMiSharedTasksAddress = "/api/get_mi_shared_tasks"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
+	gkillAPIAddress.ResetPasswordMethod = "POST"
 	gkillAPIAddress.SetNewPasswordMethod = "POST"
 	gkillAPIAddress.AddTagMethod = "POST"
 	gkillAPIAddress.AddTextMethod = "POST"
@@ -356,11 +375,18 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateKyouInfoMethod = "POST"
 	gkillAPIAddress.UpdateRekyouMethod = "POST"
 	gkillAPIAddress.GetKyousMethod = "POST"
+	gkillAPIAddress.GetKmemoMethod = "POST"
+	gkillAPIAddress.GetURLogMethod = "POST"
+	gkillAPIAddress.GetNlogMethod = "POST"
+	gkillAPIAddress.GetTimeisMethod = "POST"
+	gkillAPIAddress.GetMiMethod = "POST"
+	gkillAPIAddress.GetLantanaMethod = "POST"
 	gkillAPIAddress.GetKyouMethod = "POST"
 	gkillAPIAddress.GetRekyouMethod = "POST"
 	gkillAPIAddress.GetRekyousMethod = "POST"
+	gkillAPIAddress.GetGitCommitLogMethod = "POST"
 	gkillAPIAddress.GetGitCommitLogsMethod = "POST"
-	gkillAPIAddress.GetMiNoardListMethod = "POST"
+	gkillAPIAddress.GetMiBoardListMethod = "POST"
 	gkillAPIAddress.GetPlaingTimeisMethod = "POST"
 	gkillAPIAddress.GetAllTagNamesMethod = "POST"
 	gkillAPIAddress.GetTagsByTargetIDMethod = "POST"
@@ -386,6 +412,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.AddShareMiTaskListInfoMethod = "POST"
 	gkillAPIAddress.UpdateShareMiTaskListInfoMethod = "POST"
 	gkillAPIAddress.DeleteShareMiTaskListInfosMethod = "POST"
+	gkillAPIAddress.GetMiSharedTasksMethod = "POST"
 
 	return gkillAPIAddress
 	// ˄

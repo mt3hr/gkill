@@ -1,6 +1,8 @@
 // ˅
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
+
 // ˄
 
 type UpdateUserRepsRequest struct {
@@ -12,7 +14,7 @@ type UpdateUserRepsRequest struct {
 
 	TargetUserID string `json:"target_user_id"`
 
-	UpdatedReps []*Repository `json:"updated_reps"`
+	UpdatedReps []*user_config.Repository `json:"updated_reps"`
 
 	// ˅
 

@@ -1,6 +1,8 @@
 // ˅
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+
 // ˄
 
 type AddMiRequest struct {
@@ -10,7 +12,7 @@ type AddMiRequest struct {
 
 	SessionID string `json:"session_id"`
 
-	Mi *Mi `json:"mi"`
+	Mi *reps.Mi `json:"mi"`
 
 	// ˅
 

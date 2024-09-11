@@ -12,9 +12,13 @@ type RepositoryDAO interface {
 
 	AddRepository(ctx context.Context, repository *Repository) (bool, error)
 
+	AddRepositories(ctx context.Context, repository []*Repository) (bool, error)
+
 	UpdateRepository(ctx context.Context, repository *Repository) (bool, error)
 
 	DeleteRepository(ctx context.Context, id string) (bool, error)
+
+	DeleteAllRepositoriesByUser(ctx context.Context, userID string, device string) (bool, error)
 
 	// ˅
 

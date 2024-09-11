@@ -8,19 +8,29 @@ type ApplicationConfig struct {
 
 	// ˄
 
-	UserID string `json:"user_id"`
+	UserID string
 
-	Device string `json:"device"`
+	Device string
 
-	EnableBrowserCache bool `json:"enable_browser_cache"`
+	EnableBrowserCache bool
 
-	GoogleMapAPIKey string `json:"google_map_api_key"`
+	GoogleMapAPIKey string
 
-	RykvImageListColumnNumber int `json:"rykv_image_list_column_number"`
+	RykvImageListColumnNumber int
 
-	RykvHotReload bool `json:"rykv_hot_reload"`
+	RykvHotReload bool
 
-	MiDefaultBoard string `json:"mi_default_board"`
+	MiDefaultBoard string
+
+	KFTLTemplate []*KFTLTemplate
+
+	TagStrcuct []*TagStruct
+
+	RepStruct []*RepStruct
+
+	DeviceStruct []*DeviceStruct
+
+	RepTypeStruct []*RepTypeStruct
 
 	// ˅
 

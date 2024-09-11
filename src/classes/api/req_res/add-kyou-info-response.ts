@@ -1,8 +1,8 @@
 // ˅
 'use strict';
 
-import { Kyou } from '@/classes/datas/kyou';
 import { GkillAPIResponse } from '../gkill-api-response';
+import { IDFKyou } from '@/classes/datas/idf-kyou';
 
 // ˄
 
@@ -11,12 +11,12 @@ export class AddKyouInfoResponse extends GkillAPIResponse {
     
     // ˄
 
-    added_kyou: Kyou;
+    added_kyou: IDFKyou;
 
     constructor() {
         // ˅
         super()
-        this.added_kyou = new Kyou()
+        this.added_kyou = new IDFKyou()
         // ˄
     }
 
