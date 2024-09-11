@@ -321,4 +321,8 @@ WHERE USER_ID = ?
 	return true, nil
 }
 
+func (k *kftlTemplateDAOSQLite3Impl) Close(ctx context.Context) error {
+	return k.db.Close()
+}
+
 // ˄

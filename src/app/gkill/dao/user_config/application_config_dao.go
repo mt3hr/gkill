@@ -16,6 +16,8 @@ type ApplicationConfigDAO interface {
 
 	DeleteApplicationConfig(ctx context.Context, userID string, device string) (bool, error)
 
+	Close(ctx context.Context) error
+
 	// ˅
 
 	// ˄

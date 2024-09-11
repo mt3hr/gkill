@@ -273,4 +273,8 @@ WHERE ID = ?
 	return true, nil
 }
 
+func (f *fileUploadHistoryDAOSQLite3Impl) Close(ctx context.Context) error {
+	return f.db.Close()
+}
+
 // ˄
