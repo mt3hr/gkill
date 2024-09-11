@@ -1,6 +1,8 @@
 // ˅
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+
 // ˄
 
 type AddTagRequest struct {
@@ -10,7 +12,7 @@ type AddTagRequest struct {
 
 	SessionID string `json:"session_id"`
 
-	Tag *Tag `json:"tag"`
+	Tag *reps.Tag `json:"tag"`
 
 	// ˅
 

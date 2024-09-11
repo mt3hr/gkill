@@ -1,7 +1,10 @@
 // ˅
 package req_res
 
-import "github.com/mt3hr/gkill/src/app/gkill/api"
+import (
+	"github.com/mt3hr/gkill/src/app/gkill/api/message"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
+)
 
 // ˄
 
@@ -10,11 +13,11 @@ type AddAccountResponse struct {
 
 	// ˄
 
-	Messages []*api.GkillMessage `json:"messages"`
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*GkillError `json:"errors"`
+	Errors []*message.GkillError `json:"errors"`
 
-	AddedAccountInfo *Account `json:"added_account_info"`
+	AddedAccountInfo *account.Account `json:"added_account_info"`
 
 	// ˅
 

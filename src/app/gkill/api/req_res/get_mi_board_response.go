@@ -1,6 +1,8 @@
 // ˅
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/api/message"
+
 // ˄
 
 type GetMiBoardResponse struct {
@@ -8,11 +10,11 @@ type GetMiBoardResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage `json:"messages"`
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*GkillError `json:"errors"`
+	Errors []*message.GkillError `json:"errors"`
 
-	Boards []*string `json:"boards"`
+	Boards []string `json:"boards"`
 
 	// ˅
 

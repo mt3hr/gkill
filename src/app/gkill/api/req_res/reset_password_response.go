@@ -1,6 +1,8 @@
 // ˅
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/api/message"
+
 // ˄
 
 type ResetPasswordResponse struct {
@@ -8,9 +10,9 @@ type ResetPasswordResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage `json:"messages"`
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*GkillError `json:"errors"`
+	Errors []*message.GkillError `json:"errors"`
 
 	PasswordResetPathWithoutHost string `json:"password_reset_path_without_host"`
 

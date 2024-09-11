@@ -253,7 +253,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
-		err = fmt.Errorf("error at select from MI %s: %w", err)
+		err = fmt.Errorf("error at select from MI: %w", err)
 		return nil, err
 	}
 
@@ -926,6 +926,42 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 	sqlWhere += `;`
 
 	return sqlWhere, nil
+}
+
+func (m *miRepositorySQLite3Impl) GetBoardNames(ctx context.Context) ([]string, error) {
+	sql := `
+SELECT 
+DISTINCT BOARD_NAME
+FROM MI 
+WHERE IS_DELETED = FALSE
+`
+	stmt, err := m.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get board names sql: %w", err)
+		return nil, err
+	}
+	rows, err := stmt.QueryContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at select board names from MI: %w", err)
+		return nil, err
+	}
+
+	boardNames := []string{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			boardName := ""
+			err = rows.Scan(&boardName)
+			if err != nil {
+				err = fmt.Errorf("error at scan rows at get board names in MI: %w", err)
+				return nil, err
+			}
+			boardNames = append(boardNames, boardName)
+		}
+	}
+	return boardNames, nil
 }
 
 // ˄

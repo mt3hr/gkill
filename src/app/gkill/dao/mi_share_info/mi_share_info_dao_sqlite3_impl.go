@@ -150,6 +150,56 @@ WHERE USER_ID = ? AND DEVICE = ?
 	return miShareInfos, nil
 }
 
+func (m *miShareInfoDAOSQLite3Impl) GetMiShareInfo(ctx context.Context, sharedID string) (*MiShareInfo, error) {
+	sql := `
+SELECT 
+  ID,
+  USER_ID,
+  DEVICE,
+  SHARE_TITLE,
+  IS_SHARE_DETAIL,
+  SHARE_ID,
+  FIND_QUERY_JSON
+FROM MI_SHARE_INFO
+WHERE SHARED_ID = ?
+`
+	stmt, err := m.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get get mi share infos sql: %w", err)
+		return nil, err
+	}
+
+	rows, err := stmt.QueryContext(ctx, sharedID)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		return nil, err
+	}
+
+	miShareInfos := []*MiShareInfo{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			miShareInfo := &MiShareInfo{}
+			err = rows.Scan(
+				miShareInfo.ID,
+				miShareInfo.UserID,
+				miShareInfo.Device,
+				miShareInfo.ShareTitle,
+				miShareInfo.IsShareDetail,
+				miShareInfo.ShareID,
+				miShareInfo.FindQueryJSON,
+			)
+			miShareInfos = append(miShareInfos, miShareInfo)
+		}
+	}
+	if len(miShareInfos) == 0 {
+		return nil, nil
+	}
+	return miShareInfos[0], nil
+}
+
 func (m *miShareInfoDAOSQLite3Impl) AddMiShareInfo(ctx context.Context, miShareInfo *MiShareInfo) (bool, error) {
 	sql := `
 INSERT INTO MI_SHARE_INFO (

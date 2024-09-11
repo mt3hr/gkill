@@ -26,6 +26,8 @@ type TagRepository interface {
 
 	AddTagInfo(ctx context.Context, tag *Tag) error
 
+	GetAllTagNames(ctx context.Context) ([]string, error)
+
 	// ˅
 
 	// ˄

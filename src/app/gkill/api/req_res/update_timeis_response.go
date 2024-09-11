@@ -1,6 +1,11 @@
 // ˅
 package req_res
 
+import (
+	"github.com/mt3hr/gkill/src/app/gkill/api/message"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+)
+
 // ˄
 
 type UpdateTimeisResponse struct {
@@ -8,13 +13,13 @@ type UpdateTimeisResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage `json:"messages"`
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*GkillError `json:"errors"`
+	Errors []*message.GkillError `json:"errors"`
 
-	UpdatedTimeis *TimeIs `json:"updated_timeis"`
+	UpdatedTimeis *reps.TimeIs `json:"updated_timeis"`
 
-	UpdatedTimeisKyou *Kyou `json:"updated_timeis_kyou"`
+	UpdatedTimeisKyou *reps.Kyou `json:"updated_timeis_kyou"`
 
 	// ˅
 

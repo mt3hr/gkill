@@ -1,6 +1,11 @@
 // ˅
 package req_res
 
+import (
+	"github.com/mt3hr/gkill/src/app/gkill/api/message"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+)
+
 // ˄
 
 type UpdateLantanaResponse struct {
@@ -8,13 +13,13 @@ type UpdateLantanaResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage `json:"messages"`
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*GkillError `json:"errors"`
+	Errors []*message.GkillError `json:"errors"`
 
-	UpdatedLantana *Lantana `json:"updated_lantana"`
+	UpdatedLantana *reps.Lantana `json:"updated_lantana"`
 
-	UpdatedLantanaKyou *Kyou `json:"updated_lantana_kyou"`
+	UpdatedLantanaKyou *reps.Kyou `json:"updated_lantana_kyou"`
 
 	// ˅
 
