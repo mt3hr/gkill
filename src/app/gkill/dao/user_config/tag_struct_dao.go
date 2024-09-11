@@ -20,6 +20,8 @@ type TagStructDAO interface {
 
 	DeleteUsersTagStructs(ctx context.Context, userID string) (bool, error)
 
+	Close(ctx context.Context) error
+
 	// ˅
 
 	// ˄

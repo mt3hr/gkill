@@ -297,4 +297,8 @@ WHERE ID = ?
 	return true, nil
 }
 
+func (m *miShareInfoDAOSQLite3Impl) Close(ctx context.Context) error {
+	return m.db.Close()
+}
+
 // ˄

@@ -344,4 +344,8 @@ WHERE DEVICE = ?
 	return true, nil
 }
 
+func (s *serverConfigDAOSQLite3Impl) Close(ctx context.Context) error {
+	return s.db.Close()
+}
+
 // ˄

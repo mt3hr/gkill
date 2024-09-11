@@ -254,4 +254,8 @@ WHERE USER_ID = ? AND DEVICE = ?
 	return true, nil
 }
 
+func (a *applicationConfigDAOSQLite3Impl) Close(ctx context.Context) error {
+	return a.db.Close()
+}
+
 // ˄
