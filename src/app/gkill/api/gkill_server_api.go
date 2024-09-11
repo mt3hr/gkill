@@ -45,6 +45,21 @@ import (
 
 // ˄
 
+func NewGkillServerAPI() (*GkillServerAPI, error) {
+	autoIDF := false
+	gkillDAOManager, err := dao.NewGkillDAOManager(autoIDF)
+	if err != nil {
+		err = fmt.Errorf("error at create gkill dao manager: %w", err)
+		return nil, err
+	}
+
+	return &GkillServerAPI{
+		API_ADDRESS:     NewGKillAPIAddress(),
+		GkillDAOManager: gkillDAOManager,
+		FindFilter:      &FindFilter{},
+	}, nil
+}
+
 type GkillServerAPI struct {
 	// ˅
 
@@ -238,7 +253,7 @@ func (g *GkillServerAPI) Serve() error {
 		g.HandleLogout(w, r)
 	}).Methods(g.API_ADDRESS.GetMiSharedTasksMethod)
 
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		return err
@@ -253,6 +268,11 @@ func (g *GkillServerAPI) Serve() error {
 	port := serverConfig.Address
 	err = http.ListenAndServe(port, router)
 	return err
+}
+
+func (g *GkillServerAPI) Close() error {
+	//TODO
+	panic("notImplements")
 }
 
 func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -355,7 +375,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		isLocalAppUser = true
 	}
 
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -695,7 +715,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -818,7 +838,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -941,7 +961,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -1064,7 +1084,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -1187,7 +1207,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -1310,7 +1330,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -1433,7 +1453,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -1556,7 +1576,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -1679,7 +1699,7 @@ func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Reques
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -1802,7 +1822,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -1925,7 +1945,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -2061,7 +2081,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -2197,7 +2217,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -2333,7 +2353,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -2469,7 +2489,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -2605,7 +2625,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -2741,7 +2761,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -2877,7 +2897,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -3013,7 +3033,7 @@ func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Req
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -3149,7 +3169,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -3284,7 +3304,7 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -3356,7 +3376,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -3631,7 +3651,7 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -3717,7 +3737,7 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -3803,7 +3823,7 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -3889,7 +3909,7 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -3975,7 +3995,7 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -4061,7 +4081,7 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -4147,7 +4167,7 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -4233,7 +4253,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -4346,7 +4366,7 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -4459,7 +4479,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -4546,7 +4566,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -4634,7 +4654,7 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -4722,7 +4742,7 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -4810,7 +4830,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -4897,7 +4917,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -5037,7 +5057,7 @@ func (g *GkillServerAPI) HandleGetServerConfig(w http.ResponseWriter, r *http.Re
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -5124,7 +5144,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -5368,7 +5388,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -5675,7 +5695,7 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -5792,7 +5812,7 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -5909,7 +5929,7 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -6026,7 +6046,7 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -6143,7 +6163,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 	}
 
 	userID := requesterAccount.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -6252,7 +6272,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	}
 
 	userID := requesterAccount.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -6356,7 +6376,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	}
 
 	userID := requesterAccount.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -6531,7 +6551,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -6847,7 +6867,7 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -6933,7 +6953,7 @@ func (g *GkillServerAPI) HandleGetKFTLTemplate(w http.ResponseWriter, r *http.Re
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -7007,7 +7027,7 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -7071,7 +7091,7 @@ func (g *GkillServerAPI) HandleAddShareMiTaskListInfo(w http.ResponseWriter, r *
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -7193,7 +7213,7 @@ func (g *GkillServerAPI) HandleGetShareMiTaskListInfos(w http.ResponseWriter, r 
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -7267,7 +7287,7 @@ func (g *GkillServerAPI) HandleDeleteShareMiTaskListInfos(w http.ResponseWriter,
 	}
 
 	userID := account.UserID
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		log.Printf(err.Error())
@@ -7492,7 +7512,7 @@ func (g *GkillServerAPI) generateGPXFileContent(gpsLogs []*reps.GPSLog) (string,
 }
 
 func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *account.Account) error {
-	device, err := g.getDevice()
+	device, err := g.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device name: %w", err)
 		return err
@@ -7610,8 +7630,8 @@ func (g *GkillServerAPI) getTLSFileNames(device string) (certFileName string, pe
 	return serverConfig.TLSCertFile, serverConfig.TLSKeyFile, nil
 }
 
-func (g *GkillServerAPI) getDevice() (string, error) {
-	return "", nil //TODO
+func (g *GkillServerAPI) GetDevice() (string, error) {
+	return "gkill", nil //TODO
 }
 
 func publicKey(priv any) any {
