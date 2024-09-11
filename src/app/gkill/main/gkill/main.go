@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/asticode/go-astikit"
@@ -53,15 +55,32 @@ var (
 			address += serverConfig.Address
 
 			// Initialize astilectron
+			baseDirectoryPath := filepath.Clean(os.ExpandEnv("$HOME/gkill/lib/base_directory"))
+			dataDirectoryPath := filepath.Clean(os.ExpandEnv("$HOME/gkill/lib/data_directory"))
+			directories := []string{
+				baseDirectoryPath,
+				dataDirectoryPath,
+			}
+			for _, dir := range directories {
+				err := os.MkdirAll(dir, fs.ModePerm)
+				if err != nil {
+					err = fmt.Errorf("error at create directory %s: %w", dir, err)
+					log.Fatal(err)
+				}
+			}
+
 			a, err := astilectron.New(nil, astilectron.Options{
 				AppName:            "gkill",
 				VersionAstilectron: "0.51.0",
 				VersionElectron:    "22.0.0",
 				AppIconDefaultPath: "C:/Users/yamat/Git/gkill/public/favicon.png",
 				AppIconDarwinPath:  "C:/Users/yamat/Git/gkill/public/favicon.ico",
+				BaseDirectoryPath:  baseDirectoryPath,
+				DataDirectoryPath:  dataDirectoryPath,
+				SkipSetup:          false,
 			})
 			if err != nil {
-				fmt.Println("Electronが動かない環境であるかもしれません。その場合gkillは動きませんので変わりにgkillを起動し、ブラウザからのアクセスを試みてください。")
+				fmt.Println("Electronが動かない環境であるかもしれません。その場合gkillは動きませんので変わりにgkill_serverを起動し、ブラウザからのアクセスを試みてください。")
 				log.Fatal(err)
 			}
 			defer a.Close()
@@ -98,14 +117,10 @@ var (
 			w.Create()
 			w.ExecuteJavaScript(`// aタグがクリックされた時にelectronで開かず、デフォルトのブラウザで開く
 document.addEventListener('click', (e) => {
-  for (let i = 0; i < e.path.length; i++) {
-    let element = e.path[i]
-	if (element.tagName === 'A') {
-      e.preventDefault()
-	  let aTag = element
-	  let href = aTag.href
-      astilectron.sendMessage('` + openInDefaultBrowserMessagePrefix + ` ' + href)
-	}
+  if (e.srcElement.href) {
+    e.preventDefault()
+	let href = e.srcElement.href
+    astilectron.sendMessage('` + openInDefaultBrowserMessagePrefix + ` ' + href)
   }
 })
 `)
