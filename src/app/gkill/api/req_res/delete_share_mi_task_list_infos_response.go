@@ -1,6 +1,8 @@
 // ˅
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/api/message"
+
 // ˄
 
 type DeleteShareMiTaskListInfosResponse struct {
@@ -8,9 +10,9 @@ type DeleteShareMiTaskListInfosResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage `json:"messages"`
+	Messages []*message.GkillMessage
 
-	Errors []*GkillError `json:"errors"`
+	Errors []*message.GkillError
 
 	// ˅
 

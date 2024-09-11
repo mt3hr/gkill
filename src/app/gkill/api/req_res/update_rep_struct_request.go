@@ -1,6 +1,8 @@
 // ˅
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
+
 // ˄
 
 type UpdateRepStructRequest struct {
@@ -10,7 +12,7 @@ type UpdateRepStructRequest struct {
 
 	SessionID string `json:"session_id"`
 
-	RepStruct []*RepStruct `json:"rep_struct"`
+	RepStruct []*user_config.RepStruct `json:"rep_struct"`
 
 	// ˅
 

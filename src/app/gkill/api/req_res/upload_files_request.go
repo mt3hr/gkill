@@ -8,9 +8,13 @@ type UploadFilesRequest struct {
 
 	// ˄
 
-	SessionID string `json:"session_id"`
+	SessionID string
 
-	Files []*FileData `json:"files"`
+	Files []*FileData
+
+	TargetRepName string
+
+	ConflictBehavior FileUploadConflictBehavior
 
 	// ˅
 

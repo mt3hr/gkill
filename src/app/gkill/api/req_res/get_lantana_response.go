@@ -1,6 +1,11 @@
 // ˅
 package req_res
 
+import (
+	"github.com/mt3hr/gkill/src/app/gkill/api/message"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+)
+
 // ˄
 
 type GetLantanaResponse struct {
@@ -8,11 +13,11 @@ type GetLantanaResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage `json:"messages"`
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*GkillError `json:"errors"`
+	Errors []*message.GkillError `json:"errors"`
 
-	LantanaHistories []*Lantana `json:"lantana_histories"`
+	LantanaHistories []*reps.Lantana `json:"lantana_histories"`
 
 	// ˅
 
