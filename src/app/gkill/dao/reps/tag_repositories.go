@@ -504,6 +504,77 @@ func (t TagRepositories) AddTagInfo(ctx context.Context, tag *Tag) error {
 	// ˄
 }
 
+func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
+	// ˅
+	tagNames := map[string]struct{}{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []string, len(t))
+	errch := make(chan error, len(t))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range t {
+		wg.Add(1)
+		rep := rep
+		go func(rep TagRepository) {
+			defer wg.Done()
+			matchTagNamesInRep, err := rep.GetAllTagNames(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchTagNamesInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at get all tagnames: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// タグ名集約
+loop:
+	for {
+		select {
+		case tagNamesInRep := <-ch:
+			if tagNamesInRep == nil {
+				continue loop
+			}
+			for _, tagName := range tagNamesInRep {
+				tagNames[tagName] = struct{}{}
+			}
+		default:
+			break loop
+		}
+	}
+
+	tagNamesList := []string{}
+	for tagName := range tagNames {
+		tagNamesList = append(tagNamesList, tagName)
+	}
+
+	sort.Slice(tagNamesList, func(i, j int) bool {
+		return tagNamesList[i] < tagNamesList[j]
+	})
+
+	return tagNamesList, nil
+	// ˄
+}
+
 // ˅
 
 // ˄

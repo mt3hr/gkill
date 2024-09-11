@@ -193,6 +193,75 @@ WHERE USER_ID = ? AND DEVICE = ?
 	return loginSessions, nil
 }
 
+func (l *loginSessionDAOSQLite3Impl) GetLoginSession(ctx context.Context, sessionID string) (*LoginSession, error) {
+	sql := `
+SELECT 
+  ID,
+  USER_ID,
+  DEVICE,
+  APPLICATION_NAME,
+  SESSION_ID,
+  CLIENT_IP_ADDRESS,
+  LOGIN_TIME,
+  EXPIRATION_TIME,
+  IS_LOCAL_APP_USER,
+FROM LOGIN_SESSION
+WHERE SESSION_ID = ?
+`
+	stmt, err := l.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get login sessions sql: %w", err)
+		return nil, err
+	}
+
+	rows, err := stmt.QueryContext(ctx, sessionID)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		return nil, err
+	}
+
+	loginSessions := []*LoginSession{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			loginSession := &LoginSession{}
+			loginTimeStr := ""
+			expriationTimeStr := ""
+			err = rows.Scan(
+				loginSession.ID,
+				loginSession.UserID,
+				loginSession.Device,
+				loginSession.ApplicationName,
+				loginSession.SessionID,
+				loginSession.ClientIPAddress,
+				&loginTimeStr,
+				&expriationTimeStr,
+				loginSession.IsLocalAppUser,
+			)
+
+			loginSession.LoginTime, err = time.Parse(sqlite3impl.TimeLayout, loginTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse file upload time %s at %s in LOGIN_SESSION: %w", loginTimeStr, loginSession.ID, err)
+				return nil, err
+			}
+
+			loginSession.ExpirationTime, err = time.Parse(sqlite3impl.TimeLayout, expriationTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse file upload time %s at %s in LOGIN_SESSION: %w", expriationTimeStr, loginSession.ID, err)
+				return nil, err
+			}
+
+			loginSessions = append(loginSessions, loginSession)
+		}
+	}
+	if len(loginSessions) == 0 {
+		return nil, nil
+	}
+	return loginSessions[0], nil
+}
+
 func (l *loginSessionDAOSQLite3Impl) AddLoginSession(ctx context.Context, loginSession *LoginSession) (bool, error) {
 	sql := `
 INSERT INTO LOGIN_SESSION (
@@ -282,10 +351,10 @@ WHERE ID = ?
 	return true, nil
 }
 
-func (l *loginSessionDAOSQLite3Impl) DeleteLoginSession(ctx context.Context, id string) (bool, error) {
+func (l *loginSessionDAOSQLite3Impl) DeleteLoginSession(ctx context.Context, sessionID string) (bool, error) {
 	sql := `
 DELETE LOGIN_SESSION
-WHERE ID = ?
+WHERE SESSION_ID = ?
 `
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -293,7 +362,7 @@ WHERE ID = ?
 		return false, err
 	}
 
-	_, err = stmt.ExecContext(ctx, id)
+	_, err = stmt.ExecContext(ctx, sessionID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

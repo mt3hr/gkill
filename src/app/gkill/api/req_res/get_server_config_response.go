@@ -1,6 +1,11 @@
 // ˅
 package req_res
 
+import (
+	"github.com/mt3hr/gkill/src/app/gkill/api/message"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
+)
+
 // ˄
 
 type GetServerConfigResponse struct {
@@ -8,11 +13,11 @@ type GetServerConfigResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage `json:"messages"`
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*GkillError `json:"errors"`
+	Errors []*message.GkillError `json:"errors"`
 
-	ServerConfig *ServerConfig `json:"server_config"`
+	ServerConfig *server_config.ServerConfig `json:"server_config"`
 
 	// ˅
 

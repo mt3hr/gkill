@@ -651,4 +651,47 @@ VASLUES(
 	// ˄
 }
 
+func (t *tagRepositorySQLite3Impl) GetAllTagNames(ctx context.Context) ([]string, error) {
+	var err error
+
+	sql := `
+SELECT 
+  DISTINCT TAG
+FROM TAG
+WHERE IS_DELETED = FALSE
+;
+`
+	stmt, err := t.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get all tag names sql: %w", err)
+		return nil, err
+	}
+
+	rows, err := stmt.QueryContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at select all tag names from TAG %s: %w", err)
+		return nil, err
+	}
+
+	tagNames := []string{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			tagName := ""
+			err = rows.Scan(
+				&tagName,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at read rows at get all tag names: %w", err)
+				return nil, err
+			}
+
+			tagNames = append(tagNames, tagName)
+		}
+	}
+	return tagNames, nil
+}
+
 // ˄

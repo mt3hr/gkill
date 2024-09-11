@@ -1,6 +1,8 @@
 // ˅
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+
 // ˄
 
 type UpdateURLogRequest struct {
@@ -10,7 +12,7 @@ type UpdateURLogRequest struct {
 
 	SessionID string `json:"session_id"`
 
-	URLog *URLog `json:"urlog"`
+	URLog *reps.URLog `json:"urlog"`
 
 	// ˅
 

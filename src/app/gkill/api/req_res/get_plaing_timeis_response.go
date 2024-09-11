@@ -1,6 +1,11 @@
 // ˅
 package req_res
 
+import (
+	"github.com/mt3hr/gkill/src/app/gkill/api/message"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+)
+
 // ˄
 
 type GetPlaingTimeisResponse struct {
@@ -8,11 +13,11 @@ type GetPlaingTimeisResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage `json:"messages"`
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*GkillError `json:"errors"`
+	Errors []*message.GkillError `json:"errors"`
 
-	PlaingTimeIss []*TimeIs `json:"plaing_timeiss"`
+	PlaingTimeIss []*reps.TimeIs `json:"plaing_timeiss"`
 
 	// ˅
 
