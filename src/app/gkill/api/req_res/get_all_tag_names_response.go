@@ -1,6 +1,8 @@
 // ˅
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/api/message"
+
 // ˄
 
 type GetAllTagNamesResponse struct {
@@ -8,11 +10,11 @@ type GetAllTagNamesResponse struct {
 
 	// ˄
 
-	Messages []*GkillMessage `json:"messages"`
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*GkillError `json:"errors"`
+	Errors []*message.GkillError `json:"errors"`
 
-	TagNames []*string `json:"tag_names"`
+	TagNames []string `json:"tag_names"`
 
 	// ˅
 

@@ -13,6 +13,10 @@ export class UploadGPSLogFilesRequest extends GkillAPIRequest {
 
     gpslog_files: Array<FileData>;
 
+    target_rep_name: string;
+
+    conflict_behavior: FileUploadConflictBehavior;
+
     constructor() {
         // ˅
         super()

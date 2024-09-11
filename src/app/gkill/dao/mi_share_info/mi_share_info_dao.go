@@ -10,6 +10,8 @@ type MiShareInfoDAO interface {
 
 	GetMiShareInfos(ctx context.Context, userID string, device string) ([]*MiShareInfo, error)
 
+	GetMiShareInfo(ctx context.Context, sharedID string) (*MiShareInfo, error)
+
 	AddMiShareInfo(ctx context.Context, miShareInfo *MiShareInfo) (bool, error)
 
 	UpdateMiShareInfo(ctx context.Context, miShareInfo *MiShareInfo) (bool, error)
