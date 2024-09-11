@@ -18,6 +18,8 @@ type MiShareInfoDAO interface {
 
 	DeleteMiShareInfo(ctx context.Context, id string) (bool, error)
 
+	Close(ctx context.Context) error
+
 	// ˅
 
 	// ˄

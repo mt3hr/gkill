@@ -20,6 +20,8 @@ type KFTLTemplateDAO interface {
 
 	DeleteUsersKFTLTemplates(ctx context.Context, userID string) (bool, error)
 
+	Close(ctx context.Context) error
+
 	// ˅
 
 	// ˄

@@ -18,6 +18,8 @@ type LoginSessionDAO interface {
 
 	DeleteLoginSession(ctx context.Context, sessionID string) (bool, error)
 
+	Close(ctx context.Context) error
+
 	// ˅
 
 	// ˄

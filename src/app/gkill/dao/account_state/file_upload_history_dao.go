@@ -16,6 +16,8 @@ type FileUploadHistoryDAO interface {
 
 	DeleteFileUploadHistory(ctx context.Context, id string) (bool, error)
 
+	Close(ctx context.Context) error
+
 	// ˅
 
 	// ˄

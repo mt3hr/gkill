@@ -20,6 +20,8 @@ type DeviceStructDAO interface {
 
 	DeleteUsersDeviceStructs(ctx context.Context, userID string) (bool, error)
 
+	Close(ctx context.Context) error
+
 	// ˅
 
 	// ˄
