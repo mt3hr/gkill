@@ -13,11 +13,11 @@ type AddShareMiTaskListInfoResponse struct {
 
 	// ˄
 
-	Messages []*message.GkillMessage
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*message.GkillError
+	Errors []*message.GkillError `json:"errors"`
 
-	ShareMiTaskListInfo *mi_share_info.MiShareInfo
+	ShareMiTaskListInfo *mi_share_info.MiShareInfo `json:"share_mi_task_list_info"`
 
 	// ˅
 

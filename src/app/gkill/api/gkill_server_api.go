@@ -5476,7 +5476,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 
 			var gkillError *message.GkillError
 			// gpsLogを作る
-			gpsLog, err := g.gpsLogFileAsGPSLogs(repDir, filename, request.ConflictBehavior, base64Data)
+			gpsLog, err := gpslogs.GPSLogFileAsGPSLogs(repDir, filename, request.ConflictBehavior, base64Data)
 			if err != nil {
 				err := fmt.Errorf("error at gps log file as gpx file filename = %s: %w", filename, err)
 				log.Printf(err.Error())
@@ -7458,41 +7458,6 @@ func (g *GkillServerAPI) resolveFileName(repDir string, filename string, behavio
 	}
 	err = fmt.Errorf("does not set file upload conflict behavior")
 	return "", err
-}
-
-func (g *GkillServerAPI) gpsLogFileAsGPSLogs(repDir string, sourceFileName string, behavior req_res.FileUploadConflictBehavior, base64Data string) ([]*reps.GPSLog, error) {
-	gpsLogs := []*reps.GPSLog{}
-
-	base64Reader := bufio.NewReader(strings.NewReader(base64Data))
-	decoder := base64.NewDecoder(base64.RawStdEncoding.Strict(), base64Reader)
-
-	notDuplicationPointMap := map[time.Time]*reps.GPSLog{}
-	if sourceFileName == "Records.json" {
-		// googleロケーション履歴データの場合
-		googleLocationHistoryData := &gpslogs.GoogleLocationHistoryData{}
-		err := json.NewDecoder(decoder).Decode(googleLocationHistoryData)
-		if err != nil {
-			err = fmt.Errorf("error at parse google location history data: %w", err)
-			return nil, err
-		}
-		for _, location := range googleLocationHistoryData.Locations {
-			location.Time, err = time.Parse(time.RFC3339Nano, location.Timestamp)
-			location.Time = location.Time.In(time.Local)
-			if err != nil {
-				err = fmt.Errorf("error at parse time %s: %w")
-				return nil, err
-			}
-			notDuplicationPointMap[location.Time] = &reps.GPSLog{
-				RelatedTime: location.Time,
-				Longitude:   float64(location.LongitudeE7 / 10000000),
-				Latitude:    float64(location.LatitudeE7 / 10000000),
-			}
-		}
-	}
-	for _, gpsLog := range notDuplicationPointMap {
-		gpsLogs = append(gpsLogs, gpsLog)
-	}
-	return gpsLogs, nil
 }
 
 func (g *GkillServerAPI) generateGPXFileContent(gpsLogs []*reps.GPSLog) (string, error) {
