@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS "KFTL_TEMPLATE" (
   DEVICE NOT NULL,
   TITLE NOT NULL,
   TEMPLATE NOT NULL,
-  SEQ NOT NULL,
+  SEQ NOT NULL
 );`
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
