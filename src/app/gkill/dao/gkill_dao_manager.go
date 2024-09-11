@@ -340,6 +340,70 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 	// ˄
 }
 
+func (g *GkillDAOManager) Close() error {
+	ctx := context.Background()
+	var allErrors error
+	var err error
+	for userID, repInDevices := range g.gkillRepositories {
+		for repName, repInDevice := range repInDevices {
+			err = repInDevice.Close(ctx)
+			if err != nil {
+				if allErrors != nil {
+					allErrors = fmt.Errorf("error at close repository user id = %s rep name %s: %w", userID, repName, err)
+				} else {
+					allErrors = fmt.Errorf("error at close repository user id = %s rep name %s", userID, repName)
+				}
+			}
+
+		}
+	}
+	g.gkillRepositories = nil
+
+	daos := map[string]closable{}
+	daos["account"] = g.ConfigDAOs.AccountDAO
+	daos["login_session"] = g.ConfigDAOs.LoginSessionDAO
+	daos["file_upload_history"] = g.ConfigDAOs.FileUploadHistoryDAO
+	daos["mi_share_info"] = g.ConfigDAOs.MiShareInfoDAO
+	daos["server_config"] = g.ConfigDAOs.ServerConfigDAO
+	daos["application_config"] = g.ConfigDAOs.AppllicationConfigDAO
+	daos["repository"] = g.ConfigDAOs.RepositoryDAO
+	daos["kftl_template"] = g.ConfigDAOs.KFTLTemplateDAO
+	daos["tag_struct"] = g.ConfigDAOs.TagStructDAO
+	daos["rep_struct"] = g.ConfigDAOs.RepStructDAO
+	daos["device_struct"] = g.ConfigDAOs.DeviceStructDAO
+	daos["rep_type_struct"] = g.ConfigDAOs.RepTypeStructDAO
+
+	for dbName, dao := range daos {
+		err = dao.Close(ctx)
+		if err != nil {
+			if allErrors != nil {
+				allErrors = fmt.Errorf("error at close db = %s: %w", dbName, err)
+			} else {
+				allErrors = fmt.Errorf("error at close db = %s", dbName)
+			}
+		}
+	}
+	g.ConfigDAOs.AccountDAO = nil
+	g.ConfigDAOs.LoginSessionDAO = nil
+	g.ConfigDAOs.FileUploadHistoryDAO = nil
+	g.ConfigDAOs.MiShareInfoDAO = nil
+	g.ConfigDAOs.ServerConfigDAO = nil
+	g.ConfigDAOs.AppllicationConfigDAO = nil
+	g.ConfigDAOs.RepositoryDAO = nil
+	g.ConfigDAOs.KFTLTemplateDAO = nil
+	g.ConfigDAOs.TagStructDAO = nil
+	g.ConfigDAOs.RepStructDAO = nil
+	g.ConfigDAOs.DeviceStructDAO = nil
+	g.ConfigDAOs.RepTypeStructDAO = nil
+
+	g.ConfigDAOs = nil
+	g.router = nil
+	g.autoIDF = nil
+	g.IDFIgnore = []string{}
+
+	return err
+}
+
 func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (bool, error) {
 	// ˅
 	ctx := context.TODO()
@@ -358,6 +422,10 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 	}
 	return true, nil
 	// ˄
+}
+
+type closable interface {
+	Close(ctx context.Context) error
 }
 
 // ˅

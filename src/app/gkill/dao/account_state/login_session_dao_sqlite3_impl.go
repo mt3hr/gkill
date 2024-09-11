@@ -370,4 +370,8 @@ WHERE SESSION_ID = ?
 	return true, nil
 }
 
+func (l *loginSessionDAOSQLite3Impl) Close(ctx context.Context) error {
+	return l.db.Close()
+}
+
 // ˄

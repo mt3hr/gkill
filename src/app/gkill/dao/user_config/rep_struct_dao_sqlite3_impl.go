@@ -336,4 +336,8 @@ WHERE USER_ID = ?
 	return true, nil
 }
 
+func (r *repStructDAOSQLite3Impl) Close(ctx context.Context) error {
+	return r.db.Close()
+}
+
 // ˄

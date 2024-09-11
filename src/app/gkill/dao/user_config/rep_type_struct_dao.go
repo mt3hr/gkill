@@ -20,6 +20,8 @@ type RepTypeStructDAO interface {
 
 	DeleteUsersRepTypeStructs(ctx context.Context, userID string) (bool, error)
 
+	Close(ctx context.Context) error
+
 	// ˅
 
 	// ˄

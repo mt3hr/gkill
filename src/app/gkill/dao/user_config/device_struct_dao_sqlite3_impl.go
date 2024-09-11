@@ -322,4 +322,8 @@ WHERE USER_ID = ?
 	return true, nil
 }
 
+func (d *deviceStructDAOSQLite3Impl) Close(ctx context.Context) error {
+	return d.db.Close()
+}
+
 // ˄

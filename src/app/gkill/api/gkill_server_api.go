@@ -54,9 +54,10 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 	}
 
 	return &GkillServerAPI{
-		API_ADDRESS:     NewGKillAPIAddress(),
+		APIAddress:      NewGKillAPIAddress(),
 		GkillDAOManager: gkillDAOManager,
 		FindFilter:      &FindFilter{},
+		RebootServerCh:  make(chan struct{}),
 	}, nil
 }
 
@@ -65,11 +66,13 @@ type GkillServerAPI struct {
 
 	// ˄
 
-	API_ADDRESS *GkillServerAPIAddress
+	APIAddress *GkillServerAPIAddress
 
 	GkillDAOManager *dao.GkillDAOManager
 
 	FindFilter *FindFilter
+
+	RebootServerCh chan (struct{})
 
 	// ˅
 
@@ -78,180 +81,180 @@ type GkillServerAPI struct {
 
 func (g *GkillServerAPI) Serve() error {
 	router := g.GkillDAOManager.GetRouter()
-	router.HandleFunc(g.API_ADDRESS.LoginAddress, func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc(g.APIAddress.LoginAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleLogin(w, r)
-	}).Methods(g.API_ADDRESS.LoginMethod)
-	router.HandleFunc(g.API_ADDRESS.LogoutAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.LoginMethod)
+	router.HandleFunc(g.APIAddress.LogoutAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleLogout(w, r)
-	}).Methods(g.API_ADDRESS.LogoutMethod)
-	router.HandleFunc(g.API_ADDRESS.ResetPasswordAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.LogoutMethod)
+	router.HandleFunc(g.APIAddress.ResetPasswordAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleResetPassword(w, r)
-	}).Methods(g.API_ADDRESS.ResetPasswordMethod)
-	router.HandleFunc(g.API_ADDRESS.SetNewPasswordAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.ResetPasswordMethod)
+	router.HandleFunc(g.APIAddress.SetNewPasswordAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleSetNewPassword(w, r)
-	}).Methods(g.API_ADDRESS.SetNewPasswordMethod)
-	router.HandleFunc(g.API_ADDRESS.AddTagAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.SetNewPasswordMethod)
+	router.HandleFunc(g.APIAddress.AddTagAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddTag(w, r)
-	}).Methods(g.API_ADDRESS.AddTagMethod)
-	router.HandleFunc(g.API_ADDRESS.AddTextAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddTagMethod)
+	router.HandleFunc(g.APIAddress.AddTextAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddText(w, r)
-	}).Methods(g.API_ADDRESS.AddTextMethod)
-	router.HandleFunc(g.API_ADDRESS.AddKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddTextMethod)
+	router.HandleFunc(g.APIAddress.AddKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddKmemo(w, r)
-	}).Methods(g.API_ADDRESS.AddKmemoMethod)
-	router.HandleFunc(g.API_ADDRESS.AddURLogAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddKmemoMethod)
+	router.HandleFunc(g.APIAddress.AddURLogAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddURLog(w, r)
-	}).Methods(g.API_ADDRESS.AddURLogMethod)
-	router.HandleFunc(g.API_ADDRESS.AddNlogAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddURLogMethod)
+	router.HandleFunc(g.APIAddress.AddNlogAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddNlog(w, r)
-	}).Methods(g.API_ADDRESS.AddNlogMethod)
-	router.HandleFunc(g.API_ADDRESS.AddTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddNlogMethod)
+	router.HandleFunc(g.APIAddress.AddTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddTimeis(w, r)
-	}).Methods(g.API_ADDRESS.AddTimeisMethod)
-	router.HandleFunc(g.API_ADDRESS.AddMiAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddTimeisMethod)
+	router.HandleFunc(g.APIAddress.AddMiAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddMi(w, r)
-	}).Methods(g.API_ADDRESS.AddMiAddress)
-	router.HandleFunc(g.API_ADDRESS.AddLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddMiAddress)
+	router.HandleFunc(g.APIAddress.AddLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddLantana(w, r)
-	}).Methods(g.API_ADDRESS.AddLantanaMethod)
-	router.HandleFunc(g.API_ADDRESS.AddKyouInfoAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddLantanaMethod)
+	router.HandleFunc(g.APIAddress.AddKyouInfoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddKyouInfo(w, r)
-	}).Methods(g.API_ADDRESS.AddKyouInfoMethod)
-	router.HandleFunc(g.API_ADDRESS.AddRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddKyouInfoMethod)
+	router.HandleFunc(g.APIAddress.AddRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddRekyou(w, r)
-	}).Methods(g.API_ADDRESS.AddRekyouMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateTagAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddRekyouMethod)
+	router.HandleFunc(g.APIAddress.UpdateTagAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateTag(w, r)
-	}).Methods(g.API_ADDRESS.UpdateTagMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateTextAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateTagMethod)
+	router.HandleFunc(g.APIAddress.UpdateTextAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateText(w, r)
-	}).Methods(g.API_ADDRESS.UpdateTextMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateTextMethod)
+	router.HandleFunc(g.APIAddress.UpdateKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateKmemo(w, r)
-	}).Methods(g.API_ADDRESS.UpdateKmemoMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateURLogAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateKmemoMethod)
+	router.HandleFunc(g.APIAddress.UpdateURLogAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateURLog(w, r)
-	}).Methods(g.API_ADDRESS.UpdateURLogMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateNlogAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateURLogMethod)
+	router.HandleFunc(g.APIAddress.UpdateNlogAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateNlog(w, r)
-	}).Methods(g.API_ADDRESS.UpdateNlogMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateNlogMethod)
+	router.HandleFunc(g.APIAddress.UpdateTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateTimeis(w, r)
-	}).Methods(g.API_ADDRESS.UpdateTimeisMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateTimeisMethod)
+	router.HandleFunc(g.APIAddress.UpdateLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateLantana(w, r)
-	}).Methods(g.API_ADDRESS.UpdateLantanaMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateMiAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateLantanaMethod)
+	router.HandleFunc(g.APIAddress.UpdateMiAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateMi(w, r)
-	}).Methods(g.API_ADDRESS.UpdateMiMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateKyouInfoAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateMiMethod)
+	router.HandleFunc(g.APIAddress.UpdateKyouInfoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateKyouInfo(w, r)
-	}).Methods(g.API_ADDRESS.UpdateKyouInfoMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateKyouInfoMethod)
+	router.HandleFunc(g.APIAddress.UpdateRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateRekyou(w, r)
-	}).Methods(g.API_ADDRESS.UpdateRekyouMethod)
-	router.HandleFunc(g.API_ADDRESS.GetKyousAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateRekyouMethod)
+	router.HandleFunc(g.APIAddress.GetKyousAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetKyous(w, r)
-	}).Methods(g.API_ADDRESS.GetKyousMethod)
-	router.HandleFunc(g.API_ADDRESS.GetKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetKyousMethod)
+	router.HandleFunc(g.APIAddress.GetKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetKmemo(w, r)
-	}).Methods(g.API_ADDRESS.GetKmemoMethod)
-	router.HandleFunc(g.API_ADDRESS.GetURLogAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetKmemoMethod)
+	router.HandleFunc(g.APIAddress.GetURLogAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetURLog(w, r)
-	}).Methods(g.API_ADDRESS.GetURLogMethod)
-	router.HandleFunc(g.API_ADDRESS.GetNlogAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetURLogMethod)
+	router.HandleFunc(g.APIAddress.GetNlogAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetNlog(w, r)
-	}).Methods(g.API_ADDRESS.GetNlogMethod)
-	router.HandleFunc(g.API_ADDRESS.GetTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetNlogMethod)
+	router.HandleFunc(g.APIAddress.GetTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetTimeis(w, r)
-	}).Methods(g.API_ADDRESS.GetTimeisMethod)
-	router.HandleFunc(g.API_ADDRESS.GetMiAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetTimeisMethod)
+	router.HandleFunc(g.APIAddress.GetMiAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetMi(w, r)
-	}).Methods(g.API_ADDRESS.GetMiMethod)
-	router.HandleFunc(g.API_ADDRESS.GetLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetMiMethod)
+	router.HandleFunc(g.APIAddress.GetLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetLantana(w, r)
-	}).Methods(g.API_ADDRESS.GetLantanaMethod)
-	router.HandleFunc(g.API_ADDRESS.GetRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetLantanaMethod)
+	router.HandleFunc(g.APIAddress.GetRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetRekyou(w, r)
-	}).Methods(g.API_ADDRESS.GetRekyouMethod)
-	router.HandleFunc(g.API_ADDRESS.GetGitCommitLogAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetRekyouMethod)
+	router.HandleFunc(g.APIAddress.GetGitCommitLogAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetGitCommitLog(w, r)
-	}).Methods(g.API_ADDRESS.GetGitCommitLogMethod)
-	router.HandleFunc(g.API_ADDRESS.GetGitCommitLogsAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetGitCommitLogMethod)
+	router.HandleFunc(g.APIAddress.GetGitCommitLogsAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetGitCommitLogs(w, r)
-	}).Methods(g.API_ADDRESS.GetGitCommitLogsAddress)
-	router.HandleFunc(g.API_ADDRESS.GetMiBoardListAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetGitCommitLogsAddress)
+	router.HandleFunc(g.APIAddress.GetMiBoardListAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetMiBoardList(w, r)
-	}).Methods(g.API_ADDRESS.GetMiBoardListMethod)
-	router.HandleFunc(g.API_ADDRESS.GetPlaingTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetMiBoardListMethod)
+	router.HandleFunc(g.APIAddress.GetPlaingTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetPlaingTimeis(w, r)
-	}).Methods(g.API_ADDRESS.GetPlaingTimeisMethod)
-	router.HandleFunc(g.API_ADDRESS.GetAllTagNamesAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetPlaingTimeisMethod)
+	router.HandleFunc(g.APIAddress.GetAllTagNamesAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetAllTagNames(w, r)
-	}).Methods(g.API_ADDRESS.GetAllTagNamesMethod)
-	router.HandleFunc(g.API_ADDRESS.GetTagsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetAllTagNamesMethod)
+	router.HandleFunc(g.APIAddress.GetTagsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetTagsByTargetID(w, r)
-	}).Methods(g.API_ADDRESS.GetTagsByTargetIDMethod)
-	router.HandleFunc(g.API_ADDRESS.GetTagHistoriesByTagIDAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetTagsByTargetIDMethod)
+	router.HandleFunc(g.APIAddress.GetTagHistoriesByTagIDAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetTagHistoriesByTagID(w, r)
-	}).Methods(g.API_ADDRESS.GetTagHistoriesByTagIDMethod)
-	router.HandleFunc(g.API_ADDRESS.GetTextHistoriesByTextIDAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetTagHistoriesByTagIDMethod)
+	router.HandleFunc(g.APIAddress.GetTextHistoriesByTextIDAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetTextHistoriesByTextID(w, r)
-	}).Methods(g.API_ADDRESS.GetTextHistoriesByTagIDMethod)
-	router.HandleFunc(g.API_ADDRESS.GetApplicationConfigAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetTextHistoriesByTagIDMethod)
+	router.HandleFunc(g.APIAddress.GetApplicationConfigAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetApplicationConfig(w, r)
-	}).Methods(g.API_ADDRESS.GetApplicationConfigMethod)
-	router.HandleFunc(g.API_ADDRESS.GetServerConfigAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetApplicationConfigMethod)
+	router.HandleFunc(g.APIAddress.GetServerConfigAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetServerConfig(w, r)
-	}).Methods(g.API_ADDRESS.GetServerConfigMethod)
-	router.HandleFunc(g.API_ADDRESS.UploadFilesAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetServerConfigMethod)
+	router.HandleFunc(g.APIAddress.UploadFilesAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUploadFiles(w, r)
-	}).Methods(g.API_ADDRESS.UploadFilesMethod)
-	router.HandleFunc(g.API_ADDRESS.UploadGPSLogFilesAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UploadFilesMethod)
+	router.HandleFunc(g.APIAddress.UploadGPSLogFilesAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUploadGPSLogFiles(w, r)
-	}).Methods(g.API_ADDRESS.UploadGPSLogFilesMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateRepStructAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UploadGPSLogFilesMethod)
+	router.HandleFunc(g.APIAddress.UpdateRepStructAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateRepStruct(w, r)
-	}).Methods(g.API_ADDRESS.UpdateRepStructMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateDeviceStructAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateRepStructMethod)
+	router.HandleFunc(g.APIAddress.UpdateDeviceStructAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateDeviceStruct(w, r)
-	}).Methods(g.API_ADDRESS.UpdateDeviceStructMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateRepTypeStructAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateDeviceStructMethod)
+	router.HandleFunc(g.APIAddress.UpdateRepTypeStructAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateRepTypeStruct(w, r)
-	}).Methods(g.API_ADDRESS.UpdateRepTypeStructMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateAccountStatusAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateRepTypeStructMethod)
+	router.HandleFunc(g.APIAddress.UpdateAccountStatusAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateAccountStatus(w, r)
-	}).Methods(g.API_ADDRESS.UpdateAccountStatusMethod)
-	router.HandleFunc(g.API_ADDRESS.UpdateUserRepsAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateAccountStatusMethod)
+	router.HandleFunc(g.APIAddress.UpdateUserRepsAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateUserReps(w, r)
-	}).Methods(g.API_ADDRESS.UpdateUserRepsMethod)
-	router.HandleFunc(g.API_ADDRESS.AddAccountAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.UpdateUserRepsMethod)
+	router.HandleFunc(g.APIAddress.AddAccountAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddAccount(w, r)
-	}).Methods(g.API_ADDRESS.AddAccountMethod)
-	router.HandleFunc(g.API_ADDRESS.GenerateTLSFileAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddAccountMethod)
+	router.HandleFunc(g.APIAddress.GenerateTLSFileAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGenerateTLSFile(w, r)
-	}).Methods(g.API_ADDRESS.GenerateTLSFileMethod)
-	router.HandleFunc(g.API_ADDRESS.GetGPSLogAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GenerateTLSFileMethod)
+	router.HandleFunc(g.APIAddress.GetGPSLogAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetGPSLog(w, r)
-	}).Methods(g.API_ADDRESS.GetGPSLogMethod)
-	router.HandleFunc(g.API_ADDRESS.GetKFTLTemplateAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetGPSLogMethod)
+	router.HandleFunc(g.APIAddress.GetKFTLTemplateAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetKFTLTemplate(w, r)
-	}).Methods(g.API_ADDRESS.GetKFTLTemplateMethod)
-	router.HandleFunc(g.API_ADDRESS.GetGkillInfoAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetKFTLTemplateMethod)
+	router.HandleFunc(g.APIAddress.GetGkillInfoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetGkillInfo(w, r)
-	}).Methods(g.API_ADDRESS.GetGkillInfoMethod)
-	router.HandleFunc(g.API_ADDRESS.GetShareMiTaskListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetGkillInfoMethod)
+	router.HandleFunc(g.APIAddress.GetShareMiTaskListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetShareMiTaskListInfos(w, r)
-	}).Methods(g.API_ADDRESS.GetShareMiTaskListInfosMethod)
-	router.HandleFunc(g.API_ADDRESS.AddShareMiTaskListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.GetShareMiTaskListInfosMethod)
+	router.HandleFunc(g.APIAddress.AddShareMiTaskListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddShareMiTaskListInfo(w, r)
-	}).Methods(g.API_ADDRESS.AddShareMiTaskListInfoMethod)
-	router.HandleFunc(g.API_ADDRESS.DeleteShareMiTaskListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.AddShareMiTaskListInfoMethod)
+	router.HandleFunc(g.APIAddress.DeleteShareMiTaskListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleDeleteShareMiTaskListInfos(w, r)
-	}).Methods(g.API_ADDRESS.DeleteShareMiTaskListInfosMethod)
-	router.HandleFunc(g.API_ADDRESS.GetMiSharedTasksAddress, func(w http.ResponseWriter, r *http.Request) {
+	}).Methods(g.APIAddress.DeleteShareMiTaskListInfosMethod)
+	router.HandleFunc(g.APIAddress.GetMiSharedTasksAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleLogout(w, r)
-	}).Methods(g.API_ADDRESS.GetMiSharedTasksMethod)
+	}).Methods(g.APIAddress.GetMiSharedTasksMethod)
 
 	device, err := g.GetDevice()
 	if err != nil {
@@ -271,8 +274,20 @@ func (g *GkillServerAPI) Serve() error {
 }
 
 func (g *GkillServerAPI) Close() error {
-	//TODO
-	panic("notImplements")
+	var err error
+	err = g.GkillDAOManager.Close()
+	if err != nil {
+		err = fmt.Errorf("error at close gkill dbo manager: %w", err)
+		return err
+	}
+
+	close(g.RebootServerCh)
+	g.APIAddress = nil
+	g.GkillDAOManager = nil
+	g.FindFilter = nil
+	g.RebootServerCh = nil
+
+	return nil
 }
 
 func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
