@@ -10,9 +10,9 @@ type DeleteShareMiTaskListInfosResponse struct {
 
 	// ˄
 
-	Messages []*message.GkillMessage
+	Messages []*message.GkillMessage `json:"messages"`
 
-	Errors []*message.GkillError
+	Errors []*message.GkillError `json:"errors"`
 
 	// ˅
 
