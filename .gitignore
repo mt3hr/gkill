@@ -2,8 +2,6 @@
 node_modules
 /dist
 /**/html/*
-go.mod
-go.sum
 ~$*
 *.asta.lock
 m_plus.conf
