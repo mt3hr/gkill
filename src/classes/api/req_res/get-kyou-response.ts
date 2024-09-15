@@ -7,9 +7,9 @@ import { GkillAPIResponse } from '../gkill-api-response';
 
 // ˄
 
-export class GetKyouResponse extends GkillAPIRequest {
+export class GetKyouResponse extends GkillAPIResponse {
     // ˅
-    
+
     // ˄
 
     kyou_histories: Array<Kyou>;
@@ -22,7 +22,7 @@ export class GetKyouResponse extends GkillAPIRequest {
     }
 
     // ˅
-    
+
     // ˄
 }
 

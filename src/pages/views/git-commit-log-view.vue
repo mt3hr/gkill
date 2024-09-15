@@ -1,38 +1,14 @@
 <template>
-
+    <GitCommitLogContextMenu />
 </template>
 <script setup lang="ts">
+import { ref } from 'vue';
+import GitCommitLogContextMenu from './git-commit-log-context-menu.vue';
+import type { GitCommitLog } from '@/classes/datas/git-commit-log';
+import type { GitCommitLogViewProps } from './git-commit-log-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
 
-// ˅
-'use strict';
-
-import { GitCommitLogContextMenu } from './git-commit-log-context-menu.vue';
-import { GitCommitLogViewProps } from './git-commit-log-view-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class GitCommitLogView {
-    // ˅
-    
-    // ˄
-
-    private cloned_git_commit_log: GitCommitLog;
-
-    private props: GitCommitLogViewProps;
-
-    private contextmenu: GitCommitLogContextMenu;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<GitCommitLogViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_git_commit_log: GitCommitLog = ref(await props.git_commit_log.clone());
 </script>
-<style scoped></style>

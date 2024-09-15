@@ -1,20 +1,6 @@
-// ˅
 'use strict';
 
-import { GkillPropsBase } from './gkill-props-base';
+import type { GkillPropsBase } from "./gkill-props-base";
 
-// ˄
-
-export class EditKFTLTemplateViewProps implements GkillPropsBase {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface EditKFTLTemplateViewProps extends GkillPropsBase {
 }
-
-// ˅
-
-// ˄

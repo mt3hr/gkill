@@ -30,7 +30,7 @@ export class KFTLTextStatementLine extends KFTLStatementLine {
         // ˄
     }
 
-    static generate_wait_end_of_text_constructor(line_text: string, prototype: boolean) : { (line_text: string, context: KFTLStatementLineContext): int {
+    static generate_wait_end_of_text_constructor(line_text: string, prototype: boolean): { (line_text: string, context: KFTLStatementLineContext): KFTLStatementLine } {
         // ˅
         throw new Error('Not implemented');
         // ˄

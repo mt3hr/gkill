@@ -1,44 +1,16 @@
 <template>
-
+    <ApplicationConfigStructContextMenu />
 </template>
 <script setup lang="ts">
+import type { RepStructElementEmits } from './rep-struct-element-emits';
+import type { RepStructElementProps } from './rep-struct-element-props';
+import ApplicationConfigStructContextMenu from './application-config-struct-context-menu.vue';
+import { type Ref, ref } from 'vue';
 
-// ˅
-'use strict';
-
-import { ApplicationConfigStructContextMenu } from './application-config-struct-context-menu.vue';
-import { RepStructElementEmits } from './rep-struct-element-emits';
-import { RepStructElementProps } from './rep-struct-element-props';
-
-// ˄
-
-export class RepStructElement {
-    // ˅
-    
-    // ˄
-
-    private cloned_is_open: Ref<boolean>;
-
-    private struct_list: Ref<any>;
-
-    check_when_inited: Ref<boolean>;
-
-    ignore_check_rep_rykv: Ref<boolean>;
-
-    private props: RepStructElementProps;
-
-    private emits: RepStructElementEmits;
-
-    private contextmenu: ApplicationConfigStructContextMenu;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<RepStructElementProps>();
+const emits = defineEmits<RepStructElementEmits>();
+const cloned_is_open: Ref<boolean> = ref(props.is_open);
+const struct_list: Ref<any> = ref(props.struct_obj)//TODO
+const check_when_inited: Ref<boolean> = ref(false)//TODO
+const ignore_check_rep_rykv: Ref<boolean> = ref(false)//TODO
 </script>
-<style scoped></style>

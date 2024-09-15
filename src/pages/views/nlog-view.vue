@@ -1,38 +1,14 @@
 <template>
-
+    <NlogContextMenu />
 </template>
 <script setup lang="ts">
+import type { NlogViewProps } from './nlog-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import type { Nlog } from '@/classes/datas/nlog';
+import { type Ref, ref } from 'vue';
+import NlogContextMenu from './nlog-context-menu.vue';
 
-// ˅
-'use strict';
-
-import { KyouViewEmits } from './kyou-view-emits';
-import { NlogContextMenu } from './nlog-context-menu';
-import { NlogViewProps } from './nlog-view-props.vue';
-
-// ˄
-
-export class NlogView {
-    // ˅
-    
-    // ˄
-
-    private cloned_nlog: Nlog;
-
-    private props: NlogViewProps;
-
-    private contextmenu: NlogContextMenu;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<NlogViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_nlog: Ref<Nlog> = ref(await props.nlog.clone())
 </script>
-<style scoped></style>

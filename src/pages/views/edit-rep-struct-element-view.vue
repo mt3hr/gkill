@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { EditRepStructElementViewEmits } from './edit-rep-struct-element-view-emits';
-import { EditRepStructElementViewProps } from './edit-rep-struct-element-view-props';
+</template>
+<script lang="ts" setup>
+import type { EditRepStructElementViewEmits } from './edit-rep-struct-element-view-emits';
+import type { EditRepStructElementViewProps } from './edit-rep-struct-element-view-props';
 
-// ˄
-
-export class EditRepStructElementView {
-    // ˅
-    
-    // ˄
-
-    private props: EditRepStructElementViewProps;
-
-    private emits: EditRepStructElementViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditRepStructElementViewProps>();
+const emits = defineEmits<EditRepStructElementViewEmits>();
+</script>

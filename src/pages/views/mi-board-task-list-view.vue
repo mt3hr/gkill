@@ -1,36 +1,12 @@
 <template>
-
+    <KyouListView />
 </template>
 <script setup lang="ts">
+import KyouListView from './kyou-list-view.vue';
+import type { miBoardTaskListViewEmits } from './mi-board-task-list-view-emits';
+import type { miBoardTaskListViewProps } from './mi-board-task-list-view-props';
 
-// ˅
-'use strict';
-
-import { KyouListView } from './kyou-list-view.vue';
-import { miBoardTaskListViewEmits } from './mi-board-task-list-view-emits';
-import { miBoardTaskListViewProps } from './mi-board-task-list-view-props';
-
-// ˄
-
-export class miBoardTaskListView {
-    // ˅
-    
-    // ˄
-
-    private kyou_list_view: KyouListView;
-
-    private props: miBoardTaskListViewProps;
-
-    private emits: miBoardTaskListViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<miBoardTaskListViewProps>();
+const emits = defineEmits<miBoardTaskListViewEmits>();
 </script>
 <style scoped></style>

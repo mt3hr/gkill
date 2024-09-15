@@ -1,22 +1,8 @@
-// ˅
 'use strict';
 
-import { KyouViewPropsBase } from './kyou-view-props-base';
+import type { Lantana } from "@/classes/datas/lantana";
+import type { KyouViewPropsBase } from "./kyou-view-props-base";
 
-// ˄
-
-export class EditLantanaViewProps implements KyouViewPropsBase {
-    // ˅
-    
-    // ˄
-
+export interface EditLantanaViewProps extends KyouViewPropsBase {
     lantana: Lantana;
-
-    // ˅
-    
-    // ˄
 }
-
-// ˅
-
-// ˄

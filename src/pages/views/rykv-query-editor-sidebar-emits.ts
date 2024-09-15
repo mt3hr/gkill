@@ -1,24 +1,7 @@
-// ˅
 'use strict';
 
-// ˄
+import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 
-export class rykvQueryEditorSidebarEmits {
-    // ˅
-    
-    // ˄
-
-    updated_query(query: FindKyouQuery): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface rykvQueryEditorSidebarEmits {
+    (e: 'updated_query', query: FindKyouQuery): void
 }
-
-// ˅
-
-// ˄

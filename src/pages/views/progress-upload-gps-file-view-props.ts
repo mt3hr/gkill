@@ -1,20 +1,6 @@
-// ˅
 'use strict';
 
-import { GkillPropsBase } from './gkill-props-base';
+import type { GkillPropsBase } from "./gkill-props-base";
 
-// ˄
-
-export class ProgressUploadGPSFileViewProps implements GkillPropsBase {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface ProgressUploadGPSFileViewProps extends GkillPropsBase {
 }
-
-// ˅
-
-// ˄

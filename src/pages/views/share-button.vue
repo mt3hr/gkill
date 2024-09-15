@@ -1,24 +1,8 @@
-// ˅
-'use strict';
+<template>
 
-// ˄
+</template>
+<script lang="ts" setup>
+import type { ShareButtonEmits } from './share-button-emits';
 
-export class ShareButton {
-    // ˅
-    
-    // ˄
-
-    request_open_share_mi_dialog(): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const emits = defineEmits<ShareButtonEmits>()
+</script>

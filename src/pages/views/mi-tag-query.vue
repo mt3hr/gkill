@@ -1,36 +1,11 @@
 <template>
-
+    <FoldableStruct />
 </template>
 <script setup lang="ts">
+import FoldableStruct from './foldable-struct.vue';
+import type { miTagQueryEmits } from './mi-tag-query-emits';
+import type { miTagQueryProps } from './mi-tag-query-props';
 
-// ˅
-'use strict';
-
-import { FoldableStruct } from './foldable-struct.vue';
-import { miTagQueryEmits } from './mi-tag-query-emits';
-import { miTagQueryProps } from './mi-tag-query-props';
-
-// ˄
-
-export class miTagQuery {
-    // ˅
-    
-    // ˄
-
-    private props: miTagQueryProps;
-
-    private emits: miTagQueryEmits;
-
-    private tag_struct: FoldableStruct;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<miTagQueryProps>();
+const emits = defineEmits<miTagQueryEmits>();
 </script>
-<style scoped></style>

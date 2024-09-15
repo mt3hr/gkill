@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <AddRepView />
+</template>
+<script lang="ts" setup>
+import type { AddRepDialogEmits } from './add-rep-dialog-emits';
+import type { AddRepDialogProps } from './add-rep-dialog-props';
+import AddRepView from '../views/add-rep-view.vue';
 
-import { AddRepDialogEmits } from './add-rep-dialog-emits';
-import { AddRepDialogProps } from './add-rep-dialog-props';
-import { AddRepView } from '../views/add-rep-view';
-
-// ˄
-
-export class AddRepDialog {
-    // ˅
-    
-    // ˄
-
-    private props: AddRepDialogProps;
-
-    private emits: AddRepDialogEmits;
-
-    private add_rep_view: AddRepView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<AddRepDialogProps>();
+const emits = defineEmits<AddRepDialogEmits>();
+</script>

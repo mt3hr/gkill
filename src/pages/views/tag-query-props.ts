@@ -1,20 +1,6 @@
-// ˅
 'use strict';
 
-import { SidebarProps } from './sidebar-props';
+import type { SidebarProps } from "./sidebar-props";
 
-// ˄
-
-export class TagQueryProps implements SidebarProps {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface TagQueryProps extends SidebarProps {
 }
-
-// ˅
-
-// ˄

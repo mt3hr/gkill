@@ -1,36 +1,11 @@
 <template>
-
+    <NewBoardNameDialog />
 </template>
-<script setup lang="ts">
+<script lang="ts" setup>
+import type { AddMiViewProps } from './add-mi-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue';
 
-// ˅
-'use strict';
-
-import { AddMiViewProps } from './add-mi-view-props';
-import { KyouViewEmits } from './kyou-view-emits';
-import { NewBoardNameDialog } from '../dialogs/new-board-name-dialog.vue';
-
-// ˄
-
-export class AddMiView {
-    // ˅
-    
-    // ˄
-
-    private new_board_name_dialog: NewBoardNameDialog;
-
-    private addMiViewProps: AddMiViewProps;
-
-    private kyouViewEmits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<AddMiViewProps>();
+const emits = defineEmits<KyouViewEmits>();
 </script>
-<style scoped></style>

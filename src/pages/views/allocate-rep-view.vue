@@ -1,41 +1,16 @@
 <template>
-
+    <AddRepDialog />
+    <ConfirmDeleteRepDialog />
 </template>
 <script setup lang="ts">
+import { type Ref, ref } from 'vue';
+import type { AllocateRepViewEmits } from './allocate-rep-view-emits';
+import type { AllocateRepViewProps } from './allocate-rep-view-props';
+import { ServerConfig } from '@/classes/datas/config/server-config';
+import AddRepDialog from '../dialogs/add-rep-dialog.vue';
+import ConfirmDeleteRepDialog from '../dialogs/confirm-delete-rep-dialog.vue';
 
-// ˅
-'use strict';
-
-import { AddRepDialog } from '../dialogs/add-rep-dialog';
-import { AllocateRepViewEmits } from './allocate-rep-view-emits';
-import { AllocateRepViewProps } from './allocate-rep-view-props';
-import { ConfirmDeleteRepDialog } from '../dialogs/confirm-delete-rep-dialog.vue';
-
-// ˄
-
-export class AllocateRepView {
-    // ˅
-    
-    // ˄
-
-    cloned_server_config: ServerConfig;
-
-    private props: AllocateRepViewProps;
-
-    private emits: AllocateRepViewEmits;
-
-    private confirm_delete_rep_dialog: ConfirmDeleteRepDialog;
-
-    private add_rep_dialog: AddRepDialog;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<AllocateRepViewProps>();
+const emits = defineEmits<AllocateRepViewEmits>();
+const cloned_server_config: Ref<ServerConfig> = ref(await props.server_config.clone());
 </script>
-<style scoped></style>

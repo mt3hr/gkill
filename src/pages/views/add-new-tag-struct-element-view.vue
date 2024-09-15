@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { AddNewTagStructElementViewEmits } from './add-new-tag-struct-element-view-emits';
-import { AddNewTagStructElementViewProps } from './add-new-tag-struct-element-view-props';
+</template>
+<script lang="ts" setup>
+import type { AddNewTagStructElementViewEmits } from './add-new-tag-struct-element-view-emits';
+import type { AddNewTagStructElementViewProps } from './add-new-tag-struct-element-view-props';
 
-// ˄
-
-export class AddNewTagStructElementView {
-    // ˅
-    
-    // ˄
-
-    private props: AddNewTagStructElementViewProps;
-
-    private emits: AddNewTagStructElementViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<AddNewTagStructElementViewProps>();
+const emits = defineEmits<AddNewTagStructElementViewEmits>();
+</script>

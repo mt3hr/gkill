@@ -1,33 +1,12 @@
-// ˅
-'use strict';
+<template>
 
+</template>
+<script lang="ts" setup>
+import { type Ref, ref } from 'vue';
 import { LantanaTextTypeModel } from './lantana-text-type-model';
-import { LantanaTextTypeSelectBoxEmits } from './lantana-text-type-select-box-emits';
+import type { LantanaTextTypeSelectBoxEmits } from './lantana-text-type-select-box-emits';
 
-// ˄
-
-export class LantanaTextTypeSelectBox {
-    // ˅
-    
-    // ˄
-
-    private text_text_model: LantanaTextTypeModel;
-
-    private kmemo_text_model: LantanaTextTypeModel;
-
-    private lantanaTextTypeSelectBoxEmits: LantanaTextTypeSelectBoxEmits;
-
-    private async emit_updated_text_type(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const emits = defineEmits<LantanaTextTypeSelectBoxEmits>();
+const text_text_model: Ref<LantanaTextTypeModel> = ref(new LantanaTextTypeModel());
+const kmemo_text_model: Ref<LantanaTextTypeModel> = ref(new LantanaTextTypeModel());
+</script>
