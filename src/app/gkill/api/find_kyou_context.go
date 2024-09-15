@@ -1,17 +1,10 @@
-// ˅
 package api
 
 import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 )
 
-// ˄
-
 type FindKyouContext struct {
-	// ˅
-
-	// ˄
-
 	RawQueryJSON string
 
 	ParsedQuery map[string]string
@@ -49,12 +42,4 @@ type FindKyouContext struct {
 	TagFilterMode *TagFilterMode
 
 	TimeIsTagFilterMode *TagFilterMode
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

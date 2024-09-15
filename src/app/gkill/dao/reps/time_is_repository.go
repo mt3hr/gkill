@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type TimeIsRepository interface {
 	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
@@ -27,12 +24,4 @@ type TimeIsRepository interface {
 	GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error)
 
 	AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

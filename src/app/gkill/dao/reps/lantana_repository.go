@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type LantanaRepository interface {
 	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
@@ -27,12 +24,4 @@ type LantanaRepository interface {
 	GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error)
 
 	AddLantanaInfo(ctx context.Context, lantana *Lantana) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

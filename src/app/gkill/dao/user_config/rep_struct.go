@@ -1,13 +1,6 @@
-// ˅
 package user_config
 
-// ˄
-
 type RepStruct struct {
-	// ˅
-
-	// ˄
-
 	ID string `json:"id"`
 
 	UserID string `json:"user_id"`
@@ -23,12 +16,4 @@ type RepStruct struct {
 	CheckWhenInited bool `json:"check_when_inited"`
 
 	IgnoreCheckRepRykv bool `json:"ignore_check_rep_rykv"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

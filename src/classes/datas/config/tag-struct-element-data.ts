@@ -1,12 +1,8 @@
-// ˅
 'use strict';
 
-// ˄
 
 export class TagStructElementData {
-    // ˅
 
-    // ˄
 
     id: string;
 
@@ -17,19 +13,14 @@ export class TagStructElementData {
     is_force_hide: boolean;
 
     constructor() {
-        // ˅
         this.id = ""
         this.tag_name = ""
         this.check_when_inited = false
         this.is_force_hide = false
-        // ˄
     }
 
-    // ˅
 
-    // ˄
 }
 
-// ˅
 
-// ˄
+

@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -14,17 +13,12 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type nlogRepositorySQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewNlogRepositorySQLite3Impl(ctx context.Context, filename string) (NlogRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -747,5 +741,3 @@ VASLUES(
 	}
 	return nil
 }
-
-// ˄

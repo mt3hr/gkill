@@ -1,4 +1,3 @@
-// ˅
 package user_config
 
 import (
@@ -10,17 +9,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// ˄
-
 type kftlTemplateDAOSQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewKFTLTemplateDAOSQLite3Impl(ctx context.Context, filename string) (KFTLTemplateDAO, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -324,5 +318,3 @@ WHERE USER_ID = ?
 func (k *kftlTemplateDAOSQLite3Impl) Close(ctx context.Context) error {
 	return k.db.Close()
 }
-
-// ˄

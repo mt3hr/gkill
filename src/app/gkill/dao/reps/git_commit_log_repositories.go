@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type GitCommitLogRepositories []GitCommitLogRepository
 
 func (g GitCommitLogRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
-	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
 	})
 	return matchKyousList, nil
-	// ˄
 }
 
 func (g GitCommitLogRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
-	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -157,11 +151,9 @@ loop:
 	}
 
 	return matchKyou, nil
-	// ˄
 }
 
 func (g GitCommitLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -237,18 +229,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (g GitCommitLogRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements GitCommitLogReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (g GitCommitLogRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -286,17 +274,13 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (g GitCommitLogRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "GitCommitLogReps", nil
-	// ˄
 }
 
 func (g GitCommitLogRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -334,11 +318,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, queryJSON string) ([]*GitCommitLog, error) {
-	// ˅
 	matchGitCommitLogs := map[string]*GitCommitLog{}
 	existErr := false
 	var err error
@@ -413,11 +395,9 @@ loop:
 		return matchGitCommitLogsList[i].RelatedTime.After(matchGitCommitLogsList[j].RelatedTime)
 	})
 	return matchGitCommitLogsList, nil
-	// ˄
 }
 
 func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string) (*GitCommitLog, error) {
-	// ˅
 	matchGitCommitLog := &GitCommitLog{}
 	matchGitCommitLog = nil
 	existErr := false
@@ -480,9 +460,4 @@ loop:
 	}
 
 	return matchGitCommitLog, nil
-	// ˄
 }
-
-// ˅
-
-// ˄

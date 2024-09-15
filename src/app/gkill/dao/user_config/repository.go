@@ -1,13 +1,6 @@
-// ˅
 package user_config
 
-// ˄
-
 type Repository struct {
-	// ˅
-
-	// ˄
-
 	ID string `json:"id"`
 
 	UserID string `json:"user_id"`
@@ -23,12 +16,4 @@ type Repository struct {
 	IsExecuteIDFWhenReload bool `json:"is_execute_idf_when_reload"`
 
 	IsEnable bool `json:"is_enable"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

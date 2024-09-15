@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type NlogRepositories []NlogRepository
 
 func (n NlogRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
-	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
 	})
 	return matchKyousList, nil
-	// ˄
 }
 
 func (n NlogRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
-	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -157,11 +151,9 @@ loop:
 	}
 
 	return matchKyou, nil
-	// ˄
 }
 
 func (n NlogRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -237,18 +229,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (n NlogRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements NlogReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (n NlogRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -286,17 +274,13 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (n NlogRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "NlogReps", nil
-	// ˄
 }
 
 func (n NlogRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -334,11 +318,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (n NlogRepositories) FindNlog(ctx context.Context, queryJSON string) ([]*Nlog, error) {
-	// ˅
 	matchNlogs := map[string]*Nlog{}
 	existErr := false
 	var err error
@@ -413,11 +395,9 @@ loop:
 		return matchNlogsList[i].RelatedTime.After(matchNlogsList[j].RelatedTime)
 	})
 	return matchNlogsList, nil
-	// ˄
 }
 
 func (n NlogRepositories) GetNlog(ctx context.Context, id string) (*Nlog, error) {
-	// ˅
 	matchNlog := &Nlog{}
 	matchNlog = nil
 	existErr := false
@@ -480,11 +460,9 @@ loop:
 	}
 
 	return matchNlog, nil
-	// ˄
 }
 
 func (n NlogRepositories) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
-	// ˅
 	kyouHistories := map[string]*Nlog{}
 	existErr := false
 	var err error
@@ -560,16 +538,9 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (n NlogRepositories) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
-	// ˅
 	err := fmt.Errorf("not implements NlogReps.AddNlogInfo")
 	return err
-	// ˄
 }
-
-// ˅
-
-// ˄

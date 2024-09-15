@@ -1,13 +1,6 @@
-// ˅
 package mi_share_info
 
-// ˄
-
 type MiShareInfo struct {
-	// ˅
-
-	// ˄
-
 	ID string `json:"id"`
 
 	UserID string `json:"user_id"`
@@ -21,12 +14,4 @@ type MiShareInfo struct {
 	ShareID string `json:"share_id"`
 
 	FindQueryJSON string `json:"find_query_json"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

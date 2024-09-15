@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type TagRepository interface {
 	FindTags(ctx context.Context, queryJSON string) ([]*Tag, error)
@@ -27,12 +24,4 @@ type TagRepository interface {
 	AddTagInfo(ctx context.Context, tag *Tag) error
 
 	GetAllTagNames(ctx context.Context) ([]string, error)
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

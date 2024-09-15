@@ -1,12 +1,8 @@
-// ˅
 'use strict';
 
-// ˄
 
 export class DeviceStructElementData {
-    // ˅
-    
-    // ˄
+
 
     id: string;
 
@@ -15,18 +11,13 @@ export class DeviceStructElementData {
     check_when_inited: boolean;
 
     constructor() {
-        // ˅
         this.id = ""
         this.device_name = ""
         this.check_when_inited = false
-        // ˄
     }
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

@@ -1,4 +1,3 @@
-// ˅
 package mi_share_info
 
 import (
@@ -10,17 +9,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// ˄
-
 type miShareInfoDAOSQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewMiShareInfoDAOSQLite3Impl(ctx context.Context, filename string) (MiShareInfoDAO, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -300,5 +294,3 @@ WHERE ID = ?
 func (m *miShareInfoDAOSQLite3Impl) Close(ctx context.Context) error {
 	return m.db.Close()
 }
-
-// ˄

@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -12,16 +11,11 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-// ˄
-
 type gitCommitLogRepositoryLocalImpl struct {
-	// ˅
 	gitrep   *git.Repository
 	filename string
-	// ˄
 }
 
-// ˅
 func NewGitRep(reppath string) (GitCommitLogRepository, error) {
 	gitrep, err := git.PlainOpen(reppath)
 	if err != nil {
@@ -389,5 +383,3 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 	})
 	return matchGitCommitLog, nil
 }
-
-// ˄

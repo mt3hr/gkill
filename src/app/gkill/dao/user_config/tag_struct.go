@@ -1,13 +1,6 @@
-// ˅
 package user_config
 
-// ˄
-
 type TagStruct struct {
-	// ˅
-
-	// ˄
-
 	ID string `json:"id"`
 
 	UserID string `json:"user_id"`
@@ -23,12 +16,4 @@ type TagStruct struct {
 	CheckWhenInited bool `json:"check_when_inited"`
 
 	IsForceHide bool `json:"is_force_hide"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type GitCommitLogRepository interface {
 	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
@@ -23,12 +20,4 @@ type GitCommitLogRepository interface {
 	FindGitCommitLog(ctx context.Context, queryJSON string) ([]*GitCommitLog, error)
 
 	GetGitCommitLog(ctx context.Context, id string) (*GitCommitLog, error)
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

@@ -1,15 +1,8 @@
-// ˅
 package account_state
 
 import "time"
 
-// ˄
-
 type LoginSession struct {
-	// ˅
-
-	// ˄
-
 	ID string `json:"id"`
 
 	UserID string `json:"user_id"`
@@ -27,12 +20,4 @@ type LoginSession struct {
 	ExpirationTime time.Time `json:"expiration_time"`
 
 	IsLocalAppUser bool `json:"is_local_app_user"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

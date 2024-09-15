@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type TagRepositories []TagRepository
 
 func (t TagRepositories) FindTags(ctx context.Context, queryJSON string) ([]*Tag, error) {
-	// ˅
 	matchTags := map[string]*Tag{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchTagsList[i].RelatedTime.After(matchTagsList[j].RelatedTime)
 	})
 	return matchTagsList, nil
-	// ˄
 }
 
 func (t TagRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -132,11 +126,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (t TagRepositories) GetTag(ctx context.Context, id string) (*Tag, error) {
-	// ˅
 	matchTag := &Tag{}
 	matchTag = nil
 	existErr := false
@@ -199,11 +191,9 @@ loop:
 	}
 
 	return matchTag, nil
-	// ˄
 }
 
 func (t TagRepositories) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
-	// ˅
 	matchTags := map[string]*Tag{}
 	existErr := false
 	var err error
@@ -279,11 +269,9 @@ loop:
 	})
 
 	return tagHistoriesList, nil
-	// ˄
 }
 
 func (t TagRepositories) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
-	// ˅
 	matchTags := map[string]*Tag{}
 	existErr := false
 	var err error
@@ -359,11 +347,9 @@ loop:
 	})
 
 	return tagHistoriesList, nil
-	// ˄
 }
 
 func (t TagRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -401,24 +387,18 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (t TagRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements TagReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (t TagRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "TagReps", nil
-	// ˄
 }
 
 func (t TagRepositories) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
-	// ˅
 	tagHistories := map[string]*Tag{}
 	existErr := false
 	var err error
@@ -494,18 +474,14 @@ loop:
 	})
 
 	return tagHistoriesList, nil
-	// ˄
 }
 
 func (t TagRepositories) AddTagInfo(ctx context.Context, tag *Tag) error {
-	// ˅
 	err := fmt.Errorf("not implements TagReps.AddTagInfo")
 	return err
-	// ˄
 }
 
 func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
-	// ˅
 	tagNames := map[string]struct{}{}
 	existErr := false
 	var err error
@@ -572,9 +548,4 @@ loop:
 	})
 
 	return tagNamesList, nil
-	// ˄
 }
-
-// ˅
-
-// ˄

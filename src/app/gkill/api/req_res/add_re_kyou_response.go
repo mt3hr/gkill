@@ -1,4 +1,3 @@
-// ˅
 package req_res
 
 import (
@@ -6,13 +5,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 )
 
-// ˄
-
 type AddReKyouResponse struct {
-	// ˅
-
-	// ˄
-
 	Messages []*message.GkillMessage `json:"messages"`
 
 	Errors []*message.GkillError `json:"errors"`
@@ -20,12 +13,4 @@ type AddReKyouResponse struct {
 	AddedReKyou *reps.ReKyou `json:"added_re_kyou"`
 
 	AddedReKyouKyou *reps.Kyou `json:"added_rekyou_kyou"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

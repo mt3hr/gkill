@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type URLogRepository interface {
 	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
@@ -27,12 +24,4 @@ type URLogRepository interface {
 	GetURLogHistories(ctx context.Context, id string) ([]*URLog, error)
 
 	AddURLogInfo(ctx context.Context, urlog *URLog) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

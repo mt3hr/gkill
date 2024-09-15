@@ -1,4 +1,3 @@
-// ˅
 'use strict';
 
 import type { GkillError } from "../api/gkill-error";
@@ -6,12 +5,9 @@ import { Tag } from "./tag";
 import { Text } from "./text";
 import { TimeIs } from "./time-is";
 
-// ˄
 
 export abstract class InfoBase {
-    // ˅
 
-    // ˄
 
     id: string;
 
@@ -46,69 +42,48 @@ export abstract class InfoBase {
     is_checked: boolean;
 
     async load_attached_tags(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_attached_texts(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_attached_timeis(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async clear_attached_tags(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async clear_attached_texts(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async clear_attached_timeis(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     abstract clone(): Promise<InfoBase>;
 
     constructor() {
-        // ˅
         this.id = ""
 
         this.rep_name = ""
@@ -140,14 +115,10 @@ export abstract class InfoBase {
         this.attached_timeis = new Array<TimeIs>()
 
         this.is_checked = false
-        // ˄
     }
 
-    // ˅
 
-    // ˄
 }
 
-// ˅
 
-// ˄
+
