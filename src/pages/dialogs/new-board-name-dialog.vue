@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { NewBoardNameDialogEmits } from './new-board-name-dialog-emits';
-import { NewBoardNameDialogProps } from './new-board-name-dialog-props';
+</template>
+<script lang="ts" setup>
+import type { NewBoardNameDialogEmits } from './new-board-name-dialog-emits';
+import type { NewBoardNameDialogProps } from './new-board-name-dialog-props';
 
-// ˄
-
-export class NewBoardNameDialog {
-    // ˅
-    
-    // ˄
-
-    private props: NewBoardNameDialogProps;
-
-    private emits: NewBoardNameDialogEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<NewBoardNameDialogProps>();
+const emits = defineEmits<NewBoardNameDialogEmits>();
+</script>

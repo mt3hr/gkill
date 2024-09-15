@@ -1,67 +1,31 @@
 <template>
-
+    <LantanaFlower />
+    <LantanaTextView />
 </template>
 <script setup lang="ts">
+import { type Ref, ref } from 'vue';
+import type { LantanaFlowersViewEmits } from './lantana-flowers-view-emits';
+import type { LantanaFlowersViewProps } from './lantana-flowers-view-props';
+import LantanaFlower from './lantana-flower.vue';
+import LantanaTextView from './lantana-text-view.vue';
+import { LantanaFlowerState } from '@/classes/lantana/lantana-flower-state';
 
-// ˅
-'use strict';
+const props = defineProps<LantanaFlowersViewProps>();
+const emits = defineEmits<LantanaFlowersViewEmits>();
 
-import { LantanaFlower } from './lantana-flower.vue';
-import { LantanaFlowersViewEmits } from './lantana-flowers-view-emits';
-import { LantanaFlowersViewProps } from './lantana-flowers-view-props';
-import { LantanaTextView } from './lantana-text-view';
+const flower_state_1: Ref<LantanaFlowerState> = ref(LantanaFlowerState.none);
+const flower_state_2: Ref<LantanaFlowerState> = ref(LantanaFlowerState.none);
+const flower_state_3: Ref<LantanaFlowerState> = ref(LantanaFlowerState.none);
+const flower_state_4: Ref<LantanaFlowerState> = ref(LantanaFlowerState.none);
+const flower_state_5: Ref<LantanaFlowerState> = ref(LantanaFlowerState.none);
 
-// ˄
-
-export class LantanaFlowersView {
-    // ˅
-    
-    // ˄
-
-    private flower_state_1: Ref<LantanaFlowerState>;
-
-    private flower_state_2: Ref<LantanaFlowerState>;
-
-    private flower_state_3: Ref<LantanaFlowerState>;
-
-    private flower_state_4: Ref<LantanaFlowerState>;
-
-    private flower_state_5: Ref<LantanaFlowerState>;
-
-    private lantanaFlower: Array<LantanaFlower>;
-
-    private props: LantanaFlowersViewProps;
-
-    private emits: LantanaFlowersViewEmits;
-
-    private lantanaTextView: LantanaTextView;
-
-    async get_mood(): Promise<Number> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async set_mood(mood: Number): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async emit_updated_mood(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+async function get_mood(): Promise<Number> {
+    throw new Error('Not implemented');
 }
-
-// ˅
-
-// ˄
-
+async function set_mood(mood: Number): Promise<void> {
+    throw new Error('Not implemented');
+}
+async function emit_updated_mood(): Promise<void> {
+    throw new Error('Not implemented');
+}
 </script>
-<style scoped></style>

@@ -8,7 +8,7 @@ import { Repository } from './repository';
 
 export class ServerConfig {
     // ˅
-    
+
     // ˄
 
     device: string;
@@ -37,7 +37,11 @@ export class ServerConfig {
 
     repositories: Array<Repository>;
 
-    private accounts: Array<Account>;
+    accounts: Array<Account>;
+
+    async clone(): Promise<ServerConfig> {
+        throw new Error('Not implemented');
+    }
 
     constructor() {
         // ˅
@@ -59,7 +63,7 @@ export class ServerConfig {
     }
 
     // ˅
-    
+
     // ˄
 }
 

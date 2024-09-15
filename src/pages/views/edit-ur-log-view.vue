@@ -1,31 +1,16 @@
-// ˅
-'use strict';
+<template>
+    <KyouView />
+</template>
+<script lang="ts" setup>
+import { type Ref, ref } from 'vue';
+import type { EditURLogViewProps } from './edit-ur-log-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import { Kyou } from '@/classes/datas/kyou';
+import { URLog } from '@/classes/datas/ur-log';
+import KyouView from './kyou-view.vue';
 
-import { EditURLogViewProps } from './edit-ur-log-view-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class EditURLogView {
-    // ˅
-    
-    // ˄
-
-    private cloned_urlog: URLog;
-
-    private cloned_kyou: Kyou;
-
-    kyou_view: KyouView;
-
-    private editURLogViewProps: EditURLogViewProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditURLogViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_urlog: Ref<URLog> = ref(await props.urlog.clone());
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+</script>

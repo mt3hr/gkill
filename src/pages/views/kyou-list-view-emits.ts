@@ -1,120 +1,26 @@
-// ˅
 'use strict';
 
-// ˄
+import type { GkillError } from "@/classes/api/gkill-error";
+import type { GkillMessage } from "@/classes/api/gkill-message";
+import type { Kyou } from "@/classes/datas/kyou";
+import type { Tag } from "@/classes/datas/tag";
 
-export class KyouListViewEmits {
-    // ˅
-    
-    // ˄
-
-    reveived_messages(message: Array<GkillMessage>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    received_errors(errors: Array<GkillError>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    requested_reload_list(): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    requested_switch_list_style(is_image_only: boolean): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    updated_match_kyous(kyous: Array<Kyou>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    updated_checked_kyous(kyous: Array<Kyou>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    registered_kyou(kyou: Kyou): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    updated_kyou(kyou: Kyou): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    deleted_kyou(kyou: Kyou): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    registered_tag(tag: Tag): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    updated_tag(tag: Tag): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    deleted_tag(tag: Tag): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    registered_text(text: Text): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    updated_text(text: Text): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    deleted_text(text: Text): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    requested_reload_kyou(kyou: Kyou): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    requested_focus_kyou(kyou: Kyou): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface KyouListViewEmits {
+    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_errors', errors: Array<GkillError>): void
+    (e: 'requested_reload_list',): void
+    (e: 'requested_switch_list_style', is_image_only: boolean): void
+    (e: 'updated_match_kyous', kyous: Array<Kyou>): void
+    (e: 'updated_checked_kyous', kyous: Array<Kyou>): void
+    (e: 'registered_kyou', kyou: Kyou): void
+    (e: 'updated_kyou', kyou: Kyou): void
+    (e: 'deleted_kyou', kyou: Kyou): void
+    (e: 'registered_tag', tag: Tag): void
+    (e: 'updated_tag', tag: Tag): void
+    (e: 'deleted_tag', tag: Tag): void
+    (e: 'registered_text', text: Text): void
+    (e: 'updated_text', text: Text): void
+    (e: 'deleted_text', text: Text): void
+    (e: 'requested_reload_kyou', kyou: Kyou): void
+    (e: 'requested_focus_kyou', kyou: Kyou): void
 }
-
-// ˅
-
-// ˄

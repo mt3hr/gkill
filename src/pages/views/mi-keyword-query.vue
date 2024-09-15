@@ -1,27 +1,12 @@
-// ˅
-'use strict';
+<template>
 
-import { miKeywordQueryEmits } from './mi-keyword-query-emits';
-import { miKeywordQueryProps } from './mi-keyword-query-props';
-
-// ˄
-
-export class miKeywordQuery {
-    // ˅
-    
-    // ˄
-
-    private cloned_query: Ref<FindMiQuery>;
-
-    private prpos: miKeywordQueryProps;
-
-    private emits: miKeywordQueryEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+</template>
+<script lang="ts" setup>
+import { type Ref, ref } from 'vue';
+import type { FindMiQuery } from '@/classes/api/find_query/find-mi-query';
+import type { miKeywordQueryEmits } from './mi-keyword-query-emits';
+import type { miKeywordQueryProps } from './mi-keyword-query-props';
+const props = defineProps<miKeywordQueryProps>();
+const emits = defineEmits<miKeywordQueryEmits>();
+const cloned_query: Ref<FindMiQuery> = ref(await props.query.clone());
+</script>

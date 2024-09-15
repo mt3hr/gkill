@@ -1,24 +1,7 @@
-// ˅
 'use strict';
 
-// ˄
+import type { FindMiQuery } from "@/classes/api/find_query/find-mi-query";
 
-export class miQueryEditorSidebarEmits {
-    // ˅
-    
-    // ˄
-
-    updated_query(query: FindMiQuery): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface miQueryEditorSidebarEmits {
+    (e: 'updated_query', query: FindMiQuery): void 
 }
-
-// ˅
-
-// ˄

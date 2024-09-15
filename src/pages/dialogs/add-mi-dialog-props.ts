@@ -1,21 +1,7 @@
-// ˅
 'use strict';
 
-import { GkillPropsBase } from '../views/gkill-props-base';
-import { KyouViewPropsBase } from '../views/kyou-view-props-base';
+import type { GkillPropsBase } from "../views/gkill-props-base";
+import type { KyouViewPropsBase } from "../views/kyou-view-props-base";
 
-// ˄
-
-export class AddMiDialogProps implements KyouViewPropsBase, GkillPropsBase {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface AddMiDialogProps extends KyouViewPropsBase, GkillPropsBase {
 }
-
-// ˅
-
-// ˄

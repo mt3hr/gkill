@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { EditKFTLTemplateStructElementViewEmits } from './edit-kftl-template-struct-element-view-emits';
-import { EditKFTLTemplateStructElementViewProps } from './edit-kftl-template-struct-element-view-props';
+</template>
+<script lang="ts" setup>
+import type { EditKFTLTemplateStructElementViewEmits } from './edit-kftl-template-struct-element-view-emits';
+import type { EditKFTLTemplateStructElementViewProps } from './edit-kftl-template-struct-element-view-props';
 
-// ˄
-
-export class EditKFTLTemplateStructElementView {
-    // ˅
-    
-    // ˄
-
-    private props: EditKFTLTemplateStructElementViewProps;
-
-    private emits: EditKFTLTemplateStructElementViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditKFTLTemplateStructElementViewProps>();
+const emits = defineEmits<EditKFTLTemplateStructElementViewEmits>();
+</script>

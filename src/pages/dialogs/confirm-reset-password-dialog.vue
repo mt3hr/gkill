@@ -1,28 +1,12 @@
-// ˅
-'use strict';
+<template>
+    <ConfirmResetPasswordView />
+</template>
+<script lang="ts" setup>
+import type { ConfirmResetPasswordDialogEmits } from './confirm-reset-password-dialog-emits';
+import type { ConfirmResetPasswordDialogProps } from './confirm-reset-password-dialog-props';
+import ConfirmResetPasswordView from '../views/confirm-reset-password-view.vue';
 
-import { ConfirmResetPasswordDialogEmits } from './confirm-reset-password-dialog-emits';
-import { ConfirmResetPasswordDialogProps } from './confirm-reset-password-dialog-props';
-import { ConfirmResetPasswordView } from '../views/confirm-reset-password-view';
+const props = defineProps<ConfirmResetPasswordDialogProps>();
+const emits = defineEmits<ConfirmResetPasswordDialogEmits>();
 
-// ˄
-
-export class ConfirmResetPasswordDialog {
-    // ˅
-    
-    // ˄
-
-    private props: ConfirmResetPasswordDialogProps;
-
-    private emits: ConfirmResetPasswordDialogEmits;
-
-    private confirm_reset_password_view: ConfirmResetPasswordView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+</script>

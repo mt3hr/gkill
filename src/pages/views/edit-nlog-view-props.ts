@@ -1,22 +1,8 @@
-// ˅
 'use strict';
 
-import { KyouViewPropsBase } from './kyou-view-props-base';
+import type { Nlog } from "@/classes/datas/nlog";
+import type { KyouViewPropsBase } from "./kyou-view-props-base";
 
-// ˄
-
-export class EditNlogViewProps implements KyouViewPropsBase {
-    // ˅
-    
-    // ˄
-
+export interface EditNlogViewProps extends KyouViewPropsBase {
     nlog: Nlog;
-
-    // ˅
-    
-    // ˄
 }
-
-// ˅
-
-// ˄

@@ -1,27 +1,10 @@
-// ˅
 'use strict';
 
-import { GkillPropsBase } from './gkill-props-base';
-import { SidebarProps } from './sidebar-props';
+import type { GkillPropsBase } from "./gkill-props-base";
+import type { SidebarProps } from "./sidebar-props";
 
-// ˄
-
-export class FoldableStructProps implements SidebarProps, GkillPropsBase {
-    // ˅
-    
-    // ˄
-
+export interface FoldableStructProps extends SidebarProps, GkillPropsBase {
     struct_obj: Object;
-
     folder_name: string;
-
     is_open: boolean;
-
-    // ˅
-    
-    // ˄
 }
-
-// ˅
-
-// ˄

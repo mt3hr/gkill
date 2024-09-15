@@ -1,31 +1,16 @@
-// ˅
-'use strict';
+<template>
+    <KyouView />
+</template>
+<script lang="ts" setup>
+import { type Ref, ref } from 'vue';
+import type { ConfirmDeleteTextViewProps } from './confirm-delete-text-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import { Text } from '@/classes/datas/text';
+import { Kyou } from '@/classes/datas/kyou';
+import KyouView from './kyou-view.vue';
 
-import { ConfirmDeleteTextViewProps } from './confirm-delete-text-view-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class ConfirmDeleteTextView {
-    // ˅
-    
-    // ˄
-
-    private cloned_text: Text;
-
-    private cloned_kyou: Kyou;
-
-    kyou_view: KyouView;
-
-    private confirmDeleteTextViewProps: ConfirmDeleteTextViewProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ConfirmDeleteTextViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_text: Ref<Text> = ref(await props.text.clone());
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+</script>

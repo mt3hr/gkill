@@ -1,25 +1,8 @@
-// ˅
-'use strict';
-
-import { KyouViewEmits } from './kyou-view-emits';
-import { StartTimeIsViewProps } from './start-time-is-view-props';
-
-// ˄
-
-export class StartTimeIsView {
-    // ˅
-    
-    // ˄
-
-    private startTimeIsViewProps: StartTimeIsViewProps;
-
-    private kyouViewEmits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+<template>
+</template>
+<script lang="ts" setup>
+import type { KyouViewEmits } from './kyou-view-emits';
+import type { StartTimeIsViewProps } from './start-time-is-view-props';
+const props = defineProps<StartTimeIsViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+</script>

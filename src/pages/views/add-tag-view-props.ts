@@ -1,20 +1,6 @@
-// ˅
 'use strict';
 
-import { KyouViewPropsBase } from './kyou-view-props-base';
+import type { KyouViewPropsBase } from "./kyou-view-props-base";
 
-// ˄
-
-export class AddTagViewProps implements KyouViewPropsBase {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface AddTagViewProps extends KyouViewPropsBase {
 }
-
-// ˅
-
-// ˄

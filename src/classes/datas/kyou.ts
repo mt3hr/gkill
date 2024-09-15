@@ -2,6 +2,7 @@
 'use strict';
 
 import type { GkillError } from '../api/gkill-error';
+import { GitCommitLog } from './git-commit-log';
 import { IDFKyou } from './idf-kyou';
 import { InfoBase } from './info-base';
 import { Kmemo } from './kmemo';
@@ -35,6 +36,8 @@ export class Kyou extends InfoBase {
     typed_lantana: Lantana;
 
     typed_idf_kyou: IDFKyou;
+
+    typed_git_commit_log: GitCommitLog;
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         // ˅
@@ -102,6 +105,12 @@ export class Kyou extends InfoBase {
         // ˄
     }
 
+    async load_typed_git_commit_log(): Promise<Array<GkillError>> {
+        // ˅
+        throw new Error('Not implemented');
+        // ˄
+    }
+
     async clear_typed_datas(): Promise<Array<GkillError>> {
         // ˅
         throw new Error('Not implemented');
@@ -134,6 +143,8 @@ export class Kyou extends InfoBase {
         this.typed_lantana = new Lantana()
 
         this.typed_idf_kyou = new IDFKyou()
+
+        this.typed_git_commit_log = new GitCommitLog()
         // ˄
     }
 

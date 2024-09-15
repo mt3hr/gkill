@@ -1,22 +1,8 @@
-// ˅
 'use strict';
 
-import { KyouViewPropsBase } from './kyou-view-props-base';
+import type { IDFKyou } from "@/classes/datas/idf-kyou";
+import type { KyouViewPropsBase } from "./kyou-view-props-base";
 
-// ˄
-
-export class EditIDFKyouViewProps implements KyouViewPropsBase {
-    // ˅
-    
-    // ˄
-
+export interface EditIDFKyouViewProps extends KyouViewPropsBase {
     idf_kyou: IDFKyou;
-
-    // ˅
-    
-    // ˄
 }
-
-// ˅
-
-// ˄

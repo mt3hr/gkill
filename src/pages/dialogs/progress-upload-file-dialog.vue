@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <ProgressUploadFileView />
+</template>
+<script lang="ts" setup>
+import type { ProgressUploadFileDialogEmits } from './progress-upload-file-dialog-emits';
+import type { ProgressUploadFileDialogProps } from './progress-upload-file-dialog-props';
+import ProgressUploadFileView from '../views/progress-upload-file-view.vue';
 
-import { ProgressUploadFileDialogEmits } from './progress-upload-file-dialog-emits';
-import { ProgressUploadFileDialogProps } from './progress-upload-file-dialog-props';
-import { ProgressUploadFileView } from '../views/progress-upload-file-view';
-
-// ˄
-
-export class ProgressUploadFileDialog {
-    // ˅
-    
-    // ˄
-
-    private props: ProgressUploadFileDialogProps;
-
-    private emits: ProgressUploadFileDialogEmits;
-
-    private progress_upload_file_view: ProgressUploadFileView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ProgressUploadFileDialogProps>();
+const emits = defineEmits<ProgressUploadFileDialogEmits>();
+</script>

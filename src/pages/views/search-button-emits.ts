@@ -1,24 +1,5 @@
-// ˅
 'use strict';
 
-// ˄
-
-export class SearchButtonEmits {
-    // ˅
-    
-    // ˄
-
-    request_search(): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface SearchButtonEmits {
+    (e: 'request_search'): void
 }
-
-// ˅
-
-// ˄

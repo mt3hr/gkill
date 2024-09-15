@@ -1,54 +1,22 @@
 <template>
-
+    <AddTextView />
+    <KyouView />
 </template>
 <script setup lang="ts">
+import type { AddTextDialogProps } from './add-text-dialog-props';
+import type { KyouDialogEmits } from '../views/kyou-dialog-emits';
+import AddTextView from '../views/add-text-view.vue';
+import KyouView from '../views/kyou-view.vue';
 
-// ˅
-'use strict';
+const props = defineProps<AddTextDialogProps>();
+const emits = defineEmits<KyouDialogEmits>();
+defineExpose({ show, hide })
 
-import { AddTextDialogProps } from './add-text-dialog-props';
-import { AddTextView } from '../views/add-text-view';
-import { KyouDialogEmits } from '../views/kyou-dialog-emits';
-import { KyouView } from '../views/kyou-view.vue';
-import { KyouViewEmits } from '../views/kyou-view-emits';
-
-// ˄
-
-export class AddTextDialog {
-    // ˅
-    
-    // ˄
-
-    private props: AddTextDialogProps;
-
-    private kyouView: KyouView;
-
-    private emits: KyouViewEmits;
-
-    private emits: KyouDialogEmits;
-
-    private addTextView: AddTextView;
-
-    async show(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async hide(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+async function show(): Promise<void> {
+    throw new Error('Not implemented');
 }
-
-// ˅
-
-// ˄
-
+async function hide(): Promise<void> {
+    throw new Error('Not implemented');
+}
 </script>
 <style scoped></style>
