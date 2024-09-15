@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type MiRepositories []MiRepository
 
 func (m MiRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
-	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
 	})
 	return matchKyousList, nil
-	// ˄
 }
 
 func (m MiRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
-	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -157,11 +151,9 @@ loop:
 	}
 
 	return matchKyou, nil
-	// ˄
 }
 
 func (m MiRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -237,18 +229,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (m MiRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements MiReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (m MiRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -286,17 +274,13 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (m MiRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "MiReps", nil
-	// ˄
 }
 
 func (m MiRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -334,11 +318,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (m MiRepositories) FindMi(ctx context.Context, queryJSON string) ([]*Mi, error) {
-	// ˅
 	matchMis := map[string]*Mi{}
 	existErr := false
 	var err error
@@ -413,11 +395,9 @@ loop:
 		return matchMisList[i].CreateTime.After(matchMisList[j].CreateTime)
 	})
 	return matchMisList, nil
-	// ˄
 }
 
 func (m MiRepositories) GetMi(ctx context.Context, id string) (*Mi, error) {
-	// ˅
 	matchMi := &Mi{}
 	matchMi = nil
 	existErr := false
@@ -480,11 +460,9 @@ loop:
 	}
 
 	return matchMi, nil
-	// ˄
 }
 
 func (m MiRepositories) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
-	// ˅
 	kyouHistories := map[string]*Mi{}
 	existErr := false
 	var err error
@@ -560,18 +538,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (m MiRepositories) AddMiInfo(ctx context.Context, mi *Mi) error {
-	// ˅
 	err := fmt.Errorf("not implements MiReps.AddMiInfo")
 	return err
-	// ˄
 }
 
 func (m MiRepositories) GetBoardNames(ctx context.Context) ([]string, error) {
-	// ˅
 	boardNames := map[string]struct{}{}
 	existErr := false
 	var err error
@@ -638,9 +612,4 @@ loop:
 	})
 
 	return boardNamesList, nil
-	// ˄
 }
-
-// ˅
-
-// ˄

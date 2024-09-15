@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type NlogRepository interface {
 	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
@@ -27,12 +24,4 @@ type NlogRepository interface {
 	GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error)
 
 	AddNlogInfo(ctx context.Context, nlog *Nlog) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

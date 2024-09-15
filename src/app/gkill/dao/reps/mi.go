@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type Mi struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -47,12 +40,4 @@ type Mi struct {
 	EstimateStartTime *time.Time `json:"estimate_start_time"`
 
 	EstimateEndTime *time.Time `json:"estimate_end_time"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

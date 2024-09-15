@@ -1,4 +1,3 @@
-// ˅
 'use strict';
 
 import type { GkillError } from '../api/gkill-error';
@@ -12,12 +11,9 @@ import { Nlog } from './nlog';
 import { TimeIs } from './time-is';
 import { URLog } from './ur-log';
 
-// ˄
 
 export class Kyou extends InfoBase {
-    // ˅
 
-    // ˄
 
     image_source: string;
 
@@ -40,91 +36,62 @@ export class Kyou extends InfoBase {
     typed_git_commit_log: GitCommitLog;
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_typed_kmemo(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_typed_urlog(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_typed_nlog(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_typed_timeis(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_typed_mi(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_typed_lantana(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_typed_idf_kyou(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_typed_git_commit_log(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async clear_typed_datas(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     clone(): Promise<Kyou> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     constructor() {
-        // ˅
         super()
         this.image_source = ""
 
@@ -145,14 +112,10 @@ export class Kyou extends InfoBase {
         this.typed_idf_kyou = new IDFKyou()
 
         this.typed_git_commit_log = new GitCommitLog()
-        // ˄
     }
 
-    // ˅
 
-    // ˄
 }
 
-// ˅
 
-// ˄
+

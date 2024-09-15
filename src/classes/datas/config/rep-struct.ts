@@ -1,12 +1,8 @@
-// ˅
 'use strict';
 
-// ˄
 
 export class RepStruct {
-    // ˅
-    
-    // ˄
+
 
     id: string;
 
@@ -25,7 +21,6 @@ export class RepStruct {
     ignore_check_rep_rykv: boolean;
 
     constructor() {
-        // ˅
         this.id = ""
         this.user_id = ""
         this.device = ""
@@ -34,14 +29,10 @@ export class RepStruct {
         this.seq = 0
         this.check_when_inited = false
         this.ignore_check_rep_rykv = false
-        // ˄
     }
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

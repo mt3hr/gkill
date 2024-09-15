@@ -1,12 +1,9 @@
-// ˅
 package reps
 
 import (
 	"context"
 	"time"
 )
-
-// ˄
 
 type GPSLogRepository interface {
 	GetAllGPSLogs(ctx context.Context) ([]*GPSLog, error)
@@ -18,12 +15,4 @@ type GPSLogRepository interface {
 	GetRepName(ctx context.Context) (string, error)
 
 	UpdateCache(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

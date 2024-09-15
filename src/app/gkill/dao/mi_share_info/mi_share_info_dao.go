@@ -1,9 +1,6 @@
-// ˅
 package mi_share_info
 
 import "context"
-
-// ˄
 
 type MiShareInfoDAO interface {
 	GetAllMiShareInfos(ctx context.Context) ([]*MiShareInfo, error)
@@ -19,12 +16,4 @@ type MiShareInfoDAO interface {
 	DeleteMiShareInfo(ctx context.Context, id string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

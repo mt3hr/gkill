@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type Repository interface {
 	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
@@ -19,12 +16,4 @@ type Repository interface {
 	UpdateCache(ctx context.Context) error
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

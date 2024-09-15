@@ -1,4 +1,3 @@
-// ˅
 package dao
 
 import (
@@ -9,13 +8,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 )
 
-// ˄
-
 type ConfigDAOs struct {
-	// ˅
-
-	// ˄
-
 	AccountDAO account.AccountDAO
 
 	LoginSessionDAO account_state.LoginSessionDAO
@@ -39,12 +32,4 @@ type ConfigDAOs struct {
 	DeviceStructDAO user_config.DeviceStructDAO
 
 	RepTypeStructDAO user_config.RepTypeStructDAO
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

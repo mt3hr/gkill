@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type Nlog struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -41,12 +34,4 @@ type Nlog struct {
 	Title string `json:"title"`
 
 	Amount int `json:"amount"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

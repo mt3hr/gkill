@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type TimeIs struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -39,12 +32,4 @@ type TimeIs struct {
 	StartTime time.Time `json:"start_time"`
 
 	EndTime *time.Time `json:"end_time"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

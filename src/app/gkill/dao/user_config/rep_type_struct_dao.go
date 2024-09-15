@@ -1,9 +1,6 @@
-// ˅
 package user_config
 
 import "context"
-
-// ˄
 
 type RepTypeStructDAO interface {
 	GetAllRepTypeStructs(ctx context.Context) ([]*RepTypeStruct, error)
@@ -21,12 +18,4 @@ type RepTypeStructDAO interface {
 	DeleteUsersRepTypeStructs(ctx context.Context, userID string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

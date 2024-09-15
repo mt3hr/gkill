@@ -1,12 +1,8 @@
-// ˅
 'use strict';
 
-// ˄
 
 export class DeviceStruct {
-    // ˅
 
-    // ˄
 
     id: string;
 
@@ -23,7 +19,6 @@ export class DeviceStruct {
     check_when_inited: boolean;
 
     constructor() {
-        // ˅
         this.id = ""
         this.user_id = ""
         this.device = ""
@@ -31,14 +26,10 @@ export class DeviceStruct {
         this.parent_folder_id = ""
         this.seq = 0
         this.check_when_inited = false
-        // ˄
     }
 
-    // ˅
 
-    // ˄
 }
 
-// ˅
 
-// ˄
+

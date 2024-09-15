@@ -1,9 +1,6 @@
-// ˅
 package account_state
 
 import "context"
-
-// ˄
 
 type FileUploadHistoryDAO interface {
 	GetAllFileUploadHistories(ctx context.Context) ([]*FileUploadHistory, error)
@@ -17,12 +14,4 @@ type FileUploadHistoryDAO interface {
 	DeleteFileUploadHistory(ctx context.Context, id string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

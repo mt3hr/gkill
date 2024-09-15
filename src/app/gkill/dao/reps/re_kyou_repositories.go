@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,8 +9,6 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
-
-// ˄
 
 type ReKyouRepositories struct {
 	ReKyouRepositories []ReKyouRepository
@@ -88,7 +85,6 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([
 }
 
 func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
-	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -151,11 +147,9 @@ loop:
 	}
 
 	return matchKyou, nil
-	// ˄
 }
 
 func (r *ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -231,18 +225,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (r *ReKyouRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements ReKyouReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -280,17 +270,13 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (r *ReKyouRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "ReKyouReps", nil
-	// ˄
 }
 
 func (r *ReKyouRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -328,7 +314,6 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (r *ReKyouRepositories) FindReKyou(ctx context.Context, queryJSON string) ([]*ReKyou, error) {
@@ -387,7 +372,6 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, queryJSON string) (
 }
 
 func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string) (*ReKyou, error) {
-	// ˅
 	matchReKyou := &ReKyou{}
 	matchReKyou = nil
 	existErr := false
@@ -450,11 +434,9 @@ loop:
 	}
 
 	return matchReKyou, nil
-	// ˄
 }
 
 func (r *ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
-	// ˅
 	kyouHistories := map[string]*ReKyou{}
 	existErr := false
 	var err error
@@ -530,18 +512,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (r *ReKyouRepositories) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
-	// ˅
 	err := fmt.Errorf("not implements ReKyouReps.AddReKyouInfo")
 	return err
-	// ˄
 }
 
 func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
-	// ˅
 	matchReKyous := map[string]*ReKyou{}
 	existErr := false
 	var err error
@@ -616,13 +594,8 @@ loop:
 		return matchReKyousList[i].RelatedTime.After(matchReKyousList[j].RelatedTime)
 	})
 	return matchReKyousList, nil
-	// ˄
 }
 
 func (r *ReKyouRepositories) GetRepositories(ctx context.Context) (*GkillRepositories, error) {
 	return r.repositories, nil
 }
-
-// ˅
-
-// ˄

@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type IDFKyouRepositories []IDFKyouRepository
 
 func (i IDFKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
-	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
 	})
 	return matchKyousList, nil
-	// ˄
 }
 
 func (i IDFKyouRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
-	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -157,11 +151,9 @@ loop:
 	}
 
 	return matchKyou, nil
-	// ˄
 }
 
 func (i IDFKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -237,18 +229,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (i IDFKyouRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements IDFKyouReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (i IDFKyouRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -286,17 +274,13 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (i IDFKyouRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "IDFKyouReps", nil
-	// ˄
 }
 
 func (i IDFKyouRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -334,11 +318,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, queryJSON string) ([]*IDFKyou, error) {
-	// ˅
 	matchIDFKyous := map[string]*IDFKyou{}
 	existErr := false
 	var err error
@@ -413,11 +395,9 @@ loop:
 		return matchIDFKyousList[i].RelatedTime.After(matchIDFKyousList[j].RelatedTime)
 	})
 	return matchIDFKyousList, nil
-	// ˄
 }
 
 func (i IDFKyouRepositories) GetIDFKyou(ctx context.Context, id string) (*IDFKyou, error) {
-	// ˅
 	matchIDFKyou := &IDFKyou{}
 	matchIDFKyou = nil
 	existErr := false
@@ -480,11 +460,9 @@ loop:
 	}
 
 	return matchIDFKyou, nil
-	// ˄
 }
 
 func (i IDFKyouRepositories) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
-	// ˅
 	kyouHistories := map[string]*IDFKyou{}
 	existErr := false
 	var err error
@@ -560,23 +538,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (i IDFKyouRepositories) IDF(ctx context.Context) error {
-	// ˅
 	err := fmt.Errorf("not implements IDFKyouReps.IDF")
 	return err
-	// ˄
 }
 
 func (i IDFKyouRepositories) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
-	// ˅
 	err := fmt.Errorf("not implements IDFKyouReps.AddIDFKyouInfo")
 	return err
-	// ˄
 }
-
-// ˅
-
-// ˄

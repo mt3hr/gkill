@@ -1,13 +1,6 @@
-// ˅
 package req_res
 
-// ˄
-
 type UploadFilesRequest struct {
-	// ˅
-
-	// ˄
-
 	SessionID string
 
 	Files []*FileData
@@ -15,12 +8,4 @@ type UploadFilesRequest struct {
 	TargetRepName string
 
 	ConflictBehavior FileUploadConflictBehavior
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

@@ -1,9 +1,6 @@
-// ˅
 package user_config
 
 import "context"
-
-// ˄
 
 type DeviceStructDAO interface {
 	GetAllDeviceStructs(ctx context.Context) ([]*DeviceStruct, error)
@@ -21,12 +18,4 @@ type DeviceStructDAO interface {
 	DeleteUsersDeviceStructs(ctx context.Context, userID string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type KmemoRepository interface {
 	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
@@ -27,12 +24,4 @@ type KmemoRepository interface {
 	GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error)
 
 	AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

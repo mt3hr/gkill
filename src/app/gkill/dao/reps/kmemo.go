@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type Kmemo struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -37,12 +30,4 @@ type Kmemo struct {
 	UpdateDevice string `json:"update_device"`
 
 	Content string `json:"content"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄
