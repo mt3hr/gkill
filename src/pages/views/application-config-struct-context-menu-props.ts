@@ -1,26 +1,9 @@
-// ˅
 'use strict';
 
-import { GkillPropsBase } from './gkill-props-base';
+import type { GkillPropsBase } from "./gkill-props-base";
 
-// ˄
-
-export class ApplicationConfigStructContextMenuProps implements GkillPropsBase {
-    // ˅
-    
-    // ˄
-
+export interface ApplicationConfigStructContextMenuProps extends GkillPropsBase {
     struct_obj: Object;
-
     folder_name: string;
-
     is_open: boolean;
-
-    // ˅
-    
-    // ˄
 }
-
-// ˅
-
-// ˄

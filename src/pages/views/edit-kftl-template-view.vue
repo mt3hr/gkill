@@ -1,37 +1,19 @@
-// ˅
-'use strict';
+<template>
+    <AddNewKftlTemplateStructElementDialog />
+    <EditKftlTemplateStructElementDialog />
+    <TagStructElement />
+    <KFTLTemplateElement />
+</template>
+<script lang="ts" setup>
+import type { EditKFTLTemplateViewEmits } from './edit-kftl-template-view-emits';
+import type { EditKFTLTemplateViewProps } from './edit-kftl-template-view-props';
+import KFTLTemplateElement from './kftl-template-element.vue';
+import TagStructElement from './tag-struct-element.vue';
+import AddNewKftlTemplateStructElementDialog from '../dialogs/add-new-kftl-template-struct-element-dialog.vue';
+import EditKftlTemplateStructElementDialog from '../dialogs/edit-kftl-template-struct-element-dialog.vue';
+import { ref } from 'vue';
 
-import { EditKFTLTemplateViewEmits } from './edit-kftl-template-view-emits';
-import { EditKFTLTemplateViewProps } from './edit-kftl-template-view-props';
-import { KFTLTemplateElement } from './kftl-template-element';
-import { TagStructElement } from './tag-struct-element';
-
-// ˄
-
-export class EditKFTLTemplateView {
-    // ˅
-    
-    // ˄
-
-    private cloned_application_config: Ref<ApplicationConfig>;
-
-    add_new_kftl_template_struct_element_dialog: AddNewKFTLTemplateStructElementDialog;
-
-    edit_kftl_template_struct_element_dialog: EditKFTLTemplateStructElementDialog;
-
-    private props: EditKFTLTemplateViewProps;
-
-    private emits: EditKFTLTemplateViewEmits;
-
-    private tagStructElement: TagStructElement;
-
-    private kftl_template_root_element: KFTLTemplateElement;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditKFTLTemplateViewProps>();
+const emits = defineEmits<EditKFTLTemplateViewEmits>();
+const cloned_application_config = ref(await props.application_config.clone())
+</script>

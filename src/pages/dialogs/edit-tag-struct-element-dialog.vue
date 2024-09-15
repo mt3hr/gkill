@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <EditTagStructElementView />
+</template>
+<script lang="ts" setup>
+import type { EditTagStructElementDialogEmits } from './edit-tag-struct-element-dialog-emits';
+import type { EditTagStructElementDialogProps } from './edit-tag-struct-element-dialog-props';
+import EditTagStructElementView from '../views/edit-tag-struct-element-view.vue';
 
-import { EditTagStructElementDialogEmits } from './edit-tag-struct-element-dialog-emits';
-import { EditTagStructElementDialogProps } from './edit-tag-struct-element-dialog-props';
-import { EditTagStructElementView } from '../views/edit-tag-struct-element-view';
-
-// ˄
-
-export class EditTagStructElementDialog {
-    // ˅
-    
-    // ˄
-
-    private props: EditTagStructElementDialogProps;
-
-    private emits: EditTagStructElementDialogEmits;
-
-    private edit_tag_struct_element_view: EditTagStructElementView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditTagStructElementDialogProps>();
+const emits = defineEmits<EditTagStructElementDialogEmits>();
+</script>

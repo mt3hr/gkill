@@ -1,43 +1,19 @@
-// ˅
-'use strict';
+<template>
+    <EditReKyouView />
+</template>
+<script lang="ts" setup>
+import type { EditRekyouDialogProps } from './edit-rekyou-dialog-props';
+import type { KyouDialogEmits } from '../views/kyou-dialog-emits';
+import EditReKyouView from '../views/edit-re-kyou-view.vue';
 
-import { EditReKyouView } from '../views/edit-re-kyou-view';
-import { EditRekyouDialogProps } from './edit-rekyou-dialog-props';
-import { KyouDialogEmits } from '../views/kyou-dialog-emits';
-import { KyouViewEmits } from '../views/kyou-view-emits';
+const props = defineProps<EditRekyouDialogProps>();
+const emits = defineEmits<KyouDialogEmits>();
+defineExpose({ show, hide })
 
-// ˄
-
-export class EditReKyouDialog {
-    // ˅
-    
-    // ˄
-
-    private props: EditRekyouDialogProps;
-
-    private emits: KyouViewEmits;
-
-    private emits: KyouDialogEmits;
-
-    private editReKyouView: EditReKyouView;
-
-    async show(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async hide(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+async function show(): Promise<void> {
+    throw new Error('Not implemented');
 }
-
-// ˅
-
-// ˄
+async function hide(): Promise<void> {
+    throw new Error('Not implemented');
+}
+</script>

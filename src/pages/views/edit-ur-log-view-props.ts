@@ -1,20 +1,8 @@
-// ˅
 'use strict';
 
-import { KyouViewPropsBase } from './kyou-view-props-base';
+import type { URLog } from "@/classes/datas/ur-log";
+import type { KyouViewPropsBase } from "./kyou-view-props-base";
 
-// ˄
-
-export class EditURLogViewProps implements KyouViewPropsBase {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface EditURLogViewProps extends KyouViewPropsBase {
+    urlog: URLog
 }
-
-// ˅
-
-// ˄

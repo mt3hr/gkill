@@ -1,25 +1,9 @@
-// ˅
-'use strict';
+<template>
+</template>
+<script lang="ts" setup>
+import type { ProgressUploadGPSFileViewEmits } from './progress-upload-gps-file-view-emits';
+import type { ProgressUploadGPSFileViewProps } from './progress-upload-gps-file-view-props';
 
-import { ProgressUploadGPSFileViewEmits } from './progress-upload-gps-file-view-emits';
-import { ProgressUploadGPSFileViewProps } from './progress-upload-gps-file-view-props';
-
-// ˄
-
-export class ProgressUploadGPSFileView {
-    // ˅
-    
-    // ˄
-
-    private props: ProgressUploadGPSFileViewProps;
-
-    private emits: ProgressUploadGPSFileViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ProgressUploadGPSFileViewProps>();
+const emits = defineEmits<ProgressUploadGPSFileViewEmits>();
+</script>

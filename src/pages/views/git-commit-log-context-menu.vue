@@ -1,31 +1,15 @@
-// ˅
-'use strict';
+<template>
+    <AddTagDialog />
+    <AddTextDialog />
+    <ConfirmReKyouDialog />
+</template>
+<script lang="ts" setup>
+import type { GitCommitLogContextMenuProps } from './git-commit-log-context-menu-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import AddTagDialog from '../dialogs/add-tag-dialog.vue';
+import AddTextDialog from '../dialogs/add-text-dialog.vue';
+import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue';
 
-import { GitCommitLogContextMenuProps } from './git-commit-log-context-menu-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class GitCommitLogContextMenu {
-    // ˅
-    
-    // ˄
-
-    private add_tag_dialog: AddTagDialog;
-
-    private add_text_dialog: AddTextDialog;
-
-    private confirm_rekyou_dialog: ConfirmReKyouDialog;
-
-    private props: GitCommitLogContextMenuProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<GitCommitLogContextMenuProps>();
+const emits = defineEmits<KyouViewEmits>();
+</script>

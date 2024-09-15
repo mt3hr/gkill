@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <AddNewTagStructElementView />
+</template>
+<script lang="ts" setup>
+import type { AddNewTagStructElementDialogEmits } from './add-new-tag-struct-element-dialog-emits';
+import type { AddNewTagStructElementDialogProps } from './add-new-tag-struct-element-dialog-props';
+import AddNewTagStructElementView from '../views/add-new-tag-struct-element-view.vue';
 
-import { AddNewTagStructElementDialogEmits } from './add-new-tag-struct-element-dialog-emits';
-import { AddNewTagStructElementDialogProps } from './add-new-tag-struct-element-dialog-props';
-import { AddNewTagStructElementView } from '../views/add-new-tag-struct-element-view';
-
-// ˄
-
-export class AddNewTagStructElementDialog {
-    // ˅
-    
-    // ˄
-
-    private props: AddNewTagStructElementDialogProps;
-
-    private emits: AddNewTagStructElementDialogEmits;
-
-    private add_new_tag_struct_element_view: AddNewTagStructElementView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<AddNewTagStructElementDialogProps>();
+const emits = defineEmits<AddNewTagStructElementDialogEmits>();
+</script>

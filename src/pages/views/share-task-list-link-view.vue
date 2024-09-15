@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { ShareTaskListLinkViewEmits } from './share-task-list-link-view-emits';
-import { ShareTaskListLinkViewProps } from './share-task-list-link-view-props';
+</template>
+<script lang="ts" setup>
+import type { ShareTaskListLinkViewEmits } from './share-task-list-link-view-emits';
+import type { ShareTaskListLinkViewProps } from './share-task-list-link-view-props';
 
-// ˄
-
-export class ShareTaskListLinkView {
-    // ˅
-    
-    // ˄
-
-    private props: ShareTaskListLinkViewProps;
-
-    private emits: ShareTaskListLinkViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ShareTaskListLinkViewProps>();
+const emits = defineEmits<ShareTaskListLinkViewEmits>();
+</script>

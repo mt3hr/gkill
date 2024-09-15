@@ -1,22 +1,8 @@
-// ˅
 'use strict';
 
-import { KyouViewPropsBase } from './kyou-view-props-base';
+import type { KyouViewPropsBase } from "./kyou-view-props-base";
+import { Text } from "@/classes/datas/text";
 
-// ˄
-
-export class ConfirmDeleteTextViewProps implements KyouViewPropsBase {
-    // ˅
-    
-    // ˄
-
+export interface ConfirmDeleteTextViewProps extends KyouViewPropsBase {
     text: Text;
-
-    // ˅
-    
-    // ˄
 }
-
-// ˅
-
-// ˄

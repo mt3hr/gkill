@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <AddNlogView />
+</template>
+<script lang="ts" setup>
+import AddNlogView from '../views/add-nlog-view.vue';
+import type { AddNlogDialogProps } from './add-nlog-dialog-props';
+import type { KyouViewEmits } from '../views/kyou-view-emits';
 
-import { AddNlogDialogProps } from './add-nlog-dialog-props';
-import { AddNlogView } from '../views/add-nlog-view';
-import { KyouViewEmits } from '../views/kyou-view-emits';
-
-// ˄
-
-export class AddNlogDialog {
-    // ˅
-    
-    // ˄
-
-    private emits: KyouViewEmits;
-
-    private props: AddNlogDialogProps;
-
-    private add_nlog_view: AddNlogView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<AddNlogDialogProps>();
+const emits = defineEmits<KyouViewEmits>();
+</script>

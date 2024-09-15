@@ -1,24 +1,5 @@
-// ˅
 'use strict';
 
-// ˄
-
-export class KyouCountCalendarEmits {
-    // ˅
-    
-    // ˄
-
-    requested_focus_time(time: Date): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface KyouCountCalendarEmits {
+    (e: 'requested_focus_time', time: Date): void
 }
-
-// ˅
-
-// ˄

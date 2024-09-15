@@ -1,31 +1,16 @@
-// ˅
-'use strict';
+<template>
+    <KyouView />
+</template>
+<script lang="ts" setup>
+import type { AddTagViewProps } from './add-tag-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import type { Kyou } from '@/classes/datas/kyou';
+import { Tag } from '@/classes/datas/tag';
+import { type Ref, ref } from 'vue';
+import KyouView from './kyou-view.vue';
 
-import { AddTagViewProps } from './add-tag-view-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class AddTagView {
-    // ˅
-    
-    // ˄
-
-    private tag: Tag;
-
-    private cloned_kyou: Kyou;
-
-    kyou_view: KyouView;
-
-    private addTagViewProps: AddTagViewProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<AddTagViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+const tag: Ref<Tag> = ref(new Tag());
+</script>

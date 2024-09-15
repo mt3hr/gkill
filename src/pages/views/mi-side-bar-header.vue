@@ -1,31 +1,12 @@
-// ˅
-'use strict';
-
-import { ClearQueryButton } from './clear-query-button';
-import { SearchButton } from './search-button';
-import { miSidebarHeaderEmits } from './mi-sidebar-header-emits';
-import { miSidebarHeaderProps } from './mi-sidebar-header-props';
-
-// ˄
-
-export class miSideBarHeader {
-    // ˅
-    
-    // ˄
-
-    private clearQueryButton: ClearQueryButton;
-
-    private searchButton: SearchButton;
-
-    private emits: miSidebarHeaderEmits;
-
-    private props: miSidebarHeaderProps;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+<template>
+    <ClearQueryButton />
+    <SearchButton />
+</template>
+<script lang="ts" setup>
+import ClearQueryButton from './clear-query-button.vue';
+import SearchButton from './search-button.vue';
+import type { miSidebarHeaderEmits } from './mi-sidebar-header-emits';
+import type { miSidebarHeaderProps } from './mi-sidebar-header-props';
+const emits = defineEmits<miSidebarHeaderEmits>();
+const props = defineProps<miSidebarHeaderProps>();
+</script>

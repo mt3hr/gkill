@@ -1,19 +1,7 @@
-// ˅
 'use strict';
 
-import { GkillPropsBase } from '../views/gkill-props-base';
+import type { GkillPropsBase } from "../views/gkill-props-base";
+import type { KyouViewPropsBase } from "../views/kyou-view-props-base";
 
-// ˄
-
-export interface StartTimeIsDialogProps extends KyouViewPropsBase {
-
-    gkillPropsBase: GkillPropsBase;
-
-    // ˅
-    
-    // ˄
+export interface StartTimeIsDialogProps extends KyouViewPropsBase, GkillPropsBase {
 }
-
-// ˅
-
-// ˄

@@ -1,25 +1,9 @@
-// ˅
-'use strict';
+<template>
+</template>
+<script lang="ts" setup>
+import type { AddNewRepTypeStructElementViewEmits } from './add-new-rep-type-struct-element-view-emits';
+import type { AddNewRepTypeStructElementViewProps } from './add-new-rep-type-struct-element-view-props';
 
-import { AddNewRepTypeStructElementViewEmits } from './add-new-rep-type-struct-element-view-emits';
-import { AddNewRepTypeStructElementViewProps } from './add-new-rep-type-struct-element-view-props';
-
-// ˄
-
-export class AddNewRepTypeStructElementView {
-    // ˅
-    
-    // ˄
-
-    private props: AddNewRepTypeStructElementViewProps;
-
-    private emits: AddNewRepTypeStructElementViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<AddNewRepTypeStructElementViewProps>();
+const emits = defineEmits<AddNewRepTypeStructElementViewEmits>();
+</script>

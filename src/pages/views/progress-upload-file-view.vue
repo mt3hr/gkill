@@ -1,25 +1,9 @@
-// ˅
-'use strict';
+<template>
+</template>
+<script lang="ts" setup>
+import type { ProgressUploadFileViewEmits } from './progress-upload-file-view-emits';
+import type { ProgressUploadFileViewProps } from './progress-upload-file-view-props';
 
-import { ProgressUploadFileViewEmits } from './progress-upload-file-view-emits';
-import { ProgressUploadFileViewProps } from './progress-upload-file-view-props';
-
-// ˄
-
-export class ProgressUploadFileView {
-    // ˅
-    
-    // ˄
-
-    private props: ProgressUploadFileViewProps;
-
-    private emits: ProgressUploadFileViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ProgressUploadFileViewProps>();
+const emits = defineEmits<ProgressUploadFileViewEmits>();
+</script>

@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <EditDeviceStructElementView />
+</template>
+<script lang="ts" setup>
+import type { EditDeviceStructElementDialogEmits } from './edit-device-struct-element-dialog-emits';
+import type { EditDeviceStructElementDialogProps } from './edit-device-struct-element-dialog-props';
+import EditDeviceStructElementView from '../views/edit-device-struct-element-view.vue';
 
-import { EditDeviceStructElementDialogEmits } from './edit-device-struct-element-dialog-emits';
-import { EditDeviceStructElementDialogProps } from './edit-device-struct-element-dialog-props';
-import { EditDeviceStructElementView } from '../views/edit-device-struct-element-view';
-
-// ˄
-
-export class EditDeviceStructElementDialog {
-    // ˅
-    
-    // ˄
-
-    private props: EditDeviceStructElementDialogProps;
-
-    private emits: EditDeviceStructElementDialogEmits;
-
-    private edit_device_struct_element_view: EditDeviceStructElementView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditDeviceStructElementDialogProps>();
+const emits = defineEmits<EditDeviceStructElementDialogEmits>();
+</script>

@@ -1,20 +1,6 @@
-// ˅
 'use strict';
 
-import { SidebarProps } from './sidebar-props';
+import type { SidebarProps } from "./sidebar-props";
 
-// ˄
-
-export class CalendarQueryProps implements SidebarProps {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface CalendarQueryProps extends SidebarProps {
 }
-
-// ˅
-
-// ˄

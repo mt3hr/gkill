@@ -1,22 +1,8 @@
-// ˅
-'use strict';
+<template>
 
-import { SearchButtonEmits } from './search-button-emits';
+</template>
+<script lang="ts" setup>
+import type { SearchButtonEmits } from './search-button-emits';
 
-// ˄
-
-export class SearchButton {
-    // ˅
-    
-    // ˄
-
-    private searchButtonEmits: SearchButtonEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const emits = defineEmits<SearchButtonEmits>();
+</script>

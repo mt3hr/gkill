@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { GPSLogMapEmits } from './gps-log-map-emits';
-import { GPSLogMapProps } from './gps-log-map-props';
+</template>
+<script lang="ts" setup>
+import type { GPSLogMapEmits } from './gps-log-map-emits';
+import type { GPSLogMapProps } from './gps-log-map-props';
 
-// ˄
-
-export class GPSLogMap {
-    // ˅
-    
-    // ˄
-
-    private gPSLogMapProps: GPSLogMapProps;
-
-    private gPSLogMapEmits: GPSLogMapEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const gPSLogMapProps = defineProps<GPSLogMapProps>();
+const gPSLogMapEmits = defineEmits<GPSLogMapEmits>();
+</script>

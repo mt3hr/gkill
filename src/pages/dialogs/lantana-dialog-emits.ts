@@ -1,60 +1,17 @@
-// ˅
 'use strict';
 
-// ˄
+import type { GkillError } from "@/classes/api/gkill-error";
+import type { GkillMessage } from "@/classes/api/gkill-message";
+import type { Kmemo } from "@/classes/datas/kmemo";
+import type { Lantana } from "@/classes/datas/lantana";
+import type { Tag } from "@/classes/datas/tag";
 
-export class LantanaDialogEmits {
-    // ˅
-    
-    // ˄
-
-    reveived_messages(message: Array<GkillMessage>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    received_errors(errors: Array<GkillError>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    registered_lantana(lantana: Lantana): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    registered_kmemo(kmemo: Kmemo): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    registered_tag(tag: Tag): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    registered_text(text: Text): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    requested_close_dialog(): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface LantanaDialogEmits {
+    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_errors', errors: Array<GkillError>): void
+    (e: 'registered_lantana', lantana: Lantana): void
+    (e: 'registered_kmemo', kmemo: Kmemo): void
+    (e: 'registered_tag', tag: Tag): void
+    (e: 'registered_text', text: Text): void
+    (e: 'requested_close_dialog'): void
 }
-
-// ˅
-
-// ˄

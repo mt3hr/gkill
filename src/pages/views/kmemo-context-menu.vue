@@ -1,35 +1,19 @@
-// ˅
-'use strict';
+<template>
+    <EditKmemoDialog />
+    <AddTagDialog />
+    <AddTextDialog />
+    <ConfirmReKyouDialog />
+    <ConfirmDeleteKyouDialog />
+</template>
+<script lang="ts" setup>
+import type { KmemoContextMenuProps } from './kmemo-context-menu-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import EditKmemoDialog from '../dialogs/edit-kmemo-dialog.vue';
+import AddTagDialog from '../dialogs/add-tag-dialog.vue';
+import AddTextDialog from '../dialogs/add-text-dialog.vue';
+import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue';
+import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue';
 
-import { KmemoContextMenuProps } from './kmemo-context-menu-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class KmemoContextMenu {
-    // ˅
-    
-    // ˄
-
-    private edit_kmemo_dialog: EditKmemoDialog;
-
-    private add_tag_dialog: AddTagDialog;
-
-    private add_text_dialog: AddTextDialog;
-
-    private confirm_rekyou_dialog: ConfirmReKyouDialog;
-
-    private confirm_delete_kyou_dialog: ConfirmDeleteKyouDialog;
-
-    private props: KmemoContextMenuProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<KmemoContextMenuProps>();
+const emits = defineEmits<KyouViewEmits>();
+</script>

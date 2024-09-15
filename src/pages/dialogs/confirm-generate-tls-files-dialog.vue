@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <ConfirmGenerateTLSFilesView />
+</template>
+<script lang="ts" setup>
+import type { ConfirmGenerateTLSFilesDialogEmits } from './confirm-generate-tls-files-dialog-emits';
+import type { ConfirmGenerateTLSFilesDialogProps } from './confirm-generate-tls-files-dialog-props';
+import ConfirmGenerateTLSFilesView from '../views/confirm-generate-tls-files-view.vue';
 
-import { ConfirmGenerateTLSFilesDialogEmits } from './confirm-generate-tls-files-dialog-emits';
-import { ConfirmGenerateTLSFilesDialogProps } from './confirm-generate-tls-files-dialog-props';
-import { ConfirmGenerateTLSFilesView } from '../views/confirm-generate-tls-files-view';
-
-// ˄
-
-export class ConfirmGenerateTLSFilesDialog {
-    // ˅
-    
-    // ˄
-
-    private props: ConfirmGenerateTLSFilesDialogProps;
-
-    private emits: ConfirmGenerateTLSFilesDialogEmits;
-
-    private confirm_generate_tls_files_view: ConfirmGenerateTLSFilesView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ConfirmGenerateTLSFilesDialogProps>();
+const emits = defineEmits<ConfirmGenerateTLSFilesDialogEmits>();
+</script>

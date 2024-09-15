@@ -1,24 +1,7 @@
-// ˅
 'use strict';
 
-// ˄
+import type { MiSortType } from "@/classes/api/find_query/mi-sort-type";
 
-export class miSortTypeQueryEmits {
-    // ˅
-    
-    // ˄
-
-    request_update_sort_type(sort_type: MiSortType): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface miSortTypeQueryEmits {
+    (e: 'request_update_sort_type', sort_type: MiSortType): void 
 }
-
-// ˅
-
-// ˄

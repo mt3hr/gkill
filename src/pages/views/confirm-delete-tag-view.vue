@@ -1,31 +1,16 @@
-// ˅
-'use strict';
+<template>
+    <KyouView />
+</template>
+<script lang="ts" setup>
+import type { ConfirmDeleteTagViewProps } from './confirm-delete-tag-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import type { Kyou } from '@/classes/datas/kyou';
+import type { Tag } from '@/classes/datas/tag';
+import KyouView from './kyou-view.vue';
+import { type Ref, ref } from 'vue';
 
-import { ConfirmDeleteTagViewProps } from './confirm-delete-tag-view-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class ConfirmDeleteTagView {
-    // ˅
-    
-    // ˄
-
-    private cloned_tag: Tag;
-
-    private cloned_kyou: Kyou;
-
-    kyou_view: KyouView;
-
-    private confirmDeleteTagViewProps: ConfirmDeleteTagViewProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ConfirmDeleteTagViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_tag: Ref<Tag> = ref(await props.tag.clone());
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+</script>

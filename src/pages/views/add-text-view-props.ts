@@ -1,22 +1,8 @@
-// ˅
 'use strict';
 
-import { KyouViewPropsBase } from './kyou-view-props-base';
+import type { KyouViewPropsBase } from "./kyou-view-props-base";
+import { Text } from "@/classes/datas/text";
 
-// ˄
-
-export class AddTextViewProps implements KyouViewPropsBase {
-    // ˅
-    
-    // ˄
-
+export interface AddTextViewProps extends KyouViewPropsBase {
     text: Text;
-
-    // ˅
-    
-    // ˄
 }
-
-// ˅
-
-// ˄

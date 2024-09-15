@@ -1,39 +1,13 @@
 <template>
-
+    <ClearQueryButton />
+    <SearchButton />
 </template>
 <script setup lang="ts">
+import ClearQueryButton from './clear-query-button.vue';
+import SearchButton from './search-button.vue';
+import type { SidebarHeaderEmits } from './sidebar-header-emits';
+import type { SidebarHeaderProps } from './sidebar-header-props';
 
-// ˅
-'use strict';
-
-import { ClearQueryButton } from './clear-query-button';
-import { SearchButton } from './search-button.vue';
-import { SidebarHeaderEmits } from './sidebar-header-emits';
-import { SidebarHeaderProps } from './sidebar-header-props';
-
-// ˄
-
-export class SidebarHeader {
-    // ˅
-    
-    // ˄
-
-    private props: SidebarHeaderProps;
-
-    private props: SidebarHeaderEmits;
-
-    private clearQueryButton: ClearQueryButton;
-
-    private searchButton: SearchButton;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<SidebarHeaderProps>();
+const emits = defineEmits<SidebarHeaderEmits>();
 </script>
-<style scoped></style>

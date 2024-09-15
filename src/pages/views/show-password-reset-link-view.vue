@@ -1,25 +1,9 @@
-// ˅
-'use strict';
+<template>
+</template>
+<script lang="ts" setup>
+import type { ShowPasswordResetLinkViewEmits } from './show-password-reset-link-view-emits';
+import type { ShowPasswordResetLinkViewProps } from './show-password-reset-link-view-props';
 
-import { ShowPasswordResetLinkViewEmits } from './show-password-reset-link-view-emits';
-import { ShowPasswordResetLinkViewProps } from './show-password-reset-link-view-props';
-
-// ˄
-
-export class ShowPasswordResetLinkView {
-    // ˅
-    
-    // ˄
-
-    private props: ShowPasswordResetLinkViewProps;
-
-    private emits: ShowPasswordResetLinkViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ShowPasswordResetLinkViewProps>();
+const emits = defineEmits<ShowPasswordResetLinkViewEmits>();
+</script>

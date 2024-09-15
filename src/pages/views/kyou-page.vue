@@ -1,73 +1,78 @@
 <template>
-
+    <KyouView />
+    <ApplicationConfigDialog />
 </template>
-<script setup lang="ts">
+<script lang="ts" setup>
+import { GkillAPI } from '@/classes/api/gkill-api';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
+import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request';
+import { ApplicationConfig } from '@/classes/datas/config/application-config';
+import { type Ref, ref, computed } from 'vue';
+import ApplicationConfigDialog from '../dialogs/application-config-dialog.vue';
+import KyouView from './kyou-view.vue';
 
-// ˅
-'use strict';
 
-import { ApplicationConfigDialog } from '../dialogs/application-config-dialog';
-import { KyouView } from './kyou-view.vue';
+const actual_height: Ref<Number> = ref(0);
+const element_height: Ref<Number> = ref(0);
+const browser_url_bar_height: Ref<Number> = ref(0);
+const app_title_bar_height: Ref<Number> = ref(50);
+const app_title_bar_height_px = computed(() => app_title_bar_height.value.toString().concat("px"))
+const gkill_api: Ref<GkillAPI> = ref(new GkillAPI());
+const application_config = ref(new ApplicationConfig());
+const app_content_height: Ref<Number> = ref(0);
+const app_content_width: Ref<Number> = ref(0);
 
-// ˄
+const is_show_application_config_dialog: Ref<boolean> = ref(false);
 
-export class KyouPage {
-    // ˅
-    
-    // ˄
+async function load_application_config(): Promise<void> {
+    const req = new GetApplicationConfigRequest()
+    req.session_id = ""//TODO session_idをどこから取得するか。webstorage?
 
-    private actual_height: Ref<Number>;
+    return gkill_api.value.get_application_config(req)
+        .then(res => {
+            if (res.errors && res.errors.length != 0) {
+                write_errors(res.errors)
+                return
+            }
 
-    private element_height: Ref<Number>;
+            application_config.value = res.application_config
 
-    private browser_url_bar_height: Ref<Number>;
-
-    private app_title_bar_height: Ref<Number>;
-
-    private application_config: ApplicationConfig;
-
-    private gkill_api: GkillAPI;
-
-    private app_content_height: Ref<Number>;
-
-    private app_content_width: Ref<Number>;
-
-    private kyou: KyouView;
-
-    private application_config_dialog: ApplicationConfigDialog;
-
-    async resize(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async reload_application_config(): Promise<Array<GkillError>> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async apply_application_config(): Promise<Array<GkillError>> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async print_message(message: string): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+            if (res.messages && res.messages.length != 0) {
+                write_messages(res.messages)
+                return
+            }
+        })
 }
 
-// ˅
+async function resize_content(): Promise<void> {
+    const inner_element = document.querySelector('#control-height')
+    actual_height.value = window.innerHeight
+    element_height.value = inner_element ? inner_element.clientHeight : actual_height.value
+    browser_url_bar_height.value = Number(element_height.value) - Number(actual_height.value)
+    app_content_height.value = Number(element_height.value) - Number(browser_url_bar_height.value)
+    app_content_width.value = window.innerWidth
+}
 
-// ˄
+async function write_errors(errors: Array<GkillError>) {
+    //TODO エラーメッセージを画面に出力するように
+    errors.forEach(error => {
+        console.log(error)
+    });
+}
+
+async function write_messages(messages: Array<GkillMessage>) {
+    //TODO メッセージを画面に出力するように
+    messages.forEach(message => {
+        console.log(message)
+    });
+}
+
+window.addEventListener('resize', () => {
+    resize_content()
+})
+
+resize_content()
+load_application_config()
 
 </script>
-<style scoped></style>
