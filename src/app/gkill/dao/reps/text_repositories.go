@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type TextRepositories []TextRepository
 
 func (t TextRepositories) FindTexts(ctx context.Context, queryJSON string) ([]*Text, error) {
-	// ˅
 	matchTexts := map[string]*Text{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchTextsList[i].RelatedTime.After(matchTextsList[j].RelatedTime)
 	})
 	return matchTextsList, nil
-	// ˄
 }
 
 func (t TextRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -132,11 +126,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (t TextRepositories) GetText(ctx context.Context, id string) (*Text, error) {
-	// ˅
 	matchText := &Text{}
 	matchText = nil
 	existErr := false
@@ -199,11 +191,9 @@ loop:
 	}
 
 	return matchText, nil
-	// ˄
 }
 
 func (t TextRepositories) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
-	// ˅
 	matchTexts := map[string]*Text{}
 	existErr := false
 	var err error
@@ -279,11 +269,9 @@ loop:
 	})
 
 	return textHistoriesList, nil
-	// ˄
 }
 
 func (t TextRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -321,24 +309,18 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (t TextRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements TextReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (t TextRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "TextReps", nil
-	// ˄
 }
 
 func (t TextRepositories) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
-	// ˅
 	textHistories := map[string]*Text{}
 	existErr := false
 	var err error
@@ -414,16 +396,9 @@ loop:
 	})
 
 	return textHistoriesList, nil
-	// ˄
 }
 
 func (t TextRepositories) AddTextInfo(ctx context.Context, text *Text) error {
-	// ˅
 	err := fmt.Errorf("not implements TextReps.AddTextInfo")
 	return err
-	// ˄
 }
-
-// ˅
-
-// ˄

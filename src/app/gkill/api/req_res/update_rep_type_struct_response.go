@@ -1,4 +1,3 @@
-// ˅
 package req_res
 
 import (
@@ -6,24 +5,10 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 )
 
-// ˄
-
 type UpdateRepTypeStructResponse struct {
-	// ˅
-
-	// ˄
-
 	Messages []*message.GkillMessage `json:"messages"`
 
 	Errors []*message.GkillError `json:"errors"`
 
 	ApplicationConfig *user_config.ApplicationConfig `json:"application_config"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

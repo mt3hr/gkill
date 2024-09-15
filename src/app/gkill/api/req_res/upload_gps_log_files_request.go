@@ -1,13 +1,6 @@
-// ˅
 package req_res
 
-// ˄
-
 type UploadGPSLogFilesRequest struct {
-	// ˅
-
-	// ˄
-
 	SessionID string
 
 	GPSLogFiles []*FileData
@@ -15,12 +8,4 @@ type UploadGPSLogFilesRequest struct {
 	TargetRepName string
 
 	ConflictBehavior FileUploadConflictBehavior
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

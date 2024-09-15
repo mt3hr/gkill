@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -13,15 +12,10 @@ import (
 	"github.com/twpayne/go-gpx"
 )
 
-// ˄
-
 type gpsLogRepositoryDirectoryImpl struct {
-	// ˅
 	dirname string
-	// ˄
 }
 
-// ˅
 func NewGPXDirRep(dirname string) GPSLogRepository {
 	return &gpsLogRepositoryDirectoryImpl{dirname: dirname}
 }
@@ -183,5 +177,3 @@ func (g *gpsLogRepositoryDirectoryImpl) gpxFileToPoints(gpxfilename string) (gps
 	}
 	return gpsLogs, nil
 }
-
-// ˄

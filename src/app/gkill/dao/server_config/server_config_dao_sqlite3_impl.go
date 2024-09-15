@@ -1,4 +1,3 @@
-// ˅
 package server_config
 
 import (
@@ -11,17 +10,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// ˄
-
 type serverConfigDAOSQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewServerConfigDAOSQLite3Impl(ctx context.Context, filename string) (ServerConfigDAO, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -347,5 +341,3 @@ WHERE DEVICE = ?
 func (s *serverConfigDAOSQLite3Impl) Close(ctx context.Context) error {
 	return s.db.Close()
 }
-
-// ˄

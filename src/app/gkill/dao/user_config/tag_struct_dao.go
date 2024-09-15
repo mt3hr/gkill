@@ -1,9 +1,6 @@
-// ˅
 package user_config
 
 import "context"
-
-// ˄
 
 type TagStructDAO interface {
 	GetAllTagStructs(ctx context.Context) ([]*TagStruct, error)
@@ -21,12 +18,4 @@ type TagStructDAO interface {
 	DeleteUsersTagStructs(ctx context.Context, userID string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "context"
 
-// ˄
-
 type GkillRepositories struct {
-	// ˅
-
-	// ˄
-
 	userID string
 
 	Reps Repositories
@@ -59,10 +52,6 @@ type GkillRepositories struct {
 	WriteReKyouRep ReKyouRepository
 
 	WriteGPSLogRep GPSLogRepository
-
-	// ˅
-
-	// ˄
 }
 
 func NewGkillRepositories(userID string) *GkillRepositories {
@@ -70,12 +59,8 @@ func NewGkillRepositories(userID string) *GkillRepositories {
 }
 
 func (g *GkillRepositories) GetUserID(ctx context.Context) (string, error) {
-	// ˅
 	return g.userID, nil
-	// ˄
 }
-
-// ˅
 
 func (g *GkillRepositories) Close(ctx context.Context) error {
 	for _, rep := range g.TagReps {
@@ -157,5 +142,3 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 
 	return nil
 }
-
-// ˄

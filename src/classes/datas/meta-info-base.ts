@@ -1,14 +1,10 @@
-// ˅
 'use strict';
 
 import type { GkillError } from "../api/gkill-error";
 
-// ˄
 
 export abstract class MetaInfoBase {
-    // ˅
 
-    // ˄
 
     is_deleted: boolean;
 
@@ -35,33 +31,24 @@ export abstract class MetaInfoBase {
     update_user: string;
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     abstract clone(): Promise<MetaInfoBase>;
 
     constructor() {
-        // ˅
 
         this.is_deleted = false
 
@@ -86,14 +73,10 @@ export abstract class MetaInfoBase {
         this.update_device = ""
 
         this.update_user = ""
-        // ˄
     }
 
-    // ˅
 
-    // ˄
 }
 
-// ˅
 
-// ˄
+

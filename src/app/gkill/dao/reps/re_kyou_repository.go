@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type ReKyouRepository interface {
 	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
@@ -31,12 +28,4 @@ type ReKyouRepository interface {
 	GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error)
 
 	GetRepositories(ctx context.Context) (*GkillRepositories, error)
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

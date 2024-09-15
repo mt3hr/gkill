@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type Lantana struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -37,12 +30,4 @@ type Lantana struct {
 	UpdateDevice string `json:"update_device"`
 
 	Mood int `json:"mood"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

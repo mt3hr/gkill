@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type Kyou struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -35,12 +28,4 @@ type Kyou struct {
 	UpdateUser string `json:"update_user"`
 
 	UpdateDevice string `json:"update_device"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

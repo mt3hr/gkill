@@ -1,7 +1,5 @@
-// ˅
 'use strict';
 
-// ˄
 
 export enum MiSortType {
 
@@ -13,11 +11,8 @@ export enum MiSortType {
 
     limit_time = "limit_time"
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

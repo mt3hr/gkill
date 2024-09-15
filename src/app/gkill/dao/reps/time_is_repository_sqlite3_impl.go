@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -15,18 +14,12 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type timeIsRepositorySQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
-// ˅
 func NewTimeIsRepositorySQLite3Impl(ctx context.Context, filename string) (TimeIsRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -821,5 +814,3 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 
 	return sqlWhere, nil
 }
-
-// ˄

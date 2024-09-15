@@ -1,4 +1,3 @@
-// ˅
 package api
 
 import (
@@ -22,20 +21,10 @@ const (
 	R      = math.Pi / 180
 )
 
-// ˄
-
 type FindFilter struct {
-	// ˅
-
-	// ˄
-
-	// ˅
-
-	// ˄
 }
 
 func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string, gkillDAOManager *dao.GkillDAOManager, queryJSON string) ([]*reps.Kyou, []*message.GkillError, error) {
-	// ˅
 	findKyouContext := &FindKyouContext{}
 
 	// QueryをContextに入れる
@@ -138,7 +127,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	}
 
 	return findKyouContext.ResultKyous, nil, nil
-	// ˄
 }
 
 func (f *FindFilter) getRepositories(ctx context.Context, userID string, device string, gkillDAOManager *dao.GkillDAOManager, findCtx *FindKyouContext) ([]*message.GkillError, error) {
@@ -153,7 +141,6 @@ func (f *FindFilter) getRepositories(ctx context.Context, userID string, device 
 }
 
 func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	var err error
 	repositories := findCtx.Repositories
 
@@ -209,11 +196,9 @@ errloop:
 		return nil, err
 	}
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	var err error
 	existErr := false
 	wg := &sync.WaitGroup{}
@@ -250,11 +235,9 @@ errloop:
 		return nil, err
 	}
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	var err error
 
 	lenOfTagReps := 0
@@ -327,11 +310,9 @@ loop:
 		return nil, err
 	}
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	var err error
 
 	lenOfTagReps := 0
@@ -425,11 +406,9 @@ loop:
 	}
 
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	var err error
 
 	lenOfTagReps := 0
@@ -523,11 +502,9 @@ loop:
 	}
 
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) parseTagFilterModeFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	tagFilterModeIsAnd := false
 	tagFilterModeIsAndStr := findCtx.ParsedQuery["tags_and"]
 	err := json.Unmarshal([]byte(tagFilterModeIsAndStr), &tagFilterModeIsAnd)
@@ -545,11 +522,9 @@ func (f *FindFilter) parseTagFilterModeFromQuery(ctx context.Context, findCtx *F
 		findCtx.TagFilterMode = &tagFilterMode
 	}
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) parseTimeIsTagFilterModeFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	timeisTagFilterModeIsAnd := false
 	timeisTagFilterModeIsAndStr := findCtx.ParsedQuery["tags_and"]
 	err := json.Unmarshal([]byte(timeisTagFilterModeIsAndStr), &timeisTagFilterModeIsAnd)
@@ -567,11 +542,9 @@ func (f *FindFilter) parseTimeIsTagFilterModeFromQuery(ctx context.Context, find
 		findCtx.TagFilterMode = &timeisTagFilterMode
 	}
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	var err error
 
 	lenOfReps := 0
@@ -672,11 +645,9 @@ loop:
 
 	findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFindKyou
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	if *findCtx.TagFilterMode == Or {
 		// ORの場合のフィルタリング処理
 
@@ -829,11 +800,9 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 	}
 
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	if *findCtx.TimeIsTagFilterMode == Or {
 		// ORの場合のフィルタリング処理
 
@@ -984,7 +953,6 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 	}
 
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
@@ -1006,7 +974,6 @@ func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindK
 }
 
 func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 
 	// 対象TimeIs取得用検索クエリ
 	findTagsQueryJSON := ""
@@ -1120,11 +1087,9 @@ loop:
 		return nil, err
 	}
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	matchKyous := map[string]*reps.Kyou{}
 	const dateLayout = "2006-01-02"
 	var err error
@@ -1433,20 +1398,16 @@ errloop2:
 	findCtx.MatchKyousAtFilterLocation = matchKyous
 	findCtx.MatchKyousCurrent = matchKyous
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	sort.Slice(findCtx.ResultKyous, func(i, j int) bool {
 		return findCtx.ResultKyous[i].RelatedTime.After(findCtx.ResultKyous[j].RelatedTime)
 	})
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	var err error
 
 	lenOfTextReps := 0
@@ -1557,11 +1518,9 @@ loop:
 	}
 
 	return nil, nil
-	// ˄
 }
 
 func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// ˅
 	var err error
 
 	lenOfTextReps := 0
@@ -1672,7 +1631,6 @@ loop:
 	}
 
 	return nil, nil
-	// ˄
 }
 
 func calcDistance(lat1 float64, lng1 float64, lat2 float64, lng2 float64) float64 {
@@ -1682,7 +1640,3 @@ func calcDistance(lat1 float64, lng1 float64, lat2 float64, lng2 float64) float6
 	lng2 *= R
 	return float64(6371.0) * math.Acos(math.Cos(lat1)*math.Cos(lat2)*math.Cos(lng2-lng1)+math.Sin(lat1)*math.Sin(lat2))
 }
-
-// ˅
-
-// ˄

@@ -1,7 +1,5 @@
-// ˅
 'use strict';
 
-// ˄
 
 export enum LantanaTextType {
 
@@ -9,11 +7,8 @@ export enum LantanaTextType {
 
     text = "text"
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

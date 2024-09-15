@@ -1,4 +1,3 @@
-// ˅
 package user_config
 
 import (
@@ -8,14 +7,10 @@ import (
 	"sync"
 )
 
-// ˄
-
 type repositoryDAOSQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
 func NewRepositoryDAOSQLite3Impl(ctx context.Context, filename string) (RepositoryDAO, error) {
@@ -55,7 +50,6 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
 	}, nil
 }
 
-// ˅
 func (r *repositoryDAOSQLite3Impl) GetAllRepositories(ctx context.Context) ([]*Repository, error) {
 	sql := `
 SELECT 
@@ -333,5 +327,3 @@ WHERE USER_ID = ?
 func (r *repositoryDAOSQLite3Impl) Close(ctx context.Context) error {
 	return r.db.Close()
 }
-
-// ˄

@@ -1,15 +1,11 @@
-// ˅
 'use strict';
 
 import { FileData } from '../file-data';
 import { GkillAPIRequest } from '../gkill-api-request';
 
-// ˄
 
 export class UploadFilesRequest extends GkillAPIRequest {
-    // ˅
-    
-    // ˄
+
 
     files: Array<FileData>;
 
@@ -18,17 +14,12 @@ export class UploadFilesRequest extends GkillAPIRequest {
     conflict_behavior: FileUploadConflictBehavior;
 
     constructor() {
-        // ˅
         super()
         this.files = new Array<FileData>()
-        // ˄
     }
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

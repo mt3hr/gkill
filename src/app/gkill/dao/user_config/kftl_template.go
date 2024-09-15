@@ -1,13 +1,6 @@
-// ˅
 package user_config
 
-// ˄
-
 type KFTLTemplate struct {
-	// ˅
-
-	// ˄
-
 	ID string `json:"id"`
 
 	UserID string `json:"user_id"`
@@ -21,12 +14,4 @@ type KFTLTemplate struct {
 	ParentFolderID string `json:"parent_folder_id"`
 
 	Seq int `json:"seq"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

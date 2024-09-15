@@ -1,7 +1,5 @@
-// ˅
 'use strict';
 
-// ˄
 
 export enum GPSFileUploadConflictBehavior {
 
@@ -9,11 +7,8 @@ export enum GPSFileUploadConflictBehavior {
 
     override = "override"
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

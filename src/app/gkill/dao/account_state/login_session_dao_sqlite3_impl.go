@@ -1,4 +1,3 @@
-// ˅
 package account_state
 
 import (
@@ -12,17 +11,12 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type loginSessionDAOSQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewLoginSessionDAOSQLite3Impl(ctx context.Context, filename string) (LoginSessionDAO, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -373,5 +367,3 @@ WHERE SESSION_ID = ?
 func (l *loginSessionDAOSQLite3Impl) Close(ctx context.Context) error {
 	return l.db.Close()
 }
-
-// ˄
