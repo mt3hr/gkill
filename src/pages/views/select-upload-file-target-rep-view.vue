@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { SelectUploadFileTargetRepViewEmits } from './select-upload-file-target-rep-view-emits';
-import { SelectUploadFileTargetRepViewProps } from './select-upload-file-target-rep-view-props';
+</template>
+<script lang="ts" setup>
+import type { SelectUploadFileTargetRepViewProps } from './select-upload-file-target-rep-view-props';
+import type { SelectUploadFileTargetRepViewEmits } from './select-upload-file-target-rep-view-emits';
 
-// ˄
-
-export class SelectUploadFileTargetRepView {
-    // ˅
-    
-    // ˄
-
-    private props: SelectUploadFileTargetRepViewProps;
-
-    private emits: SelectUploadFileTargetRepViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<SelectUploadFileTargetRepViewProps>();
+const emits = defineEmits<SelectUploadFileTargetRepViewEmits>();
+</script>

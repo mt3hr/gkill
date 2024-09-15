@@ -1,22 +1,8 @@
-// ˅
-'use strict';
+<template>
 
-import { KFTLLineLabelProps } from './kftl-line-label-props';
+</template>
+<script lang="ts" setup>
+import type{ KFTLLineLabelProps } from './kftl-line-label-props';
 
-// ˄
-
-export class KFTLLineLabel {
-    // ˅
-    
-    // ˄
-
-    private props: KFTLLineLabelProps;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<KFTLLineLabelProps>();
+</script>

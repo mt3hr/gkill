@@ -1,41 +1,13 @@
 <template>
-
+    <EditIDFKyouView />
+    <KyouListView />
 </template>
 <script setup lang="ts">
+import type { DecideRelatedTimeUploadedFileViewProps } from './decide-related-time-uploaded-file-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import EditIDFKyouView from './edit-idf-kyou-view.vue';
+import KyouListView from './kyou-list-view.vue';
 
-// ˅
-'use strict';
-
-import { DecideRelatedTimeUploadedFileViewProps } from './decide-related-time-uploaded-file-view-props';
-import { EditIDFKyouView } from './edit-idf-kyou-view';
-import { KyouListView } from './kyou-list-view.vue';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class DecideRelatedTimeUploadedFileView {
-    // ˅
-    
-    // ˄
-
-    private props: DecideRelatedTimeUploadedFileViewProps;
-
-    private kyouViewEmits: KyouViewEmits;
-
-    private kyouListView: KyouListView;
-
-    private kyouViewEmits: KyouViewEmits;
-
-    private edit_uploaded_kyou_view: EditIDFKyouView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<DecideRelatedTimeUploadedFileViewProps>();
+const emits = defineEmits<KyouViewEmits>();
 </script>
-<style scoped></style>

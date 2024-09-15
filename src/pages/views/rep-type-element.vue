@@ -1,42 +1,15 @@
 <template>
-
+    <ApplicationConfigStructContextMenu />
 </template>
 <script setup lang="ts">
+import { type Ref, ref } from 'vue';
+import ApplicationConfigStructContextMenu from './application-config-struct-context-menu.vue';
+import type { RepTypeElementEmits } from './rep-type-element-emits';
+import type { RepTypeElementProps } from './rep-type-element-props';
 
-// ˅
-'use strict';
-
-import { ApplicationConfigStructContextMenu } from './application-config-struct-context-menu.vue';
-import { RepTypeElementEmits } from './rep-type-element-emits';
-import { RepTypeElementProps } from './rep-type-element-props';
-
-// ˄
-
-export class RepTypeElement {
-    // ˅
-    
-    // ˄
-
-    private cloned_is_open: Ref<boolean>;
-
-    private struct_list: Ref<any>;
-
-    check_when_inited: Ref<boolean>;
-
-    private props: RepTypeElementProps;
-
-    private emits: RepTypeElementEmits;
-
-    private contextmenu: ApplicationConfigStructContextMenu;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<RepTypeElementProps>();
+const emits = defineEmits<RepTypeElementEmits>();
+const cloned_is_open: Ref<boolean> = ref(props.is_open);
+const struct_list: Ref<any> = ref(props.struct_obj);
+const check_when_inited: Ref<boolean> = ref(false); //TODO
 </script>
-<style scoped></style>

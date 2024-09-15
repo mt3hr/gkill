@@ -1,42 +1,12 @@
-// ˅
 'use strict';
 
-// ˄
+import type { GkillError } from "@/classes/api/gkill-error";
+import type { GkillMessage } from "@/classes/api/gkill-message";
+import type { CheckState } from "./check-state";
 
-export class RepTypeElementEmits {
-    // ˅
-    
-    // ˄
-
-    reveived_messages(message: Array<GkillMessage>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    received_errors(errors: Array<GkillError>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    clicked_is_check_when_inited(items: Array<string>, is_by_user: boolean): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    requested_update_is_check_when_inited_state(items: Array<string>, check_state: CheckState): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface RepTypeElementEmits {
+    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_errors', errors: Array<GkillError>): void
+    (e: 'clicked_is_check_when_inited', items: Array<string>, is_by_user: boolean): void
+    (e: 'requested_update_is_check_when_inited_state', items: Array<string>, check_state: CheckState): void
 }
-
-// ˅
-
-// ˄

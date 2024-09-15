@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <CreateAccountView />
+</template>
+<script lang="ts" setup>
+import type { CreateAccountDialogEmits } from './create-account-dialog-emits';
+import type { CreateAccountDialogProps } from './create-account-dialog-props';
+import CreateAccountView from '../views/create-account-view.vue';
 
-import { CreateAccountDialogEmits } from './create-account-dialog-emits';
-import { CreateAccountDialogProps } from './create-account-dialog-props';
-import { CreateAccountView } from '../views/create-account-view';
-
-// ˄
-
-export class CreateAccountDialog {
-    // ˅
-    
-    // ˄
-
-    private props: CreateAccountDialogProps;
-
-    private emits: CreateAccountDialogEmits;
-
-    private create_account_view: CreateAccountView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<CreateAccountDialogProps>();
+const emits = defineEmits<CreateAccountDialogEmits>();
+</script>

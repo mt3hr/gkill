@@ -1,30 +1,8 @@
-// ˅
 'use strict';
 
-// ˄
+import type { ShareMiTaskListInfo } from "@/classes/datas/share-mi-task-list-info";
 
-export class ConfirmDeleteShareTaskLinkDialogEmits {
-    // ˅
-    
-    // ˄
-
-    requested_close_dialog(): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    deleted_share_mi_task_list_info(share_mi_task_list_info: ShareMiTaskListInfo): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface ConfirmDeleteShareTaskLinkDialogEmits {
+    (e: 'requested_close_dialog'): void
+    (e: 'deleted_share_mi_task_list_info', share_mi_task_list_info: ShareMiTaskListInfo): void
 }
-
-// ˅
-
-// ˄

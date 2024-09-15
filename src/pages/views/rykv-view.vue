@@ -1,112 +1,60 @@
 <template>
-
+    <KyouListView v-for="query, index in querys" />
+    <RykvQueryEditorSideBar />
+    <KyouView />
+    <KyouCountCalendar />
+    <GPSLogMap />
+    <Dnote />
+    <AggregateView />
+    <AddMiDialog />
+    <AddNlogDialog />
+    <EndTimeIsPlaingDialog />
+    <StartTimeIsDialog />
+    <kftlDialog />
 </template>
 <script setup lang="ts">
 
 // ˅
-'use strict';
+import { type Ref, ref } from 'vue';
+import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
+import { Kyou } from '@/classes/datas/kyou';
+import AddMiDialog from '../dialogs/add-mi-dialog.vue';
+import AddNlogDialog from '../dialogs/add-nlog-dialog.vue';
+import AggregateView from './aggregate-view.vue';
+import Dnote from './dnote.vue';
+import EndTimeIsPlaingDialog from '../dialogs/end-time-is-plaing-dialog.vue';
+import GPSLogMap from './gps-log-map.vue';
+import KyouCountCalendar from './kyou-count-calendar.vue';
+import KyouListView from './kyou-list-view.vue';
+import KyouView from './kyou-view.vue';
+import StartTimeIsDialog from '../dialogs/start-time-is-dialog.vue';
+import RykvQueryEditorSideBar from './rykv-query-editor-side-bar.vue';
+import kftlDialog from '../dialogs/kftl-dialog.vue';
+import type { rykvViewEmits } from './rykv-view-emits';
+import type { rykvViewProps } from './rykv-view-props';
 
-import { AddMiDialog } from '../dialogs/add-mi-dialog';
-import { AddNlogDialog } from '../dialogs/add-nlog-dialog';
-import { AggregateView } from './aggregate-view';
-import { Dnote } from './dnote';
-import { EndTimeIsPlaingDialog } from '../dialogs/end-time-is-plaing-dialog';
-import { GPSLogMap } from './gps-log-map';
-import { KyouCountCalendar } from './kyou-count-calendar';
-import { KyouListView } from './kyou-list-view';
-import { KyouView } from './kyou-view';
-import { StartTimeIsDialog } from '../dialogs/start-time-is-dialog';
-import { rykvQueryEditorSideBar } from './rykv-query-editor-side-bar';
-import { rykvViewEmits } from './rykv-view-emits';
-import { rykvViewProps } from './rykv-view-props';
+const querys: Ref<Array<FindKyouQuery>> = ref(new Array<FindKyouQuery>());
+const focused_kyou: Ref<Kyou> = ref(new Kyou());
+const focused_list_views_kyous: Array<Kyou> = ref(new Array<Kyou>());
+const focused_time: Ref<Date> = ref(new Date());
+const focused_column_kyous: Array<Kyou> = ref(new Array<Kyou>());
+const focused_column_checked_kyous: Array<Kyou> = ref(new Array<Kyou>());
+const is_show_kyou_detail_view: Ref<boolean> = ref(false);
+const is_show_kyou_count_calendar: Ref<boolean> = ref(false);
+const is_show_gps_log_map: Ref<boolean> = ref(false);
+const props = defineProps<rykvViewProps>();
+const emits = defineEmits<rykvViewEmits>();
 
-// ˄
-
-export class rykvView {
-    // ˅
-    
-    // ˄
-
-    private querys: Ref<Array<FindKyouQuery>>;
-
-    private focused_kyou: Ref<Kyou>;
-
-    private focused_list_views_kyous: Array<Kyou>;
-
-    private focused_time: Ref<Date>;
-
-    private focused_column_kyous: Array<Kyou>;
-
-    private focused_column_checked_kyous: Array<Kyou>;
-
-    private is_show_kyou_detail_view: Ref<boolean>;
-
-    private is_show_kyou_count_calendar: Ref<boolean>;
-
-    private is_show_gps_log_map: Ref<boolean>;
-
-    private props: rykvViewProps;
-
-    private emits: rykvViewEmits;
-
-    private kyouListView: Array<KyouListView>;
-
-    private rykvQueryEditorSideBar: rykvQueryEditorSideBar;
-
-    private kyouView: KyouView;
-
-    private kyou_detail_view: KyouView;
-
-    private kyou_count_calendar: KyouCountCalendar;
-
-    private gps_log_map: GPSLogMap;
-
-    private dnote: Array<Dnote>;
-
-    private dnote: Dnote;
-
-    private aggregate_view: AggregateView;
-
-    private addMiDialog: AddMiDialog;
-
-    private addNlogDialog: AddNlogDialog;
-
-    private endTimeIsPlaingDialog: EndTimeIsPlaingDialog;
-
-    private startTimeIsDialog: StartTimeIsDialog;
-
-    async add_list_view(): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async close_list_view(query_index: Number): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async update_queries(query_index: Number, by_user: boolean): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async update_kyous(column_index: Number, kyous: Array<Kyou>): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+async function add_list_view(): Promise<void> {
+    throw new Error('Not implemented');
 }
-
-// ˅
-
-// ˄
-
+async function close_list_view(query_index: Number): Promise<void> {
+    throw new Error('Not implemented');
+}
+async function update_queries(query_index: Number, by_user: boolean): Promise<void> {
+    throw new Error('Not implemented');
+}
+async function update_kyous(column_index: Number, kyous: Array<Kyou>): Promise<void> {
+    throw new Error('Not implemented');
+}
 </script>
-<style scoped></style>

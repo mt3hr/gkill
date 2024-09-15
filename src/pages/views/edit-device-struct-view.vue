@@ -1,45 +1,19 @@
 <template>
-
+    <TagStructElement />
+    <DeviceStructElement />
+    <AddNewDeviceStructElementDialog />
+    <EditDeviceStructElementDialog />
 </template>
 <script setup lang="ts">
+import type { EditDeviceStructViewEmits } from './edit-device-struct-view-emits';
+import type { EditDeviceStructViewProps } from './edit-device-struct-view-props';
+import TagStructElement from './tag-struct-element.vue';
+import DeviceStructElement from './device-struct-element.vue';
+import AddNewDeviceStructElementDialog from '../dialogs/add-new-device-struct-element-dialog.vue';
+import EditDeviceStructElementDialog from '../dialogs/edit-device-struct-element-dialog.vue';
+import { ref } from 'vue';
 
-// ˅
-'use strict';
-
-import { DeviceStructElement } from './device-struct-element.vue';
-import { EditDeviceStructViewEmits } from './edit-device-struct-view-emits';
-import { EditDeviceStructViewProps } from './edit-device-struct-view-props';
-import { TagStructElement } from './tag-struct-element';
-
-// ˄
-
-export class EditDeviceStructView {
-    // ˅
-    
-    // ˄
-
-    private cloned_application_config: Ref<ApplicationConfig>;
-
-    add_new_device_struct_element_dialog: AddNewDeviceStructElementDialog;
-
-    edit_device_struct_element_dialog: EditDeviceStructElementDialog;
-
-    private props: EditDeviceStructViewProps;
-
-    private emits: EditDeviceStructViewEmits;
-
-    private tagStructElement: TagStructElement;
-
-    private device_struct_root_element: DeviceStructElement;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<EditDeviceStructViewProps>();
+const emits = defineEmits<EditDeviceStructViewEmits>();
+const cloned_application_config = ref(await props.application_config.clone());
 </script>
-<style scoped></style>

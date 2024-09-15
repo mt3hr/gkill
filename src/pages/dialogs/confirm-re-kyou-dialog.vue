@@ -1,43 +1,19 @@
-// ˅
-'use strict';
+<template>
+    <ConfirmReKyouView />
+</template>
+<script lang="ts" setup>
+import type { ConfirmReKyouDialogProps } from './confirm-re-kyou-dialog-props';
+import type { KyouDialogEmits } from '../views/kyou-dialog-emits';
+import ConfirmReKyouView from '../views/confirm-re-kyou-view.vue';
 
-import { ConfirmReKyouDialogProps } from './confirm-re-kyou-dialog-props';
-import { ConfirmReKyouView } from '../views/confirm-re-kyou-view';
-import { KyouDialogEmits } from '../views/kyou-dialog-emits';
-import { KyouViewEmits } from '../views/kyou-view-emits';
+const props = defineProps<ConfirmReKyouDialogProps>();
+const emits = defineEmits<KyouDialogEmits>();
+defineExpose({ show, hide })
 
-// ˄
-
-export class ConfirmReKyouDialog {
-    // ˅
-    
-    // ˄
-
-    private props: ConfirmReKyouDialogProps;
-
-    private emits: KyouViewEmits;
-
-    private emits: KyouDialogEmits;
-
-    private confirmReKyouView: ConfirmReKyouView;
-
-    async show(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async hide(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+async function show(): Promise<void> {
+    throw new Error('Not implemented');
 }
-
-// ˅
-
-// ˄
+async function hide(): Promise<void> {
+    throw new Error('Not implemented');
+}
+</script>

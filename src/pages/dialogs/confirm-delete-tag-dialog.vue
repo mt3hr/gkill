@@ -1,54 +1,21 @@
 <template>
-
+    <KyouView />
+    <ConfirmDeleteTagView />
 </template>
 <script setup lang="ts">
+import type { ConfirmDeleteTagDialogProps } from './confirm-delete-tag-dialog-props';
+import type { KyouDialogEmits } from '../views/kyou-dialog-emits';
+import ConfirmDeleteTagView from '../views/confirm-delete-tag-view.vue';
+import KyouView from '../views/kyou-view.vue';
 
-// ˅
-'use strict';
+const props = defineProps<ConfirmDeleteTagDialogProps>();
+const emits = defineEmits<KyouDialogEmits>();
+defineExpose({ show, hide })
 
-import { ConfirmDeleteTagDialogProps } from './confirm-delete-tag-dialog-props';
-import { ConfirmDeleteTagView } from '../views/confirm-delete-tag-view';
-import { KyouDialogEmits } from '../views/kyou-dialog-emits';
-import { KyouView } from '../views/kyou-view.vue';
-import { KyouViewEmits } from '../views/kyou-view-emits';
-
-// ˄
-
-export class ConfirmDeleteTagDialog {
-    // ˅
-    
-    // ˄
-
-    private props: ConfirmDeleteTagDialogProps;
-
-    private kyouView: KyouView;
-
-    private emits: KyouViewEmits;
-
-    private emits: KyouDialogEmits;
-
-    private confirmDeleteTagView: ConfirmDeleteTagView;
-
-    async show(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async hide(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+async function show(): Promise<void> {
+    throw new Error('Not implemented');
 }
-
-// ˅
-
-// ˄
-
+async function hide(): Promise<void> {
+    throw new Error('Not implemented');
+}
 </script>
-<style scoped></style>

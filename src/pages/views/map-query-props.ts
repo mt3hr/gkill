@@ -1,20 +1,6 @@
-// ˅
 'use strict';
 
-import { SidebarProps } from './sidebar-props';
+import type { SidebarProps } from "./sidebar-props";
 
-// ˄
-
-export class MapQueryProps implements SidebarProps {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface MapQueryProps extends SidebarProps {
 }
-
-// ˅
-
-// ˄

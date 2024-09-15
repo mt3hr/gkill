@@ -1,27 +1,12 @@
-// ˅
-'use strict';
+<template>
 
-import { CalendarQueryEmits } from './calendar-query-emits';
-import { CalendarQueryProps } from './calendar-query-props';
+</template>
+<script lang="ts" setup>
+import type { CalendarQueryEmits } from './calendar-query-emits';
+import type { CalendarQueryProps } from './calendar-query-props';
+import { ref } from 'vue';
 
-// ˄
-
-export class CalendarQuery {
-    // ˅
-    
-    // ˄
-
-    private cloned_query: FindKyouQuery;
-
-    private props: CalendarQueryProps;
-
-    private emits: CalendarQueryEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<CalendarQueryProps>();
+const emits = defineEmits<CalendarQueryEmits>();
+const cloned_query = ref(await props.query.clone());
+</script>

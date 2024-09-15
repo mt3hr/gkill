@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <AllocateRepView />
+</template>
+<script lang="ts" setup>
+import type { AllocateRepDialogEmits } from './allocate-rep-dialog-emits';
+import type { AllocateRepDialogProps } from './allocate-rep-dialog-props';
+import AllocateRepView from '../views/allocate-rep-view.vue';
 
-import { AllocateRepDialogEmits } from './allocate-rep-dialog-emits';
-import { AllocateRepDialogProps } from './allocate-rep-dialog-props';
-import { AllocateRepView } from '../views/allocate-rep-view';
-
-// ˄
-
-export class AllocateRepDialog {
-    // ˅
-    
-    // ˄
-
-    private props: AllocateRepDialogProps;
-
-    private emits: AllocateRepDialogEmits;
-
-    private allocate_rep_view: AllocateRepView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props=defineProps< AllocateRepDialogProps>();
+const emits= defineEmits<AllocateRepDialogEmits>();
+</script>

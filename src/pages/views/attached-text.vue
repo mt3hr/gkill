@@ -1,44 +1,17 @@
 <template>
-
+    <AttachedTextContextMenu />
+    <ConfirmDeleteTextDialog />
+    <EditTextDialog />
 </template>
 <script setup lang="ts">
+import { type Ref, ref } from 'vue';
+import type { AttachedTextProps } from './attached-text-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import AttachedTextContextMenu from './attached-text-context-menu.vue';
+import ConfirmDeleteTextDialog from '../dialogs/confirm-delete-text-dialog.vue';
+import EditTextDialog from '../dialogs/edit-text-dialog.vue';
 
-// ˅
-'use strict';
-
-import { AttachedTextContextMenu } from './attached-text-context-menu.vue';
-import { AttachedTextProps } from './attached-text-props';
-import { ConfirmDeleteTextDialog } from '../dialogs/confirm-delete-text-dialog.vue';
-import { EditTextDialog } from '../dialogs/edit-text-dialog.vue';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class AttachedText {
-    // ˅
-    
-    // ˄
-
-    private cloned_text: Text;
-
-    private props: AttachedTextProps;
-
-    private editTextDialog: EditTextDialog;
-
-    private confirmDeleteTextDialog: ConfirmDeleteTextDialog;
-
-    private contextmenu: AttachedTextContextMenu;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<AttachedTextProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_text: Ref<Text> = ref(await props.text.clone());
 </script>
-<style scoped></style>

@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <EditRepStructView />
+</template>
+<script lang="ts" setup>
+import type { EditRepStructDialogEmits } from './edit-rep-struct-dialog-emits';
+import type { EditRepStructDialogProps } from './edit-rep-struct-dialog-props';
+import EditRepStructView from '../views/edit-rep-struct-view.vue';
 
-import { EditRepStructDialogEmits } from './edit-rep-struct-dialog-emits';
-import { EditRepStructDialogProps } from './edit-rep-struct-dialog-props';
-import { EditRepStructView } from '../views/edit-rep-struct-view';
-
-// ˄
-
-export class EditRepStructDialog {
-    // ˅
-    
-    // ˄
-
-    private props: EditRepStructDialogProps;
-
-    private emits: EditRepStructDialogEmits;
-
-    private rep_struct_view: EditRepStructView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditRepStructDialogProps>();
+const emits = defineEmits<EditRepStructDialogEmits>();
+</script>

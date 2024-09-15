@@ -1,33 +1,18 @@
-// ˅
-'use strict';
+<template>
+    <EditTagDialog />
+    <ConfirmDeleteTagDialog />
+    <TagHistoriesDialog />
+</template>
+<script lang="ts" setup>
+import type { AttachedTagContextMenuProps } from './attached-tag-context-menu-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import type { Tag } from '@/classes/datas/tag';
+import { type Ref, ref } from 'vue';
+import EditTagDialog from '../dialogs/edit-tag-dialog.vue';
+import ConfirmDeleteTagDialog from '../dialogs/confirm-delete-tag-dialog.vue';
+import TagHistoriesDialog from '../dialogs/tag-histories-dialog.vue';
 
-import { AttachedTagContextMenuProps } from './attached-tag-context-menu-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class AttachedTagContextMenu {
-    // ˅
-    
-    // ˄
-
-    private cloned_tag: Tag;
-
-    private edit_tag_dialog: EditTagDialog;
-
-    private confirm_delete_tag_dialog: ConfirmDeleteTagDialog;
-
-    private tag_histories_dialog: TagHistoriesDialog;
-
-    private attachedTagContextMenuProps: AttachedTagContextMenuProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<AttachedTagContextMenuProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_tag: Ref<Tag> = ref(await props.tag.clone());
+</script>

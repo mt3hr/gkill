@@ -1,20 +1,6 @@
-// ˅
 'use strict';
 
-import { GkillPropsBase } from './gkill-props-base';
+import type { GkillPropsBase } from "./gkill-props-base";
 
-// ˄
-
-export class AddMiViewProps implements GkillPropsBase {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface AddMiViewProps extends GkillPropsBase {
 }
-
-// ˅
-
-// ˄

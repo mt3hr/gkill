@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <AddNewFoloderView />
+</template>
+<script lang="ts" setup>
+import type { AddNewFoloderDialogEmits } from './add-new-foloder-dialog-emits';
+import type { AddNewFoloderDialogProps } from './add-new-foloder-dialog-props';
+import AddNewFoloderView from '../views/add-new-foloder-view.vue';
 
-import { AddNewFoloderDialogEmits } from './add-new-foloder-dialog-emits';
-import { AddNewFoloderDialogProps } from './add-new-foloder-dialog-props';
-import { AddNewFoloderView } from '../views/add-new-foloder-view';
-
-// ˄
-
-export class AddNewFoloderDialog {
-    // ˅
-    
-    // ˄
-
-    private props: AddNewFoloderDialogProps;
-
-    private emits: AddNewFoloderDialogEmits;
-
-    private add_new_folder_view: AddNewFoloderView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<AddNewFoloderDialogProps>();
+const emits = defineEmits<AddNewFoloderDialogEmits>();
+</script>

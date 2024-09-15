@@ -1,30 +1,9 @@
-// ˅
 'use strict';
 
-// ˄
+import type { GkillError } from "@/classes/api/gkill-error";
+import type { GkillMessage } from "@/classes/api/gkill-message";
 
-export class ShowPasswordResetLinkDialogEmits {
-    // ˅
-    
-    // ˄
-
-    reveived_messages(message: Array<GkillMessage>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    received_errors(errors: Array<GkillError>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface ShowPasswordResetLinkDialogEmits {
+    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_errors', errors: Array<GkillError>): void
 }
-
-// ˅
-
-// ˄

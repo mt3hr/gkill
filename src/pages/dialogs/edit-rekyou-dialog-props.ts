@@ -1,24 +1,9 @@
-// ˅
 'use strict';
 
-import { KyouViewPropsBase } from '../views/kyou-view-props-base';
+import type { ReKyou } from "@/classes/datas/re-kyou";
+import type { KyouViewPropsBase } from "../views/kyou-view-props-base";
 
-// ˄
-
-export class EditRekyouDialogProps implements KyouViewPropsBase {
-    // ˅
-    
-    // ˄
-
+export interface EditRekyouDialogProps extends KyouViewPropsBase {
     rekyou: ReKyou;
-
     is_show: boolean;
-
-    // ˅
-    
-    // ˄
 }
-
-// ˅
-
-// ˄

@@ -1,29 +1,13 @@
-// ˅
-'use strict';
+<template>
 
-import { CreateAccountViewEmits } from './create-account-view-emits';
-import { CreateAccountViewProps } from './create-account-view-props';
+</template>
+<script lang="ts" setup>
+import { type Ref, ref } from 'vue';
+import type { CreateAccountViewEmits } from './create-account-view-emits';
+import type { CreateAccountViewProps } from './create-account-view-props';
 
-// ˄
-
-export class CreateAccountView {
-    // ˅
-    
-    // ˄
-
-    private new_user_id: Ref<string>;
-
-    do_initialize: Ref<boolean>;
-
-    private props: CreateAccountViewProps;
-
-    private emits: CreateAccountViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<CreateAccountViewProps>();
+const emits = defineEmits<CreateAccountViewEmits>();
+const new_user_id: Ref<string> = ref("");
+const do_initialize: Ref<boolean> = ref(false)
+</script>

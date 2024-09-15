@@ -1,38 +1,15 @@
 <template>
-
+    <IDFKyouContextMenu />
 </template>
 <script setup lang="ts">
+import IDFKyouContextMenu from './idf-kyou-context-menu.vue';
+import type { IDFKyou } from '@/classes/datas/idf-kyou';
+import { type Ref, ref } from 'vue';
+import type { IDFKyouProps } from './idf-kyou-props';
+import type { KyouViewEmits } from './kyou-view-emits';
 
-// ˅
-'use strict';
-
-import { IDFKyouContextMenu } from './idf-kyou-context-menu.vue';
-import { IDFKyouProps } from './idf-kyou-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class IDFKyouView {
-    // ˅
-    
-    // ˄
-
-    private cloned_idf_kyou: IDFKyou;
-
-    private props: IDFKyouProps;
-
-    private contextmenu: IDFKyouContextMenu;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<IDFKyouProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_idf_kyou: Ref<IDFKyou> = ref(await props.idf_kyou.clone());
 
 </script>
-<style scoped></style>

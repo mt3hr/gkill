@@ -1,25 +1,8 @@
-// ˅
-'use strict';
-
-import { SelectUploadGPSFileTargetRepViewEmits } from './select-upload-gps-file-target-rep-view-emits';
-import { SelectUploadGPSFileTargetRepViewProps } from './select-upload-gps-file-target-rep-view-props';
-
-// ˄
-
-export class SelectUploadGPSFileTargetRepView {
-    // ˅
-    
-    // ˄
-
-    private props: SelectUploadGPSFileTargetRepViewProps;
-
-    private emits: SelectUploadGPSFileTargetRepViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+<template>
+</template>
+<script lang="ts" setup>
+import type { SelectUploadGPSFileTargetRepViewEmits } from './select-upload-gps-file-target-rep-view-emits';
+import type { SelectUploadGPSFileTargetRepViewProps } from './select-upload-gps-file-target-rep-view-props';
+const props = defineProps<SelectUploadGPSFileTargetRepViewProps>();
+const emits = defineEmits<SelectUploadGPSFileTargetRepViewEmits>();
+</script>

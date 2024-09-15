@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { AddNewFoloderViewEmits } from './add-new-foloder-view-emits';
-import { AddNewFoloderViewProps } from './add-new-foloder-view-props';
+</template>
+<script lang="ts" setup>
+import type { AddNewFoloderViewEmits } from './add-new-foloder-view-emits';
+import type { AddNewFoloderViewProps } from './add-new-foloder-view-props';
 
-// ˄
-
-export class AddNewFoloderView {
-    // ˅
-    
-    // ˄
-
-    private props: AddNewFoloderViewProps;
-
-    private emits: AddNewFoloderViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<AddNewFoloderViewProps>();
+const emits = defineEmits<AddNewFoloderViewEmits>();
+</script>

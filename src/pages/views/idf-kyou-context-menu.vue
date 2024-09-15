@@ -1,35 +1,19 @@
-// ˅
-'use strict';
+<template>
+    <EditIdfKyouDialog />
+    <AddTagDialog />
+    <AddTextDialog />
+    <ConfirmDeleteKyouDialog />
+    <ConfirmReKyouDialog />
+</template>
+<script lang="ts" setup>
+import type { IDFKyouContextMenuProps } from './idf-kyou-context-menu-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import EditIdfKyouDialog from '../dialogs/edit-idf-kyou-dialog.vue';
+import AddTagDialog from '../dialogs/add-tag-dialog.vue';
+import AddTextDialog from '../dialogs/add-text-dialog.vue';
+import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue';
+import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue';
 
-import { IDFKyouContextMenuProps } from './idf-kyou-context-menu-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class IDFKyouContextMenu {
-    // ˅
-    
-    // ˄
-
-    private edit_idf_kyou_dialog: EditIDFKyouDialog;
-
-    private add_tag_dialog: AddTagDialog;
-
-    private add_text_dialog: AddTextDialog;
-
-    private confirm_rekyou_dialog: ConfirmReKyouDialog;
-
-    private confirm_delete_kyou_dialog: ConfirmDeleteKyouDialog;
-
-    private props: IDFKyouContextMenuProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<IDFKyouContextMenuProps>();
+const emits = defineEmits<KyouViewEmits>();
+</script>

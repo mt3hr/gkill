@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { KyouCountCalendarEmits } from './kyou-count-calendar-emits';
-import { KyouCountCalendarProps } from './kyou-count-calendar-props';
+</template>
+<script lang="ts" setup>
+import type { KyouCountCalendarEmits } from './kyou-count-calendar-emits';
+import type { KyouCountCalendarProps } from './kyou-count-calendar-props';
 
-// ˄
-
-export class KyouCountCalendar {
-    // ˅
-    
-    // ˄
-
-    private props: KyouCountCalendarProps;
-
-    private emits: KyouCountCalendarEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<KyouCountCalendarProps>();
+const emits = defineEmits<KyouCountCalendarEmits>();
+</script>

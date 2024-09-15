@@ -1,20 +1,7 @@
-// ˅
 'use strict';
 
-import { KyouViewPropsBase } from './kyou-view-props-base';
+import type { KyouViewPropsBase } from "./kyou-view-props-base";
 
-// ˄
 
-export class KyouHistoriesViewProps implements KyouViewPropsBase {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface KyouHistoriesViewProps extends KyouViewPropsBase {
 }
-
-// ˅
-
-// ˄

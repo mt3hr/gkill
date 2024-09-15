@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { ConfirmGenerateTLSFilesViewEmits } from './confirm-generate-tls-files-view-emits';
-import { ConfirmGenerateTLSFilesViewProps } from './confirm-generate-tls-files-view-props';
+</template>
+<script lang="ts" setup>
+import type { ConfirmGenerateTLSFilesViewEmits } from './confirm-generate-tls-files-view-emits';
+import type { ConfirmGenerateTLSFilesViewProps } from './confirm-generate-tls-files-view-props';
 
-// ˄
-
-export class ConfirmGenerateTLSFilesView {
-    // ˅
-    
-    // ˄
-
-    private props: ConfirmGenerateTLSFilesViewProps;
-
-    private emits: ConfirmGenerateTLSFilesViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ConfirmGenerateTLSFilesViewProps>();
+const emits = defineEmits<ConfirmGenerateTLSFilesViewEmits>();
+</script>
