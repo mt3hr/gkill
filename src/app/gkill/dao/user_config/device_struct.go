@@ -1,13 +1,6 @@
-// ˅
 package user_config
 
-// ˄
-
 type DeviceStruct struct {
-	// ˅
-
-	// ˄
-
 	ID string `json:"id"`
 
 	UserID string `json:"user_id"`
@@ -21,12 +14,4 @@ type DeviceStruct struct {
 	Seq int `json:"seq"`
 
 	CheckWhenInited bool `json:"check_when_inited"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

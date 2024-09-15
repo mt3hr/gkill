@@ -3,7 +3,6 @@
 </template>
 
 <script lang="ts" setup>
-// ˅
 import type { UploadFileDialogEmits } from './upload-file-dialog-emits';
 import type { UploadFileDialogProps } from './upload-file-dialog-props';
 

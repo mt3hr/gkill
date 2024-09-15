@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type TimeIsRepositories []TimeIsRepository
 
 func (t TimeIsRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
-	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
 	})
 	return matchKyousList, nil
-	// ˄
 }
 
 func (t TimeIsRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
-	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -157,11 +151,9 @@ loop:
 	}
 
 	return matchKyou, nil
-	// ˄
 }
 
 func (t TimeIsRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -237,18 +229,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (t TimeIsRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements TimeIsReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (t TimeIsRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -286,17 +274,13 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (t TimeIsRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "TimeIsReps", nil
-	// ˄
 }
 
 func (t TimeIsRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -334,11 +318,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (t TimeIsRepositories) FindTimeIs(ctx context.Context, queryJSON string) ([]*TimeIs, error) {
-	// ˅
 	matchTimeIss := map[string]*TimeIs{}
 	existErr := false
 	var err error
@@ -413,11 +395,9 @@ loop:
 		return matchTimeIssList[i].StartTime.After(matchTimeIssList[j].StartTime)
 	})
 	return matchTimeIssList, nil
-	// ˄
 }
 
 func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string) (*TimeIs, error) {
-	// ˅
 	matchTimeIs := &TimeIs{}
 	matchTimeIs = nil
 	existErr := false
@@ -480,11 +460,9 @@ loop:
 	}
 
 	return matchTimeIs, nil
-	// ˄
 }
 
 func (t TimeIsRepositories) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
-	// ˅
 	kyouHistories := map[string]*TimeIs{}
 	existErr := false
 	var err error
@@ -560,16 +538,9 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (t TimeIsRepositories) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
-	// ˅
 	err := fmt.Errorf("not implements TimeIsReps.AddTimeIsInfo")
 	return err
-	// ˄
 }
-
-// ˅
-
-// ˄

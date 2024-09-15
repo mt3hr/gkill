@@ -1,15 +1,11 @@
-// ˅
 'use strict';
 
 import { FileData } from '../file-data';
 import { GkillAPIRequest } from '../gkill-api-request';
 
-// ˄
 
 export class UploadGPSLogFilesRequest extends GkillAPIRequest {
-    // ˅
-    
-    // ˄
+
 
     gpslog_files: Array<FileData>;
 
@@ -18,17 +14,12 @@ export class UploadGPSLogFilesRequest extends GkillAPIRequest {
     conflict_behavior: FileUploadConflictBehavior;
 
     constructor() {
-        // ˅
         super()
         this.gpslog_files = new Array<FileData>()
-        // ˄
     }
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

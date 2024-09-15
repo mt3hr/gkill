@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -14,18 +13,13 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type reKyouRepositorySQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
 	reps     *GkillRepositories
-	// ˄
 }
 
-// ˅
 func NewReKyouRepositorySQLite3Impl(ctx context.Context, filename string, reps *GkillRepositories) (ReKyouRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -425,7 +419,6 @@ WHERE TARGET_ID LIKE ?
 }
 
 func (r *reKyouRepositorySQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
-	// ˅
 	sql := `
 INSERT INTO REKYOU
   IS_DELETED,
@@ -479,7 +472,6 @@ VASLUES(
 		return err
 	}
 	return nil
-	// ˄
 }
 
 func (r *reKyouRepositorySQLite3Impl) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
@@ -581,5 +573,3 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 func (r *reKyouRepositorySQLite3Impl) GetRepositories(ctx context.Context) (*GkillRepositories, error) {
 	return r.reps, nil
 }
-
-// ˄

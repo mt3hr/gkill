@@ -1,12 +1,8 @@
-// ˅
 'use strict';
 
-// ˄
 
 export abstract class FindQueryBase {
-    // ˅
 
-    // ˄
 
     update_cache: boolean;
 
@@ -49,15 +45,12 @@ export abstract class FindQueryBase {
     calendar_end_date: Date;
 
     async set_other_value(key: string, value: Object): Promise<void> {
-        // ˅
         throw new Error('Not implemented');
-        // ˄
     }
 
     abstract clone(): Promise<FindQueryBase>;
 
     constructor() {
-        // ˅
         this.update_cache = false
 
         this.use_word = false
@@ -98,14 +91,10 @@ export abstract class FindQueryBase {
 
         this.calendar_end_date = new Date(0)
 
-        // ˄
     }
 
-    // ˅
 
-    // ˄
 }
 
-// ˅
 
-// ˄
+

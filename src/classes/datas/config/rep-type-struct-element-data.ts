@@ -1,12 +1,8 @@
-// ˅
 'use strict';
 
-// ˄
 
 export class RepTypeStructElementData {
-    // ˅
-    
-    // ˄
+
 
     id: string;
 
@@ -15,18 +11,13 @@ export class RepTypeStructElementData {
     check_when_inited: boolean;
 
     constructor() {
-        // ˅
         this.id = ""
         this.rep_type_name = ""
         this.check_when_inited = false
-        // ˄
     }
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

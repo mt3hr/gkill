@@ -38,80 +38,58 @@ const props = defineProps<KFTLProps>();
 const emits = defineEmits<KFTLViewEmits>();
 
 async function restore_content_from_localstorage(): Promise<void> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function save_content_to_localstorage(): Promise<void> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function update_line_labels(): Promise<void> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function is_invalid_line(line_index: Number): Promise<boolean> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function submit(): Promise<Array<GkillError>> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function clear(): Promise<void> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function show_kftl_template_dialog(): Promise<void> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function resize(): Promise<void> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function apply_application_config(): Promise<Array<GkillError>> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function update_plaing_timeis_kyous(): Promise<GkillError> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function request_close_dialog(): Promise<void> {
-    // ˅
     //TODO
     throw new Error('Not implemented');
-    // ˄
 }
 
 async function load_find_kyou_query_plaing_timeis(): Promise<void> {

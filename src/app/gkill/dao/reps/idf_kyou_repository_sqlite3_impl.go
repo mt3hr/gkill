@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -22,10 +21,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type idfKyouRepositorySQLite3Impl struct {
-	// ˅
 	repositoriesRef *GkillRepositories
 	idDBFile        string
 	contentDir      string
@@ -37,10 +33,7 @@ type idfKyouRepositorySQLite3Impl struct {
 
 	db *sql.DB
 	m  *sync.Mutex
-	// ˄
 }
-
-// ˅
 
 const DUIDLayout = "20060102T150405-0700"
 
@@ -1130,5 +1123,3 @@ func (i *idfKyouRepositorySQLite3Impl) parseDUID(str string) (id uuid.UUID, t ti
 	}
 	return id, t, nil
 }
-
-// ˄

@@ -1,9 +1,6 @@
-// ˅
 package user_config
 
 import "context"
-
-// ˄
 
 type ApplicationConfigDAO interface {
 	GetAllApplicationConfigs(ctx context.Context) ([]*ApplicationConfig, error)
@@ -17,12 +14,4 @@ type ApplicationConfigDAO interface {
 	DeleteApplicationConfig(ctx context.Context, userID string, device string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

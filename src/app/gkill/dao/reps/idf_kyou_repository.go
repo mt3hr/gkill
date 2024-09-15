@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type IDFKyouRepository interface {
 	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
@@ -26,15 +23,7 @@ type IDFKyouRepository interface {
 
 	GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error)
 
-	// ˅
-
 	IDF(ctx context.Context) error
 
 	AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error
-
-	// ˄
 }
-
-// ˅
-
-// ˄

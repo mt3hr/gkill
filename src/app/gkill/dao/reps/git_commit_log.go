@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type GitCommitLog struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -37,12 +30,4 @@ type GitCommitLog struct {
 	UpdateDevice string `json:"update_device"`
 
 	CommitMessage string `json:"commit_message"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

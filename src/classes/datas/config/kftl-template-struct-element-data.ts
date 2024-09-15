@@ -1,12 +1,8 @@
-// ˅
 'use strict';
 
-// ˄
 
 export class KFTLTemplateStructElementData {
-    // ˅
-    
-    // ˄
+
 
     id: string;
 
@@ -15,18 +11,13 @@ export class KFTLTemplateStructElementData {
     template: string;
 
     constructor() {
-        // ˅
         this.id = ""
         this.title = ""
         this.template = ""
-        // ˄
     }
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -14,17 +13,12 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type tagRepositorySQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewTagRepositorySQLite3Impl(ctx context.Context, filename string) (TagRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -591,7 +585,6 @@ WHERE ID LIKE ?
 }
 
 func (t *tagRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag *Tag) error {
-	// ˅
 	sql := `
 INSERT INTO TAG 
   IS_DELETED,
@@ -648,7 +641,6 @@ VASLUES(
 		return err
 	}
 	return nil
-	// ˄
 }
 
 func (t *tagRepositorySQLite3Impl) GetAllTagNames(ctx context.Context) ([]string, error) {
@@ -693,5 +685,3 @@ WHERE IS_DELETED = FALSE
 	}
 	return tagNames, nil
 }
-
-// ˄

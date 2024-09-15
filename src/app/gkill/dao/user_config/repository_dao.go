@@ -1,9 +1,6 @@
-// ˅
 package user_config
 
 import "context"
-
-// ˄
 
 type RepositoryDAO interface {
 	GetAllRepositories(ctx context.Context) ([]*Repository, error)
@@ -21,12 +18,4 @@ type RepositoryDAO interface {
 	DeleteAllRepositoriesByUser(ctx context.Context, userID string, device string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

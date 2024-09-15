@@ -1,7 +1,5 @@
-// ˅
 'use strict';
 
-// ˄
 
 export enum MoodOperator {
 
@@ -13,11 +11,8 @@ export enum MoodOperator {
 
     less_than = "less_than"
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

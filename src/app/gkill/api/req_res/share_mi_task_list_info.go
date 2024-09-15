@@ -1,13 +1,6 @@
-// ˅
 package req_res
 
-// ˄
-
 type ShareMiTaskListInfo struct {
-	// ˅
-
-	// ˄
-
 	UserID string `json:"user_id"`
 
 	Device string `json:"device"`
@@ -19,12 +12,4 @@ type ShareMiTaskListInfo struct {
 	ShareID string `json:"share_id"`
 
 	FindQueryJSON string `json:"find_query_json"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

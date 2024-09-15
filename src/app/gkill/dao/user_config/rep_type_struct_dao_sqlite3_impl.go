@@ -1,4 +1,3 @@
-// ˅
 package user_config
 
 import (
@@ -10,17 +9,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// ˄
-
 type repTypeStructDAOSQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewRepTypeStructDAOSQLite3Impl(ctx context.Context, filename string) (RepTypeStructDAO, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -325,5 +319,3 @@ WHERE USER_ID = ?
 func (r *repTypeStructDAOSQLite3Impl) Close(ctx context.Context) error {
 	return r.db.Close()
 }
-
-// ˄

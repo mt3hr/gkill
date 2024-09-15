@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -14,17 +13,12 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type lantanaRepositorySQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewLantanaRepositorySQLite3Impl(ctx context.Context, filename string) (LantanaRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -725,5 +719,3 @@ VASLUES(
 	}
 	return nil
 }
-
-// ˄

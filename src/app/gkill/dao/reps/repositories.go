@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type Repositories []Repository
 
 func (r Repositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
-	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
 	})
 	return matchKyousList, nil
-	// ˄
 }
 
 func (r Repositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -132,11 +126,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (r Repositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
-	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -199,11 +191,9 @@ loop:
 	}
 
 	return matchKyou, nil
-	// ˄
 }
 
 func (r Repositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -241,24 +231,18 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (r Repositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements Reps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (r Repositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "Reps", nil
-	// ˄
 }
 
 func (r Repositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -334,9 +318,4 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
-
-// ˅
-
-// ˄

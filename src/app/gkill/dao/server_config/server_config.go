@@ -1,15 +1,8 @@
-// ˅
 package server_config
 
 import "time"
 
-// ˄
-
 type ServerConfig struct {
-	// ˅
-
-	// ˄
-
 	Device string `json:"device"`
 
 	IsLocalOnlyAccess bool `json:"is_local_only_access"`
@@ -33,12 +26,4 @@ type ServerConfig struct {
 	UploadSizeLimitMonth int `json:"upload_size_limit_month"`
 
 	UserDataDirectory string `json:"user_data_directory"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

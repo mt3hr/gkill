@@ -1,4 +1,3 @@
-// ˅
 package api
 
 import (
@@ -43,8 +42,6 @@ import (
 	"github.com/twpayne/go-gpx"
 )
 
-// ˄
-
 func NewGkillServerAPI() (*GkillServerAPI, error) {
 	autoIDF := false
 	gkillDAOManager, err := dao.NewGkillDAOManager(autoIDF)
@@ -62,10 +59,6 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 }
 
 type GkillServerAPI struct {
-	// ˅
-
-	// ˄
-
 	APIAddress *GkillServerAPIAddress
 
 	GkillDAOManager *dao.GkillDAOManager
@@ -73,10 +66,6 @@ type GkillServerAPI struct {
 	FindFilter *FindFilter
 
 	RebootServerCh chan (struct{})
-
-	// ˅
-
-	// ˄
 }
 
 func (g *GkillServerAPI) Serve() error {
@@ -291,7 +280,6 @@ func (g *GkillServerAPI) Close() error {
 }
 
 func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.LoginRequest{}
 	response := &req_res.LoginResponse{}
@@ -432,11 +420,9 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		MessageCode: message.LoginSuccessMessage,
 		Message:     "ログインしました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.LogoutRequest{}
 	response := &req_res.LogoutResponse{}
@@ -489,11 +475,9 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		MessageCode: message.LogoutSuccessMessage,
 		Message:     "ログアウトしました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.ResetPasswordRequest{}
 	response := &req_res.ResetPasswordResponse{}
@@ -606,11 +590,9 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 	})
 	response.PasswordResetPathWithoutHost = fmt.Sprintf("%s", *updateTargetAccount.PasswordResetToken) //TODO パスワードリセットアドレス
 
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.SetNewPasswordRequest{}
 	response := &req_res.SetNewPasswordResponse{}
@@ -683,11 +665,9 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		MessageCode: message.SetNewPasswordSuccessMessage,
 		Message:     "パスワード設定処理が完了しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddTagRequest{}
 	response := &req_res.AddTagResponse{}
@@ -806,11 +786,9 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		MessageCode: message.AddTagSuccessMessage,
 		Message:     "タグを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddTextRequest{}
 	response := &req_res.AddTextResponse{}
@@ -929,11 +907,9 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		MessageCode: message.AddTextSuccessMessage,
 		Message:     "テキストを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddKmemoRequest{}
 	response := &req_res.AddKmemoResponse{}
@@ -1052,11 +1028,9 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		MessageCode: message.AddKmemoSuccessMessage,
 		Message:     "kmemoを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddURLogRequest{}
 	response := &req_res.AddURLogResponse{}
@@ -1175,11 +1149,9 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		MessageCode: message.AddURLogSuccessMessage,
 		Message:     "URLogを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddNlogRequest{}
 	response := &req_res.AddNlogResponse{}
@@ -1298,11 +1270,9 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		MessageCode: message.AddNlogSuccessMessage,
 		Message:     "Nlogを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddTimeIsRequest{}
 	response := &req_res.AddTimeIsResponse{}
@@ -1421,11 +1391,9 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		MessageCode: message.AddTimeIsSuccessMessage,
 		Message:     "TimeIsを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddLantanaRequest{}
 	response := &req_res.AddLantanaResponse{}
@@ -1544,11 +1512,9 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		MessageCode: message.AddLantanaSuccessMessage,
 		Message:     "Lantanaを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddMiRequest{}
 	response := &req_res.AddMiResponse{}
@@ -1667,11 +1633,9 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		MessageCode: message.AddMiSuccessMessage,
 		Message:     "Miを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddKyouInfoRequest{}
 	response := &req_res.AddKyouInfoResponse{}
@@ -1790,11 +1754,9 @@ func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Reques
 		MessageCode: message.AddKyouInfoSuccessMessage,
 		Message:     "KyouInfoを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddReKyouRequest{}
 	response := &req_res.AddReKyouResponse{}
@@ -1913,11 +1875,9 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		MessageCode: message.AddReKyouSuccessMessage,
 		Message:     "ReKyouを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateTagRequest{}
 	response := &req_res.UpdateTagResponse{}
@@ -2049,11 +2009,9 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		MessageCode: message.UpdateTagSuccessMessage,
 		Message:     "タグを更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateTextRequest{}
 	response := &req_res.UpdateTextResponse{}
@@ -2185,11 +2143,9 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		MessageCode: message.UpdateTextSuccessMessage,
 		Message:     "テキストを更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateKmemoRequest{}
 	response := &req_res.UpdateKmemoResponse{}
@@ -2321,11 +2277,9 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		MessageCode: message.UpdateKmemoSuccessMessage,
 		Message:     "Kmemoを更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateURLogRequest{}
 	response := &req_res.UpdateURLogResponse{}
@@ -2457,11 +2411,9 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		MessageCode: message.UpdateURLogSuccessMessage,
 		Message:     "URLogを更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateNlogRequest{}
 	response := &req_res.UpdateNlogResponse{}
@@ -2593,11 +2545,9 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		MessageCode: message.UpdateNlogSuccessMessage,
 		Message:     "Nlogを更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateTimeisRequest{}
 	response := &req_res.UpdateTimeisResponse{}
@@ -2729,11 +2679,9 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		MessageCode: message.UpdateTimeIsSuccessMessage,
 		Message:     "TimeIsを更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateLantanaRequest{}
 	response := &req_res.UpdateLantanaResponse{}
@@ -2865,11 +2813,9 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		MessageCode: message.UpdateLantanaSuccessMessage,
 		Message:     "Lantanaを更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateMiRequest{}
 	response := &req_res.UpdateMiResponse{}
@@ -3001,11 +2947,9 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		MessageCode: message.UpdateMiSuccessMessage,
 		Message:     "Miを更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateKyouInfoRequest{}
 	response := &req_res.UpdateKyouInfoResponse{}
@@ -3137,11 +3081,9 @@ func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Req
 		MessageCode: message.UpdateKyouInfoSuccessMessage,
 		Message:     "KyouInfoを更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateReKyouRequest{}
 	response := &req_res.UpdateReKyouResponse{}
@@ -3273,7 +3215,6 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		MessageCode: message.UpdateReKyouSuccessMessage,
 		Message:     "ReKyouを更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) {
@@ -4538,7 +4479,6 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 }
 
 func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTagsByTargetIDRequest{}
 	response := &req_res.GetTagsByTargetIDResponse{}
@@ -4622,11 +4562,9 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 		MessageCode: message.GetTagsByTargetIDSuccessMessage,
 		Message:     "タグ取得完了",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTagHistoryByTagIDRequest{}
 	response := &req_res.GetTagHistoryByTagIDResponse{}
@@ -4710,11 +4648,9 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 		MessageCode: message.GetTagHistoriesByTagIDSuccessMessage,
 		Message:     "タグ取得完了",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTextsByTargetIDRequest{}
 	response := &req_res.GetTextsByTargetIDResponse{}
@@ -4798,11 +4734,9 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 		MessageCode: message.GetTextsByTargetIDSuccessMessage,
 		Message:     "テキスト取得完了",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTextHistoryByTextIDRequest{}
 	response := &req_res.GetTextHistoryByTextIDResponse{}
@@ -4886,7 +4820,6 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 		MessageCode: message.GetTextHistoriesByTextIDSuccessMessage,
 		Message:     "テキスト取得完了",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *http.Request) {
@@ -5116,7 +5049,6 @@ func (g *GkillServerAPI) HandleGetServerConfig(w http.ResponseWriter, r *http.Re
 }
 
 func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UploadFilesRequest{}
 	response := &req_res.UploadFilesResponse{}
@@ -5356,11 +5288,9 @@ loop:
 		MessageCode: message.UploadFilesSuccessMessage,
 		Message:     "ファイルアップロードが完了しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UploadGPSLogFilesRequest{}
 	response := &req_res.UploadGPSLogFilesResponse{}
@@ -5663,11 +5593,9 @@ errloop2:
 		MessageCode: message.UploadGPSLogFilesSuccessMessage,
 		Message:     "GPSLogファイルアップロードが完了しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateTagStructRequest{}
 	response := &req_res.UpdateTagStructResponse{}
@@ -5780,11 +5708,9 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 		MessageCode: message.UpdateTagStructSuccessMessage,
 		Message:     "タグ構造を更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateRepStructRequest{}
 	response := &req_res.UpdateRepStructResponse{}
@@ -5897,11 +5823,9 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 		MessageCode: message.UpdateRepStructSuccessMessage,
 		Message:     "Rep構造を更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateDeviceStructRequest{}
 	response := &req_res.UpdateDeviceStructResponse{}
@@ -6014,11 +5938,9 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 		MessageCode: message.UpdateDeviceStructSuccessMessage,
 		Message:     "Device構造を更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateRepTypeStructRequest{}
 	response := &req_res.UpdateRepTypeStructResponse{}
@@ -6131,11 +6053,9 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 		MessageCode: message.UpdateRepTypeStructSuccessMessage,
 		Message:     "RepType構造を更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateAccountStatusRequest{}
 	response := &req_res.UpdateAccountStatusResponse{}
@@ -6240,11 +6160,9 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 		MessageCode: message.UpdateAccountStatusSuccessMessage,
 		Message:     "アカウントステータス構造を更新しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateUserRepsRequest{}
 	response := &req_res.UpdateUserRepsResponse{}
@@ -6344,11 +6262,9 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		MessageCode: message.UpdateRepositoriesSuccessMessage,
 		Message:     "Rep更新に成功しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddAccountRequest{}
 	response := &req_res.AddAccountResponse{}
@@ -6490,11 +6406,9 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		MessageCode: message.AddAccountSuccessMessage,
 		Message:     "accountを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GenerateTLSFileRequest{}
 	response := &req_res.GenerateTLSFileResponse{}
@@ -6836,7 +6750,6 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		return
 	}
 	log.Print("wrote key.pem\n")
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request) {
@@ -7063,7 +6976,6 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 }
 
 func (g *GkillServerAPI) HandleAddShareMiTaskListInfo(w http.ResponseWriter, r *http.Request) {
-	// ˅
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddShareMiTaskListInfoRequest{}
 	response := &req_res.AddShareMiTaskListInfoResponse{}
@@ -7182,7 +7094,6 @@ func (g *GkillServerAPI) HandleAddShareMiTaskListInfo(w http.ResponseWriter, r *
 		MessageCode: message.AddShareMiTaskListInfoSuccessMessage,
 		Message:     "shareMiTaskListInfoを追加しました",
 	})
-	// ˄
 }
 
 func (g *GkillServerAPI) HandleGetShareMiTaskListInfos(w http.ResponseWriter, r *http.Request) {
@@ -7416,7 +7327,6 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 }
 
 func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID string) (*account.Account, *message.GkillError, error) {
-	// ˅
 
 	loginSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, sessionID)
 	if err != nil {
@@ -7441,7 +7351,6 @@ func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID 
 	}
 
 	return account, nil, nil
-	// ˄
 }
 
 func GenerateNewID() string {
@@ -7661,7 +7570,3 @@ func publicKey(priv any) any {
 		return nil
 	}
 }
-
-// ˅
-
-// ˄

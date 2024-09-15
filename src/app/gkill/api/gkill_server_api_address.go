@@ -1,13 +1,6 @@
-// ˅
 package api
 
-// ˄
-
 type GkillServerAPIAddress struct {
-	// ˅
-
-	// ˄
-
 	LoginAddress string
 
 	LogoutAddress string
@@ -271,14 +264,9 @@ type GkillServerAPIAddress struct {
 	DeleteShareMiTaskListInfosMethod string
 
 	GetMiSharedTasksMethod string
-
-	// ˅
-
-	// ˄
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
-	// ˅
 
 	gkillAPIAddress := &GkillServerAPIAddress{}
 	gkillAPIAddress.LoginAddress = "/api/login"
@@ -415,9 +403,4 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetMiSharedTasksMethod = "POST"
 
 	return gkillAPIAddress
-	// ˄
 }
-
-// ˅
-
-// ˄

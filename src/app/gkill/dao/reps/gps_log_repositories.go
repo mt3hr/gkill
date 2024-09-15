@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -9,12 +8,9 @@ import (
 	"time"
 )
 
-// ˄
-
 type GPSLogRepositories []GPSLogRepository
 
 func (g GPSLogRepositories) GetAllGPSLogs(ctx context.Context) ([]*GPSLog, error) {
-	// ˅
 	gpsLogs := []*GPSLog{}
 	existErr := false
 	var err error
@@ -73,11 +69,9 @@ loop:
 		return gpsLogs[i].RelatedTime.After(gpsLogs[j].RelatedTime)
 	})
 	return gpsLogs, nil
-	// ˄
 }
 
 func (g GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime time.Time, endTime time.Time) ([]*GPSLog, error) {
-	// ˅
 	gpsLogs := []*GPSLog{}
 	existErr := false
 	var err error
@@ -136,28 +130,17 @@ loop:
 		return gpsLogs[i].RelatedTime.After(gpsLogs[j].RelatedTime)
 	})
 	return gpsLogs, nil
-	// ˄
 }
 
 func (g GPSLogRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements GPSLogReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (g GPSLogRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "GPSLogReps", nil
-	// ˄
 }
 
 func (g GPSLogRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	return nil
-	// ˄
 }
-
-// ˅
-
-// ˄

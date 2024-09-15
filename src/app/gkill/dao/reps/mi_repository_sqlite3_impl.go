@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -15,17 +14,12 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type miRepositorySQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewMiRepositorySQLite3Impl(ctx context.Context, filename string) (MiRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -963,5 +957,3 @@ WHERE IS_DELETED = FALSE
 	}
 	return boardNames, nil
 }
-
-// ˄

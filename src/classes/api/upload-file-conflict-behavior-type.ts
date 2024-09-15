@@ -1,7 +1,5 @@
-// ˅
 'use strict';
 
-// ˄
 
 export enum UploadFileConflictBehaviorType {
 
@@ -9,11 +7,8 @@ export enum UploadFileConflictBehaviorType {
 
     rename = "rename"
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+
