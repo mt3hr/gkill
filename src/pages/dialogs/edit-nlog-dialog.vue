@@ -1,54 +1,21 @@
 <template>
-
+    <EditNlogView />
+    <KyouView />
 </template>
 <script setup lang="ts">
+import type { EditNlogDialogProps } from './edit-nlog-dialog-props';
+import type { KyouDialogEmits } from '../views/kyou-dialog-emits';
+import EditNlogView from '../views/edit-nlog-view.vue';
+import KyouView from '../views/kyou-view.vue';
 
-// ˅
-'use strict';
+const props = defineProps<EditNlogDialogProps>();
+const emits = defineEmits<KyouDialogEmits>();
+defineExpose({ show, hide })
 
-import { EditNlogDialogProps } from './edit-nlog-dialog-props';
-import { EditNlogView } from '../views/edit-nlog-view';
-import { KyouDialogEmits } from '../views/kyou-dialog-emits';
-import { KyouView } from '../views/kyou-view.vue';
-import { KyouViewEmits } from '../views/kyou-view-emits';
-
-// ˄
-
-export class EditNlogDialog {
-    // ˅
-    
-    // ˄
-
-    private props: EditNlogDialogProps;
-
-    private kyouView: KyouView;
-
-    private emits: KyouViewEmits;
-
-    private emits: KyouDialogEmits;
-
-    private editNlogView: EditNlogView;
-
-    async show(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async hide(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+async function show(): Promise<void> {
+    throw new Error('Not implemented');
 }
-
-// ˅
-
-// ˄
-
+async function hide(): Promise<void> {
+    throw new Error('Not implemented');
+}
 </script>
-<style scoped></style>

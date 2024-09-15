@@ -1,32 +1,23 @@
-// ˅
-'use strict';
+<template>
+    <TagView />
+</template>
+<script lang="ts" setup>
+import { type Ref, computed, ref } from 'vue';
+import type { KyouViewEmits } from './kyou-view-emits';
+import type { TagHistoriesViewProps } from './tag-histories-view-props';
+import { Tag } from '@/classes/datas/tag';
+import TagView from './tag-view.vue';
 
-import { KyouViewEmits } from './kyou-view-emits';
-import { TagHistoriesViewProps } from './tag-histories-view-props';
-import { TagView } from './tag-view';
-
-// ˄
-
-export class TagHistoriesView {
-    // ˅
-    
-    // ˄
-
-    private cloned_tag: Tag;
-
-    private cloned_tag_histories: Array<Tag>;
-
-    private tagView: Array<TagView>;
-
-    private props: TagHistoriesViewProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
+const props = defineProps<TagHistoriesViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_tag: Ref<Tag> = ref(await props.tag.clone());
+const cloned_tag_histories = computed(async () => {
+    const errors = await cloned_tag.value.load_attached_histories()
+    if (errors && errors.length !== 0) {
+        emits('received_errors', errors)
+        return
+    }
+    return cloned_tag.value.attached_histories
 }
-
-// ˅
-
-// ˄
+)
+</script>

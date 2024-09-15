@@ -1,31 +1,17 @@
-// ˅
-'use strict';
+<template>
+    <KyouView />
+</template>
+<script lang="ts" setup>
+import { type Ref, ref } from 'vue';
+import type { EditIDFKyouViewProps } from './edit-idf-kyou-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import KyouView from './kyou-view.vue';
+import { IDFKyou } from '@/classes/datas/idf-kyou';
+import { Kyou } from '@/classes/datas/kyou';
 
-import { EditIDFKyouViewProps } from './edit-idf-kyou-view-props';
-import { KyouViewEmits } from './kyou-view-emits';
+const props = defineProps<EditIDFKyouViewProps>();
+const emits = defineEmits<KyouViewEmits>();
 
-// ˄
-
-export class EditIDFKyouView {
-    // ˅
-    
-    // ˄
-
-    private cloned_idf_kyou: IDFKyou;
-
-    private cloned_kyou: Kyou;
-
-    kyou_view: KyouView;
-
-    private editIDFKyouViewProps: EditIDFKyouViewProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const cloned_idf_kyou: Ref<IDFKyou> = ref(await props.idf_kyou.clone());
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
+</script>

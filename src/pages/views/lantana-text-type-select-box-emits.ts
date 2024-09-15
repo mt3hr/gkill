@@ -1,24 +1,7 @@
-// ˅
 'use strict';
 
-// ˄
+import type { LantanaTextType } from "@/classes/lantana/lantana-text-type";
 
-export class LantanaTextTypeSelectBoxEmits {
-    // ˅
-    
-    // ˄
-
-    updated_text_type(text_type: LantanaTextType): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface LantanaTextTypeSelectBoxEmits {
+    (e: 'updated_text_type',text_type: LantanaTextType): void 
 }
-
-// ˅
-
-// ˄

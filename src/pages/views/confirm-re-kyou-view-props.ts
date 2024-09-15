@@ -1,20 +1,6 @@
-// ˅
 'use strict';
 
-import { KyouViewPropsBase } from './kyou-view-props-base';
+import type { KyouViewPropsBase } from "./kyou-view-props-base";
 
-// ˄
-
-export class ConfirmReKyouViewProps implements KyouViewPropsBase {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface ConfirmReKyouViewProps extends KyouViewPropsBase {
 }
-
-// ˅
-
-// ˄

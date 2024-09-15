@@ -1,36 +1,11 @@
-// ˅
 'use strict';
 
-// ˄
+import type { GkillError } from "@/classes/api/gkill-error";
+import type { GkillMessage } from "@/classes/api/gkill-message";
+import type { Kyou } from "@/classes/datas/kyou";
 
-export class ProgressUploadGPSFileViewEmits {
-    // ˅
-    
-    // ˄
-
-    reveived_messages(message: Array<GkillMessage>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    received_errors(errors: Array<GkillError>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    uploaded_kyous(uploaded_kyous: Array<Kyou>): void {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+export interface ProgressUploadGPSFileViewEmits {
+    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_errors', errors: Array<GkillError>): void
+    (e: 'uploaded_kyous', uploaded_kyous: Array<Kyou>): void
 }
-
-// ˅
-
-// ˄

@@ -1,31 +1,16 @@
-// ˅
-'use strict';
+<template>
+    <KyouView />
+</template>
+<script lang="ts" setup>
+import { type Ref, ref } from 'vue';
+import type { EditTimeIsViewProps } from './edit-time-is-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import { Kyou } from '@/classes/datas/kyou';
+import { TimeIs } from '@/classes/datas/time-is';
+import KyouView from './kyou-view.vue';
 
-import { EditTimeIsViewProps } from './edit-time-is-view-props';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class EditTimeIsView {
-    // ˅
-    
-    // ˄
-
-    private cloned_timeis: TimeIs;
-
-    private cloned_kyou: Kyou;
-
-    kyou_view: KyouView;
-
-    private editTimeIsViewProps: EditTimeIsViewProps;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditTimeIsViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_timeis: Ref<TimeIs> = ref(await props.timeis.clone());
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+</script>

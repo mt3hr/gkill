@@ -1,25 +1,8 @@
-// ˅
 'use strict';
 
-// ˄
+import type { GkillPropsBase } from "./gkill-props-base";
 
-export interface MiViewProps extends KyouViewPropsBase {
-
-    mi: Mi;
-
-    show_mi_create_time: boolean;
-
-    show_mi_limit_time: boolean;
-
-    show_mi_estimate_start_time: boolean;
-
-    show_mi_estimate_end_time: boolean;
-
-    // ˅
-    
-    // ˄
+export interface miViewProps extends GkillPropsBase {
+    app_content_height: Number;
+    app_content_width: Number;
 }
-
-// ˅
-
-// ˄

@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { EditFolderViewEmits } from './edit-folder-view-emits';
-import { EditFolderViewProps } from './edit-folder-view-props';
+</template>
+<script lang="ts" setup>
+import type { EditFolderViewEmits } from './edit-folder-view-emits';
+import type { EditFolderViewProps } from './edit-folder-view-props';
 
-// ˄
-
-export class EditFolderView {
-    // ˅
-    
-    // ˄
-
-    private props: EditFolderViewProps;
-
-    private emits: EditFolderViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditFolderViewProps>();
+const emits = defineEmits<EditFolderViewEmits>();
+</script>

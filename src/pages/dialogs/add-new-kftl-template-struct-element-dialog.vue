@@ -1,28 +1,11 @@
-// ˅
-'use strict';
+<template>
+    <AddNewKFTLTemplateStructElementView />
+</template>
+<script lang="ts" setup>
+import type { AddNewKFTLTemplateStructElementDialogEmits } from './add-new-kftl-template-struct-element-dialog-emits';
+import type { AddNewKFTLTemplateStructElementDialogProps } from './add-new-kftl-template-struct-element-dialog-props';
+import AddNewKFTLTemplateStructElementView from '../views/add-new-kftl-template-struct-element-view.vue';
 
-import { AddNewKFTLTemplateStructElementDialogEmits } from './add-new-kftl-template-struct-element-dialog-emits';
-import { AddNewKFTLTemplateStructElementDialogProps } from './add-new-kftl-template-struct-element-dialog-props';
-import { AddNewKFTLTemplateStructElementView } from '../views/add-new-kftl-template-struct-element-view';
-
-// ˄
-
-export class AddNewKFTLTemplateStructElementDialog {
-    // ˅
-    
-    // ˄
-
-    private props: AddNewKFTLTemplateStructElementDialogProps;
-
-    private emits: AddNewKFTLTemplateStructElementDialogEmits;
-
-    private add_new_kftl_template_struct_element_view: AddNewKFTLTemplateStructElementView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<AddNewKFTLTemplateStructElementDialogProps>();
+const emits = defineEmits<AddNewKFTLTemplateStructElementDialogEmits>();
+</script>

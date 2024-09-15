@@ -1,37 +1,14 @@
 <template>
-
+    <URLogContextMenu />
 </template>
 <script setup lang="ts">
-// ˅
-'use strict';
+import { type Ref, ref } from 'vue';
+import type { URLogViewProps } from './ur-log-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import URLogContextMenu from './ur-log-context-menu.vue';
+import type { URLog } from '@/classes/datas/ur-log';
 
-import { KyouViewEmits } from './kyou-view-emits';
-import { URLogContextMenu } from './ur-log-context-menu';
-import { URLogViewProps } from './ur-log-view-props';
-
-// ˄
-
-export class URLogView {
-    // ˅
-    
-    // ˄
-
-    private cloned_urlog: URLog;
-
-    private props: URLogViewProps;
-
-    private contextmenu: URLogContextMenu;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<URLogViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_urlog: Ref<URLog> = ref(await props.urlog.clone());
 </script>
-<style scoped></style>

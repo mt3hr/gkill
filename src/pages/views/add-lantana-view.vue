@@ -1,70 +1,37 @@
-// ˅
-'use strict';
+<template>
+    <LantanaFlowersView />
+</template>
+<script lang="ts" setup>
+import type { GkillError } from '@/classes/api/gkill-error';
+import { LantanaTextData } from '@/classes/lantana/lantana-text-data';
+import { ref, type Ref } from 'vue';
 
-import { AddLantanaViewEmits } from './add-lantana-view-emits';
-import { LantanaFlowersView } from './lantana-flowers-view';
-import { LantanaProps } from './lantana-props';
+import type { LantanaProps } from './lantana-props';
+import type { AddLantanaViewEmits } from './add-lantana-view-emits';
+import LantanaFlowersView from './lantana-flowers-view.vue';
 
-// ˄
+const text_datas: Ref<Array<LantanaTextData>> = ref(new Array<LantanaTextData>());
+const mood: Ref<Number> = ref(0);
+const text_datas_dummy: Ref<Array<LantanaTextData>> = ref(new Array<LantanaTextData>());
+const props = defineProps<LantanaProps>();
+const emits = defineEmits<AddLantanaViewEmits>();
 
-export class AddLantanaView {
-    // ˅
-    
-    // ˄
-
-    private text_datas: Array<LantanaTextData>;
-
-    private mood: Number;
-
-    private text_datas_dummy: Array<LantanaTextData>;
-
-    private lantanaFlowersView: LantanaFlowersView;
-
-    private props: LantanaProps;
-
-    private emits: AddLantanaViewEmits;
-
-    private async update_mood(mood: Number): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    private async clear(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    private async submit(): Promise<Array<GkillError>> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    private async update_text_data(text_data: LantanaTextData): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    private async add_text_data(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    private async delete_text_data(text_data: LantanaTextData): Promise<boolean> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+async function update_mood(mood: Number): Promise<void> {
+    throw new Error('Not implemented');
 }
-
-// ˅
-
-// ˄
+async function clear(): Promise<void> {
+    throw new Error('Not implemented');
+}
+async function submit(): Promise<Array<GkillError>> {
+    throw new Error('Not implemented');
+}
+async function update_text_data(text_data: LantanaTextData): Promise<void> {
+    throw new Error('Not implemented');
+}
+async function add_text_data(): Promise<void> {
+    throw new Error('Not implemented');
+}
+async function delete_text_data(text_data: LantanaTextData): Promise<boolean> {
+    throw new Error('Not implemented');
+}
+</script>

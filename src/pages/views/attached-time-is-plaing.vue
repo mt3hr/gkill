@@ -1,44 +1,18 @@
 <template>
-
+    <EditTimeIsDialog />
+    <AttachedTimeisPlaingContextMenu />
+    <ConfirmDeleteKyouDialog />
 </template>
 <script setup lang="ts">
+import { type Ref, ref } from 'vue';
+import type { TimeIs } from '@/classes/datas/time-is';
+import type { AttachedTimeIsPlaingProps } from './attached-time-is-plaing-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import EditTimeIsDialog from '../dialogs/edit-time-is-dialog.vue';
+import AttachedTimeisPlaingContextMenu from './attached-timeis-plaing-context-menu.vue';
+import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue';
 
-// ˅
-'use strict';
-
-import { AttachedTimeIsPlaingProps } from './attached-time-is-plaing-props';
-import { AttachedTimeisPlaingContextMenu } from './attached-timeis-plaing-context-menu';
-import { ConfirmDeleteKyouDialog } from '../dialogs/confirm-delete-kyou-dialog.vue';
-import { EditTimeIsDialog } from '../dialogs/edit-time-is-dialog.vue';
-import { KyouViewEmits } from './kyou-view-emits';
-
-// ˄
-
-export class AttachedTimeIsPlaing {
-    // ˅
-    
-    // ˄
-
-    private cloned_timeis: TimeIs;
-
-    private props: AttachedTimeIsPlaingProps;
-
-    private editTimeIsDialog: EditTimeIsDialog;
-
-    private confirmDeleteKyouDialog: ConfirmDeleteKyouDialog;
-
-    private contextmenu: AttachedTimeisPlaingContextMenu;
-
-    private kyouViewEmits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
-
+const props = defineProps<AttachedTimeIsPlaingProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_timeis: Ref<TimeIs> = ref(await props.timeis.clone());
 </script>
-<style scoped></style>

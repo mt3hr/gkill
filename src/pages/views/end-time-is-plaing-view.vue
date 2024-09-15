@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { EndTimeIsPlaingViewProps } from './end-time-is-plaing-view-props';
-import { KyouViewEmits } from './kyou-view-emits';
+</template>
+<script lang="ts" setup>
+import type { EndTimeIsPlaingViewProps } from './end-time-is-plaing-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
 
-// ˄
-
-export class EndTimeIsPlaingView {
-    // ˅
-    
-    // ˄
-
-    private endTimeIsPlaingViewProps: EndTimeIsPlaingViewProps;
-
-    private kyouViewEmits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const endTimeIsPlaingViewProps = defineProps<EndTimeIsPlaingViewProps>();
+const kyouViewEmits = defineEmits<KyouViewEmits>();
+</script>

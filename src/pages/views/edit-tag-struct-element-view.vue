@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { EditTagStructElementViewEmits } from './edit-tag-struct-element-view-emits';
-import { EditTagStructElementViewProps } from './edit-tag-struct-element-view-props';
+</template>
+<script lang="ts" setup>
+import type { EditTagStructElementViewEmits } from './edit-tag-struct-element-view-emits';
+import type { EditTagStructElementViewProps } from './edit-tag-struct-element-view-props';
 
-// ˄
-
-export class EditTagStructElementView {
-    // ˅
-    
-    // ˄
-
-    private props: EditTagStructElementViewProps;
-
-    private emits: EditTagStructElementViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditTagStructElementViewProps>();
+const emits = defineEmits<EditTagStructElementViewEmits>();
+</script>

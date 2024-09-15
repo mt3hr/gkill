@@ -1,28 +1,14 @@
-// ˅
-'use strict';
+<template>
+    <ApplicationConfigView />
+</template>
 
-import { ApplicationConfigDialogEmits } from './application-config-dialog-emits';
-import { ApplicationConfigDialogProps } from './application-config-dialog-props';
-import { ApplicationConfigView } from '../views/application-config-view';
+<script lang="ts" setup>
+import { defineProps } from 'vue';
+import type { ApplicationConfigDialogProps } from './application-config-dialog-props';
+import type { ApplicationConfigDialogEmits } from './application-config-dialog-emits';
+import ApplicationConfigView from '../views/application-config-view.vue';
 
-// ˄
 
-export class ApplicationConfigDialog {
-    // ˅
-    
-    // ˄
-
-    private application_config_view: ApplicationConfigView;
-
-    private props: ApplicationConfigDialogProps;
-
-    private emits: ApplicationConfigDialogEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ApplicationConfigDialogProps>();
+const emits = defineEmits<ApplicationConfigDialogEmits>();
+</script>

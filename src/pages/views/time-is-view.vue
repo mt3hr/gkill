@@ -1,37 +1,14 @@
 <template>
-
+    <TimeIsContextMenu />
 </template>
 <script setup lang="ts">
+import { type Ref, ref } from 'vue';
+import type { TimeIsViewProps } from './time-is-view-props';
+import type { KyouViewEmits } from './kyou-view-emits';
+import type { TimeIs } from '@/classes/datas/time-is';
+import TimeIsContextMenu from './time-is-context-menu.vue';
 
-// ˅
-'use strict';
-
-import { KyouViewEmits } from './kyou-view-emits';
-import { TimeIsContextMenu } from './time-is-context-menu.vue';
-import { TimeIsViewProps } from './time-is-view-props';
-
-// ˄
-
-export class TimeIsView {
-    // ˅
-    
-    // ˄
-
-    private cloned_timeis: TimeIs;
-
-    private props: TimeIsViewProps;
-
-    private contextmenu: TimeIsContextMenu;
-
-    private emits: KyouViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<TimeIsViewProps>();
+const emits = defineEmits<KyouViewEmits>();
+const cloned_timeis: Ref<TimeIs> = ref(await props.timeis.clone());
 </script>
-<style scoped></style>

@@ -1,54 +1,21 @@
 <template>
-
+    <EditTagView />
+    <KyouView />
 </template>
 <script setup lang="ts">
+import type { EditTagDialogProps } from './edit-tag-dialog-props';
+import type { KyouDialogEmits } from '../views/kyou-dialog-emits';
+import EditTagView from '../views/edit-tag-view.vue';
+import KyouView from '../views/kyou-view.vue';
 
-// ˅
-'use strict';
+const props = defineProps<EditTagDialogProps>();
+const emits = defineEmits<KyouDialogEmits>();
+defineExpose({ show, hide })
 
-import { EditTagDialogProps } from './edit-tag-dialog-props';
-import { EditTagView } from '../views/edit-tag-view';
-import { KyouDialogEmits } from '../views/kyou-dialog-emits';
-import { KyouView } from '../views/kyou-view.vue';
-import { KyouViewEmits } from '../views/kyou-view-emits';
-
-// ˄
-
-export class EditTagDialog {
-    // ˅
-    
-    // ˄
-
-    private props: EditTagDialogProps;
-
-    private kyouView: KyouView;
-
-    private emits: KyouViewEmits;
-
-    private emits: KyouDialogEmits;
-
-    private editTagView: EditTagView;
-
-    async show(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async hide(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+async function show(): Promise<void> {
+    throw new Error('Not implemented');
 }
-
-// ˅
-
-// ˄
-
+async function hide(): Promise<void> {
+    throw new Error('Not implemented');
+}
 </script>
-<style scoped></style>

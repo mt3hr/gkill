@@ -1,28 +1,13 @@
+<template>
+    <DecideRelatedTimeUploadedFileView />
+</template>
+<script lang="ts" setup>
 // ˅
-'use strict';
+import type { DecideRelatedTimeUploadedFileDialogEmits } from './decide-related-time-uploaded-file-dialog-emits';
+import type { DecideRelatedTimeUploadedFileDialogProps } from './decide-related-time-uploaded-file-dialog-props';
+import DecideRelatedTimeUploadedFileView from '../views/decide-related-time-uploaded-file-view.vue';
 
-import { DecideRelatedTimeUploadedFileDialogEmits } from './decide-related-time-uploaded-file-dialog-emits';
-import { DecideRelatedTimeUploadedFileDialogProps } from './decide-related-time-uploaded-file-dialog-props';
-import { DecideRelatedTimeUploadedFileView } from '../views/decide-related-time-uploaded-file-view';
+const props = defineProps<DecideRelatedTimeUploadedFileDialogProps>();
+const emits = defineEmits<DecideRelatedTimeUploadedFileDialogEmits>();
 
-// ˄
-
-export class DecideRelatedTimeUploadedFileDialog {
-    // ˅
-    
-    // ˄
-
-    private props: DecideRelatedTimeUploadedFileDialogProps;
-
-    private emits: DecideRelatedTimeUploadedFileDialogEmits;
-
-    private decide_related_time_uploaded_file_view: DecideRelatedTimeUploadedFileView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+</script>

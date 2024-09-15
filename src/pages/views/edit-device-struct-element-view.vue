@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { EditDeviceStructElementViewEmits } from './edit-device-struct-element-view-emits';
-import { EditDeviceStructElementViewProps } from './edit-device-struct-element-view-props';
+</template>
+<script lang="ts" setup>
+import type { EditDeviceStructElementViewEmits } from './edit-device-struct-element-view-emits';
+import type { EditDeviceStructElementViewProps } from './edit-device-struct-element-view-props';
 
-// ˄
-
-export class EditDeviceStructElementView {
-    // ˅
-    
-    // ˄
-
-    private props: EditDeviceStructElementViewProps;
-
-    private emits: EditDeviceStructElementViewEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<EditDeviceStructElementViewProps>();
+const emits = defineEmits<EditDeviceStructElementViewEmits>();
+</script>

@@ -1,20 +1,6 @@
-// ˅
 'use strict';
 
-import { SidebarProps } from './sidebar-props';
+import type { SidebarProps } from "./sidebar-props";
 
-// ˄
-
-export class KeywordQueryProps implements SidebarProps {
-    // ˅
-    
-    // ˄
-
-    // ˅
-    
-    // ˄
+export interface KeywordQueryProps extends SidebarProps {
 }
-
-// ˅
-
-// ˄

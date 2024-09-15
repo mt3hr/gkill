@@ -1,28 +1,15 @@
+<template>
+    <UploadFileView />
+</template>
+
+<script lang="ts" setup>
 // ˅
-'use strict';
+import type { UploadFileDialogEmits } from './upload-file-dialog-emits';
+import type { UploadFileDialogProps } from './upload-file-dialog-props';
 
-import { UploadFileDialogEmits } from './upload-file-dialog-emits';
-import { UploadFileDialogProps } from './upload-file-dialog-props';
-import { UploadFileView } from '../views/upload-file-view';
+import UploadFileView from '../views/upload-file-view.vue';
 
-// ˄
+const props = defineProps<UploadFileDialogProps>();
+const emits = defineEmits<UploadFileDialogEmits>();
 
-export class UploadFileDialog {
-    // ˅
-    
-    // ˄
-
-    private props: UploadFileDialogProps;
-
-    private emits: UploadFileDialogEmits;
-
-    private upload_file_view: UploadFileView;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+</script>

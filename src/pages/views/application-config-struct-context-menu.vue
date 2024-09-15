@@ -1,25 +1,10 @@
-// ˅
-'use strict';
+<template>
 
-import { ApplicationConfigStructContextMenuEmits } from './application-config-struct-context-menu-emits';
-import { ApplicationConfigStructContextMenuProps } from './application-config-struct-context-menu-props';
+</template>
+<script lang="ts" setup>
+import type { ApplicationConfigStructContextMenuEmits } from './application-config-struct-context-menu-emits';
+import type { ApplicationConfigStructContextMenuProps } from './application-config-struct-context-menu-props';
 
-// ˄
-
-export class ApplicationConfigStructContextMenu {
-    // ˅
-    
-    // ˄
-
-    private props: ApplicationConfigStructContextMenuProps;
-
-    private emits: ApplicationConfigStructContextMenuEmits;
-
-    // ˅
-    
-    // ˄
-}
-
-// ˅
-
-// ˄
+const props = defineProps<ApplicationConfigStructContextMenuProps>();
+const emits = defineEmits<ApplicationConfigStructContextMenuEmits>();
+</script>

@@ -1,67 +1,26 @@
 <template>
-
+    <lantanaTextTypeSelectBox />
 </template>
 <script setup lang="ts">
+import { type Ref, ref } from 'vue';
+import LantanaTextTypeSelectBox from './lantana-text-type-select-box.vue';
+import type { LantanaTextViewEmits } from './lantana-text-view-emits';
+import { LantanaTextData } from '@/classes/lantana/lantana-text-data';
+import { LantanaTextType } from '@/classes/lantana/lantana-text-type';
 
-// ˅
-'use strict';
+const emits = defineEmits<LantanaTextViewEmits>();
+defineExpose({ update_text_content, update_text_type, get_text_data })
 
-import { LantanaTextTypeSelectBox } from './lantana-text-type-select-box.vue';
-import { LantanaTextViewEmits } from './lantana-text-view-emits';
+const lantana_text: Ref<LantanaTextData> = ref(new LantanaTextData());
+const text_data: Ref<string> = ref("");
 
-// ˄
-
-export class LantanaTextView {
-    // ˅
-    
-    // ˄
-
-    private lantana_text: Ref<LantanaTextData>;
-
-    private text_data: Ref<string>;
-
-    private emits: LantanaTextViewEmits;
-
-    private lantanaTextTypeSelectBox: LantanaTextTypeSelectBox;
-
-    private async emit_request_delete_lantana_text(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    private async emit_update_lantana_text(): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    private async update_text_content(text_content: string): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    private async update_text_type(text_type: LantanaTextType): Promise<void> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    async get_text_data(): Promise<LantanaTextData> {
-        // ˅
-        throw new Error('Not implemented');
-        // ˄
-    }
-
-    // ˅
-    
-    // ˄
+async function update_text_content(text_content: string): Promise<void> {
+    throw new Error('Not implemented');
 }
-
-// ˅
-
-// ˄
-
+async function update_text_type(text_type: LantanaTextType): Promise<void> {
+    throw new Error('Not implemented');
+}
+async function get_text_data(): Promise<LantanaTextData> {
+    throw new Error('Not implemented');
+}
 </script>
-<style scoped></style>
