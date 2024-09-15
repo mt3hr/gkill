@@ -1,15 +1,11 @@
-// ˅
 'use strict';
 
 import { Account } from './account';
 import { Repository } from './repository';
 
-// ˄
 
 export class ServerConfig {
-    // ˅
 
-    // ˄
 
     device: string;
 
@@ -44,7 +40,6 @@ export class ServerConfig {
     }
 
     constructor() {
-        // ˅
         this.device = ""
         this.is_local_only_access = true
         this.address = "8888"
@@ -59,14 +54,10 @@ export class ServerConfig {
         this.user_data_directory = ""
         this.repositories = new Array<Repository>()
         this.accounts = new Array<Account>()
-        // ˄
     }
 
-    // ˅
 
-    // ˄
 }
 
-// ˅
 
-// ˄
+

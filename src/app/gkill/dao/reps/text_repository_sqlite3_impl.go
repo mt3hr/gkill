@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -14,18 +13,12 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type textRepositorySQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
-// ˅
 func NewTextRepositorySQLite3Impl(ctx context.Context, filename string) (TextRepository, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -493,7 +486,6 @@ WHERE ID LIKE ?
 	return texts, nil
 }
 func (t *textRepositorySQLite3Impl) AddTextInfo(ctx context.Context, text *Text) error {
-	// ˅
 	sql := `
 INSERT INTO TAG 
   IS_DELETED,
@@ -550,7 +542,4 @@ VASLUES(
 		return err
 	}
 	return nil
-	// ˄
 }
-
-// ˄

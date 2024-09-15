@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type Text struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -35,12 +28,4 @@ type Text struct {
 	UpdateUser string `json:"update_user"`
 
 	Text string `json:"text"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

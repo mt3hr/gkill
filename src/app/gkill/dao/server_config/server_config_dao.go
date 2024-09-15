@@ -1,9 +1,6 @@
-// ˅
 package server_config
 
 import "context"
-
-// ˄
 
 type ServerConfigDAO interface {
 	GetAllServerConfigs(ctx context.Context) ([]*ServerConfig, error)
@@ -17,12 +14,4 @@ type ServerConfigDAO interface {
 	DeleteServerConfig(ctx context.Context, device string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

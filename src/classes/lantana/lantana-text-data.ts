@@ -1,14 +1,10 @@
-// ˅
 'use strict';
 
 import { LantanaTextType } from "./lantana-text-type";
 
-// ˄
 
 export class LantanaTextData {
-    // ˅
-    
-    // ˄
+
 
     type: LantanaTextType;
 
@@ -17,18 +13,13 @@ export class LantanaTextData {
     content: string;
 
     constructor() {
-        // ˅
         this.type = LantanaTextType.text
         this.id = ""
         this.content = ""
-        // ˄
     }
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

@@ -1,14 +1,9 @@
-// ˅
 package account_state
 
 import "time"
 
-// ˄
-
 type FileUploadHistory struct {
-	// ˅
 	ID string `json:"id"`
-	// ˄
 
 	UserID string `json:"user_id"`
 
@@ -23,12 +18,4 @@ type FileUploadHistory struct {
 	SourceAddress string `json:"source_address"`
 
 	UploadTime time.Time `json:"upload_time"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

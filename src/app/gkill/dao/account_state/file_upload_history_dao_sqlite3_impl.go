@@ -1,4 +1,3 @@
-// ˅
 package account_state
 
 import (
@@ -12,17 +11,12 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type fileUploadHistoryDAOSQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewFileUploadHistoryDAOSQLite3Impl(ctx context.Context, filename string) (FileUploadHistoryDAO, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -276,5 +270,3 @@ WHERE ID = ?
 func (f *fileUploadHistoryDAOSQLite3Impl) Close(ctx context.Context) error {
 	return f.db.Close()
 }
-
-// ˄

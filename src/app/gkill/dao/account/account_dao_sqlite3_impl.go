@@ -1,4 +1,3 @@
-// ˅
 package account
 
 import (
@@ -10,17 +9,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// ˄
-
 type accountDAOSQLite3Impl struct {
-	// ˅
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
-	// ˄
 }
 
-// ˅
 func NewAccountDAOSQLite3Impl(ctx context.Context, filename string) (AccountDAO, error) {
 	var err error
 	db, err := sql.Open("sqlite3", filename)
@@ -229,5 +223,3 @@ WHERE USER_ID = ?
 func (a *accountDAOSQLite3Impl) Close(ctx context.Context) error {
 	return a.db.Close()
 }
-
-// ˄

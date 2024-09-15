@@ -1,9 +1,6 @@
-// ˅
 package user_config
 
 import "context"
-
-// ˄
 
 type KFTLTemplateDAO interface {
 	GetAllKFTLTemplates(ctx context.Context) ([]*KFTLTemplate, error)
@@ -21,12 +18,4 @@ type KFTLTemplateDAO interface {
 	DeleteUsersKFTLTemplates(ctx context.Context, userID string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

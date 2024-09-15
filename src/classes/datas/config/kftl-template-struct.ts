@@ -1,12 +1,8 @@
-// ˅
 'use strict';
 
-// ˄
 
 export class KFTLTemplateStruct {
-    // ˅
-    
-    // ˄
+
 
     id: string;
 
@@ -23,7 +19,6 @@ export class KFTLTemplateStruct {
     seq: Number;
 
     constructor() {
-        // ˅
         this.id = ""
         this.user_id = ""
         this.device = ""
@@ -31,14 +26,10 @@ export class KFTLTemplateStruct {
         this.template = ""
         this.parent_folder_id = ""
         this.seq = 0
-        // ˄
     }
 
-    // ˅
-    
-    // ˄
+
 }
 
-// ˅
 
-// ˄
+

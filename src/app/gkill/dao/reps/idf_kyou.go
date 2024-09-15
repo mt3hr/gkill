@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type IDFKyou struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -41,12 +34,4 @@ type IDFKyou struct {
 	FileURL string `json:"file_url"`
 
 	IsImage bool `json:"is_image"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

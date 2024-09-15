@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type URLogRepositories []URLogRepository
 
 func (u URLogRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
-	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
 	})
 	return matchKyousList, nil
-	// ˄
 }
 
 func (u URLogRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
-	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -157,11 +151,9 @@ loop:
 	}
 
 	return matchKyou, nil
-	// ˄
 }
 
 func (u URLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -237,18 +229,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (u URLogRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements URLogReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (u URLogRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -286,17 +274,13 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (u URLogRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "URLogReps", nil
-	// ˄
 }
 
 func (u URLogRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -334,11 +318,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (u URLogRepositories) FindURLog(ctx context.Context, queryJSON string) ([]*URLog, error) {
-	// ˅
 	matchURLogs := map[string]*URLog{}
 	existErr := false
 	var err error
@@ -413,11 +395,9 @@ loop:
 		return matchURLogsList[i].RelatedTime.After(matchURLogsList[j].RelatedTime)
 	})
 	return matchURLogsList, nil
-	// ˄
 }
 
 func (u URLogRepositories) GetURLog(ctx context.Context, id string) (*URLog, error) {
-	// ˅
 	matchURLog := &URLog{}
 	matchURLog = nil
 	existErr := false
@@ -480,11 +460,9 @@ loop:
 	}
 
 	return matchURLog, nil
-	// ˄
 }
 
 func (u URLogRepositories) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
-	// ˅
 	kyouHistories := map[string]*URLog{}
 	existErr := false
 	var err error
@@ -560,16 +538,9 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (u URLogRepositories) AddURLogInfo(ctx context.Context, urlog *URLog) error {
-	// ˅
 	err := fmt.Errorf("not implements URLogReps.AddURLogInfo")
 	return err
-	// ˄
 }
-
-// ˅
-
-// ˄

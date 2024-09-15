@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type URLog struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -45,12 +38,4 @@ type URLog struct {
 	FaviconImage string `json:"favicon_image"`
 
 	ThumbnailImage string `json:"thumbnail_image"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

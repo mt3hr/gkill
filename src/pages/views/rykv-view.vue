@@ -14,7 +14,6 @@
 </template>
 <script setup lang="ts">
 
-// ˅
 import { type Ref, ref } from 'vue';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 import { Kyou } from '@/classes/datas/kyou';

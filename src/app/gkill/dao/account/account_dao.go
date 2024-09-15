@@ -1,9 +1,6 @@
-// ˅
 package account
 
 import "context"
-
-// ˄
 
 type AccountDAO interface {
 	GetAllAccounts(ctx context.Context) ([]*Account, error)
@@ -17,12 +14,4 @@ type AccountDAO interface {
 	DeleteAccount(ctx context.Context, userID string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

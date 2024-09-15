@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type KmemoRepositories []KmemoRepository
 
 func (k KmemoRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
-	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
 	})
 	return matchKyousList, nil
-	// ˄
 }
 
 func (k KmemoRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
-	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -157,11 +151,9 @@ loop:
 	}
 
 	return matchKyou, nil
-	// ˄
 }
 
 func (k KmemoRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -237,18 +229,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (k KmemoRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements KmemoReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (k KmemoRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -286,17 +274,13 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (k KmemoRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "KmemoReps", nil
-	// ˄
 }
 
 func (k KmemoRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -334,11 +318,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (k KmemoRepositories) FindKmemo(ctx context.Context, queryJSON string) ([]*Kmemo, error) {
-	// ˅
 	matchKmemos := map[string]*Kmemo{}
 	existErr := false
 	var err error
@@ -413,11 +395,9 @@ loop:
 		return matchKmemosList[i].RelatedTime.After(matchKmemosList[j].RelatedTime)
 	})
 	return matchKmemosList, nil
-	// ˄
 }
 
 func (k KmemoRepositories) GetKmemo(ctx context.Context, id string) (*Kmemo, error) {
-	// ˅
 	matchKmemo := &Kmemo{}
 	matchKmemo = nil
 	existErr := false
@@ -480,11 +460,9 @@ loop:
 	}
 
 	return matchKmemo, nil
-	// ˄
 }
 
 func (k KmemoRepositories) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
-	// ˅
 	kyouHistories := map[string]*Kmemo{}
 	existErr := false
 	var err error
@@ -560,16 +538,9 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (k KmemoRepositories) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
-	// ˅
 	err := fmt.Errorf("not implements KmemoReps.AddKmemoInfo")
 	return err
-	// ˄
 }
-
-// ˅
-
-// ˄

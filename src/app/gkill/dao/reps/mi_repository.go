@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type MiRepository interface {
 	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
@@ -29,12 +26,4 @@ type MiRepository interface {
 	AddMiInfo(ctx context.Context, mi *Mi) error
 
 	GetBoardNames(ctx context.Context) ([]string, error)
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

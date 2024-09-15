@@ -1,15 +1,8 @@
-// ˅
 package reps
 
 import "time"
 
-// ˄
-
 type ReKyou struct {
-	// ˅
-
-	// ˄
-
 	IsDeleted bool `json:"is_deleted"`
 
 	ID string `json:"id"`
@@ -37,12 +30,4 @@ type ReKyou struct {
 	UpdateDevice string `json:"update_device"`
 
 	TargetID string `json:"target_id"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

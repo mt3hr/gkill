@@ -1,4 +1,3 @@
-// ˅
 package reps
 
 import (
@@ -10,12 +9,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
-// ˄
-
 type LantanaRepositories []LantanaRepository
 
 func (l LantanaRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
-	// ˅
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -90,11 +86,9 @@ loop:
 		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
 	})
 	return matchKyousList, nil
-	// ˄
 }
 
 func (l LantanaRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
-	// ˅
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -157,11 +151,9 @@ loop:
 	}
 
 	return matchKyou, nil
-	// ˄
 }
 
 func (l LantanaRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	// ˅
 	kyouHistories := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -237,18 +229,14 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (l LantanaRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	// ˅
 	err := fmt.Errorf("not implements LantanaReps.GetPath")
 	return "", err
-	// ˄
 }
 
 func (l LantanaRepositories) UpdateCache(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -286,17 +274,13 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (l LantanaRepositories) GetRepName(ctx context.Context) (string, error) {
-	// ˅
 	return "LantanaReps", nil
-	// ˄
 }
 
 func (l LantanaRepositories) Close(ctx context.Context) error {
-	// ˅
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -334,11 +318,9 @@ errloop:
 	}
 
 	return nil
-	// ˄
 }
 
 func (l LantanaRepositories) FindLantana(ctx context.Context, queryJSON string) ([]*Lantana, error) {
-	// ˅
 	matchLantanas := map[string]*Lantana{}
 	existErr := false
 	var err error
@@ -413,11 +395,9 @@ loop:
 		return matchLantanasList[i].RelatedTime.After(matchLantanasList[j].RelatedTime)
 	})
 	return matchLantanasList, nil
-	// ˄
 }
 
 func (l LantanaRepositories) GetLantana(ctx context.Context, id string) (*Lantana, error) {
-	// ˅
 	matchLantana := &Lantana{}
 	matchLantana = nil
 	existErr := false
@@ -480,11 +460,9 @@ loop:
 	}
 
 	return matchLantana, nil
-	// ˄
 }
 
 func (l LantanaRepositories) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
-	// ˅
 	kyouHistories := map[string]*Lantana{}
 	existErr := false
 	var err error
@@ -560,16 +538,9 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
-	// ˄
 }
 
 func (l LantanaRepositories) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
-	// ˅
 	err := fmt.Errorf("not implements LantanaReps.AddLantanaInfo")
 	return err
-	// ˄
 }
-
-// ˅
-
-// ˄

@@ -1,13 +1,6 @@
-// ˅
 package user_config
 
-// ˄
-
 type ApplicationConfig struct {
-	// ˅
-
-	// ˄
-
 	UserID string `json:"user_id"`
 
 	Device string `json:"device"`
@@ -31,12 +24,4 @@ type ApplicationConfig struct {
 	DeviceStruct []*DeviceStruct `json:"device_struct"`
 
 	RepTypeStruct []*RepTypeStruct `json:"rep_type_struct"`
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

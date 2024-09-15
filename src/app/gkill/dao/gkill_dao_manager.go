@@ -1,4 +1,3 @@
-// ˅
 package dao
 
 import (
@@ -19,24 +18,14 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 )
 
-// ˄
-
 type GkillDAOManager struct {
-	// ˅
-
-	// ˄
-
 	gkillRepositories map[string]map[string]*reps.GkillRepositories
 
 	ConfigDAOs *ConfigDAOs
 
-	// ˅
-
 	router    *mux.Router
 	autoIDF   *bool
 	IDFIgnore []string
-
-	// ˄
 }
 
 func NewGkillDAOManager(autoIDF bool) (*GkillDAOManager, error) {
@@ -122,7 +111,6 @@ func (g *GkillDAOManager) GetRouter() *mux.Router {
 }
 
 func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.GkillRepositories, error) {
-	// ˅
 	ctx := context.TODO()
 
 	// nilだったら初期化する
@@ -337,7 +325,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		repositories, _ = repositoriesInDevice[device]
 	}
 	return repositories, nil
-	// ˄
 }
 
 func (g *GkillDAOManager) Close() error {
@@ -405,7 +392,6 @@ func (g *GkillDAOManager) Close() error {
 }
 
 func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (bool, error) {
-	// ˅
 	ctx := context.TODO()
 	repsInDevices, exist := g.gkillRepositories[userID]
 	if !exist {
@@ -421,13 +407,8 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 		return false, err
 	}
 	return true, nil
-	// ˄
 }
 
 type closable interface {
 	Close(ctx context.Context) error
 }
-
-// ˅
-
-// ˄

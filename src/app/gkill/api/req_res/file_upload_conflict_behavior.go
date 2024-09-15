@@ -1,7 +1,4 @@
-// ˅
 package req_res
-
-// ˄
 
 type FileUploadConflictBehavior string
 
@@ -11,12 +8,4 @@ const (
 	Rename FileUploadConflictBehavior = "rename"
 
 	Merge FileUploadConflictBehavior = "merge"
-
-	// ˅
-
-	// ˄
 )
-
-// ˅
-
-// ˄

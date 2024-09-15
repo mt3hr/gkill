@@ -1,9 +1,6 @@
-// ˅
 package account_state
 
 import "context"
-
-// ˄
 
 type LoginSessionDAO interface {
 	GetAllLoginSessions(ctx context.Context) ([]*LoginSession, error)
@@ -19,12 +16,4 @@ type LoginSessionDAO interface {
 	DeleteLoginSession(ctx context.Context, sessionID string) (bool, error)
 
 	Close(ctx context.Context) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

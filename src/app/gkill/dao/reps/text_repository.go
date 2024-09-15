@@ -1,9 +1,6 @@
-// ˅
 package reps
 
 import "context"
-
-// ˄
 
 type TextRepository interface {
 	FindTexts(ctx context.Context, queryJSON string) ([]*Text, error)
@@ -23,12 +20,4 @@ type TextRepository interface {
 	GetTextHistories(ctx context.Context, id string) ([]*Text, error)
 
 	AddTextInfo(ctx context.Context, text *Text) error
-
-	// ˅
-
-	// ˄
 }
-
-// ˅
-
-// ˄

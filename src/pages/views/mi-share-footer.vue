@@ -1,6 +1,6 @@
 <template>
-    <ShareButton/>
-    <ManageShareButton/>
+    <ShareButton />
+    <ManageShareButton />
 </template>
 <script setup lang="ts">
 import ManageShareButton from './manage-share-button.vue';
