@@ -22,5 +22,4 @@ export interface KFTLDialogEmits {
     (e: 'registered_timeis', timeis: TimeIs): void
     (e: 'registered_urlog', urlog: URLog): void
     (e: 'updated_timeis', timeis: TimeIs): void
-    (e: 'requested_close_dialog'): void
 }

@@ -13,7 +13,7 @@ import type { TimeIs } from "@/classes/datas/time-is";
 import type { URLog } from "@/classes/datas/ur-log";
 
 export interface DnoteEmits {
-    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'registered_kmemo', kmemo: Kmemo): void
     (e: 'registered_lantana', lantana: Lantana): void

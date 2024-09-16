@@ -5,5 +5,5 @@ import type { GkillPropsBase } from "../views/gkill-props-base";
 
 export interface ConfirmGenerateTLSFilesDialogProps extends GkillPropsBase {
     server_config: ServerConfig;
-    is_show: boolean;
+   
 }

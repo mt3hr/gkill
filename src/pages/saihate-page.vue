@@ -7,7 +7,6 @@
         <LantanaDialog :is_show="is_show_lantana_dialog" :app_content_height="app_content_height"
             :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="write_errors" @received_messages="write_messages" />
-
         <KFTLDialog :is_show="is_show_kftl_dialog" :app_content_height="app_content_height"
             :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="write_errors" @received_messages="write_messages" />

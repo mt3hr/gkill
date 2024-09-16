@@ -6,7 +6,7 @@ import type { Account } from "@/classes/datas/config/account";
 import type { ServerConfig } from "@/classes/datas/config/server-config";
 
 export interface CreateAccountViewEmits {
-    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'added_account', account: Account): void
     (e: 'requested_reload_server_config', server_config: ServerConfig): void
