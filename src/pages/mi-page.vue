@@ -7,9 +7,10 @@
         <miView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
             @received_messages="write_messages" />
-        <ApplicationConfigDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+        <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
+            :app_content_height="app_content_height" :app_content_width="app_content_width"
             :is_show="is_show_application_config_dialog" @received_errors="write_errors"
-            @reveived_messages="write_messages" @requested_reload_application_config="load_application_config" />
+            @received_messages="write_messages" @requested_reload_application_config="load_application_config" />
     </v-main>
 </template>
 

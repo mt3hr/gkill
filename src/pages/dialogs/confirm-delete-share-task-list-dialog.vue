@@ -1,5 +1,10 @@
 <template>
-    <ConfirmDeleteShareTaskListView />
+    <v-dialog v-model="is_show_dialog">
+        <ConfirmDeleteShareTaskListView :application_config="application_config" :gkill_api="gkill_api"
+            :share_mi_task_list_info="share_mi_task_list_info"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)" />
+    </v-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -11,6 +16,15 @@ import ConfirmDeleteShareTaskListView from '../views/confirm-delete-share-task-l
 
 const props = defineProps<ConfirmDeleteShareTaskLinkDialogProps>();
 const emits = defineEmits<ConfirmDeleteShareTaskLinkDialogEmits>();
+defineExpose({ show, hide })
 
+const is_show_dialog: Ref<boolean> = ref(false)
 const cloned_share_mi_task_list_info: Ref<ShareMiTaskListInfo> = ref(await props.share_mi_task_list_info.clone());
+
+async function show(): Promise<void> {
+    is_show_dialog.value = true
+}
+async function hide(): Promise<void> {
+    is_show_dialog.value = false
+}
 </script>

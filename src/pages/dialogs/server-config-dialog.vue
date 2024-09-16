@@ -1,5 +1,10 @@
 <template>
-    <ServerConfigView />
+    <v-dialog v-model="is_show_dialog">
+        <ServerConfigView :application_config="application_config" :gkill_api="gkill_api" :server_config="server_config"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)" />
+    </v-dialog>
 </template>
 <script lang="ts" setup>
 import { type Ref, ref } from 'vue';
@@ -11,14 +16,15 @@ import ServerConfigView from '../views/server-config-view.vue';
 
 const props = defineProps<ServerConfigDialogProps>();
 const emits = defineEmits<ServerConfigDialogEmits>();
-const cloned_server_config: Ref<ServerConfig> = ref(async () => {
-    const req = new GetServerConfigRequest()
-    req.session_id = ""//TODO セッションID取得
-    const res = await props.gkill_api.get_server_config(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    return res.server_config
-});
+defineExpose({ show, hide })
+
+const is_show_dialog: Ref<boolean> = ref(false)
+
+async function show(): Promise<void> {
+    is_show_dialog.value = true
+}
+async function hide(): Promise<void> {
+    is_show_dialog.value = false
+}
+const cloned_server_config: Ref<ServerConfig> = ref(await props.server_config.clone())
 </script>

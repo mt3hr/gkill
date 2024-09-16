@@ -5,7 +5,7 @@ import type { GkillMessage } from "@/classes/api/gkill-message";
 import type { KFTLTemplateStructElementData } from "@/classes/datas/config/kftl-template-struct-element-data";
 
 export interface EditKFTLTemplateStructElementViewEmits {
-    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'requested_update_kftl_template_struct_element', kftl_template_struct_element: KFTLTemplateStructElementData): void
 }

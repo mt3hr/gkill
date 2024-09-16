@@ -5,5 +5,5 @@ import type { GkillPropsBase } from "../views/gkill-props-base";
 
 export interface AddRepDialogProps extends GkillPropsBase {
     server_config: ServerConfig;
-    is_show: boolean;
+   
 }

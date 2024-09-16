@@ -5,7 +5,7 @@ import type { GkillMessage } from "@/classes/api/gkill-message";
 import type { ServerConfig } from "@/classes/datas/config/server-config";
 
 export interface ServerConfigDialogEmits {
-    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'requested_reload_server_config', server_config: ServerConfig): void
 }

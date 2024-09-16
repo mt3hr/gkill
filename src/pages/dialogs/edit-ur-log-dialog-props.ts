@@ -5,5 +5,4 @@ import type { KyouViewPropsBase } from "../views/kyou-view-props-base";
 
 export interface EditURLogDialogProps extends KyouViewPropsBase {
     urlog: URLog;
-    is_show: boolean;
 }

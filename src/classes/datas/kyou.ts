@@ -8,6 +8,7 @@ import { Kmemo } from './kmemo';
 import { Lantana } from './lantana';
 import { Mi } from './mi';
 import { Nlog } from './nlog';
+import { ReKyou } from './re-kyou';
 import { TimeIs } from './time-is';
 import { URLog } from './ur-log';
 
@@ -34,6 +35,8 @@ export class Kyou extends InfoBase {
     typed_idf_kyou: IDFKyou;
 
     typed_git_commit_log: GitCommitLog;
+
+    typed_rekyou: ReKyou;
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         throw new Error('Not implemented');
@@ -83,6 +86,10 @@ export class Kyou extends InfoBase {
         throw new Error('Not implemented');
     }
 
+    async load_typed_rekyou(): Promise<Array<GkillError>> {
+        throw new Error('Not implemented');
+    }
+
     async clear_typed_datas(): Promise<Array<GkillError>> {
         throw new Error('Not implemented');
     }
@@ -112,6 +119,8 @@ export class Kyou extends InfoBase {
         this.typed_idf_kyou = new IDFKyou()
 
         this.typed_git_commit_log = new GitCommitLog()
+
+        this.typed_rekyou = new ReKyou()
     }
 
 
