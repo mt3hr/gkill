@@ -6,7 +6,7 @@ import type { Kyou } from "@/classes/datas/kyou";
 import type { Tag } from "@/classes/datas/tag";
 
 export interface UploadFileDialogEmits {
-    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'registered_kyou', kyou: Kyou): void
     (e: 'updated_kyou', kyou: Kyou): void
@@ -17,5 +17,4 @@ export interface UploadFileDialogEmits {
     (e: 'registered_text', text: Text): void
     (e: 'updated_text', text: Text): void
     (e: 'deleted_text', text: Text): void
-    (e: 'requested_close_dialog'): void
 }

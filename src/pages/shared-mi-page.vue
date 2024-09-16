@@ -6,7 +6,7 @@
     <v-main class="main">
         <miSharedTaskView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :share_id="share_mi_id" :application_config="null" :gkill_api="gkill_api" @received_errors="write_errors"
-            @reveived_messages="write_messages" />
+            @received_messages="write_messages" />
     </v-main>
 </template>
 
