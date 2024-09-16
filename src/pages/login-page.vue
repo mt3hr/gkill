@@ -4,8 +4,8 @@
         <v-spacer />
     </v-app-bar>
     <v-main class="main">
-        <LoginView :app_content_height="app_content_height" :app_content_width="app_content_width"
-            @received_errors="write_errors" @reveived_messages="write_messages"
+        <LoginView :gkill_api="gkill_api" :app_content_height="app_content_height"
+            :app_content_width="app_content_width" @received_errors="write_errors" @received_messages="write_messages"
             @successed_login="handle_success_login" />
     </v-main>
 </template>
@@ -18,6 +18,7 @@ import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 
 import LoginView from './views/login-view.vue';
+import { ApplicationConfig } from '@/classes/datas/config/application-config';
 
 const actual_height: Ref<Number> = ref(0);
 const element_height: Ref<Number> = ref(0);

@@ -6,7 +6,7 @@ import type { Kyou } from "@/classes/datas/kyou";
 import type { Tag } from "@/classes/datas/tag";
 
 export interface KyouListViewEmits {
-    (e: 'reveived_messages', message: Array<GkillMessage>): void
+    (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'requested_reload_list',): void
     (e: 'requested_switch_list_style', is_image_only: boolean): void

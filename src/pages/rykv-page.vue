@@ -6,11 +6,13 @@
     <v-main class="main">
         <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
-            @reveived_messages="write_messages" />
-        <ApplicationConfigDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+            @received_messages="write_messages" />
+        <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
+            :app_content_height="app_content_height" :app_content_width="app_content_width"
             :is_show="is_show_application_config_dialog" @received_errors="write_errors"
-            @reveived_messages="write_messages" @requested_reload_application_config="load_application_config" />
-        <UploadFileDialog />
+            @received_messages="write_messages" @requested_reload_application_config="load_application_config" />
+        <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :application_config="application_config" :gkill_api="gkill_api" />
     </v-main>
 </template>
 

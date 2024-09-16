@@ -1,5 +1,7 @@
 <template>
-    <TagView />
+    <TagView :application_config="application_config" :gkill_api="gkill_api" :tag="tag"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" />
 </template>
 <script lang="ts" setup>
 import { type Ref, computed, ref } from 'vue';

@@ -32,19 +32,19 @@ export class ApplicationConfig {
     async clone(): Promise<ApplicationConfig> {
         throw new Error('Not implemented');
     }
-    private async parse_kftl_template(): Promise<Array<GkillError>> {
+    async parse_kftl_template(): Promise<Array<GkillError>> {
         throw new Error('Not implemented');
     }
-    private async parse_tag_struct(): Promise<Array<GkillError>> {
+    async parse_tag_struct(): Promise<Array<GkillError>> {
         throw new Error('Not implemented');
     }
-    private async parse_rep_struct(): Promise<Array<GkillError>> {
+    async parse_rep_struct(): Promise<Array<GkillError>> {
         throw new Error('Not implemented');
     }
-    private async parse_device_struct(): Promise<Array<GkillError>> {
+    async parse_device_struct(): Promise<Array<GkillError>> {
         throw new Error('Not implemented');
     }
-    private async parse_rep_type_struct(): Promise<Array<GkillError>> {
+    async parse_rep_type_struct(): Promise<Array<GkillError>> {
         throw new Error('Not implemented');
     }
     constructor() {

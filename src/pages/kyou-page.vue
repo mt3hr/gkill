@@ -1,6 +1,20 @@
 <template>
-    <KyouView />
-    <ApplicationConfigDialog />
+    <v-app-bar class="app_bar" app color="indigo" flat dark :height="app_title_bar_height_px">
+        <v-toolbar-title>mi</v-toolbar-title>
+        <v-spacer />
+    </v-app-bar>
+    <v-main class="main">
+        <KyouView :application_config="application_config" :gkill_api="gkill_api"
+            :highlight_targets="hightlight_targets" :is_image_view="is_image_view" :kyou="kyou" :last_added_tag="''"
+            :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
+            :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+            :show_timeis_plaing_end_button="true" @received_errors="write_errors" @received_messages="write_messages" />
+        <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
+            :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :is_show="is_show_application_config_dialog" @received_errors="write_errors"
+            @received_messages="write_messages" @requested_reload_application_config="load_application_config" />
+    </v-main>
+
 </template>
 <script lang="ts" setup>
 import { GkillAPI } from '@/classes/api/gkill-api';
@@ -9,8 +23,10 @@ import type { GkillMessage } from '@/classes/api/gkill-message';
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request';
 import { ApplicationConfig } from '@/classes/datas/config/application-config';
 import { type Ref, ref, computed } from 'vue';
-import ApplicationConfigDialog from '../dialogs/application-config-dialog.vue';
-import KyouView from './kyou-view.vue';
+import ApplicationConfigDialog from './dialogs/application-config-dialog.vue';
+import KyouView from './views/kyou-view.vue';
+import { InfoIdentifier } from '@/classes/datas/info-identifier';
+import { Kyou } from '@/classes/datas/kyou';
 
 
 const actual_height: Ref<Number> = ref(0);
@@ -24,6 +40,9 @@ const app_content_height: Ref<Number> = ref(0);
 const app_content_width: Ref<Number> = ref(0);
 
 const is_show_application_config_dialog: Ref<boolean> = ref(false);
+const hightlight_targets: Ref<Array<InfoIdentifier>> = ref(new Array<InfoIdentifier>())
+const is_image_view: Ref<boolean> = ref(false)
+const kyou: Ref<Kyou> = ref(new Kyou())
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
@@ -74,5 +93,6 @@ window.addEventListener('resize', () => {
 
 resize_content()
 load_application_config()
+
 
 </script>
