@@ -6,5 +6,5 @@ import type { GkillPropsBase } from "../views/gkill-props-base";
 export interface ConfirmDeleteRepDialogProps extends GkillPropsBase {
     server_config: ServerConfig;
     rep_id: string;
-    is_show: boolean;
+   
 }

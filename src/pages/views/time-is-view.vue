@@ -1,5 +1,6 @@
 <template>
-    <TimeIsContextMenu />
+    <TimeIsContextMenu :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+        :kyou="kyou" :last_added_tag="last_added_tag" />
 </template>
 <script setup lang="ts">
 import { type Ref, ref } from 'vue';

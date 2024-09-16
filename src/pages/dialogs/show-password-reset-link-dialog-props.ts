@@ -6,5 +6,4 @@ import type { GkillPropsBase } from "../views/gkill-props-base";
 export interface ShowPasswordResetLinkDialogProps extends GkillPropsBase {
     server_config: ServerConfig;
     user_id: string;
-    is_show: boolean;
 }
