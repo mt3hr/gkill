@@ -82,13 +82,13 @@ FROM KFTL_TEMPLATE
 		default:
 			kftlTemplate := &KFTLTemplate{}
 			err = rows.Scan(
-				kftlTemplate.ID,
-				kftlTemplate.UserID,
-				kftlTemplate.Device,
-				kftlTemplate.Title,
-				kftlTemplate.Template,
-				kftlTemplate.ParentFolderID,
-				kftlTemplate.Seq,
+				&kftlTemplate.ID,
+				&kftlTemplate.UserID,
+				&kftlTemplate.Device,
+				&kftlTemplate.Title,
+				&kftlTemplate.Template,
+				&kftlTemplate.ParentFolderID,
+				&kftlTemplate.Seq,
 			)
 			kftlTemplates = append(kftlTemplates, kftlTemplate)
 		}
@@ -128,13 +128,13 @@ WHERE USER_ID = ? DEVICE = ?
 		default:
 			kftlTemplate := &KFTLTemplate{}
 			err = rows.Scan(
-				kftlTemplate.ID,
-				kftlTemplate.UserID,
-				kftlTemplate.Device,
-				kftlTemplate.Title,
-				kftlTemplate.Template,
-				kftlTemplate.ParentFolderID,
-				kftlTemplate.Seq,
+				&kftlTemplate.ID,
+				&kftlTemplate.UserID,
+				&kftlTemplate.Device,
+				&kftlTemplate.Title,
+				&kftlTemplate.Template,
+				&kftlTemplate.ParentFolderID,
+				&kftlTemplate.Seq,
 			)
 			kftlTemplates = append(kftlTemplates, kftlTemplate)
 		}
