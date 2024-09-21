@@ -1,14 +1,12 @@
-'use strict';
-
+'use strict'
 
 export class DeviceStructElementData {
 
+    id: string
 
-    id: string;
+    device_name: string
 
-    device_name: string;
-
-    check_when_inited: boolean;
+    check_when_inited: boolean
 
     children: Array<DeviceStructElementData> | null
 
@@ -19,8 +17,6 @@ export class DeviceStructElementData {
         this.children = null
     }
 
-
 }
-
 
 

@@ -26,20 +26,20 @@
         @request_open_share_mi_dialog="show_share_mi_dialog()" />
 </template>
 <script setup lang="ts">
-import { FindMiQuery } from '@/classes/api/find_query/find-mi-query';
-import miBoardQuery from './mi-board-query.vue';
-import miExtructCheckStateQuery from './mi-extruct-check-state-query.vue';
-import miKeywordQuery from './mi-keyword-query.vue';
-import miShareFooter from './mi-share-footer.vue';
-import miSideBarHeader from './mi-side-bar-header.vue';
-import miSortTypeQuery from './mi-sort-type-query.vue';
-import miTagQuery from './mi-tag-query.vue';
-import type { miQueryEditorSidebarEmits } from './mi-query-editor-sidebar-emits';
-import type { miQueryEditorSidebarProps } from './mi-query-editor-sidebar-props';
-import { type Ref, ref } from 'vue';
+import { FindMiQuery } from '@/classes/api/find_query/find-mi-query'
+import miBoardQuery from './mi-board-query.vue'
+import miExtructCheckStateQuery from './mi-extruct-check-state-query.vue'
+import miKeywordQuery from './mi-keyword-query.vue'
+import miShareFooter from './mi-share-footer.vue'
+import miSideBarHeader from './mi-side-bar-header.vue'
+import miSortTypeQuery from './mi-sort-type-query.vue'
+import miTagQuery from './mi-tag-query.vue'
+import type { miQueryEditorSidebarEmits } from './mi-query-editor-sidebar-emits'
+import type { miQueryEditorSidebarProps } from './mi-query-editor-sidebar-props'
+import { type Ref, ref } from 'vue'
 
-const props = defineProps<miQueryEditorSidebarProps>();
-const emits = defineEmits<miQueryEditorSidebarEmits>();
+const props = defineProps<miQueryEditorSidebarProps>()
+const emits = defineEmits<miQueryEditorSidebarEmits>()
 defineExpose(generate_query)
 
 const default_query: Ref<FindMiQuery> = ref(function (): FindMiQuery {
@@ -48,24 +48,23 @@ const default_query: Ref<FindMiQuery> = ref(function (): FindMiQuery {
 }())
 
 
-
 function generate_query(): FindMiQuery {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 function generate_cleard_keyword_query(): FindMiQuery {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 function generate_cleard_tag_query(): FindMiQuery {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 async function show_manage_share_mi_dialog(): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 async function show_share_mi_dialog(): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 </script>

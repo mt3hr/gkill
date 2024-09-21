@@ -1,44 +1,42 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from '../api/gkill-error';
-import { InfoBase } from './info-base';
-
+import type { GkillError } from '../api/gkill-error'
+import { InfoBase } from './info-base'
 
 export class Mi extends InfoBase {
 
+    title: string
 
-    title: string;
+    is_checked: boolean
 
-    is_checked: boolean;
+    board_name: string
 
-    board_name: string;
+    limit_time: Date
 
-    limit_time: Date;
+    estimate_start_time: Date
 
-    estimate_start_time: Date;
+    estimate_end_time: Date
 
-    estimate_end_time: Date;
-
-    attached_histories: Array<Mi>;
+    attached_histories: Array<Mi>
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clone(): Promise<Mi> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     constructor() {
@@ -58,8 +56,6 @@ export class Mi extends InfoBase {
         this.attached_histories = new Array<Mi>()
     }
 
-
 }
-
 
 

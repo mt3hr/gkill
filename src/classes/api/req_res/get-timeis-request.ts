@@ -1,20 +1,16 @@
-'use strict';
+'use strict'
 
-import { GkillAPIRequest } from '../gkill-api-request';
-
+import { GkillAPIRequest } from '../gkill-api-request'
 
 export class GetTimeisRequest extends GkillAPIRequest {
 
-
-    id: string;
+    id: string
 
     constructor() {
         super()
         this.id = ""
     }
 
-
 }
-
 
 

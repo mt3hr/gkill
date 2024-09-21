@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"

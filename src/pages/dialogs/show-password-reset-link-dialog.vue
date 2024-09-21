@@ -8,13 +8,13 @@
 
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { ShowPasswordResetLinkDialogEmits } from './show-password-reset-link-dialog-emits';
-import type { ShowPasswordResetLinkDialogProps } from './show-password-reset-link-dialog-props';
-import ShowPasswordResetLinkView from '../views/show-password-reset-link-view.vue';
+import { type Ref, ref } from 'vue'
+import type { ShowPasswordResetLinkDialogEmits } from './show-password-reset-link-dialog-emits'
+import type { ShowPasswordResetLinkDialogProps } from './show-password-reset-link-dialog-props'
+import ShowPasswordResetLinkView from '../views/show-password-reset-link-view.vue'
 
-const props = defineProps<ShowPasswordResetLinkDialogProps>();
-const emits = defineEmits<ShowPasswordResetLinkDialogEmits>();
+const props = defineProps<ShowPasswordResetLinkDialogProps>()
+const emits = defineEmits<ShowPasswordResetLinkDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

@@ -1,18 +1,14 @@
-'use strict';
-
+'use strict'
 
 export class TextAreaInfo {
 
-
-    text_area_element_id: string;
+    text_area_element_id: string
 
     constructor() {
-        this.text_area_element_id = "";
+        this.text_area_element_id = ""
 
     }
 
-
 }
-
 
 

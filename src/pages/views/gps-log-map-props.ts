@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-import type { GkillPropsBase } from "./gkill-props-base";
+import type { GkillPropsBase } from "./gkill-props-base"
 
 export interface GPSLogMapProps extends GkillPropsBase {
-    start_date: Date;
-    end_date: Date;
+    start_date: Date
+    end_date: Date
 }

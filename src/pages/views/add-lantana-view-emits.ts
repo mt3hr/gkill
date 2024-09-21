@@ -1,10 +1,10 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from "@/classes/api/gkill-error";
-import type { GkillMessage } from "@/classes/api/gkill-message";
-import type { Kmemo } from "@/classes/datas/kmemo";
-import type { Lantana } from "@/classes/datas/lantana";
-import type { Tag } from "@/classes/datas/tag";
+import type { GkillError } from "@/classes/api/gkill-error"
+import type { GkillMessage } from "@/classes/api/gkill-message"
+import type { Kmemo } from "@/classes/datas/kmemo"
+import type { Lantana } from "@/classes/datas/lantana"
+import type { Tag } from "@/classes/datas/tag"
 
 export interface AddLantanaViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void

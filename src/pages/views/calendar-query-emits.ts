@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 export interface CalendarQueryEmits {
     (e: 'request_clear_calendar_query'): void

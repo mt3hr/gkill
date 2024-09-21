@@ -29,20 +29,20 @@
         @request_clear_calendar_query="emits('updated_query', generate_cleard_calendar_query())" />
 </template>
 <script setup lang="ts">
-import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
-import CalendarQuery from './calendar-query.vue';
-import KeywordQuery from './keyword-query.vue';
-import MapQuery from './map-query.vue';
-import RepQuery from './rep-query.vue';
-import SidebarHeader from './sidebar-header.vue';
-import TagQuery from './tag-query.vue';
-import TimeIsQuery from './time-is-query.vue';
-import type { rykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-emits';
-import type { rykvQueryEditorSidebarProps } from './rykv-query-editor-sidebar-props';
-import { type Ref, ref } from 'vue';
+import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import CalendarQuery from './calendar-query.vue'
+import KeywordQuery from './keyword-query.vue'
+import MapQuery from './map-query.vue'
+import RepQuery from './rep-query.vue'
+import SidebarHeader from './sidebar-header.vue'
+import TagQuery from './tag-query.vue'
+import TimeIsQuery from './time-is-query.vue'
+import type { rykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-emits'
+import type { rykvQueryEditorSidebarProps } from './rykv-query-editor-sidebar-props'
+import { type Ref, ref } from 'vue'
 
-const props = defineProps<rykvQueryEditorSidebarProps>();
-const emits = defineEmits<rykvQueryEditorSidebarEmits>();
+const props = defineProps<rykvQueryEditorSidebarProps>()
+const emits = defineEmits<rykvQueryEditorSidebarEmits>()
 defineExpose(generate_query)
 
 const default_query: Ref<FindKyouQuery> = ref(function (): FindKyouQuery {
@@ -51,30 +51,30 @@ const default_query: Ref<FindKyouQuery> = ref(function (): FindKyouQuery {
 }())
 
 function generate_query(): FindKyouQuery {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 function generate_cleard_keyword_query(): FindKyouQuery {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 function generate_cleard_timeis_query(): FindKyouQuery {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 function generate_cleard_rep_query(): FindKyouQuery {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 function generate_cleard_tag_query(): FindKyouQuery {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 function generate_cleard_map_query(): FindKyouQuery {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 function generate_cleard_calendar_query(): FindKyouQuery {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 </script>

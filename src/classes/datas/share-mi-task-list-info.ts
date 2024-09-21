@@ -1,14 +1,14 @@
-'use strict';
+'use strict'
 
 export class ShareMiTaskListInfo {
-    user_id: string;
-    device: string;
-    share_title: string;
-    is_share_detail: boolean;
-    share_id: string;
-    find_query_json: string;
+    user_id: string
+    device: string
+    share_title: string
+    is_share_detail: boolean
+    share_id: string
+    find_query_json: string
     async clone(): Promise<ShareMiTaskListInfo> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
     constructor() {
         this.user_id = ""

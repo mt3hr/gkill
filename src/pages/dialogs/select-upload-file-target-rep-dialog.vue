@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { SelectUploadFileTargetRepDialogEmits } from './select-upload-file-target-rep-dialog-emits';
-import type { SelectUploadFileTargetRepDialogProps } from './select-upload-file-target-rep-dialog-props';
-import SelectUploadFileTargetRepView from '../views/select-upload-file-target-rep-view.vue';
+import { type Ref, ref } from 'vue'
+import type { SelectUploadFileTargetRepDialogEmits } from './select-upload-file-target-rep-dialog-emits'
+import type { SelectUploadFileTargetRepDialogProps } from './select-upload-file-target-rep-dialog-props'
+import SelectUploadFileTargetRepView from '../views/select-upload-file-target-rep-view.vue'
 
-const props = defineProps<SelectUploadFileTargetRepDialogProps>();
-const emits = defineEmits<SelectUploadFileTargetRepDialogEmits>();
+const props = defineProps<SelectUploadFileTargetRepDialogProps>()
+const emits = defineEmits<SelectUploadFileTargetRepDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

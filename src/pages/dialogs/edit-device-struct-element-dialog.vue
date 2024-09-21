@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { EditDeviceStructElementDialogEmits } from './edit-device-struct-element-dialog-emits';
-import type { EditDeviceStructElementDialogProps } from './edit-device-struct-element-dialog-props';
-import EditDeviceStructElementView from '../views/edit-device-struct-element-view.vue';
+import { type Ref, ref } from 'vue'
+import type { EditDeviceStructElementDialogEmits } from './edit-device-struct-element-dialog-emits'
+import type { EditDeviceStructElementDialogProps } from './edit-device-struct-element-dialog-props'
+import EditDeviceStructElementView from '../views/edit-device-struct-element-view.vue'
 
-const props = defineProps<EditDeviceStructElementDialogProps>();
-const emits = defineEmits<EditDeviceStructElementDialogEmits>();
+const props = defineProps<EditDeviceStructElementDialogProps>()
+const emits = defineEmits<EditDeviceStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

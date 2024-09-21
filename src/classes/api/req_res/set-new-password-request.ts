@@ -1,24 +1,20 @@
-'use strict';
+'use strict'
 
-import { GkillAPIRequest } from '../gkill-api-request';
-
+import { GkillAPIRequest } from '../gkill-api-request'
 
 export class SetNewPasswordRequest extends GkillAPIRequest {
 
+    user_id: string
 
-    user_id: string;
-
-    new_password: string;
+    new_password: string
 
     constructor() {
         super()
-        this.user_id = "";
-        this.new_password = "";
+        this.user_id = ""
+        this.new_password = ""
 
     }
 
-
 }
-
 
 

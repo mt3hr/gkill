@@ -8,13 +8,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { EditKFTLTemplateStructElementDialogEmits } from './edit-kftl-template-struct-element-dialog-emits';
-import type { EditKFTLTemplateStructElementDialogProps } from './edit-kftl-template-struct-element-dialog-props';
-import EditKFTLTemplateStructElementView from '../views/edit-kftl-template-struct-element-view.vue';
+import { type Ref, ref } from 'vue'
+import type { EditKFTLTemplateStructElementDialogEmits } from './edit-kftl-template-struct-element-dialog-emits'
+import type { EditKFTLTemplateStructElementDialogProps } from './edit-kftl-template-struct-element-dialog-props'
+import EditKFTLTemplateStructElementView from '../views/edit-kftl-template-struct-element-view.vue'
 
-const props = defineProps<EditKFTLTemplateStructElementDialogProps>();
-const emits = defineEmits<EditKFTLTemplateStructElementDialogEmits>();
+const props = defineProps<EditKFTLTemplateStructElementDialogProps>()
+const emits = defineEmits<EditKFTLTemplateStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

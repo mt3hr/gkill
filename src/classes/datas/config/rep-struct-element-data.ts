@@ -1,16 +1,14 @@
-'use strict';
-
+'use strict'
 
 export class RepStructElementData {
 
+    id: string
 
-    id: string;
+    rep_name: string
 
-    rep_name: string;
+    check_when_inited: boolean
 
-    check_when_inited: boolean;
-
-    ignore_check_rep_rykv: boolean;
+    ignore_check_rep_rykv: boolean
 
     children: Array<RepStructElementData> | null
 
@@ -22,8 +20,6 @@ export class RepStructElementData {
         this.children = null
     }
 
-
 }
-
 
 

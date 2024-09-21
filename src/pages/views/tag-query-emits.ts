@@ -1,7 +1,7 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from "@/classes/api/gkill-error";
-import type { GkillMessage } from "@/classes/api/gkill-message";
+import type { GkillError } from "@/classes/api/gkill-error"
+import type { GkillMessage } from "@/classes/api/gkill-message"
 
 export interface TagQueryEmits {
     (e: 'request_clear_tag_query'): void

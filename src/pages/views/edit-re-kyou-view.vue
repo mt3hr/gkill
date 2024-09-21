@@ -9,14 +9,14 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { EditReKyouViewProps } from './edit-re-kyou-view-props';
-import type { KyouViewEmits } from './kyou-view-emits';
-import { ReKyou } from '@/classes/datas/re-kyou';
-import KyouView from './kyou-view.vue';
-import type { Kyou } from '@/classes/datas/kyou';
+import { type Ref, ref } from 'vue'
+import type { EditReKyouViewProps } from './edit-re-kyou-view-props'
+import type { KyouViewEmits } from './kyou-view-emits'
+import { ReKyou } from '@/classes/datas/re-kyou'
+import KyouView from './kyou-view.vue'
+import type { Kyou } from '@/classes/datas/kyou'
 
-const props = defineProps<EditReKyouViewProps>();
-const emits = defineEmits<KyouViewEmits>();
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+const props = defineProps<EditReKyouViewProps>()
+const emits = defineEmits<KyouViewEmits>()
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
 </script>

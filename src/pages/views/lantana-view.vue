@@ -7,16 +7,16 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script setup lang="ts">
-import type { LantanaViewProps } from './lantana-view-props';
-import type { KyouViewEmits } from './kyou-view-emits';
-import type { Lantana } from '@/classes/datas/lantana';
-import { type Ref, ref } from 'vue';
-import LantanaContextMenu from './lantana-context-menu.vue';
-import type { Kyou } from '@/classes/datas/kyou';
+import type { LantanaViewProps } from './lantana-view-props'
+import type { KyouViewEmits } from './kyou-view-emits'
+import type { Lantana } from '@/classes/datas/lantana'
+import { type Ref, ref } from 'vue'
+import LantanaContextMenu from './lantana-context-menu.vue'
+import type { Kyou } from '@/classes/datas/kyou'
 
-const props = defineProps<LantanaViewProps>();
-const emits = defineEmits<KyouViewEmits>();
+const props = defineProps<LantanaViewProps>()
+const emits = defineEmits<KyouViewEmits>()
 
-const cloned_lantana: Ref<Lantana> = ref(await props.lantana.clone());
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+const cloned_lantana: Ref<Lantana> = ref(await props.lantana.clone())
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
 </script>

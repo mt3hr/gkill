@@ -7,18 +7,18 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script setup lang="ts">
-import type { ReKyouViewProps } from './re-kyou-view-props';
-import type { KyouViewEmits } from './kyou-view-emits';
-import ReKyouContextMenu from './re-kyou-context-menu.vue';
-import { computed, type Ref, ref } from 'vue';
-import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request';
-import { ReKyou } from '@/classes/datas/re-kyou';
-import type { Kyou } from '@/classes/datas/kyou';
+import type { ReKyouViewProps } from './re-kyou-view-props'
+import type { KyouViewEmits } from './kyou-view-emits'
+import ReKyouContextMenu from './re-kyou-context-menu.vue'
+import { computed, type Ref, ref } from 'vue'
+import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
+import { ReKyou } from '@/classes/datas/re-kyou'
+import type { Kyou } from '@/classes/datas/kyou'
 
-const props = defineProps<ReKyouViewProps>();
-const emits = defineEmits<KyouViewEmits>();
+const props = defineProps<ReKyouViewProps>()
+const emits = defineEmits<KyouViewEmits>()
 const cloned_rekyou: Ref<ReKyou> = ref(await props.rekyou.clone())
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
 const target_kyou = computed(async () => {
     const req = new GetKyouRequest()
     req.id = props.rekyou.target_id

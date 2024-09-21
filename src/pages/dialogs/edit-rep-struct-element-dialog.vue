@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { EditRepStructElementDialogEmits } from './edit-rep-struct-element-dialog-emits';
-import type { EditRepStructElementDialogProps } from './edit-rep-struct-element-dialog-props';
-import EditRepStructElementView from '../views/edit-rep-struct-element-view.vue';
+import { type Ref, ref } from 'vue'
+import type { EditRepStructElementDialogEmits } from './edit-rep-struct-element-dialog-emits'
+import type { EditRepStructElementDialogProps } from './edit-rep-struct-element-dialog-props'
+import EditRepStructElementView from '../views/edit-rep-struct-element-view.vue'
 
-const props = defineProps<EditRepStructElementDialogProps>();
-const emits = defineEmits<EditRepStructElementDialogEmits>();
+const props = defineProps<EditRepStructElementDialogProps>()
+const emits = defineEmits<EditRepStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

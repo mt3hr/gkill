@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { CreateAccountDialogEmits } from './create-account-dialog-emits';
-import type { CreateAccountDialogProps } from './create-account-dialog-props';
-import CreateAccountView from '../views/create-account-view.vue';
+import { type Ref, ref } from 'vue'
+import type { CreateAccountDialogEmits } from './create-account-dialog-emits'
+import type { CreateAccountDialogProps } from './create-account-dialog-props'
+import CreateAccountView from '../views/create-account-view.vue'
 
-const props = defineProps<CreateAccountDialogProps>();
-const emits = defineEmits<CreateAccountDialogEmits>();
+const props = defineProps<CreateAccountDialogProps>()
+const emits = defineEmits<CreateAccountDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)
