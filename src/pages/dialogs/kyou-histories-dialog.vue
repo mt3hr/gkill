@@ -19,15 +19,15 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue';
-import type { KyouHistoriesDialogProps } from './kyou-histories-dialog-props';
-import type { KyouDialogEmits } from '../views/kyou-dialog-emits';
-import KyouHistoriesView from '../views/kyou-histories-view.vue';
-import KyouView from '../views/kyou-view.vue';
-import type { Kyou } from '@/classes/datas/kyou';
+import { type Ref, ref, watch } from 'vue'
+import type { KyouHistoriesDialogProps } from './kyou-histories-dialog-props'
+import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
+import KyouHistoriesView from '../views/kyou-histories-view.vue'
+import KyouView from '../views/kyou-view.vue'
+import type { Kyou } from '@/classes/datas/kyou'
 
-const props = defineProps<KyouHistoriesDialogProps>();
-const emits = defineEmits<KyouDialogEmits>();
+const props = defineProps<KyouHistoriesDialogProps>()
+const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 watch(props.kyou, async () => cloned_kyou.value = await props.kyou.clone())
 

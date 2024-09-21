@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from "@/classes/api/gkill-error";
-import type { GkillMessage } from "@/classes/api/gkill-message";
-import type { Kyou } from "@/classes/datas/kyou";
-import type { Tag } from "@/classes/datas/tag";
+import type { GkillError } from "@/classes/api/gkill-error"
+import type { GkillMessage } from "@/classes/api/gkill-message"
+import type { Kyou } from "@/classes/datas/kyou"
+import type { Tag } from "@/classes/datas/tag"
 
 export interface DecideRelatedTimeUploadedFileDialogEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void

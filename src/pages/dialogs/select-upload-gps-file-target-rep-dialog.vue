@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { SelectUploadGPSFileTargetRepDialogEmits } from './select-upload-gps-file-target-rep-dialog-emits';
-import type { SelectUploadGPSFileTargetRepDialogProps } from './select-upload-gps-file-target-rep-dialog-props';
-import SelectUploadGPSFileTargetRepView from '../views/select-upload-gps-file-target-rep-view.vue';
+import { type Ref, ref } from 'vue'
+import type { SelectUploadGPSFileTargetRepDialogEmits } from './select-upload-gps-file-target-rep-dialog-emits'
+import type { SelectUploadGPSFileTargetRepDialogProps } from './select-upload-gps-file-target-rep-dialog-props'
+import SelectUploadGPSFileTargetRepView from '../views/select-upload-gps-file-target-rep-view.vue'
 
-const props = defineProps<SelectUploadGPSFileTargetRepDialogProps>();
-const emits = defineEmits<SelectUploadGPSFileTargetRepDialogEmits>();
+const props = defineProps<SelectUploadGPSFileTargetRepDialogProps>()
+const emits = defineEmits<SelectUploadGPSFileTargetRepDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

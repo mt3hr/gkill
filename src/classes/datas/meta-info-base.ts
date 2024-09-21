@@ -1,52 +1,50 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from "../api/gkill-error";
-
+import type { GkillError } from "../api/gkill-error"
 
 export abstract class MetaInfoBase {
 
+    is_deleted: boolean
 
-    is_deleted: boolean;
+    id: string
 
-    id: string;
+    target_id: string
 
-    target_id: string;
+    related_time: Date
 
-    related_time: Date;
+    create_time: Date
 
-    create_time: Date;
+    create_app: string
 
-    create_app: string;
+    create_device: string
 
-    create_device: string;
+    create_user: string
 
-    create_user: string;
+    update_time: Date
 
-    update_time: Date;
+    update_app: string
 
-    update_app: string;
+    update_device: string
 
-    update_device: string;
-
-    update_user: string;
+    update_user: string
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
-    abstract clone(): Promise<MetaInfoBase>;
+    abstract clone(): Promise<MetaInfoBase>
 
     constructor() {
 
@@ -75,8 +73,6 @@ export abstract class MetaInfoBase {
         this.update_user = ""
     }
 
-
 }
-
 
 

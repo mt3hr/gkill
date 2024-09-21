@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 export interface MapQueryEmits {
     (e: 'request_clear_map_query'): void

@@ -1,16 +1,14 @@
-'use strict';
+'use strict'
 
-import { Nlog } from '@/classes/datas/nlog';
-import { GkillAPIResponse } from '../gkill-api-response';
-import { Kyou } from '@/classes/datas/kyou';
-
+import { Nlog } from '@/classes/datas/nlog'
+import { GkillAPIResponse } from '../gkill-api-response'
+import { Kyou } from '@/classes/datas/kyou'
 
 export class UpdateNlogResponse extends GkillAPIResponse {
 
+    updated_nlog: Nlog
 
-    updated_nlog: Nlog;
-
-    updated_nlog_kyou: Kyou;
+    updated_nlog_kyou: Kyou
 
     constructor() {
         super()
@@ -18,8 +16,6 @@ export class UpdateNlogResponse extends GkillAPIResponse {
         this.updated_nlog_kyou = new Kyou()
     }
 
-
 }
-
 
 

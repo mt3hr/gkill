@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from "@/classes/api/gkill-error";
-import type { GkillMessage } from "@/classes/api/gkill-message";
-import type { ServerConfig } from "@/classes/datas/config/server-config";
+import type { GkillError } from "@/classes/api/gkill-error"
+import type { GkillMessage } from "@/classes/api/gkill-message"
+import type { ServerConfig } from "@/classes/datas/config/server-config"
 
 export interface AllocateRepViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void

@@ -8,13 +8,13 @@
         />
 </template>
 <script setup lang="ts">
-import type { CheckState } from './check-state';
-import FoldableStruct from './foldable-struct.vue';
-import type { miTagQueryEmits } from './mi-tag-query-emits';
-import type { miTagQueryProps } from './mi-tag-query-props';
+import type { CheckState } from './check-state'
+import FoldableStruct from './foldable-struct.vue'
+import type { miTagQueryEmits } from './mi-tag-query-emits'
+import type { miTagQueryProps } from './mi-tag-query-props'
 
-const props = defineProps<miTagQueryProps>();
-const emits = defineEmits<miTagQueryEmits>();
+const props = defineProps<miTagQueryProps>()
+const emits = defineEmits<miTagQueryEmits>()
 
 async function update_check_state(items: Array<string>, check_state: CheckState) : Promise<void> {
 }

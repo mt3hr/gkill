@@ -9,13 +9,13 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue';
-import AddMiView from '../views/add-mi-view.vue';
-import type { AddMiDialogProps } from './add-mi-dialog-props';
-import type { KyouViewEmits } from '../views/kyou-view-emits';
+import { type Ref, ref } from 'vue'
+import AddMiView from '../views/add-mi-view.vue'
+import type { AddMiDialogProps } from './add-mi-dialog-props'
+import type { KyouViewEmits } from '../views/kyou-view-emits'
 
-const props = defineProps<AddMiDialogProps>();
-const emits = defineEmits<KyouViewEmits>();
+const props = defineProps<AddMiDialogProps>()
+const emits = defineEmits<KyouViewEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

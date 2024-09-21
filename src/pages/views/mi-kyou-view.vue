@@ -7,16 +7,16 @@
         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script lang="ts" setup>
-import type { Mi } from '@/classes/datas/mi';
-import { type Ref, ref } from 'vue';
-import MiContextMenu from './mi-context-menu.vue';
-import type { Kyou } from '@/classes/datas/kyou';
-import type { miKyouViewProps } from './mi-kyou-view-props';
-import type { miKyouViewEmits } from './mi-kyou-view-emits';
+import type { Mi } from '@/classes/datas/mi'
+import { type Ref, ref } from 'vue'
+import MiContextMenu from './mi-context-menu.vue'
+import type { Kyou } from '@/classes/datas/kyou'
+import type { miKyouViewProps } from './mi-kyou-view-props'
+import type { miKyouViewEmits } from './mi-kyou-view-emits'
 
-const props = defineProps<miKyouViewProps>();
-const emits = defineEmits<miKyouViewEmits>();
+const props = defineProps<miKyouViewProps>()
+const emits = defineEmits<miKyouViewEmits>()
 
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
-const cloned_mi: Ref<Mi> = ref(cloned_kyou.value.typed_mi);
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
+const cloned_mi: Ref<Mi> = ref(cloned_kyou.value.typed_mi)
 </script>

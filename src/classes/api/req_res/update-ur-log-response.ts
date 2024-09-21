@@ -1,16 +1,14 @@
-'use strict';
+'use strict'
 
-import { URLog } from '@/classes/datas/ur-log';
-import { GkillAPIResponse } from '../gkill-api-response';
-import { Kyou } from '@/classes/datas/kyou';
-
+import { URLog } from '@/classes/datas/ur-log'
+import { GkillAPIResponse } from '../gkill-api-response'
+import { Kyou } from '@/classes/datas/kyou'
 
 export class UpdateURLogResponse extends GkillAPIResponse {
 
+    updated_urlog: URLog
 
-    updated_urlog: URLog;
-
-    updated_urlog_kyou: Kyou;
+    updated_urlog_kyou: Kyou
 
     constructor() {
         super()
@@ -18,8 +16,6 @@ export class UpdateURLogResponse extends GkillAPIResponse {
         this.updated_urlog_kyou = new Kyou()
     }
 
-
 }
-
 
 

@@ -10,19 +10,19 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref, watch } from 'vue';
-import type { ConfirmReKyouDialogProps } from './confirm-re-kyou-dialog-props';
-import type { KyouDialogEmits } from '../views/kyou-dialog-emits';
-import ConfirmReKyouView from '../views/confirm-re-kyou-view.vue';
-import type { Kyou } from '@/classes/datas/kyou';
+import { type Ref, ref, watch } from 'vue'
+import type { ConfirmReKyouDialogProps } from './confirm-re-kyou-dialog-props'
+import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
+import ConfirmReKyouView from '../views/confirm-re-kyou-view.vue'
+import type { Kyou } from '@/classes/datas/kyou'
 
-const props = defineProps<ConfirmReKyouDialogProps>();
-const emits = defineEmits<KyouDialogEmits>();
+const props = defineProps<ConfirmReKyouDialogProps>()
+const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 watch(props.kyou, () => update_cloned_kyou())
 
 const is_show_dialog: Ref<boolean> = ref(false)
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
 
 async function show(): Promise<void> {
     is_show_dialog.value = true

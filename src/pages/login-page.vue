@@ -11,23 +11,23 @@
 </template>
 
 <script lang="ts" setup>
-'use strict';
-import { computed, ref, type Ref } from 'vue';
-import { GkillAPI } from '@/classes/api/gkill-api';
-import type { GkillError } from '@/classes/api/gkill-error';
-import type { GkillMessage } from '@/classes/api/gkill-message';
+'use strict'
+import { computed, ref, type Ref } from 'vue'
+import { GkillAPI } from '@/classes/api/gkill-api'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
-import LoginView from './views/login-view.vue';
-import { ApplicationConfig } from '@/classes/datas/config/application-config';
+import LoginView from './views/login-view.vue'
+import { ApplicationConfig } from '@/classes/datas/config/application-config'
 
-const actual_height: Ref<Number> = ref(0);
-const element_height: Ref<Number> = ref(0);
-const browser_url_bar_height: Ref<Number> = ref(0);
-const app_title_bar_height: Ref<Number> = ref(50);
+const actual_height: Ref<Number> = ref(0)
+const element_height: Ref<Number> = ref(0)
+const browser_url_bar_height: Ref<Number> = ref(0)
+const app_title_bar_height: Ref<Number> = ref(50)
 const app_title_bar_height_px = computed(() => app_title_bar_height.value.toString().concat("px"))
-const gkill_api: Ref<GkillAPI> = ref(new GkillAPI());
-const app_content_height: Ref<Number> = ref(0);
-const app_content_width: Ref<Number> = ref(0);
+const gkill_api: Ref<GkillAPI> = ref(new GkillAPI())
+const app_content_height: Ref<Number> = ref(0)
+const app_content_width: Ref<Number> = ref(0)
 
 async function resize_content(): Promise<void> {
     const inner_element = document.querySelector('#control-height')
@@ -42,14 +42,14 @@ async function write_errors(errors: Array<GkillError>) {
     //TODO エラーメッセージを画面に出力するように
     errors.forEach(error => {
         console.log(error)
-    });
+    })
 }
 
 async function write_messages(messages: Array<GkillMessage>) {
     //TODO メッセージを画面に出力するように
     messages.forEach(message => {
         console.log(message)
-    });
+    })
 }
 
 window.addEventListener('resize', () => {

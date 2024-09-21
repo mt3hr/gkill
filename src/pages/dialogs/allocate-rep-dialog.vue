@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { AllocateRepDialogEmits } from './allocate-rep-dialog-emits';
-import type { AllocateRepDialogProps } from './allocate-rep-dialog-props';
-import AllocateRepView from '../views/allocate-rep-view.vue';
+import { type Ref, ref } from 'vue'
+import type { AllocateRepDialogEmits } from './allocate-rep-dialog-emits'
+import type { AllocateRepDialogProps } from './allocate-rep-dialog-props'
+import AllocateRepView from '../views/allocate-rep-view.vue'
 
-const props = defineProps<AllocateRepDialogProps>();
-const emits = defineEmits<AllocateRepDialogEmits>();
+const props = defineProps<AllocateRepDialogProps>()
+const emits = defineEmits<AllocateRepDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

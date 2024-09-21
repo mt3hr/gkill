@@ -2,7 +2,7 @@
 
 </template>
 <script lang="ts" setup>
-import type { SearchButtonEmits } from './search-button-emits';
+import type { SearchButtonEmits } from './search-button-emits'
 
-const emits = defineEmits<SearchButtonEmits>();
+const emits = defineEmits<SearchButtonEmits>()
 </script>

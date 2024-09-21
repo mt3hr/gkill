@@ -1,14 +1,12 @@
-'use strict';
-
+'use strict'
 
 export class RepTypeStructElementData {
 
+    id: string
 
-    id: string;
+    rep_type_name: string
 
-    rep_type_name: string;
-
-    check_when_inited: boolean;
+    check_when_inited: boolean
 
     children: Array<RepTypeStructElementData> | null
 
@@ -19,8 +17,6 @@ export class RepTypeStructElementData {
         this.children = null
     }
 
-
 }
-
 
 

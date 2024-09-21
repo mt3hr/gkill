@@ -44,63 +44,63 @@
         @request_open_share_mi_dialog="() => show_share_mi_dialog()" />
 </template>
 <script setup lang="ts">
-import ConfirmDeleteShareTaskListDialog from '../dialogs/confirm-delete-share-task-list-dialog.vue';
-import KyouCountCalendar from './kyou-count-calendar.vue';
-import KyouView from './kyou-view.vue';
-import ManageShareTaskListDialog from '../dialogs/manage-share-task-list-dialog.vue';
-import ShareTaskListDialog from '../dialogs/share-task-list-dialog.vue';
-import ShareTaskListLinkDialog from '../dialogs/share-task-list-link-dialog.vue';
-import MiBoardTaskListView from './mi-board-task-list-view.vue';
-import miQueryEditorSidebar from './mi-query-editor-sidebar.vue';
-import miShareFooter from './mi-share-footer.vue';
-import type { miViewEmits } from './mi-view-emits';
-import type { miViewProps } from './mi-view-props';
-import type { FindMiQuery } from '@/classes/api/find_query/find-mi-query';
-import { ref, type Ref } from 'vue';
-import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info';
-import { Kyou } from '@/classes/datas/kyou';
-import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
+import ConfirmDeleteShareTaskListDialog from '../dialogs/confirm-delete-share-task-list-dialog.vue'
+import KyouCountCalendar from './kyou-count-calendar.vue'
+import KyouView from './kyou-view.vue'
+import ManageShareTaskListDialog from '../dialogs/manage-share-task-list-dialog.vue'
+import ShareTaskListDialog from '../dialogs/share-task-list-dialog.vue'
+import ShareTaskListLinkDialog from '../dialogs/share-task-list-link-dialog.vue'
+import MiBoardTaskListView from './mi-board-task-list-view.vue'
+import miQueryEditorSidebar from './mi-query-editor-sidebar.vue'
+import miShareFooter from './mi-share-footer.vue'
+import type { miViewEmits } from './mi-view-emits'
+import type { miViewProps } from './mi-view-props'
+import type { FindMiQuery } from '@/classes/api/find_query/find-mi-query'
+import { ref, type Ref } from 'vue'
+import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info'
+import { Kyou } from '@/classes/datas/kyou'
+import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 
-const props = defineProps<miViewProps>();
-const emits = defineEmits<miViewEmits>();
+const props = defineProps<miViewProps>()
+const emits = defineEmits<miViewEmits>()
 
 const find_mi_queries: Ref<Array<FindMiQuery>> = ref(new Array<FindMiQuery>())
-const match_kyous_list: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>());
+const match_kyous_list: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
 const share_mi_task_list_info: Ref<ShareMiTaskListInfo> = ref(new ShareMiTaskListInfo())
 const share_mi_task_list_infos: Ref<Array<ShareMiTaskListInfo>> = ref(new Array<ShareMiTaskListInfo>())
 const board_names: Ref<Array<string>> = ref(new Array<string>())
-const focused_board_index: Ref<number> = ref(0);
+const focused_board_index: Ref<number> = ref(0)
 const focused_mi_kyou: Ref<Kyou> = ref(new Kyou())
-const focused_time: Ref<Date> = ref(new Date());
-const focused_board_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>());
+const focused_time: Ref<Date> = ref(new Date())
+const focused_board_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const last_added_tag: Ref<string> = ref("")
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 async function reload_board(): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 async function update_check_kyous(kyou: Array<Kyou>, is_checked: boolean): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 async function show_confirm_delete_share_task_list_dialog(share_mi_task_list_info: ShareMiTaskListInfo): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 async function show_share_task_link_dialog(share_mi_task_list_info: ShareMiTaskListInfo): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 async function show_manage_share_mi_dialog(): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 async function show_share_mi_dialog(): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 async function update_query(query: FindMiQuery): Promise<void> {
@@ -123,7 +123,7 @@ async function close_board(board_name: string): Promise<void> {
 }
 
 async function update_focused_kyou(kyou: Kyou): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 
 function generate_find_kyou_query(find_mi_query: FindMiQuery): FindKyouQuery {
@@ -131,6 +131,6 @@ function generate_find_kyou_query(find_mi_query: FindMiQuery): FindKyouQuery {
 }
 
 async function open_focus_board(board_name: string) : Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 </script>

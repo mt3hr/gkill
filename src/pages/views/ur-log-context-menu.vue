@@ -20,18 +20,18 @@
         @received_messages="(messages) => emits('received_messages', messages)" />
 </template>
 <script lang="ts" setup>
-import type { KyouViewEmits } from './kyou-view-emits';
-import type { URLogContextMenuProps } from './ur-log-context-menu-props';
-import EditUrLogDialog from '../dialogs/edit-ur-log-dialog.vue';
-import AddTagDialog from '../dialogs/add-tag-dialog.vue';
-import AddTextDialog from '../dialogs/add-text-dialog.vue';
-import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue';
-import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue';
-import { InfoIdentifier } from '@/classes/datas/info-identifier';
-import { computed, type ComputedRef } from 'vue';
+import type { KyouViewEmits } from './kyou-view-emits'
+import type { URLogContextMenuProps } from './ur-log-context-menu-props'
+import EditUrLogDialog from '../dialogs/edit-ur-log-dialog.vue'
+import AddTagDialog from '../dialogs/add-tag-dialog.vue'
+import AddTextDialog from '../dialogs/add-text-dialog.vue'
+import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue'
+import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue'
+import { InfoIdentifier } from '@/classes/datas/info-identifier'
+import { computed, type ComputedRef } from 'vue'
 
-const props = defineProps<URLogContextMenuProps>();
-const emits = defineEmits<KyouViewEmits>();
+const props = defineProps<URLogContextMenuProps>()
+const emits = defineEmits<KyouViewEmits>()
 const latest_kyou_identifier: ComputedRef<Array<InfoIdentifier>> = computed(() => {
     const identifier = new InfoIdentifier()
     identifier.create_time = props.kyou.create_time

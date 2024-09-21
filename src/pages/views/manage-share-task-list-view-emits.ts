@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-import type { ShareMiTaskListInfo } from "@/classes/datas/share-mi-task-list-info";
+import type { ShareMiTaskListInfo } from "@/classes/datas/share-mi-task-list-info"
 
 export interface ManageShareTaskListViewEmits {
     (e: 'requested_show_share_task_link_dialog', share_mi_task_list_info: ShareMiTaskListInfo): void

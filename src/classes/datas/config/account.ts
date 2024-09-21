@@ -1,14 +1,12 @@
-'use strict';
-
+'use strict'
 
 export class Account {
 
+    user_id: string
 
-    user_id: string;
+    is_admin: boolean
 
-    is_admin: boolean;
-
-    is_enable: boolean;
+    is_enable: boolean
 
     constructor() {
         this.user_id = ""
@@ -16,8 +14,6 @@ export class Account {
         this.is_enable = false
     }
 
-
 }
-
 
 

@@ -1,14 +1,12 @@
-'use strict';
-
+'use strict'
 
 export class GPSLog {
 
+    related_time: Date
 
-    related_time: Date;
+    longitude: Number
 
-    longitude: Number;
-
-    latitude: Number;
+    latitude: Number
 
     constructor() {
         this.related_time = new Date(0)
@@ -16,8 +14,6 @@ export class GPSLog {
         this.longitude = 0
     }
 
-
 }
-
 
 

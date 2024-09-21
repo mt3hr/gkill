@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-import type { LantanaTextData } from "@/classes/lantana/lantana-text-data";
+import type { LantanaTextData } from "@/classes/lantana/lantana-text-data"
 
 export interface LantanaTextViewEmits {
     (e: 'requested_delete_lantana_text', lantana_text: LantanaTextData): void

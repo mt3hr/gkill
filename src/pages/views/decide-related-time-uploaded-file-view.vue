@@ -11,17 +11,17 @@
         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => { }" />
 </template>
 <script setup lang="ts">
-import type { DecideRelatedTimeUploadedFileViewProps } from './decide-related-time-uploaded-file-view-props';
-import type { KyouViewEmits } from './kyou-view-emits';
-import EditIDFKyouView from './edit-idf-kyou-view.vue';
-import KyouListView from './kyou-list-view.vue';
-import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
-import { Kyou } from '@/classes/datas/kyou';
-import { type Ref, ref } from 'vue';
+import type { DecideRelatedTimeUploadedFileViewProps } from './decide-related-time-uploaded-file-view-props'
+import type { KyouViewEmits } from './kyou-view-emits'
+import EditIDFKyouView from './edit-idf-kyou-view.vue'
+import KyouListView from './kyou-list-view.vue'
+import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import { Kyou } from '@/classes/datas/kyou'
+import { type Ref, ref } from 'vue'
 
-const props = defineProps<DecideRelatedTimeUploadedFileViewProps>();
-const emits = defineEmits<KyouViewEmits>();
-const focused_kyou: Ref<Kyou> = ref(new Kyou());
+const props = defineProps<DecideRelatedTimeUploadedFileViewProps>()
+const emits = defineEmits<KyouViewEmits>()
+const focused_kyou: Ref<Kyou> = ref(new Kyou())
 
-const cloned_uploaded_kyous: Ref<Array<Kyou>> = ref(await props.uploaded_kyous.concat());
+const cloned_uploaded_kyous: Ref<Array<Kyou>> = ref(await props.uploaded_kyous.concat())
 </script>
