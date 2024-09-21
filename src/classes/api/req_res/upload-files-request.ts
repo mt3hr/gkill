@@ -1,18 +1,16 @@
-'use strict';
+'use strict'
 
-import { FileData } from '../file-data';
-import { GkillAPIRequest } from '../gkill-api-request';
-import { FileUploadConflictBehavior } from './file-upload-conflict-behavior';
-
+import { FileData } from '../file-data'
+import { GkillAPIRequest } from '../gkill-api-request'
+import { FileUploadConflictBehavior } from './file-upload-conflict-behavior'
 
 export class UploadFilesRequest extends GkillAPIRequest {
 
+    files: Array<FileData>
 
-    files: Array<FileData>;
+    target_rep_name: string
 
-    target_rep_name: string;
-
-    conflict_behavior: FileUploadConflictBehavior;
+    conflict_behavior: FileUploadConflictBehavior
 
     constructor() {
         super()
@@ -21,8 +19,6 @@ export class UploadFilesRequest extends GkillAPIRequest {
         this.conflict_behavior = FileUploadConflictBehavior.rename
     }
 
-
 }
-
 
 

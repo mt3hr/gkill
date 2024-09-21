@@ -8,13 +8,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { ManageAccountDialogEmits } from './manage-account-dialog-emits';
-import type { ManageAccountDialogProps } from './manage-account-dialog-props';
-import ManageAccountView from '../views/manage-account-view.vue';
+import { type Ref, ref } from 'vue'
+import type { ManageAccountDialogEmits } from './manage-account-dialog-emits'
+import type { ManageAccountDialogProps } from './manage-account-dialog-props'
+import ManageAccountView from '../views/manage-account-view.vue'
 
-const props = defineProps<ManageAccountDialogProps>();
-const emits = defineEmits<ManageAccountDialogEmits>();
+const props = defineProps<ManageAccountDialogProps>()
+const emits = defineEmits<ManageAccountDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

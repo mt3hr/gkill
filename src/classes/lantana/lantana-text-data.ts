@@ -1,16 +1,14 @@
-'use strict';
+'use strict'
 
-import { LantanaTextType } from "./lantana-text-type";
-
+import { LantanaTextType } from "./lantana-text-type"
 
 export class LantanaTextData {
 
+    type: LantanaTextType
 
-    type: LantanaTextType;
+    id: string
 
-    id: string;
-
-    content: string;
+    content: string
 
     constructor() {
         this.type = LantanaTextType.text
@@ -18,8 +16,6 @@ export class LantanaTextData {
         this.content = ""
     }
 
-
 }
-
 
 

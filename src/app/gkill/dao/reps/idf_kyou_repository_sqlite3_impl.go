@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL 
-);
+)
 `
 
 	stmt, err := db.PrepareContext(ctx, sql)

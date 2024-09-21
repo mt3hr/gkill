@@ -5,10 +5,10 @@
         @received_messages="(messages) => emits('received_messages', messages)" />
 </template>
 <script setup lang="ts">
-import type { ConfirmResetPasswordViewEmits } from './confirm-reset-password-view-emits';
-import type { ConfirmResetPasswordViewProps } from './confirm-reset-password-view-props';
-import ShowPasswordResetLinkDialog from '../dialogs/show-password-reset-link-dialog.vue';
+import type { ConfirmResetPasswordViewEmits } from './confirm-reset-password-view-emits'
+import type { ConfirmResetPasswordViewProps } from './confirm-reset-password-view-props'
+import ShowPasswordResetLinkDialog from '../dialogs/show-password-reset-link-dialog.vue'
 
-const props = defineProps<ConfirmResetPasswordViewProps>();
-const emits = defineEmits<ConfirmResetPasswordViewEmits>();
+const props = defineProps<ConfirmResetPasswordViewProps>()
+const emits = defineEmits<ConfirmResetPasswordViewEmits>()
 </script>

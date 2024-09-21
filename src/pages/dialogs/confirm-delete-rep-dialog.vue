@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { ConfirmDeleteRepDialogEmits } from './confirm-delete-rep-dialog-emits';
-import type { ConfirmDeleteRepDialogProps } from './confirm-delete-rep-dialog-props';
-import ConfirmDeleteRepView from '../views/confirm-delete-rep-view.vue';
+import { type Ref, ref } from 'vue'
+import type { ConfirmDeleteRepDialogEmits } from './confirm-delete-rep-dialog-emits'
+import type { ConfirmDeleteRepDialogProps } from './confirm-delete-rep-dialog-props'
+import ConfirmDeleteRepView from '../views/confirm-delete-rep-view.vue'
 
-const props = defineProps<ConfirmDeleteRepDialogProps>();
-const emits = defineEmits<ConfirmDeleteRepDialogEmits>();
+const props = defineProps<ConfirmDeleteRepDialogProps>()
+const emits = defineEmits<ConfirmDeleteRepDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

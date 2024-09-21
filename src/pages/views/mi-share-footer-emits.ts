@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 export interface miShareFooterEmits {
     (e: 'request_open_share_mi_dialog'): void

@@ -651,7 +651,7 @@ SELECT
   DISTINCT TAG
 FROM TAG
 WHERE IS_DELETED = FALSE
-;
+
 `
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {

@@ -1,16 +1,14 @@
-'use strict';
+'use strict'
 
-import { TimeIs } from '@/classes/datas/time-is';
-import { GkillAPIResponse } from '../gkill-api-response';
-import { Kyou } from '@/classes/datas/kyou';
-
+import { TimeIs } from '@/classes/datas/time-is'
+import { GkillAPIResponse } from '../gkill-api-response'
+import { Kyou } from '@/classes/datas/kyou'
 
 export class UpdateTimeisResponse extends GkillAPIResponse {
 
+    updated_timeis: TimeIs
 
-    updated_timeis: TimeIs;
-
-    updated_timeis_kyou: Kyou;
+    updated_timeis_kyou: Kyou
 
     constructor() {
         super()
@@ -18,8 +16,6 @@ export class UpdateTimeisResponse extends GkillAPIResponse {
         this.updated_timeis_kyou = new Kyou()
     }
 
-
 }
-
 
 

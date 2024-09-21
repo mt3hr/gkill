@@ -2,6 +2,6 @@
 
 </template>
 <script lang="ts" setup>
-import type { ClearButtonEmits } from './clear-button-emits';
-const clearButtonEmits = defineEmits<ClearButtonEmits>();
+import type { ClearButtonEmits } from './clear-button-emits'
+const clearButtonEmits = defineEmits<ClearButtonEmits>()
 </script>

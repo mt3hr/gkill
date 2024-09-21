@@ -1,14 +1,12 @@
-'use strict';
+'use strict'
 
-import { GkillAPIRequest } from '../gkill-api-request';
-
+import { GkillAPIRequest } from '../gkill-api-request'
 
 export class UpdateAccountStatusRequest extends GkillAPIRequest {
 
+    target_user_id: string
 
-    target_user_id: string;
-
-    enable: boolean;
+    enable: boolean
 
     constructor() {
         super()
@@ -16,8 +14,6 @@ export class UpdateAccountStatusRequest extends GkillAPIRequest {
         this.enable = false
     }
 
-
 }
-
 
 

@@ -6,13 +6,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { ConfirmGenerateTLSFilesDialogEmits } from './confirm-generate-tls-files-dialog-emits';
-import type { ConfirmGenerateTLSFilesDialogProps } from './confirm-generate-tls-files-dialog-props';
-import ConfirmGenerateTLSFilesView from '../views/confirm-generate-tls-files-view.vue';
+import { type Ref, ref } from 'vue'
+import type { ConfirmGenerateTLSFilesDialogEmits } from './confirm-generate-tls-files-dialog-emits'
+import type { ConfirmGenerateTLSFilesDialogProps } from './confirm-generate-tls-files-dialog-props'
+import ConfirmGenerateTLSFilesView from '../views/confirm-generate-tls-files-view.vue'
 
-const props = defineProps<ConfirmGenerateTLSFilesDialogProps>();
-const emits = defineEmits<ConfirmGenerateTLSFilesDialogEmits>();
+const props = defineProps<ConfirmGenerateTLSFilesDialogProps>()
+const emits = defineEmits<ConfirmGenerateTLSFilesDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

@@ -32,20 +32,20 @@
 
 </template>
 <script lang="ts" setup>
-import type { KyouViewEmits } from './kyou-view-emits';
-import type { LantanaContextMenuProps } from './lantana-context-menu-props';
-import EditLantanaDialog from '../dialogs/edit-lantana-dialog.vue';
-import AddTagDialog from '../dialogs/add-tag-dialog.vue';
-import AddTextDialog from '../dialogs/add-text-dialog.vue';
-import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue';
-import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue';
-import type { Lantana } from '@/classes/datas/lantana';
-import type { Kyou } from '@/classes/datas/kyou';
-import { type Ref, ref } from 'vue';
+import type { KyouViewEmits } from './kyou-view-emits'
+import type { LantanaContextMenuProps } from './lantana-context-menu-props'
+import EditLantanaDialog from '../dialogs/edit-lantana-dialog.vue'
+import AddTagDialog from '../dialogs/add-tag-dialog.vue'
+import AddTextDialog from '../dialogs/add-text-dialog.vue'
+import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue'
+import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue'
+import type { Lantana } from '@/classes/datas/lantana'
+import type { Kyou } from '@/classes/datas/kyou'
+import { type Ref, ref } from 'vue'
 
-const props = defineProps<LantanaContextMenuProps>();
-const emits = defineEmits<KyouViewEmits>();
+const props = defineProps<LantanaContextMenuProps>()
+const emits = defineEmits<KyouViewEmits>()
 
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
-const cloned_lantana: Ref<Lantana> = ref(cloned_kyou.value.typed_lantana);
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
+const cloned_lantana: Ref<Lantana> = ref(cloned_kyou.value.typed_lantana)
 </script>

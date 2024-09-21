@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 export enum CheckState {
     checked = "checked",

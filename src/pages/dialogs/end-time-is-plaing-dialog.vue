@@ -9,13 +9,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import EndTimeIsPlaingView from '../views/end-time-is-plaing-view.vue';
-import type { EndTimeIsPlaingDialogProps } from './end-time-is-plaing-dialog-props';
-import type { KyouViewEmits } from '../views/kyou-view-emits';
+import { type Ref, ref } from 'vue'
+import EndTimeIsPlaingView from '../views/end-time-is-plaing-view.vue'
+import type { EndTimeIsPlaingDialogProps } from './end-time-is-plaing-dialog-props'
+import type { KyouViewEmits } from '../views/kyou-view-emits'
 
-const props = defineProps<EndTimeIsPlaingDialogProps>();
-const emits = defineEmits<KyouViewEmits>();
+const props = defineProps<EndTimeIsPlaingDialogProps>()
+const emits = defineEmits<KyouViewEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

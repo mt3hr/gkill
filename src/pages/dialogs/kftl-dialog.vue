@@ -7,15 +7,15 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { GkillError } from '@/classes/api/gkill-error';
-import type { GkillMessage } from '@/classes/api/gkill-message';
-import type { KFTLDialogEmits } from './kftl-dialog-emits';
-import type { KFTLDialogProps } from './kftl-dialog-props';
-import KFTLView from '../views/kftl-view.vue';
+import { type Ref, ref } from 'vue'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { KFTLDialogEmits } from './kftl-dialog-emits'
+import type { KFTLDialogProps } from './kftl-dialog-props'
+import KFTLView from '../views/kftl-view.vue'
 
-const props = defineProps<KFTLDialogProps>();
-const emits = defineEmits<KFTLDialogEmits>();
+const props = defineProps<KFTLDialogProps>()
+const emits = defineEmits<KFTLDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

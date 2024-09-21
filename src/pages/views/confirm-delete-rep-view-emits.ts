@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from "@/classes/api/gkill-error";
-import type { GkillMessage } from "@/classes/api/gkill-message";
-import type { Repository } from "@/classes/datas/config/repository";
+import type { GkillError } from "@/classes/api/gkill-error"
+import type { GkillMessage } from "@/classes/api/gkill-message"
+import type { Repository } from "@/classes/datas/config/repository"
 
 export interface ConfirmDeleteRepViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void

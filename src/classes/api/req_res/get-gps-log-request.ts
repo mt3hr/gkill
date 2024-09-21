@@ -1,14 +1,12 @@
-'use strict';
+'use strict'
 
-import { GkillAPIRequest } from '../gkill-api-request';
-
+import { GkillAPIRequest } from '../gkill-api-request'
 
 export class GetGPSLogRequest extends GkillAPIRequest {
 
+    start_date: Date
 
-    start_date: Date;
-
-    end_date: Date;
+    end_date: Date
 
     constructor() {
         super()
@@ -16,8 +14,6 @@ export class GetGPSLogRequest extends GkillAPIRequest {
         this.end_date = new Date(0)
     }
 
-
 }
-
 
 

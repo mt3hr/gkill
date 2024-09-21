@@ -1,16 +1,14 @@
-'use strict';
+'use strict'
 
-import { ReKyou } from '@/classes/datas/re-kyou';
-import { GkillAPIResponse } from '../gkill-api-response';
-import { Kyou } from '@/classes/datas/kyou';
-
+import { ReKyou } from '@/classes/datas/re-kyou'
+import { GkillAPIResponse } from '../gkill-api-response'
+import { Kyou } from '@/classes/datas/kyou'
 
 export class AddReKyouResponse extends GkillAPIResponse {
 
+    added_rekyou: ReKyou
 
-    added_rekyou: ReKyou;
-
-    added_rekyou_kyou: Kyou;
+    added_rekyou_kyou: Kyou
 
     constructor() {
         super()
@@ -18,8 +16,6 @@ export class AddReKyouResponse extends GkillAPIResponse {
         this.added_rekyou_kyou = new Kyou()
     }
 
-
 }
-
 
 

@@ -25,20 +25,20 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { AttachedTimeisPlaingContextMenuProps } from './attached-timeis-plaing-context-menu-props';
-import type { KyouViewEmits } from './kyou-view-emits';
-import { TimeIs } from '@/classes/datas/time-is';
-import EditTimeIsDialog from '../dialogs/edit-time-is-dialog.vue';
-import KyouHistoriesDialog from '../dialogs/kyou-histories-dialog.vue';
-import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue';
-import { InfoIdentifier } from '@/classes/datas/info-identifier';
-import type { Kyou } from '@/classes/datas/kyou';
+import { type Ref, ref } from 'vue'
+import type { AttachedTimeisPlaingContextMenuProps } from './attached-timeis-plaing-context-menu-props'
+import type { KyouViewEmits } from './kyou-view-emits'
+import { TimeIs } from '@/classes/datas/time-is'
+import EditTimeIsDialog from '../dialogs/edit-time-is-dialog.vue'
+import KyouHistoriesDialog from '../dialogs/kyou-histories-dialog.vue'
+import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue'
+import { InfoIdentifier } from '@/classes/datas/info-identifier'
+import type { Kyou } from '@/classes/datas/kyou'
 
-const props = defineProps<AttachedTimeisPlaingContextMenuProps>();
-const emits = defineEmits<KyouViewEmits>();
-const cloned_timeis: Ref<TimeIs> = ref(await props.timeis.clone());
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+const props = defineProps<AttachedTimeisPlaingContextMenuProps>()
+const emits = defineEmits<KyouViewEmits>()
+const cloned_timeis: Ref<TimeIs> = ref(await props.timeis.clone())
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
 
 function generate_info_identifer_from_timeis(timeis: TimeIs): InfoIdentifier {
     const info_identifer = new InfoIdentifier()

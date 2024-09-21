@@ -1,20 +1,16 @@
-'use strict';
+'use strict'
 
-import { GkillAPIRequest } from '../gkill-api-request';
-
+import { GkillAPIRequest } from '../gkill-api-request'
 
 export class GetPlaingTimeisRequest extends GkillAPIRequest {
 
-
-    time: Date;
+    time: Date
 
     constructor() {
         super()
         this.time = new Date(0)
     }
 
-
 }
-
 
 

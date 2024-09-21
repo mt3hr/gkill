@@ -1,20 +1,16 @@
-'use strict';
+'use strict'
 
-import { GkillAPIResponse } from '../gkill-api-response';
-
+import { GkillAPIResponse } from '../gkill-api-response'
 
 export class GetMiBoardResponse extends GkillAPIResponse {
 
-
-    boards: Array<string>;
+    boards: Array<string>
 
     constructor() {
         super()
         this.boards = new Array<string>()
     }
 
-
 }
-
 
 

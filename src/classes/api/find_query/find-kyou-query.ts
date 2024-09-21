@@ -1,13 +1,13 @@
-'use strict';
+'use strict'
 
-import { FindQueryBase } from './find-query-base';
+import { FindQueryBase } from './find-query-base'
 
 export class FindKyouQuery extends FindQueryBase {
-    reps: Array<string>;
-    is_image_only: boolean;
+    reps: Array<string>
+    is_image_only: boolean
 
     async clone(): Promise<FindKyouQuery> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     constructor() {

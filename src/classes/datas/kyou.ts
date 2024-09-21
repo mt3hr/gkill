@@ -1,105 +1,103 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from '../api/gkill-error';
-import { GitCommitLog } from './git-commit-log';
-import { IDFKyou } from './idf-kyou';
-import { InfoBase } from './info-base';
-import { Kmemo } from './kmemo';
-import { Lantana } from './lantana';
-import { Mi } from './mi';
-import { Nlog } from './nlog';
-import { ReKyou } from './re-kyou';
-import { TimeIs } from './time-is';
-import { URLog } from './ur-log';
-
+import type { GkillError } from '../api/gkill-error'
+import { GitCommitLog } from './git-commit-log'
+import { IDFKyou } from './idf-kyou'
+import { InfoBase } from './info-base'
+import { Kmemo } from './kmemo'
+import { Lantana } from './lantana'
+import { Mi } from './mi'
+import { Nlog } from './nlog'
+import { ReKyou } from './re-kyou'
+import { TimeIs } from './time-is'
+import { URLog } from './ur-log'
 
 export class Kyou extends InfoBase {
 
+    image_source: string
 
-    image_source: string;
+    attached_histories: Array<Kyou>
 
-    attached_histories: Array<Kyou>;
+    typed_kmemo: Kmemo
 
-    typed_kmemo: Kmemo;
+    typed_urlog: URLog
 
-    typed_urlog: URLog;
+    typed_nlog: Nlog
 
-    typed_nlog: Nlog;
+    typed_timeis: TimeIs
 
-    typed_timeis: TimeIs;
+    typed_mi: Mi
 
-    typed_mi: Mi;
+    typed_lantana: Lantana
 
-    typed_lantana: Lantana;
+    typed_idf_kyou: IDFKyou
 
-    typed_idf_kyou: IDFKyou;
+    typed_git_commit_log: GitCommitLog
 
-    typed_git_commit_log: GitCommitLog;
-
-    typed_rekyou: ReKyou;
+    typed_rekyou: ReKyou
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_typed_kmemo(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_typed_urlog(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_typed_nlog(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_typed_timeis(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_typed_mi(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_typed_lantana(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_typed_idf_kyou(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_typed_git_commit_log(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_typed_rekyou(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_typed_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async reload(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clone(): Promise<Kyou> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     constructor() {
@@ -127,8 +125,6 @@ export class Kyou extends InfoBase {
         this.typed_rekyou = new ReKyou()
     }
 
-
 }
-
 
 

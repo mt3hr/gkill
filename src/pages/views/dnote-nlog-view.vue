@@ -10,16 +10,16 @@
         @requested_update_check_kyous="(kyou: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyou, is_checked)" />
 </template>
 <script setup lang="ts">
-import type { DnoteNlogViewEmits } from './dnote-nlog-view-emits';
-import type { DnoteNlogViewProps } from './dnote-nlog-view-props';
-import { type Ref, ref, computed } from 'vue';
-import { Kyou } from '@/classes/datas/kyou';
-import type { GkillError } from '@/classes/api/gkill-error';
-import type { GkillMessage } from '@/classes/api/gkill-message';
+import type { DnoteNlogViewEmits } from './dnote-nlog-view-emits'
+import type { DnoteNlogViewProps } from './dnote-nlog-view-props'
+import { type Ref, ref, computed } from 'vue'
+import { Kyou } from '@/classes/datas/kyou'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
-const props = defineProps<DnoteNlogViewProps>();
-const emits = defineEmits<DnoteNlogViewEmits>();
-const cloned_kyou: Ref<Kyou> = ref(await props.nlog_kyou.clone());
+const props = defineProps<DnoteNlogViewProps>()
+const emits = defineEmits<DnoteNlogViewEmits>()
+const cloned_kyou: Ref<Kyou> = ref(await props.nlog_kyou.clone())
 const cloned_nlog = computed(async () => {
     const errors = await cloned_kyou.value.load_typed_nlog()
     if (errors && errors.length !== 0) {

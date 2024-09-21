@@ -1,22 +1,20 @@
-'use strict';
-
+'use strict'
 
 export class RepTypeStruct {
 
+    id: string
 
-    id: string;
+    user_id: string
 
-    user_id: string;
+    device: string
 
-    device: string;
+    rep_type_name: string
 
-    rep_type_name: string;
+    parent_folder_id: string
 
-    parent_folder_id: string;
+    seq: Number
 
-    seq: Number;
-
-    check_when_inited: boolean;
+    check_when_inited: boolean
 
     constructor() {
         this.id = ""
@@ -28,8 +26,6 @@ export class RepTypeStruct {
         this.check_when_inited = false
     }
 
-
 }
-
 
 

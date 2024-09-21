@@ -15,22 +15,22 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { ManageShareTaskLinkDialogEmits } from './manage-share-task-link-dialog-emits';
-import type { ManageShareTaskLinkDialogProps } from './manage-share-task-link-dialog-props';
-import ManageShareTaskListView from '../views/manage-share-task-list-view.vue';
-import ShareTaskListLinkDialog from './share-task-list-link-dialog.vue';
-import ConfirmDeleteShareTaskListDialog from './confirm-delete-share-task-list-dialog.vue';
-import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info';
+import { type Ref, ref } from 'vue'
+import type { ManageShareTaskLinkDialogEmits } from './manage-share-task-link-dialog-emits'
+import type { ManageShareTaskLinkDialogProps } from './manage-share-task-link-dialog-props'
+import ManageShareTaskListView from '../views/manage-share-task-list-view.vue'
+import ShareTaskListLinkDialog from './share-task-list-link-dialog.vue'
+import ConfirmDeleteShareTaskListDialog from './confirm-delete-share-task-list-dialog.vue'
+import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info'
 
-const share_task_list_link_dialog = ref<InstanceType<typeof ShareTaskListLinkDialog> | null>(null);
-const confirm_delete_share_task_list_dialog = ref<InstanceType<typeof ConfirmDeleteShareTaskListDialog> | null>(null);
+const share_task_list_link_dialog = ref<InstanceType<typeof ShareTaskListLinkDialog> | null>(null)
+const confirm_delete_share_task_list_dialog = ref<InstanceType<typeof ConfirmDeleteShareTaskListDialog> | null>(null)
 
-const props = defineProps<ManageShareTaskLinkDialogProps>();
-const emits = defineEmits<ManageShareTaskLinkDialogEmits>();
+const props = defineProps<ManageShareTaskLinkDialogProps>()
+const emits = defineEmits<ManageShareTaskLinkDialogEmits>()
 defineExpose({ show, hide })
 
-const cloned_share_mi_task_list_infos: Ref<Array<ShareMiTaskListInfo>> = ref(new Array<ShareMiTaskListInfo>());
+const cloned_share_mi_task_list_infos: Ref<Array<ShareMiTaskListInfo>> = ref(new Array<ShareMiTaskListInfo>())
 const share_task_list: Ref<ShareMiTaskListInfo> = ref(new ShareMiTaskListInfo())
 const share_task_link: Ref<ShareMiTaskListInfo> = ref(new ShareMiTaskListInfo())
 
