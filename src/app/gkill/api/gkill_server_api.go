@@ -66,6 +66,8 @@ type GkillServerAPI struct {
 	FindFilter *FindFilter
 
 	RebootServerCh chan (struct{})
+
+	device string
 }
 
 func (g *GkillServerAPI) Serve() error {
@@ -7562,7 +7564,33 @@ func (g *GkillServerAPI) getTLSFileNames(device string) (certFileName string, pe
 }
 
 func (g *GkillServerAPI) GetDevice() (string, error) {
-	return "gkill", nil //TODO
+	if g.device != "" {
+		return g.device, nil
+	}
+
+	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.Background())
+	if err != nil {
+		err = fmt.Errorf("error at get all server configs: %w", err)
+		log.Printf(err.Error())
+		return "", err
+	}
+
+	var device *string
+	for _, serverConfig := range serverConfigs {
+		if serverConfig.EnableThisDevice {
+			if device != nil {
+				err = fmt.Errorf("invalid status. enable device count is not 1.")
+				return "", err
+			}
+			device = &serverConfig.Device
+		}
+	}
+	if device == nil {
+		err = fmt.Errorf("invalid status. enable device count is not 1.")
+		return "", err
+	}
+	g.device = *device
+	return g.device, nil
 }
 
 func publicKey(priv any) any {

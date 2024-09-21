@@ -3,6 +3,8 @@ package server_config
 import "time"
 
 type ServerConfig struct {
+	EnableThisDevice bool `json:"enable_this_device"`
+
 	Device string `json:"device"`
 
 	IsLocalOnlyAccess bool `json:"is_local_only_access"`

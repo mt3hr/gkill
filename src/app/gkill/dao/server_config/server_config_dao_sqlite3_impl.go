@@ -26,6 +26,7 @@ func NewServerConfigDAOSQLite3Impl(ctx context.Context, filename string) (Server
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
+  ENABLE_THIS_DEVICE NOT NULL,
   DEVICE PRIMARY KEY NOT NULL,
   IS_LOCAL_ONLY_ACCESS NOT NULL,
   ADDRESS NOT NULL,
@@ -101,6 +102,7 @@ func (s *serverConfigDAOSQLite3Impl) insertInitData(ctx context.Context) error {
 func (s *serverConfigDAOSQLite3Impl) GetAllServerConfigs(ctx context.Context) ([]*ServerConfig, error) {
 	sql := `
 SELECT 
+  ENABLE_THIS_DEVICE,
   DEVICE,
   IS_LOCAL_ONLY_ACCESS,
   ADDRESS,
@@ -135,6 +137,7 @@ FROM SERVER_CONFIG
 		default:
 			serverConfig := &ServerConfig{}
 			err = rows.Scan(
+				&serverConfig.EnableThisDevice,
 				&serverConfig.Device,
 				&serverConfig.IsLocalOnlyAccess,
 				&serverConfig.Address,
@@ -157,6 +160,7 @@ FROM SERVER_CONFIG
 func (s *serverConfigDAOSQLite3Impl) GetServerConfig(ctx context.Context, device string) (*ServerConfig, error) {
 	sql := `
 SELECT 
+  ENABLE_THIS_DEVICE,
   DEVICE,
   IS_LOCAL_ONLY_ACCESS,
   ADDRESS,
@@ -192,6 +196,7 @@ WHERE DEVICE = ?
 		default:
 			serverConfig := &ServerConfig{}
 			err = rows.Scan(
+				&serverConfig.EnableThisDevice,
 				&serverConfig.Device,
 				&serverConfig.IsLocalOnlyAccess,
 				&serverConfig.Address,
@@ -219,6 +224,7 @@ WHERE DEVICE = ?
 func (s *serverConfigDAOSQLite3Impl) AddServerConfig(ctx context.Context, serverConfig *ServerConfig) (bool, error) {
 	sql := `
 INSERT INTO SERVER_CONFIG (
+  ENABLE_THIS_DEVICE,
   DEVICE,
   IS_LOCAL_ONLY_ACCESS,
   ADDRESS,
@@ -244,6 +250,7 @@ VALUES (
   ?,
   ?,
   ?,
+  ?,
   ?
 )
 `
@@ -254,6 +261,7 @@ VALUES (
 	}
 
 	_, err = stmt.ExecContext(ctx,
+		serverConfig.EnableThisDevice,
 		serverConfig.Device,
 		serverConfig.IsLocalOnlyAccess,
 		serverConfig.Address,
@@ -274,9 +282,16 @@ VALUES (
 	return true, nil
 }
 
-func (s *serverConfigDAOSQLite3Impl) UpdateServerConfig(ctx context.Context, serverConfig *ServerConfig) (bool, error) {
-	sql := `
+func (s *serverConfigDAOSQLite3Impl) UpdateServerConfigs(ctx context.Context, serverConfigs []*ServerConfig) (bool, error) {
+	tx, err := s.db.Begin()
+	if err != nil {
+		fmt.Errorf("error at begin: %w", err)
+		return false, err
+	}
+	for _, serverConfig := range serverConfigs {
+		sql := `
 UPDATE SERVER_CONFIG SET
+  ENABLE_THIS_DEVICE = ?,
   DEVICE = ?,
   IS_LOCAL_ONLY_ACCESS = ?,
   ADDRESS = ?,
@@ -291,13 +306,123 @@ UPDATE SERVER_CONFIG SET
   USER_DATA_DIRECTORY = ?
 WHERE DEVICE = ?
 `
-	stmt, err := s.db.PrepareContext(ctx, sql)
+		stmt, err := tx.PrepareContext(ctx, sql)
+		if err != nil {
+			err = fmt.Errorf("error at update server config sql: %w", err)
+			return false, err
+		}
+
+		_, err = stmt.ExecContext(ctx,
+			serverConfig.EnableThisDevice,
+			serverConfig.Device,
+			serverConfig.IsLocalOnlyAccess,
+			serverConfig.Address,
+			serverConfig.EnableTLS,
+			serverConfig.TLSCertFile,
+			serverConfig.TLSKeyFile,
+			serverConfig.OpenDirectoryCommand,
+			serverConfig.OpenFileCommand,
+			serverConfig.URLogTimeout,
+			serverConfig.URLogUserAgent,
+			serverConfig.UploadSizeLimitMonth,
+			serverConfig.UserDataDirectory,
+			serverConfig.Device,
+		)
+		if err != nil {
+			err = fmt.Errorf("error at query :%w", err)
+			return false, err
+		}
+	}
+	// 有効なDEVICEが存在しなければエラーで戻す
+	checkEnableDeviceCountSQL := `
+SELECT COUNT(*) 
+FROM SERVER_CONFIG
+WHERE ENABLE_THIS_DEVICE = ?
+`
+	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
+	if err != nil {
+		err = fmt.Errorf("error at check enable device server config sql: %w", err)
+		return false, err
+	}
+	defer checkEnableDeviceStmt.Close()
+
+	enableDeviceCount := 0
+	rows, err := checkEnableDeviceStmt.QueryContext(ctx, true)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return false, ctx.Err()
+		default:
+			enableThisDevice := false
+			err = rows.Scan(
+				&enableThisDevice,
+			)
+			if enableThisDevice {
+				enableDeviceCount++
+			}
+		}
+	}
+	if enableDeviceCount != 1 {
+		errAtRollBack := tx.Rollback()
+		err := fmt.Errorf("enable device count is not 1.")
+		if errAtRollBack != nil {
+			err = fmt.Errorf("%w: %w", err, errAtRollBack)
+			fmt.Errorf("error at commit: %w", err)
+		}
+		return false, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		errAtRollBack := tx.Rollback()
+		if errAtRollBack != nil {
+			err = fmt.Errorf("%w: %w", err, errAtRollBack)
+			fmt.Errorf("error at commit: %w", err)
+			return false, err
+		}
+
+		fmt.Errorf("error at commit: %w", err)
+		return false, err
+	}
+	return true, nil
+}
+
+func (s *serverConfigDAOSQLite3Impl) UpdateServerConfig(ctx context.Context, serverConfig *ServerConfig) (bool, error) {
+	tx, err := s.db.Begin()
+	if err != nil {
+		fmt.Errorf("error at begin: %w", err)
+		return false, err
+	}
+
+	sql := `
+UPDATE SERVER_CONFIG SET
+  ENABLE_THIS_DEVICE = ?,
+  DEVICE = ?,
+  IS_LOCAL_ONLY_ACCESS = ?,
+  ADDRESS = ?,
+  ENABLE_TLS = ?,
+  TLS_CERT_FILE = ?,
+  TLS_KEY_FILE = ?,
+  OPEN_DIRECTORY_COMMAND = ?,
+  OPEN_FILE_COMMAND = ?,
+  URLOG_TIMEOUT = ?,
+  URLOG_USERAGENT = ?,
+  UPLOAD_SIZE_LIMIT_MONTH = ?,
+  USER_DATA_DIRECTORY = ?
+WHERE DEVICE = ?
+`
+	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update server config sql: %w", err)
 		return false, err
 	}
 
 	_, err = stmt.ExecContext(ctx,
+		serverConfig.EnableThisDevice,
 		serverConfig.Device,
 		serverConfig.IsLocalOnlyAccess,
 		serverConfig.Address,
@@ -314,6 +439,62 @@ WHERE DEVICE = ?
 	)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+
+	// 有効なDEVICEが存在しなければエラーで戻す
+	checkEnableDeviceCountSQL := `
+SELECT COUNT(*) 
+FROM SERVER_CONFIG
+WHERE ENABLE_THIS_DEVICE = ?
+`
+	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
+	if err != nil {
+		err = fmt.Errorf("error at check enable device server config sql: %w", err)
+		return false, err
+	}
+	defer checkEnableDeviceStmt.Close()
+
+	rows, err := checkEnableDeviceStmt.QueryContext(ctx, true)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+
+	enableDeviceCount := 0
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return false, ctx.Err()
+		default:
+			enableThisDevice := false
+			err = rows.Scan(
+				&enableThisDevice,
+			)
+			if enableThisDevice {
+				enableDeviceCount++
+			}
+		}
+	}
+	if enableDeviceCount != 1 {
+		errAtRollBack := tx.Rollback()
+		err := fmt.Errorf("enable device count is not 1.")
+		if errAtRollBack != nil {
+			err = fmt.Errorf("%w: %w", err, errAtRollBack)
+			fmt.Errorf("error at commit: %w", err)
+		}
+		return false, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		errAtRollBack := tx.Rollback()
+		if errAtRollBack != nil {
+			err = fmt.Errorf("%w: %w", err, errAtRollBack)
+			fmt.Errorf("error at commit: %w", err)
+			return false, err
+		}
+
+		fmt.Errorf("error at commit: %w", err)
 		return false, err
 	}
 	return true, nil
