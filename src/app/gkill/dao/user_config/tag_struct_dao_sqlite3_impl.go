@@ -85,14 +85,14 @@ FROM TAG_STRUCT
 		default:
 			tagStruct := &TagStruct{}
 			err = rows.Scan(
-				tagStruct.ID,
-				tagStruct.UserID,
-				tagStruct.Device,
-				tagStruct.TagName,
-				tagStruct.ParentFolderID,
-				tagStruct.Seq,
-				tagStruct.CheckWhenInited,
-				tagStruct.IsForceHide,
+				&tagStruct.ID,
+				&tagStruct.UserID,
+				&tagStruct.Device,
+				&tagStruct.TagName,
+				&tagStruct.ParentFolderID,
+				&tagStruct.Seq,
+				&tagStruct.CheckWhenInited,
+				&tagStruct.IsForceHide,
 			)
 			tagStructs = append(tagStructs, tagStruct)
 		}
@@ -134,14 +134,14 @@ WHERE USER_ID = ? DEVICE = ?
 		default:
 			tagStruct := &TagStruct{}
 			err = rows.Scan(
-				tagStruct.ID,
-				tagStruct.UserID,
-				tagStruct.Device,
-				tagStruct.TagName,
-				tagStruct.ParentFolderID,
-				tagStruct.Seq,
-				tagStruct.CheckWhenInited,
-				tagStruct.IsForceHide,
+				&tagStruct.ID,
+				&tagStruct.UserID,
+				&tagStruct.Device,
+				&tagStruct.TagName,
+				&tagStruct.ParentFolderID,
+				&tagStruct.Seq,
+				&tagStruct.CheckWhenInited,
+				&tagStruct.IsForceHide,
 			)
 			tagStructs = append(tagStructs, tagStruct)
 		}

@@ -135,18 +135,18 @@ FROM SERVER_CONFIG
 		default:
 			serverConfig := &ServerConfig{}
 			err = rows.Scan(
-				serverConfig.Device,
-				serverConfig.IsLocalOnlyAccess,
-				serverConfig.Address,
-				serverConfig.EnableTLS,
-				serverConfig.TLSCertFile,
-				serverConfig.TLSKeyFile,
-				serverConfig.OpenDirectoryCommand,
-				serverConfig.OpenFileCommand,
-				serverConfig.URLogTimeout,
-				serverConfig.URLogUserAgent,
-				serverConfig.UploadSizeLimitMonth,
-				serverConfig.UserDataDirectory,
+				&serverConfig.Device,
+				&serverConfig.IsLocalOnlyAccess,
+				&serverConfig.Address,
+				&serverConfig.EnableTLS,
+				&serverConfig.TLSCertFile,
+				&serverConfig.TLSKeyFile,
+				&serverConfig.OpenDirectoryCommand,
+				&serverConfig.OpenFileCommand,
+				&serverConfig.URLogTimeout,
+				&serverConfig.URLogUserAgent,
+				&serverConfig.UploadSizeLimitMonth,
+				&serverConfig.UserDataDirectory,
 			)
 			serverConfigs = append(serverConfigs, serverConfig)
 		}
@@ -192,18 +192,18 @@ WHERE DEVICE = ?
 		default:
 			serverConfig := &ServerConfig{}
 			err = rows.Scan(
-				serverConfig.Device,
-				serverConfig.IsLocalOnlyAccess,
-				serverConfig.Address,
-				serverConfig.EnableTLS,
-				serverConfig.TLSCertFile,
-				serverConfig.TLSKeyFile,
-				serverConfig.OpenDirectoryCommand,
-				serverConfig.OpenFileCommand,
-				serverConfig.URLogTimeout,
-				serverConfig.URLogUserAgent,
-				serverConfig.UploadSizeLimitMonth,
-				serverConfig.UserDataDirectory,
+				&serverConfig.Device,
+				&serverConfig.IsLocalOnlyAccess,
+				&serverConfig.Address,
+				&serverConfig.EnableTLS,
+				&serverConfig.TLSCertFile,
+				&serverConfig.TLSKeyFile,
+				&serverConfig.OpenDirectoryCommand,
+				&serverConfig.OpenFileCommand,
+				&serverConfig.URLogTimeout,
+				&serverConfig.URLogUserAgent,
+				&serverConfig.UploadSizeLimitMonth,
+				&serverConfig.UserDataDirectory,
 			)
 			serverConfigs = append(serverConfigs, serverConfig)
 		}

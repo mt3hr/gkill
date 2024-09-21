@@ -83,13 +83,13 @@ FROM REP_TYPE
 		default:
 			repTypeStruct := &RepTypeStruct{}
 			err = rows.Scan(
-				repTypeStruct.ID,
-				repTypeStruct.UserID,
-				repTypeStruct.Device,
-				repTypeStruct.RepTypeName,
-				repTypeStruct.ParentFolderID,
-				repTypeStruct.Seq,
-				repTypeStruct.CheckWhenInited,
+				&repTypeStruct.ID,
+				&repTypeStruct.UserID,
+				&repTypeStruct.Device,
+				&repTypeStruct.RepTypeName,
+				&repTypeStruct.ParentFolderID,
+				&repTypeStruct.Seq,
+				&repTypeStruct.CheckWhenInited,
 			)
 			repTypeStructs = append(repTypeStructs, repTypeStruct)
 		}
@@ -130,13 +130,13 @@ WHERE USER_ID = ? DEVICE = ?
 		default:
 			repTypeStruct := &RepTypeStruct{}
 			err = rows.Scan(
-				repTypeStruct.ID,
-				repTypeStruct.UserID,
-				repTypeStruct.Device,
-				repTypeStruct.RepTypeName,
-				repTypeStruct.ParentFolderID,
-				repTypeStruct.Seq,
-				repTypeStruct.CheckWhenInited,
+				&repTypeStruct.ID,
+				&repTypeStruct.UserID,
+				&repTypeStruct.Device,
+				&repTypeStruct.RepTypeName,
+				&repTypeStruct.ParentFolderID,
+				&repTypeStruct.Seq,
+				&repTypeStruct.CheckWhenInited,
 			)
 			repTypeStructs = append(repTypeStructs, repTypeStruct)
 		}

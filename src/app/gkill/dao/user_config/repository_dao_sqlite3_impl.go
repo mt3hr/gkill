@@ -83,14 +83,14 @@ FROM REPOSITORY
 		default:
 			repository := &Repository{}
 			err = rows.Scan(
-				repository.ID,
-				repository.UserID,
-				repository.Device,
-				repository.Type,
-				repository.File,
-				repository.UseToWrite,
-				repository.IsExecuteIDFWhenReload,
-				repository.IsEnable,
+				&repository.ID,
+				&repository.UserID,
+				&repository.Device,
+				&repository.Type,
+				&repository.File,
+				&repository.UseToWrite,
+				&repository.IsExecuteIDFWhenReload,
+				&repository.IsEnable,
 			)
 			repositories = append(repositories, repository)
 		}
@@ -132,14 +132,14 @@ WHERE USER_ID = ? AND DEVICE = ?
 		default:
 			repository := &Repository{}
 			err = rows.Scan(
-				repository.ID,
-				repository.UserID,
-				repository.Device,
-				repository.Type,
-				repository.File,
-				repository.UseToWrite,
-				repository.IsExecuteIDFWhenReload,
-				repository.IsEnable,
+				&repository.ID,
+				&repository.UserID,
+				&repository.Device,
+				&repository.Type,
+				&repository.File,
+				&repository.UseToWrite,
+				&repository.IsExecuteIDFWhenReload,
+				&repository.IsEnable,
 			)
 			repositories = append(repositories, repository)
 		}

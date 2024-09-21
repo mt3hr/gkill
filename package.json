@@ -12,12 +12,14 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "go_mod": "rimraf src/app/go.mod && rimraf src/app/go.sum && cd src/app && go mod init github.com/mt3hr/gkill/src/app && cd main/gkill && go mod tidy",
     "clean_app_embed": "rimraf src/app/gkill/gkill/embed/html",
-    "copy_dist_to_app_embed": "mkdirp src/app/gkill/gkill_server_api/embed/html && copyfiles -u 1 \"dist/**/*\" src/app/gkill/gkill_server_api/embed/html",
+    "copy_dist_to_app_embed": "mkdirp src/app/gkill/api/embed/html && copyfiles -u 1 \"dist/**/*\" src/app/gkill/api/embed/html",
     "preparate_install": "npm run clean_app_embed && npm run build && npm run copy_dist_to_app_embed",
-    "install_app": "npm run preparate_install && cd src/app/main/gkill && go install -ldflags \"-H windowsgui\"",
-    "install_server": "npm run preparate_install && cd src/app/main/gkill_server && go install"
+    "install_app": "npm run preparate_install && cd src/app/gkill/main/gkill && go install -ldflags \"-H windowsgui\"",
+    "install_server": "npm run preparate_install && cd src/app/gkill/main/gkill_server && go install"
   },
   "dependencies": {
+    "copyfiles": "^2.4.1",
+    "mkdirp": "^3.0.1",
     "moment": "^2.30.1",
     "vue": "^3.4.29",
     "vue-router": "^4.3.3",

@@ -79,11 +79,11 @@ FROM ACCOUNT
 		default:
 			account := &Account{}
 			err = rows.Scan(
-				account.UserID,
-				account.PasswordSha256,
-				account.IsAdmin,
-				account.IsEnable,
-				account.PasswordResetToken,
+				&account.UserID,
+				&account.PasswordSha256,
+				&account.IsAdmin,
+				&account.IsEnable,
+				&account.PasswordResetToken,
 			)
 			accounts = append(accounts, account)
 		}
@@ -121,11 +121,11 @@ WHERE USER_ID = ?
 		default:
 			account := &Account{}
 			err = rows.Scan(
-				account.UserID,
-				account.PasswordSha256,
-				account.IsAdmin,
-				account.IsEnable,
-				account.PasswordResetToken,
+				&account.UserID,
+				&account.PasswordSha256,
+				&account.IsAdmin,
+				&account.IsEnable,
+				&account.PasswordResetToken,
 			)
 			accounts = append(accounts, account)
 		}

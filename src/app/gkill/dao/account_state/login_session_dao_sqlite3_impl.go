@@ -92,15 +92,15 @@ FROM LOGIN_SESSION
 			loginTimeStr := ""
 			expriationTimeStr := ""
 			err = rows.Scan(
-				loginSession.ID,
-				loginSession.UserID,
-				loginSession.Device,
-				loginSession.ApplicationName,
-				loginSession.SessionID,
-				loginSession.ClientIPAddress,
+				&loginSession.ID,
+				&loginSession.UserID,
+				&loginSession.Device,
+				&loginSession.ApplicationName,
+				&loginSession.SessionID,
+				&loginSession.ClientIPAddress,
 				&loginTimeStr,
 				&expriationTimeStr,
-				loginSession.IsLocalAppUser,
+				&loginSession.IsLocalAppUser,
 			)
 
 			loginSession.LoginTime, err = time.Parse(sqlite3impl.TimeLayout, loginTimeStr)
@@ -158,15 +158,15 @@ WHERE USER_ID = ? AND DEVICE = ?
 			loginTimeStr := ""
 			expriationTimeStr := ""
 			err = rows.Scan(
-				loginSession.ID,
-				loginSession.UserID,
-				loginSession.Device,
-				loginSession.ApplicationName,
-				loginSession.SessionID,
-				loginSession.ClientIPAddress,
+				&loginSession.ID,
+				&loginSession.UserID,
+				&loginSession.Device,
+				&loginSession.ApplicationName,
+				&loginSession.SessionID,
+				&loginSession.ClientIPAddress,
 				&loginTimeStr,
 				&expriationTimeStr,
-				loginSession.IsLocalAppUser,
+				&loginSession.IsLocalAppUser,
 			)
 
 			loginSession.LoginTime, err = time.Parse(sqlite3impl.TimeLayout, loginTimeStr)
@@ -224,15 +224,15 @@ WHERE SESSION_ID = ?
 			loginTimeStr := ""
 			expriationTimeStr := ""
 			err = rows.Scan(
-				loginSession.ID,
-				loginSession.UserID,
-				loginSession.Device,
-				loginSession.ApplicationName,
-				loginSession.SessionID,
-				loginSession.ClientIPAddress,
+				&loginSession.ID,
+				&loginSession.UserID,
+				&loginSession.Device,
+				&loginSession.ApplicationName,
+				&loginSession.SessionID,
+				&loginSession.ClientIPAddress,
 				&loginTimeStr,
 				&expriationTimeStr,
-				loginSession.IsLocalAppUser,
+				&loginSession.IsLocalAppUser,
 			)
 
 			loginSession.LoginTime, err = time.Parse(sqlite3impl.TimeLayout, loginTimeStr)
