@@ -244,6 +244,13 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetMiSharedTasksAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleLogout(w, r)
 	}).Methods(g.APIAddress.GetMiSharedTasksMethod)
+	gkillPage, err := fs.Sub(htmlFS, "embed/html")
+	if err != nil {
+		return err
+	}
+	router.PathPrefix("/").HandlerFunc(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+	}))
 
 	device, err := g.GetDevice()
 	if err != nil {

@@ -214,19 +214,19 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(kyou.IsDeleted,
-				kyou.ID,
-				relatedTimeStr,
-				createTimeStr,
-				kyou.CreateApp,
-				kyou.CreateDevice,
-				kyou.CreateUser,
-				updateTimeStr,
-				kyou.UpdateApp,
-				kyou.UpdateDevice,
-				kyou.UpdateUser,
-				kyou.RepName,
-				kyou.DataType,
+			err = rows.Scan(&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeStr,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -315,19 +315,19 @@ ORDER BY UPDATE_TIME DESC
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(kyou.IsDeleted,
-				kyou.ID,
-				relatedTimeStr,
-				createTimeStr,
-				kyou.CreateApp,
-				kyou.CreateDevice,
-				kyou.CreateUser,
-				updateTimeStr,
-				kyou.UpdateApp,
-				kyou.UpdateDevice,
-				kyou.UpdateUser,
-				kyou.RepName,
-				kyou.DataType,
+			err = rows.Scan(&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeStr,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -528,19 +528,19 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 			lantana.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(lantana.IsDeleted,
-				lantana.ID,
-				relatedTimeStr,
-				createTimeStr,
-				lantana.CreateApp,
-				lantana.CreateDevice,
-				lantana.CreateUser,
-				updateTimeStr,
-				lantana.UpdateApp,
-				lantana.UpdateDevice,
-				lantana.UpdateUser,
-				lantana.Mood,
-				lantana.RepName,
+			err = rows.Scan(&lantana.IsDeleted,
+				&lantana.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&lantana.CreateApp,
+				&lantana.CreateDevice,
+				&lantana.CreateUser,
+				&updateTimeStr,
+				&lantana.UpdateApp,
+				&lantana.UpdateDevice,
+				&lantana.UpdateUser,
+				&lantana.Mood,
+				&lantana.RepName,
 			)
 
 			lantana.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -628,19 +628,19 @@ ORDER BY UPDATE_TIME DESC
 			lantana.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(lantana.IsDeleted,
-				lantana.ID,
-				relatedTimeStr,
-				createTimeStr,
-				lantana.CreateApp,
-				lantana.CreateDevice,
-				lantana.CreateUser,
-				updateTimeStr,
-				lantana.UpdateApp,
-				lantana.UpdateDevice,
-				lantana.UpdateUser,
-				lantana.Mood,
-				lantana.RepName,
+			err = rows.Scan(&lantana.IsDeleted,
+				&lantana.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&lantana.CreateApp,
+				&lantana.CreateDevice,
+				&lantana.CreateUser,
+				&updateTimeStr,
+				&lantana.UpdateApp,
+				&lantana.UpdateDevice,
+				&lantana.UpdateUser,
+				&lantana.Mood,
+				&lantana.RepName,
 			)
 
 			lantana.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)

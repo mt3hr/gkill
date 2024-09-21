@@ -88,14 +88,14 @@ FROM FILE_UPLOAD_HISTORY
 			fileUploadHistory := &FileUploadHistory{}
 			uploadTimeStr := ""
 			err = rows.Scan(
-				fileUploadHistory.ID,
-				fileUploadHistory.UserID,
-				fileUploadHistory.Device,
-				fileUploadHistory.FileName,
-				fileUploadHistory.FileSizeByte,
-				fileUploadHistory.Successed,
-				fileUploadHistory.SourceAddress,
-				uploadTimeStr,
+				&fileUploadHistory.ID,
+				&fileUploadHistory.UserID,
+				&fileUploadHistory.Device,
+				&fileUploadHistory.FileName,
+				&fileUploadHistory.FileSizeByte,
+				&fileUploadHistory.Successed,
+				&fileUploadHistory.SourceAddress,
+				&uploadTimeStr,
 			)
 
 			fileUploadHistory.UploadTime, err = time.Parse(sqlite3impl.TimeLayout, uploadTimeStr)
@@ -145,14 +145,14 @@ WHERE USER_ID = ?
 			fileUploadHistory := &FileUploadHistory{}
 			uploadTimeStr := ""
 			err = rows.Scan(
-				fileUploadHistory.ID,
-				fileUploadHistory.UserID,
-				fileUploadHistory.Device,
-				fileUploadHistory.FileName,
-				fileUploadHistory.FileSizeByte,
-				fileUploadHistory.Successed,
-				fileUploadHistory.SourceAddress,
-				uploadTimeStr,
+				&fileUploadHistory.ID,
+				&fileUploadHistory.UserID,
+				&fileUploadHistory.Device,
+				&fileUploadHistory.FileName,
+				&fileUploadHistory.FileSizeByte,
+				&fileUploadHistory.Successed,
+				&fileUploadHistory.SourceAddress,
+				&uploadTimeStr,
 			)
 
 			fileUploadHistory.UploadTime, err = time.Parse(sqlite3impl.TimeLayout, uploadTimeStr)

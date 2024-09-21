@@ -196,19 +196,19 @@ ORDER BY UPDATE_TIME DESC
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(kyou.IsDeleted,
-				kyou.ID,
-				relatedTimeStr,
-				createTimeStr,
-				kyou.CreateApp,
-				kyou.CreateDevice,
-				kyou.CreateUser,
-				updateTimeStr,
-				kyou.UpdateApp,
-				kyou.UpdateDevice,
-				kyou.UpdateUser,
-				kyou.RepName,
-				kyou.DataType,
+			err = rows.Scan(&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeStr,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -381,20 +381,20 @@ WHERE TARGET_ID LIKE ?
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			repName, dataType := "", ""
 
-			err = rows.Scan(reKyou.IsDeleted,
-				reKyou.ID,
-				reKyou.TargetID,
-				relatedTimeStr,
-				createTimeStr,
-				reKyou.CreateApp,
-				reKyou.CreateDevice,
-				reKyou.CreateUser,
-				updateTimeStr,
-				reKyou.UpdateApp,
-				reKyou.UpdateDevice,
-				reKyou.UpdateUser,
-				repName,
-				dataType,
+			err = rows.Scan(&reKyou.IsDeleted,
+				&reKyou.ID,
+				&reKyou.TargetID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&reKyou.CreateApp,
+				&reKyou.CreateDevice,
+				&reKyou.CreateUser,
+				&updateTimeStr,
+				&reKyou.UpdateApp,
+				&reKyou.UpdateDevice,
+				&reKyou.UpdateUser,
+				&repName,
+				&dataType,
 			)
 
 			reKyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -533,20 +533,20 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			repName, dataType := "", ""
 
-			err = rows.Scan(reKyou.IsDeleted,
-				reKyou.ID,
-				reKyou.TargetID,
-				relatedTimeStr,
-				createTimeStr,
-				reKyou.CreateApp,
-				reKyou.CreateDevice,
-				reKyou.CreateUser,
-				updateTimeStr,
-				reKyou.UpdateApp,
-				reKyou.UpdateDevice,
-				reKyou.UpdateUser,
-				repName,
-				dataType,
+			err = rows.Scan(&reKyou.IsDeleted,
+				&reKyou.ID,
+				&reKyou.TargetID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&reKyou.CreateApp,
+				&reKyou.CreateDevice,
+				&reKyou.CreateUser,
+				&updateTimeStr,
+				&reKyou.UpdateApp,
+				&reKyou.UpdateDevice,
+				&reKyou.UpdateUser,
+				&repName,
+				&dataType,
 			)
 
 			reKyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)

@@ -215,19 +215,19 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(kyou.IsDeleted,
-				kyou.ID,
-				relatedTimeStr,
-				createTimeStr,
-				kyou.CreateApp,
-				kyou.CreateDevice,
-				kyou.CreateUser,
-				updateTimeStr,
-				kyou.UpdateApp,
-				kyou.UpdateDevice,
-				kyou.UpdateUser,
-				kyou.RepName,
-				kyou.DataType,
+			err = rows.Scan(&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeStr,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -316,19 +316,19 @@ ORDER BY UPDATE_TIME DESC
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(kyou.IsDeleted,
-				kyou.ID,
-				relatedTimeStr,
-				createTimeStr,
-				kyou.CreateApp,
-				kyou.CreateDevice,
-				kyou.CreateUser,
-				updateTimeStr,
-				kyou.UpdateApp,
-				kyou.UpdateDevice,
-				kyou.UpdateUser,
-				kyou.RepName,
-				kyou.DataType,
+			err = rows.Scan(&kyou.IsDeleted,
+				&kyou.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&kyou.CreateApp,
+				&kyou.CreateDevice,
+				&kyou.CreateUser,
+				&updateTimeStr,
+				&kyou.UpdateApp,
+				&kyou.UpdateDevice,
+				&kyou.UpdateUser,
+				&kyou.RepName,
+				&kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -529,19 +529,19 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 			kmemo.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(kmemo.IsDeleted,
-				kmemo.ID,
-				relatedTimeStr,
-				createTimeStr,
-				kmemo.CreateApp,
-				kmemo.CreateDevice,
-				kmemo.CreateUser,
-				updateTimeStr,
-				kmemo.UpdateApp,
-				kmemo.UpdateDevice,
-				kmemo.UpdateUser,
-				kmemo.Content,
-				kmemo.RepName,
+			err = rows.Scan(&kmemo.IsDeleted,
+				&kmemo.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&kmemo.CreateApp,
+				&kmemo.CreateDevice,
+				&kmemo.CreateUser,
+				&updateTimeStr,
+				&kmemo.UpdateApp,
+				&kmemo.UpdateDevice,
+				&kmemo.UpdateUser,
+				&kmemo.Content,
+				&kmemo.RepName,
 			)
 
 			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -629,19 +629,19 @@ ORDER BY UPDATE_TIME DESC
 			kmemo.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(kmemo.IsDeleted,
-				kmemo.ID,
-				relatedTimeStr,
-				createTimeStr,
-				kmemo.CreateApp,
-				kmemo.CreateDevice,
-				kmemo.CreateUser,
-				updateTimeStr,
-				kmemo.UpdateApp,
-				kmemo.UpdateDevice,
-				kmemo.UpdateUser,
-				kmemo.Content,
-				kmemo.RepName,
+			err = rows.Scan(&kmemo.IsDeleted,
+				&kmemo.ID,
+				&relatedTimeStr,
+				&createTimeStr,
+				&kmemo.CreateApp,
+				&kmemo.CreateDevice,
+				&kmemo.CreateUser,
+				&updateTimeStr,
+				&kmemo.UpdateApp,
+				&kmemo.UpdateDevice,
+				&kmemo.UpdateUser,
+				&kmemo.Content,
+				&kmemo.RepName,
 			)
 
 			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)

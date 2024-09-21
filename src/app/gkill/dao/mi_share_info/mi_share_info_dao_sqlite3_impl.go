@@ -83,13 +83,13 @@ FROM MI_SHARE_INFO
 		default:
 			miShareInfo := &MiShareInfo{}
 			err = rows.Scan(
-				miShareInfo.ID,
-				miShareInfo.UserID,
-				miShareInfo.Device,
-				miShareInfo.ShareTitle,
-				miShareInfo.IsShareDetail,
-				miShareInfo.ShareID,
-				miShareInfo.FindQueryJSON,
+				&miShareInfo.ID,
+				&miShareInfo.UserID,
+				&miShareInfo.Device,
+				&miShareInfo.ShareTitle,
+				&miShareInfo.IsShareDetail,
+				&miShareInfo.ShareID,
+				&miShareInfo.FindQueryJSON,
 			)
 			miShareInfos = append(miShareInfos, miShareInfo)
 		}
@@ -130,13 +130,13 @@ WHERE USER_ID = ? AND DEVICE = ?
 		default:
 			miShareInfo := &MiShareInfo{}
 			err = rows.Scan(
-				miShareInfo.ID,
-				miShareInfo.UserID,
-				miShareInfo.Device,
-				miShareInfo.ShareTitle,
-				miShareInfo.IsShareDetail,
-				miShareInfo.ShareID,
-				miShareInfo.FindQueryJSON,
+				&miShareInfo.ID,
+				&miShareInfo.UserID,
+				&miShareInfo.Device,
+				&miShareInfo.ShareTitle,
+				&miShareInfo.IsShareDetail,
+				&miShareInfo.ShareID,
+				&miShareInfo.FindQueryJSON,
 			)
 			miShareInfos = append(miShareInfos, miShareInfo)
 		}
@@ -177,13 +177,13 @@ WHERE SHARED_ID = ?
 		default:
 			miShareInfo := &MiShareInfo{}
 			err = rows.Scan(
-				miShareInfo.ID,
-				miShareInfo.UserID,
-				miShareInfo.Device,
-				miShareInfo.ShareTitle,
-				miShareInfo.IsShareDetail,
-				miShareInfo.ShareID,
-				miShareInfo.FindQueryJSON,
+				&miShareInfo.ID,
+				&miShareInfo.UserID,
+				&miShareInfo.Device,
+				&miShareInfo.ShareTitle,
+				&miShareInfo.IsShareDetail,
+				&miShareInfo.ShareID,
+				&miShareInfo.FindQueryJSON,
 			)
 			miShareInfos = append(miShareInfos, miShareInfo)
 		}

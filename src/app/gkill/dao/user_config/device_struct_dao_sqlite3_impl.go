@@ -83,13 +83,13 @@ FROM DEVICE_STRUCT
 		default:
 			deviceStruct := &DeviceStruct{}
 			err = rows.Scan(
-				deviceStruct.ID,
-				deviceStruct.UserID,
-				deviceStruct.Device,
-				deviceStruct.DeviceName,
-				deviceStruct.ParentFolderID,
-				deviceStruct.Seq,
-				deviceStruct.CheckWhenInited,
+				&deviceStruct.ID,
+				&deviceStruct.UserID,
+				&deviceStruct.Device,
+				&deviceStruct.DeviceName,
+				&deviceStruct.ParentFolderID,
+				&deviceStruct.Seq,
+				&deviceStruct.CheckWhenInited,
 			)
 			deviceStructs = append(deviceStructs, deviceStruct)
 		}
@@ -130,13 +130,13 @@ WHERE USER_ID = ? DEVICE = ?
 		default:
 			deviceStruct := &DeviceStruct{}
 			err = rows.Scan(
-				deviceStruct.ID,
-				deviceStruct.UserID,
-				deviceStruct.Device,
-				deviceStruct.DeviceName,
-				deviceStruct.ParentFolderID,
-				deviceStruct.Seq,
-				deviceStruct.CheckWhenInited,
+				&deviceStruct.ID,
+				&deviceStruct.UserID,
+				&deviceStruct.Device,
+				&deviceStruct.DeviceName,
+				&deviceStruct.ParentFolderID,
+				&deviceStruct.Seq,
+				&deviceStruct.CheckWhenInited,
 			)
 			deviceStructs = append(deviceStructs, deviceStruct)
 		}
