@@ -1,7 +1,13 @@
 <template>
-    <ConfirmGenerateTLSFilesDialog />
-    <CreateAccountDialog />
-    <ManageAccountDialog />
+    <ConfirmGenerateTLSFilesDialog :application_config="application_config" :gkill_api="gkill_api"
+        :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" />
+    <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api" :server_config="server_config"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" />
+    <ManageAccountDialog :application_config="application_config" :gkill_api="gkill_api" :server_config="server_config"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" />
 </template>
 <script setup lang="ts">
 import type { ServerConfig } from '@/classes/datas/config/server-config';

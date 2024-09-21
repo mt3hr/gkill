@@ -21,4 +21,5 @@ export interface miBoardTaskListViewEmits {
     (e: 'requested_reload_kyou', kyou: Kyou): void
     (e: 'requested_focus_kyou', kyou: Kyou): void
     (e: 'requested_close_board', board_name: string): void
+    (e: 'requested_update_check_kyous', kyou: Array<Kyou>, is_checked: boolean): void
 }

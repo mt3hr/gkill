@@ -1,8 +1,6 @@
 <template>
-    <AddNewRepTypeStructElementDialog />
-    <EditRepTypeStructElementDialog />
-    <RepTypeElement />
-    <TagStructElement />
+    <RepTypeElement :application_config="application_config" :folder_name="''" :gkill_api="gkill_api" :is_open="true"
+        :struct_obj="application_config.rep_type_struct" />
 </template>
 <script lang="ts" setup>
 import type { EditRepTypeViewEmits } from './edit-rep-type-view-emits';

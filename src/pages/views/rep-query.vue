@@ -1,8 +1,16 @@
 <template>
-    <FoldableStruct />
-    <FoldableStruct />
-    <FoldableStruct />
-    <FoldableStruct />
+    <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api" :is_open="true"
+        :query="query" :struct_obj="application_config.rep_type_struct" @requested_update_check_state="'//TODO'"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" @clicked_items="'//TODO'" />
+    <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api" :is_open="true"
+        :query="query" :struct_obj="application_config.rep_struct" @requested_update_check_state="'//TODO'"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" @clicked_items="'//TODO'" />
+    <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api" :is_open="true"
+        :query="query" :struct_obj="application_config.device_struct" @requested_update_check_state="'//TODO'"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" @clicked_items="'//TODO'" />
 </template>
 <script setup lang="ts">
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';

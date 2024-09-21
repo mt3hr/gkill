@@ -6,6 +6,11 @@ import { KFTLTemplateStruct } from './kftl-template-struct';
 import { RepStruct } from './rep-struct';
 import { RepTypeStruct } from './rep-type-struct';
 import { TagStruct } from './tag-struct';
+import { KFTLTemplateElement } from '../kftl-template-element';
+import { TagStructElementData } from './tag-struct-element-data';
+import { RepStructElementData } from './rep-struct-element-data';
+import { DeviceStructElementData } from './device-struct-element-data';
+import { RepTypeStructElementData } from './rep-type-struct-element-data';
 
 export class ApplicationConfig {
     is_loaded: boolean;
@@ -16,11 +21,11 @@ export class ApplicationConfig {
     rykv_image_list_column_number: Number;
     rykv_hot_reload: boolean;
     mi_default_board: string;
-    parsed_kftl_template: Object;
-    parsed_tag_struct: Object;
-    parsed_rep_struct: Object;
-    parsed_device_struct: Object;
-    parsed_rep_type_struct: Object;
+    parsed_kftl_template: KFTLTemplateElement;
+    parsed_tag_struct: TagStructElementData;
+    parsed_rep_struct: RepStructElementData;
+    parsed_device_struct: DeviceStructElementData;
+    parsed_rep_type_struct: RepTypeStructElementData;
     tag_struct: Array<TagStruct>;
     rep_struct: Array<RepStruct>;
     device_struct: Array<DeviceStruct>;
@@ -56,11 +61,11 @@ export class ApplicationConfig {
         this.rykv_image_list_column_number = 3
         this.rykv_hot_reload = false
         this.mi_default_board = ""
-        this.parsed_kftl_template = {}
-        this.parsed_tag_struct = {}
-        this.parsed_rep_struct = {}
-        this.parsed_device_struct = {}
-        this.parsed_rep_type_struct = {}
+        this.parsed_kftl_template = new KFTLTemplateElement()
+        this.parsed_tag_struct = new TagStructElementData()
+        this.parsed_rep_struct = new RepStructElementData()
+        this.parsed_device_struct = new DeviceStructElementData()
+        this.parsed_rep_type_struct = new RepTypeStructElementData()
         this.tag_struct = new Array<TagStruct>()
         this.rep_struct = new Array<RepStruct>()
         this.device_struct = new Array<DeviceStruct>()

@@ -2,8 +2,8 @@
     <v-dialog v-model="is_show_dialog">
         <ConfirmDeleteShareTaskListView :application_config="application_config" :gkill_api="gkill_api"
             :share_mi_task_list_info="share_mi_task_list_info"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" />
+            @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+            @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)" />
     </v-dialog>
 </template>
 
@@ -13,6 +13,8 @@ import type { ConfirmDeleteShareTaskLinkDialogEmits } from './confirm-delete-sha
 import type { ConfirmDeleteShareTaskLinkDialogProps } from './confirm-delete-share-task-link-dialog-props';
 import type { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info';
 import ConfirmDeleteShareTaskListView from '../views/confirm-delete-share-task-list-view.vue';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
 
 const props = defineProps<ConfirmDeleteShareTaskLinkDialogProps>();
 const emits = defineEmits<ConfirmDeleteShareTaskLinkDialogEmits>();

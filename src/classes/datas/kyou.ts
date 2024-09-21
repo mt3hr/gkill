@@ -94,7 +94,11 @@ export class Kyou extends InfoBase {
         throw new Error('Not implemented');
     }
 
-    clone(): Promise<Kyou> {
+    async reload(): Promise<Array<GkillError>> {
+        throw new Error('Not implemented');
+    }
+
+    async clone(): Promise<Kyou> {
         throw new Error('Not implemented');
     }
 

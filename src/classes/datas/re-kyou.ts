@@ -3,7 +3,6 @@
 import type { GkillError } from '../api/gkill-error';
 import { InfoBase } from './info-base';
 import { Kyou } from './kyou';
-import type { Lantana } from './lantana';
 
 
 export class ReKyou extends InfoBase {
@@ -37,7 +36,7 @@ export class ReKyou extends InfoBase {
         throw new Error('Not implemented');
     }
 
-    async clone(): Promise<Lantana> {
+    async clone(): Promise<ReKyou> {
         throw new Error('Not implemented');
     }
 
