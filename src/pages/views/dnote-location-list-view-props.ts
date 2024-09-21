@@ -5,4 +5,5 @@ import type { GkillPropsBase } from "./gkill-props-base";
 
 export interface DnoteLocationListViewProps extends GkillPropsBase {
     timeis_kyous: Array<Kyou>;
+    last_added_tag: string;
 }

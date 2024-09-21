@@ -5,8 +5,8 @@
     </v-app-bar>
     <v-main class="main">
         <miSharedTaskView :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :share_id="share_mi_id" :application_config="null" :gkill_api="gkill_api" @received_errors="write_errors"
-            @received_messages="write_messages" />
+            :share_id="share_mi_id" :application_config="new ApplicationConfig()" :gkill_api="gkill_api"
+            @received_errors="write_errors" @received_messages="write_messages" />
     </v-main>
 </template>
 
@@ -19,6 +19,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message';
 
 import miSharedTaskView from './views/mi-shared-task-view.vue';
 import { useRoute } from 'vue-router';
+import { ApplicationConfig } from '@/classes/datas/config/application-config';
 
 const actual_height: Ref<Number> = ref(0);
 const element_height: Ref<Number> = ref(0);

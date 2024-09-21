@@ -2,6 +2,7 @@
 
 import { FileData } from '../file-data';
 import { GkillAPIRequest } from '../gkill-api-request';
+import { FileUploadConflictBehavior } from './file-upload-conflict-behavior';
 
 
 export class UploadFilesRequest extends GkillAPIRequest {
@@ -16,6 +17,8 @@ export class UploadFilesRequest extends GkillAPIRequest {
     constructor() {
         super()
         this.files = new Array<FileData>()
+        this.target_rep_name = ""
+        this.conflict_behavior = FileUploadConflictBehavior.rename
     }
 
 

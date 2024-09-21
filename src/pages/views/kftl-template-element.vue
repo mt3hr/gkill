@@ -1,5 +1,6 @@
 <template>
-    <ApplicationConfigStructContextMenu />
+    <ApplicationConfigStructContextMenu :struct_obj="struct_obj" :application_config="application_config"
+        :folder_name="''" :gkill_api="gkill_api" :is_open="true" />
 </template>
 <script setup lang="ts">
 import { type Ref, ref } from 'vue';
