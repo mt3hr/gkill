@@ -1,5 +1,9 @@
 <template>
-    <ApplicationConfigStructContextMenu />
+    <!-- //TODO 実装-->
+    <!-- //TODO emitsまだひろえてない-->
+    <ApplicationConfigStructContextMenu :application_config="application_config" :gkill_api="gkill_api"
+        :folder_name="folder_name" :is_open="is_open" :struct_obj="struct_obj"
+        />
 </template>
 <script setup lang="ts">
 import { type Ref, ref } from 'vue';

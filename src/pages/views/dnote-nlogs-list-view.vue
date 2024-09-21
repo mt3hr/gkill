@@ -1,5 +1,10 @@
 <template>
-    <DnoteNlogView />
+    <DnoteNlogView v-for="kyou, index in sorted_nlog_kyous" :nlog_kyou="kyou" :application_config="application_config"
+        :gkill_api="gkill_api" :highlight_targets="new Array<Kyou>()" :last_added_tag="last_added_tag"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)"
+        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+        @requested_reload_list="emits('requested_reload_list')" />
 </template>
 <script setup lang="ts">
 import { computed, type Ref, ref } from 'vue';
@@ -10,7 +15,7 @@ import { Kyou } from '@/classes/datas/kyou';
 
 const props = defineProps<DnoteNlogsListViewProps>();
 const emits = defineEmits<DnoteNlogsListViewEmits>();
-const calcrated_total_amount: Number = computed(() => {
+const calcrated_total_amount = computed(() => {
     let total_amount: Number = 0
     props.nlog_kyous.forEach(async (nlog_kyou) => {
         const errors = await nlog_kyou.load_typed_nlog()
