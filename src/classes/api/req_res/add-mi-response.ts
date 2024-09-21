@@ -1,16 +1,14 @@
-'use strict';
+'use strict'
 
-import { Mi } from '@/classes/datas/mi';
-import { GkillAPIResponse } from '../gkill-api-response';
-import { Kyou } from '@/classes/datas/kyou';
-
+import { Mi } from '@/classes/datas/mi'
+import { GkillAPIResponse } from '../gkill-api-response'
+import { Kyou } from '@/classes/datas/kyou'
 
 export class AddMiResponse extends GkillAPIResponse {
 
+    added_mi: Mi
 
-    added_mi: Mi;
-
-    added_mi_kyou: Kyou;
+    added_mi_kyou: Kyou
 
     constructor() {
         super()
@@ -18,8 +16,6 @@ export class AddMiResponse extends GkillAPIResponse {
         this.added_mi_kyou = new Kyou()
     }
 
-
 }
-
 
 

@@ -1,16 +1,14 @@
-'use strict';
+'use strict'
 
-import { Lantana } from '@/classes/datas/lantana';
-import { GkillAPIResponse } from '../gkill-api-response';
-import { Kyou } from '@/classes/datas/kyou';
-
+import { Lantana } from '@/classes/datas/lantana'
+import { GkillAPIResponse } from '../gkill-api-response'
+import { Kyou } from '@/classes/datas/kyou'
 
 export class AddLantanaResponse extends GkillAPIResponse {
 
+    added_lantana: Lantana
 
-    added_lantana: Lantana;
-
-    added_lantana_kyou: Kyou;
+    added_lantana_kyou: Kyou
 
     constructor() {
         super()
@@ -18,8 +16,6 @@ export class AddLantanaResponse extends GkillAPIResponse {
         this.added_lantana_kyou = new Kyou()
     }
 
-
 }
-
 
 

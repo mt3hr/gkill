@@ -1,38 +1,36 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from '../api/gkill-error';
-import { InfoBase } from './info-base';
-
+import type { GkillError } from '../api/gkill-error'
+import { InfoBase } from './info-base'
 
 export class Nlog extends InfoBase {
 
+    shop: string
 
-    shop: string;
+    title: string
 
-    title: string;
+    amount: Number
 
-    amount: Number;
-
-    attached_histories: Array<Nlog>;
+    attached_histories: Array<Nlog>
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clone(): Promise<Nlog> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     constructor() {
@@ -43,8 +41,6 @@ export class Nlog extends InfoBase {
         this.attached_histories = new Array<Nlog>()
     }
 
-
 }
-
 
 

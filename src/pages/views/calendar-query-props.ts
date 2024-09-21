@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-import type { SidebarProps } from "./sidebar-props";
+import type { SidebarProps } from "./sidebar-props"
 
 export interface CalendarQueryProps extends SidebarProps {
 }

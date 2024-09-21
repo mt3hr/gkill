@@ -6,13 +6,13 @@
         @setted_new_board_name="(new_board_name) => board_name = new_board_name" />
 </template>
 <script lang="ts" setup>
-import type { AddMiViewProps } from './add-mi-view-props';
-import type { KyouViewEmits } from './kyou-view-emits';
-import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue';
-import { ref, type Ref } from 'vue';
+import type { AddMiViewProps } from './add-mi-view-props'
+import type { KyouViewEmits } from './kyou-view-emits'
+import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
+import { ref, type Ref } from 'vue'
 
-const props = defineProps<AddMiViewProps>();
-const emits = defineEmits<KyouViewEmits>();
+const props = defineProps<AddMiViewProps>()
+const emits = defineEmits<KyouViewEmits>()
 
-const board_name: Ref<string> = ref("");
+const board_name: Ref<string> = ref("")
 </script>

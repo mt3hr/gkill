@@ -9,14 +9,14 @@
 </template>
 
 <script lang="ts" setup>
-import type { UploadFileDialogEmits } from './upload-file-dialog-emits';
-import type { UploadFileDialogProps } from './upload-file-dialog-props';
+import type { UploadFileDialogEmits } from './upload-file-dialog-emits'
+import type { UploadFileDialogProps } from './upload-file-dialog-props'
 
-import UploadFileView from '../views/upload-file-view.vue';
-import { type Ref, ref } from 'vue';
+import UploadFileView from '../views/upload-file-view.vue'
+import { type Ref, ref } from 'vue'
 
-const props = defineProps<UploadFileDialogProps>();
-const emits = defineEmits<UploadFileDialogEmits>();
+const props = defineProps<UploadFileDialogProps>()
+const emits = defineEmits<UploadFileDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

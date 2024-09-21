@@ -1,18 +1,14 @@
-'use strict';
-
+'use strict'
 
 export class GkillAPIRequest {
 
-
-    session_id: string;
+    session_id: string
 
     constructor() {
-        this.session_id = "";
+        this.session_id = ""
 
     }
 
-
 }
-
 
 

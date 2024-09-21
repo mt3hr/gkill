@@ -1,21 +1,17 @@
-'use strict';
+'use strict'
 
-import { FindLantanaQuery } from '../find_query/find-lantana-query';
-import { GkillAPIRequest } from '../gkill-api-request';
-
+import { FindLantanaQuery } from '../find_query/find-lantana-query'
+import { GkillAPIRequest } from '../gkill-api-request'
 
 export class GetLantanasRequest extends GkillAPIRequest {
 
-
-    query: FindLantanaQuery;
+    query: FindLantanaQuery
 
     constructor() {
         super()
         this.query = new FindLantanaQuery()
     }
 
-
 }
-
 
 

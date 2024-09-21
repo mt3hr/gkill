@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from "@/classes/api/gkill-error";
-import type { GkillMessage } from "@/classes/api/gkill-message";
-import type { ShareMiTaskListInfo } from "@/classes/datas/share-mi-task-list-info";
+import type { GkillError } from "@/classes/api/gkill-error"
+import type { GkillMessage } from "@/classes/api/gkill-message"
+import type { ShareMiTaskListInfo } from "@/classes/datas/share-mi-task-list-info"
 
 export interface ManageShareTaskLinkDialogEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void

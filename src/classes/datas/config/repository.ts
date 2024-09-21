@@ -1,22 +1,21 @@
-'use strict';
-
+'use strict'
 
 export class Repository {
     id: string
 
-    user_id: string;
+    user_id: string
 
-    device: string;
+    device: string
 
-    type: string;
+    type: string
 
-    file: string;
+    file: string
 
-    use_to_write: boolean;
+    use_to_write: boolean
 
-    is_execute_idf_when_reload: boolean;
+    is_execute_idf_when_reload: boolean
 
-    is_enable: boolean;
+    is_enable: boolean
 
     constructor() {
         this.id = ""
@@ -29,8 +28,6 @@ export class Repository {
         this.is_enable = false
     }
 
-
 }
-
 
 

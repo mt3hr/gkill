@@ -6,13 +6,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { ProgressUploadFileDialogEmits } from './progress-upload-file-dialog-emits';
-import type { ProgressUploadFileDialogProps } from './progress-upload-file-dialog-props';
-import ProgressUploadFileView from '../views/progress-upload-file-view.vue';
+import { type Ref, ref } from 'vue'
+import type { ProgressUploadFileDialogEmits } from './progress-upload-file-dialog-emits'
+import type { ProgressUploadFileDialogProps } from './progress-upload-file-dialog-props'
+import ProgressUploadFileView from '../views/progress-upload-file-view.vue'
 
-const props = defineProps<ProgressUploadFileDialogProps>();
-const emits = defineEmits<ProgressUploadFileDialogEmits>();
+const props = defineProps<ProgressUploadFileDialogProps>()
+const emits = defineEmits<ProgressUploadFileDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

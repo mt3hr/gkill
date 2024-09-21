@@ -19,15 +19,15 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script lang="ts" setup>
-import type { GitCommitLogContextMenuProps } from './git-commit-log-context-menu-props';
-import type { KyouViewEmits } from './kyou-view-emits';
-import AddTagDialog from '../dialogs/add-tag-dialog.vue';
-import AddTextDialog from '../dialogs/add-text-dialog.vue';
-import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue';
-import type { Kyou } from '@/classes/datas/kyou';
-import { type Ref, ref } from 'vue';
+import type { GitCommitLogContextMenuProps } from './git-commit-log-context-menu-props'
+import type { KyouViewEmits } from './kyou-view-emits'
+import AddTagDialog from '../dialogs/add-tag-dialog.vue'
+import AddTextDialog from '../dialogs/add-text-dialog.vue'
+import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue'
+import type { Kyou } from '@/classes/datas/kyou'
+import { type Ref, ref } from 'vue'
 
-const props = defineProps<GitCommitLogContextMenuProps>();
-const emits = defineEmits<KyouViewEmits>();
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+const props = defineProps<GitCommitLogContextMenuProps>()
+const emits = defineEmits<KyouViewEmits>()
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
 </script>

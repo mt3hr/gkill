@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { AddNewDeviceStructElementDialogEmits } from './add-new-device-struct-element-dialog-emits';
-import type { AddNewDeviceStructElementDialogProps } from './add-new-device-struct-element-dialog-props';
-import AddNewDeviceStructElementView from '../views/add-new-device-struct-element-view.vue';
+import { type Ref, ref } from 'vue'
+import type { AddNewDeviceStructElementDialogEmits } from './add-new-device-struct-element-dialog-emits'
+import type { AddNewDeviceStructElementDialogProps } from './add-new-device-struct-element-dialog-props'
+import AddNewDeviceStructElementView from '../views/add-new-device-struct-element-view.vue'
 
-const props = defineProps<AddNewDeviceStructElementDialogProps>();
-const emits = defineEmits<AddNewDeviceStructElementDialogEmits>();
+const props = defineProps<AddNewDeviceStructElementDialogProps>()
+const emits = defineEmits<AddNewDeviceStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

@@ -222,7 +222,7 @@ VALUES (
   ?,
   ?,
   ?
-);
+)
 `
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {

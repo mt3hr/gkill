@@ -1,54 +1,52 @@
-'use strict';
-
+'use strict'
 
 export abstract class FindQueryBase {
 
+    update_cache: boolean
 
-    update_cache: boolean;
+    use_word: boolean
 
-    use_word: boolean;
+    words_and: boolean
 
-    words_and: boolean;
+    words: Array<string>
 
-    words: Array<string>;
+    not_words: Array<string>
 
-    not_words: Array<string>;
+    use_timeis: boolean
 
-    use_timeis: boolean;
+    timeis_word_and: boolean
 
-    timeis_word_and: boolean;
+    timeis_word: Array<string>
 
-    timeis_word: Array<string>;
+    timeis_not_word: Array<string>
 
-    timeis_not_word: Array<string>;
+    timeis_tags: Array<string>
 
-    timeis_tags: Array<string>;
+    timeis_tags_and: boolean
 
-    timeis_tags_and: boolean;
+    tags: Array<string>
 
-    tags: Array<string>;
+    tags_and: boolean
 
-    tags_and: boolean;
+    use_map: boolean
 
-    use_map: boolean;
+    map_latitude: Number
 
-    map_latitude: Number;
+    map_longitude: Number
 
-    map_longitude: Number;
+    map_radius: Number
 
-    map_radius: Number;
+    use_calendar: boolean
 
-    use_calendar: boolean;
+    calendar_start_date: Date
 
-    calendar_start_date: Date;
-
-    calendar_end_date: Date;
+    calendar_end_date: Date
 
     async set_other_value(key: string, value: Object): Promise<void> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
-    abstract clone(): Promise<FindQueryBase>;
+    abstract clone(): Promise<FindQueryBase>
 
     constructor() {
         this.update_cache = false
@@ -93,8 +91,6 @@ export abstract class FindQueryBase {
 
     }
 
-
 }
-
 
 

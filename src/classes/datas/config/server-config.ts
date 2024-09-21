@@ -1,42 +1,40 @@
-'use strict';
+'use strict'
 
-import { Account } from './account';
-import { Repository } from './repository';
-
+import { Account } from './account'
+import { Repository } from './repository'
 
 export class ServerConfig {
 
+    device: string
 
-    device: string;
+    is_local_only_access: boolean
 
-    is_local_only_access: boolean;
+    address: string
 
-    address: string;
+    enable_tls: boolean
 
-    enable_tls: boolean;
+    tls_cert_file: string
 
-    tls_cert_file: string;
+    tls_key_file: string
 
-    tls_key_file: string;
+    open_directory_command: string
 
-    open_directory_command: string;
+    open_file_command: string
 
-    open_file_command: string;
+    urlog_timeout: Number
 
-    urlog_timeout: Number;
+    urlog_useragent: string
 
-    urlog_useragent: string;
+    upload_size_limit_month: Number
 
-    upload_size_limit_month: Number;
+    user_data_directory: string
 
-    user_data_directory: string;
+    repositories: Array<Repository>
 
-    repositories: Array<Repository>;
-
-    accounts: Array<Account>;
+    accounts: Array<Account>
 
     async clone(): Promise<ServerConfig> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     constructor() {
@@ -56,8 +54,6 @@ export class ServerConfig {
         this.accounts = new Array<Account>()
     }
 
-
 }
-
 
 

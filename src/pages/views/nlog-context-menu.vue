@@ -32,20 +32,20 @@
 </template>
 <script lang="ts" setup>
 
-import type { KyouViewEmits } from './kyou-view-emits';
-import type { NlogContextMenuProps } from './nlog-context-menu-props';
-import EditNlogDialog from '../dialogs/edit-nlog-dialog.vue';
-import AddTagDialog from '../dialogs/add-tag-dialog.vue';
-import AddTextDialog from '../dialogs/add-text-dialog.vue';
-import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue';
-import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue';
-import type { Kyou } from '@/classes/datas/kyou';
-import type { Nlog } from '@/classes/datas/nlog';
-import { type Ref, ref } from 'vue';
+import type { KyouViewEmits } from './kyou-view-emits'
+import type { NlogContextMenuProps } from './nlog-context-menu-props'
+import EditNlogDialog from '../dialogs/edit-nlog-dialog.vue'
+import AddTagDialog from '../dialogs/add-tag-dialog.vue'
+import AddTextDialog from '../dialogs/add-text-dialog.vue'
+import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue'
+import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue'
+import type { Kyou } from '@/classes/datas/kyou'
+import type { Nlog } from '@/classes/datas/nlog'
+import { type Ref, ref } from 'vue'
 
-const props = defineProps<NlogContextMenuProps>();
-const emits = defineEmits<KyouViewEmits>();
+const props = defineProps<NlogContextMenuProps>()
+const emits = defineEmits<KyouViewEmits>()
 
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
-const cloned_nlog: Ref<Nlog> = ref(cloned_kyou.value.typed_nlog);
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
+const cloned_nlog: Ref<Nlog> = ref(cloned_kyou.value.typed_nlog)
 </script>

@@ -9,16 +9,16 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { EditIDFKyouViewProps } from './edit-idf-kyou-view-props';
-import type { KyouViewEmits } from './kyou-view-emits';
-import KyouView from './kyou-view.vue';
-import { IDFKyou } from '@/classes/datas/idf-kyou';
-import { Kyou } from '@/classes/datas/kyou';
+import { type Ref, ref } from 'vue'
+import type { EditIDFKyouViewProps } from './edit-idf-kyou-view-props'
+import type { KyouViewEmits } from './kyou-view-emits'
+import KyouView from './kyou-view.vue'
+import { IDFKyou } from '@/classes/datas/idf-kyou'
+import { Kyou } from '@/classes/datas/kyou'
 
-const props = defineProps<EditIDFKyouViewProps>();
-const emits = defineEmits<KyouViewEmits>();
+const props = defineProps<EditIDFKyouViewProps>()
+const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
-const cloned_idf_kyou: Ref<IDFKyou> = ref(await cloned_kyou.value.typed_idf_kyou);
+const cloned_idf_kyou: Ref<IDFKyou> = ref(await cloned_kyou.value.typed_idf_kyou)
 </script>

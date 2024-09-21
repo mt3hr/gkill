@@ -19,20 +19,20 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue';
-import type { AddTextDialogProps } from './add-text-dialog-props';
-import type { KyouDialogEmits } from '../views/kyou-dialog-emits';
-import AddTextView from '../views/add-text-view.vue';
-import KyouView from '../views/kyou-view.vue';
-import type { Kyou } from '@/classes/datas/kyou';
+import { type Ref, ref, watch } from 'vue'
+import type { AddTextDialogProps } from './add-text-dialog-props'
+import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
+import AddTextView from '../views/add-text-view.vue'
+import KyouView from '../views/kyou-view.vue'
+import type { Kyou } from '@/classes/datas/kyou'
 
-const props = defineProps<AddTextDialogProps>();
-const emits = defineEmits<KyouDialogEmits>();
+const props = defineProps<AddTextDialogProps>()
+const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 watch(props.kyou, () => update_cloned_kyou())
 
 const is_show_dialog: Ref<boolean> = ref(false)
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
 
 async function show(): Promise<void> {
     is_show_dialog.value = true

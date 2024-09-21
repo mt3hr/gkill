@@ -1,24 +1,22 @@
-'use strict';
-
+'use strict'
 
 export class RepStruct {
 
+    id: string
 
-    id: string;
+    user_id: string
 
-    user_id: string;
+    device: string
 
-    device: string;
+    rep_name: string
 
-    rep_name: string;
+    parent_folder_id: string
 
-    parent_folder_id: string;
+    seq: Number
 
-    seq: Number;
+    check_when_inited: boolean
 
-    check_when_inited: boolean;
-
-    ignore_check_rep_rykv: boolean;
+    ignore_check_rep_rykv: boolean
 
     constructor() {
         this.id = ""
@@ -31,8 +29,6 @@ export class RepStruct {
         this.ignore_check_rep_rykv = false
     }
 
-
 }
-
 
 

@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import type { ShareTaskListDialogEmits } from './share-task-list-dialog-emits';
-import type { ShareTaskListDialogProps } from './share-task-list-dialog-props';
-import ShareTaskListView from '../views/share-task-list-view.vue';
-import { ref, type Ref } from 'vue';
+import type { ShareTaskListDialogEmits } from './share-task-list-dialog-emits'
+import type { ShareTaskListDialogProps } from './share-task-list-dialog-props'
+import ShareTaskListView from '../views/share-task-list-view.vue'
+import { ref, type Ref } from 'vue'
 
-const props = defineProps<ShareTaskListDialogProps>();
-const emits = defineEmits<ShareTaskListDialogEmits>();
+const props = defineProps<ShareTaskListDialogProps>()
+const emits = defineEmits<ShareTaskListDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)
@@ -24,5 +24,5 @@ async function show(): Promise<void> {
 async function hide(): Promise<void> {
     is_show_dialog.value = false
 }
-const is_share_time_only: Ref<boolean> = ref(true);
+const is_share_time_only: Ref<boolean> = ref(true)
 </script>

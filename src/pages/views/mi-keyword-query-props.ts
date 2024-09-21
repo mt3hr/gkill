@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-import type { miSidebarProps } from "./mi-sidebar-props";
+import type { miSidebarProps } from "./mi-sidebar-props"
 
 export interface miKeywordQueryProps extends miSidebarProps {
 }

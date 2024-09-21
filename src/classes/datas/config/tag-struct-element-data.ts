@@ -1,16 +1,14 @@
-'use strict';
-
+'use strict'
 
 export class TagStructElementData {
 
+    id: string
 
-    id: string;
+    tag_name: string
 
-    tag_name: string;
+    check_when_inited: boolean
 
-    check_when_inited: boolean;
-
-    is_force_hide: boolean;
+    is_force_hide: boolean
 
     children: Array<TagStructElementData> | null
 
@@ -22,8 +20,6 @@ export class TagStructElementData {
         this.children = null
     }
 
-
 }
-
 
 
