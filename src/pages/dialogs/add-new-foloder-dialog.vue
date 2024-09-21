@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { AddNewFoloderDialogEmits } from './add-new-foloder-dialog-emits';
-import type { AddNewFoloderDialogProps } from './add-new-foloder-dialog-props';
-import AddNewFoloderView from '../views/add-new-foloder-view.vue';
+import { type Ref, ref } from 'vue'
+import type { AddNewFoloderDialogEmits } from './add-new-foloder-dialog-emits'
+import type { AddNewFoloderDialogProps } from './add-new-foloder-dialog-props'
+import AddNewFoloderView from '../views/add-new-foloder-view.vue'
 
-const props = defineProps<AddNewFoloderDialogProps>();
-const emits = defineEmits<AddNewFoloderDialogEmits>();
+const props = defineProps<AddNewFoloderDialogProps>()
+const emits = defineEmits<AddNewFoloderDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

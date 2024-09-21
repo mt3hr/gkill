@@ -7,13 +7,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
-import type { ConfirmResetPasswordDialogEmits } from './confirm-reset-password-dialog-emits';
-import type { ConfirmResetPasswordDialogProps } from './confirm-reset-password-dialog-props';
-import ConfirmResetPasswordView from '../views/confirm-reset-password-view.vue';
+import { type Ref, ref } from 'vue'
+import type { ConfirmResetPasswordDialogEmits } from './confirm-reset-password-dialog-emits'
+import type { ConfirmResetPasswordDialogProps } from './confirm-reset-password-dialog-props'
+import ConfirmResetPasswordView from '../views/confirm-reset-password-view.vue'
 
-const props = defineProps<ConfirmResetPasswordDialogProps>();
-const emits = defineEmits<ConfirmResetPasswordDialogEmits>();
+const props = defineProps<ConfirmResetPasswordDialogProps>()
+const emits = defineEmits<ConfirmResetPasswordDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

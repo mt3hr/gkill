@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from "@/classes/api/gkill-error";
-import type { GkillMessage } from "@/classes/api/gkill-message";
-import type { RepTypeStructElementData } from "@/classes/datas/config/rep-type-struct-element-data";
+import type { GkillError } from "@/classes/api/gkill-error"
+import type { GkillMessage } from "@/classes/api/gkill-message"
+import type { RepTypeStructElementData } from "@/classes/datas/config/rep-type-struct-element-data"
 
 export interface EditRepTypeStructElementViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void

@@ -10,18 +10,18 @@
         @requested_update_check_kyous="(kyou: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyou, is_checked)" />
 </template>
 <script setup lang="ts">
-import type { DnoteLocationViewEmits } from './dnote-location-view-emits';
-import type { DnoteLocationViewProps } from './dnote-location-view-props';
-import { type Ref, ref, computed } from 'vue';
-import { Kyou } from '@/classes/datas/kyou';
-import type { TimeIs } from '@/classes/datas/time-is';
-import type { GkillError } from '@/classes/api/gkill-error';
-import type { Kmemo } from '@/classes/datas/kmemo';
-import type { GkillMessage } from '@/classes/api/gkill-message';
+import type { DnoteLocationViewEmits } from './dnote-location-view-emits'
+import type { DnoteLocationViewProps } from './dnote-location-view-props'
+import { type Ref, ref, computed } from 'vue'
+import { Kyou } from '@/classes/datas/kyou'
+import type { TimeIs } from '@/classes/datas/time-is'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { Kmemo } from '@/classes/datas/kmemo'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
-const props = defineProps<DnoteLocationViewProps>();
-const emits = defineEmits<DnoteLocationViewEmits>();
-const cloned_kyou: Ref<Array<Kyou>> = ref(props.timeis_or_kmemo_kyou.concat());
+const props = defineProps<DnoteLocationViewProps>()
+const emits = defineEmits<DnoteLocationViewEmits>()
+const cloned_kyou: Ref<Array<Kyou>> = ref(props.timeis_or_kmemo_kyou.concat())
 const cloned_timeis = computed(() => {
     const timeiss: Array<TimeIs> = new Array<TimeIs>()
     cloned_kyou.value.forEach(async (kyou) => {

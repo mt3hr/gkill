@@ -1,5 +1,4 @@
-'use strict';
-
+'use strict'
 
 export enum MiCheckState {
 
@@ -9,8 +8,6 @@ export enum MiCheckState {
 
     uncheck = "uncheck"
 
-
 }
-
 
 

@@ -1,8 +1,8 @@
-'use strict';
+'use strict'
 
-import type { GkillPropsBase } from "./gkill-props-base";
+import type { GkillPropsBase } from "./gkill-props-base"
 
 export interface LantanaFlowersViewProps extends GkillPropsBase {
-    mood: Number;
-    editable: boolean;
+    mood: Number
+    editable: boolean
 }

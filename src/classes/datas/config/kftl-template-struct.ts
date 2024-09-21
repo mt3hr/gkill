@@ -1,22 +1,20 @@
-'use strict';
-
+'use strict'
 
 export class KFTLTemplateStruct {
 
+    id: string
 
-    id: string;
+    user_id: string
 
-    user_id: string;
+    device: string
 
-    device: string;
+    title: string
 
-    title: string;
+    template: string
 
-    template: string;
+    parent_folder_id: string
 
-    parent_folder_id: string;
-
-    seq: Number;
+    seq: Number
 
     constructor() {
         this.id = ""
@@ -28,8 +26,6 @@ export class KFTLTemplateStruct {
         this.seq = 0
     }
 
-
 }
-
 
 

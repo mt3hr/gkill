@@ -1,25 +1,25 @@
-'use strict';
+'use strict'
 
-import { FindQueryBase } from './find-query-base';
-import { MiCheckState } from './mi-check-state';
-import { MiSortType } from './mi-sort-type';
-import { FindKyouQuery } from './find-kyou-query';
+import { FindQueryBase } from './find-query-base'
+import { MiCheckState } from './mi-check-state'
+import { MiSortType } from './mi-sort-type'
+import { FindKyouQuery } from './find-kyou-query'
 
 export class FindMiQuery extends FindQueryBase {
     board_name: string
-    include_check_mi: boolean;
-    include_limit_mi: boolean;
-    include_start_mi: boolean;
-    include_end_mi: boolean;
-    sort_type: MiSortType;
-    check_state: MiCheckState;
+    include_check_mi: boolean
+    include_limit_mi: boolean
+    include_start_mi: boolean
+    include_end_mi: boolean
+    sort_type: MiSortType
+    check_state: MiCheckState
 
     async clone(): Promise<FindMiQuery> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     generate_find_kyou_query(): FindKyouQuery {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
     constructor() {
         super()

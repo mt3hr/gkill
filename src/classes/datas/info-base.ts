@@ -1,87 +1,85 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from "../api/gkill-error";
-import { Tag } from "./tag";
-import { Text } from "./text";
-import { TimeIs } from "./time-is";
-
+import type { GkillError } from "../api/gkill-error"
+import { Tag } from "./tag"
+import { Text } from "./text"
+import { TimeIs } from "./time-is"
 
 export abstract class InfoBase {
 
+    id: string
 
-    id: string;
+    rep_name: string
 
-    rep_name: string;
+    related_time: Date
 
-    related_time: Date;
+    data_type: string
 
-    data_type: string;
+    create_time: Date
 
-    create_time: Date;
+    create_app: string
 
-    create_app: string;
+    create_device: string
 
-    create_device: string;
+    create_user: string
 
-    create_user: string;
+    update_time: Date
 
-    update_time: Date;
+    update_app: string
 
-    update_app: string;
+    update_user: string
 
-    update_user: string;
+    update_device: string
 
-    update_device: string;
+    attached_tags: Array<Tag>
 
-    attached_tags: Array<Tag>;
+    attached_texts: Array<Text>
 
-    attached_texts: Array<Text>;
+    attached_timeis: Array<TimeIs>
 
-    attached_timeis: Array<TimeIs>;
-
-    is_checked: boolean;
+    is_checked: boolean
 
     async load_attached_tags(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_attached_texts(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_attached_timeis(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_tags(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_texts(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_timeis(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
-    abstract clone(): Promise<InfoBase>;
+    abstract clone(): Promise<InfoBase>
 
     constructor() {
         this.id = ""
@@ -117,8 +115,6 @@ export abstract class InfoBase {
         this.is_checked = false
     }
 
-
 }
-
 
 

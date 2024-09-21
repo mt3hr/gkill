@@ -1,14 +1,12 @@
-'use strict';
+'use strict'
 
-import { GkillAPIResponse } from '../gkill-api-response';
-
+import { GkillAPIResponse } from '../gkill-api-response'
 
 export class GetGkillInfoResponse extends GkillAPIResponse {
 
+    user_id: string
 
-    user_id: string;
-
-    device: string;
+    device: string
 
     constructor() {
         super()
@@ -16,8 +14,6 @@ export class GetGkillInfoResponse extends GkillAPIResponse {
         this.device = ""
     }
 
-
 }
-
 
 

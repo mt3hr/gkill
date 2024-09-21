@@ -1,42 +1,40 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from '../api/gkill-error';
-import { InfoBase } from './info-base';
-
+import type { GkillError } from '../api/gkill-error'
+import { InfoBase } from './info-base'
 
 export class URLog extends InfoBase {
 
+    url: string
 
-    url: string;
+    title: string
 
-    title: string;
+    description: string
 
-    description: string;
+    favicon_image: string
 
-    favicon_image: string;
+    thumbnail_image: string
 
-    thumbnail_image: string;
-
-    attached_histories: Array<URLog>;
+    attached_histories: Array<URLog>
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clone(): Promise<URLog> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     constructor() {
@@ -49,8 +47,6 @@ export class URLog extends InfoBase {
         this.attached_histories = new Array<URLog>()
     }
 
-
 }
-
 
 

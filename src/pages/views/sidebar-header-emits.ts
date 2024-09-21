@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 export interface SidebarHeaderEmits {
     (e: 'request_search'): void

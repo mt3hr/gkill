@@ -7,9 +7,9 @@
     <img class="lantana_icon_full_left_gray" />
 </template>
 <script lang="ts" setup>
-import type { LantanaFlowerEmits } from './lantana-flower-emits';
-import type { LantanaFlowerProps } from './lantana-flower-props';
+import type { LantanaFlowerEmits } from './lantana-flower-emits'
+import type { LantanaFlowerProps } from './lantana-flower-props'
 
-const props = defineProps<LantanaFlowerProps>();
-const emits = defineEmits<LantanaFlowerEmits>();
+const props = defineProps<LantanaFlowerProps>()
+const emits = defineEmits<LantanaFlowerEmits>()
 </script>

@@ -25,20 +25,20 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue';
-import type { AttachedTextProps } from './attached-text-props';
-import type { KyouViewEmits } from './kyou-view-emits';
-import AttachedTextContextMenu from './attached-text-context-menu.vue';
-import ConfirmDeleteTextDialog from '../dialogs/confirm-delete-text-dialog.vue';
-import EditTextDialog from '../dialogs/edit-text-dialog.vue';
-import { Text } from '@/classes/datas/text';
-import { Kyou } from '@/classes/datas/kyou';
-import { InfoIdentifier } from '@/classes/datas/info-identifier';
+import { type Ref, ref } from 'vue'
+import type { AttachedTextProps } from './attached-text-props'
+import type { KyouViewEmits } from './kyou-view-emits'
+import AttachedTextContextMenu from './attached-text-context-menu.vue'
+import ConfirmDeleteTextDialog from '../dialogs/confirm-delete-text-dialog.vue'
+import EditTextDialog from '../dialogs/edit-text-dialog.vue'
+import { Text } from '@/classes/datas/text'
+import { Kyou } from '@/classes/datas/kyou'
+import { InfoIdentifier } from '@/classes/datas/info-identifier'
 
-const props = defineProps<AttachedTextProps>();
-const emits = defineEmits<KyouViewEmits>();
-const cloned_text: Ref<Text> = ref(await props.text.clone());
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone());
+const props = defineProps<AttachedTextProps>()
+const emits = defineEmits<KyouViewEmits>()
+const cloned_text: Ref<Text> = ref(await props.text.clone())
+const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
 
 function generate_info_identifer_from_text(text: Text): InfoIdentifier {
     const info_identifer = new InfoIdentifier()

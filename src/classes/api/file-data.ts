@@ -1,20 +1,16 @@
-'use strict';
-
+'use strict'
 
 export class FileData {
 
+    file_name: string
 
-    file_name: string;
-
-    data_base64: string;
+    data_base64: string
 
     constructor() {
         this.file_name = ""
         this.data_base64 = ""
     }
 
-
 }
-
 
 

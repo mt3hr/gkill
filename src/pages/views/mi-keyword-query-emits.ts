@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 export interface miKeywordQueryEmits {
     (e: 'request_clear_keyword_query'): void

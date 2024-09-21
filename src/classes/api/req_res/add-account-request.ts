@@ -1,15 +1,13 @@
-'use strict';
+'use strict'
 
-import { Account } from '@/classes/datas/config/account';
-import { GkillAPIRequest } from '../gkill-api-request';
-
+import { Account } from '@/classes/datas/config/account'
+import { GkillAPIRequest } from '../gkill-api-request'
 
 export class AddAccountRequest extends GkillAPIRequest {
 
+    account_info: Account
 
-    account_info: Account;
-
-    do_initialize: boolean;
+    do_initialize: boolean
 
     constructor() {
         super()
@@ -17,8 +15,6 @@ export class AddAccountRequest extends GkillAPIRequest {
         this.do_initialize = false
     }
 
-
 }
-
 
 

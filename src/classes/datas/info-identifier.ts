@@ -1,14 +1,12 @@
-'use strict';
-
+'use strict'
 
 export class InfoIdentifier {
 
+    id: string
 
-    id: string;
+    create_time: Date
 
-    create_time: Date;
-
-    update_time: Date;
+    update_time: Date
 
     constructor() {
         this.id = ""
@@ -16,8 +14,6 @@ export class InfoIdentifier {
         this.update_time = new Date(0)
     }
 
-
 }
-
 
 

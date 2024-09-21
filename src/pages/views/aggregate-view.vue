@@ -2,14 +2,14 @@
 
 </template>
 <script lang="ts" setup>
-import { computed } from 'vue';
-import type { AggregateViewEmits } from './aggregate-view-emits';
-import type { AggregateViewProps } from './aggregate-view-props';
-import type { GkillError } from '@/classes/api/gkill-error';
-import moment from 'moment';
+import { computed } from 'vue'
+import type { AggregateViewEmits } from './aggregate-view-emits'
+import type { AggregateViewProps } from './aggregate-view-props'
+import type { GkillError } from '@/classes/api/gkill-error'
+import moment from 'moment'
 
-const props = defineProps<AggregateViewProps>();
-const emits = defineEmits<AggregateViewEmits>();
+const props = defineProps<AggregateViewProps>()
+const emits = defineEmits<AggregateViewEmits>()
 const kyous_count = computed(() => props.checked_kyous.length)
 const nlogs_total_amount = computed(() => {
     let total_amount: Number = 0
@@ -143,6 +143,6 @@ const lantanas_average_mood = computed(() => {
     return sum_mood.valueOf() / mood_count.valueOf()
 })
 async function update_aggregate_view(): Promise<void> {
-    throw new Error('Not implemented');
+    throw new Error('Not implemented')
 }
 </script>

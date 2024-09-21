@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 export interface KeywordQueryEmits {
     (e: 'request_clear_keyword_query'): void

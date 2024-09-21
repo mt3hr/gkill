@@ -1,5 +1,4 @@
-'use strict';
-
+'use strict'
 
 export enum GPSFileUploadConflictBehavior {
 
@@ -7,8 +6,6 @@ export enum GPSFileUploadConflictBehavior {
 
     override = "override"
 
-
 }
-
 
 

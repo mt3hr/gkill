@@ -1,38 +1,36 @@
-'use strict';
+'use strict'
 
-import type { GkillError } from '../api/gkill-error';
-import { InfoBase } from './info-base';
-
+import type { GkillError } from '../api/gkill-error'
+import { InfoBase } from './info-base'
 
 export class TimeIs extends InfoBase {
 
+    title: string
 
-    title: string;
+    start_time: Date
 
-    start_time: Date;
+    end_time: Date
 
-    end_time: Date;
-
-    attached_histories: Array<TimeIs>;
+    attached_histories: Array<TimeIs>
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     async clone(): Promise<TimeIs> {
-        throw new Error('Not implemented');
+        throw new Error('Not implemented')
     }
 
     constructor() {
@@ -43,8 +41,6 @@ export class TimeIs extends InfoBase {
         this.attached_histories = new Array<TimeIs>()
     }
 
-
 }
-
 
 

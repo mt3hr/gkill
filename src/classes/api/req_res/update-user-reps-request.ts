@@ -1,15 +1,13 @@
-'use strict';
+'use strict'
 
-import { Repository } from '@/classes/datas/config/repository';
-import { GkillAPIRequest } from '../gkill-api-request';
-
+import { Repository } from '@/classes/datas/config/repository'
+import { GkillAPIRequest } from '../gkill-api-request'
 
 export class UpdateUserRepsRequest extends GkillAPIRequest {
 
+    target_user_id: string
 
-    target_user_id: string;
-
-    updated_reps: Array<Repository>;
+    updated_reps: Array<Repository>
 
     constructor() {
         super()
@@ -17,8 +15,6 @@ export class UpdateUserRepsRequest extends GkillAPIRequest {
         this.updated_reps = new Array<Repository>()
     }
 
-
 }
-
 
 
