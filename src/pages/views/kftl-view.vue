@@ -1,7 +1,12 @@
 <template>
-    <KyouListView />
-    <KFTLLineLabel />
-    <KFTLTemplateDialog />
+    <KyouListView :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="last_added_tag"
+        :matched_kyous="plaing_timeis_kyous" :query="find_kyou_query_plaing_timeis"
+        @requested_reload_kyou="(kyou) => reload_plaing_timeis(kyou)"
+        @requested_reload_list="() => load_find_kyou_query_plaing_timeis()" />
+    <KFTLLineLabel v-for="line_label_data, index in line_label_datas" :application_config="application_config"
+        :style="line_label_styles[index]" :gkill_api="gkill_api" :line_label_data="line_label_data" />
+    <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api"
+        :templates="[application_config.parsed_kftl_template]" />
 </template>
 
 <script setup lang="ts">
@@ -17,6 +22,7 @@ import type { KFTLViewEmits } from './kftl-view-emits';
 import KyouListView from './kyou-list-view.vue';
 import KFTLLineLabel from './kftl-line-label.vue';
 import KFTLTemplateDialog from '../dialogs/kftl-template-dialog.vue';
+import type { Kyou } from '@/classes/datas/kyou';
 
 const text_area_content: Ref<string> = ref("");
 const text_area_width: Ref<Number> = ref(0);
@@ -33,6 +39,9 @@ const line_label_styles: Ref<Array<string>> = ref(new Array<string>());
 const invalid_line_numbers: Ref<Array<Number>> = ref(new Array<Number>());
 const is_requested_submit: Ref<boolean> = ref(false);
 const find_kyou_query_plaing_timeis: Ref<FindKyouQuery> = ref(new FindKyouQuery());
+const plaing_timeis_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
+
+const last_added_tag: Ref<string> = ref("")
 
 const props = defineProps<KFTLProps>();
 const emits = defineEmits<KFTLViewEmits>();
@@ -97,6 +106,21 @@ async function load_find_kyou_query_plaing_timeis(): Promise<void> {
     find_plaing_timeis_query.plaing_only = true
     const find_plaing_timeis_kyou_query: FindKyouQuery = await find_plaing_timeis_query.generate_find_kyou_query()
     find_kyou_query_plaing_timeis.value = find_plaing_timeis_kyou_query
+}
+
+async function reload_plaing_timeis(kyou: Kyou): Promise<void> {
+    let index = -1;
+    for (let i = 0; i < plaing_timeis_kyous.value.length; i++) {
+        const kyou_in_list = plaing_timeis_kyous.value[i]
+        if (kyou.id === kyou_in_list.id) {
+            index = i
+            await kyou_in_list.reload()
+            break
+        }
+    }
+    if (index !== -1) {
+        plaing_timeis_kyous.value.splice(index, 1, plaing_timeis_kyous.value[index])
+    }
 }
 
 load_find_kyou_query_plaing_timeis()

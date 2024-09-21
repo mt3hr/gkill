@@ -2,7 +2,7 @@
 
 
 export class Repository {
-
+    id: string
 
     user_id: string;
 
@@ -19,6 +19,7 @@ export class Repository {
     is_enable: boolean;
 
     constructor() {
+        this.id = ""
         this.user_id = ""
         this.device = ""
         this.type = ""

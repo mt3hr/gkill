@@ -1,28 +1,24 @@
 <template>
     <DecideRelatedTimeUploadedFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
         :application_config="application_config" :gkill_api="gkill_api" :uploaded_kyous="uploaded_kyous"
-        @received_errors="(errors) => emits('received_errors', errors)"
+        :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" />
     <ProgressUploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
         :application_config="application_config" :gkill_api="gkill_api"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" />
-    />
     <ProgressUploadGPSFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
         :application_config="application_config" :gkill_api="gkill_api"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" />
-    />
     <SelectUploadFileTargetRepDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
         :application_config="application_config" :gkill_api="gkill_api"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" />
-    />
     <SelectUploadGPSFileTargetRepDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
         :application_config="application_config" :gkill_api="gkill_api"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" />
-    />
 </template>
 <script setup lang="ts">
 import { type Ref, ref } from 'vue';

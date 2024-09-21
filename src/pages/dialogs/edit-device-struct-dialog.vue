@@ -3,7 +3,7 @@
         <EditDeviceStructView :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
             :struct_obj="struct_obj" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_update_device_struct_element="(device_struct) => emits('requested_update_device_struct_element', device_struct)" />
+            @requested_update_device_struct_element="(device_struct: any) => emits('requested_update_device_struct_element', device_struct)" />
     </v-dialog>
 </template>
 <script lang="ts" setup>

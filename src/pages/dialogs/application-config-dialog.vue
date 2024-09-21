@@ -1,6 +1,7 @@
 <template>
     <v-dialog v-model="is_show_dialog">
         <ApplicationConfigView :application_config="application_config" :gkill_api="gkill_api"
+            :app_content_height="app_content_height" :app_content_width="app_content_width"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_application_config="(application_config) => emits('requested_reload_application_config', application_config)" />

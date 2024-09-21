@@ -10,10 +10,13 @@ export class DeviceStructElementData {
 
     check_when_inited: boolean;
 
+    children: Array<DeviceStructElementData> | null
+
     constructor() {
         this.id = ""
         this.device_name = ""
         this.check_when_inited = false
+        this.children = null
     }
 
 

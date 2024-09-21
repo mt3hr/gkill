@@ -1,12 +1,25 @@
 <template>
-    <AllocateRepDialog />
-    <ConfirmGenerateTLSFilesDialog />
-    <ConfirmResetPasswordDialog />
-    <CreateAccountDialog />
-    <ShowPasswordResetLinkDialog />
+    <AllocateRepDialog :application_config="application_config" :gkill_api="gkill_api" :server_config="server_config"
+        :user_id="focused_user_id"
+        @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" />
+    <ConfirmGenerateTLSFilesDialog :application_config="application_config" :gkill_api="gkill_api"
+        :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" />
+    <ConfirmResetPasswordDialog :application_config="application_config" :gkill_api="gkill_api"
+        :server_config="server_config" :user_id="focused_user_id"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" />
+    <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api" :server_config="server_config"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" />
+    <ShowPasswordResetLinkDialog :application_config="application_config" :gkill_api="gkill_api"
+        :server_config="server_config" :user_id="focused_user_id"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" />
 </template>
 <script setup lang="ts">
-/* __placeholder__ */
 import { type Ref, ref } from 'vue';
 import type { ManageAccountViewEmits } from './manage-account-view-emits';
 import type { ManageAccountViewProps } from './manage-account-view-props';
@@ -20,4 +33,5 @@ import ShowPasswordResetLinkDialog from '../dialogs/show-password-reset-link-dia
 const props = defineProps<ManageAccountViewProps>();
 const emits = defineEmits<ManageAccountViewEmits>();
 const cloned_server_config: Ref<ServerConfig> = ref(await props.server_config.clone());
+const focused_user_id: Ref<string> = ref("")
 </script>
