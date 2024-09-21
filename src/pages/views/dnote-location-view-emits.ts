@@ -46,4 +46,5 @@ export interface DnoteLocationViewEmits {
     (e: 'deleted_rekyou', rekyou: ReKyou): void
     (e: 'requested_reload_kyou', kyou: Kyou): void
     (e: 'requested_reload_list',): void
+    (e: 'requested_update_check_kyous', kyou: Array<Kyou>, is_checked: boolean): void
 }

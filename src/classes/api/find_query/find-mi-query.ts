@@ -6,6 +6,7 @@ import { MiSortType } from './mi-sort-type';
 import { FindKyouQuery } from './find-kyou-query';
 
 export class FindMiQuery extends FindQueryBase {
+    board_name: string
     include_check_mi: boolean;
     include_limit_mi: boolean;
     include_start_mi: boolean;
@@ -17,11 +18,12 @@ export class FindMiQuery extends FindQueryBase {
         throw new Error('Not implemented');
     }
 
-    async generate_find_kyou_query(): Promise<FindKyouQuery> {
+    generate_find_kyou_query(): FindKyouQuery {
         throw new Error('Not implemented');
     }
     constructor() {
         super()
+        this.board_name = ""
         this.sort_type = MiSortType.estimate_start_time
         this.check_state = MiCheckState.uncheck
         this.include_check_mi = false

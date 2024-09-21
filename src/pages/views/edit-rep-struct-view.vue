@@ -1,8 +1,6 @@
 <template>
-    <TagStructElement />
-    <RepStructElement />
-    <AddNewRepStructElementDialog />
-    <EditRepStructElementDialog />
+    <RepStructElement :application_config="application_config" :folder_name="''" :gkill_api="gkill_api" :is_open="true"
+        :struct_obj="application_config.rep_struct" />
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue';

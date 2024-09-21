@@ -26,6 +26,9 @@ export class FindTimeIsQuery extends FindQueryBase {
     constructor() {
         super()
         this.plaing_only = false
+        this.use_plaing = false
+        this.plaing_time = new Date(0)
+        this.include_end_timeis = false
     }
 
 

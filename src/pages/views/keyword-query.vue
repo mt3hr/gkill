@@ -5,9 +5,9 @@
 import type { KeywordQueryEmits } from './keyword-query-emits';
 import type { KeywordQueryProps } from './keyword-query-props';
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 
 const props = defineProps<KeywordQueryProps>();
 const emits = defineEmits<KeywordQueryEmits>();
-const cloned_query: FindKyouQuery = ref(await props.application_config.clone());
+const cloned_query: Ref<FindKyouQuery> = ref(await props.query.clone());
 </script>

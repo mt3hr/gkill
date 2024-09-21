@@ -1,4 +1,6 @@
 <script setup lang="ts">
+//TODO requested_update_last_added_tag
+//TODO requested_update_last_added_tagをトップまでに持ってくる。router超えて使えるようにしたい。Cookie？
 import { RouterView } from 'vue-router'
 </script>
 

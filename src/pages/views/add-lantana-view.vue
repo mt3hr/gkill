@@ -1,5 +1,7 @@
 <template>
-    <LantanaFlowersView />
+    <!-- //TODO 実装 -->
+    <LantanaFlowersView :application_config="application_config" :gkill_api="gkill_api" :editable="true" :mood="0"
+        @updated_mood="(new_mood_value) => mood = new_mood_value" />
 </template>
 <script lang="ts" setup>
 import type { GkillError } from '@/classes/api/gkill-error';

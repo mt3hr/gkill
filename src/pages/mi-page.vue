@@ -4,7 +4,8 @@
         <v-spacer />
     </v-app-bar>
     <v-main class="main">
-        <miView :app_content_height="app_content_height" :app_content_width="app_content_width"
+        <miView :highlight_targets="new Array<Kyou>()" :last_added_tag="last_added_tag"
+            :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
             @received_messages="write_messages" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -25,6 +26,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message';
 
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue';
 import miView from './views/mi-view.vue';
+import type { Kyou } from '@/classes/datas/kyou';
 
 const actual_height: Ref<Number> = ref(0);
 const element_height: Ref<Number> = ref(0);
@@ -37,6 +39,7 @@ const app_content_height: Ref<Number> = ref(0);
 const app_content_width: Ref<Number> = ref(0);
 
 const is_show_application_config_dialog: Ref<boolean> = ref(false);
+const last_added_tag: Ref<string> = ref("");
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
