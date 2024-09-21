@@ -84,13 +84,13 @@ FROM APPLICATION_CONFIG
 		default:
 			applicationConfig := &ApplicationConfig{}
 			err = rows.Scan(
-				applicationConfig.UserID,
-				applicationConfig.Device,
-				applicationConfig.EnableBrowserCache,
-				applicationConfig.GoogleMapAPIKey,
-				applicationConfig.RykvImageListColumnNumber,
-				applicationConfig.RykvHotReload,
-				applicationConfig.MiDefaultBoard,
+				&applicationConfig.UserID,
+				&applicationConfig.Device,
+				&applicationConfig.EnableBrowserCache,
+				&applicationConfig.GoogleMapAPIKey,
+				&applicationConfig.RykvImageListColumnNumber,
+				&applicationConfig.RykvHotReload,
+				&applicationConfig.MiDefaultBoard,
 			)
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
@@ -131,13 +131,13 @@ WHERE USER_ID = ? AND DEVICE = ?
 		default:
 			applicationConfig := &ApplicationConfig{}
 			err = rows.Scan(
-				applicationConfig.UserID,
-				applicationConfig.Device,
-				applicationConfig.EnableBrowserCache,
-				applicationConfig.GoogleMapAPIKey,
-				applicationConfig.RykvImageListColumnNumber,
-				applicationConfig.RykvHotReload,
-				applicationConfig.MiDefaultBoard,
+				&applicationConfig.UserID,
+				&applicationConfig.Device,
+				&applicationConfig.EnableBrowserCache,
+				&applicationConfig.GoogleMapAPIKey,
+				&applicationConfig.RykvImageListColumnNumber,
+				&applicationConfig.RykvHotReload,
+				&applicationConfig.MiDefaultBoard,
 			)
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
