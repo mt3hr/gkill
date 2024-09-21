@@ -11,6 +11,8 @@ type ServerConfigDAO interface {
 
 	UpdateServerConfig(ctx context.Context, serverConfig *ServerConfig) (bool, error)
 
+	UpdateServerConfigs(ctx context.Context, serverConfigs []*ServerConfig) (bool, error)
+
 	DeleteServerConfig(ctx context.Context, device string) (bool, error)
 
 	Close(ctx context.Context) error
