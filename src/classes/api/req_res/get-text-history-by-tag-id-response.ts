@@ -3,7 +3,7 @@
 import { Text } from '@/classes/datas/text'
 import { GkillAPIResponse } from '../gkill-api-response'
 
-export class GetTextHistoryByTagIDResponse extends GkillAPIResponse {
+export class GetTextHistoryByTextIDResponse extends GkillAPIResponse {
 
     text_histories: Array<Text>
 
