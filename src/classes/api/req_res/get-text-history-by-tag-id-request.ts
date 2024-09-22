@@ -2,7 +2,7 @@
 
 import { GkillAPIRequest } from '../gkill-api-request'
 
-export class GetTextHistoryByTagIDRequest extends GkillAPIRequest {
+export class GetTextHistoryByTextIDRequest extends GkillAPIRequest {
 
     id: string
 

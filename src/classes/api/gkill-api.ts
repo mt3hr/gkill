@@ -80,8 +80,8 @@ import type { GetTagHistoryByTagIDRequest } from "./req_res/get-tag-history-by-t
 import type { GetTagHistoryByTagIDResponse } from "./req_res/get-tag-history-by-tag-id-response"
 import type { GetTagsByTargetIDRequest } from "./req_res/get-tags-by-target-id-request"
 import type { GetTagsByTargetIDResponse } from "./req_res/get-tags-by-target-id-response"
-import type { GetTextHistoryByTagIDRequest } from "./req_res/get-text-history-by-tag-id-request"
-import type { GetTextHistoryByTagIDResponse } from "./req_res/get-text-history-by-tag-id-response"
+import type { GetTextHistoryByTextIDRequest } from "./req_res/get-text-history-by-tag-id-request"
+import type { GetTextHistoryByTextIDResponse } from "./req_res/get-text-history-by-tag-id-response"
 import type { GetTextsByTargetIDRequest } from "./req_res/get-texts-by-target-id-request"
 import type { GetTextsByTargetIDResponse } from "./req_res/get-texts-by-target-id-response"
 import type { GetTimeisRequest } from "./req_res/get-timeis-request"
@@ -140,255 +140,137 @@ import type { UploadGPSLogFilesRequest } from "./req_res/upload-gps-log-files-re
 import type { UploadGPSLogFilesResponse } from "./req_res/upload-gps-log-files-response"
 
 export class GkillAPI {
-
         login_address: string
-
         logout_address: string
-
         reset_password_address: string
-
         set_new_password_address: string
-
         add_tag_address: string
-
         add_text_address: string
-
         add_kmemo_address: string
-
         add_urlog_address: string
-
         add_nlog_address: string
-
         add_timeis_address: string
-
         add_mi_address: string
-
         add_lantana_address: string
-
         add_kyou_info_address: string
-
         add_rekyou_address: string
-
         update_tag_address: string
-
         update_text_address: string
-
         update_kmemo_address: string
-
         update_urlog_address: string
-
         update_nlog_address: string
-
         update_timeis_address: string
-
         update_lantana_address: string
-
         update_mi_address: string
-
         update_kyou_info_address: string
-
         update_rekyou_address: string
-
         get_kyous_address: string
-
         get_kyou_address: string
-
         get_kmemos_address: string
-
         get_urlogs_address: string
-
         get_nlogs_address: string
-
         get_timeiss_address: string
-
         get_rekyous_address: string
-
         get_mis_address: string
-
         get_lantanas_address: string
-
         get_kmemo_address: string
-
         get_urlog_address: string
-
         get_nlog_address: string
-
         get_timeis_address: string
-
         get_mi_address: string
-
         get_lantana_address: string
-
         get_rekyou_address: string
-
         get_git_commit_log_address: string
-
         get_git_commit_logs_address: string
-
         get_mi_board_list_address: string
-
         get_plaing_timeis_address: string
-
         get_all_tag_names_address: string
-
         get_tags_by_target_id_address: string
-
         get_tag_histories_by_tag_id_address: string
-
         get_texts_by_target_id_address: string
-
         get_text_histories_by_text_id_address: string
-
         get_application_config_address: string
-
         get_server_config_address: string
-
         upload_files_address: string
-
         upload_gpslog_files_address: string
-
         update_tag_struct_address: string
-
         update_rep_struct_address: string
-
         update_device_struct_address: string
-
         update_rep_type_struct_address: string
-
         update_account_status_address: string
-
         update_user_reps_address: string
-
         add_account_address: string
-
         generate_tls_file_address: string
-
         get_gps_log_address: string
-
         get_kftl_template_address: string
-
         get_gkill_info_address: string
-
         get_share_mi_task_list_infos_address: string
-
         add_share_mi_task_list_info_address: string
-
         update_share_mi_task_list_info_address: string
-
         delete_share_mi_task_list_infos_address: string
-
         get_mi_shared_tasks_address: string
-
         login_method: string
-
         logout_method: string
-
         reset_password_method: string
-
         set_new_password_method: string
-
         add_tag_method: string
-
         add_text_method: string
-
         add_kmemo_method: string
-
         add_urlog_method: string
-
         add_nlog_method: string
-
         add_timeis_method: string
-
         add_mi_method: string
-
         add_lantana_method: string
-
         add_kyou_info_method: string
-
         add_rekyou_method: string
-
         update_tag_method: string
-
         update_text_method: string
-
         update_kmemo_method: string
-
         update_nlog_method: string
-
         update_urlog_method: string
-
         update_timeis_method: string
-
         update_mi_method: string
-
         update_lantana_method: string
-
         update_kyou_info_method: string
-
         update_rekyou_method: string
-
         get_kyous_method: string
-
         get_kyou_method: string
-
+        get_kmemo_method: string
+        get_urlog_method: string
+        get_nlog_method: string
+        get_timeis_method: string
+        get_mi_method: string
+        get_lantana_method: string
+        get_git_commit_log_method: string
         get_rekyou_method: string
-
         get_rekyous_method: string
-
         get_git_commit_logs_method: string
-
         get_mi_board_list_method: string
-
         get_plaing_timeis_method: string
-
         get_all_tag_names_method: string
-
         get_tags_by_target_id_method: string
-
         get_tag_histories_by_tag_id_method: string
-
         get_texts_by_target_id_method: string
-
-        get_text_histories_by_tag_id_method: string
-
+        get_text_histories_by_text_id_method: string
         get_application_config_method: string
-
         get_server_config_method: string
-
         upload_files_method: string
-
         upload_gpslog_files_method: string
-
         update_tag_struct_method: string
-
         update_rep_struct_method: string
-
         update_device_struct_method: string
-
         update_rep_type_struct_method: string
-
         update_account_status_method: string
-
         update_user_reps_method: string
-
         add_account_method: string
-
         generate_tls_file_method: string
-
         get_gps_log_method: string
-
         get_kftl_template_method: string
-
         get_gkill_info_method: string
-
         get_share_mi_task_list_infos_method: string
-
         add_share_mi_task_list_info_method: string
-
         update_share_mi_task_list_info_method: string
-
         delete_share_mi_task_list_infos_method: string
-
         get_mi_shared_tasks_method: string
 
         constructor() {
@@ -487,6 +369,13 @@ export class GkillAPI {
                 this.update_rekyou_method = "POST"
                 this.get_kyous_method = "POST"
                 this.get_kyou_method = "POST"
+                this.get_kmemo_method = "POST"
+                this.get_urlog_method = "POST"
+                this.get_nlog_method = "POST"
+                this.get_timeis_method = "POST"
+                this.get_mi_method = "POST"
+                this.get_lantana_method = "POST"
+                this.get_git_commit_log_method = "POST"
                 this.get_rekyou_method = "POST"
                 this.get_rekyous_method = "POST"
                 this.get_git_commit_logs_method = "POST"
@@ -496,7 +385,7 @@ export class GkillAPI {
                 this.get_tags_by_target_id_method = "POST"
                 this.get_tag_histories_by_tag_id_method = "POST"
                 this.get_texts_by_target_id_method = "POST"
-                this.get_text_histories_by_tag_id_method = "POST"
+                this.get_text_histories_by_text_id_method = "POST"
                 this.get_application_config_method = "POST"
                 this.get_server_config_method = "POST"
                 this.upload_files_method = "POST"
@@ -521,140 +410,445 @@ export class GkillAPI {
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.login_address, {
+                        'method': this.login_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: LoginResponse = json
+                return response
         }
 
         async logout(req: LogoutRequest): Promise<LogoutResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.logout_address, {
+                        'method': this.logout_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: LogoutResponse = json
+                return response
         }
 
         async reset_password(req: ResetPasswordRequest): Promise<ResetPasswordResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.reset_password_address, {
+                        'method': this.reset_password_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: ResetPasswordResponse = json
+                return response
         }
 
         async set_new_password(req: SetNewPasswordRequest): Promise<SetNewPasswordResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.set_new_password_address, {
+                        'method': this.set_new_password_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: SetNewPasswordResponse = json
+                return response
         }
 
         async add_tag(req: AddTagRequest): Promise<AddTagResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_tag_address, {
+                        'method': this.add_tag_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddTagResponse = json
+                return response
         }
 
         async add_text(req: AddTextRequest): Promise<AddTextResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_text_address, {
+                        'method': this.add_text_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddTextResponse = json
+                return response
         }
 
         async add_kmemo(req: AddKmemoRequest): Promise<AddKmemoResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_kmemo_address, {
+                        'method': this.add_kmemo_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddKmemoResponse = json
+                return response
         }
 
         async add_urlog(req: AddURLogRequest): Promise<AddURLogResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_urlog_address, {
+                        'method': this.add_urlog_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddURLogResponse = json
+                return response
         }
 
         async add_nlog(req: AddNlogRequest): Promise<AddNlogResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_nlog_address, {
+                        'method': this.add_nlog_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddNlogResponse = json
+                return response
         }
 
         async add_timeis(req: AddTimeisRequest): Promise<AddTimeisResponse> {
-                print()
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_timeis_address, {
+                        'method': this.add_timeis_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddTimeisResponse = json
+                return response
         }
 
         async add_mi(req: AddMiRequest): Promise<AddMiResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_mi_address, {
+                        'method': this.add_mi_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddMiResponse = json
+                return response
         }
 
         async add_lantana(req: AddLantanaRequest): Promise<AddLantanaResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_lantana_address, {
+                        'method': this.add_lantana_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddLantanaResponse = json
+                return response
         }
 
         async add_kyou_info(req: AddKyouInfoRequest): Promise<AddKyouInfoResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_kyou_info_address, {
+                        'method': this.add_kyou_info_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddKyouInfoResponse = json
+                return response
         }
 
         async add_rekyou(req: AddReKyouRequest): Promise<AddReKyouResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_rekyou_address, {
+                        'method': this.add_rekyou_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddReKyouResponse = json
+                return response
         }
 
         async update_tag(req: UpdateTagRequest): Promise<UpdateTagResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_tag_address, {
+                        'method': this.update_tag_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateTagResponse = json
+                return response
         }
 
         async update_text(req: UpdateTextRequest): Promise<UpdateTextResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_text_address, {
+                        'method': this.update_text_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateTextResponse = json
+                return response
         }
 
         async update_kmemo(req: UpdateKmemoRequest): Promise<UpdateKmemoResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_kmemo_address, {
+                        'method': this.update_kmemo_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateKmemoResponse = json
+                return response
         }
 
         async update_urlog(req: UpdateURLogRequest): Promise<UpdateURLogResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_urlog_address, {
+                        'method': this.update_urlog_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateURLogResponse = json
+                return response
         }
 
         async update_nlog(req: UpdateNlogRequest): Promise<UpdateNlogResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_nlog_address, {
+                        'method': this.update_nlog_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateNlogResponse = json
+                return response
         }
 
         async update_timeis(req: UpdateTimeisRequest): Promise<UpdateTimeisResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_timeis_address, {
+                        'method': this.update_timeis_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateTimeisResponse = json
+                return response
         }
 
         async update_mi(req: UpdateMiRequest): Promise<UpdateMiResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_mi_address, {
+                        'method': this.update_mi_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateMiResponse = json
+                return response
         }
 
         async update_lantana(req: UpdateLantanaRequest): Promise<UpdateLantanaResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_lantana_address, {
+                        'method': this.update_lantana_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateLantanaResponse = json
+                return response
         }
 
         async update_kyou_info(req: UpdateKyouInfoRequest): Promise<UpdateKyouInfoResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_kyou_info_address, {
+                        'method': this.update_kyou_info_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateKyouInfoResponse = json
+                return response
         }
 
         async update_rekyou(req: UpdateReKyouRequest): Promise<UpdateReKyouResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_rekyou_address, {
+                        'method': this.update_rekyou_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateReKyouResponse = json
+                return response
         }
 
         async get_kyous(req: GetKyousRequest): Promise<GetKyousResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_kyous_address, {
+                        'method': this.get_kyous_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetKyousResponse = json
+                return response
         }
 
         async get_kyou(req: GetKyouRequest): Promise<GetKyouResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_kyou_address, {
+                        'method': this.get_kyou_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetKyouResponse = json
+                return response
         }
 
         async get_kmemo(req: GetKmemoRequest): Promise<GetKmemoResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_kmemo_address, {
+                        'method': this.get_kmemo_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetKmemoResponse = json
+                return response
         }
 
         async get_urlog(req: GetURLogRequest): Promise<GetURLogResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_urlog_address, {
+                        'method': this.get_urlog_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetURLogResponse = json
+                return response
         }
 
         async get_nlog(req: GetNlogRequest): Promise<GetNlogResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_nlog_address, {
+                        'method': this.get_nlog_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetNlogResponse = json
+                return response
         }
 
         async get_timeis(req: GetTimeisRequest): Promise<GetTimeisResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_timeis_address, {
+                        'method': this.get_timeis_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetTimeisResponse = json
+                return response
         }
 
         async get_mi(req: GetMiRequest): Promise<GetMiResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_mi_address, {
+                        'method': this.get_mi_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetMiResponse = json
+                return response
         }
 
         async get_lantana(req: GetLantanaRequest): Promise<GetLantanaResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_lantana_address, {
+                        'method': this.get_lantana_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetLantanaResponse = json
+                return response
         }
 
         async get_rekyou(req: GetReKyouRequest): Promise<GetReKyouResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_rekyou_address, {
+                        'method': this.get_rekyou_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetReKyouResponse = json
+                return response
         }
 
         async get_git_commit_log(req: GetGitCommitLogRequest): Promise<GetGitCommitLogResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_git_commit_log_address, {
+                        'method': this.get_git_commit_log_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetGitCommitLogResponse = json
+                return response
         }
 
         async get_kmemos(req: GetKmemosRequest): Promise<GetKmemosResponse> {
@@ -690,113 +884,355 @@ export class GkillAPI {
         }
 
         async get_mi_board_list(req: GetMiBoardRequest): Promise<GetMiBoardResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_mi_board_list_address, {
+                        'method': this.get_mi_board_list_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetMiBoardResponse = json
+                return response
         }
 
         async get_plaing_timeis(req: GetPlaingTimeisRequest): Promise<GetPlaingTimeisResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_plaing_timeis_address, {
+                        'method': this.get_plaing_timeis_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetPlaingTimeisResponse = json
+                return response
         }
 
         async get_all_tag_names(req: GetAllTagNamesRequest): Promise<GetAllTagNamesResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_all_tag_names_address, {
+                        'method': this.get_all_tag_names_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetAllTagNamesResponse = json
+                return response
         }
 
         async get_tags_by_target_id(req: GetTagsByTargetIDRequest): Promise<GetTagsByTargetIDResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_tags_by_target_id_address, {
+                        'method': this.get_tags_by_target_id_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetTagsByTargetIDResponse = json
+                return response
         }
 
         async get_tag_histories_by_tag_id(req: GetTagHistoryByTagIDRequest): Promise<GetTagHistoryByTagIDResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_tag_histories_by_tag_id_address, {
+                        'method': this.get_tag_histories_by_tag_id_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetTagHistoryByTagIDResponse = json
+                return response
         }
 
         async get_texts_by_target_id(req: GetTextsByTargetIDRequest): Promise<GetTextsByTargetIDResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_texts_by_target_id_address, {
+                        'method': this.get_texts_by_target_id_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetTextsByTargetIDResponse = json
+                return response
         }
 
-        async get_text_history_by_tag_id(req: GetTextHistoryByTagIDRequest): Promise<GetTextHistoryByTagIDResponse> {
-                throw new Error('Not implemented')
+        async get_text_history_by_tag_id(req: GetTextHistoryByTextIDRequest): Promise<GetTextHistoryByTextIDResponse> {
+                const res = await fetch(this.get_text_histories_by_text_id_address, {
+                        'method': this.get_text_histories_by_text_id_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetTextHistoryByTextIDResponse = json
+                return response
         }
 
         async get_application_config(req: GetApplicationConfigRequest): Promise<GetApplicationConfigResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_application_config_address, {
+                        'method': this.get_application_config_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetApplicationConfigResponse = json
+                return response
         }
 
         async get_server_config(req: GetServerConfigRequest): Promise<GetServerConfigResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_server_config_address, {
+                        'method': this.get_server_config_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetServerConfigResponse = json
+                return response
         }
 
         async upload_files(req: UploadFilesRequest): Promise<UploadFilesResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.upload_files_address, {
+                        'method': this.upload_files_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UploadFilesResponse = json
+                return response
         }
 
         async upload_gpslog_files(req: UploadGPSLogFilesRequest): Promise<UploadGPSLogFilesResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.upload_gpslog_files_address, {
+                        'method': this.upload_gpslog_files_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UploadGPSLogFilesResponse = json
+                return response
         }
 
         async update_tag_struct(req: UpdateTagStructRequest): Promise<UpdateTagStructResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_tag_struct_address, {
+                        'method': this.update_tag_struct_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateTagStructResponse = json
+                return response
         }
 
         async update_rep_struct(req: UpdateRepStructRequest): Promise<UpdateRepStructResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_rep_struct_address, {
+                        'method': this.update_rep_struct_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateRepStructResponse = json
+                return response
         }
 
-        async update_decice_struct(req: UpdateDeviceStructRequest): Promise<UpdateDeviceStructResponse> {
-                throw new Error('Not implemented')
+        async update_device_struct(req: UpdateDeviceStructRequest): Promise<UpdateDeviceStructResponse> {
+                const res = await fetch(this.update_device_struct_address, {
+                        'method': this.update_device_struct_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateDeviceStructResponse = json
+                return response
         }
 
         async update_rep_type_struct(req: UpdateRepTypeStructRequest): Promise<UpdateRepTypeStructResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_rep_type_struct_address, {
+                        'method': this.update_rep_type_struct_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateRepTypeStructResponse = json
+                return response
         }
 
         async update_account_status(req: UpdateAccountStatusRequest): Promise<UpdateAccountStatusResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_account_status_address, {
+                        'method': this.update_account_status_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateAccountStatusResponse = json
+                return response
         }
 
         async update_user_reps(req: UpdateUserRepsRequest): Promise<UpdateUserRepsResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_user_reps_address, {
+                        'method': this.update_user_reps_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateUserRepsResponse = json
+                return response
         }
 
         async add_account(req: AddAccountRequest): Promise<AddAccountResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_account_address, {
+                        'method': this.add_account_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddAccountResponse = json
+                return response
         }
 
         async generate_tls_file(req: GenerateTLSFileRequest): Promise<GenerateTLSFileResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.generate_tls_file_address, {
+                        'method': this.generate_tls_file_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GenerateTLSFileResponse = json
+                return response
         }
 
         async get_gps_log(req: GetGPSLogRequest): Promise<GetGPSLogResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_gps_log_address, {
+                        'method': this.get_gps_log_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetGPSLogResponse = json
+                return response
         }
 
         async get_kftl_templates(req: GetKFTLTemplatesRequest): Promise<GetKFTLTemplatesResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_kftl_template_address, {
+                        'method': this.get_kftl_template_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetKFTLTemplatesResponse = json
+                return response
         }
 
         async get_gkill_info(req: GetGkillInfoRequest): Promise<GetGkillInfoResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_gkill_info_address, {
+                        'method': this.get_gkill_info_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetGkillInfoResponse = json
+                return response
         }
 
         async get_share_mi_task_list_infos(req: GetShareMiTaskListInfosRequest): Promise<GetShareMiTaskListInfosResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_share_mi_task_list_infos_address, {
+                        'method': this.get_share_mi_task_list_infos_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetShareMiTaskListInfosResponse = json
+                return response
         }
 
         async add_share_mi_task_list_info(req: AddShareMiTaskListInfoRequest): Promise<AddShareMiTaskListInfoResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.add_share_mi_task_list_info_address, {
+                        'method': this.add_share_mi_task_list_info_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: AddShareMiTaskListInfoResponse = json
+                return response
         }
 
         async update_share_mi_task_list_info(req: UpdateShareMiTaskListInfoRequest): Promise<UpdateShareMiTaskListInfoResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.update_share_mi_task_list_info_address, {
+                        'method': this.update_share_mi_task_list_info_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateShareMiTaskListInfoResponse = json
+                return response
         }
 
         async delete_share_mi_task_list_infos(req: DeleteShareMiTaskListInfosRequest): Promise<DeleteShareMiTaskListInfosResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.delete_share_mi_task_list_infos_address, {
+                        'method': this.delete_share_mi_task_list_infos_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: DeleteShareMiTaskListInfosResponse = json
+                return response
         }
 
         async get_mi_shared_tasks(req: GetSharedMiTasksRequest): Promise<GetSharedMiTasksResponse> {
-                throw new Error('Not implemented')
+                const res = await fetch(this.get_mi_shared_tasks_address, {
+                        'method': this.get_mi_shared_tasks_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetSharedMiTasksResponse = json
+                return response
         }
-
 }
 
 
