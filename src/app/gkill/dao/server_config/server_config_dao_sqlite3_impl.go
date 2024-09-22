@@ -78,6 +78,7 @@ func (s *serverConfigDAOSQLite3Impl) insertInitData(ctx context.Context) error {
 	}
 	// データがなかったら初期データを作ってあげる
 	serverConfig := &ServerConfig{
+		EnableThisDevice:     true,
 		Device:               "gkill",
 		IsLocalOnlyAccess:    false,
 		Address:              ":9999",
