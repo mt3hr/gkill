@@ -218,7 +218,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		default:
 			text := &Text{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			repName, dataType := "", ""
+			dataType := ""
 
 			err = rows.Scan(&text.IsDeleted,
 				&text.ID,
@@ -233,7 +233,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 				&text.UpdateApp,
 				&text.UpdateDevice,
 				&text.UpdateUser,
-				&repName,
+				&text.RepName,
 				&dataType,
 			)
 
@@ -338,7 +338,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		default:
 			text := &Text{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			repName, dataType := "", ""
+			dataType := ""
 
 			err = rows.Scan(&text.IsDeleted,
 				&text.ID,
@@ -353,7 +353,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 				&text.UpdateApp,
 				&text.UpdateDevice,
 				&text.UpdateUser,
-				&repName,
+				&text.RepName,
 				&dataType,
 			)
 
@@ -453,7 +453,7 @@ WHERE ID LIKE ?
 		default:
 			text := &Text{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			repName, dataType := "", ""
+			dataType := ""
 
 			err = rows.Scan(&text.IsDeleted,
 				&text.ID,
@@ -468,7 +468,7 @@ WHERE ID LIKE ?
 				&text.UpdateApp,
 				&text.UpdateDevice,
 				&text.UpdateUser,
-				&repName,
+				&text.RepName,
 				&dataType,
 			)
 
