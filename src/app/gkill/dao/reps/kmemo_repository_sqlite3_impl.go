@@ -179,6 +179,27 @@ WHERE
 			}
 			whereCounter++
 		}
+		// id検索である場合のSQL追記
+		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+			ids := []string{}
+			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
+			if err != nil {
+				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
+				return nil, nil
+			}
+
+			if whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += "ID IN ("
+			for i, id := range ids {
+				sql += fmt.Sprintf("'%s'", id)
+				if i != len(ids)-1 {
+					sql += ", "
+				}
+			}
+			sql += ")"
+		}
 	}
 	// UPDATE_TIMEが一番上のものだけを抽出
 	sql += `
@@ -497,6 +518,28 @@ WHERE
 				sql += " ) "
 			}
 			whereCounter++
+		}
+
+		// id検索である場合のSQL追記
+		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+			ids := []string{}
+			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
+			if err != nil {
+				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
+				return nil, nil
+			}
+
+			if whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += "ID IN ("
+			for i, id := range ids {
+				sql += fmt.Sprintf("'%s'", id)
+				if i != len(ids)-1 {
+					sql += ", "
+				}
+			}
+			sql += ")"
 		}
 	}
 	// UPDATE_TIMEが一番上のものだけを抽出

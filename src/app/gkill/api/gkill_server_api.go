@@ -790,6 +790,8 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//TODO キャッシュ更新
+
 	response.AddedTag = tag
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddTagSuccessMessage,
