@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
 		err = fmt.Errorf("error at create APPLICATION_CONFIG table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -69,12 +70,14 @@ FROM APPLICATION_CONFIG
 		err = fmt.Errorf("error at get get all application configs sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	applicationConfigs := []*ApplicationConfig{}
 	for rows.Next() {
@@ -116,12 +119,14 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at get get application config sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	applicationConfigs := []*ApplicationConfig{}
 	for rows.Next() {
@@ -176,6 +181,7 @@ VALUES (
 		err = fmt.Errorf("error at add application config sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		applicationConfig.UserID,
@@ -210,6 +216,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at update application config sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		applicationConfig.UserID,
@@ -239,6 +246,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at delete application config sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, device)
 	if err != nil {
