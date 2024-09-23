@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		err = fmt.Errorf("error at create MI table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -238,6 +239,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := m.GetRepName(ctx)
 	if err != nil {
@@ -250,6 +252,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 		err = fmt.Errorf("error at select from MI: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -344,12 +347,14 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI %s: %w", id, err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -473,6 +478,7 @@ FROM MI
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := m.GetRepName(ctx)
 	if err != nil {
@@ -485,6 +491,7 @@ FROM MI
 		err = fmt.Errorf("error at select from MI %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	mis := []*Mi{}
 	for rows.Next() {
@@ -593,6 +600,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get mi histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := m.GetRepName(ctx)
 	if err != nil {
@@ -605,6 +613,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at select from MI %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	mis := []*Mi{}
 	for rows.Next() {
@@ -708,6 +717,7 @@ VASLUES(
 		err = fmt.Errorf("error at add mi sql %s: %w", mi.ID, err)
 		return err
 	}
+	defer stmt.Close()
 
 	var checkedTimeStr interface{}
 	if mi.CheckedTime == nil {
@@ -934,11 +944,14 @@ WHERE IS_DELETED = FALSE
 		err = fmt.Errorf("error at get board names sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
+
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at select board names from MI: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	boardNames := []string{}
 	for rows.Next() {
