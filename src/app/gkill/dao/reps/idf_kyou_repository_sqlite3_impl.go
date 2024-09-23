@@ -82,6 +82,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		err = fmt.Errorf("error at create IDF table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -169,6 +170,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at find kyou sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := i.GetRepName(ctx)
 	if err != nil {
@@ -182,6 +184,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from idf %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -405,6 +408,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := i.GetRepName(ctx)
 	if err != nil {
@@ -418,6 +422,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at select from idf %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -596,6 +601,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at find kyou sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := i.GetRepName(ctx)
 	if err != nil {
@@ -609,6 +615,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from idf %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	idfKyous := []*IDFKyou{}
 	for rows.Next() {
@@ -817,6 +824,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get idf histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := i.GetRepName(ctx)
 	if err != nil {
@@ -830,6 +838,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at select from idf %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	idfKyous := []*IDFKyou{}
 	for rows.Next() {
@@ -1072,6 +1081,7 @@ VASLUES(
 		err = fmt.Errorf("error at add idf sql %s: %w", idfKyou.ID, err)
 		return err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		idfKyou.IsDeleted,

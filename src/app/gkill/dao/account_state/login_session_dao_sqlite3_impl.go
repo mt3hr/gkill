@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS "LOGIN_SESSION" (
 		err = fmt.Errorf("error at create LOGIN_SESSION table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -75,12 +76,14 @@ FROM LOGIN_SESSION
 		err = fmt.Errorf("error at get all login sessions sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	loginSessions := []*LoginSession{}
 	for rows.Next() {
@@ -141,12 +144,14 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at get login sessions sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	loginSessions := []*LoginSession{}
 	for rows.Next() {
@@ -207,12 +212,14 @@ WHERE SESSION_ID = ?
 		err = fmt.Errorf("error at get login sessions sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, sessionID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	loginSessions := []*LoginSession{}
 	for rows.Next() {
@@ -279,13 +286,13 @@ VALUES (
   ?,
   ?
 )
-WHERE ID = ?
 `
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update login sessions sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		loginSession.ID,
@@ -297,7 +304,6 @@ WHERE ID = ?
 		loginSession.LoginTime.Format(sqlite3impl.TimeLayout),
 		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
 		loginSession.IsLocalAppUser,
-		loginSession.ID,
 	)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -325,6 +331,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at add login sessions sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		loginSession.ID,
@@ -355,6 +362,7 @@ WHERE SESSION_ID = ?
 		err = fmt.Errorf("error at delete login session sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, sessionID)
 	if err != nil {

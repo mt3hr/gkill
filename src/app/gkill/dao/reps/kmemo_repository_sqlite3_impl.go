@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 		err = fmt.Errorf("error at create KMEMO table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -191,6 +192,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := k.GetRepName(ctx)
 	if err != nil {
@@ -204,6 +206,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -298,6 +301,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	dataType := "kmemo"
 	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
@@ -305,6 +309,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at select from KMEMO %s: %w", id, err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -506,6 +511,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := k.GetRepName(ctx)
 	if err != nil {
@@ -518,6 +524,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kmemos := []*Kmemo{}
 	for rows.Next() {
@@ -612,12 +619,14 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
+	defer rows.Close()
 
 	kmemos := []*Kmemo{}
 	for rows.Next() {
@@ -699,6 +708,7 @@ VASLUES(
 		err = fmt.Errorf("error at add kmemo sql %s: %w", kmemo.ID, err)
 		return err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		kmemo.IsDeleted,
