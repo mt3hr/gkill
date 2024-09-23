@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 		err = fmt.Errorf("error at create LANTANA table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -190,6 +191,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := l.GetRepName(ctx)
 	if err != nil {
@@ -203,6 +205,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from LANTANA%s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -297,6 +300,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	dataType := "lantana"
 	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
@@ -304,6 +308,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at select from LANTANA %s: %w", id, err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -505,6 +510,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := l.GetRepName(ctx)
 	if err != nil {
@@ -517,6 +523,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from LANTANA %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	lantanas := []*Lantana{}
 	for rows.Next() {
@@ -611,12 +618,14 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get lantana histories sql %s: %w", id, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
+	defer rows.Close()
 
 	lantanas := []*Lantana{}
 	for rows.Next() {
@@ -698,6 +707,7 @@ VASLUES(
 		err = fmt.Errorf("error at add lantana sql %s: %w", lantana.ID, err)
 		return err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		lantana.IsDeleted,

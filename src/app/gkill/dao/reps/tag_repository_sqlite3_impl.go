@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		err = fmt.Errorf("error at create TAG table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -193,6 +194,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -206,6 +208,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	tags := []*Tag{}
 	for rows.Next() {
@@ -311,6 +314,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -324,6 +328,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	tags := []*Tag{}
 	for rows.Next() {
@@ -409,6 +414,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -422,6 +428,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	tags := []*Tag{}
 	for rows.Next() {
@@ -522,6 +529,7 @@ WHERE ID LIKE ?
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -535,6 +543,7 @@ WHERE ID LIKE ?
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	tags := []*Tag{}
 	for rows.Next() {
@@ -620,6 +629,7 @@ VASLUES(
 		err = fmt.Errorf("error at add tag sql %s: %w", tag.ID, err)
 		return err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		tag.IsDeleted,
@@ -658,12 +668,14 @@ WHERE IS_DELETED = FALSE
 		err = fmt.Errorf("error at get all tag names sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at select all tag names from TAG %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	tagNames := []string{}
 	for rows.Next() {

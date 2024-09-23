@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 		err = fmt.Errorf("error at create REKYOU table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -178,6 +179,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	dataType := "rekyou"
 	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
@@ -185,6 +187,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at select from REKYOU %s: %w", id, err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -357,6 +360,7 @@ WHERE TARGET_ID LIKE ?
 		err = fmt.Errorf("error at get rekyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := r.GetRepName(ctx)
 	if err != nil {
@@ -370,6 +374,7 @@ WHERE TARGET_ID LIKE ?
 		err = fmt.Errorf("error at select from REKYOU %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	reKyous := []*ReKyou{}
 	for rows.Next() {
@@ -452,6 +457,7 @@ VASLUES(
 		err = fmt.Errorf("error at add rekyou sql %s: %w", rekyou.ID, err)
 		return err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		rekyou.IsDeleted,
@@ -509,6 +515,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get all rekyous sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := r.GetRepName(ctx)
 	if err != nil {
@@ -522,6 +529,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from REKYOU %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	reKyous := []*ReKyou{}
 	for rows.Next() {

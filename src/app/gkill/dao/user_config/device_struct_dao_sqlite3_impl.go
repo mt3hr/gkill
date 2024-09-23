@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS "DEVICE_STRUCT" (
 		err = fmt.Errorf("error at create DEVICE_STRUCT table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -68,12 +69,14 @@ FROM DEVICE_STRUCT
 		err = fmt.Errorf("error at get get all device struct sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	deviceStructs := []*DeviceStruct{}
 	for rows.Next() {
@@ -115,12 +118,14 @@ WHERE USER_ID = ? DEVICE = ?
 		err = fmt.Errorf("error at get get device struct sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	deviceStructs := []*DeviceStruct{}
 	for rows.Next() {
@@ -170,6 +175,7 @@ VALUES (
 		err = fmt.Errorf("error at add device struct sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		deviceStruct.ID,
@@ -217,8 +223,13 @@ VALUES (
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add device struct sql: %w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
 			return false, err
 		}
+		defer stmt.Close()
 
 		_, err = stmt.ExecContext(ctx,
 			deviceStruct.ID,
@@ -231,12 +242,20 @@ VALUES (
 		)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
 			return false, err
 		}
 	}
 	err = tx.Commit()
 	if err != nil {
 		fmt.Errorf("error at commit: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
 		return false, err
 	}
 
@@ -260,6 +279,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at update device struct sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		deviceStruct.ID,
@@ -288,6 +308,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at delete device struct sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
@@ -307,6 +328,7 @@ WHERE USER_ID = ?
 		err = fmt.Errorf("error at delete device struct sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, userID)
 	if err != nil {
