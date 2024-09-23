@@ -112,6 +112,7 @@ func (g *GkillDAOManager) GetRouter() *mux.Router {
 
 func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.GkillRepositories, error) {
 	ctx := context.TODO()
+	var err error
 
 	// nilだったら初期化する
 	if g.gkillRepositories == nil {
@@ -128,7 +129,11 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 	repositories, existInDevice := repositoriesInDevice[device]
 	if !existInDevice {
 		// なかったら作っていれる
-		repositories = reps.NewGkillRepositories(userID)
+		repositories, err = reps.NewGkillRepositories(userID)
+		if err != nil {
+			err = fmt.Errorf("error at new gkill repositories. user id = %s: %w", userID, err)
+			return nil, err
+		}
 
 		repositoriesDefine, err := g.ConfigDAOs.RepositoryDAO.GetRepositories(ctx, userID, device)
 		if err != nil {

@@ -8,6 +8,7 @@ import (
 
 type LatestDataRepositoryAddressDAO interface {
 	GetAllLatestDataRepositoryAddresses(ctx context.Context) ([]*LatestDataRepositoryAddress, error)
+	GetLatestDataRepositoryAddressesByRepName(ctx context.Context, repName string) ([]*LatestDataRepositoryAddress, error)
 	GetLatestDataRepositoryAddress(ctx context.Context, targetID string) (*LatestDataRepositoryAddress, error)
 	AddLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error)
 	UpdateLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error)

@@ -28,4 +28,6 @@ type Text struct {
 	UpdateUser string `json:"update_user"`
 
 	Text string `json:"text"`
+
+	RepName string `json:"rep_name"`
 }

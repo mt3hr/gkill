@@ -100,6 +100,55 @@ FROM LATEST_DATA_REPOSITORY_ADDRESS
 	return latestDataRepositoryAddresses, nil
 }
 
+func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressesByRepName(ctx context.Context, repName string) ([]*LatestDataRepositoryAddress, error) {
+	sql := `
+SELECT 
+  TARGET_ID,
+  LATEST_DATA_REPOSITORY_NAME,
+  DATA_UPDATE_TIME
+FROM LATEST_DATA_REPOSITORY_ADDRESS
+WHERE LATEST_DATA_REPOSITORY_NAME = ?
+`
+	stmt, err := l.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, repName)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	latestDataRepositoryAddresses := []*LatestDataRepositoryAddress{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			latestDataRepositoryAddress := &LatestDataRepositoryAddress{}
+			dataUpdateTimeStr := ""
+			err = rows.Scan(
+				&latestDataRepositoryAddress.TargetID,
+				&latestDataRepositoryAddress.LatestDataRepositoryName,
+				&dataUpdateTimeStr,
+			)
+
+			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse file data update time %s at %s in LATEST_DATA_REPOSITORY_ADDREDD: %w", dataUpdateTimeStr, latestDataRepositoryAddress.TargetID, err)
+				return nil, err
+			}
+
+			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
+		}
+	}
+	return latestDataRepositoryAddresses, nil
+}
+
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, targetID string) (*LatestDataRepositoryAddress, error) {
 	sql := `
 SELECT 
