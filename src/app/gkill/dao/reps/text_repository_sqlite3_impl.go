@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 		err = fmt.Errorf("error at create TEXT table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -193,6 +194,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get TEXT histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -206,6 +208,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from TEXT %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	texts := []*Text{}
 	for rows.Next() {
@@ -215,7 +218,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		default:
 			text := &Text{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			repName, dataType := "", ""
+			dataType := ""
 
 			err = rows.Scan(&text.IsDeleted,
 				&text.ID,
@@ -230,7 +233,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 				&text.UpdateApp,
 				&text.UpdateDevice,
 				&text.UpdateUser,
-				&repName,
+				&text.RepName,
 				&dataType,
 			)
 
@@ -311,6 +314,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get text histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -324,6 +328,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from TEXT %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	texts := []*Text{}
 	for rows.Next() {
@@ -333,7 +338,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		default:
 			text := &Text{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			repName, dataType := "", ""
+			dataType := ""
 
 			err = rows.Scan(&text.IsDeleted,
 				&text.ID,
@@ -348,7 +353,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 				&text.UpdateApp,
 				&text.UpdateDevice,
 				&text.UpdateUser,
-				&repName,
+				&text.RepName,
 				&dataType,
 			)
 
@@ -424,6 +429,7 @@ WHERE ID LIKE ?
 		err = fmt.Errorf("error at get text histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -437,6 +443,7 @@ WHERE ID LIKE ?
 		err = fmt.Errorf("error at select from TEXT %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	texts := []*Text{}
 	for rows.Next() {
@@ -446,7 +453,7 @@ WHERE ID LIKE ?
 		default:
 			text := &Text{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			repName, dataType := "", ""
+			dataType := ""
 
 			err = rows.Scan(&text.IsDeleted,
 				&text.ID,
@@ -461,7 +468,7 @@ WHERE ID LIKE ?
 				&text.UpdateApp,
 				&text.UpdateDevice,
 				&text.UpdateUser,
-				&repName,
+				&text.RepName,
 				&dataType,
 			)
 
@@ -521,6 +528,7 @@ VASLUES(
 		err = fmt.Errorf("error at add text sql %s: %w", text.ID, err)
 		return err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		text.IsDeleted,

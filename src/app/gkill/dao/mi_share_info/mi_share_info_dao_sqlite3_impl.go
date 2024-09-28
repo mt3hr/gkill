@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS "MI_SHARE_INFO" (
 		err = fmt.Errorf("error at create MI_SHARE_INFO table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -68,12 +69,14 @@ FROM MI_SHARE_INFO
 		err = fmt.Errorf("error at get get all mi share infos sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	miShareInfos := []*MiShareInfo{}
 	for rows.Next() {
@@ -115,12 +118,14 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at get get mi share infos sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	miShareInfos := []*MiShareInfo{}
 	for rows.Next() {
@@ -162,12 +167,14 @@ WHERE SHARED_ID = ?
 		err = fmt.Errorf("error at get get mi share infos sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, sharedID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	miShareInfos := []*MiShareInfo{}
 	for rows.Next() {
@@ -220,6 +227,7 @@ VALUES (
 		err = fmt.Errorf("error at add mi share info sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		miShareInfo.ID,
@@ -254,6 +262,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at update mi share info sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		miShareInfo.ID,
@@ -282,6 +291,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at delete mi share info sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {

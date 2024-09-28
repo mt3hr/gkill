@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 		err = fmt.Errorf("error at create KMEMO table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -178,6 +179,27 @@ WHERE
 			}
 			whereCounter++
 		}
+		// id検索である場合のSQL追記
+		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+			ids := []string{}
+			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
+			if err != nil {
+				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
+				return nil, nil
+			}
+
+			if whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += "ID IN ("
+			for i, id := range ids {
+				sql += fmt.Sprintf("'%s'", id)
+				if i != len(ids)-1 {
+					sql += ", "
+				}
+			}
+			sql += ")"
+		}
 	}
 	// UPDATE_TIMEが一番上のものだけを抽出
 	sql += `
@@ -191,6 +213,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := k.GetRepName(ctx)
 	if err != nil {
@@ -204,6 +227,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -298,6 +322,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	dataType := "kmemo"
 	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
@@ -305,6 +330,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at select from KMEMO %s: %w", id, err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -493,6 +519,28 @@ WHERE
 			}
 			whereCounter++
 		}
+
+		// id検索である場合のSQL追記
+		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+			ids := []string{}
+			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
+			if err != nil {
+				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
+				return nil, nil
+			}
+
+			if whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += "ID IN ("
+			for i, id := range ids {
+				sql += fmt.Sprintf("'%s'", id)
+				if i != len(ids)-1 {
+					sql += ", "
+				}
+			}
+			sql += ")"
+		}
 	}
 	// UPDATE_TIMEが一番上のものだけを抽出
 	sql += `
@@ -506,6 +554,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := k.GetRepName(ctx)
 	if err != nil {
@@ -518,6 +567,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kmemos := []*Kmemo{}
 	for rows.Next() {
@@ -612,12 +662,14 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
+	defer rows.Close()
 
 	kmemos := []*Kmemo{}
 	for rows.Next() {
@@ -699,6 +751,7 @@ VASLUES(
 		err = fmt.Errorf("error at add kmemo sql %s: %w", kmemo.ID, err)
 		return err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		kmemo.IsDeleted,
