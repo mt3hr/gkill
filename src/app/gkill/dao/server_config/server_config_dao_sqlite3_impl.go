@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 		err = fmt.Errorf("error at create SERVER_CONFIG table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -123,12 +124,14 @@ FROM SERVER_CONFIG
 		err = fmt.Errorf("error at get get all server configs sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	serverConfigs := []*ServerConfig{}
 	for rows.Next() {
@@ -182,12 +185,14 @@ WHERE DEVICE = ?
 		err = fmt.Errorf("error at get get server config sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	serverConfigs := []*ServerConfig{}
 	for rows.Next() {
@@ -260,6 +265,7 @@ VALUES (
 		err = fmt.Errorf("error at add server config sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		serverConfig.EnableThisDevice,
@@ -310,8 +316,13 @@ WHERE DEVICE = ?
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at update server config sql: %w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
 			return false, err
 		}
+		defer stmt.Close()
 
 		_, err = stmt.ExecContext(ctx,
 			serverConfig.EnableThisDevice,
@@ -331,6 +342,10 @@ WHERE DEVICE = ?
 		)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
 			return false, err
 		}
 	}
@@ -343,6 +358,10 @@ WHERE ENABLE_THIS_DEVICE = ?
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
 		return false, err
 	}
 	defer checkEnableDeviceStmt.Close()
@@ -351,8 +370,13 @@ WHERE ENABLE_THIS_DEVICE = ?
 	rows, err := checkEnableDeviceStmt.QueryContext(ctx, true)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
 		return false, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		select {
@@ -379,14 +403,13 @@ WHERE ENABLE_THIS_DEVICE = ?
 	}
 	err = tx.Commit()
 	if err != nil {
+		fmt.Errorf("error at commit: %w", err)
 		errAtRollBack := tx.Rollback()
 		if errAtRollBack != nil {
 			err = fmt.Errorf("%w: %w", err, errAtRollBack)
 			fmt.Errorf("error at commit: %w", err)
 			return false, err
 		}
-
-		fmt.Errorf("error at commit: %w", err)
 		return false, err
 	}
 	return true, nil
@@ -419,8 +442,13 @@ WHERE DEVICE = ?
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update server config sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		serverConfig.EnableThisDevice,
@@ -440,6 +468,10 @@ WHERE DEVICE = ?
 	)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
 		return false, err
 	}
 
@@ -452,6 +484,10 @@ WHERE ENABLE_THIS_DEVICE = ?
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
 		return false, err
 	}
 	defer checkEnableDeviceStmt.Close()
@@ -459,8 +495,13 @@ WHERE ENABLE_THIS_DEVICE = ?
 	rows, err := checkEnableDeviceStmt.QueryContext(ctx, true)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
 		return false, err
 	}
+	defer rows.Close()
 
 	enableDeviceCount := 0
 	for rows.Next() {
@@ -511,6 +552,7 @@ WHERE DEVICE = ?
 		err = fmt.Errorf("error at delete server config sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, device)
 	if err != nil {

@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
 		err = fmt.Errorf("error at create REPOSITORY table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -68,12 +69,14 @@ FROM REPOSITORY
 		err = fmt.Errorf("error at get get all repositories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	repositories := []*Repository{}
 	for rows.Next() {
@@ -117,12 +120,14 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at get get repositories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	repositories := []*Repository{}
 	for rows.Next() {
@@ -174,6 +179,7 @@ VALUES (
 		err = fmt.Errorf("error at add repository sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		repository.ID,
@@ -198,6 +204,7 @@ func (r *repositoryDAOSQLite3Impl) AddRepositories(ctx context.Context, reposito
 		fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+
 	for _, repository := range repositories {
 		sql := `
 INSERT INTO REPOSITORY (
@@ -224,8 +231,13 @@ VALUES (
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add repositories sql: %w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
 			return false, err
 		}
+		defer stmt.Close()
 
 		_, err = stmt.ExecContext(ctx,
 			repository.ID,
@@ -239,12 +251,20 @@ VALUES (
 		)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
 			return false, err
 		}
 	}
 	err = tx.Commit()
 	if err != nil {
 		fmt.Errorf("error at commit: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
 		return false, err
 	}
 
@@ -268,6 +288,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at update repository sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, ctx,
 		repository.ID,
@@ -296,6 +317,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at delete repository sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
@@ -315,6 +337,7 @@ WHERE USER_ID = ?
 		err = fmt.Errorf("error at delete repository sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, userID)
 	if err != nil {

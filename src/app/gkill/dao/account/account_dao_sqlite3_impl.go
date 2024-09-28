@@ -36,12 +36,14 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 		err = fmt.Errorf("error at create ACCOUNT table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create ACCOUNT table to %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	return &accountDAOSQLite3Impl{
 		filename: filename,
@@ -64,12 +66,14 @@ FROM ACCOUNT
 		err = fmt.Errorf("error at get get all accounts sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	accounts := []*Account{}
 	for rows.Next() {
@@ -106,12 +110,14 @@ WHERE USER_ID = ?
 		err = fmt.Errorf("error at get get account sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, userID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	accounts := []*Account{}
 	for rows.Next() {
@@ -159,6 +165,7 @@ VALUES (
 		err = fmt.Errorf("error at add account sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		account.UserID,
@@ -187,6 +194,7 @@ WHERE USER_ID = ?
 		err = fmt.Errorf("error at update account sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx,
 		account.UserID,
@@ -211,6 +219,7 @@ WHERE USER_ID = ?
 		err = fmt.Errorf("error at delete account sql: %w", err)
 		return false, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, userID)
 	if err != nil {
