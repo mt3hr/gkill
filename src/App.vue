@@ -5,8 +5,10 @@ import { RouterView } from 'vue-router'
 </script>
 
 <template>
+  <v-app>
+    <RouterView />
+  </v-app>
   <div id="control-height"></div>
-  <RouterView />
 </template>
 
 <style scoped></style>
