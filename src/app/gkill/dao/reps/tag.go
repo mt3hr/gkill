@@ -28,4 +28,6 @@ type Tag struct {
 	UpdateUser string `json:"update_user"`
 
 	Tag string `json:"tag"`
+
+	RepName string `json:"rep_name"`
 }
