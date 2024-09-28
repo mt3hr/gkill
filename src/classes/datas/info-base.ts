@@ -1,9 +1,9 @@
 'use strict'
 
 import type { GkillError } from "../api/gkill-error"
-import { Tag } from "./tag"
-import { Text } from "./text"
-import { TimeIs } from "./time-is"
+import type { Tag } from "./tag"
+import type { Text } from "./text"
+import type { TimeIs } from "./time-is"
 
 export abstract class InfoBase {
 
