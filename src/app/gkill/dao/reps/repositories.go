@@ -200,7 +200,7 @@ func (r Repositories) UpdateCache(ctx context.Context) error {
 	errch := make(chan error, len(r))
 	defer close(errch)
 
-	// 並列処理
+	// UpdateCache並列処理
 	for _, rep := range r {
 		wg.Add(1)
 		rep := rep
@@ -229,7 +229,6 @@ errloop:
 	if existErr {
 		return err
 	}
-
 	return nil
 }
 

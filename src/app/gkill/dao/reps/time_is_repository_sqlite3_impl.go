@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", filename, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
@@ -142,6 +143,7 @@ FROM TIMEIS
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -154,6 +156,7 @@ FROM TIMEIS
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -249,12 +252,14 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS %s: %w", id, err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -384,6 +389,7 @@ FROM TIMEIS
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -396,6 +402,7 @@ FROM TIMEIS
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	timeiss := []*TimeIs{}
 	for rows.Next() {
@@ -497,6 +504,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
+	defer stmt.Close()
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -509,6 +517,7 @@ ORDER BY UPDATE_TIME DESC
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
 		return nil, err
 	}
+	defer rows.Close()
 
 	timeiss := []*TimeIs{}
 	for rows.Next() {
@@ -600,6 +609,7 @@ VASLUES(
 		err = fmt.Errorf("error at add timeis sql %s: %w", timeis.ID, err)
 		return err
 	}
+	defer stmt.Close()
 
 	var endTimeStr interface{}
 	if timeis.EndTime == nil {
