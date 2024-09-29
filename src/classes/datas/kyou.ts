@@ -15,6 +15,8 @@ import { InfoIdentifier } from './info-identifier'
 
 export class Kyou extends InfoBase {
 
+    is_deleted: boolean
+
     image_source: string
 
     attached_histories: Array<Kyou>
@@ -111,6 +113,9 @@ export class Kyou extends InfoBase {
 
     constructor() {
         super()
+
+        this.is_deleted = false
+
         this.image_source = ""
 
         this.attached_histories = new Array<Kyou>()
