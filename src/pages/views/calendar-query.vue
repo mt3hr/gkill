@@ -8,5 +8,4 @@ import { ref } from 'vue'
 
 const props = defineProps<CalendarQueryProps>()
 const emits = defineEmits<CalendarQueryEmits>()
-const cloned_query = ref(await props.query.clone())
 </script>

@@ -305,7 +305,7 @@ VALUES (
 	}
 
 	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-		_, err := l.GetAllLatestDataRepositoryAddresses(ctx)
+		_, err := l.GetLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress.TargetID)
 		if err == nil { // データが存在する場合は更新する
 			_, err := l.UpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 			stmt, err := tx.PrepareContext(ctx, updateSQL)
