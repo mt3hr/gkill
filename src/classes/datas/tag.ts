@@ -30,7 +30,7 @@ export class Tag extends MetaInfoBase {
         throw new Error('Not implemented')
     }
 
-generate_info_identifer(): InfoIdentifier {
+    generate_info_identifer(): InfoIdentifier {
         const info_identifer = new InfoIdentifier()
         info_identifer.id = this.id
         info_identifer.create_time = this.create_time
