@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar :height="app_title_bar_height" class="app_bar" app color="indigo" flat dark>
+    <v-app-bar :height="app_title_bar_height" class="app_bar" app color="primary" flat >
         <v-toolbar-title>gkill ログイン</v-toolbar-title>
         <v-spacer />
         <span class="gkill_version">version: {{ gkill_version }}</span>
@@ -24,7 +24,7 @@ const element_height: Ref<Number> = ref(0)
 const browser_url_bar_height: Ref<Number> = ref(0)
 const app_title_bar_height: Ref<Number> = ref(50)
 const app_title_bar_height_px = computed(() => app_title_bar_height.value.toString().concat("px"))
-const gkill_api: Ref<GkillAPI> = ref(new GkillAPI())
+const gkill_api: Ref<GkillAPI> = ref(GkillAPI.get_instance())
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 const gkill_version: Ref<string> = ref(package_json.version)

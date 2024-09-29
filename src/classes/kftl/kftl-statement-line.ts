@@ -14,7 +14,7 @@ export abstract class KFTLStatementLine {
     private context: KFTLStatementLineContext
 
     constructor(line_text: string, context: KFTLStatementLineContext) {
-        this.api = new GkillAPI()
+        this.api = GkillAPI.get_instance()
         this.statement_line_text = line_text
         this.context = context
     }

@@ -19,7 +19,7 @@
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto">
-                    <v-btn class="login_button" color="indigo" dark @click="try_login(user_id, password_sha256)">
+                    <v-btn class="login_button" color="primary"  @click="try_login(user_id, password_sha256)">
                         ログイン
                     </v-btn>
                 </v-col>

@@ -1,30 +1,29 @@
 <template>
     <EditIdfKyouDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
-        :idf_kyou="cloned_idf_kyou" @received_errors="(errors) => emits('received_errors', errors)"
+        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+        @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" @requested_reload_list="() => { }"
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
     <ConfirmDeleteKyouDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" @requested_reload_list="() => { }"
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
     <AddTagDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-        :kyou="cloned_kyou" :last_added_tag="last_added_tag"
-        @received_errors="(errors) => emits('received_errors', errors)"
+        :kyou="kyou" :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" @requested_reload_list="() => { }"
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
     <AddTextDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" @requested_reload_list="() => { }"
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
     <ConfirmReKyouDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" @requested_reload_list="() => { }"
@@ -44,7 +43,4 @@ import type { IDFKyou } from '@/classes/datas/idf-kyou'
 
 const props = defineProps<IDFKyouContextMenuProps>()
 const emits = defineEmits<KyouViewEmits>()
-
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
-const cloned_idf_kyou: Ref<IDFKyou> = ref(cloned_kyou.value.typed_idf_kyou)
 </script>

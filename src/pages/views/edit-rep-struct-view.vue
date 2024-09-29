@@ -13,5 +13,4 @@ import EditRepStructElementDialog from '../dialogs/edit-rep-struct-element-dialo
 
 const props = defineProps<EditRepStructViewProps>()
 const emits = defineEmits<EditRepStructViewEmits>()
-const cloned_application_config = ref(await props.application_config.clone())
 </script>

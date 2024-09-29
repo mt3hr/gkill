@@ -32,6 +32,5 @@ import ShowPasswordResetLinkDialog from '../dialogs/show-password-reset-link-dia
 
 const props = defineProps<ManageAccountViewProps>()
 const emits = defineEmits<ManageAccountViewEmits>()
-const cloned_server_config: Ref<ServerConfig> = ref(await props.server_config.clone())
 const focused_user_id: Ref<string> = ref("")
 </script>
