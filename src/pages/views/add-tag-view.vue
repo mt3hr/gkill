@@ -1,7 +1,7 @@
 <template>
     <!-- //TODO 実装 -->
     <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-        :is_image_view="false" :kyou="cloned_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
+        :is_image_view="false" :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
         :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
         :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
         @received_errors="(errors) => emits('received_errors', errors)"
@@ -19,6 +19,6 @@ import KyouView from './kyou-view.vue'
 
 const props = defineProps<AddTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
+
 const tag: Ref<Tag> = ref(new Tag())
 </script>

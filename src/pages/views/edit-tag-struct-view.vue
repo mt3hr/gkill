@@ -25,7 +25,6 @@ import EditTagStructElementDialog from '../dialogs/edit-tag-struct-element-dialo
 const props = defineProps<EditTagStructViewProps>()
 const emits = defineEmits<EditTagStructViewEmits>()
 
-const cloned_application_config = ref(await props.application_config.clone())
 const tag_struct: Ref<Array<TagStruct>> = ref(props.tag_struct.concat())
 const tag_struct_root: Ref<Array<TagStruct>> = ref(props.tag_struct_root.concat())
 </script>

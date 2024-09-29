@@ -23,7 +23,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
 
     constructor(request_id: string, context: KFTLStatementLineContext) {
         super()
-        this.api = new GkillAPI()
+        this.api = GkillAPI.get_instance()
 
         this.request_id = ""
         this.tags = new Array<string>

@@ -1,7 +1,7 @@
 <template>
     <v-dialog v-model="is_show_dialog">
-        <EditTagStructView :tag_struct="application_config.tag_struct" :application_config="application_config" :gkill_api="gkill_api"
-            :tag_struct_root="cloned_application_config.tag_struct"
+        <EditTagStructView :tag_struct="application_config.tag_struct" :application_config="application_config"
+            :gkill_api="gkill_api" :tag_struct_root="application_config.tag_struct"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_application_config="(application_config) => emits('requested_reload_application_config', application_config)" />
@@ -19,7 +19,6 @@ const emits = defineEmits<EditTagStructDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)
-const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
 
 async function show(): Promise<void> {
     is_show_dialog.value = true
