@@ -1,47 +1,55 @@
 <template>
-    <EditTimeIsDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="[generate_info_identifer_from_timeis(timeis)]" :kyou="kyou"
-        :last_added_tag="last_added_tag" :timeis="timeis"
+    <span class="plaing" @contextmenu.prevent="async (e) => show_context_menu(e as PointerEvent)">
+        {{ timeis.title }}
+    </span>
+    <AttachedTimeIsPlaingContextMenu :application_config="application_config" :gkill_api="gkill_api" :kyou="kyou"
+        :timeis="timeis" :last_added_tag="last_added_tag"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
         @requested_reload_list="() => emits('requested_reload_list')"
-        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
-    <AttachedTimeisPlaingContextMenu :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="[generate_info_identifer_from_timeis(timeis)]" :kyou="kyou"
-        :last_added_tag="last_added_tag" :timeis="timeis"
-        @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
-        @requested_reload_list="() => emits('requested_reload_list')"
-        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
-    <ConfirmDeleteKyouDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="[generate_info_identifer_from_timeis(timeis)]" :kyou="kyou"
-        :last_added_tag="last_added_tag" :timeis="timeis"
-        @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
-        @requested_reload_list="() => emits('requested_reload_list')"
-        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
+        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
+        ref="context_menu" />
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
-import type { TimeIs } from '@/classes/datas/time-is'
 import type { AttachedTimeIsPlaingProps } from './attached-time-is-plaing-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import EditTimeIsDialog from '../dialogs/edit-time-is-dialog.vue'
-import AttachedTimeisPlaingContextMenu from './attached-timeis-plaing-context-menu.vue'
-import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue'
-import { InfoIdentifier } from '@/classes/datas/info-identifier'
+import { type Ref, ref } from 'vue'
+import AttachedTimeIsPlaingContextMenu from './attached-timeis-plaing-context-menu.vue'
+
+const context_menu = ref<InstanceType<typeof AttachedTimeIsPlaingContextMenu> | null>(null);
 
 const props = defineProps<AttachedTimeIsPlaingProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-function generate_info_identifer_from_timeis(timeis: TimeIs): InfoIdentifier {
-    const info_identifer = new InfoIdentifier()
-    info_identifer.create_time = timeis.create_time
-    info_identifer.id = timeis.id
-    info_identifer.update_time = timeis.update_time
-    return info_identifer
+async function show_context_menu(e: PointerEvent): Promise<void> {
+    context_menu.value?.show(e)
 }
 </script>
+<style scoped>
+.plaing {
+    border: solid white 2px;
+    border-left: 0px;
+    color: blue;
+    cursor: pointer;
+    font-size: small;
+    background: lightgray;
+    display: inline-flex;
+}
+
+.plaing::after {
+    content: "";
+    background: white;
+    border-top: 9.5px solid transparent;
+    border-left: 10px solid #d3d3d3;
+    border-bottom: 9.5px solid transparent;
+}
+
+.plaing::before {
+    content: "";
+    background: white;
+    border-top: 9.5px solid transparent;
+    border-right: 10px solid #d3d3d3;
+    border-bottom: 9.5px solid transparent;
+}
+</style>
