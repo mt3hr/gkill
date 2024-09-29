@@ -4,7 +4,7 @@
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" @requested_reload_kyou="(kyou) => { }"
         @requested_reload_list="() => { }" />
-    <KyouListView :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="cloned_uploaded_kyous"
+    <KyouListView :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="uploaded_kyous"
         :query="new FindKyouQuery()" @received_errors="(errors) => emits('received_errors', errors)"
         :last_added_tag="last_added_tag" @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => { }" @requested_reload_list="() => { }"
@@ -22,6 +22,4 @@ import { type Ref, ref } from 'vue'
 const props = defineProps<DecideRelatedTimeUploadedFileViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 const focused_kyou: Ref<Kyou> = ref(new Kyou())
-
-const cloned_uploaded_kyous: Ref<Array<Kyou>> = ref(await props.uploaded_kyous.concat())
 </script>

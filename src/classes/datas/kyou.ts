@@ -1,16 +1,17 @@
 'use strict'
 
-import type { GkillError } from '../api/gkill-error'
-import { GitCommitLog } from './git-commit-log'
-import { IDFKyou } from './idf-kyou'
 import { InfoBase } from './info-base'
-import { Kmemo } from './kmemo'
-import { Lantana } from './lantana'
-import { Mi } from './mi'
-import { Nlog } from './nlog'
-import { ReKyou } from './re-kyou'
-import { TimeIs } from './time-is'
-import { URLog } from './ur-log'
+import type { GkillError } from '../api/gkill-error'
+import type { GitCommitLog } from './git-commit-log'
+import type { IDFKyou } from './idf-kyou'
+import type { Kmemo } from './kmemo'
+import type { Lantana } from './lantana'
+import type { Mi } from './mi'
+import type { Nlog } from './nlog'
+import type { ReKyou } from './re-kyou'
+import type { TimeIs } from './time-is'
+import type { URLog } from './ur-log'
+import { InfoIdentifier } from './info-identifier'
 
 export class Kyou extends InfoBase {
 
@@ -18,23 +19,23 @@ export class Kyou extends InfoBase {
 
     attached_histories: Array<Kyou>
 
-    typed_kmemo: Kmemo
+    typed_kmemo: Kmemo | null
 
-    typed_urlog: URLog
+    typed_urlog: URLog | null
 
-    typed_nlog: Nlog
+    typed_nlog: Nlog | null
 
-    typed_timeis: TimeIs
+    typed_timeis: TimeIs | null
 
-    typed_mi: Mi
+    typed_mi: Mi | null
 
-    typed_lantana: Lantana
+    typed_lantana: Lantana | null
 
-    typed_idf_kyou: IDFKyou
+    typed_idf_kyou: IDFKyou | null
 
-    typed_git_commit_log: GitCommitLog
+    typed_git_commit_log: GitCommitLog | null
 
-    typed_rekyou: ReKyou
+    typed_rekyou: ReKyou | null
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         throw new Error('Not implemented')
@@ -100,29 +101,37 @@ export class Kyou extends InfoBase {
         throw new Error('Not implemented')
     }
 
+    generate_info_identifer(): InfoIdentifier {
+        const info_identifer = new InfoIdentifier()
+        info_identifer.id = this.id
+        info_identifer.create_time = this.create_time
+        info_identifer.update_time = this.update_time
+        return info_identifer
+    }
+
     constructor() {
         super()
         this.image_source = ""
 
         this.attached_histories = new Array<Kyou>()
 
-        this.typed_kmemo = new Kmemo()
+        this.typed_kmemo = null
 
-        this.typed_urlog = new URLog()
+        this.typed_urlog = null
 
-        this.typed_nlog = new Nlog()
+        this.typed_nlog = null
 
-        this.typed_timeis = new TimeIs()
+        this.typed_timeis = null
 
-        this.typed_mi = new Mi()
+        this.typed_mi = null
 
-        this.typed_lantana = new Lantana()
+        this.typed_lantana = null
 
-        this.typed_idf_kyou = new IDFKyou()
+        this.typed_idf_kyou = null
 
-        this.typed_git_commit_log = new GitCommitLog()
+        this.typed_git_commit_log = null
 
-        this.typed_rekyou = new ReKyou()
+        this.typed_rekyou = null
     }
 
 }

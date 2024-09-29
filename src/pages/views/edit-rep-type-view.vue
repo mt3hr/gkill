@@ -13,5 +13,4 @@ import { ref } from 'vue'
 
 const props = defineProps<EditRepTypeViewProps>()
 const emits = defineEmits<EditRepTypeViewEmits>()
-const cloned_application_config = ref(await props.application_config.clone())
 </script>

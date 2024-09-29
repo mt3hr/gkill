@@ -10,8 +10,6 @@
 import { type Ref, ref } from 'vue'
 import type { ServerConfigDialogEmits } from './server-config-dialog-emits'
 import type { ServerConfigDialogProps } from './server-config-dialog-props'
-import { ServerConfig } from '@/classes/datas/config/server-config'
-import { GetServerConfigRequest } from '@/classes/api/req_res/get-server-config-request'
 import ServerConfigView from '../views/server-config-view.vue'
 
 const props = defineProps<ServerConfigDialogProps>()
@@ -26,5 +24,4 @@ async function show(): Promise<void> {
 async function hide(): Promise<void> {
     is_show_dialog.value = false
 }
-const cloned_server_config: Ref<ServerConfig> = ref(await props.server_config.clone())
 </script>

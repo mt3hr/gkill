@@ -4,6 +4,7 @@ import login_page from '../pages/login-page.vue'
 import kftl_page from '../pages/kftl-page.vue'
 import mi_page from '../pages/mi-page.vue'
 import rykv_page from '../pages/rykv-page.vue'
+import kyou_page from '../pages/kyou-page.vue'
 import saihate_page from '../pages/saihate-page.vue'
 import set_new_password_page from '../pages/set-new-password-page.vue'
 import shared_mi_page from '../pages/shared-mi-page.vue'
@@ -30,6 +31,11 @@ const router = createRouter({
       path: '/rykv',
       name: 'rykv',
       component: rykv_page,
+    },
+    {
+      path: '/kyou',
+      name: 'kyou',
+      component: kyou_page,
     },
     {
       path: '/saihate',
