@@ -140,6 +140,11 @@ import type { UploadGPSLogFilesRequest } from "./req_res/upload-gps-log-files-re
 import type { UploadGPSLogFilesResponse } from "./req_res/upload-gps-log-files-response"
 
 export class GkillAPI {
+        private static gkill_api: GkillAPI = GkillAPI.get_instance()
+        static get_instance(): GkillAPI {
+                return this.gkill_api
+        }
+
         login_address: string
         logout_address: string
         reset_password_address: string
@@ -273,7 +278,7 @@ export class GkillAPI {
         delete_share_mi_task_list_infos_method: string
         get_mi_shared_tasks_method: string
 
-        constructor() {
+        private constructor() {
                 this.login_address = "/api/login"
                 this.logout_address = "/api/logout"
                 this.reset_password_address = "/api/reset_password"

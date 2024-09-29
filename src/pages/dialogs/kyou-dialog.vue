@@ -15,14 +15,12 @@
 import { type Ref, ref, watch } from 'vue'
 import type { KyouDialogProps } from './kyou-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
-import type { Kyou } from '@/classes/datas/kyou'
 import KyouView from '../views/kyou-view.vue'
 
 const props = defineProps<KyouDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
+
 defineExpose({ show, hide })
-watch(props.kyou, async () => cloned_kyou.value = await props.kyou.clone())
 
 const is_show_dialog: Ref<boolean> = ref(false)
 
@@ -31,11 +29,6 @@ async function show(): Promise<void> {
 }
 async function hide(): Promise<void> {
     is_show_dialog.value = false
-}
-
-const errors = await cloned_kyou.value.load_attached_histories()
-if (errors && errors.length !== 0) {
-    emits('received_errors', errors)
 }
 </script>
 

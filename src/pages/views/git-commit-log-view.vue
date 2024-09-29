@@ -1,6 +1,6 @@
 <template>
     <GitCommitLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
         @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
@@ -19,6 +19,6 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const props = defineProps<GitCommitLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
-const cloned_kyou: Ref<Kyou> = ref(await props.kyou.clone())
-const cloned_git_commit_log: Ref<GitCommitLog> = ref(await props.git_commit_log.clone())
+
+const cloned_git_commit_log: Ref<GitCommitLog> = ref(await props.kyou.typed_git_commit_log!.clone())
 </script>

@@ -30,7 +30,6 @@ const props = defineProps<ManageShareTaskLinkDialogProps>()
 const emits = defineEmits<ManageShareTaskLinkDialogEmits>()
 defineExpose({ show, hide })
 
-const cloned_share_mi_task_list_infos: Ref<Array<ShareMiTaskListInfo>> = ref(new Array<ShareMiTaskListInfo>())
 const share_task_list: Ref<ShareMiTaskListInfo> = ref(new ShareMiTaskListInfo())
 const share_task_link: Ref<ShareMiTaskListInfo> = ref(new ShareMiTaskListInfo())
 

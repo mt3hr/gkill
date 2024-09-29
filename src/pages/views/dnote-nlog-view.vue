@@ -1,6 +1,6 @@
 <template>
     <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-        :is_image_view="false" :kyou="cloned_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
+        :is_image_view="false" :kyou="nlog_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
         :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
         :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
         @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
@@ -19,14 +19,4 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const props = defineProps<DnoteNlogViewProps>()
 const emits = defineEmits<DnoteNlogViewEmits>()
-const cloned_kyou: Ref<Kyou> = ref(await props.nlog_kyou.clone())
-const cloned_nlog = computed(async () => {
-    const errors = await cloned_kyou.value.load_typed_nlog()
-    if (errors && errors.length !== 0) {
-        emits('received_errors', errors)
-        return
-    }
-    const nlog = cloned_kyou.value.typed_nlog
-    return nlog
-})
 </script>
