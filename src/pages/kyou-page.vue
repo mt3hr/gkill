@@ -310,6 +310,7 @@ mi.update_app = "gkill"
 mi.update_device = "X1Yoga"
 mi.update_time = new Date(Date.now())
 mi.update_user = "mt3hr"
+mi.board_name = "hoge"
 test_kyou_mi.data_type = "mi"
 test_kyou_mi.rep_name = "mi"
 test_kyou_mi.image_source = ""
@@ -800,5 +801,5 @@ test_kyou_idf.attached_texts = [test_attached_text1, test_attached_text2]
 test_kyou_idf.attached_timeis_kyou = [test_attached_timeis_kyou1, test_attached_timeis_kyou2]
 test_kyou_idf.attached_histories = [test_kyou_idf, test_kyou_idf_for_history]
 
-kyou.value = test_kyou_kmemo
+kyou.value = test_kyou_mi
 </script>
