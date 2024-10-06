@@ -1,7 +1,7 @@
 <template>
     <TextView v-for="text, index in text.attached_histories" :application_config="application_config"
         :gkill_api="gkill_api" :text="text" :kyou="kyou" :last_added_tag="last_added_tag"
-        @received_errors="(errors) => emits('received_errors', errors)"
+        :highlight_targets="highlight_targets" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" />
 </template>
 <script lang="ts" setup>

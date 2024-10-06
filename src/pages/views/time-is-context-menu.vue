@@ -24,8 +24,8 @@
             </v-list-item>
         </v-list>
     </v-menu>
-    <EditTimeIsDialog v-if="kyou.typed_timeis" :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag" :timeis="kyou.typed_timeis"
+    <EditTimeIsDialog :application_config="application_config" :gkill_api="gkill_api"
+        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -39,11 +39,11 @@
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" ref="add_text_dialog" />
-    <ConfirmDeleteKyouDialog v-if="kyou.typed_timeis" :application_config="application_config" :gkill_api="gkill_api"
+    <ConfirmDeleteKyouDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(message) => emits('received_messages', message)" ref="confirm_delete_kyou_dialog" />
-    <ConfirmReKyouDialog v-if="kyou.typed_timeis" :application_config="application_config" :gkill_api="gkill_api"
+    <ConfirmReKyouDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" ref="confirm_rekyou_dialog" />
