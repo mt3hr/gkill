@@ -16,7 +16,7 @@
         </v-list>
     </v-menu>
     <EditTagDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="[generate_info_identifer_from_tag(tag)]" :kyou="kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="[tag.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
         :tag="tag" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -24,7 +24,7 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
         ref="edit_tag_dialog" />
     <ConfirmDeleteTagDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="[generate_info_identifer_from_tag(tag)]" :kyou="kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="[tag.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
         :tag="tag" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -32,7 +32,7 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
         ref="confirm_delete_tag_dialog" />
     <TagHistoriesDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="[generate_info_identifer_from_tag(tag)]" :kyou="kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="[tag.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
         :tag="tag" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -63,14 +63,6 @@ const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
 const context_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
-
-function generate_info_identifer_from_tag(tag: Tag): InfoIdentifier {
-    const info_identifer = new InfoIdentifier()
-    info_identifer.create_time = tag.create_time
-    info_identifer.id = tag.id
-    info_identifer.update_time = tag.update_time
-    return info_identifer
-}
 
 async function show(e: PointerEvent): Promise<void> {
     position_x.value = e.clientX
