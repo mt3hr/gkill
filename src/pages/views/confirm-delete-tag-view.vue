@@ -83,6 +83,7 @@ async function delete_tag(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
+    emits('deleted_tag', res.updated_tag)
     return
 }
 </script>

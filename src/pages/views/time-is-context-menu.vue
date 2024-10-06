@@ -78,13 +78,6 @@ const kyou_histories_dialog = ref<InstanceType<typeof KyouHistoriesDialog> | nul
 const props = defineProps<TimeIsContextMenuProps>()
 const emits = defineEmits<KyouViewEmits>()
 defineExpose({ show })
-const latest_kyou_identifier: ComputedRef<Array<InfoIdentifier>> = computed(() => {
-    const identifier = new InfoIdentifier()
-    identifier.create_time = props.kyou.create_time
-    identifier.id = props.kyou.id
-    identifier.update_time = props.kyou.update_time
-    return [identifier]
-})
 
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)

@@ -213,6 +213,7 @@ async function save(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
+    emits("updated_kyou", res.updated_timeis_kyou)
     return
 }
 
