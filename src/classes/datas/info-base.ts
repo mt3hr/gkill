@@ -8,6 +8,8 @@ import type { TimeIs } from "./time-is"
 
 export abstract class InfoBase {
 
+    is_deleted: boolean
+
     id: string
 
     rep_name: string
@@ -83,6 +85,9 @@ export abstract class InfoBase {
     abstract clone(): Promise<InfoBase>
 
     constructor() {
+
+        this.is_deleted = false
+
         this.id = ""
 
         this.rep_name = ""
