@@ -3,7 +3,7 @@
         @contextmenu.prevent="async (e) => show_context_menu(e as PointerEvent)">
         {{ timeis_kyou.typed_timeis.title }}
     </span>
-    <AttachedTimeIsPlaingContextMenu :application_config="application_config" :gkill_api="gkill_api" :kyou="kyou"
+    <AttachedTimeIsPlaingContextMenu :application_config="application_config" :gkill_api="gkill_api" :kyou="timeis_kyou"
         v-if="timeis_kyou.typed_timeis" :timeis="timeis_kyou.typed_timeis" :last_added_tag="last_added_tag"
         :highlight_targets="highlight_targets" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
@@ -24,14 +24,14 @@ const props = defineProps<AttachedTimeIsPlaingProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const plaing_class = computed(() => {
-    if (!props.kyou.typed_timeis) {
+    if (!props.timeis_kyou) {
         return ""
     }
     let highlighted = false;
     for (let i = 0; i < props.highlight_targets.length; i++) {
-        if (props.highlight_targets[i].id === props.kyou.typed_timeis.id
-            && props.highlight_targets[i].create_time === props.kyou.typed_timeis.create_time
-            && props.highlight_targets[i].update_time === props.kyou.typed_timeis.update_time) {
+        if (props.highlight_targets[i].id === props.timeis_kyou.id
+            && props.highlight_targets[i].create_time === props.timeis_kyou.create_time
+            && props.highlight_targets[i].update_time === props.timeis_kyou.update_time) {
             highlighted = true
             break
         }
@@ -54,13 +54,14 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     position: relative;
     top: 6px;
 
+
     display: inline-flex;
     border: solid white 2px;
     border-left: 0px;
     color: blue;
     cursor: pointer;
     font-size: small;
-    background: lightgray;
+    background: lightgray
 }
 
 .plaing::after {
