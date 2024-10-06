@@ -800,5 +800,5 @@ test_kyou_idf.attached_texts = [test_attached_text1, test_attached_text2]
 test_kyou_idf.attached_timeis_kyou = [test_attached_timeis_kyou1, test_attached_timeis_kyou2]
 test_kyou_idf.attached_histories = [test_kyou_idf, test_kyou_idf_for_history]
 
-kyou.value = test_kyou_timeis
+kyou.value = test_kyou_kmemo
 </script>
