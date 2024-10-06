@@ -2,6 +2,7 @@
 
 import type { Kyou } from "@/classes/datas/kyou"
 import type { KyouViewPropsBase } from "./kyou-view-props-base"
+import type { InfoIdentifier } from "@/classes/datas/info-identifier"
 
 export interface KyouViewProps extends KyouViewPropsBase {
     kyou: Kyou
@@ -13,4 +14,5 @@ export interface KyouViewProps extends KyouViewPropsBase {
     show_mi_estimate_start_time: boolean
     show_mi_estimate_end_time: boolean
     show_timeis_plaing_end_button: boolean
+    highlight_targets: Array<InfoIdentifier>
 }

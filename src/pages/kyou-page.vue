@@ -116,6 +116,8 @@ const test_attached_text1 = new Text()
 const test_attached_text2 = new Text()
 const test_attached_timeis1 = new TimeIs()
 const test_attached_timeis2 = new TimeIs()
+const test_attached_timeis_kyou1 = new Kyou()
+const test_attached_timeis_kyou2 = new Kyou()
 const kmemo = new Kmemo()
 const urlog = new URLog()
 const mi = new Mi()
@@ -727,6 +729,32 @@ test_attached_timeis2_for_history.update_app = "gkill"
 test_attached_timeis2_for_history.update_device = "X1Yoga"
 test_attached_timeis2_for_history.update_time = new Date(Date.now())
 test_attached_timeis2_for_history.update_user = "mt3hr"
+test_attached_timeis_kyou1.data_type = "timeis"
+test_attached_timeis_kyou1.rep_name = "timeis"
+test_attached_timeis_kyou1.create_app = "gkill"
+test_attached_timeis_kyou1.create_device = "X1Yoga"
+test_attached_timeis_kyou1.create_time = new Date(Date.now())
+test_attached_timeis_kyou1.create_user = "mt3hr"
+test_attached_timeis_kyou1.id = "95552055-266a-4d41-b9b1-949c719b61f6"
+test_attached_timeis_kyou1.related_time = new Date(Date.now())
+test_attached_timeis_kyou1.update_app = "gkill"
+test_attached_timeis_kyou1.update_device = "X1Yoga"
+test_attached_timeis_kyou1.update_time = new Date(Date.now())
+test_attached_timeis_kyou1.update_user = "mt3hr"
+test_attached_timeis_kyou1.typed_timeis = test_attached_timeis1
+test_attached_timeis_kyou2.data_type = "timeis"
+test_attached_timeis_kyou2.rep_name = "timeis"
+test_attached_timeis_kyou2.create_app = "gkill"
+test_attached_timeis_kyou2.create_device = "X1Yoga"
+test_attached_timeis_kyou2.create_time = new Date(Date.now())
+test_attached_timeis_kyou2.create_user = "mt3hr"
+test_attached_timeis_kyou2.id = "95552055-266a-4d41-b9b1-949c719b61f6"
+test_attached_timeis_kyou2.related_time = new Date(Date.now())
+test_attached_timeis_kyou2.update_app = "gkill"
+test_attached_timeis_kyou2.update_device = "X1Yoga"
+test_attached_timeis_kyou2.update_time = new Date(Date.now())
+test_attached_timeis_kyou2.update_user = "mt3hr"
+test_attached_timeis_kyou2.typed_timeis = test_attached_timeis2
 
 test_attached_tag1.attached_histories = [test_attached_tag1, test_attached_tag1_for_history]
 test_attached_tag2.attached_histories = [test_attached_tag2, test_attached_tag2_for_history]
@@ -739,38 +767,38 @@ test_attached_timeis2.attached_histories = [test_attached_timeis2, test_attached
 
 test_kyou_kmemo.attached_tags = [test_attached_tag1, test_attached_tag2]
 test_kyou_kmemo.attached_texts = [test_attached_text1, test_attached_text2]
-test_kyou_kmemo.attached_timeis = [test_attached_timeis1, test_attached_timeis2]
+test_kyou_kmemo.attached_timeis_kyou = [test_attached_timeis_kyou1, test_attached_timeis_kyou2]
 test_kyou_kmemo.attached_histories = [test_kyou_kmemo, test_kyou_kmemo_for_history]
 
 test_kyou_urlog.attached_tags = [test_attached_tag1, test_attached_tag2]
 test_kyou_urlog.attached_texts = [test_attached_text1, test_attached_text2]
-test_kyou_urlog.attached_timeis = [test_attached_timeis1, test_attached_timeis2]
+test_kyou_urlog.attached_timeis_kyou = [test_attached_timeis_kyou1, test_attached_timeis_kyou2]
 test_kyou_urlog.attached_histories = [test_kyou_kmemo, test_kyou_kmemo_for_history]
 
 test_kyou_mi.attached_tags = [test_attached_tag1, test_attached_tag2]
 test_kyou_mi.attached_texts = [test_attached_text1, test_attached_text2]
-test_kyou_mi.attached_timeis = [test_attached_timeis1, test_attached_timeis2]
+test_kyou_mi.attached_timeis_kyou = [test_attached_timeis_kyou1, test_attached_timeis_kyou2]
 test_kyou_mi.attached_histories = [test_kyou_kmemo, test_kyou_kmemo_for_history]
 
 test_kyou_lantana.attached_tags = [test_attached_tag1, test_attached_tag2]
 test_kyou_lantana.attached_texts = [test_attached_text1, test_attached_text2]
-test_kyou_lantana.attached_timeis = [test_attached_timeis1, test_attached_timeis2]
+test_kyou_lantana.attached_timeis_kyou = [test_attached_timeis_kyou1, test_attached_timeis_kyou2]
 test_kyou_lantana.attached_histories = [test_kyou_lantana, test_kyou_lantana_for_history]
 
 test_kyou_nlog.attached_tags = [test_attached_tag1, test_attached_tag2]
 test_kyou_nlog.attached_texts = [test_attached_text1, test_attached_text2]
-test_kyou_nlog.attached_timeis = [test_attached_timeis1, test_attached_timeis2]
+test_kyou_nlog.attached_timeis_kyou = [test_attached_timeis_kyou1, test_attached_timeis_kyou2]
 test_kyou_nlog.attached_histories = [test_kyou_nlog, test_kyou_nlog_for_history]
 
 test_kyou_timeis.attached_tags = [test_attached_tag1, test_attached_tag2]
 test_kyou_timeis.attached_texts = [test_attached_text1, test_attached_text2]
-test_kyou_timeis.attached_timeis = [test_attached_timeis1, test_attached_timeis2]
+test_kyou_timeis.attached_timeis_kyou = [test_attached_timeis_kyou1, test_attached_timeis_kyou2]
 test_kyou_timeis.attached_histories = [test_kyou_kmemo, test_kyou_kmemo_for_history]
 
 test_kyou_idf.attached_tags = [test_attached_tag1, test_attached_tag2]
 test_kyou_idf.attached_texts = [test_attached_text1, test_attached_text2]
-test_kyou_idf.attached_timeis = [test_attached_timeis1, test_attached_timeis2]
+test_kyou_idf.attached_timeis_kyou = [test_attached_timeis_kyou1, test_attached_timeis_kyou2]
 test_kyou_idf.attached_histories = [test_kyou_idf, test_kyou_idf_for_history]
 
-kyou.value = test_kyou_kmemo
+kyou.value = test_kyou_timeis
 </script>

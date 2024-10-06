@@ -1,6 +1,7 @@
 'use strict'
 
 import type { GkillError } from "../api/gkill-error"
+import type { Kyou } from "./kyou"
 import type { Tag } from "./tag"
 import type { Text } from "./text"
 import type { TimeIs } from "./time-is"
@@ -35,7 +36,7 @@ export abstract class InfoBase {
 
     attached_texts: Array<Text>
 
-    attached_timeis: Array<TimeIs>
+    attached_timeis_kyou: Array<Kyou>
 
     is_checked: boolean
 
@@ -110,7 +111,7 @@ export abstract class InfoBase {
 
         this.attached_texts = new Array<Text>()
 
-        this.attached_timeis = new Array<TimeIs>()
+        this.attached_timeis_kyou = new Array<Kyou>()
 
         this.is_checked = false
     }
