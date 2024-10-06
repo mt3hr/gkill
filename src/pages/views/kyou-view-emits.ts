@@ -4,6 +4,7 @@ import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
 import type { Kyou } from "@/classes/datas/kyou"
 import type { Tag } from "@/classes/datas/tag"
+import type { Text } from "@/classes/datas/text"
 
 export interface KyouViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void

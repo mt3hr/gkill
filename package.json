@@ -18,6 +18,8 @@
     "install_server": "npm run preparate_install && cd src/app/gkill/main/gkill_server && go install"
   },
   "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@mdi/js": "^7.4.47",
     "copyfiles": "^2.4.1",
     "mkdirp": "^3.0.1",
     "moment": "^2.30.1",

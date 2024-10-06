@@ -82,6 +82,7 @@ async function delete_kyou(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
+    emits('deleted_kyou', res.updated_kyou)
     return
 }
 </script>

@@ -12,11 +12,11 @@ export class Mi extends InfoBase {
 
     board_name: string
 
-    limit_time: Date
+    limit_time: Date | null
 
-    estimate_start_time: Date
+    estimate_start_time: Date | null
 
-    estimate_end_time: Date
+    estimate_end_time: Date | null
 
     attached_histories: Array<Mi>
 
