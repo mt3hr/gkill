@@ -19,7 +19,7 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
-                :highlight_targets="[kyou.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
+                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
