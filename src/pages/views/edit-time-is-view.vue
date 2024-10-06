@@ -81,7 +81,6 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request'
 import router from '@/router'
-const display = useDisplay()
 
 const props = defineProps<EditTimeIsViewProps>()
 const emits = defineEmits<KyouViewEmits>()

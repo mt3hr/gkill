@@ -14,13 +14,14 @@
             </v-card-title>
             <textHistoriesView :application_config="application_config" :gkill_api="gkill_api" :text="text" :kyou="kyou"
                 :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
+                :highlight_targets="highlight_targets"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(kyou, is_checked) => emits('requested_update_check_kyous', kyou, is_checked)" />
             <v-card v-if="show_kyou">
                 <KyouView :application_config="application_config" :gkill_api="gkill_api"
-                    :highlight_targets="[text.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
+                    :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
                     :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                     :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                     :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
