@@ -11,7 +11,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="text_name" label="テキスト" />
+        <v-textarea v-model="text_value" label="テキスト" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
@@ -45,12 +45,12 @@ import { GkillError } from '@/classes/api/gkill-error';
 const props = defineProps<EditTextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const text_name: Ref<string> = ref(props.text.text)
+const text_value: Ref<string> = ref(props.text.text)
 const show_kyou: Ref<boolean> = ref(true)
 
 async function save(): Promise<void> {
     // 更新がなかったらエラーメッセージを出力する
-    if (props.text.text === text_name.value) {
+    if (props.text.text === text_value.value) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "テキストが更新されていません"
@@ -78,7 +78,7 @@ async function save(): Promise<void> {
 
     // 更新後テキスト情報を用意する
     const updated_text = await props.text.clone()
-    updated_text.text = text_name.value
+    updated_text.text = text_value.value
     updated_text.update_app = "gkill"
     updated_text.update_device = gkill_info_res.device
     updated_text.update_time = new Date(Date.now())
