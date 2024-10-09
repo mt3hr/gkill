@@ -45,7 +45,7 @@ const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)
-const show_kyou: Ref<boolean> = ref(true)
+const show_kyou: Ref<boolean> = ref(false)
 
 async function show(): Promise<void> {
     is_show_dialog.value = true

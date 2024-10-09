@@ -10,9 +10,8 @@
         <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time">実行中</div>
     </v-card>
     <TimeIsContextMenu :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets.concat([kyou.generate_info_identifer()])" :kyou="kyou"
-        :last_added_tag="last_added_tag" ref="context_menu"
-        @received_errors="(errors) => emits('received_errors', errors)"
+        :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
+        ref="context_menu" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
         @requested_reload_list="() => emits('requested_reload_list')"
@@ -32,10 +31,12 @@ const emits = defineEmits<KyouViewEmits>()
 
 function format_duration(time1: Date, time2: Date | null): string {
     let diff_str = ""
-    time2 = time2 ? time2 : new Date(Date.now())
+    const zero_time = moment(new Date(0)).toDate()
+    time1 = moment(time1).toDate()
+    time2 = time2 ? moment(time2).toDate() : new Date(Date.now())
     const diff = time2?.getTime() - time1.getTime()
     const diff_date = new Date(diff)
-    if ((diff_date.getFullYear() - (new Date(0).getFullYear() as number)) !== 0) {
+    if ((diff_date.getFullYear() - (zero_time.getFullYear() as number)) !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
@@ -47,17 +48,17 @@ function format_duration(time1: Date, time2: Date | null): string {
         }
         diff_str += (diff_date.getMonth() + 1) + "ヶ月"
     }
-    if (diff_date.getDate() !== 0) {
+    if ((diff_date.getDate() - 1) !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += diff_date.getDate() + "日"
+        diff_str += (diff_date.getDate() - 1) + "日"
     }
-    if (diff_date.getHours() !== 0) {
+    if ((diff_date.getHours() - zero_time.getHours()) !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += diff_date.getHours() + "時間"
+        diff_str += (diff_date.getHours() - zero_time.getHours()) + "時間"
     }
     if (diff_date.getMinutes() !== 0) {
         if (diff_str !== "") {
@@ -82,4 +83,3 @@ function show_context_menu(e: PointerEvent): void {
     context_menu.value?.show(e)
 }
 </script>
-

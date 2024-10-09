@@ -56,7 +56,7 @@ const emits = defineEmits<KyouViewEmits>()
 const kmemo_value: Ref<string> = ref(props.kyou.typed_kmemo ? props.kyou.typed_kmemo.content : "")
 const related_date: Ref<string> = ref(moment(props.kyou.related_time).format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment(props.kyou.related_time).format("HH:mm:ss"))
-const show_kyou: Ref<boolean> = ref(true)
+const show_kyou: Ref<boolean> = ref(false)
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する

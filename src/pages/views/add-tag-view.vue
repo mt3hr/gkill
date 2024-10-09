@@ -47,7 +47,7 @@ import router from '@/router'
 const props = defineProps<AddTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const show_kyou: Ref<boolean> = ref(true)
+const show_kyou: Ref<boolean> = ref(false)
 const tag_name: Ref<string> = ref("")
 
 async function save(): Promise<void> {
