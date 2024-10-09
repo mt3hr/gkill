@@ -46,7 +46,7 @@ const props = defineProps<EditTextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const text_value: Ref<string> = ref(props.text.text)
-const show_kyou: Ref<boolean> = ref(true)
+const show_kyou: Ref<boolean> = ref(false)
 
 async function save(): Promise<void> {
     // 更新がなかったらエラーメッセージを出力する
