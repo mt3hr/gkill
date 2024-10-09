@@ -120,7 +120,7 @@ const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null
 const props = defineProps<EditMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const show_kyou: Ref<boolean> = ref(true)
+const show_kyou: Ref<boolean> = ref(false)
 const mi_board_names: Ref<Array<string>> = ref(new Array())
 
 const mi_title: Ref<string> = ref(props.kyou.typed_mi ? props.kyou.typed_mi.title : "")

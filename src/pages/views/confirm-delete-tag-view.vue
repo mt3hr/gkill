@@ -44,7 +44,7 @@ import router from '@/router';
 const props = defineProps<ConfirmDeleteTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const show_kyou: Ref<boolean> = ref(true)
+const show_kyou: Ref<boolean> = ref(false)
 
 async function delete_tag(): Promise<void> {
     // セッションIDを取得する

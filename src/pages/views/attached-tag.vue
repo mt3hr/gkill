@@ -3,7 +3,7 @@
         {{ tag.tag }}
     </span>
     <AttachedTagContextMenu :application_config="application_config" :gkill_api="gkill_api" :tag="tag" :kyou="kyou"
-        :last_added_tag="last_added_tag" :highlight_targets="highlight_targets.concat([tag.generate_info_identifer()])"
+        :last_added_tag="last_added_tag" :highlight_targets="[tag.generate_info_identifer()]"
         received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
