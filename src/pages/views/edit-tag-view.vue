@@ -46,7 +46,7 @@ const props = defineProps<EditTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const tag_name: Ref<string> = ref(props.tag.tag)
-const show_kyou: Ref<boolean> = ref(true)
+const show_kyou: Ref<boolean> = ref(false)
 
 async function save(): Promise<void> {
     // 更新がなかったらエラーメッセージを出力する

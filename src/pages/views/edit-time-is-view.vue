@@ -91,7 +91,7 @@ const timeis_start_time: Ref<string> = ref(moment(props.kyou.typed_timeis!.start
 const timeis_end_date: Ref<string> = ref(moment(props.kyou.typed_timeis!.end_time).format("YYYY-MM-DD"))
 const timeis_end_time: Ref<string> = ref(moment(props.kyou.typed_timeis!.end_time).format("HH:mm:ss"))
 
-const show_kyou: Ref<boolean> = ref(true)
+const show_kyou: Ref<boolean> = ref(false)
 
 function reset(): void {
     timeis_title.value = props.kyou.typed_timeis!.title

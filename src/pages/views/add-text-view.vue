@@ -47,7 +47,7 @@ import router from '@/router'
 const props = defineProps<AddTextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const show_kyou: Ref<boolean> = ref(true)
+const show_kyou: Ref<boolean> = ref(false)
 const text_value: Ref<string> = ref("")
 
 
