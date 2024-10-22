@@ -1,4 +1,7 @@
 <template>
+    <v-card v-if="kyou.typed_git_commit_log" @contextmenu.prevent="show_context_menu">
+        <div>{{ kyou.typed_git_commit_log.commit_message }}</div>
+    </v-card>
     <GitCommitLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
@@ -16,9 +19,12 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+const context_menu = ref<InstanceType<typeof GitCommitLogContextMenu> | null>(null);
 
 const props = defineProps<GitCommitLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const cloned_git_commit_log: Ref<GitCommitLog> = ref(await props.kyou.typed_git_commit_log!.clone())
+async function show_context_menu(e: PointerEvent): Promise<void> {
+    context_menu.value?.show(e)
+}
 </script>
