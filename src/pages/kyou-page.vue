@@ -35,6 +35,8 @@ import { Mi } from '@/classes/datas/mi'
 import { Lantana } from '@/classes/datas/lantana'
 import { Nlog } from '@/classes/datas/nlog'
 import { IDFKyou } from '@/classes/datas/idf-kyou'
+import { ReKyou } from '@/classes/datas/re-kyou'
+import { GitCommitLog } from '@/classes/datas/git-commit-log'
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -110,6 +112,8 @@ const test_kyou_lantana = new Kyou()
 const test_kyou_nlog = new Kyou()
 const test_kyou_timeis = new Kyou()
 const test_kyou_idf = new Kyou()
+const test_kyou_rekyou = new Kyou()
+const test_kyou_git_commit_log = new Kyou()
 const test_attached_tag1 = new Tag()
 const test_attached_tag2 = new Tag()
 const test_attached_text1 = new Text()
@@ -125,6 +129,8 @@ const lantana = new Lantana()
 const nlog = new Nlog()
 const timeis = new TimeIs()
 const idf = new IDFKyou()
+const rekyou = new ReKyou()
+const git_commit_log = new GitCommitLog()
 const test_kyou_kmemo_for_history = new Kyou()
 const test_kyou_urlog_for_history = new Kyou()
 const test_kyou_mi_for_history = new Kyou()
@@ -582,6 +588,33 @@ test_kyou_idf_for_history.update_device = "X1Yoga"
 test_kyou_idf_for_history.update_time = new Date(Date.now())
 test_kyou_idf_for_history.update_user = "mt3hr"
 test_kyou_idf_for_history.typed_idf_kyou = idf_for_history
+rekyou.target_id = "hoge"
+rekyou.data_type = "rekyou"
+rekyou.rep_name = "rekyou"
+rekyou.create_app = "gkill"
+rekyou.create_device = "X1Yoga"
+rekyou.create_time = new Date(Date.now())
+rekyou.create_user = "mt3hr"
+rekyou.id = "95552055-266a-4d41-b9b1-949c719b61f6"
+rekyou.related_time = new Date(Date.now())
+rekyou.update_app = "gkill"
+rekyou.update_device = "X1Yoga"
+rekyou.update_time = new Date(Date.now())
+test_kyou_rekyou.update_user = "mt3hr"
+test_kyou_rekyou.data_type = "rekyou"
+test_kyou_rekyou.rep_name = "rekyou"
+test_kyou_rekyou.image_source = ""
+test_kyou_rekyou.create_app = "gkill"
+test_kyou_rekyou.create_device = "X1Yoga"
+test_kyou_rekyou.create_time = new Date(Date.now())
+test_kyou_rekyou.create_user = "mt3hr"
+test_kyou_rekyou.id = "95552055-266a-4d41-b9b1-949c719b61f6"
+test_kyou_rekyou.related_time = new Date(Date.now())
+test_kyou_rekyou.update_app = "gkill"
+test_kyou_rekyou.update_device = "X1Yoga"
+test_kyou_rekyou.update_time = new Date(Date.now())
+test_kyou_rekyou.update_user = "mt3hr"
+test_kyou_rekyou.typed_rekyou = rekyou
 test_attached_tag1.tag = "タグ1"
 test_attached_tag1.create_app = "gkill"
 test_attached_tag1.create_device = "X1Yoga"
@@ -801,5 +834,5 @@ test_kyou_idf.attached_texts = [test_attached_text1, test_attached_text2]
 test_kyou_idf.attached_timeis_kyou = [test_attached_timeis_kyou1, test_attached_timeis_kyou2]
 test_kyou_idf.attached_histories = [test_kyou_idf, test_kyou_idf_for_history]
 
-kyou.value = test_kyou_idf
+kyou.value = test_kyou_rekyou
 </script>
