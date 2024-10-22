@@ -1,9 +1,43 @@
 <template>
+    <v-card @contextmenu.prevent="show_context_menu">
+        <v-row class="ma-0 pa-0">
+            <v-col v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() > 0" cols="auto" class="ma-0 pa-0">
+                ↑
+            </v-col>
+            <v-col v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() <= 0" cols="auto" class="ma-0 pa-0">
+                ↓
+            </v-col>
+            <v-col v-if="kyou.typed_nlog" cols="auto" class="ma-0 pa-0">
+                {{ kyou.typed_nlog.title }}
+            </v-col>
+            <v-col cols="auto" class="ma-0 pa-0"></v-col>
+        </v-row>
+        <v-row class="ma-0 pa-0">
+            <v-col v-if="kyou.typed_nlog" cols="auto" class="ma-0 pa-0">
+                {{ "@".concat(kyou.typed_nlog.shop) }}
+            </v-col>
+        </v-row>
+        <v-row class="ma-0 pa-0">
+            <v-col v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() > 0" class="ma-0 pa-0 nlog_amount_plus"
+                cols="auto">
+                {{ kyou.typed_nlog.amount }}
+            </v-col>
+            <v-col v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() <= 0" class="ma-0 pa-0 nlog_amount_minus"
+                cols="auto">
+                {{ kyou.typed_nlog.amount }}
+            </v-col>
+            <v-col v-if="kyou.typed_nlog" class="ma-0 pa-0">
+                円
+            </v-col>
+            <v-col cols="auto" class="ma-0 pa-0"></v-col>
+        </v-row>
+    </v-card>
     <NlogContextMenu :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
-        @received_errors="(errors) => emits('received_errors', errors)"
+        :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
+        ref="context_menu" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" @requested_reload_list="() => { }"
+        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+        @requested_reload_list="() => emits('requested_reload_list')"
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script setup lang="ts">
@@ -13,7 +47,21 @@ import type { Nlog } from '@/classes/datas/nlog'
 import { type Ref, ref } from 'vue'
 import NlogContextMenu from './nlog-context-menu.vue'
 import type { Kyou } from '@/classes/datas/kyou'
+const context_menu = ref<InstanceType<typeof NlogContextMenu> | null>(null);
 
 const props = defineProps<NlogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+
+function show_context_menu(e: PointerEvent): void {
+    context_menu.value?.show(e)
+}
 </script>
+<style lang="css" scoped>
+.nlog_amount_plus {
+    color: crimson;
+}
+
+.nlog_amount_minus {
+    color: dodgerblue;
+}
+</style>
