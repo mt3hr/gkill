@@ -2,7 +2,7 @@
 
 export enum LantanaFlowerState {
     full = "full",
-    harf = "harf",
+    half = "half",
     none = "none"
 }
 
