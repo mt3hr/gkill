@@ -1,6 +1,6 @@
 <template>
     <v-virtual-scroll :items="matched_kyous" :item-height="kyou_height_px" :height="list_height">
-        <template v-slot:default="{ item }" class="list_item_template">
+        <template v-slot:default="{ item }">
             <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :is_image_view="false" :kyou="item" :last_added_tag="last_added_tag"
                 :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
@@ -50,9 +50,6 @@ async function scroll_to_time(time: Date): Promise<boolean> {
     height: v-bind(kyou_height_px) !important;
     min-height: v-bind(kyou_height_px) !important;
     max-height: v-bind(kyou_height_px) !important;
-}
-
-.list_item_template {
-    border-bottom: 2px silver;
+    border-top: 1px solid silver;
 }
 </style>
