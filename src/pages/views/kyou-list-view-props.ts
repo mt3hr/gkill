@@ -8,4 +8,6 @@ export interface KyouListViewProps extends GkillPropsBase {
     last_added_tag: string
     query: FindKyouQuery
     matched_kyous: Array<Kyou>
+    list_height: Number
+    kyou_height: Number
 }
