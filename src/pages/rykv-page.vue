@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar class="app_bar" app color="primary" flat  :height="app_title_bar_height_px">
+    <v-app-bar class="app_bar" app color="primary" flat :height="app_title_bar_height_px">
         <v-toolbar-title>mi</v-toolbar-title>
         <v-spacer />
     </v-app-bar>
@@ -35,7 +35,7 @@ const browser_url_bar_height: Ref<Number> = ref(0)
 const app_title_bar_height: Ref<Number> = ref(50)
 const app_title_bar_height_px = computed(() => app_title_bar_height.value.toString().concat("px"))
 const gkill_api: Ref<GkillAPI> = ref(GkillAPI.get_instance())
-const application_config = ref(new ApplicationConfig())
+const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 
@@ -90,5 +90,5 @@ window.addEventListener('resize', () => {
 })
 
 resize_content()
-load_application_config()
+//TODO コメントアウト解除　load_application_config()
 </script>

@@ -140,7 +140,7 @@ import type { UploadGPSLogFilesRequest } from "./req_res/upload-gps-log-files-re
 import type { UploadGPSLogFilesResponse } from "./req_res/upload-gps-log-files-response"
 
 export class GkillAPI {
-        private static gkill_api: GkillAPI = GkillAPI.get_instance()
+        private static gkill_api: GkillAPI = new GkillAPI() 
         static get_instance(): GkillAPI {
                 return this.gkill_api
         }
