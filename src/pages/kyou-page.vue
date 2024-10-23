@@ -26,19 +26,6 @@ import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import KyouView from './views/kyou-view.vue'
 import { InfoIdentifier } from '@/classes/datas/info-identifier'
 import { Kyou } from '@/classes/datas/kyou'
-import { Tag } from '@/classes/datas/tag'
-import { Text } from '@/classes/datas/text'
-import { TimeIs } from '@/classes/datas/time-is'
-import { Kmemo } from '@/classes/datas/kmemo'
-import { URLog } from '@/classes/datas/ur-log'
-import { Mi } from '@/classes/datas/mi'
-import { Lantana } from '@/classes/datas/lantana'
-import { Nlog } from '@/classes/datas/nlog'
-import { IDFKyou } from '@/classes/datas/idf-kyou'
-import { ReKyou } from '@/classes/datas/re-kyou'
-import { GitCommitLog } from '@/classes/datas/git-commit-log'
-import KyouListView from './views/kyou-list-view.vue'
-import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -80,7 +67,7 @@ async function resize_content(): Promise<void> {
     actual_height.value = window.innerHeight
     element_height.value = inner_element ? inner_element.clientHeight : actual_height.value
     browser_url_bar_height.value = Number(element_height.value) - Number(actual_height.value)
-    app_content_height.value = Number(element_height.value) - Number(browser_url_bar_height.value)
+    app_content_height.value = Number(element_height.value) - (Number(browser_url_bar_height.value) + Number(app_title_bar_height.value))
     app_content_width.value = window.innerWidth
 }
 
@@ -104,6 +91,4 @@ window.addEventListener('resize', () => {
 
 resize_content()
 load_application_config()
-
-
 </script>

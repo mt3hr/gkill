@@ -1,5 +1,5 @@
 <template>
-    <KyouListView :kyou_height="200" :list_height="kyou_list_view_height" v-for="query, index in querys"
+    <KyouListView :kyou_height="180" :list_height="kyou_list_view_height" v-for="query, index in querys"
         :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="match_kyous_list[index]"
         :query="query" :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
