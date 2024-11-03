@@ -1,13 +1,21 @@
 <template>
+    <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
+        <v-app-bar-nav-icon @click.stop="() => { drawer = !drawer }" />
+        <v-toolbar-title>rykv</v-toolbar-title>
+        <v-spacer />
+    </v-app-bar>
+    <v-main class="main">
+    <v-navigation-drawer v-model="drawer" app :width="300">
+        <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
+            :query="querys[focused_column_index]" @request_search="search(focused_column_index)"
+            @updated_query="(new_query) => querys.splice(focused_column_index, 1, new_query)" />
+    </v-navigation-drawer>
     <KyouListView :kyou_height="180" :list_height="kyou_list_view_height" v-for="query, index in querys"
         :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="match_kyous_list[index]"
         :query="query" :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="reload_list(index)"
         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
-    <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
-        :query="querys[focused_column_index]" @request_search="search(focused_column_index)"
-        @updated_query="(new_query) => querys.splice(focused_column_index, 1, new_query)" />
     <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
         :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
         :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
@@ -60,6 +68,7 @@
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+    </v-main>
 </template>
 <script setup lang="ts">
 
@@ -93,6 +102,7 @@ const is_show_kyou_detail_view: Ref<boolean> = ref(false)
 const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
 const is_show_gps_log_map: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
+const drawer: Ref<boolean | null> = ref(null)
 const kyou_list_view_height = computed(() => {
     return props.app_content_height
 })
