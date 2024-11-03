@@ -38,9 +38,9 @@ export abstract class FindQueryBase {
 
     use_calendar: boolean
 
-    calendar_start_date: Date
+    calendar_start_date: Date | null
 
-    calendar_end_date: Date
+    calendar_end_date: Date | null
 
     async set_other_value(key: string, value: Object): Promise<void> {
         throw new Error('Not implemented')
