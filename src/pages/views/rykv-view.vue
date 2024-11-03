@@ -4,70 +4,81 @@
         <v-toolbar-title>rykv</v-toolbar-title>
         <v-spacer />
     </v-app-bar>
-    <v-main class="main">
     <v-navigation-drawer v-model="drawer" app :width="300">
         <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
             :query="querys[focused_column_index]" @request_search="search(focused_column_index)"
             @updated_query="(new_query) => querys.splice(focused_column_index, 1, new_query)" />
     </v-navigation-drawer>
-    <KyouListView :kyou_height="180" :list_height="kyou_list_view_height" v-for="query, index in querys"
-        :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="match_kyous_list[index]"
-        :query="query" :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="reload_list(index)"
-        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
-    <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-        :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
-        :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-        :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
-        @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
-    <KyouCountCalendar :application_config="application_config" :gkill_api="gkill_api" :kyous="focused_column_kyous"
-        @requested_focus_time="(time) => focused_time = time" />
-    <GPSLogMap :application_config="application_config" :gkill_api="gkill_api" :start_date="focused_time"
-        :end_date="focused_time" @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_focus_time="(time) => focused_time = time" />
-    <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
-        :application_config="application_config" :gkill_api="gkill_api" :query="querys[focused_column_index]"
-        :last_added_tag="last_added_tag" @received_messages="(messages) => emits('received_messages', messages)"
-        @received_errors="(errors) => emits('received_errors', errors)" />
-    <AggregateView :application_config="application_config" :gkill_api="gkill_api"
-        :checked_kyous="focused_column_checked_kyous"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @received_errors="(errors) => emits('received_errors', errors)" />
-    <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-        :last_added_tag="last_added_tag" :kyou="new Kyou()"
-        @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
-    <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-        :last_added_tag="last_added_tag" :kyou="new Kyou()"
-        @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
-    <EndTimeIsPlaingDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-        :last_added_tag="last_added_tag" :kyou="new Kyou()"
-        @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
-    <StartTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-        :last_added_tag="last_added_tag" :kyou="new Kyou()"
-        @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
-    <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-        :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
-        :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+    <v-main class="main">
+        <table class="rykv_view_table">
+            <tr>
+                <td valign="top">
+                    <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
+                        v-for="query, index in querys" :application_config="application_config" :gkill_api="gkill_api"
+                        :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
+                        @received_errors="(errors) => emits('received_errors', errors)"
+                        @received_messages="(messages) => emits('received_messages', messages)"
+                        @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="reload_list(index)"
+                        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+                </td>
+                <td valign="top">
+                    <KyouCountCalendar :application_config="application_config" :gkill_api="gkill_api"
+                        :kyous="focused_column_kyous" @requested_focus_time="(time) => focused_time = time" />
+                </td>
+            </tr>
+        </table>
+        <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
+            :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
+            :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+        <KyouCountCalendar :application_config="application_config" :gkill_api="gkill_api" :kyous="focused_column_kyous"
+            @requested_focus_time="(time) => focused_time = time" />
+        <GPSLogMap :application_config="application_config" :gkill_api="gkill_api" :start_date="focused_time"
+            :end_date="focused_time" @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_focus_time="(time) => focused_time = time" />
+        <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :application_config="application_config" :gkill_api="gkill_api" :query="querys[focused_column_index]"
+            :last_added_tag="last_added_tag" @received_messages="(messages) => emits('received_messages', messages)"
+            @received_errors="(errors) => emits('received_errors', errors)" />
+        <AggregateView :application_config="application_config" :gkill_api="gkill_api"
+            :checked_kyous="focused_column_checked_kyous"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @received_errors="(errors) => emits('received_errors', errors)" />
+        <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :last_added_tag="last_added_tag" :kyou="new Kyou()"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+        <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :last_added_tag="last_added_tag" :kyou="new Kyou()"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+        <EndTimeIsPlaingDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :last_added_tag="last_added_tag" :kyou="new Kyou()"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+        <StartTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :last_added_tag="last_added_tag" :kyou="new Kyou()"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+        <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
+            :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
     </v-main>
 </template>
 <script setup lang="ts">
@@ -1110,3 +1121,8 @@ match_kyous_list.value.push([
     test_kyou_kmemo, test_kyou_urlog, test_kyou_timeis,
 ])
 </script>
+<style lang="css">
+.rykv_view_table {
+    padding-top: 0px;
+}
+</style>

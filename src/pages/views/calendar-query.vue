@@ -10,7 +10,6 @@
     </v-row>
     <VDatePicker :max-width="300" :model-value="dates" :color="'primary'" :multiple="'range'"
         @wheel="(e: any) => on_wheel(e)" @update:model-value="clicked_date" />
-    <v-slider min="0" max="86399" v-model="slider_model" :label="time" />
 </template>
 <script lang="ts" setup>
 import moment from 'moment';
@@ -24,8 +23,7 @@ const emits = defineEmits<CalendarQueryEmits>()
 
 const date_picker = ref<InstanceType<typeof VDatePicker> | null>(null)
 
-const slider_model: Ref<Number> = ref(86399)
-const dates: Ref<Array<Date>> = ref([moment('2024-11-01').toDate(), moment('2024-11-03').toDate()])
+const dates: Ref<Array<Date>> = ref([])
 const use_calendar: Ref<boolean> = ref(false)
 
 watch(props.query, () => {
@@ -41,13 +39,6 @@ watch(props.query, () => {
     dates.value = date_list
 })
 
-
-const time = computed(() => {
-    return ('00' + (slider_model.value.valueOf() / 3600)).slice(-2) + ":" +
-        ('00' + ((slider_model.value.valueOf() / 60) % 60)).slice(-2) + ":" +
-        ('00' + (slider_model.value.valueOf() % 60)).slice(-2)
-})
-
 // 日付がクリックされた時、日時を更新してclicked_timeをemitする
 function clicked_date(recved_dates: any): void {
     dates.value = recved_dates
@@ -61,15 +52,15 @@ function clicked_date(recved_dates: any): void {
 // カレンダーでホイールが転がされた時、下ならカレンダーを次の年月へ、上ならカレンダーを前の年月へ
 function on_wheel(e: any) {
     if (0 < e.deltaY) {
-        document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(1)").forEach((el, key, parent) => { (el as any).click() })
-    } else {
         document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(2)").forEach((el, key, parent) => { (el as any).click() })
+    } else {
+        document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(1)").forEach((el, key, parent) => { (el as any).click() })
     }
 }
 
 function clicked_clear_calendar_button(): void {
     dates.value = []
-    //emits('request_update_dates', null, null)
+    emits('request_update_dates', null, null)
 }
 
 function clicked_use_calendar_checkbox(): void {
