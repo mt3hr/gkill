@@ -1,7 +1,8 @@
 <template>
     <v-sheet>
-        <v-calendar :width="350" :v-slot:event="events" show-week="false" :value="dates" ref="kyou_counter_calendar"
-            color="primary" :events="events" type="day" @update:modelValue="clicked_date" @wheel="on_wheel">
+        <v-calendar :width="350" :v-slot:event="events" :weeks-in-month="'static'"
+            :v-model="new Date(Date.now())" :allowed-dates="(date: unknown): boolean => { return true }"
+            ref="kyou_counter_calendar" :color="'primary'" :events="events" type="day" @wheel.prevent.stop="on_wheel">
             <template v-slot:event="{ day, allDay, event }">
                 <p class="kyou_counter" @click="clicked_date(event.start as Date)">{{ event.title }}</p>
             </template>
@@ -13,7 +14,7 @@
 import { VCalendar } from 'vuetify/labs/components';
 import type { KyouCountCalendarEmits } from './kyou-count-calendar-emits'
 import type { KyouCountCalendarProps } from './kyou-count-calendar-props'
-import { computed, ref, watch, type Ref } from 'vue';
+import { computed, ref, watch, nextTick, type Ref } from 'vue';
 import moment from 'moment';
 const kyou_counter_calendar = ref<InstanceType<typeof VCalendar> | null>(null)
 
@@ -22,7 +23,6 @@ const emits = defineEmits<KyouCountCalendarEmits>()
 
 const dates: Ref<Array<Date>> = ref([moment('2024-11-10 00:00:00').toDate()])
 const slider_model: Ref<number> = ref(86399)
-const type = ref('month')
 const events: Ref<Array<any>> = ref(new Array<any>())
 
 watch(props.kyous, () => {
@@ -69,6 +69,21 @@ const time = computed(() => {
     return ('00' + Math.floor(slider_model.value / 3600).toString()).slice(-2) + ":" +
         ('00' + (Math.floor(slider_model.value / 60) % 60).toString()).slice(-2) + ":" +
         ('00' + Math.floor(slider_model.value % 60).toString()).slice(-2)
+})
+nextTick(() => {
+    document.querySelectorAll("div.v-calendar__container.days__7 > div.v-calendar-month__days.days-with-weeknumbers__7.v-calendar-month__weeknumbers > div > div.v-calendar-weekly__day-label > button > span.v-btn__content").forEach((element, key, parent) => {
+        element.addEventListener('click', (() => {
+            let year = 0
+            let month = 0
+            kyou_counter_calendar.value?.daysInMonth.forEach(date => {
+                if (moment((date.date as Date).toString()).date() === 14) {
+                    year = date.year
+                    month = date.month
+                }
+            })
+            clicked_date(moment(year + "-" + month + "-" + element.textContent).toDate())
+        }))
+    })
 })
 </script>
 
