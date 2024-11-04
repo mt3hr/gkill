@@ -1,5 +1,5 @@
 <template>
-    <v-virtual-scroll :items="matched_kyous" :item-height="kyou_height_px" :height="list_height" :width="width">
+    <v-virtual-scroll class="kyou_list_view" :items="matched_kyous" :item-height="kyou_height_px" :height="list_height" :width="width">
         <template v-slot:default="{ item }">
             <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="[]" :is_image_view="false" :kyou="item" :last_added_tag="last_added_tag"
