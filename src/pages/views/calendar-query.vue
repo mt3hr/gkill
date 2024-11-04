@@ -1,15 +1,16 @@
 <template>
     <v-row class="pa-0 ma-0">
         <v-col cols="auto" class="pa-0 ma-0">
-            <v-checkbox v-model="use_calendar" @click="clicked_use_calendar_checkbox" label="日付" hide-details />
+            <v-checkbox v-model="use_calendar" @click="clicked_use_calendar_checkbox" label="日付" hide-details
+                class="pb-0 mb-0" />
         </v-col>
-        <v-spacer />
+        <v-spacer class="pa-0 ma-0" />
         <v-col cols="auto" class="pa-0 ma-0">
-            <v-btn @click="clicked_clear_calendar_button">クリア</v-btn>
+            <v-btn @click="clicked_clear_calendar_button" hide-details class="pb-0 mb-0">クリア</v-btn>
         </v-col>
     </v-row>
-    <VDatePicker :max-width="300" :model-value="dates" :color="'primary'" :multiple="'range'"
-        @wheel="(e: any) => on_wheel(e)" @update:model-value="clicked_date" />
+    <VDatePicker class="calendar_query_date_picker" :max-width="300" :model-value="dates" :color="'primary'"
+        :multiple="'range'" @wheel.prevent.stop="(e: any) => on_wheel(e)" @update:model-value="clicked_date" />
 </template>
 <script lang="ts" setup>
 import moment from 'moment';
@@ -42,7 +43,6 @@ watch(props.query, () => {
 // 日付がクリックされた時、日時を更新してclicked_timeをemitする
 function clicked_date(recved_dates: any): void {
     dates.value = recved_dates
-    console.log(dates.value)
     if (dates.value && dates.value.length !== 0) {
         emits('request_update_dates', moment(dates.value[0]).toDate(), moment(dates.value[dates.value.length - 1]).toDate())
     } else {
@@ -56,6 +56,7 @@ function on_wheel(e: any) {
     } else {
         document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(1)").forEach((el, key, parent) => { (el as any).click() })
     }
+    //TODO document.querySelectorAll(".calendar_query_date_picker").forEach((element, key, parent) => { element.scrollTop = 0 })
 }
 
 function clicked_clear_calendar_button(): void {

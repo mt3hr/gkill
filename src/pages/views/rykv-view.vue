@@ -22,25 +22,29 @@
                         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
                 </td>
                 <td valign="top">
+                    <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                        :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag"
+                        :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
+                        :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                        :show_timeis_plaing_end_button="true"
+                        @received_errors="(errors) => emits('received_errors', errors)"
+                        @received_messages="(messages) => emits('received_messages', messages)"
+                        @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+                </td>
+                <td valign="top">
                     <KyouCountCalendar :application_config="application_config" :gkill_api="gkill_api"
                         :kyous="focused_column_kyous" @requested_focus_time="(time) => focused_time = time" />
                 </td>
+                <td valign="top">
+                    <GPSLogMap :application_config="application_config" :gkill_api="gkill_api"
+                        :start_date="focused_time" :end_date="focused_time"
+                        @received_errors="(errors) => emits('received_errors', errors)"
+                        @received_messages="(messages) => emits('received_messages', messages)"
+                        @requested_focus_time="(time) => focused_time = time" />
+                </td>
             </tr>
         </table>
-        <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
-            :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-            :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
-        <KyouCountCalendar :application_config="application_config" :gkill_api="gkill_api" :kyous="focused_column_kyous"
-            @requested_focus_time="(time) => focused_time = time" />
-        <GPSLogMap :application_config="application_config" :gkill_api="gkill_api" :start_date="focused_time"
-            :end_date="focused_time" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_focus_time="(time) => focused_time = time" />
         <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" :query="querys[focused_column_index]"
             :last_added_tag="last_added_tag" @received_messages="(messages) => emits('received_messages', messages)"
