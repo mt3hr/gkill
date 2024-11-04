@@ -1,8 +1,8 @@
 <template>
     <div class="rykv_sidebar">
         <SidebarHeader :application_config="application_config" :gkill_api="gkill_api" :query="query"
-            @request_search="emits('request_search')"
-            @request_clear_find_query="emits('updated_query', default_query)" />
+            @request_search="emits('request_search')" @request_clear_find_query="emits('updated_query', default_query)"
+            class="sidebar_header" />
         <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
             @request_update_and_search="emits('updated_query', generate_query())"
             @request_update_keywords="emits('updated_query', generate_query())"
@@ -81,3 +81,8 @@ function generate_cleard_calendar_query(): FindKyouQuery {
     throw new Error('Not implemented')
 }
 </script>
+<style lang="css">
+.sidebar_header {
+    border-bottom: solid 1px #2672ed;
+}
+</style>
