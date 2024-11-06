@@ -1,13 +1,13 @@
 <template>
-        <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width" :app_title_bar_height="app_title_bar_height"
-            :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
-            @received_messages="write_messages" />
-        <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
-            :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :is_show="is_show_application_config_dialog" @received_errors="write_errors"
-            @received_messages="write_messages" @requested_reload_application_config="load_application_config" />
-        <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="last_added_tag" />
+    <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
+        :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
+        @received_errors="write_errors" @received_messages="write_messages" />
+    <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
+        :app_content_height="app_content_height" :app_content_width="app_content_width"
+        :is_show="is_show_application_config_dialog" @received_errors="write_errors" @received_messages="write_messages"
+        @requested_reload_application_config="load_application_config" />
+    <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+        :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="last_added_tag" />
 </template>
 
 <script lang="ts" setup>
