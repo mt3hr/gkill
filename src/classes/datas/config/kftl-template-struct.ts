@@ -1,6 +1,6 @@
 'use strict'
 
-export class KFTLTemplateStruct {
+export class KFTLTemplateStruct{
 
     id: string
 
