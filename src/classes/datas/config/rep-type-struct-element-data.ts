@@ -10,11 +10,20 @@ export class RepTypeStructElementData {
 
     children: Array<RepTypeStructElementData> | null
 
+    key: string
+
+    is_checked: boolean
+
+    indeterminate: boolean
+
     constructor() {
         this.id = ""
         this.rep_type_name = ""
         this.check_when_inited = false
         this.children = null
+        this.key = ""
+        this.is_checked = false
+        this.indeterminate = false
     }
 
 }
