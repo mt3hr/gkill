@@ -12,12 +12,21 @@ export class TagStructElementData {
 
     children: Array<TagStructElementData> | null
 
+    key: string
+
+    is_checked: boolean
+
+    indeterminate: boolean
+
     constructor() {
         this.id = ""
         this.tag_name = ""
         this.check_when_inited = false
         this.is_force_hide = false
         this.children = null
+        this.key = ""
+        this.is_checked = false
+        this.indeterminate = false
     }
 
 }
