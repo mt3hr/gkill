@@ -10,7 +10,7 @@
         </v-col>
     </v-row>
 
-    <v-row class="pa-0 ma-0">
+    <v-row v-show="use_words" class="pa-0 ma-0">
         <v-col cols="2" class="pa-0 ma-0">
             <v-btn v-if="!use_and_search" icon="mdi-set-center" @click="use_and_search = !use_and_search" />
             <v-btn v-if="use_and_search" icon="mdi-set-all" @click="use_and_search = !use_and_search" />
