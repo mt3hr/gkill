@@ -1,34 +1,36 @@
 <template>
-    <div class="rykv_sidebar">
+    <div>
         <SidebarHeader :application_config="application_config" :gkill_api="gkill_api" :query="query"
             @request_search="emits('request_search')" @request_clear_find_query="emits('updated_query', default_query)"
             class="sidebar_header" />
-        <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-            @request_update_and_search="emits('updated_query', generate_query())"
-            @request_update_keywords="emits('updated_query', generate_query())"
-            @request_update_use_keyword_query="emits('updated_query', generate_query())"
-            @request_clear_keyword_query="emits('updated_query', generate_cleard_keyword_query())" />
-        <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-            @request_update_and_search_timeis_tags="emits('updated_query', generate_query())"
-            @request_update_and_search_timeis_word="emits('updated_query', generate_query())"
-            @request_update_timeis_keywords="emits('updated_query', generate_query())"
-            @request_update_use_timeis_query="emits('updated_query', generate_query())"
-            @request_clear_timeis_query="emits('updated_query', generate_cleard_timeis_query())" />
-        <RepQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-            @request_update_checked_reps="emits('updated_query', generate_query())"
-            @request_clear_rep_query="emits('updated_query', generate_cleard_rep_query())" />
-        <TagQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-            @request_update_and_search_tags="emits('updated_query', generate_query())"
-            @request_update_checked_tags="emits('updated_query', generate_query())"
-            @request_clear_tag_query="emits('updated_query', generate_cleard_tag_query())" />
-        <MapQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-            @request_update_area="emits('updated_query', generate_query())"
-            @request_update_use_map_query="emits('updated_query', generate_query())"
-            @request_clear_map_query="emits('updated_query', generate_cleard_map_query())" />
-        <CalendarQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-            @request_update_dates="emits('updated_query', generate_query())"
-            @request_update_use_calendar_query="emits('updated_query', generate_query())"
-            @request_clear_calendar_query="emits('updated_query', generate_cleard_calendar_query())" />
+        <div class="rykv_sidebar">
+            <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
+                @request_update_and_search="emits('updated_query', generate_query())"
+                @request_update_keywords="emits('updated_query', generate_query())"
+                @request_update_use_keyword_query="emits('updated_query', generate_query())"
+                @request_clear_keyword_query="emits('updated_query', generate_cleard_keyword_query())" />
+            <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
+                @request_update_and_search_timeis_tags="emits('updated_query', generate_query())"
+                @request_update_and_search_timeis_word="emits('updated_query', generate_query())"
+                @request_update_timeis_keywords="emits('updated_query', generate_query())"
+                @request_update_use_timeis_query="emits('updated_query', generate_query())"
+                @request_clear_timeis_query="emits('updated_query', generate_cleard_timeis_query())" />
+            <RepQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
+                @request_update_checked_reps="emits('updated_query', generate_query())"
+                @request_clear_rep_query="emits('updated_query', generate_cleard_rep_query())" />
+            <TagQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
+                @request_update_and_search_tags="emits('updated_query', generate_query())"
+                @request_update_checked_tags="emits('updated_query', generate_query())"
+                @request_clear_tag_query="emits('updated_query', generate_cleard_tag_query())" />
+            <CalendarQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
+                @request_update_dates="emits('updated_query', generate_query())"
+                @request_update_use_calendar_query="emits('updated_query', generate_query())"
+                @request_clear_calendar_query="emits('updated_query', generate_cleard_calendar_query())" />
+            <MapQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
+                @request_update_area="emits('updated_query', generate_query())"
+                @request_update_use_map_query="emits('updated_query', generate_query())"
+                @request_clear_map_query="emits('updated_query', generate_cleard_map_query())" />
+        </div>
     </div>
 </template>
 <script setup lang="ts">
@@ -42,11 +44,16 @@ import TagQuery from './tag-query.vue'
 import TimeIsQuery from './time-is-query.vue'
 import type { rykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-emits'
 import type { rykvQueryEditorSidebarProps } from './rykv-query-editor-sidebar-props'
-import { type Ref, ref } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 
 const props = defineProps<rykvQueryEditorSidebarProps>()
 const emits = defineEmits<rykvQueryEditorSidebarEmits>()
 defineExpose(generate_query)
+
+const header_height: Ref<number> = ref(38)
+const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
+const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
+const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
 
 const default_query: Ref<FindKyouQuery> = ref(function (): FindKyouQuery {
     //TODO
@@ -83,6 +90,14 @@ function generate_cleard_calendar_query(): FindKyouQuery {
 </script>
 <style lang="css">
 .sidebar_header {
-    border-bottom: solid 1px #2672ed;
+    top: v-bind(header_top_px);
+    position: sticky;
+    border-top: solid 2px #2672ed;
+}
+
+.rykv_sidebar {
+    min-height: v-bind(sidebar_height);
+    top: v-bind(sidebar_top_px);
+    position: relative;
 }
 </style>

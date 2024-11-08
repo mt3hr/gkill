@@ -1,6 +1,8 @@
 'use strict'
 
-export class TagStructElementData {
+import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
+
+export class TagStructElementData implements FoldableStructModel {
 
     id: string
 

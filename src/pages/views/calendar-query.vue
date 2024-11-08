@@ -9,7 +9,7 @@
             <v-btn @click="clicked_clear_calendar_button" hide-details class="pb-0 mb-0">クリア</v-btn>
         </v-col>
     </v-row>
-    <VDatePicker class="calendar_query_date_picker" :max-width="300" :model-value="dates" :color="'primary'"
+    <VDatePicker v-show="use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates" :color="'primary'"
         :multiple="'range'" @wheel.prevent.stop="(e: any) => on_wheel(e)" @update:model-value="clicked_date" />
 </template>
 <script lang="ts" setup>

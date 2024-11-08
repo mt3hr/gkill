@@ -1,6 +1,8 @@
 'use strict'
 
-export class RepTypeStructElementData {
+import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
+
+export class RepTypeStructElementData implements FoldableStructModel {
 
     id: string
 
