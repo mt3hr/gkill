@@ -6,7 +6,9 @@
     </v-app-bar>
     <v-navigation-drawer v-model="drawer" app :width="300">
         <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
-            :query="querys[focused_column_index]" @request_search="search(focused_column_index)"
+            :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
+            :app_content_width="app_content_width" :query="querys[focused_column_index]"
+            @request_search="search(focused_column_index)"
             @updated_query="(new_query) => querys.splice(focused_column_index, 1, new_query)" />
     </v-navigation-drawer>
     <v-main class="main">

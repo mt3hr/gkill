@@ -43,7 +43,7 @@ export abstract class FindQueryBase {
     calendar_end_date: Date | null
 
     async set_other_value(key: string, value: Object): Promise<void> {
-        throw new Error('Not implemented')
+        (this as any)[key] = value
     }
 
     abstract clone(): Promise<FindQueryBase>
