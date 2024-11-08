@@ -9,7 +9,7 @@
             <v-btn @click="circles = []; emits('request_clear_map_query')">クリア</v-btn>
         </v-col>
     </v-row>
-    <v-sheet>
+    <v-sheet v-show="use_map_search">
         <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="application_config.google_map_api_key"
             @click="($event) => { update_circles(); center.lat = $event.latLng.lat(); center.lng = $event.latLng.lng(); is_enable_circle = true; emits('request update_area', center.lat, center.lng, circle_radius); is_enable_circle = true; }"
             style="width: 100%; height: 400px" class="googlemap search_google_map">
@@ -17,7 +17,7 @@
                 :key="(opt.center?.lat.toString().concat(opt.center?.lng.toString()).concat(circle_radius.toString()))" />
         </GoogleMap>
     </v-sheet>
-    <v-sheet>
+    <v-sheet v-show="use_map_search">
         <v-slider min="0" max="5000" v-model="circle_radius" :label="'範囲'"
             @click="update_circles(); emits('request update_area', center.lat, center.lng, circle_radius)" />
     </v-sheet>

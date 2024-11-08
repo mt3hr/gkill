@@ -3,7 +3,8 @@
         <a v-if="kyou.typed_idf_kyou && !kyou.typed_idf_kyou.is_image" :href="kyou.typed_idf_kyou.file_url">
             {{ kyou.typed_idf_kyou.file_name }}
         </a>
-        <img v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_image" :src="kyou.typed_idf_kyou.file_url" />
+        <img v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_image" :src="kyou.typed_idf_kyou.file_url"
+            class="kyou_image" />
     </v-card>
     <IDFKyouContextMenu :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
@@ -30,3 +31,12 @@ function show_context_menu(e: PointerEvent): void {
     context_menu.value?.show(e)
 }
 </script>
+
+<style lang="css">
+.kyou_image {
+    border: 1px solid gray;
+    height: 198px;
+    width: 198px;
+    object-fit: cover;
+}
+</style>
