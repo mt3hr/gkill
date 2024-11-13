@@ -41,7 +41,6 @@
 </template>
 <script lang="ts" setup>
 import { type Ref, ref } from 'vue'
-import type { EditKmemoViewProps } from './edit-kmemo-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -49,8 +48,9 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import router from '@/router'
 import moment from 'moment'
 import { UpdateNlogRequest } from '@/classes/api/req_res/update-nlog-request'
+import type { EditNlogViewProps } from './edit-nlog-view-props'
 
-const props = defineProps<EditKmemoViewProps>()
+const props = defineProps<EditNlogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const nlog_title_value: Ref<string> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.title : "")
