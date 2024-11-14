@@ -104,13 +104,13 @@ export abstract class InfoBase {
 
         this.create_user = ""
 
-        this.update_time = new Date(0)
+        this.update_time = null
 
-        this.update_app = ""
+        this.update_app = null
 
-        this.update_user = ""
+        this.update_user = null
 
-        this.update_device = ""
+        this.update_device = null
 
         this.attached_tags = new Array<Tag>()
 

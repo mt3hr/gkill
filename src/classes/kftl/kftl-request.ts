@@ -1,7 +1,10 @@
 'use strict'
 
 import { GkillAPI } from '../api/gkill-api'
-import type { GkillAPIResponse } from '../api/gkill-api-response'
+import type { GkillError } from '../api/gkill-error'
+import { AddTagRequest } from '../api/req_res/add-tag-request'
+import { AddTextRequest } from '../api/req_res/add-text-request'
+import { GetGkillInfoRequest } from '../api/req_res/get-gkill-info-request'
 import { KFTLRequestBase } from './kftl-request-base'
 import type { KFTLStatementLineContext } from './kftl-statement-line-context'
 
@@ -11,7 +14,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
 
     private tags: Array<string>
 
-    private current_text_id: string
+    private current_text_id: string | null
 
     private texts_map: Map<string, string>
 
@@ -33,56 +36,116 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         this.context = context
     }
 
-    abstract do_request(): Promise<Array<GkillAPIResponse>>
+    async do_request(): Promise<Array<GkillError>> {
+        let errors = Array<GkillError>()
+        const time = this.get_related_time() != null ? this.get_related_time()!! : new Date(Date.now())
+        const req = new GetGkillInfoRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        const res = await GkillAPI.get_instance().get_gkill_info(req)
 
-    async get_request_id(): Promise<string> {
-        throw new Error('Not implemented')
+        for (let i = 0; i < this.tags.length; i++) {
+            const tag = this.tags[i]
+            const req = new AddTagRequest()
+            req.tag.id = GkillAPI.get_instance().generate_uuid()
+            req.tag.tag = tag
+            req.tag.target_id = this.get_request_id()
+            req.tag.related_time = time
+            req.tag.create_app = "gkill_kftl"
+            req.tag.create_device = res.device
+            req.tag.create_time = time
+            req.tag.create_user = res.user_id
+            req.tag.update_app = "gkill_kftl"
+            req.tag.update_device = res.device
+            req.tag.update_time = time
+            req.tag.update_user = res.user_id
+            await GkillAPI.get_instance().add_tag(req).then((res) => {
+                if (res.errors && res.errors.length !== 0) {
+                    errors = errors.concat(res.errors)
+                }
+            })
+        }
+        for (const text_entry of this.texts_map) {
+            const id = text_entry[0]
+            const text = text_entry[1]
+
+            const req = new AddTextRequest()
+            req.text.id = id
+            req.text.target_id = this.get_request_id()
+            req.text.text = text
+            req.text.related_time = time
+            req.text.create_app = "gkill_kftl"
+            req.text.create_device = res.device
+            req.text.create_time = time
+            req.text.create_user = res.user_id
+            req.text.update_app = "gkill_kftl"
+            req.text.update_device = res.device
+            req.text.update_time = time
+            req.text.update_user = res.user_id
+            await GkillAPI.get_instance().add_text(req).then((res) => {
+                if (res.errors && res.errors.length !== 0) {
+                    errors = errors.concat(res.errors)
+                }
+            })
+        }
+        return errors
     }
 
-    async get_tags(): Promise<Array<string>> {
-        throw new Error('Not implemented')
+    get_request_id(): string {
+        return this.request_id
     }
 
-    async set_tags(tags: Array<string>): Promise<void> {
-        throw new Error('Not implemented')
+    get_tags(): Array<string> {
+        return this.tags
     }
 
-    async get_texts(): Promise<Array<string>> {
-        throw new Error('Not implemented')
+    set_tags(tags: Array<string>): void {
+        this.tags = tags
     }
 
-    async set_texts(texts: Array<string>): Promise<void> {
-        throw new Error('Not implemented')
+    get_texts(): Array<string> {
+        const texts = Array<string>()
+        this.texts_map.forEach(text => {
+            texts.push(text)
+        });
+        return texts
     }
 
-    async get_related_time(): Promise<Date> {
-        throw new Error('Not implemented')
+    set_texts(texts: Array<string>): void {
+        this.texts_map.clear()
+        texts.forEach(text => {
+            this.texts_map.set(GkillAPI.get_instance().generate_uuid(), text)
+        });
     }
 
-    async set_related_time(time: Date): Promise<void> {
-        throw new Error('Not implemented')
+    get_related_time(): Date {
+        return this.related_time
     }
 
-    async add_tag(tag: string): Promise<void> {
-        throw new Error('Not implemented')
+    set_related_time(time: Date): void {
+        this.related_time = time
     }
 
-    async get_current_text_id(): Promise<string> {
-        throw new Error('Not implemented')
+    add_tag(tag: string): void {
+        this.tags.push(tag)
     }
 
-    async set_current_text_id(text_id: string): Promise<void> {
-        throw new Error('Not implemented')
+    get_current_text_id(): string | null {
+        return this.current_text_id
     }
 
-    async add_text_line(text_id: string, text_line: string): Promise<void> {
-        throw new Error('Not implemented')
+    set_current_text_id(text_id: string | null): void {
+        this.current_text_id = text_id
     }
 
-    protected async get_api(): Promise<GkillAPI> {
-        throw new Error('Not implemented')
+    add_text_line(text_id: string, text_line: string): void {
+        let text = this.texts_map.get(text_id)
+        if (!text) {
+            text = `${text_line}`
+        } else {
+            text += `\n${text_line}`
+        }
+        this.texts_map.set(text_id, text)
     }
-
 }
 
 

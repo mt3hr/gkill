@@ -140,7 +140,7 @@ import type { UploadGPSLogFilesRequest } from "./req_res/upload-gps-log-files-re
 import type { UploadGPSLogFilesResponse } from "./req_res/upload-gps-log-files-response"
 
 export class GkillAPI {
-        private static gkill_api: GkillAPI = new GkillAPI() 
+        private static gkill_api: GkillAPI = new GkillAPI()
         static get_instance(): GkillAPI {
                 return this.gkill_api
         }
@@ -1237,6 +1237,19 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: GetSharedMiTasksResponse = json
                 return response
+        }
+
+        get_session_id(): string {
+                let session_id = window.localStorage.getItem("gkill_session_id")
+                if (!session_id) {
+                        window.localStorage.removeItem("gkill_session_id")
+                        session_id = ""
+                }
+                return session_id
+        }
+
+        set_session_id(session_id: string): void {
+                window.localStorage.setItem("gkill_session_id", session_id)
         }
 
         generate_uuid(): string {

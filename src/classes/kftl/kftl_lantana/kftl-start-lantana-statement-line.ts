@@ -3,6 +3,7 @@
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
+import { KFTLLantanaRequest } from './kftl-lantana-request'
 
 export class KFTLStartLantanaStatementLine extends KFTLStatementLine {
 
@@ -10,16 +11,18 @@ export class KFTLStartLantanaStatementLine extends KFTLStatementLine {
         super(line_text, context)
     }
 
-    async apply_this_line_to_request_map(requet_map: KFTLRequestMap): Promise<void> {
-        throw new Error('Not implemented')
+    async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
+        const req = new KFTLLantanaRequest(this.get_context().get_this_statement_line_target_id(), this.get_context())
+        request_map.set(this.get_context().get_this_statement_line_target_id(), req)
+        return new Promise<void>((resolve) => resolve())
     }
 
-    async get_label_name(context: KFTLStatementLineContext): Promise<string> {
-        throw new Error('Not implemented')
+    get_label_name(context: KFTLStatementLineContext): string {
+        return "lantana"
     }
 
-    static async is_this_type(line_text: string): Promise<boolean> {
-        throw new Error('Not implemented')
+    static is_this_type(line_text: string): boolean {
+        return line_text == "ーら"
     }
 
 }
