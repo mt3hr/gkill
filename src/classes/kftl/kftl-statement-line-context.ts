@@ -12,7 +12,7 @@ export class KFTLStatementLineContext {
 
     private next_statement_line_text: string
 
-    private next_statement_line_target_id: string
+    private next_statement_line_target_id: string | null
 
     private next_is_prototype: boolean
 
@@ -35,68 +35,72 @@ export class KFTLStatementLineContext {
 
     }
 
-    async get_this_statement_line_text(): Promise<string> {
-        throw new Error('Not implemented')
+    get_this_statement_line_text(): string {
+        return this.this_statement_line_text
     }
 
-    async get_this_statement_line_target_id(): Promise<string> {
-        throw new Error('Not implemented')
+    get_this_statement_line_target_id(): string {
+        return this.this_statement_line_target_id
     }
 
-    async set_this_statement_line_target_id(this_statement_line_target_id: string): Promise<void> {
-        throw new Error('Not implemented')
+    set_this_statement_line_target_id(this_statement_line_target_id: string): void {
+        this.this_statement_line_target_id = this_statement_line_target_id
     }
 
-    async get_next_statement_line_text(): Promise<string> {
-        throw new Error('Not implemented')
+    get_next_statement_line_text(): string {
+        return this.next_statement_line_text
     }
 
-    async get_next_statement_line_target_id(): Promise<string> {
-        throw new Error('Not implemented')
+    get_next_statement_line_target_id(): string | null {
+        return this.next_statement_line_target_id
     }
 
-    async set_next_statement_line_target_id(target_id: string | null): Promise<void> {
-        throw new Error('Not implemented')
+    set_next_statement_line_target_id(target_id: string | null): void {
+        this.next_statement_line_target_id = target_id
     }
 
-    async get_next_statement_line_constructor(): Promise<{ (line_text: string, context: KFTLStatementLineContext): KFTLStatementLine } | null> {
-        throw new Error('Not implemented')
+    get_next_statement_line_constructor(): { (line_text: string, context: KFTLStatementLineContext): KFTLStatementLine } | null {
+        return this.next_statement_line_constructor
     }
 
-    async set_next_statement_line_constructor(next_statement_line_constructor: { (line_text: string, context: KFTLStatementLineContext): KFTLStatementLine } | null): Promise<void> {
-        throw new Error('Not implemented')
+    set_next_statement_line_constructor(next_statement_line_constructor: { (line_text: string, context: KFTLStatementLineContext): KFTLStatementLine } | null): void {
+        this.next_statement_line_constructor = next_statement_line_constructor
     }
 
-    async get_prev_statement_line(): Promise<KFTLStatementLine | null> {
-        throw new Error('Not implemented')
+    get_prev_statement_line(): KFTLStatementLine | null {
+        const lines = this.get_kftl_statement_lines()
+        if (2 <= lines.length) {
+            return lines[lines.length - 1]
+        }
+        return null
     }
 
-    async get_kftl_statement_lines(): Promise<Array<KFTLStatementLine>> {
-        throw new Error('Not implemented')
+    get_kftl_statement_lines(): Array<KFTLStatementLine> {
+        return this.kftl_statement_lines
     }
 
-    async get_add_second(): Promise<Number> {
-        throw new Error('Not implemented')
+    get_add_second(): Number {
+        return this.add_second
     }
 
-    async set_add_second(add_second: Number): Promise<void> {
-        throw new Error('Not implemented')
+    set_add_second(add_second: Number): void {
+        this.add_second = add_second
     }
 
-    async is_this_prototype(): Promise<boolean> {
-        throw new Error('Not implemented')
+    is_this_prototype(): boolean {
+        return this.this_is_prototype
     }
 
-    async set_is_this_prototype(is_this_prototype: boolean): Promise<void> {
-        throw new Error('Not implemented')
+    set_is_this_prototype(is_this_prototype: boolean): void {
+        this.this_is_prototype = is_this_prototype
     }
 
-    async is_next_prototype(): Promise<boolean> {
-        throw new Error('Not implemented')
+    is_next_prototype(): boolean {
+        return this.next_is_prototype
     }
 
-    async set_is_next_prototype(is_next_prototype: boolean): Promise<void> {
-        throw new Error('Not implemented')
+    set_is_next_prototype(is_next_prototype: boolean): void {
+        this.next_is_prototype = is_next_prototype
     }
 
 }
