@@ -1,5 +1,9 @@
 'use strict'
 
+import moment from "moment"
+import { GkillAPI } from "../api/gkill-api"
+import { GetGkillInfoRequest } from "../api/req_res/get-gkill-info-request"
+
 export class KFTLRequestBase {
 
     private is_deleted: boolean
@@ -30,75 +34,86 @@ export class KFTLRequestBase {
         this.update_user = ""
         this.create_time = new Date(0)
         this.update_time = new Date(0)
-
     }
 
     async apply_default_value_kftl_request_base(): Promise<void> {
-        throw new Error('Not implemented')
+        const req = new GetGkillInfoRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        const res = await GkillAPI.get_instance().get_gkill_info(req)
+
+        this.is_deleted = false
+        this.create_app = "gkill_kftl"
+        this.update_app = "gkill_kftl"
+        this.create_device = res.device
+        this.create_user = res.user_id
+        this.update_device = ""
+        this.update_user = ""
+        this.create_time = moment().toDate()
+        this.update_time = new Date(0)
     }
 
-    async get_create_time(): Promise<Date> {
-        throw new Error('Not implemented')
+    get_create_time(): Date {
+        return this.create_time
     }
 
-    async set_create_time(create_time: Date): Promise<void> {
-        throw new Error('Not implemented')
+    set_create_time(create_time: Date): void {
+        this.create_time = create_time
     }
 
-    async get_create_app(): Promise<string> {
-        throw new Error('Not implemented')
+    get_create_app(): string {
+        return this.create_app
     }
 
-    async set_create_app(create_app: string): Promise<void> {
-        throw new Error('Not implemented')
+    set_create_app(create_app: string): void {
+        this.create_app = create_app
     }
 
-    async get_create_device(): Promise<string> {
-        throw new Error('Not implemented')
+    get_create_device(): string {
+        return this.create_device
     }
 
-    async set_create_device(create_device: string): Promise<void> {
-        throw new Error('Not implemented')
+    set_create_device(create_device: string): void {
+        this.create_device = create_device
     }
 
-    async get_create_user(): Promise<string> {
-        throw new Error('Not implemented')
+    get_create_user(): string {
+        return this.create_user
     }
 
-    async set_create_user(create_user: string): Promise<void> {
-        throw new Error('Not implemented')
+    set_create_user(create_user: string): void {
+        this.create_user = create_user
     }
 
-    async get_update_time(): Promise<Date> {
-        throw new Error('Not implemented')
+    get_update_time(): Date {
+        return this.update_time
     }
 
-    async set_update_time(create_time: Date): Promise<void> {
-        throw new Error('Not implemented')
+    set_update_time(update_time: Date): void {
+        this.update_time = update_time
     }
 
-    async get_update_app(): Promise<string> {
-        throw new Error('Not implemented')
+    get_update_app(): string {
+        return this.update_app
     }
 
-    async set_update_app(create_app: string): Promise<void> {
-        throw new Error('Not implemented')
+    set_update_app(update_app: string): void {
+        this.update_app = update_app
     }
 
-    async get_update_device(): Promise<string> {
-        throw new Error('Not implemented')
+    get_update_device(): string {
+        return this.update_device
     }
 
-    async set_update_device(create_device: string): Promise<void> {
-        throw new Error('Not implemented')
+    set_update_device(update_device: string): void {
+        this.update_device = update_device
     }
 
-    async get_update_user(): Promise<string> {
-        throw new Error('Not implemented')
+    get_update_user(): string {
+        return this.update_user
     }
 
-    async set_update_user(create_user: string): Promise<void> {
-        throw new Error('Not implemented')
+    set_update_user(update_user: string): void {
+        this.update_user = update_user
     }
 
 }

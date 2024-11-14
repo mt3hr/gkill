@@ -1,8 +1,12 @@
 'use strict'
 
-import type { GkillAPIResponse } from '@/classes/api/gkill-api-response'
 import { KFTLRequest } from '../kftl-request'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
+import { GkillError } from '@/classes/api/gkill-error'
+import { GkillAPI } from '@/classes/api/gkill-api'
+import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
+import { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
+import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 
 export class KFTLMiRequest extends KFTLRequest {
 
@@ -25,28 +29,88 @@ export class KFTLMiRequest extends KFTLRequest {
         this.esitimate_end_time = new Date(0)
     }
 
-    async do_request(): Promise<Array<GkillAPIResponse>> {
-        throw new Error('Not implemented')
+    async do_request(): Promise<Array<GkillError>> {
+        let errors = new Array<GkillError>()
+        if (this.title == "") {
+            const error = new GkillError()
+            error.error_code = "//TODO"
+            error.error_message = "タイトルが未入力です"
+            errors = errors.concat([error])
+        }
+
+        const gkill_info_req = new GetGkillInfoRequest()
+        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+
+        if (this.board_name == "") {
+            const error = new GkillError()
+            error.error_code = "//TODO"
+            error.error_message = "板名が未入力です"
+            errors = errors.concat([error])
+        }
+        if (errors.length !== 0) {
+            return errors
+        }
+
+        const req = new GetApplicationConfigRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        const res = await GkillAPI.get_instance().get_application_config(req)
+        if (res.errors && res.errors.length !== 0) {
+            errors = errors.concat(res.errors)
+            return errors
+        }
+
+        const board_name = this.board_name != "" ? this.board_name : res.application_config.mi_default_board
+
+        await super.do_request().then(super_errors => errors = errors.concat(super_errors))
+        const id = this.get_request_id()
+        const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
+
+        const mi_req = new AddMiRequest()
+
+        mi_req.mi.id = id
+        mi_req.mi.title = this.title
+        mi_req.mi.board_name = board_name
+        mi_req.mi.limit_time = this.limit_time
+        mi_req.mi.estimate_start_time = this.estimate_start_time
+        mi_req.mi.estimate_end_time = this.esitimate_end_time
+        mi_req.mi.is_checked = false
+
+        mi_req.mi.create_app = "gkill_kftl"
+        mi_req.mi.create_device = gkill_info_res.device
+        mi_req.mi.create_time = time
+        mi_req.mi.create_user = gkill_info_res.user_id
+        mi_req.mi.update_app = "gkill_kftl"
+        mi_req.mi.update_device = gkill_info_res.device
+        mi_req.mi.update_time = time
+        mi_req.mi.update_user = gkill_info_res.user_id
+
+        await GkillAPI.get_instance().add_mi(mi_req).then(res => {
+            if (res.errors && res.errors.length !== 0) {
+                errors = errors.concat(res.errors)
+            }
+        })
+        return errors
     }
 
     async set_title(title: string): Promise<void> {
-        throw new Error('Not implemented')
+        this.title = title
     }
 
     async set_board_name(board_name: string): Promise<void> {
-        throw new Error('Not implemented')
+        this.board_name = board_name
     }
 
     async set_limit_time(limit_time: Date): Promise<void> {
-        throw new Error('Not implemented')
+        this.limit_time = limit_time
     }
 
     async set_estimate_start_time(estimate_start_time: Date): Promise<void> {
-        throw new Error('Not implemented')
+        this.estimate_start_time = estimate_start_time
     }
 
     async set_estimate_end_time(estimate_end_time: Date): Promise<void> {
-        throw new Error('Not implemented')
+        this.esitimate_end_time = estimate_end_time
     }
 
 }

@@ -3,6 +3,7 @@
 import type { GkillAPIResponse } from '@/classes/api/gkill-api-response'
 import { KFTLRequest } from '../kftl-request'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
+import { GkillError } from '@/classes/api/gkill-error'
 
 export class KFTLPrototypeRequest extends KFTLRequest {
 
@@ -10,12 +11,13 @@ export class KFTLPrototypeRequest extends KFTLRequest {
         super(request_id, context)
     }
 
-    async is_prototype_request(request: KFTLRequest): Promise<void> {
-        throw new Error('Not implemented')
+    static is_prototype_request(request: KFTLRequest): boolean {
+        return request.constructor.name == KFTLPrototypeRequest.name
+
     }
 
-    async do_request(): Promise<Array<GkillAPIResponse>> {
-        throw new Error('Not implemented')
+    async do_request(): Promise<Array<GkillError>> {
+        return new Array<GkillError>()
     }
 
 }
