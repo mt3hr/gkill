@@ -81,6 +81,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request'
 import router from '@/router'
+import { GkillAPI } from '@/classes/api/gkill-api'
 
 const props = defineProps<EditTimeIsViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -171,16 +172,9 @@ async function save(): Promise<void> {
         return
     }
 
-    // セッションIDを取得する
-    const session_id = window.localStorage.getItem("gkill_session_id")
-    if (!session_id) {
-        window.localStorage.removeItem("gkill_session_id")
-        router.replace('/login')
-        return
-    }
     // UserIDやDevice情報を取得する
     const get_gkill_req = new GetGkillInfoRequest()
-    get_gkill_req.session_id = session_id
+    get_gkill_req.session_id = GkillAPI.get_instance().get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
@@ -203,7 +197,7 @@ async function save(): Promise<void> {
 
     // 更新リクエストを飛ばす
     const req = new UpdateTimeisRequest()
-    req.session_id = session_id
+    req.session_id = GkillAPI.get_instance().get_session_id()
     req.timeis = updated_timeis
     const res = await props.gkill_api.update_timeis(req)
     if (res.errors && res.errors.length !== 0) {
