@@ -26,8 +26,8 @@
         </div>
     </v-card>
     <MiContextMenu :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou"
-        :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
+        :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
+        @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyous, is_checked)"
@@ -45,6 +45,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import router from '@/router'
+import { GkillAPI } from '@/classes/api/gkill-api'
 
 const context_menu = ref<InstanceType<typeof MiContextMenu> | null>(null);
 
@@ -85,16 +86,9 @@ async function clicked_mi_check(): Promise<void> {
         return
     }
 
-    // セッションIDを取得する
-    const session_id = window.localStorage.getItem("gkill_session_id")
-    if (!session_id) {
-        window.localStorage.removeItem("gkill_session_id")
-        router.replace('/login')
-        return
-    }
     // UserIDやDevice情報を取得する
     const get_gkill_req = new GetGkillInfoRequest()
-    get_gkill_req.session_id = session_id
+    get_gkill_req.session_id = GkillAPI.get_instance().get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
@@ -111,7 +105,7 @@ async function clicked_mi_check(): Promise<void> {
 
     // 更新リクエストを飛ばす
     const req = new UpdateMiRequest()
-    req.session_id = session_id
+    req.session_id = GkillAPI.get_instance().get_session_id()
     req.mi = updated_mi
     const res = await props.gkill_api.update_mi(req)
     if (res.errors && res.errors.length !== 0) {
