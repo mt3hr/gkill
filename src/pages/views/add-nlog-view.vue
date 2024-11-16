@@ -36,6 +36,7 @@ import moment from 'moment'
 import { UpdateNlogRequest } from '@/classes/api/req_res/update-nlog-request'
 import { Nlog } from '@/classes/datas/nlog'
 import { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
+import { GkillAPI } from '@/classes/api/gkill-api'
 
 const props = defineProps<AddNlogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -85,16 +86,9 @@ async function save(): Promise<void> {
         return
     }
 
-    // セッションIDを取得する
-    const session_id = window.localStorage.getItem("gkill_session_id")
-    if (!session_id) {
-        window.localStorage.removeItem("gkill_session_id")
-        router.replace('/login')
-        return
-    }
     // UserIDやDevice情報を取得する
     const get_gkill_req = new GetGkillInfoRequest()
-    get_gkill_req.session_id = session_id
+    get_gkill_req.session_id = GkillAPI.get_instance().get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
@@ -118,7 +112,7 @@ async function save(): Promise<void> {
 
     // 更新リクエストを飛ばす
     const req = new AddNlogRequest()
-    req.session_id = session_id
+    req.session_id = GkillAPI.get_instance().get_session_id()
     req.nlog = new_nlog
     const res = await props.gkill_api.add_nlog(req)
     if (res.errors && res.errors.length !== 0) {

@@ -40,7 +40,7 @@ const is_show_kftl_dialog: Ref<boolean> = ref(false)
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
-    req.session_id = ""//TODO session_idをどこから取得するか。webstorage?
+    req.session_id = GkillAPI.get_instance().get_session_id()
 
     return gkill_api.value.get_application_config(req)
         .then(res => {

@@ -1,6 +1,8 @@
 <template>
-    <DeviceStructElement :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-        :is_open="true" :struct_obj="application_config.device_struct" />
+    <v-card class="pa-2">
+        <DeviceStructElement :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
+            :is_open="true" :struct_obj="application_config.device_struct" />
+    </v-card>
 </template>
 <script setup lang="ts">
 import type { EditDeviceStructViewEmits } from './edit-device-struct-view-emits'

@@ -102,6 +102,8 @@ import type { SetNewPasswordRequest } from "./req_res/set-new-password-request"
 import type { SetNewPasswordResponse } from "./req_res/set-new-password-response"
 import type { UpdateAccountStatusRequest } from "./req_res/update-account-status-request"
 import type { UpdateAccountStatusResponse } from "./req_res/update-account-status-response"
+import type { UpdateApplicationConfigRequest } from "./req_res/update-application-config-request"
+import type { UpdateApplicationConfigResponse } from "./req_res/update-application-config-response"
 import type { UpdateDeviceStructRequest } from "./req_res/update-device-struct-request"
 import type { UpdateDeviceStructResponse } from "./req_res/update-device-struct-response"
 import type { UpdateKmemoRequest } from "./req_res/update-kmemo-request"
@@ -196,6 +198,7 @@ export class GkillAPI {
         get_text_histories_by_text_id_address: string
         get_application_config_address: string
         get_server_config_address: string
+        update_application_config_address: string
         upload_files_address: string
         upload_gpslog_files_address: string
         update_tag_struct_address: string
@@ -259,6 +262,7 @@ export class GkillAPI {
         get_text_histories_by_text_id_method: string
         get_application_config_method: string
         get_server_config_method: string
+        update_application_config_method: string
         upload_files_method: string
         upload_gpslog_files_method: string
         update_tag_struct_method: string
@@ -332,6 +336,7 @@ export class GkillAPI {
                 this.get_server_config_address = "/api/get_server_config"
                 this.upload_files_address = "/api/upload_files"
                 this.upload_gpslog_files_address = "/api/upload_gpslog_files"
+                this.update_application_config_address = "/api/update_application_config"
                 this.update_tag_struct_address = "/api/update_tag_struct"
                 this.update_rep_struct_address = "/api/update_rep_struct"
                 this.update_device_struct_address = "/api/update_device_struct"
@@ -395,6 +400,7 @@ export class GkillAPI {
                 this.get_server_config_method = "POST"
                 this.upload_files_method = "POST"
                 this.upload_gpslog_files_method = "POST"
+                this.update_application_config_method = "POST"
                 this.update_tag_struct_method = "POST"
                 this.update_rep_struct_method = "POST"
                 this.update_device_struct_method = "POST"
@@ -1028,6 +1034,19 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UploadGPSLogFilesResponse = json
+                return response
+        }
+
+        async update_application_config(req: UpdateApplicationConfigRequest): Promise<UpdateApplicationConfigResponse> {
+                const res = await fetch(this.update_application_config_address, {
+                        'method': this.update_application_config_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateApplicationConfigResponse = json
                 return response
         }
 
