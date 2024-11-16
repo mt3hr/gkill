@@ -60,4 +60,5 @@ const (
 	DeleteShareMiTaskListInfosSuccessMessage = "MSG000054"
 	GetMiSharedTasksSuccessMessage           = "MSG000055"
 	AddShareMiTaskListInfoSuccessMessage     = "MSG000056"
+	UpdateApplicationConfigSuccessMessage    = "MSG000057"
 )

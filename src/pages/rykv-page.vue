@@ -5,14 +5,14 @@
     <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
         :app_content_height="app_content_height" :app_content_width="app_content_width"
         :is_show="is_show_application_config_dialog" @received_errors="write_errors" @received_messages="write_messages"
-        @requested_reload_application_config="load_application_config" />
+        @requested_reload_application_config="load_application_config" ref="application_config_dialog" />
     <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
         :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="last_added_tag" />
 </template>
 
 <script lang="ts" setup>
 'use strict'
-import { computed, ref, type Ref } from 'vue'
+import { computed, nextTick, ref, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
@@ -22,6 +22,8 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import rykvView from './views/rykv-view.vue'
+
+const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -38,7 +40,7 @@ const last_added_tag: Ref<string> = ref("")
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
-    req.session_id = ""//TODO session_idをどこから取得するか。webstorage?
+    req.session_id = GkillAPI.get_instance().get_session_id()
 
     return gkill_api.value.get_application_config(req)
         .then(res => {
@@ -85,4 +87,5 @@ window.addEventListener('resize', () => {
 
 resize_content()
 //TODO コメントアウト解除　load_application_config()
+nextTick(() => { application_config_dialog.value?.show() })
 </script>

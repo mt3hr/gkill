@@ -226,4 +226,8 @@ const (
 	GetDeviceError                                     = "ERR000220"
 	RemoveCertFileError                                = "ERR000221"
 	RemovePemFileError                                 = "ERR000222"
+	GetIDFKyouError                                    = "ERR000223"
+	InvalidUpdateApplicationconfigResponseDataError    = "ERR000224"
+	InvalidUpdateApplicationConfigRequestDataError     = "ERR000225"
+	UpdateApplicationConfigError                       = "ERR000226"
 )

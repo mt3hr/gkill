@@ -204,6 +204,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.UploadGPSLogFilesAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUploadGPSLogFiles(w, r)
 	}).Methods(g.APIAddress.UploadGPSLogFilesMethod)
+	router.HandleFunc(g.APIAddress.UpdateApplicationConfigAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleUpdateApplicationConfig(w, r)
+	}).Methods(g.APIAddress.UpdateApplicationConfigMethod)
 	router.HandleFunc(g.APIAddress.UpdateRepStructAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateRepStruct(w, r)
 	}).Methods(g.APIAddress.UpdateRepStructMethod)
@@ -1089,7 +1092,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	kmemo, err := repositories.GetKmemo(r.Context(), request.Kmemo.ID)
+	kmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
 		log.Printf(err.Error())
@@ -1932,7 +1935,7 @@ func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Reques
 
 	repName, err := repositories.WriteIDFKyouRep.GetRepName(r.Context())
 	if err != nil {
-		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouError,
@@ -1943,7 +1946,7 @@ func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Reques
 	}
 	err = repositories.UpdateCacheByRepName(r.Context(), repName)
 	if err != nil {
-		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouError,
@@ -3466,7 +3469,7 @@ func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Req
 
 	repName, err := repositories.WriteIDFKyouRep.GetRepName(r.Context())
 	if err != nil {
-		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouError,
@@ -3477,7 +3480,7 @@ func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Req
 	}
 	err = repositories.UpdateCacheByRepName(r.Context(), repName)
 	if err != nil {
-		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouError,
@@ -6176,6 +6179,82 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateTagStructSuccessMessage,
 		Message:     "タグ構造を更新しました",
+	})
+}
+
+func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.UpdateApplicationConfigRequest{}
+	response := &req_res.UpdateApplicationConfigResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse update application config response to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidUpdateApplicationconfigResponseDataError,
+				ErrorMessage: "設定更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse update application config request to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidUpdateApplicationConfigRequestDataError,
+				ErrorMessage: "設定更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// ApplicationConfigを更新する
+	ok, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.UpdateApplicationConfig(r.Context(), &request.ApplicationConfig)
+	if !ok || err != nil {
+		if err != nil {
+			err = fmt.Errorf("error at update application config user user id = %s device = %s id = %s: %w", userID, device, err)
+			log.Printf(err.Error())
+		}
+		gkillError := &message.GkillError{
+			ErrorCode:    message.UpdateApplicationConfigError,
+			ErrorMessage: "設定更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.UpdateApplicationConfigSuccessMessage,
+		Message:     "設定を更新しました",
 	})
 }
 

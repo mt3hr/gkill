@@ -107,6 +107,8 @@ type GkillServerAPIAddress struct {
 
 	UploadGPSLogFilesAddress string
 
+	UpdateApplicationConfigAddress string
+
 	UpdateTagStructAddress string
 
 	UpdateRepStructAddress string
@@ -233,6 +235,8 @@ type GkillServerAPIAddress struct {
 
 	UploadGPSLogFilesMethod string
 
+	UpdateApplicationConfigMethod string
+
 	UpdateTagStructMethod string
 
 	UpdateRepStructMethod string
@@ -322,6 +326,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetServerConfigAddress = "/api/get_server_config"
 	gkillAPIAddress.UploadFilesAddress = "/api/upload_files"
 	gkillAPIAddress.UploadGPSLogFilesAddress = "/api/upload_gpslog_files"
+	gkillAPIAddress.UpdateApplicationConfigAddress = "/api/update_application_config"
 	gkillAPIAddress.UpdateTagStructAddress = "/api/update_tag_struct"
 	gkillAPIAddress.UpdateRepStructAddress = "/api/update_rep_struct"
 	gkillAPIAddress.UpdateDeviceStructAddress = "/api/update_device_struct"
@@ -385,6 +390,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetServerConfigMethod = "POST"
 	gkillAPIAddress.UploadFilesMethod = "POST"
 	gkillAPIAddress.UploadGPSLogFilesMethod = "POST"
+	gkillAPIAddress.UpdateApplicationConfigMethod = "POST"
 	gkillAPIAddress.UpdateTagStructMethod = "POST"
 	gkillAPIAddress.UpdateRepStructMethod = "POST"
 	gkillAPIAddress.UpdateDeviceStructMethod = "POST"
