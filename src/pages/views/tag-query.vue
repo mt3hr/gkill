@@ -16,14 +16,15 @@
         <table v-show="use_tag" class="taglist">
             <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                 :is_open="true" :query="query" :struct_obj="cloned_application_config.parsed_tag_struct"
-                @clicked_items="clicked_items" @requested_update_check_state="update_check_state"
+                :is_editable="false" :is_root="true" :is_show_checkbox="true" @clicked_items="clicked_items"
+                @requested_update_check_state="update_check_state"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)" ref="foldable_struct" />
         </table>
     </div>
 </template>
 <script setup lang="ts">
-import { readonly, type Ref, ref } from 'vue'
+import { readonly, type Ref, ref, watch } from 'vue'
 import type { TagQueryEmits } from './tag-query-emits'
 import type { TagQueryProps } from './tag-query-props'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
@@ -36,14 +37,19 @@ import type { RefSymbol } from '@vue/reactivity'
 
 const props = defineProps<TagQueryProps>()
 const emits = defineEmits<TagQueryEmits>()
-
-
 const use_tag: Ref<boolean> = ref(true)
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const is_and_search: Ref<boolean> = ref(false)
 
 const cloned_query: Ref<FindKyouQuery> = ref(await props.query.clone())
 const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
+
+cloned_application_config.value.parse_tag_struct()
+
+watch(() => props.application_config, async () => {
+    cloned_application_config.value = await props.application_config.clone()
+    cloned_application_config.value.parse_tag_struct()
+})
 
 async function clicked_items(items: Array<string>, is_checked: CheckState): Promise<void> {
     update_check(items, is_checked, true)
@@ -104,4 +110,5 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
         emits('request_update_checked_tags', checked_items)
     }
 }
+
 </script>

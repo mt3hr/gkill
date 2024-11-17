@@ -111,7 +111,7 @@
             :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_application_config="(application_config) => emits('requested_reload_application_config')"
+            @requested_reload_application_config="emits('requested_reload_application_config')"
             ref="edit_tag_struct_dialog" />
         <NewBoardNameDialog :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
@@ -121,7 +121,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 
 import EditDeviceStructDialog from '../dialogs/edit-device-struct-dialog.vue'
 import EditKFTLTemplateDialog from '../dialogs/edit-kftl-template-dialog.vue'
@@ -133,9 +133,7 @@ import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 import type { ApplicationConfigViewEmits } from './application-config-view-emits'
 import type { ApplicationConfigViewProps } from './application-config-view-props'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
-import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
-import router from '@/router'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { UpdateApplicationConfigRequest } from '@/classes/api/req_res/update-application-config-request'
 
@@ -150,6 +148,11 @@ const props = defineProps<ApplicationConfigViewProps>()
 const emits = defineEmits<ApplicationConfigViewEmits>()
 defineExpose({ reload_cloned_application_config })
 
+watch(() => props.application_config, async () => {
+    cloned_application_config.value = await props.application_config.clone()
+    cloned_application_config.value.parse_template_and_struct()
+})
+
 const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
 
 const google_map_api_key: Ref<string> = ref(cloned_application_config.value.google_map_api_key)
@@ -160,6 +163,7 @@ const mi_default_board: Ref<string> = ref(cloned_application_config.value.mi_def
 const mi_board_names: Ref<Array<string>> = ref(new Array())
 
 async function reload_cloned_application_config(): Promise<void> {
+    cloned_application_config.value = await props.application_config.clone()
     google_map_api_key.value = cloned_application_config.value.google_map_api_key
     rykv_image_list_column_number.value = cloned_application_config.value.rykv_image_list_column_number
     enable_browser_cache.value = cloned_application_config.value.enable_browser_cache

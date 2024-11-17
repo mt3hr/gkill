@@ -1,5 +1,7 @@
 'use strict'
 
+import { ApplicationConfig } from "../datas/config/application-config"
+import { TagStruct } from "../datas/config/tag-struct"
 import type { AddAccountRequest } from "./req_res/add-account-request"
 import type { AddAccountResponse } from "./req_res/add-account-response"
 import type { AddKmemoRequest } from "./req_res/add-kmemo-request"
@@ -31,7 +33,7 @@ import type { GenerateTLSFileResponse } from "./req_res/generate-tls-file-respon
 import type { GetAllTagNamesRequest } from "./req_res/get-all-tag-names-request"
 import type { GetAllTagNamesResponse } from "./req_res/get-all-tag-names-response"
 import type { GetApplicationConfigRequest } from "./req_res/get-application-config-request"
-import type { GetApplicationConfigResponse } from "./req_res/get-application-config-response"
+import { GetApplicationConfigResponse } from "./req_res/get-application-config-response"
 import type { GetGitCommitLogRequest } from "./req_res/get-git-commit-log-request"
 import type { GetGitCommitLogResponse } from "./req_res/get-git-commit-log-response"
 import type { GetGitCommitLogsRequest } from "./req_res/get-git-commit-logs-request"
@@ -986,6 +988,7 @@ export class GkillAPI {
         }
 
         async get_application_config(req: GetApplicationConfigRequest): Promise<GetApplicationConfigResponse> {
+                /* //TODO コメントアウト解除
                 const res = await fetch(this.get_application_config_address, {
                         'method': this.get_application_config_method,
                         headers: {
@@ -995,6 +998,62 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetApplicationConfigResponse = json
+                */
+                const response = new GetApplicationConfigResponse()
+                const application_config = new ApplicationConfig()
+                const tag1 = new TagStruct()
+                const tag2 = new TagStruct()
+                const tag3 = new TagStruct()
+                const tag4 = new TagStruct()
+                const tag5 = new TagStruct()
+                const tag6 = new TagStruct()
+                const tag7 = new TagStruct()
+                const tag8 = new TagStruct()
+                const tag9 = new TagStruct()
+                tag1.id = "1"
+                tag2.id = "2"
+                tag3.id = "3"
+                tag4.id = "4"
+                tag5.id = "5"
+                tag6.id = "6"
+                tag7.id = "7"
+                tag8.id = "8"
+                tag9.id = "9"
+                tag1.seq = 1
+                tag2.seq = 2
+                tag3.seq = 3
+                tag4.seq = 4
+                tag5.seq = 5
+                tag6.seq = 6
+                tag7.seq = 7
+                tag8.seq = 8
+                tag9.seq = 9
+                tag1.tag_name = "1"
+                tag2.tag_name = "2"
+                tag3.tag_name = "3"
+                tag4.tag_name = "4"
+                tag5.tag_name = "5"
+                tag6.tag_name = "6"
+                tag7.tag_name = "7"
+                tag8.tag_name = "8"
+                tag9.tag_name = "9"
+                tag4.parent_folder_id = "3"
+                tag5.parent_folder_id = "3"
+                tag6.parent_folder_id = "3"
+                tag7.parent_folder_id = "2"
+                tag8.parent_folder_id = "2"
+                tag9.parent_folder_id = "2"
+                application_config.tag_struct.push(tag1)
+                application_config.tag_struct.push(tag2)
+                application_config.tag_struct.push(tag3)
+                application_config.tag_struct.push(tag4)
+                application_config.tag_struct.push(tag5)
+                application_config.tag_struct.push(tag6)
+                application_config.tag_struct.push(tag7)
+                application_config.tag_struct.push(tag8)
+                application_config.tag_struct.push(tag9)
+                application_config.parse_tag_struct()
+                response.application_config = application_config
                 return response
         }
 
