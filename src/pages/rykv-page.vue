@@ -50,6 +50,7 @@ async function load_application_config(): Promise<void> {
             }
 
             application_config.value = res.application_config
+            console.log(application_config.value)
 
             if (res.messages && res.messages.length != 0) {
                 write_messages(res.messages)
@@ -86,6 +87,6 @@ window.addEventListener('resize', () => {
 })
 
 resize_content()
-//TODO コメントアウト解除　load_application_config()
+load_application_config().then(() => console.log(application_config.value)) //TODO then以降削除
 nextTick(() => { application_config_dialog.value?.show() })
 </script>

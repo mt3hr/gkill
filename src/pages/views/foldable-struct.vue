@@ -1,62 +1,73 @@
 <template>
-    <tr v-if="is_item()">
+    <tr v-if="is_item()" :draggable="is_editable" @dragstart="drag_start" @drop="drop" :dropzone="is_editable"
+        :key="props.struct_obj.key" @dragover="dragover">
         <td>
             <table>
                 <tr>
-                    <td>
+                    <td v-if="is_show_checkbox">
                         <input type="checkbox" v-model="check" @change="update_check_item_by_user"
                             :indeterminate.prop="(struct_obj).indeterminate" />
                     </td>
-                    <td class="tree_item ml-1" @click.prevent.stop="click_item_by_user">{{ (struct_obj).key }}</td>
+                    <td class="tree_item ml-1" @dblclick="dblclick_item_by_user"
+                        @click.prevent.stop="click_item_by_user">{{ struct_obj.key }}</td>
                 </tr>
             </table>
         </td>
     </tr>
-    <tr v-else>
+    <tr v-if="!is_item()" :draggable="is_editable" @dragstart="drag_start" @drop="drop" :dropzone="is_editable"
+        :key="props.struct_obj.key" @dragover="dragover">
         <td>
             <table>
                 <tr>
-                    <td>
+                    <td v-if="is_show_checkbox">
                         <input type="checkbox" v-model="check" @change="change_group_by_user"
                             :indeterminate="indeterminate_group" />
                     </td>
                     <td>
                         <span v-if="open_group" style="cursor: default" @click="open_group = !open_group">▽</span>
-                        <span v-else style="cursor: default" @click="open_group = !open_group">▷</span>
+                        <span v-if="!open_group" style="cursor: default" @click="open_group = !open_group">▷</span>
                     </td>
                     <td @click="click_group_by_user">
                         <div class="tree_item">{{ folder_name }}</div>
                     </td>
                 </tr>
             </table>
-            <table class="ml-4">
-                <FoldableStruct v-show="open_group" v-for="child_struct, index in struct_list"
+            <table class="ml-4" v-if="open_group">
+                <FoldableStruct v-show="open_group" v-for="child_struct, index in struct_list" :key="child_struct.id"
                     :application_config="application_config" :folder_name="get_group_name(index)" :gkill_api="gkill_api"
-                    :is_open="get_group_open(index)" :query="query" :struct_obj="child_struct"
-                    @clicked_items="emit_click_items_by_user" :key="index"
-                    @click_items_by_user="emit_click_items_by_user"
+                    :is_open="get_group_open(index)" :struct_obj="child_struct" :is_editable="is_editable"
+                    @clicked_items="emit_click_items_by_user" :is_show_checkbox="is_show_checkbox"
+                    @click_items_by_user="emit_click_items_by_user" :is_root="false"
                     @received_errors="(errors) => emits('received_errors', errors)"
-                    @received_messages="(messages) => emits('received_messages', messages)" ref="foldable_struct" />
+                    @received_messages="(messages) => emits('received_messages', messages)" ref="foldable_struct"
+                    @dblclicked_item="(id: string) => emits('dblclicked_item', id)"
+                    @requested_update_check_state="(items: Array<string>, check_state: CheckState) => emits('requested_update_check_state', items, check_state)"
+                    @requested_move_struct_obj="handle_move_struct_obj"
+                    @requested_update_struct_obj="update_struct_obj" />
             </table>
         </td>
     </tr>
 </template>
 <script lang="ts" setup>
 import FoldableStruct from './foldable-struct.vue'
-import { ref, watch, type Ref } from 'vue'
+import { computed, ref, watch, type Ref } from 'vue'
 import type { FoldableStructEmits } from './foldable-struct-emits'
 import type { FoldableStructProps } from './foldable-struct-props'
 import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
+import { DropTypeFoldableStruct } from '@/classes/api/drop-type-foldable-struct'
 
 const props = defineProps<FoldableStructProps>()
 const emits = defineEmits<FoldableStructEmits>()
-defineExpose({ get_selected_items })
+defineExpose({ get_selected_items, handle_move_struct_obj, get_foldable_struct })
 
 const open_group: Ref<boolean> = ref(props.is_open)
 const check: Ref<boolean> = ref(false)
 const struct_list: Ref<Array<FoldableStructModel>> = ref(new Array<FoldableStructModel>())
 const indeterminate_group: Ref<boolean> = ref(false)
+const tr_size: Ref<Number> = ref(24)
+const font_size: Ref<Number> = ref(16)
+const font_size_px = computed(() => font_size.value.valueOf().toString().concat("px"))
 
 watch(() => props.is_open, () => {
     open_group.value = props.is_open
@@ -182,6 +193,9 @@ function update_check_item_by_user() {
 function click_item_by_user() {
     emit_click_item_by_user((props.struct_obj).key)
 }
+function dblclick_item_by_user() {
+    emits('dblclicked_item', props.struct_obj.id)
+}
 // このアイテムがクリックされたときに呼び出されます。
 // このアイテム内のアイテムのみにチェックが入るように上にemitします。
 function click_group_by_user() {
@@ -217,11 +231,228 @@ function get_selected_items(): Array<string> {
     f(props.struct_obj)
     return items
 }
+
+function drag_start(e: DragEvent): void {
+    // 編集が有効でなければ何もしない
+    if (!props.is_editable) {
+        return
+    }
+
+    // struct_objをJSONにしてdataTransferにセット
+    e.dataTransfer?.setData("gkill_struct_obj_json", JSON.stringify(props.struct_obj))
+    e.stopPropagation()
+}
+
+function drop(e: DragEvent): void {
+    // 編集が有効でなければ何もしない
+    if (!props.is_editable) {
+        return
+    }
+
+    // struct_objをJSONから復元
+    const struct_obj_json = e.dataTransfer?.getData("gkill_struct_obj_json")
+    if (!struct_obj_json) {
+        return
+    }
+    const struct_obj: FoldableStructModel = JSON.parse(struct_obj_json) as unknown as FoldableStructModel
+
+
+    // 自分自身にドロップしていたら何もしない
+    if (struct_obj.id === props.struct_obj.id) {
+        return
+    }
+
+    // ドロップされたものを移動。
+    // 移動する場所の決定
+    let drop_type: DropTypeFoldableStruct = DropTypeFoldableStruct.up_element
+    if (props.struct_obj.children) { // フォルダの場合
+        if (e.offsetY <= tr_size.value.valueOf() * (1 / 3)) {
+            drop_type = DropTypeFoldableStruct.up_element
+        } else if (e.offsetY <= tr_size.value.valueOf() * (2 / 3)) {
+            drop_type = DropTypeFoldableStruct.in_folder_bottom
+        } else {
+            drop_type = DropTypeFoldableStruct.down_element
+        }
+    } else { // フォルダではない要素の場合
+        if (e.offsetY <= tr_size.value.valueOf() * (1 / 2)) {
+            drop_type = DropTypeFoldableStruct.up_element
+        } else {
+            drop_type = DropTypeFoldableStruct.down_element
+        }
+    }
+    emits('requested_move_struct_obj', struct_obj, props.struct_obj, drop_type)
+    // e.preventDefault()
+    e.stopPropagation()
+}
+
+// ドロップされたときの移動処理
+function handle_move_struct_obj(struct_obj: FoldableStructModel, target_struct_obj: FoldableStructModel, drop_type: DropTypeFoldableStruct): void {
+    // rootのみで再帰的にやる
+    if (!props.is_root) {
+        emits('requested_move_struct_obj', struct_obj, target_struct_obj, drop_type)
+        return
+    }
+
+    // parentのなかにchildがあったらtrueを返す
+    let has_child = (parent: FoldableStructModel, child: FoldableStructModel): boolean => false
+    let has_child_impl = (parent: FoldableStructModel, child: FoldableStructModel): boolean => {
+        let is_has_child = false
+        if (parent.children) {
+            for (let i = 0; i < parent.children.length; i++) {
+                if (parent.children[i].id === child.id) {
+                    is_has_child = true
+                    break
+                }
+                if (has_child(parent.children[i], child)) {
+                    is_has_child = true
+                    break
+                }
+            }
+        }
+        return is_has_child
+    }
+    has_child = has_child_impl
+
+    // 親を子に入れようとしていたらおかしくなるので何もしない 
+    if (has_child(target_struct_obj, struct_obj)) {
+        return
+    }
+
+    // 再帰的にやる
+    let deleted = false
+    let f = (struct: FoldableStructModel, parent: FoldableStructModel) => { }
+    let func = (struct: FoldableStructModel, parent: FoldableStructModel) => {
+        if (deleted) {
+            return
+        }
+
+        // 子に渡されたものがあれば消す
+        if (parent.children) {
+            for (let i = 0; i < parent.children.length; i++) {
+                if (parent.children[i].id === struct_obj.id) {
+                    parent.children.splice(i, 1)
+                    emits('requested_update_struct_obj', struct)
+                    deleted = true
+                    break
+                }
+            }
+        }
+        if (struct.children) {
+            for (let i = 0; i < struct.children.length; i++) {
+                f(struct.children[i], struct)
+            }
+        }
+    }
+    f = func
+    struct_list.value.forEach(struct_child => f(struct_child, props.struct_obj))
+
+    let pasted = false
+    func = (walk_struct_obj: FoldableStructModel, parent_struct_obj: FoldableStructModel) => {
+        if (pasted) {
+            return
+        }
+
+        switch (drop_type) {
+            case DropTypeFoldableStruct.in_folder_top:
+                // 自分が対象であればいれる フォルダの場合
+                if (walk_struct_obj.id !== target_struct_obj.id) {
+                    break
+                }
+                if (!walk_struct_obj.children) {
+                    break
+                }
+                walk_struct_obj.children.unshift(struct_obj)
+                pasted = true
+                break
+            case DropTypeFoldableStruct.in_folder_bottom:
+                // 自分が対象であればいれる フォルダの場合
+                if (walk_struct_obj.id !== target_struct_obj.id) {
+                    break
+                }
+                if (!walk_struct_obj.children) {
+                    break
+                }
+                walk_struct_obj.children.push(struct_obj)
+                pasted = true
+                break
+            case DropTypeFoldableStruct.up_element:
+                // 自分が対象であればいれる フォルダではない場合
+                if (!parent_struct_obj.children) {
+                    break
+                }
+                for (let i = 0; i < parent_struct_obj.children.length; i++) {
+                    if (target_struct_obj.id === parent_struct_obj.children[i].id) {
+                        parent_struct_obj.children.splice(i, 0, struct_obj)
+                        pasted = true
+                        break
+                    }
+                }
+                break
+            case DropTypeFoldableStruct.down_element:
+                // 自分が対象であればいれる フォルダではない場合
+                if (!parent_struct_obj.children) {
+                    break
+                }
+                for (let i = 0; i < parent_struct_obj.children.length; i++) {
+                    if (target_struct_obj.id === parent_struct_obj.children[i].id) {
+                        parent_struct_obj.children.splice(i + 1, 0, struct_obj)
+                        pasted = true
+                        break
+                    }
+                }
+                break
+        }
+
+        if (!pasted) {
+            if (walk_struct_obj.children) {
+                for (let i = 0; i < walk_struct_obj.children.length; i++) {
+                    f(walk_struct_obj.children[i], walk_struct_obj)
+                }
+            }
+        }
+    }
+    f = func
+    struct_list.value.forEach(struct_child => f(struct_child, props.struct_obj))
+}
+function get_foldable_struct(): Array<FoldableStructModel> {
+    return struct_list.value.concat()
+}
+function dragover(e: DragEvent): void {
+    if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = "move"
+    }
+    e.preventDefault()
+    e.stopPropagation()
+}
+function update_struct_obj(struct_obj: FoldableStructModel): void {
+    if (!props.is_root) {
+        emits('requested_update_struct_obj', struct_obj)
+        return
+    }
+    let f = (struct: FoldableStructModel) => { }
+    let func = (struct: FoldableStructModel) => {
+        if (!struct.children) {
+            return
+        }
+        for (let i = 0; i < struct.children.length; i++) {
+            f(struct.children[i])
+            if (struct_obj.id === struct.children[i].id) {
+                struct.children.splice(i, 1, struct_obj)
+                break
+            }
+        }
+    }
+    f = func
+    for (let i = 0; i < struct_list.value.length; i++) {
+        f(struct_list.value[i])
+    }
+}
 </script>
 
 <style>
 .tree_item {
     min-width: 200px;
     cursor: default;
+    font-size: v-bind(font_size_px);
 }
 </style>
