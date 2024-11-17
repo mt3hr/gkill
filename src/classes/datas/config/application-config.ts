@@ -153,11 +153,11 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: TagStructElementData, target_id: string): TagStructElementData | null => {
+        let walk = (struct: TagStructElementData, target_id: string | null): TagStructElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
-        walk = (struct: TagStructElementData, target_id: string): TagStructElementData | null => {
+        walk = (struct: TagStructElementData, target_id: string | null): TagStructElementData | null => {
             if (struct.id === target_id) {
                 return struct
             }

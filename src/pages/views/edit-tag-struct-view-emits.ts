@@ -8,4 +8,5 @@ export interface EditTagStructViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'requested_reload_application_config', application_config: ApplicationConfig): void
+    (e: 'requested_close_dialog'): void
 }
