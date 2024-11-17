@@ -69,6 +69,4 @@ async function clicked_items(items: Array<string>, check_state: CheckState, is_u
         emits('request_update_checked_timeis_tags', checked_items)
     }
 }
-
-console.log(cloned_application_config.value)
 </script>
