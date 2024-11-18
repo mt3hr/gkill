@@ -8,4 +8,5 @@ export interface AddNewTagStructElementViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'requested_add_tag_struct_element', tag_struct_element: TagStructElementData): void
+    (e: 'requested_close_dialog'): void
 }

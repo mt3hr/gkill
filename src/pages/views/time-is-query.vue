@@ -63,7 +63,7 @@ const cloned_application_config: Ref<ApplicationConfig> = ref(await props.applic
 
 const query: Ref<FindKyouQuery> = ref(await props.query.clone())
 
-async function clicked_items(items: Array<string>, check_state: CheckState, is_user: boolean): Promise<void> {
+async function clicked_items(e: MouseEvent, items: Array<string>, check_state: CheckState, is_user: boolean): Promise<void> {
     const checked_items = await foldable_struct.value?.get_selected_items()
     if (checked_items) {
         emits('request_update_checked_timeis_tags', checked_items)

@@ -219,7 +219,7 @@ function rep_to_struct(rep: RepStructElementData): { type: string, device: strin
     }
 }
 
-async function clicked_reps(items: Array<string>, is_checked: CheckState): Promise<void> {
+async function clicked_reps(e: MouseEvent, items: Array<string>, is_checked: CheckState): Promise<void> {
     update_check_reps(items, is_checked, true)
 }
 
@@ -227,7 +227,7 @@ async function update_reps(items: Array<string>, is_checked: CheckState): Promis
     update_check_reps(items, is_checked, false)
 }
 
-async function clicked_devices(items: Array<string>, is_checked: CheckState): Promise<void> {
+async function clicked_devices(e: MouseEvent, items: Array<string>, is_checked: CheckState): Promise<void> {
     update_check_devices(items, is_checked, true)
 }
 
@@ -235,7 +235,7 @@ async function update_devices(items: Array<string>, is_checked: CheckState): Pro
     update_check_devices(items, is_checked, false)
 }
 
-async function clicked_rep_types(items: Array<string>, is_checked: CheckState): Promise<void> {
+async function clicked_rep_types(e: MouseEvent, items: Array<string>, is_checked: CheckState): Promise<void> {
     update_check_rep_types(items, is_checked, true)
 }
 
@@ -297,7 +297,7 @@ async function update_check_reps(items: Array<string>, is_checked: CheckState, p
 }
 
 async function update_check_devices(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
-    const  devices = get_all_devices()
+    const devices = get_all_devices()
     if (pre_uncheck_all) {
         let f = (struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
