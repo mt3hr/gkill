@@ -1,6 +1,7 @@
 <template>
     <tr v-if="is_item()" :draggable="is_editable" @dragstart="drag_start" @drop="drop" :dropzone="is_editable"
-        :key="props.struct_obj.key" @dragover="dragover">
+        :key="props.struct_obj.key" @dragover="dragover"
+        @contextmenu.prevent.stop="(e: MouseEvent) => emits('contextmenu_item', e, props.struct_obj.id)">
         <td>
             <table>
                 <tr>
@@ -15,7 +16,8 @@
         </td>
     </tr>
     <tr v-if="!is_item()" :draggable="is_editable" @dragstart="drag_start" @drop="drop" :dropzone="is_editable"
-        :key="props.struct_obj.key" @dragover="dragover">
+        :key="props.struct_obj.key" @dragover="dragover"
+        @contextmenu.prevent.stop="(e: MouseEvent) => emits('contextmenu_item', e, props.struct_obj.id)">
         <td>
             <table>
                 <tr>
@@ -40,7 +42,8 @@
                     @click_items_by_user="emit_click_items_by_user" :is_root="false"
                     @received_errors="(errors) => emits('received_errors', errors)"
                     @received_messages="(messages) => emits('received_messages', messages)" ref="foldable_struct"
-                    @dblclicked_item="(id: string) => emits('dblclicked_item', id)"
+                    @dblclicked_item="(e: MouseEvent, id: string) => emits('dblclicked_item', e, id)"
+                    @contextmenu_item.prevent.stop="(e: MouseEvent, id: string) => emits('contextmenu_item', e, id)"
                     @requested_update_check_state="(items: Array<string>, check_state: CheckState) => emits('requested_update_check_state', items, check_state)"
                     @requested_move_struct_obj="handle_move_struct_obj"
                     @requested_update_struct_obj="update_struct_obj" />
@@ -59,7 +62,7 @@ import { DropTypeFoldableStruct } from '@/classes/api/drop-type-foldable-struct'
 
 const props = defineProps<FoldableStructProps>()
 const emits = defineEmits<FoldableStructEmits>()
-defineExpose({ get_selected_items, handle_move_struct_obj, get_foldable_struct })
+defineExpose({ get_selected_items, handle_move_struct_obj, get_foldable_struct, delete_struct })
 
 const open_group: Ref<boolean> = ref(props.is_open)
 const check: Ref<boolean> = ref(false)
@@ -177,12 +180,12 @@ function emit_updated_check_items_by_user(items: Array<string>, check: boolean, 
     emits('requested_update_check_state', items, indeterminate ? CheckState.indeterminate : check ? CheckState.checked : CheckState.unchecked)
 }
 // 子グループ内の複数のアイテムのみをチェックするように変更があったときに、それを上に伝えるために呼び出されます。
-function emit_click_items_by_user(items: Array<string>) {
-    emits('clicked_items', items, CheckState.checked, true)
+function emit_click_items_by_user(e: MouseEvent, items: Array<string>) {
+    emits('clicked_items', e, items, CheckState.checked, true)
 }
 // 子グループ内の一つのアイテムのみをチェックするよう変更があったときに、それを上に伝えるために呼び出されます。
-function emit_click_item_by_user(item: string) {
-    emit_click_items_by_user([item])
+function emit_click_item_by_user(e: MouseEvent, item: string) {
+    emit_click_items_by_user(e, [item])
 }
 // アイテムのチェック状態に変更があったときに呼び出されます。
 function update_check_item_by_user() {
@@ -190,15 +193,15 @@ function update_check_item_by_user() {
 }
 // このアイテムがクリックされたときに呼び出されます。
 // このアイテムのみにチェックが入るように上にemitします。
-function click_item_by_user() {
-    emit_click_item_by_user((props.struct_obj).key)
+function click_item_by_user(e: MouseEvent) {
+    emit_click_item_by_user(e, props.struct_obj.key)
 }
-function dblclick_item_by_user() {
-    emits('dblclicked_item', props.struct_obj.id)
+function dblclick_item_by_user(e: MouseEvent) {
+    emits('dblclicked_item', e, props.struct_obj.id)
 }
 // このアイテムがクリックされたときに呼び出されます。
 // このアイテム内のアイテムのみにチェックが入るように上にemitします。
-function click_group_by_user() {
+function click_group_by_user(e: MouseEvent) {
     let items = new Array<string>()
     let f = (struct: FoldableStructModel) => { }
     let func = (struct: FoldableStructModel) => {
@@ -211,7 +214,7 @@ function click_group_by_user() {
     }
     f = func
     f(props.struct_obj)
-    emit_click_items_by_user(items)
+    emit_click_items_by_user(e, items)
 }
 // 現在チェックの入っているアイテム名を配列で取得します。
 function get_selected_items(): Array<string> {
@@ -314,40 +317,15 @@ function handle_move_struct_obj(struct_obj: FoldableStructModel, target_struct_o
     has_child = has_child_impl
 
     // 親を子に入れようとしていたらおかしくなるので何もしない 
-    if (has_child(target_struct_obj, struct_obj)) {
+    if (has_child(struct_obj, target_struct_obj)) {
         return
     }
 
     // 再帰的にやる
-    let deleted = false
-    let f = (struct: FoldableStructModel, parent: FoldableStructModel) => { }
-    let func = (struct: FoldableStructModel, parent: FoldableStructModel) => {
-        if (deleted) {
-            return
-        }
-
-        // 子に渡されたものがあれば消す
-        if (parent.children) {
-            for (let i = 0; i < parent.children.length; i++) {
-                if (parent.children[i].id === struct_obj.id) {
-                    parent.children.splice(i, 1)
-                    emits('requested_update_struct_obj', struct)
-                    deleted = true
-                    break
-                }
-            }
-        }
-        if (struct.children) {
-            for (let i = 0; i < struct.children.length; i++) {
-                f(struct.children[i], struct)
-            }
-        }
-    }
-    f = func
-    struct_list.value.forEach(struct_child => f(struct_child, props.struct_obj))
-
+    delete_struct(struct_obj.id)
     let pasted = false
-    func = (walk_struct_obj: FoldableStructModel, parent_struct_obj: FoldableStructModel) => {
+    let f = (walk_struct_obj: FoldableStructModel, parent_struct_obj: FoldableStructModel) => { }
+    let func = (walk_struct_obj: FoldableStructModel, parent_struct_obj: FoldableStructModel) => {
         if (pasted) {
             return
         }
@@ -446,6 +424,38 @@ function update_struct_obj(struct_obj: FoldableStructModel): void {
     for (let i = 0; i < struct_list.value.length; i++) {
         f(struct_list.value[i])
     }
+}
+function delete_struct(id: string): boolean {
+    if (!props.is_root) {
+        return false
+    }
+    let deleted = false
+    let f = (struct: FoldableStructModel, parent: FoldableStructModel) => { }
+    let func = (struct: FoldableStructModel, parent: FoldableStructModel) => {
+        if (deleted) {
+            return
+        }
+
+        // 子に渡されたものがあれば消す
+        if (parent.children) {
+            for (let i = 0; i < parent.children.length; i++) {
+                if (parent.children[i].id === id) {
+                    parent.children.splice(i, 1)
+                    emits('requested_update_struct_obj', struct)
+                    deleted = true
+                    break
+                }
+            }
+        }
+        if (struct.children) {
+            for (let i = 0; i < struct.children.length; i++) {
+                f(struct.children[i], struct)
+            }
+        }
+    }
+    f = func
+    struct_list.value.forEach(struct_child => f(struct_child, props.struct_obj))
+    return deleted
 }
 </script>
 
