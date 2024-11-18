@@ -51,7 +51,7 @@ watch(() => props.application_config, async () => {
     cloned_application_config.value.parse_tag_struct()
 })
 
-async function clicked_items(items: Array<string>, is_checked: CheckState): Promise<void> {
+async function clicked_items(e: MouseEvent, items: Array<string>, is_checked: CheckState): Promise<void> {
     update_check(items, is_checked, true)
 }
 
