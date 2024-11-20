@@ -1,6 +1,6 @@
 <template>
     <v-dialog v-model="is_show_dialog">
-        <EditRepTypeView :application_config="application_config" :gkill_api="gkill_api"
+        <EditRepTypeStructStructView :application_config="application_config" :gkill_api="gkill_api"
             @requested_reload_application_config="(application_config) => emits('requested_reload_application_config', application_config)"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" />
@@ -10,7 +10,7 @@
 import { type Ref, ref } from 'vue'
 import type { EditRepTypeDialogEmits } from './edit-rep-type-dialog-emits'
 import type { EditRepTypeDialogProps } from './edit-rep-type-dialog-props'
-import EditRepTypeView from '../views/edit-rep-type-view.vue'
+import EditRepTypeStructView from '../views/edit-rep-type-struct-view.vue'
 
 const props = defineProps<EditRepTypeDialogProps>()
 const emits = defineEmits<EditRepTypeDialogEmits>()

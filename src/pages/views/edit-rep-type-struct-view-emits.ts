@@ -2,11 +2,11 @@
 
 import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
-import type { RepTypeStruct } from "@/classes/datas/config/rep-type-struct"
+import type { ApplicationConfig } from "@/classes/datas/config/application-config"
 
-export interface EditRepTypeStructElementViewEmits {
+export interface EditRepTypeStructViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'requested_update_rep_type_struct', rep_type_struct: RepTypeStruct): void
+    (e: 'requested_reload_application_config', application_config: ApplicationConfig): void
     (e: 'requested_close_dialog'): void
 }
