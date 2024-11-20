@@ -10,7 +10,7 @@ export class DeviceStruct {
 
     device_name: string
 
-    parent_folder_id: string
+    parent_folder_id: string | null
 
     seq: Number
 
