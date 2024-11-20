@@ -93,7 +93,7 @@
             :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_application_config="(application_config) => emits('requested_reload_application_config')"
+            @requested_reload_application_config="() => emits('requested_reload_application_config')"
             ref="edit_kftl_template_dialog" />
         <EditRepStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api"
@@ -124,7 +124,7 @@
 import { type Ref, ref, watch } from 'vue'
 
 import EditDeviceStructDialog from '../dialogs/edit-device-struct-dialog.vue'
-import EditKFTLTemplateDialog from '../dialogs/edit-kftl-template-dialog.vue'
+import EditKFTLTemplateDialog from '../dialogs/edit-kftl-template-struct-dialog.vue'
 import EditRepStructDialog from '../dialogs/edit-rep-struct-dialog.vue'
 import EditRepTypeStructDialog from '../dialogs/edit-rep-type-struct-dialog.vue'
 import EditTagStructDialog from '../dialogs/edit-tag-struct-dialog.vue'
