@@ -13,9 +13,6 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn @click="show_add_new_rep_struct_element_dialog">記録保管場所追加</v-btn>
                 </v-col>
-                <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="show_add_new_folder_dialog">フォルダ追加</v-btn>
-                </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -27,10 +24,6 @@
                 </v-col>
             </v-row>
         </v-card-action>
-        <AddNewFoloderDialog :application_config="application_config" :gkill_api="gkill_api"
-            @requested_add_new_folder="add_folder_struct_element"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="add_new_folder_dialog" />
         <AddNewRepStructElementDialog :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
             :is_open="true" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
