@@ -30,14 +30,14 @@ export class ApplicationConfig {
     rep_struct: Array<RepStruct>
     device_struct: Array<DeviceStruct>
     rep_type_struct: Array<RepTypeStruct>
-    kftl_template: Array<KFTLTemplateStruct>
+    kftl_template_struct: Array<KFTLTemplateStruct>
     async parse_template_and_struct(): Promise<Array<GkillError>> {
         const errors = Array<GkillError>()
         errors.concat(await this.parse_tag_struct())
         errors.concat(await this.parse_rep_struct())
         errors.concat(await this.parse_device_struct())
         errors.concat(await this.parse_rep_type_struct())
-        errors.concat(await this.parse_kftl_template())
+        errors.concat(await this.parse_kftl_template_struct())
         return errors
     }
     async clone(): Promise<ApplicationConfig> {
@@ -54,12 +54,12 @@ export class ApplicationConfig {
         application_config.rep_struct = this.rep_struct
         application_config.device_struct = this.device_struct
         application_config.rep_type_struct = this.rep_type_struct
-        application_config.kftl_template = this.kftl_template
+        application_config.kftl_template_struct = this.kftl_template_struct
         return application_config
     }
-    async parse_kftl_template(): Promise<Array<GkillError>> {
+    async parse_kftl_template_struct(): Promise<Array<GkillError>> {
         const added_list = new Array<KFTLTemplateStruct>()
-        const not_added_list: Array<KFTLTemplateStruct> = this.kftl_template.concat()
+        const not_added_list: Array<KFTLTemplateStruct> = this.kftl_template_struct.concat()
         const struct = new KFTLTemplateElementData()
         struct.children = new Array<KFTLTemplateElementData>()
 
@@ -81,11 +81,11 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: KFTLTemplateElementData, target_id: string): KFTLTemplateElementData | null => {
+        let walk = (struct: KFTLTemplateElementData, target_id: string | null): KFTLTemplateElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
-        walk = (struct: KFTLTemplateElementData, target_id: string): KFTLTemplateElementData | null => {
+        walk = (struct: KFTLTemplateElementData, target_id: string | null): KFTLTemplateElementData | null => {
             if (struct.id === target_id) {
                 return struct
             }
@@ -227,11 +227,11 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: RepStructElementData, target_id: string): RepStructElementData | null => {
+        let walk = (struct: RepStructElementData, target_id: string | null): RepStructElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
-        walk = (struct: RepStructElementData, target_id: string): RepStructElementData | null => {
+        walk = (struct: RepStructElementData, target_id: string | null): RepStructElementData | null => {
             if (struct.id === target_id) {
                 return struct
             }
@@ -300,11 +300,11 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: DeviceStructElementData, target_id: string): DeviceStructElementData | null => {
+        let walk = (struct: DeviceStructElementData, target_id: string | null): DeviceStructElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
-        walk = (struct: DeviceStructElementData, target_id: string): DeviceStructElementData | null => {
+        walk = (struct: DeviceStructElementData, target_id: string | null): DeviceStructElementData | null => {
             if (struct.id === target_id) {
                 return struct
             }
@@ -372,11 +372,11 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: RepTypeStructElementData, target_id: string): RepTypeStructElementData | null => {
+        let walk = (struct: RepTypeStructElementData, target_id: string | null): RepTypeStructElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
-        walk = (struct: RepTypeStructElementData, target_id: string): RepTypeStructElementData | null => {
+        walk = (struct: RepTypeStructElementData, target_id: string | null): RepTypeStructElementData | null => {
             if (struct.id === target_id) {
                 return struct
             }
@@ -438,6 +438,6 @@ export class ApplicationConfig {
         this.rep_struct = new Array<RepStruct>()
         this.device_struct = new Array<DeviceStruct>()
         this.rep_type_struct = new Array<RepTypeStruct>()
-        this.kftl_template = new Array<KFTLTemplateStruct>()
+        this.kftl_template_struct = new Array<KFTLTemplateStruct>()
     }
 }

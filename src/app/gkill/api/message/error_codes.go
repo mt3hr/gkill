@@ -230,4 +230,9 @@ const (
 	InvalidUpdateApplicationconfigResponseDataError    = "ERR000224"
 	InvalidUpdateApplicationConfigRequestDataError     = "ERR000225"
 	UpdateApplicationConfigError                       = "ERR000226"
+	InvalidUpdateKFTLTemplateResponseDataError         = "ERR000227"
+	InvalidUpdateKFTLTemplateRequestDataError          = "ERR000228"
+	KFTLTemplateStructInvalidUserID                    = "ERR000229"
+	DeleteUsersKFTLTemplateError                       = "ERR000230"
+	AddUsersKFTLTemplateError                          = "ERR000231"
 )
