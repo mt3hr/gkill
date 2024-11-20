@@ -10,7 +10,7 @@ export class RepTypeStruct {
 
     rep_type_name: string
 
-    parent_folder_id: string
+    parent_folder_id: string | null
 
     seq: Number
 
