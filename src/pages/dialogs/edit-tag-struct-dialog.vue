@@ -3,9 +3,8 @@
         <EditTagStructView :application_config="application_config" :gkill_api="gkill_api"
             :tag_struct="application_config.tag_struct" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_application_config="emits('requested_reload_application_config')" 
-            @requested_close_dialog="hide"
-            />
+            @requested_reload_application_config="emits('requested_reload_application_config')"
+            @requested_close_dialog="hide" />
     </v-dialog>
 </template>
 <script lang="ts" setup>
