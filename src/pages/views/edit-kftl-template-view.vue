@@ -1,6 +1,6 @@
 <template>
     <EditKftlTemplateStructElementDialog :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-        :is_open="true" :struct_obj="application_config.kftl_template" />
+        :is_open="true" :struct_obj="application_config.kftl_template_struct" />
 </template>
 <script lang="ts" setup>
 import type { EditKFTLTemplateViewEmits } from './edit-kftl-template-view-emits'
