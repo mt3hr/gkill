@@ -216,6 +216,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.UpdateRepTypeStructAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateRepTypeStruct(w, r)
 	}).Methods(g.APIAddress.UpdateRepTypeStructMethod)
+	router.HandleFunc(g.APIAddress.UpdateKFTLTemplateAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleUpdateKFTLTemplate(w, r)
+	}).Methods(g.APIAddress.UpdateKFTLTemplateStructMethod)
 	router.HandleFunc(g.APIAddress.UpdateAccountStatusAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateAccountStatus(w, r)
 	}).Methods(g.APIAddress.UpdateAccountStatusMethod)
@@ -6600,6 +6603,121 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateRepTypeStructSuccessMessage,
 		Message:     "RepType構造を更新しました",
+	})
+}
+
+func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.UpdateKFTLTemplateRequest{}
+	response := &req_res.UpdateKFTLTemplateResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse update kftl template response to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidUpdateKFTLTemplateResponseDataError,
+				ErrorMessage: "KFTLテンプレート構造更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse update kftl template request to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidUpdateKFTLTemplateRequestDataError,
+				ErrorMessage: "KFTLテンプレート構造更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// 他ユーザのものが紛れていたら弾く
+	for _, kftlTemplate := range request.KFTLTemplates {
+		if kftlTemplate.UserID != userID {
+			err := fmt.Errorf("error at invalid user id user id = %s kftl template user id = %s device = %s: %w", userID, kftlTemplate.UserID, device, err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.KFTLTemplateStructInvalidUserID,
+				ErrorMessage: "KFTLテンプレート構造更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	// 一回全部消して全部いれる
+	ok, err := g.GkillDAOManager.ConfigDAOs.KFTLTemplateDAO.DeleteUsersKFTLTemplates(r.Context(), userID)
+	if !ok || err != nil {
+		if err != nil {
+			err = fmt.Errorf("error at delete users kftl tempates user user id = %s device = %s id = %s: %w", userID, device, err)
+			log.Printf(err.Error())
+		}
+		gkillError := &message.GkillError{
+			ErrorCode:    message.DeleteUsersKFTLTemplateError,
+			ErrorMessage: "KFTLテンプレート構造更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	ok, err = g.GkillDAOManager.ConfigDAOs.KFTLTemplateDAO.AddKFTLTemplates(r.Context(), request.KFTLTemplates)
+	if !ok || err != nil {
+		if err != nil {
+			err = fmt.Errorf("error at add kftl templates user user id = %s device = %s id = %s: %w", userID, device, err)
+			log.Printf(err.Error())
+		}
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddUsersKFTLTemplateError,
+			ErrorMessage: "KFTLテンプレート構造更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.ApplicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetApplicationConfigError,
+			ErrorMessage: "KFTLテンプレート構造更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.UpdateKFTLTemplateSuccessMessage,
+		Message:     "KFTLテンプレート構造を更新しました",
 	})
 }
 

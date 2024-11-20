@@ -1,6 +1,6 @@
 'use strict'
 
-export class KFTLTemplateStruct{
+export class KFTLTemplateStruct {
 
     id: string
 
@@ -12,7 +12,7 @@ export class KFTLTemplateStruct{
 
     template: string
 
-    parent_folder_id: string
+    parent_folder_id: string | null
 
     seq: Number
 
