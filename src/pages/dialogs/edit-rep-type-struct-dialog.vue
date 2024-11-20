@@ -1,6 +1,7 @@
 <template>
     <v-dialog v-model="is_show_dialog">
-        <EditRepTypeStructStructView :application_config="application_config" :gkill_api="gkill_api"
+        <EditRepTypeStructView :application_config="application_config" :gkill_api="gkill_api"
+            :rep_type_struct="application_config.rep_type_struct"
             @requested_reload_application_config="(application_config) => emits('requested_reload_application_config', application_config)"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" />

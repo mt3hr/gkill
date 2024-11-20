@@ -8,4 +8,5 @@ export interface AddNewDeviceStructElementViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'requested_add_device_struct_element', device_struct_element: DeviceStructElementData): void
+    (e: 'requested_close_dialog'): void
 }

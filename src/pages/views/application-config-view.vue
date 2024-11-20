@@ -222,7 +222,7 @@ function show_edit_tag_dialog() {
     edit_tag_struct_dialog.value?.show()
 }
 function show_edit_rep_type_dialog() {
-    edit_rep_type_dialog.value?.show()
+    edit_rep_type_struct_dialog.value?.show()
 }
 function show_edit_kftl_template_dialog() {
     edit_kftl_template_dialog.value?.show()
