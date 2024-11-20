@@ -117,6 +117,8 @@ type GkillServerAPIAddress struct {
 
 	UpdateRepTypeStructAddress string
 
+	UpdateKFTLTemplateAddress string
+
 	UpdateAccountStatusAddress string
 
 	UpdateUserRepsAddress string
@@ -245,6 +247,8 @@ type GkillServerAPIAddress struct {
 
 	UpdateRepTypeStructMethod string
 
+	UpdateKFTLTemplateStructMethod string
+
 	UpdateAccountStatusMethod string
 
 	UpdateUserRepsMethod string
@@ -331,6 +335,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateRepStructAddress = "/api/update_rep_struct"
 	gkillAPIAddress.UpdateDeviceStructAddress = "/api/update_device_struct"
 	gkillAPIAddress.UpdateRepTypeStructAddress = "/api/update_rep_struct"
+	gkillAPIAddress.UpdateKFTLTemplateAddress = "/api/update_kftl_template"
 	gkillAPIAddress.UpdateAccountStatusAddress = "/api/update_account_status"
 	gkillAPIAddress.UpdateUserRepsAddress = "/api/update_user_reps"
 	gkillAPIAddress.AddAccountAddress = "/api/add_user"
@@ -395,6 +400,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateRepStructMethod = "POST"
 	gkillAPIAddress.UpdateDeviceStructMethod = "POST"
 	gkillAPIAddress.UpdateRepTypeStructMethod = "POST"
+	gkillAPIAddress.UpdateKFTLTemplateStructMethod = "POST"
 	gkillAPIAddress.UpdateAccountStatusMethod = "POST"
 	gkillAPIAddress.UpdateUserRepsMethod = "POST"
 	gkillAPIAddress.AddAccountMethod = "POST"

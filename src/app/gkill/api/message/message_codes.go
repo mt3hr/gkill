@@ -61,4 +61,5 @@ const (
 	GetMiSharedTasksSuccessMessage           = "MSG000055"
 	AddShareMiTaskListInfoSuccessMessage     = "MSG000056"
 	UpdateApplicationConfigSuccessMessage    = "MSG000057"
+	UpdateKFTLTemplateSuccessMessage         = "MSG000058"
 )

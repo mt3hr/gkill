@@ -1,6 +1,8 @@
 'use strict'
 
-export class KFTLTemplateElementData {
+import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
+
+export class KFTLTemplateElementData implements FoldableStructModel {
 
     id: string
 
@@ -8,13 +10,21 @@ export class KFTLTemplateElementData {
 
     template: string
 
-    children: Array<KFTLTemplateElementData>
+    children: Array<KFTLTemplateElementData> | null
+
+    key: string
+
+    is_checked: boolean // 使わない
+    indeterminate: boolean // 使わない
 
     constructor() {
         this.id = ""
         this.title = ""
         this.template = ""
-        this.children = new Array<KFTLTemplateElementData>()
+        this.children = null
+        this.is_checked = false
+        this.indeterminate = false
+        this.key = ""
     }
 
 }
