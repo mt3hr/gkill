@@ -225,6 +225,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.UpdateUserRepsAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateUserReps(w, r)
 	}).Methods(g.APIAddress.UpdateUserRepsMethod)
+	router.HandleFunc(g.APIAddress.UpdateServerConfigAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleUpdateServerConfig(w, r)
+	}).Methods(g.APIAddress.UpdateServerConfigMethod)
 	router.HandleFunc(g.APIAddress.AddAccountAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddAccount(w, r)
 	}).Methods(g.APIAddress.AddAccountMethod)
@@ -5429,7 +5432,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	applicationConfig.RepStruct = repStructs
 	applicationConfig.DeviceStruct = deviceStructs
 	applicationConfig.RepTypeStruct = repTypeStructs
-
+	applicationConfig.AccountIsAdmin = account.IsAdmin
 	response.ApplicationConfig = applicationConfig
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetApplicationConfigSuccessMessage,
@@ -5515,6 +5518,32 @@ func (g *GkillServerAPI) HandleGetServerConfig(w http.ResponseWriter, r *http.Re
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+
+	accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get all account config")
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetAllAccountConfigError,
+			ErrorMessage: "アカウント設定情報の取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	serverConfig.Accounts = accounts
+
+	repositories, err := g.GkillDAOManager.ConfigDAOs.RepositoryDAO.GetAllRepositories(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get all repositories")
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetAllRepositoriesError,
+			ErrorMessage: "Repository全件取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	serverConfig.Repositories = repositories
 
 	response.ServerConfig = serverConfig
 	response.Messages = append(response.Messages, &message.GkillMessage{
@@ -6927,6 +6956,94 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateRepositoriesSuccessMessage,
 		Message:     "Rep更新に成功しました",
+	})
+}
+
+func (g *GkillServerAPI) HandleUpdateServerConfig(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.UpdateServerConfigRequest{}
+	response := &req_res.UpdateServerConfigResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse update server config response to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidUpdateServerConfigResponseDataError,
+				ErrorMessage: "設定更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse update server config request to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidUpdateServerConfigRequestDataError,
+				ErrorMessage: "設定更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// adminじゃなかったら弾く
+	if !account.IsAdmin {
+		err = fmt.Errorf("%s is not admin", userID)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountNotHasAdminError,
+			ErrorMessage: "管理者権限を所有していません",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// ServerConfigを更新する
+	ok, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.UpdateServerConfig(r.Context(), &request.ServerConfig)
+	if !ok || err != nil {
+		if err != nil {
+			err = fmt.Errorf("error at update server config user user id = %s device = %s id = %s: %w", userID, device, err)
+			log.Printf(err.Error())
+		}
+		gkillError := &message.GkillError{
+			ErrorCode:    message.UpdateServerConfigError,
+			ErrorMessage: "設定更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.UpdateServerConfigSuccessMessage,
+		Message:     "設定を更新しました",
 	})
 }
 

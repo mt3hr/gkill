@@ -8,4 +8,5 @@ export interface AddRepViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'requested_add_rep', rep: Repository): void
+    (e: 'requested_close_dialog'): void
 }
