@@ -123,6 +123,8 @@ type GkillServerAPIAddress struct {
 
 	UpdateUserRepsAddress string
 
+	UpdateServerConfigAddress string
+
 	AddAccountAddress string
 
 	GenerateTLSFileAddress string
@@ -253,6 +255,8 @@ type GkillServerAPIAddress struct {
 
 	UpdateUserRepsMethod string
 
+	UpdateServerConfigMethod string
+
 	AddAccountMethod string
 
 	GenerateTLSFileMethod string
@@ -338,6 +342,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateKFTLTemplateAddress = "/api/update_kftl_template"
 	gkillAPIAddress.UpdateAccountStatusAddress = "/api/update_account_status"
 	gkillAPIAddress.UpdateUserRepsAddress = "/api/update_user_reps"
+	gkillAPIAddress.UpdateServerConfigAddress = "/api/update_server_config"
 	gkillAPIAddress.AddAccountAddress = "/api/add_user"
 	gkillAPIAddress.GenerateTLSFileAddress = "/api/generate_tls_file"
 	gkillAPIAddress.GetGPSLogAddress = "/api/get_gps_log"
@@ -403,6 +408,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateKFTLTemplateStructMethod = "POST"
 	gkillAPIAddress.UpdateAccountStatusMethod = "POST"
 	gkillAPIAddress.UpdateUserRepsMethod = "POST"
+	gkillAPIAddress.UpdateServerConfigMethod = "POST"
 	gkillAPIAddress.AddAccountMethod = "POST"
 	gkillAPIAddress.GenerateTLSFileMethod = "POST"
 	gkillAPIAddress.GetGPSLogMethod = "POST"

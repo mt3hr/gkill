@@ -2,7 +2,8 @@
     <v-dialog v-model="is_show_dialog">
         <ConfirmGenerateTLSFilesView :application_config="application_config" :gkill_api="gkill_api"
             :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" />
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @generated_tls_files="emits('generated_tls_files')" @requested_close_dialog="hide" />
     </v-dialog>
 </template>
 <script lang="ts" setup>

@@ -144,6 +144,8 @@ import type { UploadFilesRequest } from "./req_res/upload-files-request"
 import type { UploadFilesResponse } from "./req_res/upload-files-response"
 import type { UploadGPSLogFilesRequest } from "./req_res/upload-gps-log-files-request"
 import type { UploadGPSLogFilesResponse } from "./req_res/upload-gps-log-files-response"
+import type { UpdateServerConfigRequest } from "./req_res/update-server-config-request"
+import type { UpdateServerConfigResponse } from "./req_res/update-server-config-response"
 
 export class GkillAPI {
         private static gkill_api: GkillAPI = new GkillAPI()
@@ -212,6 +214,7 @@ export class GkillAPI {
         update_kftl_template_address: string
         update_account_status_address: string
         update_user_reps_address: string
+        update_server_config_address: string
         add_account_address: string
         generate_tls_file_address: string
         get_gps_log_address: string
@@ -277,6 +280,7 @@ export class GkillAPI {
         update_kftl_template_method: string
         update_account_status_method: string
         update_user_reps_method: string
+        update_server_config_method: string
         add_account_method: string
         generate_tls_file_method: string
         get_gps_log_method: string
@@ -350,6 +354,7 @@ export class GkillAPI {
                 this.update_kftl_template_address = "/api/update_kftl_template"
                 this.update_account_status_address = "/api/update_account_status"
                 this.update_user_reps_address = "/api/update_user_reps"
+                this.update_server_config_address = "/api/update_server_config"
                 this.add_account_address = "/api/add_user"
                 this.generate_tls_file_address = "/api/generate_tls_file"
                 this.get_gps_log_address = "/api/get_gps_log"
@@ -415,6 +420,7 @@ export class GkillAPI {
                 this.update_kftl_template_method = "POST"
                 this.update_account_status_method = "POST"
                 this.update_user_reps_method = "POST"
+                this.update_server_config_method = "POST"
                 this.add_account_method = "POST"
                 this.generate_tls_file_method = "POST"
                 this.get_gps_log_method = "POST"
@@ -1203,6 +1209,19 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateUserRepsResponse = json
+                return response
+        }
+
+        async update_server_config(req: UpdateServerConfigRequest): Promise<UpdateServerConfigResponse> {
+                const res = await fetch(this.update_server_config_address, {
+                        'method': this.update_server_config_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: UpdateServerConfigResponse = json
                 return response
         }
 

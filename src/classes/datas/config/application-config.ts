@@ -21,6 +21,7 @@ export class ApplicationConfig {
     rykv_image_list_column_number: Number
     rykv_hot_reload: boolean
     mi_default_board: string
+    account_is_admin: boolean
     parsed_kftl_template: KFTLTemplateElementData
     parsed_tag_struct: TagStructElementData
     parsed_rep_struct: RepStructElementData
@@ -55,6 +56,7 @@ export class ApplicationConfig {
         application_config.device_struct = this.device_struct
         application_config.rep_type_struct = this.rep_type_struct
         application_config.kftl_template_struct = this.kftl_template_struct
+        application_config.account_is_admin = this.account_is_admin
         return application_config
     }
     async parse_kftl_template_struct(): Promise<Array<GkillError>> {
@@ -429,6 +431,7 @@ export class ApplicationConfig {
         this.rykv_image_list_column_number = 3
         this.rykv_hot_reload = false
         this.mi_default_board = ""
+        this.account_is_admin = false
         this.parsed_kftl_template = new KFTLTemplateElementData()
         this.parsed_tag_struct = new TagStructElementData()
         this.parsed_rep_struct = new RepStructElementData()

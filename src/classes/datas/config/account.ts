@@ -8,10 +8,13 @@ export class Account {
 
     is_enable: boolean
 
+    password_reset_token: string | null
+
     constructor() {
         this.user_id = ""
         this.is_admin = false
         this.is_enable = false
+        this.password_reset_token = null
     }
 
 }
