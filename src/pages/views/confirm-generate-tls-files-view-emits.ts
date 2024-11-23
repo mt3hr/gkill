@@ -7,4 +7,5 @@ export interface ConfirmGenerateTLSFilesViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'generated_tls_files'): void
+    (e: 'requested_close_dialog'): void
 }
