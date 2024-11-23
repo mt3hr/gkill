@@ -1,7 +1,7 @@
 <template>
     <v-dialog v-model="is_show_dialog">
         <CreateAccountView :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)" @requested_close_dialog="hide"
             @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
             @received_messages="(messages) => emits('received_messages', messages)" />
     </v-dialog>
