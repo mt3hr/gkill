@@ -5,6 +5,10 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <span>設定</span>
                 </v-col>
+                <v-spacer />
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <v-btn v-if="is_admin" @click="show_server_config_dialog()" color="'primary'">サーバ設定</v-btn>
+                </v-col>
             </v-row>
         </v-card-title>
         <v-card>
@@ -118,6 +122,11 @@
             @received_messages="(messages) => emits('received_messages', messages)"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
             ref="new_board_name_dialog" />
+        <ServerConfigDialog :application_config="application_config" :gkill_api="gkill_api"
+            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_server_config="(server_config) => reload_server_config(server_config)"
+            ref="server_config_dialog" />
     </v-card>
 </template>
 <script setup lang="ts">
@@ -136,6 +145,8 @@ import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { UpdateApplicationConfigRequest } from '@/classes/api/req_res/update-application-config-request'
+import { ServerConfig } from '@/classes/datas/config/server-config'
+import ServerConfigDialog from '../dialogs/server-config-dialog.vue'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 const edit_device_struct_dialog = ref<InstanceType<typeof EditDeviceStructDialog> | null>(null);
@@ -143,6 +154,7 @@ const edit_rep_struct_dialog = ref<InstanceType<typeof EditRepStructDialog> | nu
 const edit_rep_type_struct_dialog = ref<InstanceType<typeof EditRepTypeStructDialog> | null>(null);
 const edit_tag_struct_dialog = ref<InstanceType<typeof EditTagStructDialog> | null>(null);
 const edit_kftl_template_dialog = ref<InstanceType<typeof EditKFTLTemplateDialog> | null>(null);
+const server_config_dialog = ref<InstanceType<typeof ServerConfigDialog> | null>(null);
 
 const props = defineProps<ApplicationConfigViewProps>()
 const emits = defineEmits<ApplicationConfigViewEmits>()
@@ -154,6 +166,8 @@ watch(() => props.application_config, async () => {
 })
 
 const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
+const server_config: Ref<ServerConfig> = ref(new ServerConfig())
+const is_admin: Ref<boolean> = ref(cloned_application_config.value.account_is_admin)
 
 const google_map_api_key: Ref<string> = ref(cloned_application_config.value.google_map_api_key)
 const rykv_image_list_column_number: Ref<Number> = ref(cloned_application_config.value.rykv_image_list_column_number)
@@ -161,6 +175,9 @@ const enable_browser_cache: Ref<boolean> = ref(cloned_application_config.value.e
 const rykv_hot_reload: Ref<boolean> = ref(cloned_application_config.value.rykv_hot_reload)
 const mi_default_board: Ref<string> = ref(cloned_application_config.value.mi_default_board)
 const mi_board_names: Ref<Array<string>> = ref(new Array())
+
+async function update_is_admin(): Promise<void> {
+}
 
 async function reload_cloned_application_config(): Promise<void> {
     cloned_application_config.value = await props.application_config.clone()
@@ -234,5 +251,12 @@ function update_board_name(board_name: string): void {
     mi_board_names.value.push(board_name)
     mi_default_board.value = board_name
 }
+function show_server_config_dialog(): void {
+    server_config_dialog.value?.show()
+}
+function reload_server_config(updated_server_config: ServerConfig): void {
+    server_config.value = updated_server_config
+}
 //TODO コメントアウト解除 load_mi_board_names()
+is_admin.value = true //TODO けして
 </script>

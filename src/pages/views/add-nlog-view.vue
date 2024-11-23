@@ -1,29 +1,31 @@
 <template>
-    <v-card-title>
+    <v-card>
+        <v-card-title>
+            <v-row class="pa-0 ma-0">
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <span>Nlog追加</span>
+                </v-col>
+                <v-spacer />
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                </v-col>
+            </v-row>
+        </v-card-title>
+        <v-text-field v-if="nlog" v-model="nlog_title_value" label="タイトル" />
+        <v-text-field v-if="nlog" v-model="nlog_shop_value" label="店名" />
+        <v-text-field v-if="nlog" v-model="nlog_amount_value" type="number" label="金額" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <span>Nlog編集</span>
+                <label>日時</label>
+                <input class="input" type="date" v-model="related_date" label="日付" />
+                <input class="input" type="time" v-model="related_time" label="時刻" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                <v-btn color="primary" @click="save()">保存</v-btn>
             </v-col>
         </v-row>
-    </v-card-title>
-    <v-text-field v-if="nlog" v-model="nlog_title_value" label="タイトル" />
-    <v-text-field v-if="nlog" v-model="nlog_shop_value" label="店名" />
-    <v-text-field v-if="nlog" v-model="nlog_amount_value" type="number" label="金額" />
-    <v-row class="pa-0 ma-0">
-        <v-col cols="auto" class="pa-0 ma-0">
-            <label>日時</label>
-            <input class="input" type="date" v-model="related_date" label="日付" />
-            <input class="input" type="time" v-model="related_time" label="時刻" />
-        </v-col>
-        <v-spacer />
-        <v-col cols="auto" class="pa-0 ma-0">
-            <v-btn color="primary" @click="save()">保存</v-btn>
-        </v-col>
-    </v-row>
+    </v-card>
 </template>
 <script lang="ts" setup>
 import type { AddNlogViewProps } from './add-nlog-view-props'

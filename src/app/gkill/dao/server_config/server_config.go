@@ -1,6 +1,11 @@
 package server_config
 
-import "time"
+import (
+	"time"
+
+	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
+)
 
 type ServerConfig struct {
 	EnableThisDevice bool `json:"enable_this_device"`
@@ -28,4 +33,8 @@ type ServerConfig struct {
 	UploadSizeLimitMonth int `json:"upload_size_limit_month"`
 
 	UserDataDirectory string `json:"user_data_directory"`
+
+	Repositories []*user_config.Repository `json:"repositories"`
+
+	Accounts []*account.Account `json:"accounts"`
 }

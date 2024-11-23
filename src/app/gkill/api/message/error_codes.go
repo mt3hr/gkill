@@ -235,4 +235,9 @@ const (
 	KFTLTemplateStructInvalidUserID                    = "ERR000229"
 	DeleteUsersKFTLTemplateError                       = "ERR000230"
 	AddUsersKFTLTemplateError                          = "ERR000231"
+	InvalidUpdateServerConfigResponseDataError         = "ERR000232"
+	InvalidUpdateServerConfigRequestDataError          = "ERR000233"
+	UpdateServerConfigError                            = "ERR000234"
+	GetAllAccountConfigError                           = "ERR000235"
+	GetAllRepositoriesError                            = "ERR000236"
 )

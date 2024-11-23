@@ -21,7 +21,7 @@ export class ServerConfig {
 
     open_file_command: string
 
-    urlog_timeout: Number
+    urlog_timeout: string
 
     urlog_useragent: string
 
@@ -46,7 +46,7 @@ export class ServerConfig {
         this.tls_key_file = ""
         this.open_directory_command = ""
         this.open_file_command = ""
-        this.urlog_timeout = 0
+        this.urlog_timeout = "10s"
         this.urlog_useragent = ""
         this.upload_size_limit_month = 0
         this.user_data_directory = ""

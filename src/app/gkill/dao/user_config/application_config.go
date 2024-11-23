@@ -24,4 +24,6 @@ type ApplicationConfig struct {
 	DeviceStruct []*DeviceStruct `json:"device_struct"`
 
 	RepTypeStruct []*RepTypeStruct `json:"rep_type_struct"`
+
+	AccountIsAdmin bool `json:"account_is_admin"`
 }
