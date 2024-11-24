@@ -338,7 +338,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateTagStructAddress = "/api/update_tag_struct"
 	gkillAPIAddress.UpdateRepStructAddress = "/api/update_rep_struct"
 	gkillAPIAddress.UpdateDeviceStructAddress = "/api/update_device_struct"
-	gkillAPIAddress.UpdateRepTypeStructAddress = "/api/update_rep_struct"
+	gkillAPIAddress.UpdateRepTypeStructAddress = "/api/update_rep_type_struct"
 	gkillAPIAddress.UpdateKFTLTemplateAddress = "/api/update_kftl_template"
 	gkillAPIAddress.UpdateAccountStatusAddress = "/api/update_account_status"
 	gkillAPIAddress.UpdateUserRepsAddress = "/api/update_user_reps"

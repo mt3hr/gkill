@@ -1,6 +1,4 @@
 <template>
-    <!-- //TODO Emitsがまだ-->
-    <!-- //TODO 削除ダイアログが存在しない-->
     <ApplicationConfigStructContextMenu :application_config="application_config" :folder_name="folder_name"
         :gkill_api="gkill_api" :is_open="is_open" :struct_obj="struct_obj" />
 </template>

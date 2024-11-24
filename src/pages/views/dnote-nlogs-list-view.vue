@@ -24,7 +24,9 @@ const calcrated_total_amount = computed(() => {
             return
         }
         const nlog = nlog_kyou.typed_nlog
-        total_amount = total_amount.valueOf() + nlog.amount.valueOf()
+        if (nlog) {
+            total_amount = total_amount.valueOf() + nlog.amount.valueOf()
+        }
     })
     return total_amount
 })

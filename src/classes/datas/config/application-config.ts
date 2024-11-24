@@ -33,15 +33,15 @@ export class ApplicationConfig {
     rep_type_struct: Array<RepTypeStruct>
     kftl_template_struct: Array<KFTLTemplateStruct>
     async parse_template_and_struct(): Promise<Array<GkillError>> {
-        const errors = Array<GkillError>()
-        errors.concat(await this.parse_tag_struct())
-        errors.concat(await this.parse_rep_struct())
-        errors.concat(await this.parse_device_struct())
-        errors.concat(await this.parse_rep_type_struct())
-        errors.concat(await this.parse_kftl_template_struct())
+        let errors = Array<GkillError>()
+        errors = errors.concat(await this.parse_tag_struct())
+        errors = errors.concat(await this.parse_rep_struct())
+        errors = errors.concat(await this.parse_device_struct())
+        errors = errors.concat(await this.parse_rep_type_struct())
+        errors = errors.concat(await this.parse_kftl_template_struct())
         return errors
     }
-    async clone(): Promise<ApplicationConfig> {
+    clone(): ApplicationConfig {
         const application_config = new ApplicationConfig()
         application_config.is_loaded = this.is_loaded
         application_config.user_id = this.user_id
@@ -72,6 +72,7 @@ export class ApplicationConfig {
                 const struct_element = new KFTLTemplateElementData()
                 struct_element.id = item.id
                 struct_element.title = item.title
+                struct_element.key = item.title
                 if (item.template) {
                     struct_element.template = item.template
                 }
@@ -112,6 +113,7 @@ export class ApplicationConfig {
                     const struct_element = new KFTLTemplateElementData()
                     struct_element.id = item.id
                     struct_element.title = item.title
+                    struct_element.key = item.title
                     if (item.template) {
                         struct_element.template = item.template
                     }

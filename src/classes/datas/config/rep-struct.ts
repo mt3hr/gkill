@@ -2,7 +2,7 @@
 
 export class RepStruct {
 
-    id: string
+    id: string | null
 
     user_id: string
 

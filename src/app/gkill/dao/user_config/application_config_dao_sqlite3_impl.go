@@ -121,7 +121,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	rows, err := stmt.QueryContext(ctx, device)
+	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -165,8 +165,7 @@ INSERT INTO APPLICATION_CONFIG (
   RYKV_IMAGE_LIST_COLUMN_NUMBER,
   RYKV_HOT_RELOAD,
   MI_DEFAULT_BOARD
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,

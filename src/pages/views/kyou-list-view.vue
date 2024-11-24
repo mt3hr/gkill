@@ -48,14 +48,12 @@ import KyouView from './kyou-view.vue'
 const props = defineProps<KyouListViewProps>()
 const emits = defineEmits<KyouListViewEmits>()
 // const cloned_find_query: Ref<FindKyouQuery> = ref(await props.query.clone())
-const match_kyous: Ref<Array<Kyou>> = ref(props.matched_kyous.concat())
+const match_kyous: Ref<Array<Kyou>> = ref(props.matched_kyous ? props.matched_kyous.concat() : new Array<Kyou>())
 const match_kyous_for_image: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
 const is_loading: Ref<boolean> = ref(false)
 const scroll_distance_from_top_px: Ref<Number> = ref(0)
 const checked_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
-const kyou_height_px = computed(() => {
-    return props.kyou_height.toString().concat("px")
-})
+const kyou_height_px = computed(() => props.kyou_height ? props.kyou_height.toString().concat("px") : "0px")
 
 watch(() => match_kyous, () => {
     if (props.query.is_image_only) {

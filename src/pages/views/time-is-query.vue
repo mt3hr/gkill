@@ -34,7 +34,8 @@
         </v-row>
         <table v-show="use_timeis" class="taglist">
             <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-                :is_open="false" :query="query" :struct_obj="cloned_application_config.parsed_tag_struct" @clicked_items="clicked_items"
+                :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="false" :query="query"
+                :struct_obj="cloned_application_config.parsed_tag_struct" @clicked_items="clicked_items"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)" ref="foldable_struct" />
         </table>
@@ -59,9 +60,9 @@ const use_timeis: Ref<boolean> = ref(false)
 const use_and_search_timeis_words: Ref<boolean> = ref(false)
 const use_and_search_timeis_tags: Ref<boolean> = ref(false)
 const timeis_keywords: Ref<string> = ref(props.query.timeis_word.join(" ") + props.query.timeis_not_word.join(" -"))
-const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
+const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
-const query: Ref<FindKyouQuery> = ref(await props.query.clone())
+const query: Ref<FindKyouQuery> = ref(props.query.clone())
 
 async function clicked_items(e: MouseEvent, items: Array<string>, check_state: CheckState, is_user: boolean): Promise<void> {
     const checked_items = await foldable_struct.value?.get_selected_items()

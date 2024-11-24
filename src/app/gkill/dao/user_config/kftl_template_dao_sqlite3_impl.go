@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS "KFTL_TEMPLATE" (
   DEVICE NOT NULL,
   TITLE NOT NULL,
   TEMPLATE NOT NULL,
+  PARENT_FOLDER_ID,
   SEQ NOT NULL
 );`
 	stmt, err := db.PrepareContext(ctx, sql)
@@ -104,12 +105,13 @@ func (k *kftlTemplateDAOSQLite3Impl) GetKFTLTemplates(ctx context.Context, userI
 SELECT 
   ID,
   USER_ID,
+  DEVICE,
   TITLE,
   TEMPLATE,
   PARENT_FOLDER_ID,
   SEQ
-FROM DEVICE_STRUCT
-WHERE USER_ID = ? DEVICE = ?
+FROM KFTL_TEMPLATE
+WHERE USER_ID = ? AND DEVICE = ?
 `
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -157,8 +159,7 @@ INSERT INTO KFTL_TEMPLATE (
   TEMPLATE,
   PARENT_FOLDER_ID,
   SEQ
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -207,8 +208,7 @@ INSERT INTO KFTL_TEMPLATE (
   TEMPLATE,
   PARENT_FOLDER_ID,
   SEQ
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -257,7 +257,6 @@ VALUES (
 		}
 		return false, err
 	}
-
 	return true, nil
 }
 
@@ -299,7 +298,7 @@ WHERE ID = ?
 
 func (k *kftlTemplateDAOSQLite3Impl) DeleteKFTLTemplate(ctx context.Context, id string) (bool, error) {
 	sql := `
-DELETE KFTL_TEMPLATE
+DELETE FROM KFTL_TEMPLATE
 WHERE ID = ?
 `
 	stmt, err := k.db.PrepareContext(ctx, sql)
@@ -319,7 +318,7 @@ WHERE ID = ?
 
 func (k *kftlTemplateDAOSQLite3Impl) DeleteUsersKFTLTemplates(ctx context.Context, userID string) (bool, error) {
 	sql := `
-DELETE KFTL_TEMPLATE
+DELETE FROM KFTL_TEMPLATE
 WHERE USER_ID = ?
 `
 	stmt, err := k.db.PrepareContext(ctx, sql)

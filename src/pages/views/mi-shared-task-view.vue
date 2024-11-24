@@ -2,7 +2,8 @@
     <KyouCountCalendar :application_config="application_config" :gkill_api="gkill_api" :kyous="match_kyous"
         @requested_focus_time="(time) => focused_time = time" />
     <miBoardTaskListView :application_config="application_config" :gkill_api="gkill_api" :is_show_close_button="false"
-        :last_added_tag="''" :matched_kyous="match_kyous" :query="find_mi_kyou_query"
+        :app_content_height="app_content_height" :app_content_width="app_content_width" :last_added_tag="''"
+        :matched_kyous="match_kyous" :query="find_mi_kyou_query"
         @requested_focus_kyou="(kyou) => update_focused_kyou(kyou)" />
 </template>
 <script setup lang="ts">

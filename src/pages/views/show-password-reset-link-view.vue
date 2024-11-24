@@ -36,11 +36,13 @@ const over_lan_password_reset_url: Ref<string> = ref("")
 
 watch(() => props.account, () => update_password_reset_urls())
 
+update_password_reset_urls()
+
 function update_password_reset_urls(): void {
     const token = props.account.password_reset_token
     let http = props.server_config.enable_tls ? "https://" : "http://"
     const port = props.server_config.address
-    lan_password_reset_url.value = `${http}localhost:${port}/login?reset_token=${token}`
-    over_lan_password_reset_url.value = `${http}localhost:${port}/login?reset_token=${token}`
+    lan_password_reset_url.value = `${http}localhost${port}/set_new_password?reset_token=${token}`
+    over_lan_password_reset_url.value = `${http}localhost${port}/set_new_password?reset_token=${token}`
 }
 </script>

@@ -19,7 +19,7 @@
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto">
-                    <v-btn class="login_button" color="primary"  @click="try_login(user_id, password_sha256)">
+                    <v-btn class="login_button" color="primary" @click="try_login(user_id, password_sha256)">
                         ログイン
                     </v-btn>
                 </v-col>
@@ -34,6 +34,7 @@ import type LoginViewEmits from './login-view-emits'
 import { LoginRequest } from '@/classes/api/req_res/login-request';
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
+import { GkillAPI } from '@/classes/api/gkill-api';
 
 const user_id: Ref<string> = ref("")
 const password: Ref<string> = ref("")
@@ -92,7 +93,7 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
     }
 
     // localStorageにセッションをセット
-    window.localStorage.setItem('gkill_session_id', res.session_id)
+    GkillAPI.get_instance().set_session_id(res.session_id)
 
     // ログインに成功したらrykv画面に遷移
     router.replace('rykv')

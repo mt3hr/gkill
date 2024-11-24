@@ -115,7 +115,7 @@ SELECT
   CHECK_WHEN_INITED,
   IGNORE_CHECK_REP_RYKV
 FROM REP_STRUCT
-WHERE USER_ID = ? DEVICE = ?
+WHERE USER_ID = ? AND DEVICE = ?
 `
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -165,8 +165,7 @@ INSERT INTO REP_STRUCT (
   SEQ,
   CHECK_WHEN_INITED,
   IGNORE_CHECK_REP_RYKV
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -218,8 +217,7 @@ INSERT INTO REP_STRUCT (
   SEQ,
   CHECK_WHEN_INITED,
   IGNORE_CHECK_REP_RYKV
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -314,7 +312,7 @@ WHERE ID = ?
 
 func (r *repStructDAOSQLite3Impl) DeleteRepStruct(ctx context.Context, id string) (bool, error) {
 	sql := `
-DELETE REP_STRUCT
+DELETE FROM REP_STRUCT
 WHERE ID = ?
 `
 	stmt, err := r.db.PrepareContext(ctx, sql)
@@ -335,7 +333,7 @@ WHERE ID = ?
 func (r *repStructDAOSQLite3Impl) DeleteUsersRepStructs(ctx context.Context, userID string) (bool, error) {
 
 	sql := `
-DELETE REP_STRUCT
+DELETE FROM REP_STRUCT
 WHERE USER_ID = ?
 `
 	stmt, err := r.db.PrepareContext(ctx, sql)

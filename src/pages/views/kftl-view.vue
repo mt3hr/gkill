@@ -1,8 +1,4 @@
 <template>
-    <KyouListView :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="last_added_tag"
-        :matched_kyous="plaing_timeis_kyous" :query="find_kyou_query_plaing_timeis"
-        @requested_reload_kyou="(kyou) => reload_plaing_timeis(kyou)"
-        @requested_reload_list="() => load_find_kyou_query_plaing_timeis()" />
     <KFTLLineLabel v-for="line_label_data, index in line_label_datas" :application_config="application_config"
         :style="line_label_styles[index]" :gkill_api="gkill_api" :line_label_data="line_label_data" />
     <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api"

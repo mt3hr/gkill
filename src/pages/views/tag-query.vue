@@ -42,12 +42,12 @@ const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const is_and_search: Ref<boolean> = ref(false)
 
 const cloned_query: Ref<FindKyouQuery> = ref(await props.query.clone())
-const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
+const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
 cloned_application_config.value.parse_tag_struct()
 
 watch(() => props.application_config, async () => {
-    cloned_application_config.value = await props.application_config.clone()
+    cloned_application_config.value = props.application_config.clone()
     cloned_application_config.value.parse_tag_struct()
 })
 

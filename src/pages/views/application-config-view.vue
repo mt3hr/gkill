@@ -37,9 +37,7 @@
                     <td>
                         <v-row class="pa-0 ma-0">
                             <v-col class="pa-0 ma-0">
-                                <v-select class="select" v-model="mi_default_board">
-                                    <option v-for="board_name, index in mi_board_names">{{ board_name }}</option>
-                                </v-select>
+                                <v-select class="select" v-model="mi_default_board" :items="mi_board_names" />
                             </v-col>
                             <v-col class="pa-0 ma-0">
                                 <v-btn color="primary" @click="show_new_board_name_dialog()" icon="mdi-plus" dark
@@ -88,7 +86,6 @@
             </v-row>
         </v-card-action>
         <EditDeviceStructDialog :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-            :struct_obj="props.application_config.parsed_device_struct"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_update_device_struct_element="async () => emits('requested_reload_application_config')"
@@ -123,10 +120,8 @@
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
             ref="new_board_name_dialog" />
         <ServerConfigDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_server_config="(server_config) => reload_server_config(server_config)"
-            ref="server_config_dialog" />
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)" ref="server_config_dialog" />
     </v-card>
 </template>
 <script setup lang="ts">
@@ -161,12 +156,11 @@ const emits = defineEmits<ApplicationConfigViewEmits>()
 defineExpose({ reload_cloned_application_config })
 
 watch(() => props.application_config, async () => {
-    cloned_application_config.value = await props.application_config.clone()
+    cloned_application_config.value = props.application_config.clone()
     cloned_application_config.value.parse_template_and_struct()
 })
 
-const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
-const server_config: Ref<ServerConfig> = ref(new ServerConfig())
+const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 const is_admin: Ref<boolean> = ref(cloned_application_config.value.account_is_admin)
 
 const google_map_api_key: Ref<string> = ref(cloned_application_config.value.google_map_api_key)
@@ -180,7 +174,7 @@ async function update_is_admin(): Promise<void> {
 }
 
 async function reload_cloned_application_config(): Promise<void> {
-    cloned_application_config.value = await props.application_config.clone()
+    cloned_application_config.value = props.application_config.clone()
     google_map_api_key.value = cloned_application_config.value.google_map_api_key
     rykv_image_list_column_number.value = cloned_application_config.value.rykv_image_list_column_number
     enable_browser_cache.value = cloned_application_config.value.enable_browser_cache
@@ -253,9 +247,6 @@ function update_board_name(board_name: string): void {
 }
 function show_server_config_dialog(): void {
     server_config_dialog.value?.show()
-}
-function reload_server_config(updated_server_config: ServerConfig): void {
-    server_config.value = updated_server_config
 }
 //TODO コメントアウト解除 load_mi_board_names()
 is_admin.value = true //TODO けして

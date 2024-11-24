@@ -38,6 +38,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/mi_share_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 	"github.com/twpayne/go-gpx"
 )
@@ -48,6 +49,79 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 	if err != nil {
 		err = fmt.Errorf("error at create gkill dao manager: %w", err)
 		return nil, err
+	}
+
+	// 初回起動の場合、Adminアカウントデータを作成する
+	accounts, err := gkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(context.TODO())
+	if err != nil {
+		err = fmt.Errorf("error at get all account: %w", err)
+		return nil, err
+	}
+	if len(accounts) == 0 {
+		passwordSha256Admin := "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+		adminAccount := &account.Account{
+			UserID:             "admin",
+			PasswordSha256:     &passwordSha256Admin,
+			IsAdmin:            true,
+			IsEnable:           true,
+			PasswordResetToken: nil,
+		}
+		_, err := gkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(context.TODO(), adminAccount)
+		if err != nil {
+			err = fmt.Errorf("error at add admin account: %w", err)
+			return nil, err
+		}
+	}
+
+	applicationConfigs, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetAllApplicationConfigs(context.TODO())
+	if err != nil {
+		err = fmt.Errorf("error at get all application configs: %w", err)
+		return nil, err
+	}
+	if len(applicationConfigs) == 0 {
+		applicationConfig := &user_config.ApplicationConfig{
+			UserID:                    "admin",
+			Device:                    "gkill",
+			EnableBrowserCache:        false,
+			GoogleMapAPIKey:           "",
+			RykvImageListColumnNumber: 3,
+			RykvHotReload:             false,
+			MiDefaultBoard:            "Inbox",
+		}
+		_, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
+		if err != nil {
+			err = fmt.Errorf("error at add application config admin: %w", err)
+			return nil, err
+		}
+
+	}
+
+	serverConfigs, err := gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.TODO())
+	if err != nil {
+		err = fmt.Errorf("error at get server configs: %w", err)
+		return nil, err
+	}
+	if len(serverConfigs) == 0 {
+		serverConfig := &server_config.ServerConfig{
+			EnableThisDevice:     true,
+			Device:               "gkill",
+			IsLocalOnlyAccess:    false,
+			Address:              ":9999",
+			EnableTLS:            false,
+			TLSCertFile:          "",
+			TLSKeyFile:           "",
+			OpenDirectoryCommand: "explorer /select,$filename",
+			OpenFileCommand:      "rundll32 url.dll,FileProtocolHandler $filename",
+			URLogTimeout:         1 * time.Minute,
+			URLogUserAgent:       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36",
+			UploadSizeLimitMonth: -1,
+			UserDataDirectory:    "$HOME/gkill/datas",
+		}
+		_, err = gkillDAOManager.ConfigDAOs.ServerConfigDAO.AddServerConfig(context.TODO(), serverConfig)
+		if err != nil {
+			err = fmt.Errorf("error at add init data to server config db: %w", err)
+			return nil, err
+		}
 	}
 
 	return &GkillServerAPI{
@@ -207,6 +281,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.UpdateApplicationConfigAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateApplicationConfig(w, r)
 	}).Methods(g.APIAddress.UpdateApplicationConfigMethod)
+	router.HandleFunc(g.APIAddress.UpdateTagStructAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleUpdateTagStruct(w, r)
+	}).Methods(g.APIAddress.UpdateTagStructMethod)
 	router.HandleFunc(g.APIAddress.UpdateRepStructAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateRepStruct(w, r)
 	}).Methods(g.APIAddress.UpdateRepStructMethod)
@@ -255,10 +332,39 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetMiSharedTasksAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleLogout(w, r)
 	}).Methods(g.APIAddress.GetMiSharedTasksMethod)
+
 	gkillPage, err := fs.Sub(htmlFS, "embed/html")
 	if err != nil {
 		return err
 	}
+	router.PathPrefix("/rykv").Handler(http.StripPrefix("/rykv",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
+	router.PathPrefix("/kftl").Handler(http.StripPrefix("/kftl",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
+	router.PathPrefix("/mi").Handler(http.StripPrefix("/mi",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
+	router.PathPrefix("/kyou").Handler(http.StripPrefix("/kyou",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
+	router.PathPrefix("/saihate").Handler(http.StripPrefix("/saihate",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
+	router.PathPrefix("/shared_mi").Handler(http.StripPrefix("/shared_mi",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
+	router.PathPrefix("/set_new_password").Handler(http.StripPrefix("/set_new_password",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
 	router.PathPrefix("/").HandlerFunc(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 	}))
@@ -340,6 +446,16 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: "ログインに失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if account == nil {
+		err = fmt.Errorf("error at get account user id = %s: %w", request.UserID, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountNotFoundError,
+			ErrorMessage: "ユーザIDまたはパスワードが違います",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5428,7 +5544,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	}
 
 	applicationConfig.KFTLTemplate = kftlTemplates
-	applicationConfig.TagStrcuct = tagStructs
+	applicationConfig.TagStruct = tagStructs
 	applicationConfig.RepStruct = repStructs
 	applicationConfig.DeviceStruct = deviceStructs
 	applicationConfig.RepTypeStruct = repTypeStructs
@@ -7115,7 +7231,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	}
 
 	// 対象が存在する場合はエラー
-	existAccount, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), userID)
+	existAccount, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAccount(r.Context(), request.AccountInfo.UserID)
 	if err != nil {
 		err = fmt.Errorf("error at get account user device = %s id = %s: %w", userID, device, err)
 		log.Printf(err.Error())
@@ -7137,14 +7253,15 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// 追加するアカウント情報を作成して追加
-	updatedAccountData := &account.Account{
-		UserID:   request.AccountInfo.UserID,
-		IsAdmin:  request.AccountInfo.IsAdmin,
-		IsEnable: request.AccountInfo.IsEnable,
+	// アカウント情報を追加
+	passwordResetToken := GenerateNewID()
+	newAccount := &account.Account{
+		UserID:             request.AccountInfo.UserID,
+		IsAdmin:            false,
+		IsEnable:           true,
+		PasswordResetToken: &passwordResetToken,
 	}
-
-	ok, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(r.Context(), updatedAccountData)
+	ok, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(r.Context(), newAccount)
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at add account user id = %s device = %s account = %#v: %w", userID, device, request.AccountInfo, err)
@@ -7164,6 +7281,27 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountError,
+			ErrorMessage: "account追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	applicationConfig := &user_config.ApplicationConfig{
+		UserID:                    request.AccountInfo.UserID,
+		Device:                    device,
+		EnableBrowserCache:        false,
+		GoogleMapAPIKey:           "",
+		RykvImageListColumnNumber: 3,
+		RykvHotReload:             false,
+		MiDefaultBoard:            "Inbox",
+	}
+	_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
+	if err != nil {
+		err = fmt.Errorf("error at add application config user id = %s id = %s: %w", userID, request.AccountInfo.UserID, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddApplicationConfig,
 			ErrorMessage: "account追加後取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -8112,7 +8250,7 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID string) (*account.Account, *message.GkillError, error) {
 
 	loginSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, sessionID)
-	if err != nil {
+	if loginSession == nil || err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", sessionID, err)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
@@ -8129,6 +8267,16 @@ func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID 
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: "アカウント認証に失敗しました",
+		}
+		return nil, gkillError, err
+	}
+
+	if !account.IsEnable {
+		err = fmt.Errorf("error at disable account user id = %s: %w", loginSession.UserID, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountDisabledError,
+			ErrorMessage: "アカウントが無効化されています",
 		}
 		return nil, gkillError, err
 	}
@@ -8232,11 +8380,11 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 	}
 
 	userDataRootDirectory := filepath.Join(serverConfig.UserDataDirectory, account.UserID)
-	if _, err := os.Stat(userDataRootDirectory); err == nil {
+	if _, err := os.Stat(os.ExpandEnv(userDataRootDirectory)); err == nil {
 		err := fmt.Errorf("error at initialize new user reps. user root directory aleady exist %s: %w", userDataRootDirectory, err)
 		return err
 	} else {
-		err := os.MkdirAll(userDataRootDirectory, fs.ModePerm)
+		err := os.MkdirAll(os.ExpandEnv(userDataRootDirectory), fs.ModePerm)
 		if err != nil {
 			err = fmt.Errorf("error at initialize new user reps. error at create directory %s: %w", userDataRootDirectory, err)
 			return err
@@ -8275,7 +8423,7 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 
 	repType, repFileName := "directory", "Files"
 	repFileFullName := filepath.Join(userDataRootDirectory, repFileName)
-	err = os.MkdirAll(repFileFullName, fs.ModePerm)
+	err = os.MkdirAll(os.ExpandEnv(repFileFullName), fs.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at initialize new user reps. error at add repository create directory reptype = %s repdirname = %s: %w", repType, repFileFullName, err)
 		return err
