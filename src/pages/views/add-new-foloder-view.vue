@@ -35,6 +35,7 @@ function emits_folder(): void {
     const folder_struct_element = new FolderStructElementData()
     folder_struct_element.id = GkillAPI.get_instance().generate_uuid()
     folder_struct_element.folder_name = folder_name.value
+    emits('requested_add_new_folder', folder_struct_element)
     emits('requested_close_dialog')
 }
 

@@ -4,9 +4,7 @@
             :server_config="server_config"
             @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
             @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" 
-            @requested_close_dialog="hide"
-            />
+            @received_messages="(messages) => emits('received_messages', messages)" @requested_close_dialog="hide" />
     </v-dialog>
 </template>
 <script lang="ts" setup>

@@ -28,12 +28,10 @@
                         <v-textfield :label="'デバイス名'" v-model="repository.device" />
                     </td>
                     <td>
-                        <v-select v-model="repository.type">
-                            <option v-for="rep_type, index in rep_types">{{ rep_type }}</option>
-                        </v-select>
+                        <v-select v-model="repository.type" readonly :items="rep_types" label="RepType" />
                     </td>
                     <td>
-                        <v-textfield :label="'ファイルPath'" v-model="repository.file" />
+                        <v-text-field :width="600" :label="'ファイルPath'" v-model="repository.file" />
                     </td>
                     <td>
                         <v-btn @click="show_confirm_delete_rep_dialog(repository)">削除</v-btn>
@@ -101,6 +99,7 @@ watch(() => props.server_config, () => {
 watch(() => props.account, () => {
     update_repositories()
 })
+update_repositories()
 
 function update_repositories(): void {
     const filtered_repository: Array<Repository> = new Array<Repository>()

@@ -5,8 +5,9 @@
         </v-card-title>
         <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="'KFTLテンプレート'"
             :is_open="true" :struct_obj="cloned_application_config.parsed_kftl_template" :is_editable="true"
-            :is_root="true" :is_show_checkbox="false"
-            @dblclicked_item="(e: MouseEvent, id: string) => show_edit_kftl_template_struct_dialog(id)"
+            :is_root="true" :is_show_checkbox="false" @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @dblclicked_item="(e: MouseEvent, id: string | null) => { if (id) show_edit_kftl_template_struct_dialog(id) }"
             @contextmenu_item="show_kftl_template_contextmenu" ref="foldable_struct" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
@@ -86,17 +87,19 @@ defineExpose({ reload_cloned_application_config })
 
 watch(() => props.application_config, () => reload_cloned_application_config())
 
-const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
+const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
 cloned_application_config.value.parse_kftl_template_struct()
 
 async function reload_cloned_application_config(): Promise<void> {
-    cloned_application_config.value = await props.application_config.clone()
+    cloned_application_config.value = props.application_config.clone()
     cloned_application_config.value.parse_kftl_template_struct()
 }
 
-function show_kftl_template_contextmenu(e: MouseEvent, id: string): void {
-    kftl_template_struct_context_menu.value?.show(e, id)
+function show_kftl_template_contextmenu(e: MouseEvent, id: string | null): void {
+    if (id) {
+        kftl_template_struct_context_menu.value?.show(e, id)
+    }
 }
 
 function show_edit_kftl_template_struct_dialog(id: string): void {
@@ -134,22 +137,25 @@ function update_kftl_template_struct(kftl_template_struct_obj: KFTLTemplateStruc
 
 function update_seq(kftl_template_struct: Array<FoldableStructModel>): void {
     // 並び順再決定
-    let f = (struct: FoldableStructModel, seq: number) => { }
-    let func = (struct: FoldableStructModel, seq: number) => {
+    let f = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => { }
+    let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
         for (let i = 0; i < cloned_application_config.value.kftl_template_struct.length; i++) {
             if (struct.id === cloned_application_config.value.kftl_template_struct[i].id) {
                 cloned_application_config.value.kftl_template_struct[i].seq = seq
+                cloned_application_config.value.kftl_template_struct[i].parent_folder_id = parent.id
             }
         }
         if (struct.children) {
             for (let i = 0; i < struct.children.length; i++) {
-                f(struct.children[i], i)
+                f(struct.children[i], struct, i)
             }
         }
     }
     f = func
-    for (let i = 0; i < kftl_template_struct.length; i++) {
-        f(kftl_template_struct[i], i)
+    if (cloned_application_config.value.parsed_kftl_template.children) {
+        for (let i = 0; i < cloned_application_config.value.parsed_kftl_template.children?.length; i++) {
+            f(cloned_application_config.value.parsed_kftl_template.children[i], cloned_application_config.value.parsed_kftl_template, i)
+        }
     }
 }
 
@@ -197,15 +203,16 @@ async function add_folder_struct_element(folder_struct_element: FolderStructElem
     kftl_template_struct.id = folder_struct_element.id
     kftl_template_struct.user_id = res.user_id
     kftl_template_struct.device = res.device
-    kftl_template_struct.title = cloned_application_config.value.parsed_kftl_template.title
-    kftl_template_struct.template = cloned_application_config.value.parsed_kftl_template.template
-    kftl_template_struct.parent_folder_id = cloned_application_config.value.parsed_kftl_template.id
+    kftl_template_struct.title = folder_struct_element.folder_name
+    kftl_template_struct.template = null
+    kftl_template_struct.parent_folder_id = null
     kftl_template_struct.seq = cloned_application_config.value.parsed_kftl_template.children ? cloned_application_config.value.parsed_kftl_template.children.length : 0
 
     const kftl_template_struct_element = new KFTLTemplateStructElementData()
     kftl_template_struct_element.id = folder_struct_element.id
     kftl_template_struct_element.title = folder_struct_element.folder_name
     kftl_template_struct_element.children = new Array<KFTLTemplateStructElementData>()
+    kftl_template_struct_element.key = folder_struct_element.folder_name
 
     cloned_application_config.value.kftl_template_struct.push(kftl_template_struct)
     cloned_application_config.value.parsed_kftl_template.children?.push(kftl_template_struct_element)
@@ -223,7 +230,7 @@ async function add_kftl_template_struct_element(kftl_template_struct_element: KF
     }
 
     const kftl_template_struct = new KFTLTemplateStruct()
-    kftl_template_struct.id = kftl_template_struct_element.id
+    kftl_template_struct.id = kftl_template_struct_element.id ? kftl_template_struct_element.id : ""
     kftl_template_struct.user_id = res.user_id
     kftl_template_struct.device = res.device
     kftl_template_struct.title = kftl_template_struct_element.title

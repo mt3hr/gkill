@@ -10,8 +10,8 @@ export interface FoldableStructEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'clicked_items', event: MouseEvent, items: Array<string>, check_state: CheckState, is_by_user: boolean): void
-    (e: 'dblclicked_item', event: MouseEvent, id: string): void
-    (e: 'contextmenu_item', event: MouseEvent, id: string): void
+    (e: 'dblclicked_item', event: MouseEvent, id: string | null): void
+    (e: 'contextmenu_item', event: MouseEvent, id: string | null): void
     (e: 'requested_update_check_state', items: Array<string>, check_state: CheckState): void
     (e: 'requested_move_struct_obj', struct_obj: FoldableStructModel, target_struct_obj: FoldableStructModel, drop_type: DropTypeFoldableStruct): void
     (e: 'requested_update_struct_obj', struct_obj: FoldableStructModel): void

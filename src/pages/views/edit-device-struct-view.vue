@@ -6,7 +6,7 @@
         <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="'デバイス'"
             :is_open="true" :struct_obj="cloned_application_config.parsed_device_struct" :is_editable="true"
             :is_root="true" :is_show_checkbox="false"
-            @dblclicked_item="(e: MouseEvent, id: string) => show_edit_device_struct_dialog(id)"
+            @dblclicked_item="(e: MouseEvent, id: string | null) => { if (id) show_edit_device_struct_dialog(id) }"
             @contextmenu_item="show_device_contextmenu" ref="foldable_struct" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
@@ -84,17 +84,19 @@ defineExpose({ reload_cloned_application_config })
 
 watch(() => props.application_config, () => reload_cloned_application_config())
 
-const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
+const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
 cloned_application_config.value.parse_device_struct()
 
 async function reload_cloned_application_config(): Promise<void> {
-    cloned_application_config.value = await props.application_config.clone()
+    cloned_application_config.value = props.application_config.clone()
     cloned_application_config.value.parse_device_struct()
 }
 
-function show_device_contextmenu(e: MouseEvent, id: string): void {
-    device_struct_context_menu.value?.show(e, id)
+function show_device_contextmenu(e: MouseEvent, id: string | null): void {
+    if (id) {
+        device_struct_context_menu.value?.show(e, id)
+    }
 }
 
 function show_edit_device_struct_dialog(id: string): void {
@@ -132,22 +134,25 @@ function update_device_struct(device_struct_obj: DeviceStruct): void {
 
 function update_seq(device_struct: Array<FoldableStructModel>): void {
     // 並び順再決定
-    let f = (struct: FoldableStructModel, seq: number) => { }
-    let func = (struct: FoldableStructModel, seq: number) => {
+    let f = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => { }
+    let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
         for (let i = 0; i < cloned_application_config.value.device_struct.length; i++) {
             if (struct.id === cloned_application_config.value.device_struct[i].id) {
                 cloned_application_config.value.device_struct[i].seq = seq
+                cloned_application_config.value.device_struct[i].parent_folder_id = parent.id
             }
         }
         if (struct.children) {
             for (let i = 0; i < struct.children.length; i++) {
-                f(struct.children[i], i)
+                f(struct.children[i], struct, i)
             }
         }
     }
     f = func
-    for (let i = 0; i < device_struct.length; i++) {
-        f(device_struct[i], i)
+    if (cloned_application_config.value.parsed_device_struct.children) {
+        for (let i = 0; i < cloned_application_config.value.parsed_device_struct.children?.length; i++) {
+            f(cloned_application_config.value.parsed_device_struct.children[i], cloned_application_config.value.parsed_device_struct, i)
+        }
     }
 }
 
@@ -196,7 +201,7 @@ async function add_folder_struct_element(folder_struct_element: FolderStructElem
     device_struct.user_id = res.user_id
     device_struct.device = res.device
     device_struct.check_when_inited = false
-    device_struct.parent_folder_id = cloned_application_config.value.parsed_device_struct.id
+    device_struct.parent_folder_id = null
     device_struct.seq = cloned_application_config.value.parsed_device_struct.children ? cloned_application_config.value.parsed_device_struct.children.length : 0
     device_struct.device_name = folder_struct_element.folder_name
 
@@ -223,7 +228,7 @@ async function add_device_struct_element(device_struct_element: DeviceStructElem
     }
 
     const device_struct = new DeviceStruct()
-    device_struct.id = device_struct_element.id
+    device_struct.id = device_struct_element.id ? device_struct_element.id : ""
     device_struct.user_id = res.user_id
     device_struct.device = res.device
     device_struct.check_when_inited = device_struct_element.check_when_inited

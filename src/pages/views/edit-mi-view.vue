@@ -317,7 +317,7 @@ async function save(): Promise<void> {
     return
 }
 
-//TODO 有効化して load_mi_board_names()
+load_mi_board_names()
 </script>
 
 <style lang="css" scoped>

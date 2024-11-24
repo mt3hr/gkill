@@ -1,9 +1,9 @@
 <template>
     <v-dialog v-model="is_show_dialog">
         <DecideRelatedTimeUploadedFileView :application_config="application_config" :gkill_api="gkill_api"
+            :app_content_height="app_content_height" :app_content_width="app_content_width"
             :uploaded_kyous="uploaded_kyous" @received_errors="(errors) => emits('received_errors', errors)"
-            :last_added_tag="last_added_tag"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            :last_added_tag="last_added_tag" @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
             @requested_reload_list="emits('requested_reload_list')"
             @requested_update_check_kyous="(kyou, is_checked) => emits('requested_update_check_kyous', kyou, is_checked)" />

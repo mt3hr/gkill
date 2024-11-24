@@ -6,7 +6,7 @@
         <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="'記録保管場所'"
             :is_open="true" :struct_obj="cloned_application_config.parsed_rep_struct" :is_editable="true"
             :is_root="true" :is_show_checkbox="false"
-            @dblclicked_item="(e: MouseEvent, id: string) => show_edit_rep_struct_dialog(id)"
+            @dblclicked_item="(e: MouseEvent, id: string | null) => { if (id) show_edit_rep_struct_dialog(id) }"
             @contextmenu_item="show_rep_contextmenu" ref="foldable_struct" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
@@ -75,17 +75,19 @@ defineExpose({ reload_cloned_application_config })
 
 watch(() => props.application_config, () => reload_cloned_application_config())
 
-const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
+const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
 cloned_application_config.value.parse_rep_struct()
 
 async function reload_cloned_application_config(): Promise<void> {
-    cloned_application_config.value = await props.application_config.clone()
+    cloned_application_config.value = props.application_config.clone()
     cloned_application_config.value.parse_rep_struct()
 }
 
-function show_rep_contextmenu(e: MouseEvent, id: string): void {
-    rep_struct_context_menu.value?.show(e, id)
+function show_rep_contextmenu(e: MouseEvent, id: string | null): void {
+    if (id) {
+        rep_struct_context_menu.value?.show(e, id)
+    }
 }
 
 function show_edit_rep_struct_dialog(id: string): void {
@@ -123,22 +125,25 @@ function update_rep_struct(rep_struct_obj: RepStruct): void {
 
 function update_seq(rep_struct: Array<FoldableStructModel>): void {
     // 並び順再決定
-    let f = (struct: FoldableStructModel, seq: number) => { }
-    let func = (struct: FoldableStructModel, seq: number) => {
+    let f = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => { }
+    let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
         for (let i = 0; i < cloned_application_config.value.rep_struct.length; i++) {
             if (struct.id === cloned_application_config.value.rep_struct[i].id) {
                 cloned_application_config.value.rep_struct[i].seq = seq
+                cloned_application_config.value.rep_struct[i].parent_folder_id = parent.id
             }
         }
         if (struct.children) {
             for (let i = 0; i < struct.children.length; i++) {
-                f(struct.children[i], i)
+                f(struct.children[i], struct, i)
             }
         }
     }
     f = func
-    for (let i = 0; i < rep_struct.length; i++) {
-        f(rep_struct[i], i)
+    if (cloned_application_config.value.parsed_rep_struct.children) {
+        for (let i = 0; i < cloned_application_config.value.parsed_rep_struct.children.length; i++) {
+            f(cloned_application_config.value.parsed_rep_struct.children[i], cloned_application_config.value.parsed_rep_struct, i)
+        }
     }
 }
 
@@ -147,7 +152,6 @@ async function apply(): Promise<void> {
     if (!rep_struct) {
         return
     }
-
     update_seq(rep_struct)
 
     // 更新する
@@ -166,42 +170,6 @@ async function apply(): Promise<void> {
 }
 function show_add_new_rep_struct_element_dialog(): void {
     add_new_rep_struct_element_dialog.value?.show()
-}
-function show_add_new_folder_dialog(): void {
-    add_new_folder_dialog.value?.show()
-}
-async function add_folder_struct_element(folder_struct_element: FolderStructElementData): Promise<void> {
-    const req = new GetGkillInfoRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
-    const res = await GkillAPI.get_instance().get_gkill_info(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-
-    const rep_struct = new RepStruct()
-    rep_struct.id = folder_struct_element.id
-    rep_struct.user_id = res.user_id
-    rep_struct.device = res.device
-    rep_struct.check_when_inited = false
-    rep_struct.ignore_check_rep_rykv = false
-    rep_struct.parent_folder_id = cloned_application_config.value.parsed_rep_struct.id
-    rep_struct.seq = cloned_application_config.value.parsed_rep_struct.children ? cloned_application_config.value.parsed_rep_struct.children.length : 0
-    rep_struct.rep_name = folder_struct_element.folder_name
-
-    const rep_struct_element = new RepStructElementData()
-    rep_struct_element.id = folder_struct_element.id
-    rep_struct_element.check_when_inited = false
-    rep_struct_element.ignore_check_rep_rykv = false
-    rep_struct_element.rep_name = folder_struct_element.folder_name
-    rep_struct_element.children = new Array<RepStructElementData>()
-    rep_struct_element.key = folder_struct_element.folder_name
-
-    cloned_application_config.value.rep_struct.push(rep_struct)
-    cloned_application_config.value.parsed_rep_struct.children?.push(rep_struct_element)
 }
 async function add_rep_struct_element(rep_struct_element: RepStructElementData): Promise<void> {
     const req = new GetGkillInfoRequest()

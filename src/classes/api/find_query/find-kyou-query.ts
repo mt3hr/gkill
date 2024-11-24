@@ -6,7 +6,7 @@ export class FindKyouQuery extends FindQueryBase {
     reps: Array<string>
     is_image_only: boolean
 
-    async clone(): Promise<FindKyouQuery> {
+    clone(): FindKyouQuery {
         const cloned = new FindKyouQuery()
         cloned.update_cache = this.update_cache
         cloned.use_word = this.use_word

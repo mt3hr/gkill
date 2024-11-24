@@ -28,6 +28,8 @@ import { Circle, GoogleMap } from 'vue3-google-map';
 import type { MapQueryEmits } from './map-query-emits'
 import type { MapQueryProps } from './map-query-props'
 import { computed, ref, watch, type Ref } from 'vue';
+import type { CircleOptions } from '@/classes/datas/circle-options';
+
 const props = defineProps<MapQueryProps>()
 const emits = defineEmits<MapQueryEmits>()
 
@@ -38,7 +40,7 @@ const zoom = ref(11) // mapのズーム
 const is_enable_circle = ref(false)
 const circle_radius = ref(300)
 const use_map_search = ref(false)
-const circles: Ref<Array<google.maps.CircleOptions>> = ref(new Array<google.maps.CircleOptions>())
+const circles: Ref<Array<CircleOptions>> = ref(new Array<CircleOptions>())
 
 function update_circles(): void {
     circles.value = []

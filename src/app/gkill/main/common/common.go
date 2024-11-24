@@ -15,8 +15,8 @@ var (
 )
 
 func init() {
-	if "" == os.ExpandEnv("$HOME") {
-		os.Setenv("HOME", os.ExpandEnv("$HOMEPATH"))
+	if "" == os.Getenv("HOME") {
+		os.Setenv("HOME", os.Getenv("HOMEPATH"))
 	}
 }
 

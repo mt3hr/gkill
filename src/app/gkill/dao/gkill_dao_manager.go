@@ -47,7 +47,7 @@ func NewGkillDAOManager(autoIDF bool) (*GkillDAOManager, error) {
 	}
 
 	configDBRootDir := os.ExpandEnv("$HOME/gkill/configs")
-	err := os.MkdirAll(configDBRootDir, fs.ModePerm)
+	err := os.MkdirAll(os.ExpandEnv(configDBRootDir), fs.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at create directory %s: %w", err)
 		return nil, err
@@ -149,7 +149,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			sort.Strings(matchFiles)
 			for _, filename := range matchFiles {
 				parentDir := filepath.Dir(filename)
-				err := os.MkdirAll(parentDir, os.ModePerm)
+				err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
 				if err != nil {
 					err = fmt.Errorf("error at make directory %s: %w", parentDir)
 					return nil, err
@@ -300,7 +300,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 				case "directory":
 					parentDir := filepath.Join(filename, ".kyou")
-					err := os.MkdirAll(parentDir, os.ModePerm)
+					err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
 					if err != nil {
 						err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
 						return nil, err

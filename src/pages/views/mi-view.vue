@@ -27,17 +27,18 @@
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" />
     <MiBoardTaskListView v-for="find_mi_query, index in find_mi_queries" :application_config="application_config"
-        :last_added_tag="last_added_tag" :matched_kyous="match_kyous_list[index]"
-        :query="generate_find_kyou_query(find_mi_query)" :gkill_api="gkill_api" :is_show_close_button="true"
-        @received_errors="(errors) => emits('received_errors', errors)"
+        :app_content_height="app_content_height" :app_content_width="app_content_width" :last_added_tag="last_added_tag"
+        :matched_kyous="match_kyous_list[index]" :query="generate_find_kyou_query(find_mi_query)" :gkill_api="gkill_api"
+        :is_show_close_button="true" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_close_board="(board_name) => close_board(board_name)"
         @requested_focus_kyou="(kyou) => update_focused_kyou(kyou)" @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
     <miQueryEditorSidebar :application_config="application_config" :board_names="board_names" :gkill_api="gkill_api"
         :query="find_mi_queries[focused_board_index]" :sort_type="find_mi_queries[focused_board_index].sort_type"
-        @updated_query="(query) => update_query(query)" @request_open_focus_board="(board_name) => open_focus_board(board_name)" @request_search="() => reload_board()" 
-        />
+        @updated_query="(query) => update_query(query)"
+        @request_open_focus_board="(board_name) => open_focus_board(board_name)"
+        @request_search="() => reload_board()" />
     <miShareFooter :application_config="application_config" :board_names="board_names" :gkill_api="gkill_api"
         :query="find_mi_queries[focused_board_index]" :sort_type="find_mi_queries[focused_board_index].sort_type"
         @request_open_manage_share_mi_dialog="() => show_manage_share_mi_dialog()"
@@ -130,7 +131,7 @@ function generate_find_kyou_query(find_mi_query: FindMiQuery): FindKyouQuery {
     return find_mi_query.generate_find_kyou_query()
 }
 
-async function open_focus_board(board_name: string) : Promise<void> {
+async function open_focus_board(board_name: string): Promise<void> {
     throw new Error('Not implemented')
 }
 </script>
