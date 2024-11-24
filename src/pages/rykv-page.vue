@@ -1,7 +1,8 @@
 <template>
     <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
         :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
-        @received_errors="write_errors" @received_messages="write_messages" />
+        @requested_show_application_config_dialog="show_application_config_dialog()" @received_errors="write_errors"
+        @received_messages="write_messages" />
     <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
         :app_content_height="app_content_height" :app_content_width="app_content_width"
         :is_show="is_show_application_config_dialog" @received_errors="write_errors" @received_messages="write_messages"
@@ -50,7 +51,6 @@ async function load_application_config(): Promise<void> {
             }
 
             application_config.value = res.application_config
-            console.log(application_config.value)
 
             if (res.messages && res.messages.length != 0) {
                 write_messages(res.messages)
@@ -82,11 +82,14 @@ async function write_messages(messages: Array<GkillMessage>) {
     })
 }
 
+function show_application_config_dialog(): void {
+    application_config_dialog.value?.show()
+}
+
 window.addEventListener('resize', () => {
     resize_content()
 })
 
 resize_content()
-load_application_config().then(() => console.log(application_config.value)) //TODO then以降削除
-nextTick(() => { application_config_dialog.value?.show() })
+load_application_config()
 </script>

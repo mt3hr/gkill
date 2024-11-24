@@ -46,7 +46,7 @@ export abstract class FindQueryBase {
         (this as any)[key] = value
     }
 
-    abstract clone(): Promise<FindQueryBase>
+    abstract clone(): FindQueryBase
 
     constructor() {
         this.update_cache = false

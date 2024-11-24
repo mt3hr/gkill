@@ -22,7 +22,9 @@ const nlogs_total_amount = computed(() => {
             emits('received_errors', errors)
             return
         }
-        total_amount = total_amount.valueOf() + kyou.typed_nlog.amount.valueOf()
+        if (kyou.typed_nlog) {
+            total_amount = total_amount.valueOf() + kyou.typed_nlog.amount.valueOf()
+        }
     })
     return total_amount
 })
@@ -37,10 +39,12 @@ const nlogs_total_plus_amount = computed(() => {
             emits('received_errors', errors)
             return
         }
-        if (kyou.typed_nlog.amount.valueOf() <= 0) {
-            return
+        if (kyou.typed_nlog) {
+            if (kyou.typed_nlog.amount.valueOf() <= 0) {
+                return
+            }
+            plus_amount = plus_amount.valueOf() + kyou.typed_nlog.amount.valueOf()
         }
-        plus_amount = plus_amount.valueOf() + kyou.typed_nlog.amount.valueOf()
     })
     return plus_amount
 })
@@ -55,10 +59,12 @@ const nlogs_total_minus_amount = computed(() => {
             emits('received_errors', errors)
             return
         }
-        if (kyou.typed_nlog.amount.valueOf() > 0) {
-            return
+        if (kyou.typed_nlog) {
+            if (kyou.typed_nlog.amount.valueOf() > 0) {
+                return
+            }
+            minus_amount = minus_amount.valueOf() + kyou.typed_nlog.amount.valueOf()
         }
-        minus_amount = minus_amount.valueOf() + kyou.typed_nlog.amount.valueOf()
     })
     return minus_amount
 })
@@ -73,10 +79,12 @@ const timeis_total_time_milli_second = computed(() => {
             emits('received_errors', errors)
             return
         }
-        const start_time = moment(kyou.typed_timeis.start_time)
-        const end_time = kyou.typed_timeis.end_time ? moment(kyou.typed_timeis.end_time) : moment()
-        const diff = start_time.diff(end_time)
-        millisecond = diff //TODO あってる？
+        if (kyou.typed_timeis) {
+            const start_time = moment(kyou.typed_timeis.start_time)
+            const end_time = kyou.typed_timeis.end_time ? moment(kyou.typed_timeis.end_time) : moment()
+            const diff = start_time.diff(end_time)
+            millisecond = diff //TODO あってる？
+        }
     })
     return millisecond
 })
@@ -138,7 +146,9 @@ const lantanas_average_mood = computed(() => {
             return
         }
         mood_count = mood_count.valueOf() + 1
-        sum_mood = sum_mood.valueOf() + kyou.typed_lantana.mood.valueOf()
+        if (kyou.typed_lantana) {
+            sum_mood = sum_mood.valueOf() + kyou.typed_lantana.mood.valueOf()
+        }
     })
     return sum_mood.valueOf() / mood_count.valueOf()
 })

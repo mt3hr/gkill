@@ -115,7 +115,7 @@ SELECT
   CHECK_WHEN_INITED,
   IS_FORCE_HIDE
 FROM TAG_STRUCT
-WHERE USER_ID = ? DEVICE = ?
+WHERE USER_ID = ? AND DEVICE = ?
 `
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -165,8 +165,7 @@ INSERT INTO TAG_STRUCT (
   SEQ,
   CHECK_WHEN_INITED,
   IS_FORCE_HIDE
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -218,8 +217,7 @@ INSERT INTO TAG_STRUCT (
   SEQ,
   CHECK_WHEN_INITED,
   IS_FORCE_HIDE
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -249,6 +247,7 @@ VALUES (
 			tagStruct.ParentFolderID,
 			tagStruct.Seq,
 			tagStruct.CheckWhenInited,
+			tagStruct.IsForceHide,
 		)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
@@ -304,7 +303,7 @@ WHERE ID = ?
 
 func (t *tagStructDAOSQLite3Impl) DeleteTagStruct(ctx context.Context, id string) (bool, error) {
 	sql := `
-DELETE TAG_STRUCT
+DELETE FROM TAG_STRUCT
 WHERE ID = ?
 `
 	stmt, err := t.db.PrepareContext(ctx, sql)
@@ -324,7 +323,7 @@ WHERE ID = ?
 
 func (t *tagStructDAOSQLite3Impl) DeleteUsersTagStructs(ctx context.Context, userID string) (bool, error) {
 	sql := `
-DELETE TAG_STRUCT
+DELETE FROM TAG_STRUCT
 WHERE USER_ID = ?
 `
 	stmt, err := t.db.PrepareContext(ctx, sql)

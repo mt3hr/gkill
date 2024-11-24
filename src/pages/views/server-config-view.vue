@@ -110,14 +110,16 @@
             </v-row>
         </v-card-action>
         <ConfirmGenerateTLSFilesDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="props.server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             ref="confirm_generate_tls_files_dialog" />
         <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="props.server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
             @received_messages="(messages) => emits('received_messages', messages)" ref="create_account_dialog" />
         <ManageAccountDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="props.server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
             @received_messages="(messages) => emits('received_messages', messages)" ref="manage_account_dialog" />
     </v-card>
 </template>
@@ -186,6 +188,7 @@ async function update_server_config(): Promise<void> {
     }
 
     const server_config = new ServerConfig()
+    server_config.enable_this_device = props.server_config.enable_this_device
     server_config.accounts = props.server_config.accounts
     server_config.repositories = props.server_config.repositories
     server_config.address = address.value

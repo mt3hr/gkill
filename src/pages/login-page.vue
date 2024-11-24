@@ -53,15 +53,12 @@ async function write_messages(messages: Array<GkillMessage>) {
 }
 
 async function handle_success_login(session_id: string): Promise<void> {
-    //TODO webStorageにセッションIDを入れる
-    //TODO webStorageの構造モデル起こし
-    //TODO rykv画面に繊維
+    GkillAPI.get_instance().set_session_id(session_id)
 }
 
 window.addEventListener('resize', () => {
     resize_content()
 })
-
 
 resize_content()
 </script>

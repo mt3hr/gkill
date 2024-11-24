@@ -35,15 +35,15 @@
                 </tr>
             </table>
             <table class="ml-4" v-if="open_group">
-                <FoldableStruct v-show="open_group" v-for="child_struct, index in struct_list" :key="child_struct.id"
-                    :application_config="application_config" :folder_name="get_group_name(index)" :gkill_api="gkill_api"
-                    :is_open="get_group_open(index)" :struct_obj="child_struct" :is_editable="is_editable"
-                    @clicked_items="emit_click_items_by_user" :is_show_checkbox="is_show_checkbox"
-                    @click_items_by_user="emit_click_items_by_user" :is_root="false"
-                    @received_errors="(errors) => emits('received_errors', errors)"
+                <FoldableStruct v-show="open_group" v-for="child_struct, index in struct_list"
+                    :key="child_struct.id ? child_struct.id : ''" :application_config="application_config"
+                    :folder_name="get_group_name(index)" :gkill_api="gkill_api" :is_open="get_group_open(index)"
+                    :struct_obj="child_struct" :is_editable="is_editable" @clicked_items="emit_click_items_by_user"
+                    :is_show_checkbox="is_show_checkbox" @click_items_by_user="emit_click_items_by_user"
+                    :is_root="false" @received_errors="(errors) => emits('received_errors', errors)"
                     @received_messages="(messages) => emits('received_messages', messages)" ref="foldable_struct"
-                    @dblclicked_item="(e: MouseEvent, id: string) => emits('dblclicked_item', e, id)"
-                    @contextmenu_item.prevent.stop="(e: MouseEvent, id: string) => emits('contextmenu_item', e, id)"
+                    @dblclicked_item="(e: MouseEvent, id: string | null) => emits('dblclicked_item', e, id)"
+                    @contextmenu_item.prevent.stop="(e: MouseEvent, id: string | null) => emits('contextmenu_item', e, id)"
                     @requested_update_check_state="(items: Array<string>, check_state: CheckState) => emits('requested_update_check_state', items, check_state)"
                     @requested_move_struct_obj="handle_move_struct_obj"
                     @requested_update_struct_obj="update_struct_obj" />
@@ -322,6 +322,9 @@ function handle_move_struct_obj(struct_obj: FoldableStructModel, target_struct_o
     }
 
     // 再帰的にやる
+    if (!struct_obj.id) {
+        return
+    }
     delete_struct(struct_obj.id)
     let pasted = false
     let f = (walk_struct_obj: FoldableStructModel, parent_struct_obj: FoldableStructModel) => { }

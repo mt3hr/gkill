@@ -5,7 +5,7 @@ import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
 
 export class RepStructElementData implements FoldableStructModel {
 
-    id: string
+    id: string | null
 
     rep_name: string
 
@@ -21,7 +21,7 @@ export class RepStructElementData implements FoldableStructModel {
 
     indeterminate: boolean
 
-    parent_folder_id: string 
+    parent_folder_id: string  | null
 
     seq: number
 

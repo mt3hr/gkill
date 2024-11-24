@@ -22,9 +22,9 @@ const struct_list: Ref<any> = ref(props.struct_obj)
 const is_check_when_inited: Ref<boolean> = ref(true)//TODO
 const is_force_hide: Ref<boolean> = ref(false) //TODO
 
-const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
+const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
 async function reload_cloned_application_config(): Promise<void> {
-    cloned_application_config.value = await props.application_config.clone()
+    cloned_application_config.value = props.application_config.clone()
 }
 </script>

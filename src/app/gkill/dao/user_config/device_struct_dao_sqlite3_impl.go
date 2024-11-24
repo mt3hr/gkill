@@ -111,7 +111,7 @@ SELECT
   SEQ,
   CHECK_WHEN_INITED
 FROM DEVICE_STRUCT
-WHERE USER_ID = ? DEVICE = ?
+WHERE USER_ID = ? AND DEVICE = ?
 `
 	stmt, err := d.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -159,8 +159,7 @@ INSERT INTO DEVICE_STRUCT (
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -209,8 +208,7 @@ INSERT INTO DEVICE_STRUCT (
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -300,7 +298,7 @@ WHERE ID = ?
 
 func (d *deviceStructDAOSQLite3Impl) DeleteDeviceStruct(ctx context.Context, id string) (bool, error) {
 	sql := `
-DELETE DEVICE_STRUCT
+DELETE FROM DEVICE_STRUCT
 WHERE ID = ?
 `
 	stmt, err := d.db.PrepareContext(ctx, sql)
@@ -320,7 +318,7 @@ WHERE ID = ?
 
 func (d *deviceStructDAOSQLite3Impl) DeleteUsersDeviceStructs(ctx context.Context, userID string) (bool, error) {
 	sql := `
-DELETE DEVICE_STRUCT
+DELETE FROM DEVICE_STRUCT
 WHERE USER_ID = ?
 `
 	stmt, err := d.db.PrepareContext(ctx, sql)

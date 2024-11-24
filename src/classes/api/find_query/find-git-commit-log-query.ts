@@ -5,7 +5,7 @@ import { FindKyouQuery } from './find-kyou-query'
 
 export class FindGitCommitLogQuery extends FindQueryBase {
 
-    async clone(): Promise<FindGitCommitLogQuery> {
+    clone(): FindGitCommitLogQuery {
         throw new Error('Not implemented')
     }
 

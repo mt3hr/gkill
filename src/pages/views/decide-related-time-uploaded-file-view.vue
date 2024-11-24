@@ -5,9 +5,10 @@
         @received_messages="(messages) => emits('received_messages', messages)" @requested_reload_kyou="(kyou) => { }"
         @requested_reload_list="() => { }" />
     <KyouListView :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="uploaded_kyous"
-        :query="new FindKyouQuery()" @received_errors="(errors) => emits('received_errors', errors)"
-        :last_added_tag="last_added_tag" @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => { }" @requested_reload_list="() => { }"
+        :width="180" :list_height="app_content_height" :kyou_height="180" :query="new FindKyouQuery()"
+        @received_errors="(errors) => emits('received_errors', errors)" :last_added_tag="last_added_tag"
+        @received_messages="(messages) => emits('received_messages', messages)" @requested_reload_kyou="(kyou) => { }"
+        @requested_reload_list="() => { }"
         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => { }" />
 </template>
 <script setup lang="ts">

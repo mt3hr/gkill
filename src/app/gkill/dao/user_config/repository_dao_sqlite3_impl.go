@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
   ID PRIMARY KEY NOT NULL,
   USER_ID NOT NULL,
   DEVICE NOT NULL,
+  TYPE NOT NULL,
   FILE NOT NULL,
   USE_TO_WRITE NOT NULL,
   IS_EXECUTE_IDF_WHEN_RELOAD NOT NULL,
@@ -163,8 +164,8 @@ INSERT INTO REPOSITORY (
   USE_TO_WRITE,
   IS_EXECUTE_IDF_WHEN_RELOAD,
   IS_ENABLE 
-)
-VALUES (
+) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -216,8 +217,7 @@ INSERT INTO REPOSITORY (
   USE_TO_WRITE,
   IS_EXECUTE_IDF_WHEN_RELOAD,
   IS_ENABLE 
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -309,7 +309,7 @@ WHERE ID = ?
 
 func (r *repositoryDAOSQLite3Impl) DeleteRepository(ctx context.Context, id string) (bool, error) {
 	sql := `
-DELETE REPOSITORY
+DELETE FROM REPOSITORY
 WHERE ID = ?
 `
 	stmt, err := r.db.PrepareContext(ctx, sql)
@@ -329,7 +329,7 @@ WHERE ID = ?
 
 func (r *repositoryDAOSQLite3Impl) DeleteAllRepositoriesByUser(ctx context.Context, userID string, device string) (bool, error) {
 	sql := `
-DELETE REPOSITORY
+DELETE FROM REPOSITORY
 WHERE USER_ID = ?
 `
 	stmt, err := r.db.PrepareContext(ctx, sql)

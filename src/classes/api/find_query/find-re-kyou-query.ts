@@ -5,7 +5,7 @@ import { FindKyouQuery } from './find-kyou-query'
 
 export class FindReKyouQuery extends FindQueryBase {
 
-    async clone(): Promise<FindReKyouQuery> {
+    clone(): FindReKyouQuery {
         throw new Error('Not implemented')
     }
 
