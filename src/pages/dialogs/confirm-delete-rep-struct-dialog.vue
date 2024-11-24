@@ -2,7 +2,7 @@
     <v-dialog v-model="is_show_dialog">
         <ConfirmDeleteRepStructView :application_config="application_config" :gkill_api="gkill_api"
             :rep_struct="rep_struct" @received_errors="(errors) => emits('received_errors', errors)"
-            @requested_close_dialog="hide" @requested_delete_rep="(id) => { emits('requested_delete_rep', id); hide() }"
+            @requested_close_dialog="hide" @requested_delete_rep="(id) => { if (id) emits('requested_delete_rep', id); hide() }"
             @received_messages="(messages) => emits('received_messages', messages)" />
     </v-dialog>
 </template>

@@ -18,7 +18,8 @@
                 <h2>Devices</h2>
                 <table class="devicelist">
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-                        :is_open="true" :query="query" :struct_obj="application_config.parsed_device_struct"
+                        :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true" :query="query"
+                        :struct_obj="application_config.parsed_device_struct"
                         @requested_update_check_state="update_devices"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
@@ -27,7 +28,8 @@
                 <h2>Types</h2>
                 <table class="typelist">
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-                        :is_open="true" :query="query" :struct_obj="application_config.parsed_rep_type_struct"
+                        :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true" :query="query"
+                        :struct_obj="application_config.parsed_rep_type_struct"
                         @requested_update_check_state="update_rep_types"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
@@ -38,8 +40,8 @@
                 <h2>Reps</h2>
                 <table>
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-                        :is_open="true" :query="query" :struct_obj="application_config.parsed_rep_struct"
-                        @requested_update_check_state="update_reps"
+                        :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true" :query="query"
+                        :struct_obj="application_config.parsed_rep_struct" @requested_update_check_state="update_reps"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @clicked_items="clicked_reps" ref="foldable_struct_reps" />
@@ -68,7 +70,7 @@ const foldable_struct_rep_types = ref<InstanceType<typeof FoldableStruct> | null
 const props = defineProps<RepQueryProps>()
 const emits = defineEmits<RepQueryEmits>()
 const cloned_query: Ref<FindKyouQuery> = ref(await props.query.clone())
-const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
+const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
 const tab = ref(2)
 const use_rep = ref(true)

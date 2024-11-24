@@ -12,7 +12,7 @@ export class FindLantanaQuery extends FindQueryBase {
 
     mood_operator: MoodOperator
 
-    async clone(): Promise<FindLantanaQuery> {
+    clone(): FindLantanaQuery {
         throw new Error('Not implemented')
     }
 

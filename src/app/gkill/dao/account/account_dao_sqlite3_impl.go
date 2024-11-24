@@ -45,11 +45,12 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 	}
 	defer stmt.Close()
 
-	return &accountDAOSQLite3Impl{
+	accountDAO := &accountDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
 		m:        &sync.Mutex{},
-	}, nil
+	}
+	return accountDAO, nil
 }
 func (a *accountDAOSQLite3Impl) GetAllAccounts(ctx context.Context) ([]*Account, error) {
 	sql := `

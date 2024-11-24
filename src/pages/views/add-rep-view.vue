@@ -11,9 +11,9 @@
         <v-checkbox v-model="is_enable" :label="'有効'" />
         <v-checkbox v-model="use_to_write" :label="'書込先として使用'" />
         <v-checkbox v-model="is_execute_idf_when_reload" :label="'更新時にID自動割り当て'" />
-        <v-textfield v-model="device" :label="'デバイス名'" />
-        <v-textfield v-model="type" :label="'repのtype'" />
-        <v-textfield v-model="file" :label="'PATH'" />
+        <v-text-field v-model="device" :label="'デバイス名'" />
+        <v-select v-model="type" :items="rep_types" label="RepType" />
+        <v-text-field v-model="file" :label="'PATH'" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -42,6 +42,19 @@ const file: Ref<string> = ref("")
 const use_to_write: Ref<boolean> = ref(false)
 const is_execute_idf_when_reload: Ref<boolean> = ref(false)
 const is_enable: Ref<boolean> = ref(true)
+
+const rep_types: Ref<Array<string>> = ref([
+    "kmemo",
+    "urlog",
+    "timeis",
+    "mi",
+    "nlog",
+    "lantana",
+    "tag",
+    "text",
+    "rekyou",
+    "directory",
+])
 
 async function add_rep(): Promise<void> {
     const repository = new Repository()

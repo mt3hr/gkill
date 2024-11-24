@@ -111,7 +111,7 @@ SELECT
   SEQ,
   CHECK_WHEN_INITED
 FROM REP_TYPE_STRUCT
-WHERE USER_ID = ? DEVICE = ?
+WHERE USER_ID = ? AND DEVICE = ?
 `
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -159,8 +159,7 @@ INSERT INTO REP_TYPE_STRUCT (
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -209,8 +208,7 @@ INSERT INTO REP_TYPE_STRUCT (
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -300,7 +298,7 @@ WHERE ID = ?
 
 func (r *repTypeStructDAOSQLite3Impl) DeleteRepTypeStruct(ctx context.Context, id string) (bool, error) {
 	sql := `
-DELETE REP_TYPE_STRUCT
+DELETE FROM REP_TYPE_STRUCT
 WHERE ID = ?
 `
 	stmt, err := r.db.PrepareContext(ctx, sql)
@@ -320,7 +318,7 @@ WHERE ID = ?
 
 func (r *repTypeStructDAOSQLite3Impl) DeleteUsersRepTypeStructs(ctx context.Context, userID string) (bool, error) {
 	sql := `
-DELETE REP_TYPE_STRUCT
+DELETE FROM REP_TYPE_STRUCT
 WHERE USER_ID = ?
 `
 	stmt, err := r.db.PrepareContext(ctx, sql)

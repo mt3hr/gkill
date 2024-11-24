@@ -240,4 +240,6 @@ const (
 	UpdateServerConfigError                            = "ERR000234"
 	GetAllAccountConfigError                           = "ERR000235"
 	GetAllRepositoriesError                            = "ERR000236"
+	AddApplicationConfig                               = "ERR000237"
+	AccountDisabledError                               = "ERR000238"
 )

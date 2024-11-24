@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"sync"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -53,52 +52,11 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 		return nil, err
 	}
 
-	serverConfigDao := &serverConfigDAOSQLite3Impl{
+	return &serverConfigDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
 		m:        &sync.Mutex{},
-	}
-
-	err = serverConfigDao.insertInitData(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at insert init data to server config %s: %w", filename, err)
-		return nil, err
-	}
-	return serverConfigDao, nil
-}
-
-func (s *serverConfigDAOSQLite3Impl) insertInitData(ctx context.Context) error {
-	serverConfigs, err := s.GetAllServerConfigs(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get all server configs: %w", err)
-		return err
-	}
-	// データが有れば何もしない
-	if len(serverConfigs) != 0 {
-		return nil
-	}
-	// データがなかったら初期データを作ってあげる
-	serverConfig := &ServerConfig{
-		EnableThisDevice:     true,
-		Device:               "gkill",
-		IsLocalOnlyAccess:    false,
-		Address:              ":9999",
-		EnableTLS:            false,
-		TLSCertFile:          "",
-		TLSKeyFile:           "",
-		OpenDirectoryCommand: "explorer /select,$filename",
-		OpenFileCommand:      "rundll32 url.dll,FileProtocolHandler $filename",
-		URLogTimeout:         1 * time.Minute,
-		URLogUserAgent:       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36",
-		UploadSizeLimitMonth: -1,
-		UserDataDirectory:    "$HOME/gkill/datas",
-	}
-	_, err = s.AddServerConfig(ctx, serverConfig)
-	if err != nil {
-		err = fmt.Errorf("error at add init data to server config db: %w", err)
-		return err
-	}
-	return nil
+	}, nil
 }
 
 func (s *serverConfigDAOSQLite3Impl) GetAllServerConfigs(ctx context.Context) ([]*ServerConfig, error) {
@@ -243,8 +201,7 @@ INSERT INTO SERVER_CONFIG (
   URLOG_USERAGENT,
   UPLOAD_SIZE_LIMIT_MONTH,
   USER_DATA_DIRECTORY
-)
-VALUES (
+) VALUES (
   ?,
   ?,
   ?,
@@ -351,7 +308,7 @@ WHERE DEVICE = ?
 	}
 	// 有効なDEVICEが存在しなければエラーで戻す
 	checkEnableDeviceCountSQL := `
-SELECT COUNT(*) 
+SELECT COUNT(*) AS COUNT
 FROM SERVER_CONFIG
 WHERE ENABLE_THIS_DEVICE = ?
 `
@@ -378,18 +335,17 @@ WHERE ENABLE_THIS_DEVICE = ?
 	}
 	defer rows.Close()
 
+	enableDeviceCount = 0
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return false, ctx.Err()
 		default:
-			enableThisDevice := false
+			enableCount := 0
 			err = rows.Scan(
-				&enableThisDevice,
+				&enableCount,
 			)
-			if enableThisDevice {
-				enableDeviceCount++
-			}
+			enableDeviceCount += enableCount
 		}
 	}
 	if enableDeviceCount != 1 {
@@ -509,13 +465,11 @@ WHERE ENABLE_THIS_DEVICE = ?
 		case <-ctx.Done():
 			return false, ctx.Err()
 		default:
-			enableThisDevice := false
+			enableCount := 0
 			err = rows.Scan(
-				&enableThisDevice,
+				&enableCount,
 			)
-			if enableThisDevice {
-				enableDeviceCount++
-			}
+			enableDeviceCount += enableCount
 		}
 	}
 	if enableDeviceCount != 1 {
@@ -544,7 +498,7 @@ WHERE ENABLE_THIS_DEVICE = ?
 
 func (s *serverConfigDAOSQLite3Impl) DeleteServerConfig(ctx context.Context, device string) (bool, error) {
 	sql := `
-DELETE SERVER_CONFIG 
+DELETE FROM SERVER_CONFIG 
 WHERE DEVICE = ?
 `
 	stmt, err := s.db.PrepareContext(ctx, sql)

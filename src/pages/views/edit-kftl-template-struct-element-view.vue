@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <v-card-title>
-            タグ編集
+            テンプレート編集
         </v-card-title>
         <v-text-field class="input" type="text" v-model="title" label="KFTLテンプレート名" />
         <v-textarea v-model="template" label="テンプレート内容" />
@@ -30,7 +30,7 @@ const props = defineProps<EditKFTLTemplateStructElementViewProps>()
 const emits = defineEmits<EditKFTLTemplateStructElementViewEmits>()
 
 const title: Ref<string> = ref(props.struct_obj.title)
-const template: Ref<string> = ref(props.struct_obj.template)
+const template: Ref<string | null> = ref(props.struct_obj.template)
 
 async function apply(): Promise<void> {
     const gkill_info_req = new GetGkillInfoRequest()

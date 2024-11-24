@@ -13,7 +13,7 @@ export class FindTimeIsQuery extends FindQueryBase {
 
     include_end_timeis: boolean
 
-    async clone(): Promise<FindTimeIsQuery> {
+    clone(): FindTimeIsQuery {
         throw new Error('Not implemented')
     }
 

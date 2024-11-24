@@ -13,7 +13,7 @@
         </v-card-title>
         <v-card>
             <table>
-                <tr v-for="account in cloned_accounts">
+                <tr v-for="account in cloned_accounts" :key="account.user_id">
                     <td>
                         <v-checkbox v-model="account.is_enable"
                             @click="update_is_enable_account(account, !account.is_enable)" />
@@ -54,6 +54,7 @@
             ref="confirm_reset_password_dialog" />
         <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api"
             :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
             @received_messages="(messages) => emits('received_messages', messages)" ref="create_account_dialog" />
         <ShowPasswordResetLinkDialog :application_config="application_config" :gkill_api="gkill_api"
             :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"

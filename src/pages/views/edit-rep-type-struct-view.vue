@@ -6,7 +6,7 @@
         <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="'記録タイプ'"
             :is_open="true" :struct_obj="cloned_application_config.parsed_rep_type_struct" :is_editable="true"
             :is_root="true" :is_show_checkbox="false"
-            @dblclicked_item="(e: MouseEvent, id: string) => show_edit_rep_type_struct_dialog(id)"
+            @dblclicked_item="(e: MouseEvent, id: string | null) => { if (id) show_edit_rep_type_struct_dialog(id) }"
             @contextmenu_item="show_rep_type_contextmenu" ref="foldable_struct" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
@@ -84,17 +84,19 @@ defineExpose({ reload_cloned_application_config })
 
 watch(() => props.application_config, () => reload_cloned_application_config())
 
-const cloned_application_config: Ref<ApplicationConfig> = ref(await props.application_config.clone())
+const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
 cloned_application_config.value.parse_rep_type_struct()
 
 async function reload_cloned_application_config(): Promise<void> {
-    cloned_application_config.value = await props.application_config.clone()
+    cloned_application_config.value = props.application_config.clone()
     cloned_application_config.value.parse_rep_type_struct()
 }
 
-function show_rep_type_contextmenu(e: MouseEvent, id: string): void {
-    rep_type_struct_context_menu.value?.show(e, id)
+function show_rep_type_contextmenu(e: MouseEvent, id: string | null): void {
+    if (id) {
+        rep_type_struct_context_menu.value?.show(e, id)
+    }
 }
 
 function show_edit_rep_type_struct_dialog(id: string): void {
@@ -132,22 +134,25 @@ function update_rep_type_struct(rep_type_struct_obj: RepTypeStruct): void {
 
 function update_seq(rep_type_struct: Array<FoldableStructModel>): void {
     // 並び順再決定
-    let f = (struct: FoldableStructModel, seq: number) => { }
-    let func = (struct: FoldableStructModel, seq: number) => {
+    let f = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => { }
+    let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
         for (let i = 0; i < cloned_application_config.value.rep_type_struct.length; i++) {
             if (struct.id === cloned_application_config.value.rep_type_struct[i].id) {
                 cloned_application_config.value.rep_type_struct[i].seq = seq
+                cloned_application_config.value.rep_type_struct[i].parent_folder_id = parent.id
             }
         }
         if (struct.children) {
             for (let i = 0; i < struct.children.length; i++) {
-                f(struct.children[i], i)
+                f(struct.children[i], struct, i)
             }
         }
     }
     f = func
-    for (let i = 0; i < rep_type_struct.length; i++) {
-        f(rep_type_struct[i], i)
+    if (cloned_application_config.value.parsed_rep_type_struct.children) {
+        for (let i = 0; i < cloned_application_config.value.parsed_rep_type_struct.children?.length; i++) {
+            f(cloned_application_config.value.parsed_rep_type_struct.children[i], cloned_application_config.value.parsed_rep_type_struct, i)
+        }
     }
 }
 
@@ -156,7 +161,6 @@ async function apply(): Promise<void> {
     if (!rep_type_struct) {
         return
     }
-
     update_seq(rep_type_struct)
 
     // 更新する
@@ -196,7 +200,7 @@ async function add_folder_struct_element(folder_struct_element: FolderStructElem
     rep_type_struct.user_id = res.user_id
     rep_type_struct.device = res.device
     rep_type_struct.check_when_inited = false
-    rep_type_struct.parent_folder_id = cloned_application_config.value.parsed_rep_type_struct.id
+    rep_type_struct.parent_folder_id = null
     rep_type_struct.seq = cloned_application_config.value.parsed_rep_type_struct.children ? cloned_application_config.value.parsed_rep_type_struct.children.length : 0
     rep_type_struct.rep_type_name = folder_struct_element.folder_name
 
@@ -223,7 +227,7 @@ async function add_rep_type_struct_element(rep_type_struct_element: RepTypeStruc
     }
 
     const rep_type_struct = new RepTypeStruct()
-    rep_type_struct.id = rep_type_struct_element.id
+    rep_type_struct.id = rep_type_struct_element.id ? rep_type_struct_element.id : ""
     rep_type_struct.user_id = res.user_id
     rep_type_struct.device = res.device
     rep_type_struct.check_when_inited = rep_type_struct_element.check_when_inited

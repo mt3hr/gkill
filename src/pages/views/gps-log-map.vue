@@ -18,7 +18,7 @@
 <script lang="ts" setup>
 import moment from 'moment';
 import { computed, ref, watch, type Ref } from 'vue';
-import { GoogleMap, Polyline } from 'vue3-google-map';
+import { GoogleMap, Polyline, } from 'vue3-google-map';
 import type { GPSLogMapEmits } from './gps-log-map-emits'
 import type { GPSLogMapProps } from './gps-log-map-props'
 import { GkillAPI } from '@/classes/api/gkill-api';
@@ -34,7 +34,7 @@ const zoom = ref(11) // mapのズーム
 const time_slider_max = ref(86399)
 
 const gps_logs: Ref<Array<GPSLog>> = ref([])
-const gps_log_lines: Ref<google.maps.PolylineOptions> = ref({}) // mapに表示するmarkerのposition
+const gps_log_lines = ref({}) // mapに表示するmarkerのposition
 const slider_model = ref(0) // スライダーの値のモデル
 
 const start_date_str = computed(() => moment(props.start_date).format("YYYY-MM-DD"))
@@ -66,6 +66,7 @@ async function update_gps_log_lines(): Promise<void> {
     const req = new GetGPSLogRequest()
     req.start_date = moment(start_date_str.value).toDate()
     req.end_date = moment(end_date_str.value).toDate()
+    req.session_id = GkillAPI.get_instance().get_session_id()
     const res = await GkillAPI.get_instance().get_gps_log(req)
     // エラーチェック
     if (res.errors && res.errors.length !== 0) {
@@ -131,14 +132,17 @@ async function centering(): Promise<void> {
         if (minLng > gps_log.longitude.valueOf()) minLng = gps_log.longitude.valueOf()
     })
 
-    const bounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(minLat, minLng),
-        new google.maps.LatLng(maxLat, maxLng))
+    const bounds = {
+        north: minLat,
+        south: maxLat,
+        east: minLng,
+        west: maxLng,
+    }
     gmap.value?.map?.fitBounds(bounds)
     const msec = 100
     await new Promise(resolve => setTimeout(resolve, msec))
     gmap.value?.map?.fitBounds(bounds)
-    center.value = { lat: bounds.getCenter().lat(), lng: bounds.getCenter().lng() }
+    center.value = { lat: (minLat + maxLat) / 2, lng: (minLng + maxLng) / 2 }
 }
 // pathが更新されたとき中央寄せする
 watch(gps_logs, () => centering())

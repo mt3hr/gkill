@@ -56,7 +56,6 @@ function on_wheel(e: any) {
     } else {
         document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(1)").forEach((el, key, parent) => { (el as any).click() })
     }
-    //TODO document.querySelectorAll(".calendar_query_date_picker").forEach((element, key, parent) => { element.scrollTop = 0 })
 }
 
 function clicked_clear_calendar_button(): void {
