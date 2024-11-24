@@ -14,7 +14,7 @@ export class FindMiQuery extends FindQueryBase {
     sort_type: MiSortType
     check_state: MiCheckState
 
-    async clone(): Promise<FindMiQuery> {
+    clone(): FindMiQuery {
         throw new Error('Not implemented')
     }
 

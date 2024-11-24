@@ -4,7 +4,7 @@ import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
 
 export class KFTLTemplateStructElementData implements FoldableStructModel {
 
-    id: string
+    id: string | null
 
     title: string
 

@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar class="app_bar" app color="primary" flat  :height="app_title_bar_height_px">
+    <v-app-bar class="app_bar" app color="primary" flat :height="app_title_bar_height_px">
         <v-toolbar-title>mi</v-toolbar-title>
         <v-spacer />
     </v-app-bar>
@@ -40,7 +40,7 @@ const is_show_application_config_dialog: Ref<boolean> = ref(false)
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
-    req.session_id =GkillAPI.get_instance().get_session_id()
+    req.session_id = GkillAPI.get_instance().get_session_id()
 
     return gkill_api.value.get_application_config(req)
         .then(res => {

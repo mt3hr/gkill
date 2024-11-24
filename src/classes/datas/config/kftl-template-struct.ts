@@ -10,7 +10,7 @@ export class KFTLTemplateStruct {
 
     title: string
 
-    template: string
+    template: string | null
 
     parent_folder_id: string | null
 

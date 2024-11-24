@@ -15,9 +15,9 @@ type ApplicationConfig struct {
 
 	MiDefaultBoard string `json:"mi_default_board"`
 
-	KFTLTemplate []*KFTLTemplate `json:"kftl_template"`
+	KFTLTemplate []*KFTLTemplate `json:"kftl_template_struct"`
 
-	TagStrcuct []*TagStruct `json:"tag_strcuct"`
+	TagStruct []*TagStruct `json:"tag_struct"`
 
 	RepStruct []*RepStruct `json:"rep_struct"`
 

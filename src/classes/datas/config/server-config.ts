@@ -5,6 +5,8 @@ import { Repository } from './repository'
 
 export class ServerConfig {
 
+    enable_this_device: boolean
+
     device: string
 
     is_local_only_access: boolean
@@ -38,6 +40,7 @@ export class ServerConfig {
     }
 
     constructor() {
+        this.enable_this_device = false
         this.device = ""
         this.is_local_only_access = true
         this.address = "8888"

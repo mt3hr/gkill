@@ -1,7 +1,6 @@
 'use strict'
 
 import { ApplicationConfig } from "../datas/config/application-config"
-import { TagStruct } from "../datas/config/tag-struct"
 import type { AddAccountRequest } from "./req_res/add-account-request"
 import type { AddAccountResponse } from "./req_res/add-account-response"
 import type { AddKmemoRequest } from "./req_res/add-kmemo-request"
@@ -38,7 +37,7 @@ import type { GetGitCommitLogRequest } from "./req_res/get-git-commit-log-reques
 import type { GetGitCommitLogResponse } from "./req_res/get-git-commit-log-response"
 import type { GetGitCommitLogsRequest } from "./req_res/get-git-commit-logs-request"
 import type { GetGitCommitLogsResponse } from "./req_res/get-git-commit-logs-response"
-import type { GetGkillInfoRequest } from "./req_res/get-gkill-info-request"
+import { GetGkillInfoRequest } from "./req_res/get-gkill-info-request"
 import type { GetGkillInfoResponse } from "./req_res/get-gkill-info-response"
 import type { GetGPSLogRequest } from "./req_res/get-gps-log-request"
 import type { GetGPSLogResponse } from "./req_res/get-gps-log-response"
@@ -146,6 +145,13 @@ import type { UploadGPSLogFilesRequest } from "./req_res/upload-gps-log-files-re
 import type { UploadGPSLogFilesResponse } from "./req_res/upload-gps-log-files-response"
 import type { UpdateServerConfigRequest } from "./req_res/update-server-config-request"
 import type { UpdateServerConfigResponse } from "./req_res/update-server-config-response"
+import { DeviceStruct } from "../datas/config/device-struct"
+import { KFTLTemplateStruct } from "../datas/config/kftl-template-struct"
+import { RepStruct } from "../datas/config/rep-struct"
+import { RepTypeStruct } from "../datas/config/rep-type-struct"
+import { generateCodeFrame } from "vue/compiler-sfc"
+import type { GkillAPIResponse } from "./gkill-api-response"
+import router from "@/router"
 
 export class GkillAPI {
         private static gkill_api: GkillAPI = new GkillAPI()
@@ -350,7 +356,7 @@ export class GkillAPI {
                 this.update_tag_struct_address = "/api/update_tag_struct"
                 this.update_rep_struct_address = "/api/update_rep_struct"
                 this.update_device_struct_address = "/api/update_device_struct"
-                this.update_rep_type_struct_address = "/api/update_rep_struct"
+                this.update_rep_type_struct_address = "/api/update_rep_type_struct"
                 this.update_kftl_template_address = "/api/update_kftl_template"
                 this.update_account_status_address = "/api/update_account_status"
                 this.update_user_reps_address = "/api/update_user_reps"
@@ -444,6 +450,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: LoginResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -457,6 +464,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: LogoutResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -470,6 +478,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: ResetPasswordResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -483,6 +492,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: SetNewPasswordResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -496,6 +506,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddTagResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -509,6 +520,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddTextResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -522,6 +534,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddKmemoResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -535,6 +548,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddURLogResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -548,6 +562,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddNlogResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -561,6 +576,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddTimeisResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -574,6 +590,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddMiResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -587,6 +604,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddLantanaResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -600,6 +618,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddKyouInfoResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -613,6 +632,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddReKyouResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -626,6 +646,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateTagResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -639,6 +660,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateTextResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -652,6 +674,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateKmemoResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -665,6 +688,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateURLogResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -678,6 +702,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateNlogResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -691,6 +716,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateTimeisResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -704,6 +730,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateMiResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -717,6 +744,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateLantanaResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -730,6 +758,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateKyouInfoResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -743,6 +772,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateReKyouResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -756,6 +786,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetKyousResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -769,6 +800,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetKyouResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -782,6 +814,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetKmemoResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -795,6 +828,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetURLogResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -808,6 +842,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetNlogResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -821,6 +856,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetTimeisResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -834,6 +870,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetMiResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -847,6 +884,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetLantanaResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -860,6 +898,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetReKyouResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -873,6 +912,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetGitCommitLogResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -918,6 +958,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetMiBoardResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -931,6 +972,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetPlaingTimeisResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -944,6 +986,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetAllTagNamesResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -957,6 +1000,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetTagsByTargetIDResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -970,6 +1014,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetTagHistoryByTagIDResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -983,6 +1028,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetTextsByTargetIDResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -996,11 +1042,11 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetTextHistoryByTextIDResponse = json
+                this.check_auth(response)
                 return response
         }
 
         async get_application_config(req: GetApplicationConfigRequest): Promise<GetApplicationConfigResponse> {
-                /* //TODO コメントアウト解除
                 const res = await fetch(this.get_application_config_address, {
                         'method': this.get_application_config_method,
                         headers: {
@@ -1009,63 +1055,40 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
-                const response: GetApplicationConfigResponse = json
-                */
-                const response = new GetApplicationConfigResponse()
+                const response = json as unknown as GetApplicationConfigResponse
+                this.check_auth(response)
+
+                const gkill_info_req = new GetGkillInfoRequest()
+                gkill_info_req.session_id = this.get_session_id()
+                const gkill_info_res = await this.get_gkill_info(gkill_info_req)
+                if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+                        response.errors = response.errors.concat(gkill_info_res.errors)
+                        this.check_auth(response)
+                        return response
+                }
+                if (gkill_info_res.messages && gkill_info_res.messages.length !== 0) {
+                        // response.messages = response.messages.concat(gkill_info_res.messages)
+                }
+
                 const application_config = new ApplicationConfig()
-                const tag1 = new TagStruct()
-                const tag2 = new TagStruct()
-                const tag3 = new TagStruct()
-                const tag4 = new TagStruct()
-                const tag5 = new TagStruct()
-                const tag6 = new TagStruct()
-                const tag7 = new TagStruct()
-                const tag8 = new TagStruct()
-                const tag9 = new TagStruct()
-                tag1.id = "1"
-                tag2.id = "2"
-                tag3.id = "3"
-                tag4.id = "4"
-                tag5.id = "5"
-                tag6.id = "6"
-                tag7.id = "7"
-                tag8.id = "8"
-                tag9.id = "9"
-                tag1.seq = 1
-                tag2.seq = 2
-                tag3.seq = 3
-                tag4.seq = 4
-                tag5.seq = 5
-                tag6.seq = 6
-                tag7.seq = 7
-                tag8.seq = 8
-                tag9.seq = 9
-                tag1.tag_name = "1"
-                tag2.tag_name = "2"
-                tag3.tag_name = "3"
-                tag4.tag_name = "4"
-                tag5.tag_name = "5"
-                tag6.tag_name = "6"
-                tag7.tag_name = "7"
-                tag8.tag_name = "8"
-                tag9.tag_name = "9"
-                tag4.parent_folder_id = "3"
-                tag5.parent_folder_id = "3"
-                tag6.parent_folder_id = "3"
-                tag7.parent_folder_id = "2"
-                tag8.parent_folder_id = "2"
-                tag9.parent_folder_id = "2"
-                application_config.tag_struct.push(tag1)
-                application_config.tag_struct.push(tag2)
-                application_config.tag_struct.push(tag3)
-                application_config.tag_struct.push(tag4)
-                application_config.tag_struct.push(tag5)
-                application_config.tag_struct.push(tag6)
-                application_config.tag_struct.push(tag7)
-                application_config.tag_struct.push(tag8)
-                application_config.tag_struct.push(tag9)
-                application_config.parse_tag_struct()
+                application_config.tag_struct = response.application_config.tag_struct ? response.application_config.tag_struct : []
+                application_config.device_struct = response.application_config.device_struct ? response.application_config.device_struct : []
+                application_config.rep_struct = response.application_config.rep_struct ? response.application_config.rep_struct : []
+                application_config.rep_type_struct = response.application_config.rep_type_struct ? response.application_config.rep_type_struct : []
+                application_config.kftl_template_struct = response.application_config.kftl_template_struct ? response.application_config.kftl_template_struct : []
+                application_config.account_is_admin = response.application_config.account_is_admin
+                application_config.device = response.application_config.device
+                application_config.enable_browser_cache = response.application_config.enable_browser_cache
+                application_config.google_map_api_key = response.application_config.google_map_api_key
+                application_config.is_loaded = response.application_config.is_loaded
+                application_config.mi_default_board = response.application_config.mi_default_board
+                application_config.rykv_hot_reload = response.application_config.rykv_hot_reload
+                application_config.rykv_image_list_column_number = response.application_config.rykv_image_list_column_number
+                application_config.user_id = response.application_config.user_id
                 response.application_config = application_config
+
+                await response.application_config.parse_template_and_struct()
+                this.check_auth(response)
                 return response
         }
 
@@ -1079,6 +1102,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetServerConfigResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1092,6 +1116,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UploadFilesResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1105,6 +1130,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UploadGPSLogFilesResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1118,10 +1144,12 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateApplicationConfigResponse = json
+                this.check_auth(response)
                 return response
         }
 
         async update_tag_struct(req: UpdateTagStructRequest): Promise<UpdateTagStructResponse> {
+                console.log(req)
                 const res = await fetch(this.update_tag_struct_address, {
                         'method': this.update_tag_struct_method,
                         headers: {
@@ -1131,6 +1159,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateTagStructResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1144,6 +1173,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateRepStructResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1157,6 +1187,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateDeviceStructResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1170,12 +1201,13 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateRepTypeStructResponse = json
+                this.check_auth(response)
                 return response
         }
 
         async update_kftl_template(req: UpdateKFTLTemplateRequest): Promise<UpdateKFTLTemplateResponse> {
-                const res = await fetch(this.update_rep_type_struct_address, {
-                        'method': this.update_rep_type_struct_method,
+                const res = await fetch(this.update_kftl_template_address, {
+                        'method': this.update_kftl_template_method,
                         headers: {
                                 'Content-Type': 'application/json'
                         },
@@ -1183,6 +1215,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateKFTLTemplateResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1196,6 +1229,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateAccountStatusResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1209,6 +1243,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateUserRepsResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1222,6 +1257,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateServerConfigResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1235,6 +1271,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddAccountResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1248,6 +1285,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GenerateTLSFileResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1261,6 +1299,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetGPSLogResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1274,6 +1313,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetKFTLTemplatesResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1287,6 +1327,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetGkillInfoResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1300,6 +1341,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetShareMiTaskListInfosResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1313,6 +1355,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: AddShareMiTaskListInfoResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1326,6 +1369,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateShareMiTaskListInfoResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1339,6 +1383,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: DeleteShareMiTaskListInfosResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1352,6 +1397,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetSharedMiTasksResponse = json
+                this.check_auth(response)
                 return response
         }
 
@@ -1382,6 +1428,25 @@ export class GkillAPI {
                 }
                 const uuid = chars.join('')
                 return uuid
+        }
+
+        // 認証が通っていなかったらログイン画面に遷移する
+        check_auth(res: GkillAPIResponse): void {
+                if (res.errors && res.errors.length !== 0) {
+                        res.errors.forEach(error => {
+                                switch (error.error_code) {
+                                        case "ERR000013": // AccountSessionNotFoundError
+                                                router.replace("/")
+                                                break
+                                        case "ERR000002": // AccountNotFoundError
+                                                router.replace("/")
+                                                break
+                                        case "ERR000238": // AccountDisabledError
+                                                router.replace("/")
+                                                break
+                                }
+                        })
+                }
         }
 }
 

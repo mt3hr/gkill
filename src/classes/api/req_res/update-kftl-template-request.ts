@@ -9,6 +9,7 @@ export class UpdateKFTLTemplateRequest extends GkillAPIRequest {
 
     constructor() {
         super()
+        this.kftl_templates = new Array<KFTLTemplateStruct>()
     }
 
 }

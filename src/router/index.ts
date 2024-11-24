@@ -43,7 +43,7 @@ const router = createRouter({
       component: saihate_page,
     },
     {
-      path: '/',
+      path: '/set_new_password',
       name: 'set_new_password',
       component: set_new_password_page,
     },

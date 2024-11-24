@@ -4,7 +4,7 @@
             :app_content_height="app_content_height" :app_content_width="app_content_width"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_application_config="(application_config) => emits('requested_reload_application_config', application_config)"
+            @requested_reload_application_config="emits('requested_reload_application_config', application_config)"
             @requested_close_dialog="hide" ref="application_config_view" />
     </v-dialog>
 </template>
