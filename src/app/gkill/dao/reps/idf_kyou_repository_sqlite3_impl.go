@@ -518,7 +518,135 @@ ORDER BY UPDATE_TIME DESC
 }
 
 func (i *idfKyouRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	panic("notImplements")
+	if id == "" {
+		return i.contentDir, nil
+	}
+	var err error
+	sql := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TARGET_REP_NAME,
+  TARGET_FILE,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
+FROM IDF
+WHERE ID = ?
+ORDER BY UPDATE_TIME DESC
+`
+	stmt, err := i.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		return "", err
+	}
+	defer stmt.Close()
+
+	repName, err := i.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at idf : %w", err)
+		return "", err
+	}
+
+	dataType := "idf"
+	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+	if err != nil {
+		err = fmt.Errorf("error at select from idf %s: %w", err)
+		return "", err
+	}
+	defer rows.Close()
+
+	idfKyous := []*IDFKyou{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		default:
+			idf := &IDFKyou{}
+			idf.RepName = repName
+			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			targetRepName, targetFile := "", ""
+
+			err = rows.Scan(&idf.IsDeleted,
+				&idf.ID,
+				&targetRepName,
+				&targetFile,
+				&relatedTimeStr,
+				&createTimeStr,
+				&idf.CreateApp,
+				&idf.CreateDevice,
+				&idf.CreateUser,
+				&updateTimeStr,
+				&idf.UpdateApp,
+				&idf.UpdateDevice,
+				&idf.UpdateUser,
+				&idf.RepName,
+				&idf.DataType,
+			)
+			idf.FileName = filepath.Base(targetFile)
+
+			for _, rep := range i.repositoriesRef.Reps {
+				repName, err := rep.GetRepName(ctx)
+				if err != nil {
+					err = fmt.Errorf("error at get rep name: %w", err)
+					return "", err
+				}
+				if repName == targetRepName {
+					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.FileName))
+				}
+			}
+
+			// 画像であるか判定
+			idf.IsImage = false
+			ext := strings.ToLower(filepath.Ext(idf.FileName))
+			switch ext {
+			case ".jpg",
+				".jpeg",
+				".jfif",
+				".png",
+				".gif",
+				".bmp":
+				idf.IsImage = true
+			}
+
+			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse related time %s in idf: %w", relatedTimeStr, err)
+				return "", err
+			}
+			idf.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse create time %s in idf: %w", createTimeStr, err)
+				return "", err
+			}
+			idf.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse update time %s in idf: %w", updateTimeStr, err)
+				return "", err
+			}
+
+			idfKyous = append(idfKyous, idf)
+		}
+	}
+	sort.Slice(idfKyous, func(i, j int) bool {
+		return idfKyous[i].UpdateTime.After(idfKyous[j].UpdateTime)
+	})
+	if len(idfKyous) == 0 {
+		repName, _ := i.GetRepName(ctx)
+		err := fmt.Errorf("not found %s in %s", id, repName)
+		return "", err
+	}
+
+	filename := filepath.Join(i.contentDir, idfKyous[0].FileName)
+	return filename, nil
 }
 
 func (i *idfKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
