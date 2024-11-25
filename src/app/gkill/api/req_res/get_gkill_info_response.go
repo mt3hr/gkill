@@ -10,4 +10,6 @@ type GetGkillInfoResponse struct {
 	UserID string `json:"user_id"`
 
 	Device string `json:"device"`
+
+	UserIsAdmin bool `json:"user_is_admin"`
 }

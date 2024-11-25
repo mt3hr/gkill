@@ -175,7 +175,12 @@ INSERT INTO REPOSITORY (
   ?
 )
 `
-	stmt, err := r.db.PrepareContext(ctx, sql)
+	tx, err := r.db.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin update repository: %w", err)
+		return false, err
+	}
+	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add repository sql: %w", err)
 		return false, err
@@ -193,7 +198,21 @@ INSERT INTO REPOSITORY (
 		repository.IsEnable,
 	)
 	if err != nil {
+		errAtRollback := tx.Rollback()
+		err = fmt.Errorf("%w, %w", err, errAtRollback)
 		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+	err = r.checkEnableRepositoryCount(ctx, tx, repository.UserID)
+	if err != nil {
+		errAtRollback := tx.Rollback()
+		err = fmt.Errorf("%w, %w", err, errAtRollback)
+		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at add repository commit: %w", err)
 		return false, err
 	}
 	return true, nil
@@ -258,6 +277,17 @@ INSERT INTO REPOSITORY (
 			return false, err
 		}
 	}
+
+	for _, repository := range repositories {
+		err = r.checkEnableRepositoryCount(ctx, tx, repository.UserID)
+		if err != nil {
+			errAtRollback := tx.Rollback()
+			err = fmt.Errorf("%w, %w", err, errAtRollback)
+			err = fmt.Errorf("error at query :%w", err)
+			return false, err
+		}
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		fmt.Errorf("error at commit: %w", err)
@@ -283,7 +313,12 @@ UPDATE DEVICE_STRUCT SET
   CHECK_WHEN_INITED = ?
 WHERE ID = ?
 `
-	stmt, err := r.db.PrepareContext(ctx, sql)
+	tx, err := r.db.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin update repository: %w", err)
+		return false, err
+	}
+	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update repository sql: %w", err)
 		return false, err
@@ -301,7 +336,21 @@ WHERE ID = ?
 		repository.IsEnable,
 	)
 	if err != nil {
+		errAtRollback := tx.Rollback()
+		err = fmt.Errorf("%w, %w", err, errAtRollback)
 		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+	err = r.checkEnableRepositoryCount(ctx, tx, repository.UserID)
+	if err != nil {
+		errAtRollback := tx.Rollback()
+		err = fmt.Errorf("%w, %w", err, errAtRollback)
+		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at add repository commit: %w", err)
 		return false, err
 	}
 	return true, nil
@@ -349,4 +398,54 @@ WHERE USER_ID = ?
 
 func (r *repositoryDAOSQLite3Impl) Close(ctx context.Context) error {
 	return r.db.Close()
+}
+
+func (r *repositoryDAOSQLite3Impl) checkEnableRepositoryCount(ctx context.Context, tx *sql.Tx, userID string) error {
+	sql := `
+SELECT TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.IS_ENABLE = ?
+AND USER_ID = ?
+GROUP BY TYPE
+`
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get enable repository count sql: %w", err)
+		return err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, true, userID)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			repType := ""
+			device := ""
+			count := 0
+			err := rows.Scan(
+				&repType,
+				&device,
+				&count,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at get enable repository count: %w", err)
+				return err
+			}
+
+			if count >= 2 {
+				err = fmt.Errorf("error at check enable repository count")
+				err = fmt.Errorf("rep type %s enable count is %d: %w", repType, count, err)
+				return err
+			}
+		}
+	}
+	return nil
 }
