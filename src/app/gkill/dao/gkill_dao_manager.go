@@ -314,7 +314,10 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					repositories.IDFKyouReps = append(repositories.IDFKyouReps, idfKyouRep)
 					repositories.Reps = append(repositories.Reps, idfKyouRep)
 					if rep.UseToWrite {
-						existPath, _ := repositories.WriteIDFKyouRep.GetPath(ctx, "")
+						existPath := ""
+						if repositories.WriteIDFKyouRep != nil {
+							existPath, _ = repositories.WriteIDFKyouRep.GetPath(ctx, "")
+						}
 						newPath, _ := idfKyouRep.GetPath(ctx, "")
 						if repositories.WriteIDFKyouRep != nil {
 							err := fmt.Errorf("error conflict write idf kyou rep %s %s: %w", existPath, newPath)

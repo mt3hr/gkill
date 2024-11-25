@@ -1076,7 +1076,7 @@ export class GkillAPI {
                 application_config.rep_struct = response.application_config.rep_struct ? response.application_config.rep_struct : []
                 application_config.rep_type_struct = response.application_config.rep_type_struct ? response.application_config.rep_type_struct : []
                 application_config.kftl_template_struct = response.application_config.kftl_template_struct ? response.application_config.kftl_template_struct : []
-                application_config.account_is_admin = response.application_config.account_is_admin
+                application_config.account_is_admin = gkill_info_res.user_is_admin
                 application_config.device = response.application_config.device
                 application_config.enable_browser_cache = response.application_config.enable_browser_cache
                 application_config.google_map_api_key = response.application_config.google_map_api_key
