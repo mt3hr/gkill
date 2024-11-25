@@ -7890,6 +7890,7 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 
 	response.UserID = userID
 	response.Device = device
+	response.UserIsAdmin = account.IsAdmin
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetGkillInfoSuccessMessage,
 		Message:     "取得完了",
@@ -8429,6 +8430,29 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 		return err
 	}
 	repository := &user_config.Repository{
+		ID:                     GenerateNewID(),
+		UserID:                 account.UserID,
+		Device:                 device,
+		Type:                   repType,
+		File:                   repFileFullName,
+		UseToWrite:             true,
+		IsExecuteIDFWhenReload: true,
+		IsEnable:               true,
+	}
+	_, err = g.GkillDAOManager.ConfigDAOs.RepositoryDAO.AddRepository(ctx, repository)
+	if err != nil {
+		err = fmt.Errorf("error at initialize new user reps. error at add repository reptype = %s repfilename = %s: %w", repType, repFileFullName, err)
+		return err
+	}
+
+	repType, repFileName = "directory", "Files"
+	repFileFullName = filepath.Join(userDataRootDirectory, repFileName)
+	err = os.MkdirAll(os.ExpandEnv(repFileFullName), fs.ModePerm)
+	if err != nil {
+		err = fmt.Errorf("error at initialize new user reps. error at add repository create directory reptype = %s repdirname = %s: %w", repType, repFileFullName, err)
+		return err
+	}
+	repository = &user_config.Repository{
 		ID:                     GenerateNewID(),
 		UserID:                 account.UserID,
 		Device:                 device,
