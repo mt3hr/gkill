@@ -3,13 +3,13 @@ package reps
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 		reps:     reps,
 	}, nil
 }
-func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := []*Kyou{}
 
 	// 未削除ReKyouを抽出
@@ -81,22 +81,18 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON s
 
 	// ReKyou対象が検索ヒットすれば返す
 	// 検索用クエリJSONを作成
-	queryJSONForFindKyouTemplate := ""
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at rekyou %s: %w", queryJSON, err)
-		return nil, err
+	ids := []string{}
+	for _, rekyou := range allReKyous {
+		ids = append(ids, rekyou.TargetID)
 	}
-	queryMap["is_deleted"] = "false"
-	queryMap["use_ids"] = "true"
-	queryMap["ids"] = "[\"%s\"]"
-	marshaledJSONb, err := json.Marshal(queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at marshal json: %w", err)
-		return nil, err
+
+	falseValue := false
+	trueValue := true
+	findQuery := &find.FindQuery{
+		IsDeleted: &falseValue,
+		UseIDs:    &trueValue,
+		IDs:       &ids,
 	}
-	queryJSONForFindKyouTemplate = string(marshaledJSONb)
 
 	reps, err := r.GetRepositories(ctx)
 	if err != nil {
@@ -105,7 +101,7 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON s
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.Reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
+		kyous, err := reps.Reps.FindKyous(ctx, findQuery)
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -259,7 +255,7 @@ func (r *reKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return r.db.Close()
 }
 
-func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, queryJSON string) ([]*ReKyou, error) {
+func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
 	matchReKyous := []*ReKyou{}
 
 	// 未削除ReKyouを抽出
@@ -277,22 +273,18 @@ func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, queryJSON 
 
 	// ReKyou対象が検索ヒットすれば返す
 	// 検索用クエリJSONを作成
-	queryJSONForFindKyouTemplate := ""
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at rekyou %s: %w", queryJSON, err)
-		return nil, err
+	ids := []string{}
+	for _, rekyou := range allReKyous {
+		ids = append(ids, rekyou.TargetID)
 	}
-	queryMap["is_deleted"] = "false"
-	queryMap["use_ids"] = "true"
-	queryMap["ids"] = "[\"%s\"]"
-	marshaledJSONb, err := json.Marshal(queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at marshal json: %w", err)
-		return nil, err
+
+	falseValue := false
+	trueValue := true
+	findQuery := &find.FindQuery{
+		IsDeleted: &falseValue,
+		UseIDs:    &trueValue,
+		IDs:       &ids,
 	}
-	queryJSONForFindKyouTemplate = string(marshaledJSONb)
 
 	reps, err := r.GetRepositories(ctx)
 	if err != nil {
@@ -301,7 +293,7 @@ func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, queryJSON 
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.Reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
+		kyous, err := reps.Reps.FindKyous(ctx, findQuery)
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -425,7 +417,7 @@ WHERE TARGET_ID LIKE ?
 
 func (r *reKyouRepositorySQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
 	sql := `
-INSERT INTO REKYOU
+INSERT INTO REKYOU (
   IS_DELETED,
   ID,
   TARGET_ID,
@@ -438,7 +430,7 @@ INSERT INTO REKYOU
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER
-) VASLUES (
+) VALUES (
   ?,
   ?,
   ?,

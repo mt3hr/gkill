@@ -7,13 +7,14 @@ import (
 	"math"
 	"runtime"
 	"sort"
+	"strconv"
 	"sync"
 	"time"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/api/message"
 	"github.com/mt3hr/gkill/src/app/gkill/dao"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 const (
@@ -29,14 +30,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 	// QueryをContextに入れる
 	// jsonからパースする
-	queryMap := map[string]string{}
-	err := json.Unmarshal([]byte(queryJSON), &queryMap)
+	findQuery := &find.FindQuery{}
+	err := json.Unmarshal([]byte(queryJSON), &findQuery)
 	if err != nil {
 		err = fmt.Errorf("error at parse query json at find kyous %s: %w", queryJSON, err)
 		return nil, nil, err
 	}
-	findKyouContext.RawQueryJSON = queryJSON
-	findKyouContext.ParsedQuery = queryMap
+	findKyouContext.RawFindQueryJSON = queryJSON
+	findKyouContext.ParsedFindQuery = findQuery
 
 	// フィルタ
 	gkillErr, err := f.getRepositories(ctx, userID, device, gkillDAOManager, findKyouContext)
@@ -150,10 +151,8 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	defer close(errch)
 
 	targetRepNames := []string{}
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["reps"]), &targetRepNames)
-	if err != nil {
-		err = fmt.Errorf("error at parse reps %s: %w", findCtx.ParsedQuery["reps"], err)
-		return nil, err
+	if findCtx.ParsedFindQuery.Reps != nil {
+		targetRepNames = *findCtx.ParsedFindQuery.Reps
 	}
 
 	// 並列処理
@@ -246,10 +245,8 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 	}
 
 	// 全タグ取得用検索クエリ
-	findTagsQueryJSON := ""
-	findTagsQueryJSON += "{\n"
-	findTagsQueryJSON += "  is_deleted: false\n"
-	findTagsQueryJSON += "}"
+	falseValue := false
+	findTagsQuery := &find.FindQuery{IsDeleted: &falseValue}
 
 	existErr := false
 	wg := &sync.WaitGroup{}
@@ -264,7 +261,7 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 		rep := rep
 		go func(tagRep reps.TagRepository) {
 			defer wg.Done()
-			tags, err := tagRep.FindTags(ctx, findTagsQueryJSON)
+			tags, err := tagRep.FindTags(ctx, findTagsQuery)
 			if err != nil {
 				errch <- err
 				return
@@ -320,31 +317,14 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 		lenOfTagReps++
 	}
 
-	// クエリのタグをParse
-	tags := []string{}
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["time_is_tags"]), &tags)
-	if err != nil {
-		err = fmt.Errorf("error at parse tags %s: %w", findCtx.ParsedQuery["tags"], err)
-		return nil, err
-	}
-
 	// 対象タグ取得用検索クエリ
-	findTagsQueryJSON := ""
-	findTagsQueryJSON += "{\n"
-	findTagsQueryJSON += "  is_deleted: false,\n"
-	findTagsQueryJSON += "  use_word: true,\n"
-	findTagsQueryJSON += "  words: [\n"
-	for i, tag := range tags {
-		findTagsQueryJSON += `    "` + tag + `"`
-		if i != len(tags)-1 {
-			findTagsQueryJSON += ",\n"
-		} else {
-			findTagsQueryJSON += "\n"
-		}
+	trueValue := true
+	falseValue := false
+	findTagsQuery := &find.FindQuery{IsDeleted: &falseValue,
+		UseWords: &trueValue,
+		Words:    findCtx.ParsedFindQuery.Tags,
+		WordsAnd: &falseValue,
 	}
-	findTagsQueryJSON += "  ],\n"
-	findTagsQueryJSON += "  words_and: false\n"
-	findTagsQueryJSON += "}"
 
 	existErr := false
 	wg := &sync.WaitGroup{}
@@ -359,7 +339,7 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 		rep := rep
 		go func(tagRep reps.TagRepository) {
 			defer wg.Done()
-			tags, err := tagRep.FindTags(ctx, findTagsQueryJSON)
+			tags, err := tagRep.FindTags(ctx, findTagsQuery)
 			if err != nil {
 				errch <- err
 				return
@@ -416,31 +396,14 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 		lenOfTagReps++
 	}
 
-	// クエリのタグをParse
-	tags := []string{}
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["time_is_tags"]), &tags)
-	if err != nil {
-		err = fmt.Errorf("error at parse tags %s: %w", findCtx.ParsedQuery["tags"], err)
-		return nil, err
-	}
-
 	// 対象タグ取得用検索クエリ
-	findTagsQueryJSON := ""
-	findTagsQueryJSON += "{\n"
-	findTagsQueryJSON += "  is_deleted: false,\n"
-	findTagsQueryJSON += "  use_word: true,\n"
-	findTagsQueryJSON += "  words: [\n"
-	for i, tag := range tags {
-		findTagsQueryJSON += `    "` + tag + `"`
-		if i != len(tags)-1 {
-			findTagsQueryJSON += ",\n"
-		} else {
-			findTagsQueryJSON += "\n"
-		}
+	trueValue := true
+	falseValue := false
+	findTagsQuery := &find.FindQuery{IsDeleted: &falseValue,
+		UseWords: &trueValue,
+		Words:    findCtx.ParsedFindQuery.Tags,
+		WordsAnd: &falseValue,
 	}
-	findTagsQueryJSON += "  ],\n"
-	findTagsQueryJSON += "  words_and: false\n"
-	findTagsQueryJSON += "}"
 
 	existErr := false
 	wg := &sync.WaitGroup{}
@@ -455,7 +418,7 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 		rep := rep
 		go func(tagRep reps.TagRepository) {
 			defer wg.Done()
-			tags, err := tagRep.FindTags(ctx, findTagsQueryJSON)
+			tags, err := tagRep.FindTags(ctx, findTagsQuery)
 			if err != nil {
 				errch <- err
 				return
@@ -506,19 +469,16 @@ loop:
 
 func (f *FindFilter) parseTagFilterModeFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	tagFilterModeIsAnd := false
-	tagFilterModeIsAndStr := findCtx.ParsedQuery["tags_and"]
-	err := json.Unmarshal([]byte(tagFilterModeIsAndStr), &tagFilterModeIsAnd)
-	if err != nil {
-		err = fmt.Errorf("error at parse tag filter mode %s: %w", tagFilterModeIsAndStr, err)
-		return nil, err
+	if findCtx.ParsedFindQuery.TagsAnd != nil {
+		tagFilterModeIsAnd = *findCtx.ParsedFindQuery.TagsAnd
 	}
 	if tagFilterModeIsAnd {
-		var tagFilterMode TagFilterMode
-		tagFilterMode = Or
+		var tagFilterMode find.TagFilterMode
+		tagFilterMode = find.Or
 		findCtx.TagFilterMode = &tagFilterMode
 	} else {
-		var tagFilterMode TagFilterMode
-		tagFilterMode = And
+		var tagFilterMode find.TagFilterMode
+		tagFilterMode = find.And
 		findCtx.TagFilterMode = &tagFilterMode
 	}
 	return nil, nil
@@ -526,19 +486,16 @@ func (f *FindFilter) parseTagFilterModeFromQuery(ctx context.Context, findCtx *F
 
 func (f *FindFilter) parseTimeIsTagFilterModeFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	timeisTagFilterModeIsAnd := false
-	timeisTagFilterModeIsAndStr := findCtx.ParsedQuery["tags_and"]
-	err := json.Unmarshal([]byte(timeisTagFilterModeIsAndStr), &timeisTagFilterModeIsAnd)
-	if err != nil {
-		err = fmt.Errorf("error at parse tag filter mode %s: %w", timeisTagFilterModeIsAndStr, err)
-		return nil, err
+	if findCtx.ParsedFindQuery.TimeIsTagsAnd != nil {
+		timeisTagFilterModeIsAnd = *findCtx.ParsedFindQuery.TimeIsTagsAnd
 	}
 	if timeisTagFilterModeIsAnd {
-		var timeisTagFilterMode TagFilterMode
-		timeisTagFilterMode = Or
+		var timeisTagFilterMode find.TagFilterMode
+		timeisTagFilterMode = find.Or
 		findCtx.TagFilterMode = &timeisTagFilterMode
 	} else {
-		var timeisTagFilterMode TagFilterMode
-		timeisTagFilterMode = And
+		var timeisTagFilterMode find.TagFilterMode
+		timeisTagFilterMode = find.And
 		findCtx.TagFilterMode = &timeisTagFilterMode
 	}
 	return nil, nil
@@ -560,27 +517,18 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 	defer close(errch)
 
 	// text検索用クエリ
-	lenOfTexts := 0
-	for _ = range findCtx.MatchTexts {
-		lenOfTexts++
-	}
-	matchTextFindByIDQueryJSON := ""
-	matchTextFindByIDQueryJSON += "{"
-	matchTextFindByIDQueryJSON += "  is_deleted: false,\n"
-	matchTextFindByIDQueryJSON += "  use_ids: true,\n"
-	matchTextFindByIDQueryJSON += "  ids: ["
-	i := 0
+	targetIDs := []string{}
 	for _, text := range findCtx.MatchTexts {
-		matchTextFindByIDQueryJSON += `"` + text.TargetID + `"`
-		if i != lenOfTexts-1 {
-			matchTextFindByIDQueryJSON += ",\n"
-		} else {
-			matchTextFindByIDQueryJSON += "\n"
-		}
-		i++
+		targetIDs = append(targetIDs, text.TargetID)
 	}
-	matchTextFindByIDQueryJSON += "],\n"
-	matchTextFindByIDQueryJSON += "}"
+
+	falseValue := false
+	trueValue := true
+	matchTextFindByIDQuery := &find.FindQuery{
+		IsDeleted: &falseValue,
+		UseIDs:    &trueValue,
+		IDs:       &targetIDs,
+	}
 
 	// 並列処理
 	for _, rep := range findCtx.MatchReps {
@@ -589,14 +537,14 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 		go func(rep reps.Repository) {
 			defer wg.Done()
 			// repで検索
-			kyous, err := rep.FindKyous(ctx, findCtx.RawQueryJSON)
+			kyous, err := rep.FindKyous(ctx, findCtx.ParsedFindQuery)
 			if err != nil {
 				errch <- err
 				return
 			}
 
 			// textでマッチしたものをID検索
-			textMatchKyous, err := rep.FindKyous(ctx, matchTextFindByIDQueryJSON)
+			textMatchKyous, err := rep.FindKyous(ctx, matchTextFindByIDQuery)
 			if err != nil {
 				errch <- err
 				return
@@ -648,7 +596,7 @@ loop:
 }
 
 func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if *findCtx.TagFilterMode == Or {
+	if *findCtx.TagFilterMode == find.Or {
 		// ORの場合のフィルタリング処理
 
 		// タグ対象Kyouリスト
@@ -684,10 +632,8 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		// タグ無し込であればそれもいれる
 		existNoTags := false
 		tags := []string{}
-		err := json.Unmarshal([]byte(findCtx.ParsedQuery["tags"]), &tags)
-		if err != nil {
-			err = fmt.Errorf("error at parse tags %s: %w", findCtx.ParsedQuery["tags"], err)
-			return nil, err
+		if findCtx.ParsedFindQuery.Tags != nil {
+			tags = *findCtx.ParsedFindQuery.Tags
 		}
 
 		for _, tag := range tags {
@@ -719,7 +665,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			}
 		}
 		findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterTags
-	} else if *findCtx.TagFilterMode == And {
+	} else if *findCtx.TagFilterMode == find.And {
 		// ANDの場合のフィルタリング処理
 
 		tagNameMap := map[string]map[string]*reps.Kyou{} // map[タグ名][kyou.ID（tagTargetID）] = reps.kyou
@@ -803,7 +749,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 }
 
 func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if *findCtx.TimeIsTagFilterMode == Or {
+	if *findCtx.TimeIsTagFilterMode == find.Or {
 		// ORの場合のフィルタリング処理
 
 		// タグ対象Kyouリスト
@@ -839,12 +785,9 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 		// タグ無し込であればそれもいれる
 		existNoTags := false
 		tags := []string{}
-		err := json.Unmarshal([]byte(findCtx.ParsedQuery["timeis_tags"]), &tags)
-		if err != nil {
-			err = fmt.Errorf("error at parse tags %s: %w", findCtx.ParsedQuery["timeis_tags"], err)
-			return nil, err
+		if findCtx.ParsedFindQuery.Tags != nil {
+			tags = *findCtx.ParsedFindQuery.Tags
 		}
-
 		for _, tag := range tags {
 			if tag == NoTags {
 				existNoTags = true
@@ -873,7 +816,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 				}
 			}
 		}
-	} else if *findCtx.TimeIsTagFilterMode == And {
+	} else if *findCtx.TimeIsTagFilterMode == find.And {
 		// ANDの場合のフィルタリング処理
 
 		tagNameMap := map[string]map[string]*reps.TimeIs{} // map[タグ名][kyou.ID（tagTargetID）] = reps.TimeIs
@@ -976,18 +919,43 @@ func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindK
 func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 
 	// 対象TimeIs取得用検索クエリ
+	timeisWords := []string{}
+	if findCtx.ParsedFindQuery.TimeIsWords != nil {
+		timeisWords = *findCtx.ParsedFindQuery.TimeIsWords
+	}
+	timeisWordsJSON, err := json.Marshal(timeisWords)
+	if err != nil {
+		err = fmt.Errorf("error at marshal json timeis words %s: %w", timeisWords, err)
+		return nil, err
+	}
+
+	timeisNotWords := []string{}
+	if findCtx.ParsedFindQuery.TimeIsNotWords != nil {
+		timeisWords = *findCtx.ParsedFindQuery.TimeIsNotWords
+	}
+	timeisNotWordsJSON, err := json.Marshal(timeisNotWords)
+	if err != nil {
+		err = fmt.Errorf("error at marshal json timeis not words %s: %w", timeisNotWords, err)
+		return nil, err
+	}
+
+	timeisWordsAnd := false
+	if findCtx.ParsedFindQuery.TimeIsWordsAnd != nil {
+		timeisWordsAnd = *findCtx.ParsedFindQuery.TimeIsWordsAnd
+	}
+
 	findTagsQueryJSON := ""
 	findTagsQueryJSON += "{\n"
 	findTagsQueryJSON += "  is_deleted: false,\n"
 	findTagsQueryJSON += "  use_word: true,\n"
 	findTagsQueryJSON += "  words: "
-	findTagsQueryJSON += findCtx.ParsedQuery["time_is_word"]
+	findTagsQueryJSON += string(timeisWordsJSON)
 	findTagsQueryJSON += ",\n"
 	findTagsQueryJSON += "  not_words: "
-	findTagsQueryJSON += findCtx.ParsedQuery["time_is_not_word"]
+	findTagsQueryJSON += string(timeisNotWordsJSON)
 	findTagsQueryJSON += ",\n"
 	findTagsQueryJSON += "  words_and: "
-	findTagsQueryJSON += findCtx.ParsedQuery["time_is_word_and"]
+	findTagsQueryJSON += strconv.FormatBool(timeisWordsAnd)
 	findTagsQueryJSON += "\n"
 	findTagsQueryJSON += "}"
 
@@ -996,25 +964,18 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 	for _ = range findCtx.MatchTimeIsTexts {
 		lenOfTexts++
 	}
-	matchTextFindByIDQueryJSON := ""
-	matchTextFindByIDQueryJSON += "{"
-	matchTextFindByIDQueryJSON += "  is_deleted: false,\n"
-	matchTextFindByIDQueryJSON += "  use_ids: true,\n"
-	matchTextFindByIDQueryJSON += "  ids: ["
-	i := 0
-	for _, text := range findCtx.MatchTimeIsTexts {
-		matchTextFindByIDQueryJSON += `"` + text.TargetID + `"`
-		if i != lenOfTexts-1 {
-			matchTextFindByIDQueryJSON += ",\n"
-		} else {
-			matchTextFindByIDQueryJSON += "\n"
-		}
-		i++
-	}
-	matchTextFindByIDQueryJSON += "],\n"
-	matchTextFindByIDQueryJSON += "}"
 
-	var err error
+	targetIDs := []string{}
+	for _, text := range findCtx.MatchTimeIsTexts {
+		targetIDs = append(targetIDs, text.TargetID)
+	}
+	trueValue := true
+	falseValue := false
+	matchTextFindByIDQuery := &find.FindQuery{
+		IsDeleted: &falseValue,
+		UseIDs:    &trueValue,
+		IDs:       &targetIDs,
+	}
 
 	lenOfReps := 0
 	for _ = range findCtx.Repositories.TimeIsReps {
@@ -1034,14 +995,14 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 		rep := rep
 		go func(rep reps.TimeIsRepository) {
 			defer wg.Done()
-			timeiss, err := rep.FindTimeIs(ctx, findCtx.RawQueryJSON)
+			timeiss, err := rep.FindTimeIs(ctx, findCtx.ParsedFindQuery)
 			if err != nil {
 				errch <- err
 				return
 			}
 
 			// textでマッチしたものをID検索
-			textMatchTimeiss, err := rep.FindTimeIs(ctx, matchTextFindByIDQueryJSON)
+			textMatchTimeiss, err := rep.FindTimeIs(ctx, matchTextFindByIDQuery)
 			if err != nil {
 				errch <- err
 				return
@@ -1096,55 +1057,22 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	matchGPSLogs := []*reps.GPSLog{}
 
 	// 開始日を取得
-	var startTime *time.Time
-	var startTimeStr string
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["calendar_start_time"]), &startTimeStr)
-	if err != nil {
-		err = fmt.Errorf("error at parse calendar_start_time %s: %w", findCtx.ParsedQuery["calendar_start_time"], err)
-		return nil, err
-	}
-	startTimeValue, err := time.Parse(sqlite3impl.TimeLayout, startTimeStr)
-	if err == nil {
-		startTimeValue, err = time.Parse(dateLayout, startTimeValue.Format(dateLayout))
-		if err == nil {
-			startTime = &startTimeValue
-		}
-	}
-
-	// 終了日を取得
-	var endTime *time.Time
-	var endTimeStr string
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["calendar_end_time"]), &endTimeStr)
-	if err != nil {
-		err = fmt.Errorf("error at parse calendar_end_time %s: %w", findCtx.ParsedQuery["calendar_end_time"], err)
-		return nil, err
-	}
-	endTimeValue, _ := time.Parse(sqlite3impl.TimeLayout, endTimeStr)
-	if err == nil {
-		endTimeValue, err = time.Parse(dateLayout, endTimeValue.Format(dateLayout))
-		if err == nil {
-			endTime = &endTimeValue
-		}
-	}
+	startTime := findCtx.ParsedFindQuery.CalendarStartDate
+	endTime := findCtx.ParsedFindQuery.CalendarEndDate
 
 	// radius, latitude, longitudeを取得
 	var radius float64
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["map_radius"]), &radius)
-	if err != nil {
-		err = fmt.Errorf("error at parse map_radius %s: %w", findCtx.ParsedQuery["map_radius"], err)
-		return nil, err
-	}
 	var latitude float64
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["map_latitude"]), &latitude)
-	if err != nil {
-		err = fmt.Errorf("error at parse map_latitude %s: %w", findCtx.ParsedQuery["map_latitude"], err)
-		return nil, err
-	}
 	var longitude float64
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["map_longitude"]), &longitude)
-	if err != nil {
-		err = fmt.Errorf("error at parse map_longitude %s: %w", findCtx.ParsedQuery["map_longitude"], err)
-		return nil, err
+
+	if findCtx.ParsedFindQuery.MapRadius != nil {
+		radius = *findCtx.ParsedFindQuery.MapRadius
+	}
+	if findCtx.ParsedFindQuery.MapLatitude != nil {
+		latitude = *findCtx.ParsedFindQuery.MapLatitude
+	}
+	if findCtx.ParsedFindQuery.MapLongitude != nil {
+		longitude = *findCtx.ParsedFindQuery.MapLongitude
 	}
 
 	// 日付のnil解決
@@ -1417,46 +1345,25 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 
 	// words, notWordsをパースする
 	words := []string{}
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["words"]), &words)
-	if err != nil {
-		err = fmt.Errorf("error at parse query word %s: %w", findCtx.ParsedQuery["words"], err)
-		return nil, err
-	}
 	notWords := []string{}
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["not_words"]), &words)
-	if err != nil {
-		err = fmt.Errorf("error at parse query not word %s: %w", findCtx.ParsedQuery["not_words"], err)
-		return nil, err
+	if findCtx.ParsedFindQuery.Words != nil {
+		words = *findCtx.ParsedFindQuery.Words
+	}
+	if findCtx.ParsedFindQuery.NotWords != nil {
+		notWords = *findCtx.ParsedFindQuery.NotWords
 	}
 
 	// 対象タグ取得用検索クエリ
-	findTextsQueryJSON := ""
-	findTextsQueryJSON += "{\n"
-	findTextsQueryJSON += "  is_deleted: false,\n"
-	findTextsQueryJSON += "  use_word: true,\n"
-	findTextsQueryJSON += "  words: [\n"
-	for i, word := range words {
-		findTextsQueryJSON += `    "` + word + `"`
-		if i != len(words)-1 {
-			findTextsQueryJSON += ",\n"
-		} else {
-			findTextsQueryJSON += "\n"
-		}
-	}
-	findTextsQueryJSON += "  ],\n"
-	findTextsQueryJSON += "  not_words: [\n"
-	for i, notWord := range notWords {
-		findTextsQueryJSON += `    "` + notWord + `"`
-		if i != len(words)-1 {
-			findTextsQueryJSON += ",\n"
-		} else {
-			findTextsQueryJSON += "\n"
-		}
-	}
-	findTextsQueryJSON += "  ],\n"
+	trueValue := true
+	falseValue := false
 
-	findTextsQueryJSON += "  words_and: false\n"
-	findTextsQueryJSON += "}"
+	findTextsQuery := &find.FindQuery{
+		IsDeleted: &falseValue,
+		UseWords:  &trueValue,
+		Words:     &words,
+		NotWords:  &notWords,
+		WordsAnd:  &falseValue,
+	}
 
 	existErr := false
 	wg := &sync.WaitGroup{}
@@ -1471,7 +1378,7 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 		rep := rep
 		go func(textRep reps.TextRepository) {
 			defer wg.Done()
-			texts, err := textRep.FindTexts(ctx, findTextsQueryJSON)
+			texts, err := textRep.FindTexts(ctx, findTextsQuery)
 			if err != nil {
 				errch <- err
 				return
@@ -1530,46 +1437,24 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 
 	// words, notWordsをパースする
 	words := []string{}
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["timeis_word"]), &words)
-	if err != nil {
-		err = fmt.Errorf("error at parse query word %s: %w", findCtx.ParsedQuery["timeis_word"], err)
-		return nil, err
-	}
 	notWords := []string{}
-	err = json.Unmarshal([]byte(findCtx.ParsedQuery["timeis_not_word"]), &words)
-	if err != nil {
-		err = fmt.Errorf("error at parse query not word %s: %w", findCtx.ParsedQuery["timeis_not_word"], err)
-		return nil, err
+	if findCtx.ParsedFindQuery.Words != nil {
+		words = *findCtx.ParsedFindQuery.Words
+	}
+	if findCtx.ParsedFindQuery.NotWords != nil {
+		notWords = *findCtx.ParsedFindQuery.NotWords
 	}
 
 	// 対象タグ取得用検索クエリ
-	findTextsQueryJSON := ""
-	findTextsQueryJSON += "{\n"
-	findTextsQueryJSON += "  is_deleted: false,\n"
-	findTextsQueryJSON += "  use_word: true,\n"
-	findTextsQueryJSON += "  words: [\n"
-	for i, word := range words {
-		findTextsQueryJSON += `    "` + word + `"`
-		if i != len(words)-1 {
-			findTextsQueryJSON += ",\n"
-		} else {
-			findTextsQueryJSON += "\n"
-		}
+	trueValue := true
+	falseValue := false
+	findTextsQuery := &find.FindQuery{
+		IsDeleted: &falseValue,
+		UseWords:  &trueValue,
+		Words:     &words,
+		NotWords:  &notWords,
+		WordsAnd:  &falseValue,
 	}
-	findTextsQueryJSON += "  ],\n"
-	findTextsQueryJSON += "  not_words: [\n"
-	for i, notWord := range notWords {
-		findTextsQueryJSON += `    "` + notWord + `"`
-		if i != len(words)-1 {
-			findTextsQueryJSON += ",\n"
-		} else {
-			findTextsQueryJSON += "\n"
-		}
-	}
-	findTextsQueryJSON += "  ],\n"
-
-	findTextsQueryJSON += "  words_and: false\n"
-	findTextsQueryJSON += "}"
 
 	existErr := false
 	wg := &sync.WaitGroup{}
@@ -1584,7 +1469,7 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 		rep := rep
 		go func(textRep reps.TextRepository) {
 			defer wg.Done()
-			texts, err := textRep.FindTexts(ctx, findTextsQueryJSON)
+			texts, err := textRep.FindTexts(ctx, findTextsQuery)
 			if err != nil {
 				errch <- err
 				return

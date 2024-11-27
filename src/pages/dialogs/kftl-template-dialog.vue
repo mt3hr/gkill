@@ -1,6 +1,5 @@
 <template>
     <v-dialog v-model="is_show_dialog">
-    <kFTLTemplateDialog />
     </v-dialog>
 </template>
 <script lang="ts" setup>
@@ -11,6 +10,8 @@ import type { KFTLTemplateDialogProps } from './kftl-template-dialog-props'
 
 const props = defineProps<KFTLTemplateDialogProps>()
 const emits = defineEmits<KFTLTemplateDialogEmits>()
+defineExpose({ show, hide })
+
 const child_templates: Ref<Array<KFTLTemplateElementData>> = ref(new Array<KFTLTemplateElementData>())
 const is_show_child_dialog: Ref<boolean> = ref(false)
 

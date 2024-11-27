@@ -1,4 +1,4 @@
-package api
+package find
 
 type TagFilterMode string
 

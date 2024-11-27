@@ -18,7 +18,6 @@ export class KFTLLantanaMoodStatementLine extends KFTLStatementLine {
         const mood = this.parse_mood()
         const lantana_request = request_map.get(this.get_context().get_this_statement_line_target_id()) as unknown as KFTLLantanaRequest
         lantana_request.set_mood(mood)
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(context: KFTLStatementLineContext): string {
@@ -31,11 +30,11 @@ export class KFTLLantanaMoodStatementLine extends KFTLStatementLine {
     }
     private parse_mood(): number {
         try {
-            const mood = Number.parseInt(this.get_context().get_this_statement_line_text().trim())
-            if (Number.isNaN(mood)) {
+            const mood = Number.parseInt(this.get_context().get_this_statement_line_text().trim()).valueOf()
+            if (!mood) {
                 throw new Error("気分値が変です")
             }
-            if (0 > mood || 10 < mood) {
+            if (!(0 <= mood && mood <= 10)) {
                 throw new Error("気分値が範囲外です")
             }
             return mood

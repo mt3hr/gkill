@@ -22,7 +22,7 @@ export class KFTLSplitStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(context: KFTLStatementLineContext): string {
-        return "----------"
+        return "------"
     }
 
     static is_this_type(line_text: string): boolean {

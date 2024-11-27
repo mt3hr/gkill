@@ -15,13 +15,13 @@ export class KFTLTimeIsRequest extends KFTLRequest {
 
     private start_time: Date
 
-    private end_time: Date
+    private end_time: Date | null
 
     constructor(line_text: string, context: KFTLStatementLineContext) {
         super(line_text, context)
         this.title = ""
         this.start_time = new Date(0)
-        this.end_time = new Date(0)
+        this.end_time = null
     }
 
     async set_title(title: string): Promise<void> {
@@ -32,7 +32,7 @@ export class KFTLTimeIsRequest extends KFTLRequest {
         this.start_time = start_time
     }
 
-    async set_end_time(end_time: Date): Promise<void> {
+    async set_end_time(end_time: Date | null): Promise<void> {
         this.end_time = end_time
     }
 
@@ -54,6 +54,7 @@ export class KFTLTimeIsRequest extends KFTLRequest {
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
 
         const timeis_req = new AddTimeisRequest()
+        timeis_req.session_id = GkillAPI.get_instance().get_session_id()
         timeis_req.timeis.id = this.get_request_id()
         timeis_req.timeis.start_time = this.start_time
         timeis_req.timeis.end_time = this.end_time

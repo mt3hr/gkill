@@ -1,9 +1,13 @@
 package reps
 
-import "context"
+import (
+	"context"
+
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+)
 
 type TextRepository interface {
-	FindTexts(ctx context.Context, queryJSON string) ([]*Text, error)
+	FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error)
 
 	Close(ctx context.Context) error
 
