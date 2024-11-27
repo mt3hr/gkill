@@ -6,12 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type MiRepositories []MiRepository
 
-func (m MiRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (m MiRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -27,7 +28,7 @@ func (m MiRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyo
 		rep := rep
 		go func(rep MiRepository) {
 			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
 				errch <- err
 				return
@@ -320,7 +321,7 @@ errloop:
 	return nil
 }
 
-func (m MiRepositories) FindMi(ctx context.Context, queryJSON string) ([]*Mi, error) {
+func (m MiRepositories) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
 	matchMis := map[string]*Mi{}
 	existErr := false
 	var err error
@@ -336,7 +337,7 @@ func (m MiRepositories) FindMi(ctx context.Context, queryJSON string) ([]*Mi, er
 		rep := rep
 		go func(rep MiRepository) {
 			defer wg.Done()
-			matchMisInRep, err := rep.FindMi(ctx, queryJSON)
+			matchMisInRep, err := rep.FindMi(ctx, query)
 			if err != nil {
 				errch <- err
 				return

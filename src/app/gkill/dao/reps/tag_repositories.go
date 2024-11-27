@@ -6,12 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type TagRepositories []TagRepository
 
-func (t TagRepositories) FindTags(ctx context.Context, queryJSON string) ([]*Tag, error) {
+func (t TagRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
 	matchTags := map[string]*Tag{}
 	existErr := false
 	var err error
@@ -27,7 +28,7 @@ func (t TagRepositories) FindTags(ctx context.Context, queryJSON string) ([]*Tag
 		rep := rep
 		go func(rep TagRepository) {
 			defer wg.Done()
-			matchTagsInRep, err := rep.FindTags(ctx, queryJSON)
+			matchTagsInRep, err := rep.FindTags(ctx, query)
 			if err != nil {
 				errch <- err
 				return

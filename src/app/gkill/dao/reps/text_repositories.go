@@ -6,12 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type TextRepositories []TextRepository
 
-func (t TextRepositories) FindTexts(ctx context.Context, queryJSON string) ([]*Text, error) {
+func (t TextRepositories) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
 	matchTexts := map[string]*Text{}
 	existErr := false
 	var err error
@@ -27,7 +28,7 @@ func (t TextRepositories) FindTexts(ctx context.Context, queryJSON string) ([]*T
 		rep := rep
 		go func(rep TextRepository) {
 			defer wg.Done()
-			matchTextsInRep, err := rep.FindTexts(ctx, queryJSON)
+			matchTextsInRep, err := rep.FindTexts(ctx, query)
 			if err != nil {
 				errch <- err
 				return

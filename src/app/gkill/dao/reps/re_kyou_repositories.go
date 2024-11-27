@@ -2,11 +2,11 @@ package reps
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -15,7 +15,7 @@ type ReKyouRepositories struct {
 	repositories       *GkillRepositories
 }
 
-func (r *ReKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := []*Kyou{}
 
 	// 未削除ReKyouを抽出
@@ -33,22 +33,18 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([
 
 	// ReKyou対象が検索ヒットすれば返す
 	// 検索用クエリJSONを作成
-	queryJSONForFindKyouTemplate := ""
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at rekyou %s: %w", queryJSON, err)
-		return nil, err
+	ids := []string{}
+	for _, rekyou := range allReKyous {
+		ids = append(ids, rekyou.TargetID)
 	}
-	queryMap["is_deleted"] = "false"
-	queryMap["use_ids"] = "true"
-	queryMap["ids"] = "[\"%s\"]"
-	marshaledJSONb, err := json.Marshal(queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at marshal json: %w", err)
-		return nil, err
+
+	falseValue := false
+	trueValue := true
+	findQuery := &find.FindQuery{
+		IsDeleted: &falseValue,
+		UseIDs:    &trueValue,
+		IDs:       &ids,
 	}
-	queryJSONForFindKyouTemplate = string(marshaledJSONb)
 
 	reps, err := r.GetRepositories(ctx)
 	if err != nil {
@@ -57,7 +53,7 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.Reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
+		kyous, err := reps.Reps.FindKyous(ctx, findQuery)
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -316,7 +312,7 @@ errloop:
 	return nil
 }
 
-func (r *ReKyouRepositories) FindReKyou(ctx context.Context, queryJSON string) ([]*ReKyou, error) {
+func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
 	matchReKyous := []*ReKyou{}
 
 	// 未削除ReKyouを抽出
@@ -334,22 +330,18 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, queryJSON string) (
 
 	// ReKyou対象が検索ヒットすれば返す
 	// 検索用クエリJSONを作成
-	queryJSONForFindKyouTemplate := ""
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at rekyou %s: %w", queryJSON, err)
-		return nil, err
+	ids := []string{}
+	for _, rekyou := range allReKyous {
+		ids = append(ids, rekyou.TargetID)
 	}
-	queryMap["is_deleted"] = "false"
-	queryMap["use_ids"] = "true"
-	queryMap["ids"] = "[\"%s\"]"
-	marshaledJSONb, err := json.Marshal(queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at marshal json: %w", err)
-		return nil, err
+
+	falseValue := false
+	trueValue := true
+	findQuery := &find.FindQuery{
+		IsDeleted: &falseValue,
+		UseIDs:    &trueValue,
+		IDs:       &ids,
 	}
-	queryJSONForFindKyouTemplate = string(marshaledJSONb)
 
 	reps, err := r.GetRepositories(ctx)
 	if err != nil {
@@ -358,7 +350,7 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, queryJSON string) (
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.Reps.FindKyous(ctx, fmt.Sprintf(queryJSONForFindKyouTemplate, rekyou.TargetID))
+		kyous, err := reps.Reps.FindKyous(ctx, findQuery)
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err

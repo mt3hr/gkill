@@ -1,24 +1,58 @@
 <template>
-    <KFTLLineLabel v-for="line_label_data, index in line_label_datas" :application_config="application_config"
-        :style="line_label_styles[index]" :gkill_api="gkill_api" :line_label_data="line_label_data" />
-    <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api"
-        :templates="[application_config.parsed_kftl_template]" />
+    <div>
+        <v-card>
+            <v-card-title>
+                <v-row>
+                    <v-col cols="auto">
+                        記録追加
+                    </v-col>
+                    <v-spacer />
+                    <v-col cols="auto">
+                        <v-btn @click="submit">保存</v-btn>
+                    </v-col>
+                </v-row>
+            </v-card-title>
+            <table class="kftl_input">
+                <tr>
+                    <td>
+                        <div class="kftl_line_label line_label_wrap">
+                            <KFTLLineLabel v-for="( line_label_data, index ) in line_label_datas"
+                                :application_config="application_config" :gkill_api="gkill_api"
+                                :line_label_data="line_label_data" :style="line_label_styles[index]" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="kftl_text_area_wrap">
+                            <textarea :autofocus="true" id="kftl_text_area" class="kftl_text_area"
+                                v-model="text_area_content"></textarea>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </v-card>
+        <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @clicked_template_element_leaf="(kftl_template) => paste_template(kftl_template)"
+            :templates="[application_config.parsed_kftl_template]" ref="kftl_template_dialog" />
+    </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, type Ref } from 'vue'
-import type { GkillError } from '@/classes/api/gkill-error'
-import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { FindTimeIsQuery } from '@/classes/api/find_query/find-time-is-query'
+import { computed, nextTick, onMounted, ref, watch, type Ref } from 'vue'
+import { GkillError } from '@/classes/api/gkill-error'
 import { LineLabelData } from '@/classes/kftl/line-label-data'
 
 import type { KFTLProps } from './kftl-props'
 import type { KFTLViewEmits } from './kftl-view-emits'
 
-import KyouListView from './kyou-list-view.vue'
 import KFTLLineLabel from './kftl-line-label.vue'
 import KFTLTemplateDialog from '../dialogs/kftl-template-dialog.vue'
-import type { Kyou } from '@/classes/datas/kyou'
+import { KFTLStatement } from '@/classes/kftl/kftl-statement'
+import { TextAreaInfo } from '@/classes/kftl/text-area-info'
+import { GkillMessage } from '@/classes/api/gkill-message'
+import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
+const kftl_template_dialog = ref<InstanceType<typeof KFTLTemplateDialog> | null>(null);
 
 const text_area_content: Ref<string> = ref("")
 const text_area_width: Ref<Number> = ref(0)
@@ -30,94 +64,209 @@ const line_label_width_px = computed(() => line_label_width.value.toString().con
 const line_label_height: Ref<Number> = ref(0)
 const line_label_height_px = computed(() => line_label_height.value.toString().concat("px"))
 
+const app_bar_height = 50
+const title_height = 55
+const action_height = 10
+const kftl_input_height: Ref<number> = ref(0)
+const kftl_input_height_px = computed(() => kftl_input_height.value.toString().concat("px"))
+const kftl_input_width: Ref<number> = ref(0)
+const kftl_input_width_px = computed(() => kftl_input_width.value.toString().concat("px"))
+
 const line_label_datas: Ref<Array<LineLabelData>> = ref(new Array<LineLabelData>())
-const line_label_styles: Ref<Array<string>> = ref(new Array<string>())
+const line_label_styles: Ref<Array<any>> = ref(new Array<any>())
 const invalid_line_numbers: Ref<Array<Number>> = ref(new Array<Number>())
 const is_requested_submit: Ref<boolean> = ref(false)
-const find_kyou_query_plaing_timeis: Ref<FindKyouQuery> = ref(new FindKyouQuery())
-const plaing_timeis_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 
 const last_added_tag: Ref<string> = ref("")
 
 const props = defineProps<KFTLProps>()
 const emits = defineEmits<KFTLViewEmits>()
 
+watch(() => text_area_content.value, () => {
+    update_line_labels()
+    save_content_to_localstorage()
+})
+watch(line_label_datas, async () => {
+    line_label_styles.value.splice(0)
+    let prev_target_id = ""
+    let background_is_gray = true
+    let switch_id = false
+    let background_color: string = "white"
+    for (let i = 0; i < line_label_datas.value.length; i++) {
+        let color: string = "unset"
+        switch_id = prev_target_id != line_label_datas.value[i].target_request_id
+        if (switch_id) {
+            background_is_gray = !background_is_gray
+            if (background_is_gray) {
+                background_color = "#f0f0f0"
+            } else {
+                background_color = "white"
+            }
+        }
+        if (is_invalid_line(i)) {
+            color = "pink"
+        }
+        line_label_styles.value.push({
+            "background-color": background_color,
+            "color": color,
+        })
+        prev_target_id = line_label_datas.value[i].target_request_id
+    }
+})
+
+nextTick(() => {
+    const kftl_text_area_element_id = "kftl_text_area"
+    const kftl_text_area_element = document.getElementById(kftl_text_area_element_id)!!
+    kftl_text_area_element.addEventListener("scroll", update_line_labels)
+    update_line_labels()
+})
+
+restore_content_from_localstorage()
+
 async function restore_content_from_localstorage(): Promise<void> {
-    //TODO
-    throw new Error('Not implemented')
+    const saved_content = localStorage.getItem("kftl_content")
+    if (saved_content) {
+        text_area_content.value = saved_content
+    }
 }
 
 async function save_content_to_localstorage(): Promise<void> {
-    //TODO
-    throw new Error('Not implemented')
+    localStorage.setItem("kftl_content", text_area_content.value)
 }
 
 async function update_line_labels(): Promise<void> {
-    //TODO
-    throw new Error('Not implemented')
+    const kftl_text_area_element_id = "kftl_text_area"
+    const kftl_text_area_element = document.getElementById(kftl_text_area_element_id)!!
+    const kftl_line_label_elements = document.getElementsByClassName("kftl_line_label")!!
+    for (let i = 0; i < kftl_line_label_elements.length; i++) {
+        const kftl_line_label_element = kftl_line_label_elements.item(i)
+        if (kftl_line_label_element) {
+            kftl_line_label_element.scrollTo(0, kftl_text_area_element.scrollTop)
+        }
+    }
+
+    const statement = new KFTLStatement(text_area_content.value)
+    const textarea_info = new TextAreaInfo()
+    textarea_info.text_area_element_id = kftl_text_area_element_id
+
+    line_label_datas.value = statement.generate_line_label_data(textarea_info)
+
+    invalid_line_numbers.value = await statement.get_invalid_line_indexs()
+
+    if (text_area_content.value.endsWith("\n！\n") && !is_requested_submit.value) {
+        is_requested_submit.value = true
+        submit()
+    }
 }
 
-async function is_invalid_line(line_index: Number): Promise<boolean> {
-    //TODO
-    throw new Error('Not implemented')
+function is_invalid_line(line_index: Number): boolean {
+    for (let i = 0; i < invalid_line_numbers.value.length; i++) {
+        if (invalid_line_numbers.value[i] == line_index) {
+            return true
+        }
+    }
+    return false
 }
 
-async function submit(): Promise<Array<GkillError>> {
-    //TODO
-    throw new Error('Not implemented')
+async function submit(): Promise<void> {
+    try {
+        if (invalid_line_numbers.value.length != 0) {
+            const error = new GkillError()
+            error.error_code = "//TODO"
+            error.error_message = "おかしな行があります"
+            emits('received_errors', [error])
+            return
+        }
+        const statement = new KFTLStatement(text_area_content.value)
+        const kftl_requests = await statement.generate_requests()
+        let errors = new Array<GkillError>()
+        for (let i = 0; i < kftl_requests.length; i++) {
+            const request = kftl_requests[i]
+            await request.do_request().then(request_errors => errors = errors.concat(request_errors))
+        }
+        if (errors.length != 0) {
+            emits('received_errors', errors)
+            return
+        }
+        clear()
+        const message = new GkillMessage()
+        message.message_code = "//TODO"
+        message.message = "保存しました"
+        emits('received_messages', [message])
+    } finally {
+        is_requested_submit.value = false
+    }
 }
 
 async function clear(): Promise<void> {
-    //TODO
-    throw new Error('Not implemented')
+    text_area_content.value = ""
 }
 
 async function show_kftl_template_dialog(): Promise<void> {
-    //TODO
-    throw new Error('Not implemented')
+    kftl_template_dialog.value?.show()
 }
 
 async function resize(): Promise<void> {
-    //TODO
-    throw new Error('Not implemented')
+    line_label_width.value = 100
+    line_label_height.value = props.app_content_height.valueOf() - app_bar_height - title_height - action_height
+    text_area_width.value = props.app_content_width.valueOf() - line_label_width.value.valueOf() - 5 // 5はマジックナンバー
+    text_area_height.value = props.app_content_height.valueOf() - app_bar_height - title_height - action_height
+    kftl_input_width.value = line_label_width.value.valueOf() + text_area_width.value.valueOf()
+    kftl_input_height.value = props.app_content_height.valueOf() - app_bar_height - title_height - action_height
 }
 
-async function apply_application_config(): Promise<Array<GkillError>> {
-    //TODO
-    throw new Error('Not implemented')
+function paste_template(template: KFTLTemplateElementData): void {
+    text_area_content.value = template.template as string
 }
 
-async function update_plaing_timeis_kyous(): Promise<GkillError> {
-    //TODO
-    throw new Error('Not implemented')
-}
 
-async function request_close_dialog(): Promise<void> {
-    //TODO
-    throw new Error('Not implemented')
-}
+window.addEventListener("resize", () => {
+    resize()
+    update_line_labels()
+})
+onMounted(() => resize())
 
-async function load_find_kyou_query_plaing_timeis(): Promise<void> {
-    const find_plaing_timeis_query: FindTimeIsQuery = new FindTimeIsQuery()
-    find_plaing_timeis_query.plaing_only = true
-    const find_plaing_timeis_kyou_query: FindKyouQuery = await find_plaing_timeis_query.generate_find_kyou_query()
-    find_kyou_query_plaing_timeis.value = find_plaing_timeis_kyou_query
-}
-
-async function reload_plaing_timeis(kyou: Kyou): Promise<void> {
-    let index = -1
-    for (let i = 0; i < plaing_timeis_kyous.value.length; i++) {
-        const kyou_in_list = plaing_timeis_kyous.value[i]
-        if (kyou.id === kyou_in_list.id) {
-            index = i
-            await kyou_in_list.reload()
-            break
-        }
-    }
-    if (index !== -1) {
-        plaing_timeis_kyous.value.splice(index, 1, plaing_timeis_kyous.value[index])
-    }
-}
-
-load_find_kyou_query_plaing_timeis()
 </script>
+
+<style lang="css" scoped>
+.kftl_text_area_wrap {
+    height: calc(v-bind(text_area_height_px));
+    width: calc(v-bind(text_area_width_px));
+}
+
+.kftl_text_area {
+    height: calc(v-bind(text_area_height_px));
+    width: calc(v-bind(text_area_width_px));
+    resize: none;
+}
+
+.line_label_wrap {
+    color: silver;
+    padding-right: 16px;
+    height: calc(v-bind(line_label_height_px));
+    width: calc(v-bind(line_label_width_px));
+    text-align: right;
+}
+
+textarea {
+    border: solid 1px silver;
+}
+
+.kftl_input {
+    height: calc(v-bind(kftl_input_height_px));
+    width: calc(v-bind(kftl_input_width_px));
+    overflow-y: scroll;
+}
+
+.kftl_line_label {
+    overflow-y: hidden;
+}
+
+.kftl_line_label::-webkit-scrollbar {
+    display: none;
+}
+
+.main {
+    margin-top: 50px;
+}
+</style>

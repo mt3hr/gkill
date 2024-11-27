@@ -3,13 +3,13 @@ package reps
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -62,19 +62,11 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 		m:        &sync.Mutex{},
 	}, nil
 }
-func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, queryJSON string) ([]*Text, error) {
+func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
 	var err error
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at TEXT %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = t.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := t.GetRepName(ctx)
@@ -98,7 +90,7 @@ SELECT
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TEXT
@@ -106,33 +98,29 @@ WHERE
 `
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(queryJSON, &whereCounter)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
 
 	// ワードand検索である場合のSQL追記
-	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
+	if query.UseWords != nil && *query.UseWords {
 		// ワードを解析
-		words := []string{}
-		err = json.Unmarshal([]byte(queryMap["words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-			return nil, err
-		}
-		notWords := []string{}
-		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-			return nil, err
-		}
-
 		if whereCounter != 0 {
 			sql += " AND "
 		}
 
-		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+		words := []string{}
+		if query.Words != nil {
+			words = *query.Words
+		}
+		notWords := []string{}
+		if query.NotWords != nil {
+			notWords = *query.NotWords
+		}
+
+		if query.WordsAnd != nil && *query.WordsAnd {
 			for i, word := range words {
 				if i == 0 {
 					sql += " ( "
@@ -295,7 +283,7 @@ SELECT
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TEXT
@@ -415,7 +403,7 @@ SELECT
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TEXT
@@ -494,7 +482,7 @@ WHERE ID LIKE ?
 }
 func (t *textRepositorySQLite3Impl) AddTextInfo(ctx context.Context, text *Text) error {
 	sql := `
-INSERT INTO TAG 
+INSERT INTO TEXT (
   IS_DELETED,
   ID,
   TEXT,
@@ -508,7 +496,7 @@ INSERT INTO TAG
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER
-) VASLUES (
+) VALUES (
   ?,
   ?,
   ?,

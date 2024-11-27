@@ -3,13 +3,13 @@ package reps
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -63,19 +63,10 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 		m:        &sync.Mutex{},
 	}, nil
 }
-func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	var err error
-
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at NLOG %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = n.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := n.GetRepName(ctx)
@@ -105,33 +96,28 @@ WHERE
 `
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(queryJSON, &whereCounter)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
 
 	// ワードand検索である場合のSQL追記
-	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
-		// ワードを解析
-		words := []string{}
-		err = json.Unmarshal([]byte(queryMap["words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-			return nil, err
-		}
-		notWords := []string{}
-		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-			return nil, err
-		}
-
+	if query.UseWords != nil && *query.UseWords {
 		if whereCounter != 0 {
 			sql += " AND "
 		}
 
-		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+		words := []string{}
+		if query.Words != nil {
+			words = *query.Words
+		}
+		notWords := []string{}
+		if query.NotWords != nil {
+			notWords = *query.NotWords
+		}
+
+		if query.WordsAnd != nil && *query.WordsAnd {
 			for i, word := range words {
 				if i == 0 {
 					sql += " ( "
@@ -388,19 +374,11 @@ func (n *nlogRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return n.db.Close()
 }
 
-func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, queryJSON string) ([]*Nlog, error) {
+func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
 	var err error
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at nlog %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = n.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := n.GetRepName(ctx)
@@ -432,33 +410,28 @@ WHERE
 `
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(queryJSON, &whereCounter)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
 
 	// ワードand検索である場合のSQL追記
-	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
-		// ワードを解析
-		words := []string{}
-		err = json.Unmarshal([]byte(queryMap["words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-			return nil, err
-		}
-		notWords := []string{}
-		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-			return nil, err
-		}
-
+	if query.UseWords != nil && *query.UseWords {
 		if whereCounter != 0 {
 			sql += " AND "
 		}
 
-		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+		words := []string{}
+		if query.Words != nil {
+			words = *query.Words
+		}
+		notWords := []string{}
+		if query.NotWords != nil {
+			notWords = *query.NotWords
+		}
+
+		if query.WordsAnd != nil && *query.WordsAnd {
 			for i, word := range words {
 				if i == 0 {
 					sql += " ( "
@@ -621,7 +594,7 @@ SELECT
   UPDATE_USER,
   SHOP,
   TITLE,
-  AMOUNT
+  AMOUNT,
   ? AS REP_NAME
 FROM NLOG 
 WHERE ID = ?
@@ -691,7 +664,7 @@ ORDER BY UPDATE_TIME DESC
 
 func (n *nlogRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
 	sql := `
-INSERT INTO NLOG
+INSERT INTO NLOG (
   IS_DELETED,
   ID,
   SHOP,
@@ -706,7 +679,7 @@ INSERT INTO NLOG
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER
-) VASLUES (
+) VALUES (
   ?,
   ?,
   ?,

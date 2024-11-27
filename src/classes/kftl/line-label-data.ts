@@ -6,7 +6,7 @@ export class LineLabelData {
 
     label: string
 
-    lines: Number
+    lines: number
 
     constructor() {
         this.target_request_id = ""

@@ -3,13 +3,13 @@ package reps
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -62,19 +62,10 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 	}, nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	var err error
-
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at kmemo %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = k.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := k.GetRepName(ctx)
@@ -104,33 +95,29 @@ WHERE
 `
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(queryJSON, &whereCounter)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
 
-	// ワードand検索である場合のSQL追記
-	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
-		// ワードを解析
-		words := []string{}
-		err = json.Unmarshal([]byte(queryMap["words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-			return nil, err
-		}
-		notWords := []string{}
-		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-			return nil, err
-		}
+	words := []string{}
+	notWords := []string{}
+	if query.Words != nil {
+		words = *query.Words
+	}
+	if query.NotWords != nil {
+		notWords = *query.NotWords
+	}
 
+	// ワードand検索である場合のSQL追記
+	if query.UseWords != nil && *query.UseWords {
+		// ワードを解析
 		if whereCounter != 0 {
 			sql += " AND "
 		}
 
-		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+		if query.WordsAnd != nil && *query.WordsAnd {
 			for i, word := range words {
 				if i == 0 {
 					sql += " ( "
@@ -180,12 +167,10 @@ WHERE
 			whereCounter++
 		}
 		// id検索である場合のSQL追記
-		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+		if query.UseIDs != nil && *query.UseIDs {
 			ids := []string{}
-			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
-			if err != nil {
-				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
-				return nil, nil
+			if query.IDs != nil {
+				ids = *query.IDs
 			}
 
 			if whereCounter != 0 {
@@ -402,19 +387,11 @@ func (k *kmemoRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return k.db.Close()
 }
 
-func (k *kmemoRepositorySQLite3Impl) FindKmemo(ctx context.Context, queryJSON string) ([]*Kmemo, error) {
+func (k *kmemoRepositorySQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
 	var err error
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at kmemo %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = k.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := k.GetRepName(ctx)
@@ -444,33 +421,29 @@ WHERE
 `
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(queryJSON, &whereCounter)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
 
 	// ワードand検索である場合のSQL追記
-	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
-		// ワードを解析
-		words := []string{}
-		err = json.Unmarshal([]byte(queryMap["words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-			return nil, err
-		}
-		notWords := []string{}
-		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-			return nil, err
-		}
+	words := []string{}
+	notWords := []string{}
+	if query.Words != nil {
+		words = *query.Words
+	}
+	if query.NotWords != nil {
+		notWords = *query.NotWords
+	}
 
+	if query.UseWords != nil && *query.UseWords {
+		// ワードを解析
 		if whereCounter != 0 {
 			sql += " AND "
 		}
 
-		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+		if query.WordsAnd != nil && *query.WordsAnd {
 			for i, word := range words {
 				if i == 0 {
 					sql += " ( "
@@ -521,14 +494,11 @@ WHERE
 		}
 
 		// id検索である場合のSQL追記
-		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+		if query.UseIDs != nil && *query.UseIDs {
 			ids := []string{}
-			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
-			if err != nil {
-				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
-				return nil, nil
+			if query.IDs != nil {
+				ids = *query.IDs
 			}
-
 			if whereCounter != 0 {
 				sql += " AND "
 			}
@@ -719,7 +689,7 @@ ORDER BY UPDATE_TIME DESC
 
 func (k *kmemoRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
 	sql := `
-INSERT INTO KMEMO
+INSERT INTO KMEMO (
   IS_DELETED,
   ID,
   CONTENT,
@@ -732,7 +702,7 @@ INSERT INTO KMEMO
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER
-) VASLUES (
+) VALUES (
   ?,
   ?,
   ?,

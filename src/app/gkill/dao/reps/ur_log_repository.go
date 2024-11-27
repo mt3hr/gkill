@@ -1,9 +1,13 @@
 package reps
 
-import "context"
+import (
+	"context"
+
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+)
 
 type URLogRepository interface {
-	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error)
 
 	GetKyou(ctx context.Context, id string) (*Kyou, error)
 
@@ -17,7 +21,7 @@ type URLogRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindURLog(ctx context.Context, queryJSON string) ([]*URLog, error)
+	FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error)
 
 	GetURLog(ctx context.Context, id string) (*URLog, error)
 
