@@ -6,12 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type URLogRepositories []URLogRepository
 
-func (u URLogRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (u URLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -27,7 +28,7 @@ func (u URLogRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*
 		rep := rep
 		go func(rep URLogRepository) {
 			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
 				errch <- err
 				return
@@ -320,7 +321,7 @@ errloop:
 	return nil
 }
 
-func (u URLogRepositories) FindURLog(ctx context.Context, queryJSON string) ([]*URLog, error) {
+func (u URLogRepositories) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
 	matchURLogs := map[string]*URLog{}
 	existErr := false
 	var err error
@@ -336,7 +337,7 @@ func (u URLogRepositories) FindURLog(ctx context.Context, queryJSON string) ([]*
 		rep := rep
 		go func(rep URLogRepository) {
 			defer wg.Done()
-			matchURLogsInRep, err := rep.FindURLog(ctx, queryJSON)
+			matchURLogsInRep, err := rep.FindURLog(ctx, query)
 			if err != nil {
 				errch <- err
 				return

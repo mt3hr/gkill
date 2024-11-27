@@ -6,12 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type KmemoRepositories []KmemoRepository
 
-func (k KmemoRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (k KmemoRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -27,7 +28,7 @@ func (k KmemoRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*
 		rep := rep
 		go func(rep KmemoRepository) {
 			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
 				errch <- err
 				return
@@ -320,7 +321,7 @@ errloop:
 	return nil
 }
 
-func (k KmemoRepositories) FindKmemo(ctx context.Context, queryJSON string) ([]*Kmemo, error) {
+func (k KmemoRepositories) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
 	matchKmemos := map[string]*Kmemo{}
 	existErr := false
 	var err error
@@ -336,7 +337,7 @@ func (k KmemoRepositories) FindKmemo(ctx context.Context, queryJSON string) ([]*
 		rep := rep
 		go func(rep KmemoRepository) {
 			defer wg.Done()
-			matchKmemosInRep, err := rep.FindKmemo(ctx, queryJSON)
+			matchKmemosInRep, err := rep.FindKmemo(ctx, query)
 			if err != nil {
 				errch <- err
 				return

@@ -1,34 +1,31 @@
 package sqlite3impl
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 )
 
-const TimeLayout = time.RFC3339
+const TimeLayout = "2006-01-02T15:04:05-07:00"
 
 func EscapeSQLite(str string) string {
 	return strings.ReplaceAll(str, "'", "''")
 }
 
-func GenerateFindSQLCommon(queryJSON string, whereCounter *int) (string, error) {
-	var err error
+func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, error) {
 	sql := ""
 
 	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json %s: %w", queryJSON, err)
-		return "", err
-	}
 
 	// 削除済みであるかどうかのSQL追記
-	if queryMap["is_deleted"] == fmt.Sprintf("%t", true) {
+	isDeleted := false
+	if query.IsDeleted != nil {
+		isDeleted = *query.IsDeleted
+	}
+	if isDeleted {
 		if *whereCounter != 0 {
 			sql += " AND "
 		}
@@ -41,14 +38,16 @@ func GenerateFindSQLCommon(queryJSON string, whereCounter *int) (string, error) 
 	}
 
 	// id検索である場合のSQL追記
-	if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
-		ids := []string{}
-		err := json.Unmarshal([]byte(queryMap["ids"]), ids)
-		if err != nil {
-			err = fmt.Errorf("error at parse ids %s: %w", ids, err)
-			return "", nil
-		}
+	useIDs := false
+	ids := []string{}
+	if query.UseIDs != nil {
+		useIDs = *query.UseIDs
+	}
+	if query.IDs != nil {
+		ids = *query.IDs
+	}
 
+	if useIDs {
 		if *whereCounter != 0 {
 			sql += " AND "
 		}
@@ -63,36 +62,35 @@ func GenerateFindSQLCommon(queryJSON string, whereCounter *int) (string, error) 
 	}
 
 	// 日付範囲指定ありの場合
-	if queryMap["use_calendar"] == fmt.Sprintf("%t", true) {
-		// 開始日時を指定するSQLを追記
-		if queryMap["calendar_start_date"] != "" {
-			startDate := &time.Time{}
-			err = json.Unmarshal([]byte(queryMap["calendar_start_date"]), startDate)
-			if err != nil {
-				err = fmt.Errorf("error at parse calendar start date %s: %w", queryMap["calendar_start_date"])
-				return "", err
-			}
+	useCalendar := false
+	var calendarStartDate *time.Time
+	var calendarEndDate *time.Time
+	if query.UseCalendar != nil {
+		useCalendar = *query.UseCalendar
+	}
+	if query.CalendarStartDate != nil {
+		calendarStartDate = query.CalendarStartDate
+	}
+	if query.CalendarEndDate != nil {
+		calendarEndDate = query.CalendarEndDate
+	}
 
+	if useCalendar {
+		// 開始日時を指定するSQLを追記
+		if calendarStartDate != nil {
 			if *whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += EscapeSQLite(fmt.Sprintf("datetime(RELATED_TIME, 'localtime') >= datetime('%s', 'localtime')", startDate.Format(TimeLayout)))
+			sql += EscapeSQLite(fmt.Sprintf("datetime(RELATED_TIME, 'localtime') >= datetime('%s', 'localtime')", calendarStartDate.Format(TimeLayout)))
 			*whereCounter++
 		}
 
 		// 終了日時を指定するSQLを追記
-		if queryMap["calendar_end_date"] != "" {
-			endDate := &time.Time{}
-			err = json.Unmarshal([]byte(queryMap["calendar_end_date"]), endDate)
-			if err != nil {
-				err = fmt.Errorf("error at parse calendar end date %s: %w", queryMap["calendar_end_date"])
-				return "", err
-			}
-
+		if calendarEndDate != nil {
 			if *whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += EscapeSQLite(fmt.Sprintf("datetime(RELATED_TIME, 'localtime') <= datetime('%s', 'localtime')", endDate.Format(TimeLayout)))
+			sql += EscapeSQLite(fmt.Sprintf("datetime(RELATED_TIME, 'localtime') <= datetime('%s', 'localtime')", calendarEndDate.Format(TimeLayout)))
 			*whereCounter++
 		}
 	}

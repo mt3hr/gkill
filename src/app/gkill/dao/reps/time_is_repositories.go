@@ -6,12 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type TimeIsRepositories []TimeIsRepository
 
-func (t TimeIsRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -27,7 +28,7 @@ func (t TimeIsRepositories) FindKyous(ctx context.Context, queryJSON string) ([]
 		rep := rep
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
 				errch <- err
 				return
@@ -320,7 +321,7 @@ errloop:
 	return nil
 }
 
-func (t TimeIsRepositories) FindTimeIs(ctx context.Context, queryJSON string) ([]*TimeIs, error) {
+func (t TimeIsRepositories) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
 	matchTimeIss := map[string]*TimeIs{}
 	existErr := false
 	var err error
@@ -336,7 +337,7 @@ func (t TimeIsRepositories) FindTimeIs(ctx context.Context, queryJSON string) ([
 		rep := rep
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
-			matchTimeIssInRep, err := rep.FindTimeIs(ctx, queryJSON)
+			matchTimeIssInRep, err := rep.FindTimeIs(ctx, query)
 			if err != nil {
 				errch <- err
 				return

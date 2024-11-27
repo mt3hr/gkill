@@ -6,12 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type GitCommitLogRepositories []GitCommitLogRepository
 
-func (g GitCommitLogRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (g GitCommitLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -27,7 +28,7 @@ func (g GitCommitLogRepositories) FindKyous(ctx context.Context, queryJSON strin
 		rep := rep
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
 				errch <- err
 				return
@@ -320,7 +321,7 @@ errloop:
 	return nil
 }
 
-func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, queryJSON string) ([]*GitCommitLog, error) {
+func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]*GitCommitLog, error) {
 	matchGitCommitLogs := map[string]*GitCommitLog{}
 	existErr := false
 	var err error
@@ -336,7 +337,7 @@ func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, queryJSO
 		rep := rep
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
-			matchGitCommitLogsInRep, err := rep.FindGitCommitLog(ctx, queryJSON)
+			matchGitCommitLogsInRep, err := rep.FindGitCommitLog(ctx, query)
 			if err != nil {
 				errch <- err
 				return

@@ -3,13 +3,13 @@ package reps
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -66,19 +66,11 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 	}, nil
 }
 
-func (u *urlogRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (u *urlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	var err error
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at URLOG%s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = u.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := u.GetRepName(ctx)
@@ -108,33 +100,28 @@ WHERE
 `
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(queryJSON, &whereCounter)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
 
 	// ワードand検索である場合のSQL追記
-	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
-		// ワードを解析
-		words := []string{}
-		err = json.Unmarshal([]byte(queryMap["words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-			return nil, err
-		}
-		notWords := []string{}
-		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-			return nil, err
-		}
-
+	if query.UseWords != nil && *query.UseWords {
 		if whereCounter != 0 {
 			sql += " AND "
 		}
 
-		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+		words := []string{}
+		if query.Words != nil {
+			words = *query.Words
+		}
+		notWords := []string{}
+		if query.NotWords != nil {
+			notWords = *query.NotWords
+		}
+
+		if query.WordsAnd != nil && *query.WordsAnd {
 			for i, word := range words {
 				if i == 0 {
 					sql += " ( "
@@ -234,7 +221,8 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(&kyou.IsDeleted,
+			err = rows.Scan(
+				&kyou.IsDeleted,
 				&kyou.ID,
 				&relatedTimeStr,
 				&createTimeStr,
@@ -337,7 +325,8 @@ ORDER BY UPDATE_TIME DESC
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(&kyou.IsDeleted,
+			err = rows.Scan(
+				&kyou.IsDeleted,
 				&kyou.ID,
 				&relatedTimeStr,
 				&createTimeStr,
@@ -349,6 +338,7 @@ ORDER BY UPDATE_TIME DESC
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
 				&kyou.RepName,
+				&kyou.DataType,
 			)
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -397,19 +387,11 @@ func (u *urlogRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return u.db.Close()
 }
 
-func (u *urlogRepositorySQLite3Impl) FindURLog(ctx context.Context, queryJSON string) ([]*URLog, error) {
+func (u *urlogRepositorySQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
 	var err error
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at URLOG  %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = u.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := u.GetRepName(ctx)
@@ -432,6 +414,7 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  URL,
   TITLE,
   DESCRIPTION,
   FAVICON_IMAGE,
@@ -442,33 +425,29 @@ WHERE
 `
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(queryJSON, &whereCounter)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
 
 	// ワードand検索である場合のSQL追記
-	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
+	if query.UseWords != nil && *query.UseWords {
 		// ワードを解析
 		words := []string{}
-		err = json.Unmarshal([]byte(queryMap["words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-			return nil, err
+		if query.Words != nil {
+			words = *query.Words
 		}
 		notWords := []string{}
-		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-			return nil, err
+		if query.NotWords != nil {
+			notWords = *query.NotWords
 		}
 
 		if whereCounter != 0 {
 			sql += " AND "
 		}
 
-		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+		if query.WordsAnd != nil && *query.WordsAnd {
 			for i, word := range words {
 				if i == 0 {
 					sql += " ( "
@@ -566,7 +545,8 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 			urlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(&urlog.IsDeleted,
+			err = rows.Scan(
+				&urlog.IsDeleted,
 				&urlog.ID,
 				&relatedTimeStr,
 				&createTimeStr,
@@ -642,6 +622,7 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  URL,
   TITLE,
   DESCRIPTION,
   FAVICON_IMAGE,
@@ -675,7 +656,8 @@ ORDER BY UPDATE_TIME DESC
 			urlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(&urlog.IsDeleted,
+			err = rows.Scan(
+				&urlog.IsDeleted,
 				&urlog.ID,
 				&relatedTimeStr,
 				&createTimeStr,
@@ -696,17 +678,17 @@ ORDER BY UPDATE_TIME DESC
 
 			urlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in KMEMO: %w", relatedTimeStr, id, err)
+				err = fmt.Errorf("error at parse related time %s at %s in URLog: %w", relatedTimeStr, id, err)
 				return nil, err
 			}
 			urlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in KMEMO: %w", createTimeStr, id, err)
+				err = fmt.Errorf("error at parse create time %s at %s in URLog: %w", createTimeStr, id, err)
 				return nil, err
 			}
 			urlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in KMEMO: %w", updateTimeStr, id, err)
+				err = fmt.Errorf("error at parse update time %s at %s in URLog: %w", updateTimeStr, id, err)
 				return nil, err
 			}
 			urlogs = append(urlogs, urlog)
@@ -717,9 +699,10 @@ ORDER BY UPDATE_TIME DESC
 
 func (u *urlogRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog) error {
 	sql := `
-INSERT INTO URLOG
+INSERT INTO URLOG (
   IS_DELETED,
   ID,
+  URL,
   TITLE,
   DESCRIPTION,
   FAVICON_IMAGE,
@@ -733,7 +716,8 @@ INSERT INTO URLOG
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER
-) VASLUES (
+) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -760,6 +744,7 @@ INSERT INTO URLOG
 	_, err = stmt.ExecContext(ctx,
 		urlog.IsDeleted,
 		urlog.ID,
+		urlog.URL,
 		urlog.Title,
 		urlog.Description,
 		urlog.FaviconImage,

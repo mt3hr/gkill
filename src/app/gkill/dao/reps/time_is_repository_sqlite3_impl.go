@@ -4,13 +4,13 @@ import (
 	"context"
 	"database/sql"
 	sql_lib "database/sql"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
   ID NOT NULL,
   TITLE NOT NULL,
   START_TIME NOT NULL,
-  END_TIME
+  END_TIME,
   CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
   CREATE_USER NOT NULL,
@@ -63,19 +63,11 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 		m:        &sync.Mutex{},
 	}, nil
 }
-func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	var err error
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at TIMEIS %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = t.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := t.GetRepName(ctx)
@@ -98,8 +90,8 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
-  'timeis_start' AS DATA_TYPE
+  ? AS 'REP_NAME',
+  'timeis_start' AS 'DATA_TYPE'
 FROM TIMEIS 
 `
 	sqlEndTimeIs := `
@@ -115,32 +107,32 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
-  'timeis_end' AS DATA_TYPE
+  ? AS 'REP_NAME',
+  'timeis_end' AS 'DATA_TYPE'
 FROM TIMEIS 
 `
 
 	sqlWhereFilterEndTimeIs := ""
-	if queryMap["include_end_timeis"] == fmt.Sprintf("%t", true) {
+	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end')"
 	} else {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
-	sqlWhereForStart, err := t.whereSQLGenerator(true, queryJSON)
+	sqlWhereForStart, err := t.whereSQLGenerator(true, query)
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForEnd, err := t.whereSQLGenerator(false, queryJSON)
+	sqlWhereForEnd, err := t.whereSQLGenerator(false, query)
 	if err != nil {
 		return nil, err
 	}
 
-	sql := fmt.Sprintf("SELECT * FROM ((SELECT * FROM %s WHERE %s) UNION (SELECT * FROM %s WHERE %s)) WHERE %s", sqlStartTimeIs, sqlWhereForStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterEndTimeIs)
+	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s WHERE %s", sqlStartTimeIs, sqlWhereForStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterEndTimeIs)
 
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		err = fmt.Errorf("error at find kyous sql: %w", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -168,7 +160,8 @@ FROM TIMEIS
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(&kyou.IsDeleted,
+			err = rows.Scan(
+				&kyou.IsDeleted,
 				&kyou.ID,
 				&relatedTimeStr,
 				&createTimeStr,
@@ -241,8 +234,8 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
-  'timeis_start' AS DATA_TYPE
+  ? AS 'REP_NAME',
+  'timeis_start' AS 'DATA_TYPE'
 FROM TIMEIS 
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
@@ -271,7 +264,8 @@ ORDER BY UPDATE_TIME DESC
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(&kyou.IsDeleted,
+			err = rows.Scan(
+				&kyou.IsDeleted,
 				&kyou.ID,
 				&relatedTimeStr,
 				&createTimeStr,
@@ -331,19 +325,11 @@ func (t *timeIsRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return t.db.Close()
 }
 
-func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, queryJSON string) ([]*TimeIs, error) {
+func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
 	var err error
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at TIMEIS %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = t.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := t.GetRepName(ctx)
@@ -357,7 +343,10 @@ func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, queryJSON 
 SELECT 
   IS_DELETED,
   ID,
-  START_TIME AS 'RELATED_TIME',
+  TITLE,
+  START_TIME,
+  END_TIME,
+  START_TIME AS 'RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
@@ -366,27 +355,27 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
-  'timeis_start' AS DATA_TYPE
+  ? AS 'REP_NAME',
+  'timeis_start' AS 'DATA_TYPE'
 FROM TIMEIS 
 `
 	sqlWhereFilterEndTimeIs := ""
-	if queryMap["include_end_timeis"] == fmt.Sprintf("%t", true) {
+	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end')"
 	} else {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
-	sqlWhereForStart, err := t.whereSQLGenerator(true, queryJSON)
+	sqlWhereForStart, err := t.whereSQLGenerator(true, query)
 	if err != nil {
 		return nil, err
 	}
 
-	sql := fmt.Sprintf("SELECT * FROM ((SELECT * FROM %s WHERE %s)) WHERE %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterEndTimeIs)
+	sql := fmt.Sprintf("%s WHERE %s WHERE %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterEndTimeIs)
 
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		err = fmt.Errorf("error at get find time is sql: %w", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -415,7 +404,8 @@ FROM TIMEIS
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			startTimeStr, endTime := "", sql_lib.NullTime{}
 
-			err = rows.Scan(&timeis.IsDeleted,
+			err = rows.Scan(
+				&timeis.IsDeleted,
 				&timeis.ID,
 				&timeis.Title,
 				&startTimeStr,
@@ -483,17 +473,17 @@ SELECT
   ID,
   TITLE,
   START_TIME,
-  END_TIME
+  END_TIME,
   CREATE_TIME,
+  CREATE_TIME AS 'RELATED_TIME',
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
-  ? AS REP_NAME
-)
+  UPDATE_USER,
+  ? AS 'REP_NAME'
 FROM TIMEIS 
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
@@ -501,7 +491,7 @@ ORDER BY UPDATE_TIME DESC
 
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		err = fmt.Errorf("error at get time is histories sql: %w", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -530,13 +520,14 @@ ORDER BY UPDATE_TIME DESC
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			startTimeStr, endTime := "", sql_lib.NullTime{}
 
-			err = rows.Scan(&timeis.IsDeleted,
+			err = rows.Scan(
+				&timeis.IsDeleted,
 				&timeis.ID,
 				&timeis.Title,
 				&startTimeStr,
 				&endTime,
-				&relatedTimeStr,
 				&createTimeStr,
+				&relatedTimeStr,
 				&timeis.CreateApp,
 				&timeis.CreateDevice,
 				&timeis.CreateUser,
@@ -574,22 +565,21 @@ ORDER BY UPDATE_TIME DESC
 
 func (t *timeIsRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
 	sql := `
-INSERT INTO TIMEIS
+INSERT INTO TIMEIS (
   IS_DELETED,
   ID,
   TITLE,
   START_TIME,
-  END_TIME
+  END_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER
-) VASLUES (
-  ?,
+) VALUES (
   ?,
   ?,
   ?,
@@ -620,6 +610,7 @@ INSERT INTO TIMEIS
 	_, err = stmt.ExecContext(ctx,
 		timeis.IsDeleted,
 		timeis.ID,
+		timeis.Title,
 		timeis.StartTime.Format(sqlite3impl.TimeLayout),
 		endTimeStr,
 		timeis.CreateTime.Format(sqlite3impl.TimeLayout),
@@ -638,21 +629,12 @@ INSERT INTO TIMEIS
 	return nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, queryJSON string) (string, error) {
+func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query *find.FindQuery) (string, error) {
 	sqlWhere := ""
 	whereCounter := 0
-	var err error
-
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json %s: %w", queryJSON, err)
-		return "", err
-	}
 
 	// 削除済みであるかどうかのSQL追記
-	if queryMap["is_deleted"] == fmt.Sprintf("%t", true) {
+	if query.IsDeleted != nil && *query.IsDeleted {
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
@@ -665,14 +647,11 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 	}
 
 	// id検索である場合のSQL追記
-	if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
-		ids := []string{}
-		err := json.Unmarshal([]byte(queryMap["ids"]), ids)
-		if err != nil {
-			err = fmt.Errorf("error at parse ids %s: %w", ids, err)
-			return "", nil
-		}
-
+	ids := []string{}
+	if query.IDs != nil {
+		ids = *query.IDs
+	}
+	if query.UseIDs != nil && *query.UseIDs {
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
@@ -687,7 +666,7 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 	}
 
 	// 日付範囲指定ありの場合
-	if queryMap["use_calendar"] == fmt.Sprintf("%t", true) {
+	if query.UseCalendar != nil && *query.UseCalendar {
 		// 開始日時を指定するSQLを追記
 		columnName := ""
 		if forStartTime {
@@ -695,14 +674,8 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 		} else {
 			columnName = "END_TIME"
 		}
-		if queryMap["calendar_start_date"] != "" {
-			startDate := &time.Time{}
-			err = json.Unmarshal([]byte(queryMap["calendar_start_date"]), startDate)
-			if err != nil {
-				err = fmt.Errorf("error at parse calendar start date %s: %w", queryMap["calendar_start_date"])
-				return "", err
-			}
-
+		if query.CalendarStartDate != nil {
+			startDate := query.CalendarStartDate
 			if whereCounter != 0 {
 				sqlWhere += " AND "
 			}
@@ -711,14 +684,8 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 		}
 
 		// 終了日時を指定するSQLを追記
-		if queryMap["calendar_end_date"] != "" {
-			endDate := &time.Time{}
-			err = json.Unmarshal([]byte(queryMap["calendar_end_date"]), endDate)
-			if err != nil {
-				err = fmt.Errorf("error at parse calendar end date %s: %w", queryMap["calendar_end_date"])
-				return "", err
-			}
-
+		if query.CalendarEndDate != nil {
+			endDate := query.CalendarEndDate
 			if whereCounter != 0 {
 				sqlWhere += " AND "
 			}
@@ -727,26 +694,21 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 		}
 	}
 	// ワードand検索である場合のSQL追記
-	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
-		// ワードを解析
-		words := []string{}
-		err = json.Unmarshal([]byte(queryMap["words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-			return "", err
-		}
-		notWords := []string{}
-		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-			return "", err
-		}
-
+	if query.UseWords != nil && *query.UseWords {
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
 
-		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+		words := []string{}
+		if query.Words != nil {
+			words = *query.Words
+		}
+		notWords := []string{}
+		if query.NotWords != nil {
+			notWords = *query.NotWords
+		}
+
+		if query.WordsAnd != nil && *query.WordsAnd {
 			for i, word := range words {
 				if i == 0 {
 					sqlWhere += " ( "
@@ -797,19 +759,8 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 		}
 	}
 	// plaingの場合
-	if queryMap["use_plaing"] == fmt.Sprintf("%t", true) {
-		plaingTimeStr := ""
-		err = json.Unmarshal([]byte(queryMap["plaing_time"]), &plaingTimeStr)
-		if err != nil {
-			err = fmt.Errorf("error at parse plaing_time %s: %w", queryMap["plaing_time"], err)
-			return "", err
-		}
-		plaingTime, err := time.Parse(sqlite3impl.TimeLayout, plaingTimeStr)
-		if err != nil {
-			err = fmt.Errorf("error at parse plaing_time %s: %w", queryMap["plaing_time"], err)
-			return "", err
-		}
-
+	if query.UsePlaing != nil && *query.UsePlaing {
+		plaingTime := query.PlaingTime
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}

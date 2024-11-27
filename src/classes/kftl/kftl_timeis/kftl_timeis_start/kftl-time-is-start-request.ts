@@ -18,16 +18,12 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         this.title = ""
     }
 
-    async apply_this_line_to_request_map(requet_map: KFTLRequestMap): Promise<void> {
-        throw new Error('Not implemented')
-    }
-
     async get_label_name(context: KFTLStatementLineContext): Promise<string> {
-        throw new Error('Not implemented')
+        return "開始"
     }
 
     async set_title(title: string): Promise<void> {
-        throw new Error('Not implemented')
+        this.title = title
     }
 
     async do_request(): Promise<Array<GkillError>> {
@@ -47,6 +43,7 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddTimeisRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
         req.timeis.id = this.get_request_id()
         req.timeis.start_time = time
         req.timeis.title = this.title

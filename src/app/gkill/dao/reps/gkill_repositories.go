@@ -11,6 +11,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
@@ -38,7 +39,7 @@ type GkillRepositories struct {
 
 	IDFKyouReps IDFKyouRepositories
 
-	ReKyouReps *ReKyouRepositories
+	ReKyouReps ReKyouRepositories
 
 	GitCommitLogReps GitCommitLogRepositories
 
@@ -181,7 +182,7 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 	return nil
 }
 
-func (g *GkillRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -198,17 +199,11 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, queryJSON string) ([]
 		go func(rep Repository) {
 			defer wg.Done()
 			// jsonからパースする
-			queryJSONLatest := queryJSON
-			queryMap := map[string]string{}
-			err = json.Unmarshal([]byte(queryJSONLatest), &queryMap)
-			if err != nil {
-				err = fmt.Errorf("error at parse query json at idf %s: %w", queryJSON, err)
-				errch <- err
-				return
-			}
+			queryLatest := query
+
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if queryMap["ids"] == "" {
-				queryJSONLatestBuf := bytes.NewBufferString("")
+			if query.IDs != nil {
+				ids := *query.IDs
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -224,7 +219,6 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, queryJSON string) ([]
 				}
 
 				idsStrBuf := bytes.NewBufferString("")
-				ids := []string{}
 				for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 					ids = append(ids, latestDataRepositoryAddress.TargetID)
 				}
@@ -235,19 +229,15 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, queryJSON string) ([]
 					errch <- err
 					return
 				}
-				queryMap["ids"] = idsStrBuf.String()
-				queryMap["use_ids"] = fmt.Sprintf("%t", true)
+				trueValue := true
 
-				err = json.NewEncoder(queryJSONLatestBuf).Encode(queryMap)
-				if err != nil {
-					err = fmt.Errorf("error at latest ids in rep query marshal json %#v: %w", ids, err)
-					errch <- err
-					return
-				}
-				queryJSONLatest = idsStrBuf.String()
+				query.IDs = &ids
+				query.UseIDs = &trueValue
+
+				queryLatest = query
 			}
 
-			matchKyousInRep, err := rep.FindKyous(ctx, queryJSONLatest)
+			matchKyousInRep, err := rep.FindKyous(ctx, queryLatest)
 			if err != nil {
 				errch <- err
 				return
@@ -418,7 +408,8 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 				return
 			}
 
-			kyous, err := rep.FindKyous(ctx, fmt.Sprintf(`{reps: ["%s"]}`, repName))
+			reps := []string{repName}
+			kyous, err := rep.FindKyous(ctx, &find.FindQuery{Reps: &reps})
 			if err != nil {
 				errch <- err
 				return
@@ -440,7 +431,8 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 				return
 			}
 
-			tags, err := rep.FindTags(ctx, fmt.Sprintf(`{reps: ["%s"]}`, repName))
+			reps := []string{repName}
+			tags, err := rep.FindTags(ctx, &find.FindQuery{Reps: &reps})
 			if err != nil {
 				errch <- err
 				return
@@ -462,7 +454,8 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 				return
 			}
 
-			texts, err := rep.FindTexts(ctx, fmt.Sprintf(`{reps: ["%s"]}`, repName))
+			reps := []string{repName}
+			texts, err := rep.FindTexts(ctx, &find.FindQuery{Reps: &reps})
 			if err != nil {
 				errch <- err
 				return
@@ -641,7 +634,8 @@ func (g *GkillRepositories) UpdateCacheByRepName(ctx context.Context, repName st
 				return
 			}
 
-			kyous, err := rep.FindKyous(ctx, fmt.Sprintf(`{reps: ["%s"]}`, repName))
+			reps := []string{repName}
+			kyous, err := rep.FindKyous(ctx, &find.FindQuery{Reps: &reps})
 			if err != nil {
 				errch <- err
 				return
@@ -709,7 +703,7 @@ kyousloop:
 }
 
 func (g *GkillRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements Reps.GetPath")
+	err := fmt.Errorf("not implements GetPath")
 	return "", err
 }
 
@@ -795,7 +789,7 @@ loop:
 	return kyouHistoriesList, nil
 }
 
-func (g *GkillRepositories) FindTags(ctx context.Context, queryJSON string) ([]*Tag, error) {
+func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
 	matchTags := map[string]*Tag{}
 	existErr := false
 	var err error
@@ -812,17 +806,10 @@ func (g *GkillRepositories) FindTags(ctx context.Context, queryJSON string) ([]*
 		go func(rep TagRepository) {
 			defer wg.Done()
 			// jsonからパースする
-			queryJSONLatest := queryJSON
-			queryMap := map[string]string{}
-			err = json.Unmarshal([]byte(queryJSONLatest), &queryMap)
-			if err != nil {
-				err = fmt.Errorf("error at parse query json at idf %s: %w", queryJSON, err)
-				errch <- err
-				return
-			}
+			queryLatest := query
+
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if queryMap["ids"] == "" {
-				queryJSONLatestBuf := bytes.NewBufferString("")
+			if query.IDs != nil {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -849,19 +836,14 @@ func (g *GkillRepositories) FindTags(ctx context.Context, queryJSON string) ([]*
 					errch <- err
 					return
 				}
-				queryMap["ids"] = idsStrBuf.String()
-				queryMap["use_ids"] = fmt.Sprintf("%t", true)
+				trueValue := true
+				query.IDs = &ids
+				query.UseIDs = &trueValue
 
-				err = json.NewEncoder(queryJSONLatestBuf).Encode(queryMap)
-				if err != nil {
-					err = fmt.Errorf("error at latest ids in rep query marshal json %#v: %w", ids, err)
-					errch <- err
-					return
-				}
-				queryJSONLatest = idsStrBuf.String()
+				queryLatest = query
 			}
 
-			matchTagsInRep, err := rep.FindTags(ctx, queryJSONLatest)
+			matchTagsInRep, err := rep.FindTags(ctx, queryLatest)
 			if err != nil {
 				errch <- err
 				return
@@ -1296,7 +1278,7 @@ loop:
 	return tagNamesList, nil
 }
 
-func (g *GkillRepositories) FindTexts(ctx context.Context, queryJSON string) ([]*Text, error) {
+func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
 	matchTexts := map[string]*Text{}
 	existErr := false
 	var err error
@@ -1313,17 +1295,13 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, queryJSON string) ([]
 		go func(rep TextRepository) {
 			defer wg.Done()
 			// jsonからパースする
-			queryJSONLatest := queryJSON
-			queryMap := map[string]string{}
-			err = json.Unmarshal([]byte(queryJSONLatest), &queryMap)
-			if err != nil {
-				err = fmt.Errorf("error at parse query json at idf %s: %w", queryJSON, err)
-				errch <- err
-				return
+			queryLatest := query
+			ids := []string{}
+			if query.IDs != nil {
+				ids = *query.IDs
 			}
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if queryMap["ids"] == "" {
-				queryJSONLatestBuf := bytes.NewBufferString("")
+			if len(ids) == 0 {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -1339,7 +1317,6 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, queryJSON string) ([]
 				}
 
 				idsStrBuf := bytes.NewBufferString("")
-				ids := []string{}
 				for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 					ids = append(ids, latestDataRepositoryAddress.TargetID)
 				}
@@ -1350,19 +1327,14 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, queryJSON string) ([]
 					errch <- err
 					return
 				}
-				queryMap["ids"] = idsStrBuf.String()
-				queryMap["use_ids"] = fmt.Sprintf("%t", true)
+				trueValue := true
+				query.IDs = &ids
+				query.UseIDs = &trueValue
 
-				err = json.NewEncoder(queryJSONLatestBuf).Encode(queryMap)
-				if err != nil {
-					err = fmt.Errorf("error at latest ids in rep query marshal json %#v: %w", ids, err)
-					errch <- err
-					return
-				}
-				queryJSONLatest = idsStrBuf.String()
+				queryLatest = query
 			}
 
-			matchTextsInRep, err := rep.FindTexts(ctx, queryJSONLatest)
+			matchTextsInRep, err := rep.FindTexts(ctx, queryLatest)
 			if err != nil {
 				errch <- err
 				return

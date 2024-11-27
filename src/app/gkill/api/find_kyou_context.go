@@ -1,13 +1,14 @@
 package api
 
 import (
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 )
 
 type FindKyouContext struct {
-	RawQueryJSON string
+	RawFindQueryJSON string
 
-	ParsedQuery map[string]string
+	ParsedFindQuery *find.FindQuery
 
 	Repositories *reps.GkillRepositories
 
@@ -39,7 +40,7 @@ type FindKyouContext struct {
 
 	ResultKyous []*reps.Kyou
 
-	TagFilterMode *TagFilterMode
+	TagFilterMode *find.TagFilterMode
 
-	TimeIsTagFilterMode *TagFilterMode
+	TimeIsTagFilterMode *find.TagFilterMode
 }

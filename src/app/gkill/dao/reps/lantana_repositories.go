@@ -6,12 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type LantanaRepositories []LantanaRepository
 
-func (l LantanaRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (l LantanaRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -27,7 +28,7 @@ func (l LantanaRepositories) FindKyous(ctx context.Context, queryJSON string) ([
 		rep := rep
 		go func(rep LantanaRepository) {
 			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
 				errch <- err
 				return
@@ -320,7 +321,7 @@ errloop:
 	return nil
 }
 
-func (l LantanaRepositories) FindLantana(ctx context.Context, queryJSON string) ([]*Lantana, error) {
+func (l LantanaRepositories) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
 	matchLantanas := map[string]*Lantana{}
 	existErr := false
 	var err error
@@ -336,7 +337,7 @@ func (l LantanaRepositories) FindLantana(ctx context.Context, queryJSON string) 
 		rep := rep
 		go func(rep LantanaRepository) {
 			defer wg.Done()
-			matchLantanasInRep, err := rep.FindLantana(ctx, queryJSON)
+			matchLantanasInRep, err := rep.FindLantana(ctx, query)
 			if err != nil {
 				errch <- err
 				return

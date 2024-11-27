@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar class="app_bar" app color="primary" flat  :height="app_title_bar_height_px">
+    <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
         <v-toolbar-title>kftl</v-toolbar-title>
         <v-spacer />
     </v-app-bar>
