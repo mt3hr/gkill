@@ -7,7 +7,8 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn v-if="is_admin" @click="show_server_config_dialog()" color="'primary'">サーバ設定</v-btn>
+                    <v-btn v-if="cloned_application_config.account_is_admin" @click="show_server_config_dialog()"
+                        color="'primary'">サーバ設定</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -161,7 +162,6 @@ watch(() => props.application_config, async () => {
 })
 
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
-const is_admin: Ref<boolean> = ref(cloned_application_config.value.account_is_admin)
 
 const google_map_api_key: Ref<string> = ref(cloned_application_config.value.google_map_api_key)
 const rykv_image_list_column_number: Ref<Number> = ref(cloned_application_config.value.rykv_image_list_column_number)
@@ -169,9 +169,6 @@ const enable_browser_cache: Ref<boolean> = ref(cloned_application_config.value.e
 const rykv_hot_reload: Ref<boolean> = ref(cloned_application_config.value.rykv_hot_reload)
 const mi_default_board: Ref<string> = ref(cloned_application_config.value.mi_default_board)
 const mi_board_names: Ref<Array<string>> = ref(new Array())
-
-async function update_is_admin(): Promise<void> {
-}
 
 async function reload_cloned_application_config(): Promise<void> {
     cloned_application_config.value = props.application_config.clone()
@@ -248,6 +245,5 @@ function update_board_name(board_name: string): void {
 function show_server_config_dialog(): void {
     server_config_dialog.value?.show()
 }
-//TODO コメントアウト解除 load_mi_board_names()
-is_admin.value = true //TODO けして
+load_mi_board_names()
 </script>

@@ -2,13 +2,13 @@ package reps
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 )
 
 type gitCommitLogRepositoryLocalImpl struct {
@@ -27,19 +27,10 @@ func NewGitRep(reppath string) (GitCommitLogRepository, error) {
 		filename: reppath,
 	}, nil
 }
-func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	var err error
-
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at kmemo %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = g.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := g.GetRepName(ctx)
@@ -62,7 +53,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, queryJS
 		match := true
 
 		// 削除済みであるかどうかの判定
-		if queryMap["is_deleted"] == fmt.Sprintf("%t", true) {
+		if query.IsDeleted != nil && *query.IsDeleted {
 			match = false
 			if !match {
 				return nil
@@ -70,12 +61,10 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, queryJS
 		}
 
 		// id検索である場合のSQL追記
-		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+		if query.UseIDs != nil && *query.UseIDs {
 			ids := []string{}
-			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
-			if err != nil {
-				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
-				return nil
+			if query.IDs != nil {
+				ids = *query.IDs
 			}
 			for _, id := range ids {
 				match = id == fmt.Sprintf("%s", commit.Hash)
@@ -89,23 +78,18 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, queryJS
 		}
 
 		// ワードand検索である場合の判定
-		if queryMap["use_word"] == fmt.Sprintf("%t", true) {
+		if query.WordsAnd != nil && *query.WordsAnd {
 			match = false
-			// ワードを解析
 			words := []string{}
-			err = json.Unmarshal([]byte(queryMap["words"]), &words)
-			if err != nil {
-				err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-				return err
+			if query.Words != nil {
+				words = *query.Words
 			}
 			notWords := []string{}
-			err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-			if err != nil {
-				err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-				return err
+			if query.NotWords != nil {
+				notWords = *query.NotWords
 			}
 
-			if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+			if query.WordsAnd != nil && *query.WordsAnd {
 				for _, word := range words {
 					match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
 					if !match {
@@ -221,19 +205,11 @@ func (g *gitCommitLogRepositoryLocalImpl) Close(ctx context.Context) error {
 	return nil
 }
 
-func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, queryJSON string) ([]*GitCommitLog, error) {
+func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]*GitCommitLog, error) {
 	var err error
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at kmemo %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = g.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := g.GetRepName(ctx)
@@ -256,12 +232,10 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 		match := true
 
 		// id検索である場合のSQL追記
-		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+		if query.UseIDs != nil && query.IDs != nil {
 			ids := []string{}
-			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
-			if err != nil {
-				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
-				return nil
+			if query.IDs != nil {
+				ids = *query.IDs
 			}
 			for _, id := range ids {
 				match = id == fmt.Sprintf("%s", commit.Hash)
@@ -275,23 +249,14 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 		}
 
 		// ワードand検索である場合の判定
-		if queryMap["use_word"] == fmt.Sprintf("%t", true) {
+		if query.WordsAnd != nil {
 			match = false
 			// ワードを解析
-			words := []string{}
-			err = json.Unmarshal([]byte(queryMap["words"]), &words)
-			if err != nil {
-				err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-				return err
-			}
-			notWords := []string{}
-			err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-			if err != nil {
-				err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-				return err
-			}
-
-			if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+			if query.WordsAnd != nil && *query.WordsAnd {
+				words := []string{}
+				if query.Words != nil {
+					words = *query.Words
+				}
 				for _, word := range words {
 					match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
 					if !match {
@@ -299,6 +264,10 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 					}
 				}
 			} else {
+				words := []string{}
+				if query.Words != nil {
+					words = *query.Words
+				}
 				// ワードor検索である場合の判定
 				for _, word := range words {
 					match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
@@ -308,6 +277,10 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 				}
 			}
 
+			notWords := []string{}
+			if query.NotWords != nil {
+				notWords = *query.NotWords
+			}
 			// notワードを除外する場合の判定
 			for _, notWord := range notWords {
 				match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)

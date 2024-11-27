@@ -6,12 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type NlogRepositories []NlogRepository
 
-func (n NlogRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (n NlogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -27,7 +28,7 @@ func (n NlogRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*K
 		rep := rep
 		go func(rep NlogRepository) {
 			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
 				errch <- err
 				return
@@ -320,7 +321,7 @@ errloop:
 	return nil
 }
 
-func (n NlogRepositories) FindNlog(ctx context.Context, queryJSON string) ([]*Nlog, error) {
+func (n NlogRepositories) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
 	matchNlogs := map[string]*Nlog{}
 	existErr := false
 	var err error
@@ -336,7 +337,7 @@ func (n NlogRepositories) FindNlog(ctx context.Context, queryJSON string) ([]*Nl
 		rep := rep
 		go func(rep NlogRepository) {
 			defer wg.Done()
-			matchNlogsInRep, err := rep.FindNlog(ctx, queryJSON)
+			matchNlogsInRep, err := rep.FindNlog(ctx, query)
 			if err != nil {
 				errch <- err
 				return

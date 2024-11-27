@@ -23,13 +23,13 @@ export class KFTLStatementLineContext {
     private add_second: Number
 
     constructor(statement_line_text: string, target_id: string, next_statement_line_text: string, kftl_statement_lines: Array<KFTLStatementLine>, is_prototype: boolean) {
-        this.this_statement_line_text = ""
-        this.this_statement_line_target_id = ""
-        this.this_is_prototype = false
-        this.next_statement_line_text = ""
+        this.this_statement_line_text = statement_line_text
+        this.this_statement_line_target_id = target_id
+        this.this_is_prototype = is_prototype
+        this.next_statement_line_text = next_statement_line_text
         this.next_statement_line_target_id = ""
         this.next_is_prototype = false
-        this.kftl_statement_lines = new Array<KFTLStatementLine>()
+        this.kftl_statement_lines = kftl_statement_lines
         this.add_second = 0
         this.next_statement_line_constructor = null
 

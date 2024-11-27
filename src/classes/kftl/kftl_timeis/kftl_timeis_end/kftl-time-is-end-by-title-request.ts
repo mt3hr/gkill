@@ -70,6 +70,7 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
         // end_timeをいれてUPDATEする
         const update_timeis_req = new UpdateTimeisRequest()
         update_timeis_req.session_id = GkillAPI.get_instance().get_session_id()
+        update_timeis_req.session_id = GkillAPI.get_instance().get_session_id()
         update_timeis_req.timeis = target_timeis
         update_timeis_req.timeis.end_time = time
         update_timeis_req.timeis.update_app = "gkill_kftl"

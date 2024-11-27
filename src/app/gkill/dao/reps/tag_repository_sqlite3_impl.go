@@ -3,13 +3,13 @@ package reps
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -62,19 +62,11 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		m:        &sync.Mutex{},
 	}, nil
 }
-func (t *tagRepositorySQLite3Impl) FindTags(ctx context.Context, queryJSON string) ([]*Tag, error) {
+func (t *tagRepositorySQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
 	var err error
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at TAG %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = t.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := t.GetRepName(ctx)
@@ -98,7 +90,7 @@ SELECT
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TAG
@@ -106,33 +98,28 @@ WHERE
 `
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(queryJSON, &whereCounter)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
 
-	// ワードand検索である場合のSQL追記
-	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
-		// ワードを解析
-		words := []string{}
-		err = json.Unmarshal([]byte(queryMap["words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-			return nil, err
-		}
-		notWords := []string{}
-		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-			return nil, err
-		}
+	words := []string{}
+	if query.Words != nil {
+		words = *query.Words
+	}
+	notWords := []string{}
+	if query.NotWords != nil {
+		notWords = *query.NotWords
+	}
 
+	// ワードand検索である場合のSQL追記
+	if query.UseWords != nil && *query.UseWords {
 		if whereCounter != 0 {
 			sql += " AND "
 		}
 
-		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+		if query.WordsAnd != nil && *query.WordsAnd {
 			for i, word := range words {
 				if i == 0 {
 					sql += " ( "
@@ -183,14 +170,11 @@ WHERE
 		}
 
 		// id検索である場合のSQL追記
-		if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
+		if query.UseIDs != nil && *query.UseIDs {
 			ids := []string{}
-			err := json.Unmarshal([]byte(queryMap["ids"]), ids)
-			if err != nil {
-				err = fmt.Errorf("error at parse ids %s: %w", ids, err)
-				return nil, nil
+			if query.IDs != nil {
+				ids = *query.IDs
 			}
-
 			if whereCounter != 0 {
 				sql += " AND "
 			}
@@ -318,7 +302,7 @@ SELECT
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TAG
@@ -418,7 +402,7 @@ SELECT
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TAG
@@ -538,7 +522,7 @@ SELECT
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TAG
@@ -618,7 +602,7 @@ WHERE ID LIKE ?
 
 func (t *tagRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag *Tag) error {
 	sql := `
-INSERT INTO TAG 
+INSERT INTO TAG (
   IS_DELETED,
   ID,
   TAG,
@@ -632,7 +616,7 @@ INSERT INTO TAG
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER
-) VASLUES (
+) VALUES (
   ?,
   ?,
   ?,

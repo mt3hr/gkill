@@ -242,4 +242,5 @@ const (
 	GetAllRepositoriesError                            = "ERR000236"
 	AddApplicationConfig                               = "ERR000237"
 	AccountDisabledError                               = "ERR000238"
+	InvalidGetMiSharedTaskRequest                      = "ERR000239"
 )

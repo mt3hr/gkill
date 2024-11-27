@@ -46,7 +46,7 @@ export class TimeIs extends InfoBase {
         super()
         this.title = ""
         this.start_time = new Date(0)
-        this.end_time = new Date(0)
+        this.end_time = null
         this.attached_histories = new Array<TimeIs>()
     }
 

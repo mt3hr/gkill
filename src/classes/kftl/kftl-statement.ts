@@ -6,6 +6,7 @@ import { KFTLRequestMap } from "./kftl-request-map"
 import type { KFTLStatementLine } from "./kftl-statement-line"
 import { KFTLStatementLineConstructorFactory } from "./kftl-statement-line-constructor-factory"
 import { KFTLStatementLineContext } from "./kftl-statement-line-context"
+import { KFTLSplitAndNextSecondStatementLine } from "./kftl_split/kftl-split-and-next-second-statement-line"
 import { LineLabelData } from "./line-label-data"
 import type { TextAreaInfo } from "./text-area-info"
 
@@ -43,7 +44,7 @@ export class KFTLStatement {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i]
             const label_data = new LineLabelData()
-            label_data.lines = line.get_count_line_in_textarea(text_area_info)
+            label_data.lines = line.get_count_line_in_textarea(text_area_info).valueOf()
             label_data.label = line.get_label_name(line.get_context())
             label_data.target_request_id = line.get_context().get_this_statement_line_target_id()
             label_datas.push(label_data)
@@ -56,7 +57,7 @@ export class KFTLStatement {
             const context = new KFTLStatementLineContext(line_text, next_line_text, target_id, lines, false)
             line = line.get_context().get_next_statement_line_constructor()!!(context.get_this_statement_line_target_id(), context)
             const label_data = new LineLabelData()
-            label_data.lines = line.get_count_line_in_textarea(text_area_info)
+            label_data.lines = line.get_count_line_in_textarea(text_area_info).valueOf()
             label_data.label = line.get_label_name(line.get_context())
             label_datas.push(label_data)
             lines.push(line)
@@ -83,7 +84,50 @@ export class KFTLStatement {
     }
 
     private generate_kftl_lines(): Array<KFTLStatementLine> {
-        throw new Error('Not implemented')
+        KFTLStatementLineConstructorFactory.get_instance().reset()
+        const lines = new Array<KFTLStatementLine>()
+        const text = this.get_statement_text()
+        const line_texts = text.split("\n")
+        let prev_context: KFTLStatementLineContext | null = null
+        let prev_add_second = 0
+        for (let i = 0; i < line_texts.length; i++) {
+            const line_text = line_texts[i]
+            const next_line_text = i < line_texts.length - 1 ? line_texts[i + 1] : ""
+            const target_id: string = (prev_context != null && prev_context.get_next_statement_line_target_id() != null) ? prev_context.get_next_statement_line_target_id()!! : GkillAPI.get_instance().generate_uuid()
+            const prototype_flag: boolean = (prev_context != null && prev_context.is_this_prototype() != null) ? prev_context?.is_next_prototype() : true
+            const context: KFTLStatementLineContext = new KFTLStatementLineContext(line_text, target_id, next_line_text, lines.slice(0, i), prototype_flag)
+            context.set_add_second(prev_add_second)
+
+            if (i != 0 && line_text == "！") {
+                break
+            }
+
+            const line = this.generate_kftl_line(context)
+            lines.push(line)
+
+            if (line.constructor.name == KFTLSplitAndNextSecondStatementLine.name) {
+                prev_add_second++
+            }
+            prev_context = context
+        }
+        return lines
+    }
+
+
+    public async get_invalid_line_indexs(): Promise<Array<number>> {
+        const lines = this.generate_kftl_lines()
+        const invalid_line_indexs = new Array<number>()
+        const map = new KFTLRequestMap()
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i]
+            try {
+                await line.apply_this_line_to_request_map(map)
+            } catch (e: any) {
+                invalid_line_indexs.push(i)
+                console.log(e)
+            }
+        }
+        return invalid_line_indexs
     }
 
 }

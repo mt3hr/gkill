@@ -3,7 +3,6 @@ package reps
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -18,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -108,19 +108,10 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	return rep, nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	var err error
-
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at idf %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = i.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := i.GetRepName(ctx)
@@ -151,7 +142,7 @@ WHERE
 `
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(queryJSON, &whereCounter)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
 	if err != nil {
 		return nil, err
 	}
@@ -285,25 +276,22 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 				fileContentText += strings.ToLower(string(b))
 			}
 
+			words := []string{}
+			notWords := []string{}
+			if query.Words != nil {
+				words = *query.Words
+			}
+			if query.NotWords != nil {
+				notWords = *query.NotWords
+			}
+
 			// ワードand検索である場合の判定
 			match := true
-			if queryMap["use_word"] == fmt.Sprintf("%t", true) {
+			if query.UseWords != nil && *query.UseWords {
 				match = false
 				// ワードを解析
-				words := []string{}
-				err = json.Unmarshal([]byte(queryMap["words"]), &words)
-				if err != nil {
-					err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-					return nil, err
-				}
-				notWords := []string{}
-				err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-				if err != nil {
-					err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-					return nil, err
-				}
 
-				if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+				if query.WordsAnd != nil && *query.WordsAnd {
 					for _, word := range words {
 						match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
 						if !match {
@@ -667,19 +655,11 @@ func (i *idfKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return i.db.Close()
 }
 
-func (i *idfKyouRepositorySQLite3Impl) FindIDFKyou(ctx context.Context, queryJSON string) ([]*IDFKyou, error) {
+func (i *idfKyouRepositorySQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
 	var err error
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at idf %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = i.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := i.GetRepName(ctx)
@@ -710,7 +690,7 @@ WHERE
 `
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(queryJSON, &whereCounter)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
 	if err != nil {
 		return nil, err
 	}
@@ -845,24 +825,19 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 			}
 
 			// ワードand検索である場合の判定
+			words := []string{}
+			notWords := []string{}
+			if query.Words != nil {
+				words = *query.Words
+			}
+			if query.NotWords != nil {
+				notWords = *query.NotWords
+			}
 			match := true
-			if queryMap["use_word"] == fmt.Sprintf("%t", true) {
+			if query.UseWords != nil && *query.UseWords {
 				match = false
 				// ワードを解析
-				words := []string{}
-				err = json.Unmarshal([]byte(queryMap["words"]), &words)
-				if err != nil {
-					err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-					return nil, err
-				}
-				notWords := []string{}
-				err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-				if err != nil {
-					err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-					return nil, err
-				}
-
-				if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+				if query.WordsAnd != nil && *query.WordsAnd {
 					for _, word := range words {
 						match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
 						if !match {
@@ -1047,10 +1022,9 @@ ORDER BY UPDATE_TIME DESC
 }
 
 func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
-	queryJSON := "{}"
-	allIDFKyous, err := i.FindIDFKyou(ctx, queryJSON)
+	allIDFKyous, err := i.FindIDFKyou(ctx, &find.FindQuery{})
 	if err != nil {
-		err = fmt.Errorf("error at find idf kyou %s: %w", queryJSON, err)
+		err = fmt.Errorf("error at find idf kyou: %w", err)
 		return err
 	}
 
@@ -1175,7 +1149,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 
 func (i *idfKyouRepositorySQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
 	sql := `
-INSERT INTO IDF 
+INSERT INTO IDF (
   IS_DELETED,
   ID,
   TARGET_REP_NAME,
@@ -1189,7 +1163,7 @@ INSERT INTO IDF
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER
-) VASLUES (
+) VALUES (
   ?,
   ?,
   ?,

@@ -1,9 +1,13 @@
 package reps
 
-import "context"
+import (
+	"context"
+
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+)
 
 type TagRepository interface {
-	FindTags(ctx context.Context, queryJSON string) ([]*Tag, error)
+	FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error)
 
 	Close(ctx context.Context) error
 

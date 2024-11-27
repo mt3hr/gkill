@@ -4,13 +4,13 @@ import (
 	"context"
 	"database/sql"
 	sql_lib "database/sql"
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -67,26 +67,16 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		m:        &sync.Mutex{},
 	}, nil
 }
-func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	var err error
-
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at MI %s: %w", queryJSON, err)
-		return nil, err
-	}
-
 	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = m.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := m.GetRepName(ctx)
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
-
 	}
 
 	sqlCreateMi := `
@@ -102,8 +92,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
-		  'mi_limit' AS DATA_TYPE,
+		  ? AS 'REP_NAME',
+		  'mi_limit' AS 'DATA_TYPE'
 		FROM MI
 		`
 
@@ -120,8 +110,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
-		  'mi_limit' AS DATA_TYPE,
+		  ? AS 'REP_NAME',
+		  'mi_limit' AS 'DATA_TYPE'
 		FROM MI
 		`
 
@@ -138,8 +128,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
-		  'mi_limit' AS DATA_TYPE,
+		  ? AS 'REP_NAME',
+		  'mi_limit' AS 'DATA_TYPE'
 		FROM MI
 		`
 	sqlStartMi := `
@@ -155,8 +145,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
-		  'mi_start' AS DATA_TYPE,
+		  ? AS 'REP_NAME',
+		  'mi_start' AS 'DATA_TYPE'
 		FROM MI
 		`
 
@@ -173,8 +163,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
-		  'mi_end' AS DATA_TYPE,
+		  ? AS 'REP_NAME',
+		  'mi_end' AS 'DATA_TYPE'
 		FROM MI
 		`
 
@@ -182,28 +172,28 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 	filterWhereCounter := 0
 	sqlWhereFilterEndMi := ""
 	sqlWhereFilterEndMi += "DATA_TYPE IN ("
-	if queryMap["include_check_mi"] == fmt.Sprintf("%t", true) {
+	if query.IncludeCheckMi != nil && *query.IncludeCheckMi {
 		if filterWhereCounter == 0 {
 			sqlWhereFilterEndMi += ", "
 		}
 		filterWhereCounter++
 		sqlWhereFilterEndMi += "'mi_check'"
 	}
-	if queryMap["include_limit_mi"] == fmt.Sprintf("%t", true) {
+	if query.IncludeLimitMi != nil && *query.IncludeLimitMi {
 		if filterWhereCounter == 0 {
 			sqlWhereFilterEndMi += ", "
 		}
 		filterWhereCounter++
 		sqlWhereFilterEndMi += "'mi_limit'"
 	}
-	if queryMap["include_start_mi"] == fmt.Sprintf("%t", true) {
+	if query.IncludeStartMi != nil && *query.IncludeStartMi {
 		if filterWhereCounter == 0 {
 			sqlWhereFilterEndMi += ", "
 		}
 		filterWhereCounter++
 		sqlWhereFilterEndMi += "'mi_start'"
 	}
-	if queryMap["include_end_mi"] == fmt.Sprintf("%t", true) {
+	if query.IncludeEndMi != nil && *query.IncludeEndMi {
 		if filterWhereCounter == 0 {
 			sqlWhereFilterEndMi += ", "
 		}
@@ -211,28 +201,31 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 		sqlWhereFilterEndMi += "'mi_end'"
 	}
 	sqlWhereFilterEndMi += ")"
+	if (filterWhereCounter == 0) {
+		sqlWhereFilterEndMi = ""
+	}
 
-	sqlWhereForCreate, err := m.whereSQLGenerator("CREATE_TIME", queryJSON)
+	sqlWhereForCreate, err := m.whereSQLGenerator("CREATE_TIME", query)
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForCheck, err := m.whereSQLGenerator("CHECKED_TIME", queryJSON)
+	sqlWhereForCheck, err := m.whereSQLGenerator("CHECKED_TIME", query)
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForLimit, err := m.whereSQLGenerator("LIMIT_TIME", queryJSON)
+	sqlWhereForLimit, err := m.whereSQLGenerator("LIMIT_TIME", query)
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForStart, err := m.whereSQLGenerator("ESTIMATE_START_TIME", queryJSON)
+	sqlWhereForStart, err := m.whereSQLGenerator("ESTIMATE_START_TIME", query)
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForEnd, err := m.whereSQLGenerator("ESTIMATE_END_TIME", queryJSON)
+	sqlWhereForEnd, err := m.whereSQLGenerator("ESTIMATE_END_TIME", query)
 	if err != nil {
 		return nil, err
 	}
-	sql := fmt.Sprintf("SELECT * FROM ((SELECT * FROM %s WHERE %s) UNION (SELECT * FROM %s WHERE %s) UNION (SELECT * FROM %s WHERE %s) UNION (SELECT * FROM %s WHERE %s) UNION (SELECT * FROM %s WHERE %s)) WHERE %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
+	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -247,7 +240,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 		return nil, err
 	}
 
-	rows, err := stmt.QueryContext(ctx, repName)
+	rows, err := stmt.QueryContext(ctx, repName, repName, repName, repName, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI: %w", err)
 		return nil, err
@@ -264,7 +257,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, queryJSON strin
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(&kyou.IsDeleted,
+			err = rows.Scan(
+				&kyou.IsDeleted,
 				&kyou.ID,
 				&relatedTimeStr,
 				&createTimeStr,
@@ -337,7 +331,7 @@ SELECT
   UPDATE_DEVICE,
   UPDATE_USER,
   ? AS REP_NAME,
-  'mi_create' AS DATA_TYPE
+  'mi_create' AS 'DATA_TYPE'
 FROM MI 
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
@@ -366,7 +360,8 @@ ORDER BY UPDATE_TIME DESC
 			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
-			err = rows.Scan(&kyou.IsDeleted,
+			err = rows.Scan(
+				&kyou.IsDeleted,
 				&kyou.ID,
 				&relatedTimeStr,
 				&createTimeStr,
@@ -426,19 +421,9 @@ func (m *miRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return m.db.Close()
 }
 
-func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, queryJSON string) ([]*Mi, error) {
+func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
 	var err error
-
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json at MI %s: %w", queryJSON, err)
-		return nil, err
-	}
-
-	// update_cacheであればキャッシュを更新する
-	if queryMap["update_cache"] == fmt.Sprintf("%t", true) {
+	if query.UpdateCache != nil && *query.UpdateCache {
 		err = m.UpdateCache(ctx)
 		if err != nil {
 			repName, _ := m.GetRepName(ctx)
@@ -452,7 +437,12 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, queryJSON string) 
 SELECT 
   IS_DELETED,
   ID,
-  START_TIME AS 'RELATED_TIME',
+  TITLE,
+  IS_CHECKED,
+  CHECKED_TIME,
+  BOARD_NAME,
+  LIMIT_TIME,
+  ESTIMATE_END_TIME,
   CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
@@ -462,16 +452,16 @@ SELECT
   UPDATE_DEVICE,
   UPDATE_USER,
   ? AS REP_NAME,
-  'mi_create' AS DATA_TYPE
+  'mi_create' AS 'DATA_TYPE'
 FROM MI 
 `
 	sqlWhereFilterCreateMi := "DATA_TYPE IN ('mi_create')"
 
-	sqlWhereForCreate, err := m.whereSQLGenerator("CREATE_TIME", queryJSON)
+	sqlWhereForCreate, err := m.whereSQLGenerator("CREATE_TIME", query)
 	if err != nil {
 		return nil, err
 	}
-	sql := fmt.Sprintf("SELECT * FROM ((SELECT * FROM %s WHERE %s)) WHERE %s", sqlCreateMi, sqlWhereForCreate, sqlWhereFilterCreateMi)
+	sql := fmt.Sprintf("SELECT * FROM (SELECT * FROM (%s) WHERE %s) WHERE %s", sqlCreateMi, sqlWhereForCreate, sqlWhereFilterCreateMi)
 
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -504,9 +494,11 @@ FROM MI
 			createTimeStr, updateTimeStr := "", ""
 			checkedTime, limitTime, estimateStartTime, estimateEndTime := sql_lib.NullTime{}, sql_lib.NullTime{}, sql_lib.NullTime{}, sql_lib.NullTime{}
 
-			err = rows.Scan(&mi.IsDeleted,
+			err = rows.Scan(
+				&mi.IsDeleted,
 				&mi.ID,
 				&mi.Title,
+				&mi.IsChecked,
 				&checkedTime,
 				&mi.BoardName,
 				&limitTime,
@@ -588,8 +580,8 @@ SELECT
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
-)
+  UPDATE_USER,
+  ? AS 'REP_NAME'
 FROM MI
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
@@ -626,9 +618,11 @@ ORDER BY UPDATE_TIME DESC
 			createTimeStr, updateTimeStr := "", ""
 			checkedTime, limitTime, estimateStartTime, estimateEndTime := sql_lib.NullTime{}, sql_lib.NullTime{}, sql_lib.NullTime{}, sql_lib.NullTime{}
 
-			err = rows.Scan(&mi.IsDeleted,
+			err = rows.Scan(
+				&mi.IsDeleted,
 				&mi.ID,
 				&mi.Title,
+				&mi.IsChecked,
 				&checkedTime,
 				&mi.BoardName,
 				&limitTime,
@@ -676,7 +670,7 @@ ORDER BY UPDATE_TIME DESC
 
 func (m *miRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi) error {
 	sql := `
-INSERT INTO MI
+INSERT INTO MI (
   IS_DELETED,
   ID,
   TITLE,
@@ -694,7 +688,8 @@ INSERT INTO MI
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER
-) VASLUES (
+) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -769,21 +764,12 @@ INSERT INTO MI
 	return nil
 }
 
-func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, queryJSON string) (string, error) {
+func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query *find.FindQuery) (string, error) {
 	whereCounter := 0
-	var err error
 	sqlWhere := ""
 
-	// jsonからパースする
-	queryMap := map[string]string{}
-	err = json.Unmarshal([]byte(queryJSON), &queryMap)
-	if err != nil {
-		err = fmt.Errorf("error at parse query json %s: %w", queryJSON, err)
-		return "", err
-	}
-
 	// 削除済みであるかどうかのSQL追記
-	if queryMap["is_deleted"] == fmt.Sprintf("%t", true) {
+	if query.IsDeleted != nil && *query.IsDeleted {
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
@@ -796,14 +782,11 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 	}
 
 	// id検索である場合のSQL追記
-	if queryMap["use_ids"] == fmt.Sprintf("%t", true) {
-		ids := []string{}
-		err := json.Unmarshal([]byte(queryMap["ids"]), ids)
-		if err != nil {
-			err = fmt.Errorf("error at parse ids %s: %w", ids, err)
-			return "", nil
-		}
-
+	ids := []string{}
+	if query.IDs != nil {
+		ids = *query.IDs
+	}
+	if query.UseIDs != nil && *query.UseIDs {
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
@@ -818,17 +801,11 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 	}
 
 	// 日付範囲指定ありの場合
-	if queryMap["use_calendar"] == fmt.Sprintf("%t", true) {
+	if query.UseCalendar != nil && *query.UseCalendar {
 		// 開始日時を指定するSQLを追記
 		columnName := timeColmunName
-		if queryMap["calendar_start_date"] != "" {
-			startDate := &time.Time{}
-			err = json.Unmarshal([]byte(queryMap["calendar_start_date"]), startDate)
-			if err != nil {
-				err = fmt.Errorf("error at parse calendar start date %s: %w", queryMap["calendar_start_date"])
-				return "", err
-			}
-
+		if query.CalendarStartDate != nil {
+			startDate := *query.CalendarStartDate
 			if whereCounter != 0 {
 				sqlWhere += " AND "
 			}
@@ -837,14 +814,8 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 		}
 
 		// 終了日時を指定するSQLを追記
-		if queryMap["calendar_end_date"] != "" {
-			endDate := &time.Time{}
-			err = json.Unmarshal([]byte(queryMap["calendar_end_date"]), endDate)
-			if err != nil {
-				err = fmt.Errorf("error at parse calendar end date %s: %w", queryMap["calendar_end_date"])
-				return "", err
-			}
-
+		if query.UseCalendar != nil && *query.UseCalendar {
+			endDate := *query.CalendarEndDate
 			if whereCounter != 0 {
 				sqlWhere += " AND "
 			}
@@ -853,26 +824,21 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 		}
 	}
 	// ワードand検索である場合のSQL追記
-	if queryMap["use_word"] == fmt.Sprintf("%t", true) {
-		// ワードを解析
-		words := []string{}
-		err = json.Unmarshal([]byte(queryMap["words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query word %s: %w", queryMap["words"], err)
-			return "", err
-		}
-		notWords := []string{}
-		err = json.Unmarshal([]byte(queryMap["not_words"]), &words)
-		if err != nil {
-			err = fmt.Errorf("error at parse query not word %s: %w", queryMap["not_words"], err)
-			return "", err
-		}
-
+	if query.UseWords != nil && *query.UseWords {
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
 
-		if queryMap["words_and"] == fmt.Sprintf("%t", true) {
+		words := []string{}
+		if query.Words != nil {
+			words = *query.Words
+		}
+		notWords := []string{}
+		if query.NotWords != nil {
+			notWords = *query.NotWords
+		}
+
+		if query.WordsAnd != nil && *query.WordsAnd {
 			for i, word := range words {
 				if i == 0 {
 					sqlWhere += " ( "
@@ -927,8 +893,6 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 		GROUP BY ID
 		HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		`
-	sqlWhere += `;`
-
 	return sqlWhere, nil
 }
 

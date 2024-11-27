@@ -48,6 +48,7 @@ export class KFTLNlogRequest extends KFTLRequest {
             }
             const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
             const req = new AddNlogRequest()
+            req.session_id = GkillAPI.get_instance().get_session_id()
             req.nlog.id = GkillAPI.get_instance().generate_uuid()
             req.nlog.shop = this.shop_name
             req.nlog.amount = amount

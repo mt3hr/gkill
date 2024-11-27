@@ -5,6 +5,7 @@ import type { KFTLStatementLineContext } from "./kftl-statement-line-context"
 import { KFTLKmemoStatementLine } from "./kftl_kmemo/kftl-kmemo-statement-line"
 import { KFTLStartLantanaStatementLine } from "./kftl_lantana/kftl-start-lantana-statement-line"
 import { KFTLStartMiStatementLine } from "./kftl_mi/kftl-start-mi-statement-line"
+import { KFTLNlogTitleStatementLine } from "./kftl_nlog/kftl-nlog-title-statement-line"
 import { KFTLStartNlogStatementLine } from "./kftl_nlog/kftl-start-nlog-statement-line"
 import { KFTLNoneStatementLine } from "./kftl_none/kftl-none-statement-line"
 import { KFTLRelatedTimeStatementLine } from "./kftl_related_time/kftl-related-time-statement-line"
@@ -55,7 +56,7 @@ export class KFTLStatementLineConstructorFactory {
     generate_nlog_constructor(line_text: string): { (line_text: string, context: KFTLStatementLineContext): KFTLStatementLine } {
         return this.generate_default_constructor(line_text, (line_text: string, context: KFTLStatementLineContext) => {
             this.prev_line_is_meta_info = false
-            return new KFTLKmemoStatementLine(line_text, context)
+            return new KFTLNlogTitleStatementLine(line_text, context)
         })
     }
 

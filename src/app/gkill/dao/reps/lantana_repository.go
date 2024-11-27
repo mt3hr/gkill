@@ -1,9 +1,13 @@
 package reps
 
-import "context"
+import (
+	"context"
+
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+)
 
 type LantanaRepository interface {
-	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error)
 
 	GetKyou(ctx context.Context, id string) (*Kyou, error)
 
@@ -17,7 +21,7 @@ type LantanaRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindLantana(ctx context.Context, queryJSON string) ([]*Lantana, error)
+	FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error)
 
 	GetLantana(ctx context.Context, id string) (*Lantana, error)
 

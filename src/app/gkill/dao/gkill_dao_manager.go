@@ -164,9 +164,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					repositories.KmemoReps = append(repositories.KmemoReps, kmemoRep)
 					repositories.Reps = append(repositories.Reps, kmemoRep)
 					if rep.UseToWrite {
-						existPath, _ := repositories.WriteKmemoRep.GetPath(ctx, "")
 						newPath, _ := kmemoRep.GetPath(ctx, "")
 						if repositories.WriteKmemoRep != nil {
+							existPath, _ := repositories.WriteKmemoRep.GetPath(ctx, "")
 							err := fmt.Errorf("error conflict write kmemo rep %s %s: %w", existPath, newPath)
 							return nil, err
 						}
@@ -180,9 +180,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					repositories.URLogReps = append(repositories.URLogReps, urlogRep)
 					repositories.Reps = append(repositories.Reps, urlogRep)
 					if rep.UseToWrite {
-						existPath, _ := repositories.WriteURLogRep.GetPath(ctx, "")
 						newPath, _ := urlogRep.GetPath(ctx, "")
 						if repositories.WriteURLogRep != nil {
+							existPath, _ := repositories.WriteURLogRep.GetPath(ctx, "")
 							err := fmt.Errorf("error conflict write urlog rep %s %s: %w", existPath, newPath)
 							return nil, err
 						}
@@ -196,9 +196,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					repositories.TimeIsReps = append(repositories.TimeIsReps, timeisRep)
 					repositories.Reps = append(repositories.Reps, timeisRep)
 					if rep.UseToWrite {
-						existPath, _ := repositories.WriteTimeIsRep.GetPath(ctx, "")
 						newPath, _ := timeisRep.GetPath(ctx, "")
 						if repositories.WriteTimeIsRep != nil {
+							existPath, _ := repositories.WriteTimeIsRep.GetPath(ctx, "")
 							err := fmt.Errorf("error conflict write timeis rep %s %s: %w", existPath, newPath)
 							return nil, err
 						}
@@ -212,9 +212,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					repositories.MiReps = append(repositories.MiReps, miRep)
 					repositories.Reps = append(repositories.Reps, miRep)
 					if rep.UseToWrite {
-						existPath, _ := repositories.WriteMiRep.GetPath(ctx, "")
 						newPath, _ := miRep.GetPath(ctx, "")
 						if repositories.WriteMiRep != nil {
+							existPath, _ := repositories.WriteMiRep.GetPath(ctx, "")
 							err := fmt.Errorf("error conflict write mi rep %s %s: %w", existPath, newPath)
 							return nil, err
 						}
@@ -228,9 +228,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					repositories.NlogReps = append(repositories.NlogReps, nlogRep)
 					repositories.Reps = append(repositories.Reps, nlogRep)
 					if rep.UseToWrite {
-						existPath, _ := repositories.WriteNlogRep.GetPath(ctx, "")
 						newPath, _ := nlogRep.GetPath(ctx, "")
 						if repositories.WriteNlogRep != nil {
+							existPath, _ := repositories.WriteNlogRep.GetPath(ctx, "")
 							err := fmt.Errorf("error conflict write nlog rep %s %s: %w", existPath, newPath)
 							return nil, err
 						}
@@ -244,9 +244,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					repositories.LantanaReps = append(repositories.LantanaReps, lantanaRep)
 					repositories.Reps = append(repositories.Reps, lantanaRep)
 					if rep.UseToWrite {
-						existPath, _ := repositories.WriteLantanaRep.GetPath(ctx, "")
 						newPath, _ := lantanaRep.GetPath(ctx, "")
 						if repositories.WriteLantanaRep != nil {
+							existPath, _ := repositories.WriteLantanaRep.GetPath(ctx, "")
 							err := fmt.Errorf("error conflict write lantana rep %s %s: %w", existPath, newPath)
 							return nil, err
 						}
@@ -259,9 +259,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					repositories.TagReps = append(repositories.TagReps, tagRep)
 					if rep.UseToWrite {
-						existPath, _ := repositories.WriteTagRep.GetPath(ctx, "")
 						newPath, _ := tagRep.GetPath(ctx, "")
 						if repositories.WriteTagRep != nil {
+							existPath, _ := repositories.WriteTagRep.GetPath(ctx, "")
 							err := fmt.Errorf("error conflict write tag rep %s %s: %w", existPath, newPath)
 							return nil, err
 						}
@@ -274,9 +274,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					repositories.TextReps = append(repositories.TextReps, textRep)
 					if rep.UseToWrite {
-						existPath, _ := repositories.WriteTextRep.GetPath(ctx, "")
 						newPath, _ := textRep.GetPath(ctx, "")
 						if repositories.WriteTextRep != nil {
+							existPath, _ := repositories.WriteTextRep.GetPath(ctx, "")
 							err := fmt.Errorf("error conflict write text rep %s %s: %w", existPath, newPath)
 							return nil, err
 						}
@@ -290,9 +290,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					repositories.ReKyouReps.ReKyouRepositories = append(repositories.ReKyouReps.ReKyouRepositories, reKyouRep)
 					repositories.Reps = append(repositories.Reps, reKyouRep)
 					if rep.UseToWrite {
-						existPath, _ := repositories.WriteReKyouRep.GetPath(ctx, "")
 						newPath, _ := reKyouRep.GetPath(ctx, "")
 						if repositories.WriteReKyouRep != nil {
+							existPath, _ := repositories.WriteReKyouRep.GetPath(ctx, "")
 							err := fmt.Errorf("error conflict write reKyou rep %s %s: %w", existPath, newPath)
 							return nil, err
 						}
@@ -314,12 +314,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					repositories.IDFKyouReps = append(repositories.IDFKyouReps, idfKyouRep)
 					repositories.Reps = append(repositories.Reps, idfKyouRep)
 					if rep.UseToWrite {
-						existPath := ""
-						if repositories.WriteIDFKyouRep != nil {
-							existPath, _ = repositories.WriteIDFKyouRep.GetPath(ctx, "")
-						}
 						newPath, _ := idfKyouRep.GetPath(ctx, "")
 						if repositories.WriteIDFKyouRep != nil {
+							existPath, _ := repositories.WriteIDFKyouRep.GetPath(ctx, "")
 							err := fmt.Errorf("error conflict write idf kyou rep %s %s: %w", existPath, newPath)
 							return nil, err
 						}

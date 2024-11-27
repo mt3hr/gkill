@@ -6,12 +6,13 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type IDFKyouRepositories []IDFKyouRepository
 
-func (i IDFKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error) {
+func (i IDFKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
 	matchKyous := map[string]*Kyou{}
 	existErr := false
 	var err error
@@ -27,7 +28,7 @@ func (i IDFKyouRepositories) FindKyous(ctx context.Context, queryJSON string) ([
 		rep := rep
 		go func(rep IDFKyouRepository) {
 			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, queryJSON)
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
 				errch <- err
 				return
@@ -320,7 +321,7 @@ errloop:
 	return nil
 }
 
-func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, queryJSON string) ([]*IDFKyou, error) {
+func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
 	matchIDFKyous := map[string]*IDFKyou{}
 	existErr := false
 	var err error
@@ -336,7 +337,7 @@ func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, queryJSON string) 
 		rep := rep
 		go func(rep IDFKyouRepository) {
 			defer wg.Done()
-			matchIDFKyousInRep, err := rep.FindIDFKyou(ctx, queryJSON)
+			matchIDFKyousInRep, err := rep.FindIDFKyou(ctx, query)
 			if err != nil {
 				errch <- err
 				return
