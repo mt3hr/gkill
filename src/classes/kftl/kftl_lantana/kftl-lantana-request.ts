@@ -26,6 +26,7 @@ export class KFTLLantanaRequest extends KFTLRequest {
 
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddLantanaRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
         req.lantana.id = this.get_request_id()
         req.lantana.mood = this.mood
         req.lantana.related_time = time

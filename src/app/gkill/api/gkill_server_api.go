@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/api/gpslogs"
 	"github.com/mt3hr/gkill/src/app/gkill/api/message"
 	"github.com/mt3hr/gkill/src/app/gkill/api/req_res"
@@ -178,7 +179,7 @@ func (g *GkillServerAPI) Serve() error {
 	}).Methods(g.APIAddress.AddTimeisMethod)
 	router.HandleFunc(g.APIAddress.AddMiAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddMi(w, r)
-	}).Methods(g.APIAddress.AddMiAddress)
+	}).Methods(g.APIAddress.AddMiMethod)
 	router.HandleFunc(g.APIAddress.AddLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddLantana(w, r)
 	}).Methods(g.APIAddress.AddLantanaMethod)
@@ -8229,7 +8230,21 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	miKyous, err := repositories.MiReps.FindKyous(r.Context(), sharedMiInfo.FindQueryJSON)
+	findQuery := &find.FindQuery{}
+	err = json.Unmarshal([]byte(sharedMiInfo.FindQueryJSON), &findQuery)
+	if err != nil {
+		err = fmt.Errorf("error at parse query json at find kyous %s: %w", findQuery, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetMiSharedTaskRequest,
+			ErrorMessage: "Mi取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+		return
+	}
+
+	miKyous, err := repositories.MiReps.FindKyous(r.Context(), findQuery)
 	if err != nil {
 		err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
 		log.Printf(err.Error())
@@ -8405,6 +8420,17 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 
 	for repType, repFileName := range repTypeFileNameMap {
 		repFileFullName := filepath.Join(userDataRootDirectory, repFileName)
+		repFile, err := os.Create(os.ExpandEnv(repFileFullName))
+		if err != nil {
+			err = fmt.Errorf("error at create rep file %s: %w", repFileFullName, err)
+			return err
+		}
+		err = repFile.Close()
+		if err != nil {
+			err = fmt.Errorf("error at close rep file %s: %w", repFileFullName, err)
+			return err
+		}
+
 		repository := &user_config.Repository{
 			ID:                     GenerateNewID(),
 			UserID:                 account.UserID,
@@ -8415,7 +8441,7 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 			IsExecuteIDFWhenReload: true,
 			IsEnable:               true,
 		}
-		_, err := g.GkillDAOManager.ConfigDAOs.RepositoryDAO.AddRepository(ctx, repository)
+		_, err = g.GkillDAOManager.ConfigDAOs.RepositoryDAO.AddRepository(ctx, repository)
 		if err != nil {
 			err = fmt.Errorf("error at initialize new user reps. error at add repository reptype = %s repfilename = %s: %w", repType, repFileFullName, err)
 			return err
@@ -8430,29 +8456,6 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 		return err
 	}
 	repository := &user_config.Repository{
-		ID:                     GenerateNewID(),
-		UserID:                 account.UserID,
-		Device:                 device,
-		Type:                   repType,
-		File:                   repFileFullName,
-		UseToWrite:             true,
-		IsExecuteIDFWhenReload: true,
-		IsEnable:               true,
-	}
-	_, err = g.GkillDAOManager.ConfigDAOs.RepositoryDAO.AddRepository(ctx, repository)
-	if err != nil {
-		err = fmt.Errorf("error at initialize new user reps. error at add repository reptype = %s repfilename = %s: %w", repType, repFileFullName, err)
-		return err
-	}
-
-	repType, repFileName = "directory", "Files"
-	repFileFullName = filepath.Join(userDataRootDirectory, repFileName)
-	err = os.MkdirAll(os.ExpandEnv(repFileFullName), fs.ModePerm)
-	if err != nil {
-		err = fmt.Errorf("error at initialize new user reps. error at add repository create directory reptype = %s repdirname = %s: %w", repType, repFileFullName, err)
-		return err
-	}
-	repository = &user_config.Repository{
 		ID:                     GenerateNewID(),
 		UserID:                 account.UserID,
 		Device:                 device,

@@ -1,9 +1,13 @@
 package reps
 
-import "context"
+import (
+	"context"
+
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+)
 
 type TimeIsRepository interface {
-	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error)
 
 	GetKyou(ctx context.Context, id string) (*Kyou, error)
 
@@ -17,7 +21,7 @@ type TimeIsRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindTimeIs(ctx context.Context, queryJSON string) ([]*TimeIs, error)
+	FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error)
 
 	GetTimeIs(ctx context.Context, id string) (*TimeIs, error)
 

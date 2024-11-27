@@ -18,7 +18,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
 
     private texts_map: Map<string, string>
 
-    private related_time: Date
+    private related_time: Date | null
 
     private context: KFTLStatementLineContext
 
@@ -28,11 +28,11 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         super()
         this.api = GkillAPI.get_instance()
 
-        this.request_id = ""
+        this.request_id = request_id
         this.tags = new Array<string>
         this.current_text_id = ""
         this.texts_map = new Map<string, string>()
-        this.related_time = new Date(0)
+        this.related_time = null
         this.context = context
     }
 
@@ -46,6 +46,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         for (let i = 0; i < this.tags.length; i++) {
             const tag = this.tags[i]
             const req = new AddTagRequest()
+            req.session_id = GkillAPI.get_instance().get_session_id()
             req.tag.id = GkillAPI.get_instance().generate_uuid()
             req.tag.tag = tag
             req.tag.target_id = this.get_request_id()
@@ -69,6 +70,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
             const text = text_entry[1]
 
             const req = new AddTextRequest()
+            req.session_id = GkillAPI.get_instance().get_session_id()
             req.text.id = id
             req.text.target_id = this.get_request_id()
             req.text.text = text
@@ -117,11 +119,11 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         });
     }
 
-    get_related_time(): Date {
+    get_related_time(): Date | null {
         return this.related_time
     }
 
-    set_related_time(time: Date): void {
+    set_related_time(time: Date | null): void {
         this.related_time = time
     }
 

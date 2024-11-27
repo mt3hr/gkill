@@ -14,19 +14,19 @@ export class KFTLMiRequest extends KFTLRequest {
 
     private board_name: string
 
-    private limit_time: Date
+    private limit_time: Date | null
 
-    private estimate_start_time: Date
+    private estimate_start_time: Date | null
 
-    private esitimate_end_time: Date
+    private esitimate_end_time: Date | null
 
     constructor(request_id: string, context: KFTLStatementLineContext) {
         super(request_id, context)
         this.title = ""
         this.board_name = ""
-        this.limit_time = new Date(0)
-        this.estimate_start_time = new Date(0)
-        this.esitimate_end_time = new Date(0)
+        this.limit_time = null
+        this.estimate_start_time = null
+        this.esitimate_end_time = null
     }
 
     async do_request(): Promise<Array<GkillError>> {
@@ -43,10 +43,10 @@ export class KFTLMiRequest extends KFTLRequest {
         const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
 
         if (this.board_name == "") {
-            const error = new GkillError()
-            error.error_code = "//TODO"
-            error.error_message = "板名が未入力です"
-            errors = errors.concat([error])
+            const req = new GetApplicationConfigRequest()
+            req.session_id = GkillAPI.get_instance().get_session_id()
+            const res = await GkillAPI.get_instance().get_application_config(req)
+            this.board_name = res.application_config.mi_default_board
         }
         if (errors.length !== 0) {
             return errors
@@ -68,6 +68,7 @@ export class KFTLMiRequest extends KFTLRequest {
 
         const mi_req = new AddMiRequest()
 
+        mi_req.session_id = GkillAPI.get_instance().get_session_id()
         mi_req.mi.id = id
         mi_req.mi.title = this.title
         mi_req.mi.board_name = board_name
@@ -101,15 +102,15 @@ export class KFTLMiRequest extends KFTLRequest {
         this.board_name = board_name
     }
 
-    async set_limit_time(limit_time: Date): Promise<void> {
+    async set_limit_time(limit_time: Date | null): Promise<void> {
         this.limit_time = limit_time
     }
 
-    async set_estimate_start_time(estimate_start_time: Date): Promise<void> {
+    async set_estimate_start_time(estimate_start_time: Date | null): Promise<void> {
         this.estimate_start_time = estimate_start_time
     }
 
-    async set_estimate_end_time(estimate_end_time: Date): Promise<void> {
+    async set_estimate_end_time(estimate_end_time: Date | null): Promise<void> {
         this.esitimate_end_time = estimate_end_time
     }
 

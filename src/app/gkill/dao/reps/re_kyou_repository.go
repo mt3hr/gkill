@@ -1,9 +1,13 @@
 package reps
 
-import "context"
+import (
+	"context"
+
+	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+)
 
 type ReKyouRepository interface {
-	FindKyous(ctx context.Context, queryJSON string) ([]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error)
 
 	GetKyou(ctx context.Context, id string) (*Kyou, error)
 
@@ -17,7 +21,7 @@ type ReKyouRepository interface {
 
 	Close(ctx context.Context) error
 
-	FindReKyou(ctx context.Context, queryJSON string) ([]*ReKyou, error)
+	FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error)
 
 	GetReKyou(ctx context.Context, id string) (*ReKyou, error)
 

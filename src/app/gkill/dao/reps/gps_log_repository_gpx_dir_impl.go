@@ -60,16 +60,16 @@ func (g *gpsLogRepositoryDirectoryImpl) GetGPSLogs(ctx context.Context, startTim
 
 	// ファイル名をリストアップ
 	dates := []string{}
-	timeLayout := "20060102"
-	startDate := startTime.Format(timeLayout)
-	endDate := endTime.Format(timeLayout)
-	currentDate, err := time.Parse(timeLayout, startDate)
+	TimeLayout := "20060102"
+	startDate := startTime.Format(TimeLayout)
+	endDate := endTime.Format(TimeLayout)
+	currentDate, err := time.Parse(TimeLayout, startDate)
 	if err != nil {
 		err = fmt.Errorf("error at parse date at get gps logs %s: %w", startDate, err)
 		return nil, err
 	}
 	for {
-		currentDateStr := currentDate.Format(timeLayout)
+		currentDateStr := currentDate.Format(TimeLayout)
 		dates = append(dates, currentDateStr)
 		if currentDateStr == endDate {
 			break
