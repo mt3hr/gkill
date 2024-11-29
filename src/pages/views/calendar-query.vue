@@ -26,6 +26,7 @@ const date_picker = ref<InstanceType<typeof VDatePicker> | null>(null)
 
 const dates: Ref<Array<Date>> = ref([])
 const use_calendar: Ref<boolean> = ref(false)
+defineExpose({get_use_calendar, get_start_date, get_end_date})
 
 watch(props.query, () => {
     use_calendar.value = props.query.use_calendar
@@ -65,6 +66,22 @@ function clicked_clear_calendar_button(): void {
 
 function clicked_use_calendar_checkbox(): void {
     emits('request_update_use_calendar_query', use_calendar.value)
+}
+
+function get_use_calendar(): boolean {
+    return use_calendar.value
+}
+function get_start_date(): Date | null {
+    if (dates.value.length >= 1) {
+        return dates.value[0]
+    }
+    return null
+}
+function get_end_date() : Date | null {
+    if (dates.value.length == 2) {
+        return dates.value[2]
+    }
+    return null
 }
 </script>
 <style lang="css">

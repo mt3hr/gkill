@@ -63,4 +63,6 @@ const (
 	UpdateApplicationConfigSuccessMessage    = "MSG000057"
 	UpdateKFTLTemplateSuccessMessage         = "MSG000058"
 	UpdateServerConfigSuccessMessage         = "MSG000059"
+	GetRepositoriesSuccessMessage            = "MSG000060"
+	GetAllRepNamesSuccessMessage             = "MSG000061"
 )

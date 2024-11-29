@@ -140,7 +140,7 @@ function is_item() {
     return props.struct_obj.children === null
 }
 function get_group_open(index: number) {
-    let group_name = Object.keys(props.struct_obj)[index]
+    let group_name = struct_list.value[index].key
     if (group_name.endsWith(',close') || group_name.endsWith(', close')) {
         return false
     } else if (group_name.endsWith(',open') || group_name.endsWith(', open')) {

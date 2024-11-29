@@ -152,6 +152,10 @@ import { RepTypeStruct } from "../datas/config/rep-type-struct"
 import { generateCodeFrame } from "vue/compiler-sfc"
 import type { GkillAPIResponse } from "./gkill-api-response"
 import router from "@/router"
+import type { GetRepositoriesResponse } from "./req_res/get-repositories-response"
+import type { GetRepositoriesRequest } from "./req_res/get-repositories-request"
+import type { GetAllRepNamesRequest } from "./req_res/get-all-rep-names-request"
+import type { GetAllRepNamesResponse } from "./req_res/get-all-rep-names-response"
 
 export class GkillAPI {
         private static gkill_api: GkillAPI = new GkillAPI()
@@ -204,6 +208,7 @@ export class GkillAPI {
         get_mi_board_list_address: string
         get_plaing_timeis_address: string
         get_all_tag_names_address: string
+        get_all_rep_names_address: string
         get_tags_by_target_id_address: string
         get_tag_histories_by_tag_id_address: string
         get_texts_by_target_id_address: string
@@ -231,6 +236,7 @@ export class GkillAPI {
         update_share_mi_task_list_info_address: string
         delete_share_mi_task_list_infos_address: string
         get_mi_shared_tasks_address: string
+        get_repositories_address: string
         login_method: string
         logout_method: string
         reset_password_method: string
@@ -270,6 +276,7 @@ export class GkillAPI {
         get_mi_board_list_method: string
         get_plaing_timeis_method: string
         get_all_tag_names_method: string
+        get_all_rep_names_method: string
         get_tags_by_target_id_method: string
         get_tag_histories_by_tag_id_method: string
         get_texts_by_target_id_method: string
@@ -297,6 +304,7 @@ export class GkillAPI {
         update_share_mi_task_list_info_method: string
         delete_share_mi_task_list_infos_method: string
         get_mi_shared_tasks_method: string
+        get_repositories_method: string
 
         private constructor() {
                 this.login_address = "/api/login"
@@ -344,6 +352,7 @@ export class GkillAPI {
                 this.get_mi_board_list_address = "/api/get_mi_board_list"
                 this.get_plaing_timeis_address = "/api/get_plaing_timeis"
                 this.get_all_tag_names_address = "/api/get_all_tag_names"
+                this.get_all_rep_names_address = "/api/get_all_rep_names"
                 this.get_tags_by_target_id_address = "/api/get_tags_by_id"
                 this.get_tag_histories_by_tag_id_address = "/api/get_tag_histories_by_tag_id"
                 this.get_texts_by_target_id_address = "/api/get_texts_by_id"
@@ -371,6 +380,7 @@ export class GkillAPI {
                 this.update_share_mi_task_list_info_address = "/api/update_share_mi_task_list_info"
                 this.delete_share_mi_task_list_infos_address = "/api/delete_share_mi_task_list_infos"
                 this.get_mi_shared_tasks_address = "/api/get_mi_shared_tasks"
+                this.get_repositories_address = "/api/get_repositories"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
@@ -410,6 +420,7 @@ export class GkillAPI {
                 this.get_mi_board_list_method = "POST"
                 this.get_plaing_timeis_method = "POST"
                 this.get_all_tag_names_method = "POST"
+                this.get_all_rep_names_method = "POST"
                 this.get_tags_by_target_id_method = "POST"
                 this.get_tag_histories_by_tag_id_method = "POST"
                 this.get_texts_by_target_id_method = "POST"
@@ -437,7 +448,7 @@ export class GkillAPI {
                 this.update_share_mi_task_list_info_method = "POST"
                 this.delete_share_mi_task_list_infos_method = "POST"
                 this.get_mi_shared_tasks_method = "POST"
-
+                this.get_repositories_method = "POST"
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
@@ -990,6 +1001,20 @@ export class GkillAPI {
                 return response
         }
 
+        async get_all_rep_names(req: GetAllRepNamesRequest): Promise<GetAllRepNamesResponse> {
+                const res = await fetch(this.get_all_rep_names_address, {
+                        'method': this.get_all_rep_names_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetAllRepNamesResponse = json
+                this.check_auth(response)
+                return response
+        }
+
         async get_tags_by_target_id(req: GetTagsByTargetIDRequest): Promise<GetTagsByTargetIDResponse> {
                 const res = await fetch(this.get_tags_by_target_id_address, {
                         'method': this.get_tags_by_target_id_method,
@@ -1087,8 +1112,13 @@ export class GkillAPI {
                 application_config.user_id = response.application_config.user_id
                 response.application_config = application_config
 
+                await response.application_config.append_not_found_tags()
+                await response.application_config.append_not_found_reps()
+                await response.application_config.append_not_found_rep_types()
+                await response.application_config.append_not_found_devices()
                 await response.application_config.parse_template_and_struct()
                 this.check_auth(response)
+                console.log(response.application_config)
                 return response
         }
 
@@ -1397,6 +1427,20 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetSharedMiTasksResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async get_repositories(req: GetRepositoriesRequest): Promise<GetRepositoriesResponse> {
+                const res = await fetch(this.get_repositories_address, {
+                        'method': this.get_repositories_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+                const response: GetRepositoriesResponse = json
                 this.check_auth(response)
                 return response
         }
