@@ -1278,6 +1278,70 @@ loop:
 	return tagNamesList, nil
 }
 
+func (g *GkillRepositories) GetAllRepNames(ctx context.Context) ([]string, error) {
+	repNames := map[string]struct{}{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan string, len(g.Reps))
+	errch := make(chan error, len(g.Reps))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range g.Reps {
+		wg.Add(1)
+		rep := rep
+		go func(rep Repository) {
+			defer wg.Done()
+			repName, err := rep.GetRepName(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- repName
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at get all repnames: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// タグ名集約
+loop:
+	for {
+		select {
+		case repName := <-ch:
+			repNames[repName] = struct{}{}
+		default:
+			break loop
+		}
+	}
+
+	repNamesList := []string{}
+	for repName := range repNames {
+		repNamesList = append(repNamesList, repName)
+	}
+
+	sort.Slice(repNamesList, func(i, j int) bool {
+		return repNamesList[i] < repNamesList[j]
+	})
+
+	return repNamesList, nil
+}
+
 func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
 	matchTexts := map[string]*Text{}
 	existErr := false

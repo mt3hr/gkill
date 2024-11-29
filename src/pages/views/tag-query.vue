@@ -37,6 +37,8 @@ import type { RefSymbol } from '@vue/reactivity'
 
 const props = defineProps<TagQueryProps>()
 const emits = defineEmits<TagQueryEmits>()
+defineExpose({get_use_tag, get_tags, get_is_and_search})
+
 const use_tag: Ref<boolean> = ref(true)
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const is_and_search: Ref<boolean> = ref(false)
@@ -111,4 +113,17 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
     }
 }
 
+function get_use_tag(): boolean {
+    return use_tag.value
+}
+function get_tags(): Array<string> {
+    const tags = foldable_struct.value?.get_selected_items()
+    if (tags) {
+        return tags
+    }
+    return new Array<string>()
+}
+function get_is_and_search(): boolean {
+    return is_and_search.value
+}
 </script>
