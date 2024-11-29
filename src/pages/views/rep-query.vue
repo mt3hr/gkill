@@ -19,7 +19,7 @@
                 <table class="devicelist">
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true" :query="query"
-                        :struct_obj="application_config.parsed_device_struct"
+                        :struct_obj="cloned_application_config.parsed_device_struct"
                         @requested_update_check_state="update_devices"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
@@ -29,7 +29,7 @@
                 <table class="typelist">
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true" :query="query"
-                        :struct_obj="application_config.parsed_rep_type_struct"
+                        :struct_obj="cloned_application_config.parsed_rep_type_struct"
                         @requested_update_check_state="update_rep_types"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
@@ -69,8 +69,16 @@ const foldable_struct_rep_types = ref<InstanceType<typeof FoldableStruct> | null
 
 const props = defineProps<RepQueryProps>()
 const emits = defineEmits<RepQueryEmits>()
+defineExpose({ get_checked_reps })
+
 const cloned_query: Ref<FindKyouQuery> = ref(await props.query.clone())
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
+
+watch(() => props.application_config, async () => {
+    cloned_application_config.value = props.application_config.clone()
+    cloned_application_config.value.parse_device_struct()
+    cloned_application_config.value.parse_rep_type_struct()
+})
 
 const tab = ref(2)
 const use_rep = ref(true)
@@ -404,6 +412,12 @@ async function update_check_rep_types(items: Array<string>, is_checked: CheckSta
     if (checked_items) {
         emits('request_update_checked_reps', checked_items)
     }
+}
+
+function get_checked_reps(): Array<string> {
+    const reps = new Array<string>()
+    checked_reps.value.forEach(rep => reps.push(rep.rep_name))
+    return reps
 }
 
 </script>

@@ -91,6 +91,8 @@ type GkillServerAPIAddress struct {
 
 	GetAllTagNamesAddress string
 
+	GetAllRepNamesAddress string
+
 	GetTagsByTargetIDAddress string
 
 	GetTagHistoriesByTagIDAddress string
@@ -144,6 +146,8 @@ type GkillServerAPIAddress struct {
 	DeleteShareMiTaskListInfosAddress string
 
 	GetMiSharedTasksAddress string
+
+	GetRepositoriesAddress string
 
 	LoginMethod string
 
@@ -223,6 +227,8 @@ type GkillServerAPIAddress struct {
 
 	GetAllTagNamesMethod string
 
+	GetAllRepNamesMethod string
+
 	GetTagsByTargetIDMethod string
 
 	GetTagHistoriesByTagIDMethod string
@@ -276,6 +282,8 @@ type GkillServerAPIAddress struct {
 	DeleteShareMiTaskListInfosMethod string
 
 	GetMiSharedTasksMethod string
+
+	GetRepositoriesMethod string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -326,6 +334,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetMiBoardListAddress = "/api/get_mi_board_list"
 	gkillAPIAddress.GetPlaingTimeisAddress = "/api/get_plaing_timeis"
 	gkillAPIAddress.GetAllTagNamesAddress = "/api/get_all_tag_names"
+	gkillAPIAddress.GetAllRepNamesAddress = "/api/get_all_rep_names"
 	gkillAPIAddress.GetTagsByTargetIDAddress = "/api/get_tags_by_id"
 	gkillAPIAddress.GetTagHistoriesByTagIDAddress = "/api/get_tag_histories_by_tag_id"
 	gkillAPIAddress.GetTextsByTargetIDAddress = "/api/get_texts_by_id"
@@ -353,6 +362,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateShareMiTaskListInfoAddress = "/api/update_share_mi_task_list_info"
 	gkillAPIAddress.DeleteShareMiTaskListInfosAddress = "/api/delete_share_mi_task_list_infos"
 	gkillAPIAddress.GetMiSharedTasksAddress = "/api/get_mi_shared_tasks"
+	gkillAPIAddress.GetRepositoriesAddress = "/api/get_repositories"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
@@ -392,6 +402,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetMiBoardListMethod = "POST"
 	gkillAPIAddress.GetPlaingTimeisMethod = "POST"
 	gkillAPIAddress.GetAllTagNamesMethod = "POST"
+	gkillAPIAddress.GetAllRepNamesMethod = "POST"
 	gkillAPIAddress.GetTagsByTargetIDMethod = "POST"
 	gkillAPIAddress.GetTagHistoriesByTagIDMethod = "POST"
 	gkillAPIAddress.GetTextsByTargetIDMethod = "POST"
@@ -419,6 +430,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateShareMiTaskListInfoMethod = "POST"
 	gkillAPIAddress.DeleteShareMiTaskListInfosMethod = "POST"
 	gkillAPIAddress.GetMiSharedTasksMethod = "POST"
+	gkillAPIAddress.GetRepositoriesMethod = "POST"
 
 	return gkillAPIAddress
 }

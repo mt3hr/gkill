@@ -243,4 +243,11 @@ const (
 	AddApplicationConfig                               = "ERR000237"
 	AccountDisabledError                               = "ERR000238"
 	InvalidGetMiSharedTaskRequest                      = "ERR000239"
+	InvalidGetRepositoriesResponseDataError            = "ERR000240"
+	InvalidGetRepositoriesRequestDataError             = "ERR000241"
+	GetRepositoriesError                               = "ERR000242"
+	InvalidGetAllRepNamesResponseDataErro              = "ERR000243"
+	InvalidGetAllRepNamesRequestDataError              = "ERR000244"
+	GetAllRepNamesError                                = "ERR000245"
+	InvalidGetAllRepNamesResponseDataError             = "ERR000246"
 )

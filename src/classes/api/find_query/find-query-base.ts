@@ -6,6 +6,8 @@ export abstract class FindQueryBase {
 
     use_word: boolean
 
+    keywords: string
+
     words_and: boolean
 
     words: Array<string>
@@ -14,11 +16,15 @@ export abstract class FindQueryBase {
 
     use_timeis: boolean
 
-    timeis_word_and: boolean
+    timeis_words_and: boolean
 
-    timeis_word: Array<string>
+    timeis_keywords: string
 
-    timeis_not_word: Array<string>
+    timeis_words: Array<string>
+
+    timeis_not_words: Array<string>
+
+    use_timeis_tags: boolean
 
     timeis_tags: Array<string>
 
@@ -53,6 +59,8 @@ export abstract class FindQueryBase {
 
         this.use_word = false
 
+        this.keywords = ""
+
         this.words_and = false
 
         this.words = new Array<string>
@@ -61,11 +69,15 @@ export abstract class FindQueryBase {
 
         this.use_timeis = false
 
-        this.timeis_word_and = false
+        this.timeis_keywords = ""
 
-        this.timeis_word = new Array<string>()
+        this.timeis_words_and = false
 
-        this.timeis_not_word = new Array<string>()
+        this.timeis_words = new Array<string>()
+
+        this.timeis_not_words = new Array<string>()
+
+        this.use_timeis_tags = false
 
         this.timeis_tags = new Array<string>()
 
@@ -85,10 +97,15 @@ export abstract class FindQueryBase {
 
         this.use_calendar = false
 
-        this.calendar_start_date = new Date(0)
+        this.calendar_start_date = null
 
-        this.calendar_end_date = new Date(0)
+        this.calendar_end_date = null
 
+    }
+
+    parse_words_and_not_words() {
+        //TODO
+        //TODO timeis
     }
 
 }
