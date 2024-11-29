@@ -258,6 +258,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetAllTagNamesAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetAllTagNames(w, r)
 	}).Methods(g.APIAddress.GetAllTagNamesMethod)
+	router.HandleFunc(g.APIAddress.GetAllRepNamesAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleGetAllRepNames(w, r)
+	}).Methods(g.APIAddress.GetAllRepNamesMethod)
 	router.HandleFunc(g.APIAddress.GetTagsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetTagsByTargetID(w, r)
 	}).Methods(g.APIAddress.GetTagsByTargetIDMethod)
@@ -333,6 +336,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetMiSharedTasksAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleLogout(w, r)
 	}).Methods(g.APIAddress.GetMiSharedTasksMethod)
+	router.HandleFunc(g.APIAddress.GetRepositoriesAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleGetRepositories(w, r)
+	}).Methods(g.APIAddress.GetRepositoriesMethod)
 
 	gkillPage, err := fs.Sub(htmlFS, "embed/html")
 	if err != nil {
@@ -5073,6 +5079,92 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 	})
 }
 
+func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.GetAllRepNamesRequest{}
+	response := &req_res.GetAllRepNamesResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse get kyous response to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidGetAllRepNamesResponseDataError,
+				ErrorMessage: "Rep名全件取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse get kyous request to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidGetAllRepNamesRequestDataError,
+				ErrorMessage: "Rep名全件取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "Rep名全件取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	allRepNames, err := repositories.GetAllRepNames(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get all rep names user id = %s device = %s: %w", userID, device, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetAllRepNamesError,
+			ErrorMessage: "Rep名全件取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.RepNames = allRepNames
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.GetAllRepNamesSuccessMessage,
+		Message:     "検索完了",
+	})
+}
+
 func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTagsByTargetIDRequest{}
@@ -8259,6 +8351,83 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 	response.MiKyous = miKyous
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetMiSharedTasksSuccessMessage,
+		Message:     "取得完了",
+	})
+}
+
+func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.GetRepositoriesRequest{}
+	response := &req_res.GetRepositoriesResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse get repositories response to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidGetRepositoriesResponseDataError,
+				ErrorMessage: "Repositoriesの取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse get repositories request to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidGetRepositoriesRequestDataError,
+				ErrorMessage: "Repositoriesの取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.ConfigDAOs.RepositoryDAO.GetRepositories(r.Context(), userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetRepositoriesError,
+			ErrorMessage: "Repositoriesの取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	for _, repository := range repositories {
+		repository.File = ""
+	}
+
+	response.Repositories = repositories
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.GetRepositoriesSuccessMessage,
 		Message:     "取得完了",
 	})
 }

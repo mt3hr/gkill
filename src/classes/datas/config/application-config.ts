@@ -11,6 +11,11 @@ import { DeviceStructElementData } from './device-struct-element-data'
 import { RepTypeStructElementData } from './rep-type-struct-element-data'
 import { KFTLTemplateElementData } from '../kftl-template-element-data'
 import type { KFTLTemplateStruct } from './kftl-template-struct'
+import { GkillAPI } from '@/classes/api/gkill-api'
+import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-request'
+import { GetAllRepNamesRequest } from '@/classes/api/req_res/get-all-rep-names-request'
+import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
 
 export class ApplicationConfig {
     is_loaded: boolean
@@ -58,6 +63,178 @@ export class ApplicationConfig {
         application_config.kftl_template_struct = this.kftl_template_struct
         application_config.account_is_admin = this.account_is_admin
         return application_config
+    }
+    async append_not_found_reps(): Promise<Array<GkillError>> {
+        const req = new GetAllRepNamesRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        const res = await GkillAPI.get_instance().get_all_rep_names(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+
+        const gkill_info_req = new GetGkillInfoRequest()
+        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+
+        const not_found = new Array<string>()
+        res.rep_names.forEach(rep_name => {
+            let exist = false
+            this.rep_struct.forEach(rep => {
+                if (rep.rep_name === rep_name) {
+                    exist = true
+                }
+            })
+            if (!exist) {
+                not_found.push(rep_name)
+            }
+        })
+
+        let i = 0
+        not_found.forEach(rep_name => {
+            const rep_struct = new RepStruct()
+            rep_struct.check_when_inited = true
+            rep_struct.device = gkill_info_res.device
+            rep_struct.id = GkillAPI.get_instance().generate_uuid()
+            rep_struct.ignore_check_rep_rykv = false
+            rep_struct.parent_folder_id = null
+            rep_struct.rep_name = rep_name
+            rep_struct.seq = 1000 + i++
+            rep_struct.user_id = gkill_info_res.user_id
+            this.rep_struct.push(rep_struct)
+        })
+        return new Array<GkillError>()
+    }
+    async append_not_found_tags(): Promise<Array<GkillError>> {
+        const req = new GetAllTagNamesRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        const res = await GkillAPI.get_instance().get_all_tag_names(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+
+        const gkill_info_req = new GetGkillInfoRequest()
+        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+
+        const not_found = new Array<string>()
+        res.tag_names.forEach(tag_name => {
+            let exist = false
+            this.tag_struct.forEach(tag => {
+                if (tag.tag_name === tag_name) {
+                    exist = true
+                }
+            })
+            if (!exist) {
+                not_found.push(tag_name)
+            }
+        })
+
+        let i = 0
+        not_found.forEach(tag_name => {
+            const tag_struct = new TagStruct()
+            tag_struct.check_when_inited = true
+            tag_struct.device = gkill_info_res.device
+            tag_struct.id = GkillAPI.get_instance().generate_uuid()
+            tag_struct.is_force_hide = false
+            tag_struct.parent_folder_id = null
+            tag_struct.tag_name = tag_name
+            tag_struct.seq = 1000 + i++
+            tag_struct.user_id = gkill_info_res.user_id
+            this.tag_struct.push(tag_struct)
+        })
+        return new Array<GkillError>()
+    }
+    async append_not_found_devices(): Promise<Array<GkillError>> {
+        const req = new GetAllRepNamesRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        const res = await GkillAPI.get_instance().get_all_rep_names(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+
+        const gkill_info_req = new GetGkillInfoRequest()
+        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+
+        const not_found = new Array<string>()
+        res.rep_names.forEach(rep_name => {
+            let exist = false
+            const device_name = this.get_device_from_rep_name(rep_name)
+            this.device_struct.forEach(device => {
+                if (device.device_name === device_name) {
+                    exist = true
+                }
+            })
+            if (!exist && device_name) {
+                not_found.push(device_name)
+            }
+        })
+
+        let i = 0
+        not_found.forEach(device_name => {
+            const device_struct = new DeviceStruct()
+            device_struct.check_when_inited = true
+            device_struct.device = gkill_info_res.device
+            device_struct.id = GkillAPI.get_instance().generate_uuid()
+            device_struct.device_name = device_name
+            device_struct.parent_folder_id = null
+            device_struct.seq = 1000 + i++
+            device_struct.user_id = gkill_info_res.user_id
+            this.device_struct.push(device_struct)
+        })
+        return new Array<GkillError>()
+    }
+    async append_not_found_rep_types(): Promise<Array<GkillError>> {
+        const req = new GetAllRepNamesRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        const res = await GkillAPI.get_instance().get_all_rep_names(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+
+        const gkill_info_req = new GetGkillInfoRequest()
+        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+
+        const not_found = new Array<string>()
+        res.rep_names.forEach(rep_name => {
+            let exist = false
+            const rep_type_name = this.get_rep_type_from_rep_name(rep_name)
+            this.rep_type_struct.forEach(rep_type => {
+                if (rep_type.rep_type_name === rep_type_name) {
+                    exist = true
+                }
+            })
+            if (!exist && rep_type_name) {
+                not_found.push(rep_type_name)
+            }
+        })
+
+        let i = 0
+        not_found.forEach(rep_type => {
+            const rep_type_struct = new RepTypeStruct()
+            rep_type_struct.check_when_inited = true
+            rep_type_struct.device = gkill_info_res.device
+            rep_type_struct.id = GkillAPI.get_instance().generate_uuid()
+            rep_type_struct.rep_type_name = rep_type
+            rep_type_struct.parent_folder_id = null
+            rep_type_struct.seq = 1000 + i++
+            rep_type_struct.user_id = gkill_info_res.user_id
+            this.rep_type_struct.push(rep_type_struct)
+        })
+        return new Array<GkillError>()
     }
     async parse_kftl_template_struct(): Promise<Array<GkillError>> {
         const added_list = new Array<KFTLTemplateStruct>()
@@ -444,5 +621,28 @@ export class ApplicationConfig {
         this.device_struct = new Array<DeviceStruct>()
         this.rep_type_struct = new Array<RepTypeStruct>()
         this.kftl_template_struct = new Array<KFTLTemplateStruct>()
+    }
+
+
+    get_device_from_rep_name(rep_name: string): string | null {
+        const splited = rep_name.split("_")
+        if (splited.length !== 3) {
+            return null
+        }
+        if (splited.length < 2) {
+            return null
+        }
+        return splited[1]
+    }
+
+    get_rep_type_from_rep_name(rep_name: string): string | null {
+        const splited = rep_name.split("_")
+        if (splited.length !== 3) {
+            if (!rep_name || rep_name === "") {
+                return null
+            }
+            return rep_name
+        }
+        return splited[0]
     }
 }

@@ -27,8 +27,19 @@ import { ref, type Ref } from 'vue'
 
 const props = defineProps<KeywordQueryProps>()
 const emits = defineEmits<KeywordQueryEmits>()
+defineExpose({get_keywords, get_use_words, get_use_word_and_search})
 
 const keywords: Ref<string> = ref("")
 const use_words: Ref<boolean> = ref(true)
 const use_and_search: Ref<boolean> = ref(true)
+
+function get_keywords(): string {
+    return keywords.value
+}
+function get_use_words(): boolean {
+    return use_words.value
+}
+function get_use_word_and_search(): boolean {
+    return use_and_search.value
+}
 </script>
