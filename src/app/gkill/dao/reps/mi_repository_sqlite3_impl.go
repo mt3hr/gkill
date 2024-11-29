@@ -3,11 +3,12 @@ package reps
 import (
 	"context"
 	"database/sql"
-	sql_lib "database/sql"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
+
+	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
@@ -201,7 +202,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		sqlWhereFilterEndMi += "'mi_end'"
 	}
 	sqlWhereFilterEndMi += ")"
-	if (filterWhereCounter == 0) {
+	if filterWhereCounter == 0 {
 		sqlWhereFilterEndMi = ""
 	}
 
@@ -271,6 +272,10 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 				&kyou.UpdateUser,
 				&kyou.RepName,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan mi: %w", err)
+				return nil, err
+			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -375,6 +380,10 @@ ORDER BY UPDATE_TIME DESC
 				&kyou.RepName,
 				&kyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan mi: %w", err)
+				return nil, err
+			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -492,7 +501,7 @@ FROM MI
 			mi := &Mi{}
 			mi.RepName = repName
 			createTimeStr, updateTimeStr := "", ""
-			checkedTime, limitTime, estimateStartTime, estimateEndTime := sql_lib.NullTime{}, sql_lib.NullTime{}, sql_lib.NullTime{}, sql_lib.NullTime{}
+			checkedTime, limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
 
 			err = rows.Scan(
 				&mi.IsDeleted,
@@ -514,6 +523,10 @@ FROM MI
 				&mi.UpdateUser,
 				&mi.RepName,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan mi: %w", err)
+				return nil, err
+			}
 
 			mi.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
@@ -526,16 +539,20 @@ FROM MI
 				return nil, err
 			}
 			if checkedTime.Valid {
-				mi.CheckedTime = &checkedTime.Time
+				parsedCheckedTime, _ := time.Parse(sqlite3impl.TimeLayout, checkedTime.String)
+				mi.CheckedTime = &parsedCheckedTime
 			}
 			if limitTime.Valid {
-				mi.LimitTime = &limitTime.Time
+				parsedLimitTime, _ := time.Parse(sqlite3impl.TimeLayout, limitTime.String)
+				mi.LimitTime = &parsedLimitTime
 			}
 			if estimateStartTime.Valid {
-				mi.EstimateStartTime = &estimateStartTime.Time
+				parsedEstimateStartTime, _ := time.Parse(sqlite3impl.TimeLayout, estimateStartTime.String)
+				mi.EstimateStartTime = &parsedEstimateStartTime
 			}
 			if estimateEndTime.Valid {
-				mi.EstimateEndTime = &estimateEndTime.Time
+				parsedEstimateEndTime, _ := time.Parse(sqlite3impl.TimeLayout, estimateEndTime.String)
+				mi.EstimateEndTime = &parsedEstimateEndTime
 			}
 			mis = append(mis, mi)
 		}
@@ -616,7 +633,7 @@ ORDER BY UPDATE_TIME DESC
 			mi := &Mi{}
 			mi.RepName = repName
 			createTimeStr, updateTimeStr := "", ""
-			checkedTime, limitTime, estimateStartTime, estimateEndTime := sql_lib.NullTime{}, sql_lib.NullTime{}, sql_lib.NullTime{}, sql_lib.NullTime{}
+			checkedTime, limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
 
 			err = rows.Scan(
 				&mi.IsDeleted,
@@ -638,6 +655,10 @@ ORDER BY UPDATE_TIME DESC
 				&mi.UpdateUser,
 				&mi.RepName,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan mi: %w", err)
+				return nil, err
+			}
 
 			mi.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
@@ -649,17 +670,21 @@ ORDER BY UPDATE_TIME DESC
 				err = fmt.Errorf("error at parse update time %s in MI: %w", updateTimeStr, err)
 				return nil, err
 			}
-			if checkedTime.Valid {
-				mi.CheckedTime = &checkedTime.Time
+			if !checkedTime.Valid {
+				parsedCheckedTime, _ := time.Parse(sqlite3impl.TimeLayout, checkedTime.String)
+				mi.CheckedTime = &parsedCheckedTime
 			}
-			if limitTime.Valid {
-				mi.LimitTime = &limitTime.Time
+			if !limitTime.Valid {
+				parsedLimitTime, _ := time.Parse(sqlite3impl.TimeLayout, limitTime.String)
+				mi.LimitTime = &parsedLimitTime
 			}
-			if estimateStartTime.Valid {
-				mi.EstimateStartTime = &estimateStartTime.Time
+			if !estimateStartTime.Valid {
+				parsedEstimateStartTime, _ := time.Parse(sqlite3impl.TimeLayout, estimateStartTime.String)
+				mi.EstimateStartTime = &parsedEstimateStartTime
 			}
-			if estimateEndTime.Valid {
-				mi.EstimateEndTime = &estimateEndTime.Time
+			if !estimateEndTime.Valid {
+				parsedEstimateEndTime, _ := time.Parse(sqlite3impl.TimeLayout, estimateEndTime.String)
+				mi.EstimateEndTime = &parsedEstimateEndTime
 			}
 			mis = append(mis, mi)
 		}
