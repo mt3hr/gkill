@@ -20,7 +20,6 @@ export class KFTLStartTimeIsStatementLine extends KFTLStatementLine {
     async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
         const req = new KFTLTimeIsRequest(this.get_context().get_this_statement_line_target_id(), this.get_context())
         request_map.set(this.get_context().get_this_statement_line_target_id(), req)
-        return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(context: KFTLStatementLineContext): string {
