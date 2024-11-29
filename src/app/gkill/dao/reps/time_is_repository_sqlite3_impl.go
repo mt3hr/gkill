@@ -3,11 +3,12 @@ package reps
 import (
 	"context"
 	"database/sql"
-	sql_lib "database/sql"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
+
+	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
@@ -402,7 +403,7 @@ FROM TIMEIS
 			timeis := &TimeIs{}
 			timeis.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			startTimeStr, endTime := "", sql_lib.NullTime{}
+			startTimeStr, endTime := "", sqllib.NullString{}
 
 			err = rows.Scan(
 				&timeis.IsDeleted,
@@ -438,9 +439,9 @@ FROM TIMEIS
 				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", updateTimeStr, err)
 				return nil, err
 			}
-
 			if endTime.Valid {
-				timeis.EndTime = &endTime.Time
+				parsedEndTime, _ := time.Parse(sqlite3impl.TimeLayout, endTime.String)
+				timeis.EndTime = &parsedEndTime
 			}
 			timeiss = append(timeiss, timeis)
 		}
@@ -474,8 +475,8 @@ SELECT
   TITLE,
   START_TIME,
   END_TIME,
-  CREATE_TIME,
   CREATE_TIME AS 'RELATED_TIME',
+  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
@@ -518,7 +519,7 @@ ORDER BY UPDATE_TIME DESC
 			timeis := &TimeIs{}
 			timeis.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			startTimeStr, endTime := "", sql_lib.NullTime{}
+			startTimeStr, endTime := "", sqllib.NullString{}
 
 			err = rows.Scan(
 				&timeis.IsDeleted,
@@ -526,8 +527,8 @@ ORDER BY UPDATE_TIME DESC
 				&timeis.Title,
 				&startTimeStr,
 				&endTime,
-				&createTimeStr,
 				&relatedTimeStr,
+				&createTimeStr,
 				&timeis.CreateApp,
 				&timeis.CreateDevice,
 				&timeis.CreateUser,
@@ -537,6 +538,10 @@ ORDER BY UPDATE_TIME DESC
 				&timeis.UpdateUser,
 				&timeis.RepName,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan timeis: %w", err)
+				return nil, err
+			}
 
 			timeis.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
@@ -553,9 +558,9 @@ ORDER BY UPDATE_TIME DESC
 				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", updateTimeStr, err)
 				return nil, err
 			}
-
 			if endTime.Valid {
-				timeis.EndTime = &endTime.Time
+				parsedEndTime, _ := time.Parse(sqlite3impl.TimeLayout, endTime.String)
+				timeis.EndTime = &parsedEndTime
 			}
 			timeiss = append(timeiss, timeis)
 		}
