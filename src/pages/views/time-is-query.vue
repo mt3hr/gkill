@@ -29,7 +29,8 @@
                     @click="use_and_search_timeis_tags = !use_and_search_timeis_tags; emits('request_update_and_search_timeis_tags', use_and_search_timeis_tags)" />
             </v-col>
             <v-col cols="10" class="pt-4 pa-0 ma-0">
-                <v-label>状況タグ</v-label>
+                <v-checkbox v-model="use_timeis_tags" @click="emits('request_update_use_timeis_query', use_timeis)"
+                    label="状況タグ" hide-details class="pa-0 ma-0" />
             </v-col>
         </v-row>
         <table v-show="use_timeis" class="taglist">
@@ -45,7 +46,7 @@
 import type { TimeIsQueryEmits } from './time-is-query-emits'
 import type { TimeIsQueryProps } from './time-is-query-props'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { type Ref, ref } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 
 import FoldableStruct from './foldable-struct.vue'
 import type { CheckState } from './check-state'
@@ -54,13 +55,20 @@ import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-
 
 const props = defineProps<TimeIsQueryProps>()
 const emits = defineEmits<TimeIsQueryEmits>()
+defineExpose({ get_use_timeis, get_use_and_search_timeis_words, get_use_and_search_timeis_tags, get_timeis_keywords, get_use_timeis_tags, get_timeis_tags })
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const use_timeis: Ref<boolean> = ref(false)
+const use_timeis_tags: Ref<boolean> = ref(false)
 const use_and_search_timeis_words: Ref<boolean> = ref(false)
 const use_and_search_timeis_tags: Ref<boolean> = ref(false)
-const timeis_keywords: Ref<string> = ref(props.query.timeis_word.join(" ") + props.query.timeis_not_word.join(" -"))
+const timeis_keywords: Ref<string> = ref(props.query.timeis_words.join(" ") + props.query.timeis_not_words.join(" -"))
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
+
+watch(() => props.application_config, async () => {
+    cloned_application_config.value = props.application_config.clone()
+    cloned_application_config.value.parse_tag_struct()
+})
 
 const query: Ref<FindKyouQuery> = ref(props.query.clone())
 
@@ -69,5 +77,28 @@ async function clicked_items(e: MouseEvent, items: Array<string>, check_state: C
     if (checked_items) {
         emits('request_update_checked_timeis_tags', checked_items)
     }
+}
+
+function get_use_timeis(): boolean {
+    return use_timeis.value
+}
+function get_use_timeis_tags(): boolean {
+    return use_timeis_tags.value
+}
+function get_use_and_search_timeis_words(): boolean {
+    return use_and_search_timeis_words.value
+}
+function get_use_and_search_timeis_tags(): boolean {
+    return use_and_search_timeis_tags.value
+}
+function get_timeis_keywords(): string {
+    return timeis_keywords.value
+}
+function get_timeis_tags(): Array<string> {
+    const tags = foldable_struct.value?.get_selected_items()
+    if (tags) {
+        return tags
+    }
+    return new Array<string>()
 }
 </script>
