@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -45,6 +46,7 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", filename, err)
@@ -82,7 +84,7 @@ func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 SELECT 
   IS_DELETED,
   ID,
-  START_TIME AS 'RELATED_TIME',
+  START_TIME AS RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
@@ -91,15 +93,15 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS 'REP_NAME',
-  'timeis_start' AS 'DATA_TYPE'
+  ? AS REP_NAME,
+  'timeis_start' AS DATA_TYPE
 FROM TIMEIS 
 `
 	sqlEndTimeIs := `
 SELECT 
   IS_DELETED,
   ID,
-  END_TIME AS 'RELATED_TIME',
+  END_TIME AS RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
@@ -108,16 +110,16 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS 'REP_NAME',
-  'timeis_end' AS 'DATA_TYPE'
+  ? AS REP_NAME,
+  'timeis_end' AS DATA_TYPE
 FROM TIMEIS 
 `
 
 	sqlWhereFilterEndTimeIs := ""
 	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
-		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end')"
+		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME IS NOT NULL"
 	} else {
-		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
+		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start') AND END_TIME IS NOT NULL"
 	}
 
 	sqlWhereForStart, err := t.whereSQLGenerator(true, query)
@@ -129,8 +131,9 @@ FROM TIMEIS
 		return nil, err
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s WHERE %s", sqlStartTimeIs, sqlWhereForStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterEndTimeIs)
+	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterEndTimeIs)
 
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous sql: %w", err)
@@ -144,7 +147,7 @@ FROM TIMEIS
 		return nil, err
 	}
 
-	rows, err := stmt.QueryContext(ctx, repName)
+	rows, err := stmt.QueryContext(ctx, repName, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
 		return nil, err
@@ -226,7 +229,7 @@ func (t *timeIsRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id s
 SELECT 
   IS_DELETED,
   ID,
-  START_TIME AS 'RELATED_TIME',
+  START_TIME AS RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
@@ -235,12 +238,13 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS 'REP_NAME',
-  'timeis_start' AS 'DATA_TYPE'
+  ? AS REP_NAME,
+  'timeis_start' AS DATA_TYPE
 FROM TIMEIS 
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -347,7 +351,7 @@ SELECT
   TITLE,
   START_TIME,
   END_TIME,
-  START_TIME AS 'RELATED_TIME,
+  START_TIME AS RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
@@ -356,8 +360,8 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS 'REP_NAME',
-  'timeis_start' AS 'DATA_TYPE'
+  ? AS REP_NAME,
+  'timeis_start' AS DATA_TYPE
 FROM TIMEIS 
 `
 	sqlWhereFilterEndTimeIs := ""
@@ -372,8 +376,9 @@ FROM TIMEIS
 		return nil, err
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s WHERE %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterEndTimeIs)
+	sql := fmt.Sprintf("%s WHERE %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterEndTimeIs)
 
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find time is sql: %w", err)
@@ -475,7 +480,7 @@ SELECT
   TITLE,
   START_TIME,
   END_TIME,
-  CREATE_TIME AS 'RELATED_TIME',
+  CREATE_TIME AS RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
@@ -484,12 +489,13 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS 'REP_NAME'
+  ? AS REP_NAME
 FROM TIMEIS 
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
 
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get time is histories sql: %w", err)
@@ -599,6 +605,7 @@ INSERT INTO TIMEIS (
   ?,
   ?
 )`
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add timeis sql %s: %w", timeis.ID, err)
@@ -643,12 +650,14 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
-		sqlWhere += "IS_DELETED = 'TRUE'"
+		sqlWhere += "IS_DELETED = TRUE"
+		whereCounter++
 	} else {
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
-		sqlWhere += "IS_DELETED = 'FALSE'"
+		sqlWhere += "IS_DELETED = FALSE"
+		whereCounter++
 	}
 
 	// id検索である場合のSQL追記
@@ -660,7 +669,7 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
-		sqlWhere += "ID IN ("
+		sqlWhere += " ID IN ("
 		for i, id := range ids {
 			sqlWhere += fmt.Sprintf("'%s'", id)
 			if i != len(ids)-1 {
@@ -668,6 +677,7 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 			}
 		}
 		sqlWhere += ")"
+		whereCounter++
 	}
 
 	// 日付範囲指定ありの場合
@@ -698,19 +708,22 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 			whereCounter++
 		}
 	}
+
+	words := []string{}
+	if query.Words != nil {
+		words = *query.Words
+	}
+	notWords := []string{}
+	if query.NotWords != nil {
+		notWords = *query.NotWords
+	}
+
 	// ワードand検索である場合のSQL追記
 	if query.UseWords != nil && *query.UseWords {
-		if whereCounter != 0 {
-			sqlWhere += " AND "
-		}
-
-		words := []string{}
-		if query.Words != nil {
-			words = *query.Words
-		}
-		notWords := []string{}
-		if query.NotWords != nil {
-			notWords = *query.NotWords
+		if len(words) != 0 {
+			if whereCounter != 0 {
+				sqlWhere += " AND "
+			}
 		}
 
 		if query.WordsAnd != nil && *query.WordsAnd {
@@ -744,8 +757,10 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 			}
 		}
 
-		if whereCounter != 0 {
-			sqlWhere += " AND "
+		if len(notWords) != 0 {
+			if whereCounter != 0 {
+				sqlWhere += " AND "
+			}
 		}
 
 		// notワードを除外するSQLを追記
@@ -776,7 +791,5 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-	sqlWhere += `;`
-
 	return sqlWhere, nil
 }

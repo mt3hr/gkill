@@ -12,7 +12,6 @@ import { RepTypeStructElementData } from './rep-type-struct-element-data'
 import { KFTLTemplateElementData } from '../kftl-template-element-data'
 import type { KFTLTemplateStruct } from './kftl-template-struct'
 import { GkillAPI } from '@/classes/api/gkill-api'
-import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-request'
 import { GetAllRepNamesRequest } from '@/classes/api/req_res/get-all-rep-names-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
@@ -74,9 +73,9 @@ export class ApplicationConfig {
 
         const gkill_info_req = new GetGkillInfoRequest()
         gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(req)
-        if (res.errors && res.errors.length !== 0) {
-            return res.errors
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            return gkill_info_res.errors
         }
 
         const not_found = new Array<string>()
@@ -117,9 +116,9 @@ export class ApplicationConfig {
 
         const gkill_info_req = new GetGkillInfoRequest()
         gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(req)
-        if (res.errors && res.errors.length !== 0) {
-            return res.errors
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            return gkill_info_res.errors
         }
 
         const not_found = new Array<string>()
@@ -150,6 +149,36 @@ export class ApplicationConfig {
         })
         return new Array<GkillError>()
     }
+
+    async append_no_devices(): Promise<Array<GkillError>> {
+        const gkill_info_req = new GetGkillInfoRequest()
+        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            return gkill_info_res.errors
+        }
+
+        let exist = false
+        this.device_struct.forEach(device => {
+            if (device.device_name === "なし") {
+                exist = true
+            }
+        })
+
+        if (!exist) {
+            const device_struct = new DeviceStruct()
+            device_struct.check_when_inited = true
+            device_struct.device = gkill_info_res.device
+            device_struct.id = GkillAPI.get_instance().generate_uuid()
+            device_struct.device_name = "なし"
+            device_struct.parent_folder_id = null
+            device_struct.seq = -1000
+            device_struct.user_id = gkill_info_res.user_id
+            this.device_struct.push(device_struct)
+        }
+        return new Array<GkillError>()
+    }
+
     async append_not_found_devices(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
         req.session_id = GkillAPI.get_instance().get_session_id()
@@ -160,9 +189,9 @@ export class ApplicationConfig {
 
         const gkill_info_req = new GetGkillInfoRequest()
         gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(req)
-        if (res.errors && res.errors.length !== 0) {
-            return res.errors
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            return gkill_info_res.errors
         }
 
         const not_found = new Array<string>()
@@ -203,9 +232,9 @@ export class ApplicationConfig {
 
         const gkill_info_req = new GetGkillInfoRequest()
         gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(req)
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
         if (res.errors && res.errors.length !== 0) {
-            return res.errors
+            return gkill_info_res.errors
         }
 
         const not_found = new Array<string>()
@@ -600,6 +629,35 @@ export class ApplicationConfig {
         this.parsed_rep_type_struct = struct
         return new Array<GkillError>()
 
+    }
+    async append_no_tags(): Promise<Array<GkillError>> {
+        const gkill_info_req = new GetGkillInfoRequest()
+        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            return gkill_info_res.errors
+        }
+
+        let exist = false
+        this.tag_struct.forEach(tag => {
+            if (tag.tag_name === "no tags") {
+                exist = true
+            }
+        })
+
+        if (!exist) {
+            const tag_struct = new TagStruct()
+            tag_struct.check_when_inited = true
+            tag_struct.device = gkill_info_res.device
+            tag_struct.id = GkillAPI.get_instance().generate_uuid()
+            tag_struct.is_force_hide = false
+            tag_struct.parent_folder_id = null
+            tag_struct.tag_name = "no tags"
+            tag_struct.seq = -1000
+            tag_struct.user_id = gkill_info_res.user_id
+            this.tag_struct.unshift(tag_struct)
+        }
+        return new Array<GkillError>()
     }
     constructor() {
         this.is_loaded = false

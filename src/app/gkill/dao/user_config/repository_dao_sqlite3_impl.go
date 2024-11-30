@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 )
 
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
   IS_EXECUTE_IDF_WHEN_RELOAD NOT NULL,
   IS_ENABLE NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create REPOSITORY table statement %s: %w", filename, err)
@@ -65,6 +67,7 @@ SELECT
   IS_ENABLE
 FROM REPOSITORY
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all repositories sql: %w", err)
@@ -116,6 +119,7 @@ SELECT
 FROM REPOSITORY
 WHERE USER_ID = ? AND DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get repositories sql: %w", err)
@@ -361,6 +365,7 @@ func (r *repositoryDAOSQLite3Impl) DeleteRepository(ctx context.Context, id stri
 DELETE FROM REPOSITORY
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete repository sql: %w", err)
@@ -381,6 +386,7 @@ func (r *repositoryDAOSQLite3Impl) DeleteAllRepositoriesByUser(ctx context.Conte
 DELETE FROM REPOSITORY
 WHERE USER_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete repository sql: %w", err)

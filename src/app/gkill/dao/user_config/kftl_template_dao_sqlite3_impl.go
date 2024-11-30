@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS "KFTL_TEMPLATE" (
   PARENT_FOLDER_ID,
   SEQ NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create KFTL_TEMPLATE table statement %s: %w", filename, err)
@@ -64,6 +66,7 @@ SELECT
   SEQ
 FROM KFTL_TEMPLATE
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all kftl templates sql: %w", err)
@@ -113,6 +116,7 @@ SELECT
 FROM KFTL_TEMPLATE
 WHERE USER_ID = ? AND DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get kftl templates sql: %w", err)
@@ -169,6 +173,7 @@ INSERT INTO KFTL_TEMPLATE (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add device struct sql: %w", err)
@@ -272,6 +277,7 @@ UPDATE KFTL_TEMPLATE SET
   SEQ = ?
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update kftl template sql: %w", err)
@@ -301,6 +307,7 @@ func (k *kftlTemplateDAOSQLite3Impl) DeleteKFTLTemplate(ctx context.Context, id 
 DELETE FROM KFTL_TEMPLATE
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete kftl template sql: %w", err)
@@ -321,6 +328,7 @@ func (k *kftlTemplateDAOSQLite3Impl) DeleteUsersKFTLTemplates(ctx context.Contex
 DELETE FROM KFTL_TEMPLATE
 WHERE USER_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete kftl template sql: %w", err)

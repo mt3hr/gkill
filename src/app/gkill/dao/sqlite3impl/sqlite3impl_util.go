@@ -29,12 +29,14 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, er
 		if *whereCounter != 0 {
 			sql += " AND "
 		}
-		sql += "IS_DELETED = 'TRUE'"
+		sql += "IS_DELETED = TRUE"
+		*whereCounter++
 	} else {
 		if *whereCounter != 0 {
 			sql += " AND "
 		}
-		sql += "IS_DELETED = 'FALSE'"
+		sql += "IS_DELETED = FALSE"
+		*whereCounter++
 	}
 
 	// id検索である場合のSQL追記
@@ -51,7 +53,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, er
 		if *whereCounter != 0 {
 			sql += " AND "
 		}
-		sql += "ID IN ("
+		sql += " ID IN ("
 		for i, id := range ids {
 			sql += fmt.Sprintf("'%s'", id)
 			if i != len(ids)-1 {

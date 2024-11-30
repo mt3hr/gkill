@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
   UPLOAD_SIZE_LIMIT_MONTH,
   USER_DATA_DIRECTORY NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create SERVER_CONFIG table statement %s: %w", filename, err)
@@ -77,6 +79,7 @@ SELECT
   USER_DATA_DIRECTORY
 FROM SERVER_CONFIG
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all server configs sql: %w", err)
@@ -138,6 +141,7 @@ SELECT
 FROM SERVER_CONFIG
 WHERE DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get server config sql: %w", err)
@@ -217,6 +221,7 @@ INSERT INTO SERVER_CONFIG (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add server config sql: %w", err)
@@ -501,6 +506,7 @@ func (s *serverConfigDAOSQLite3Impl) DeleteServerConfig(ctx context.Context, dev
 DELETE FROM SERVER_CONFIG 
 WHERE DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete server config sql: %w", err)
