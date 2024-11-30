@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS "DEVICE_STRUCT" (
   SEQ NOT NULL,
   CHECK_WHEN_INITED NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create DEVICE_STRUCT table statement %s: %w", filename, err)
@@ -64,6 +66,7 @@ SELECT
   CHECK_WHEN_INITED
 FROM DEVICE_STRUCT
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := d.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all device struct sql: %w", err)
@@ -113,6 +116,7 @@ SELECT
 FROM DEVICE_STRUCT
 WHERE USER_ID = ? AND DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := d.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get device struct sql: %w", err)
@@ -169,6 +173,7 @@ INSERT INTO DEVICE_STRUCT (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := d.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add device struct sql: %w", err)
@@ -272,6 +277,7 @@ UPDATE DEVICE_STRUCT SET
   CHECK_WHEN_INITED = ?
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := d.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update device struct sql: %w", err)
@@ -301,6 +307,7 @@ func (d *deviceStructDAOSQLite3Impl) DeleteDeviceStruct(ctx context.Context, id 
 DELETE FROM DEVICE_STRUCT
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := d.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete device struct sql: %w", err)
@@ -321,6 +328,7 @@ func (d *deviceStructDAOSQLite3Impl) DeleteUsersDeviceStructs(ctx context.Contex
 DELETE FROM DEVICE_STRUCT
 WHERE USER_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := d.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete device struct sql: %w", err)

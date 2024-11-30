@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL 
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT table statement %s: %w", filename, err)
@@ -104,20 +106,22 @@ WHERE
 	}
 	sql += commonWhereSQL
 
+	words := []string{}
+	if query.Words != nil {
+		words = *query.Words
+	}
+	notWords := []string{}
+	if query.NotWords != nil {
+		notWords = *query.NotWords
+	}
+
 	// ワードand検索である場合のSQL追記
 	if query.UseWords != nil && *query.UseWords {
 		// ワードを解析
-		if whereCounter != 0 {
-			sql += " AND "
-		}
-
-		words := []string{}
-		if query.Words != nil {
-			words = *query.Words
-		}
-		notWords := []string{}
-		if query.NotWords != nil {
-			notWords = *query.NotWords
+		if len(words) != 0 {
+			if whereCounter != 0 {
+				sql += " AND "
+			}
 		}
 
 		if query.WordsAnd != nil && *query.WordsAnd {
@@ -151,8 +155,10 @@ WHERE
 			}
 		}
 
-		if whereCounter != 0 {
-			sql += " AND "
+		if len(notWords) != 0 {
+			if whereCounter != 0 {
+				sql += " AND "
+			}
 		}
 
 		// notワードを除外するSQLを追記
@@ -175,8 +181,8 @@ WHERE
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-	sql += `;`
 
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get TEXT histories sql: %w", err)
@@ -295,8 +301,8 @@ WHERE TARGET_ID LIKE ?
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-	sql += `;`
 
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get text histories sql: %w", err)
@@ -410,8 +416,7 @@ FROM TEXT
 WHERE ID LIKE ?
 `
 
-	sql += `;`
-
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get text histories sql: %w", err)
@@ -511,6 +516,7 @@ INSERT INTO TEXT (
   ?,
   ?
 )`
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add text sql %s: %w", text.ID, err)

@@ -4,7 +4,7 @@ export abstract class FindQueryBase {
 
     update_cache: boolean
 
-    use_word: boolean
+    use_words: boolean
 
     keywords: string
 
@@ -57,7 +57,7 @@ export abstract class FindQueryBase {
     constructor() {
         this.update_cache = false
 
-        this.use_word = false
+        this.use_words = false
 
         this.keywords = ""
 

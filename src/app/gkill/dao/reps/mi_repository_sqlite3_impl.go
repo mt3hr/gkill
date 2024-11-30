@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -49,6 +50,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table statement %s: %w", filename, err)
@@ -84,7 +86,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  CREATE_TIME AS 'RELATED_TIME',
+		  CREATE_TIME AS RELATED_TIME,
 		  CREATE_TIME,
 		  CREATE_APP,
 		  CREATE_DEVICE,
@@ -93,8 +95,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS 'REP_NAME',
-		  'mi_limit' AS 'DATA_TYPE'
+		  ? AS REP_NAME,
+		  'mi_limit' AS DATA_TYPE
 		FROM MI
 		`
 
@@ -102,7 +104,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  CHECKED_TIME AS 'RELATED_TIME',
+		  CHECKED_TIME AS RELATED_TIME,
 		  CREATE_TIME,
 		  CREATE_APP,
 		  CREATE_DEVICE,
@@ -111,8 +113,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS 'REP_NAME',
-		  'mi_limit' AS 'DATA_TYPE'
+		  ? AS REP_NAME,
+		  'mi_limit' AS DATA_TYPE
 		FROM MI
 		`
 
@@ -120,7 +122,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  LIMIT_TIME AS 'RELATED_TIME',
+		  LIMIT_TIME AS RELATED_TIME,
 		  CREATE_TIME,
 		  CREATE_APP,
 		  CREATE_DEVICE,
@@ -129,15 +131,15 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS 'REP_NAME',
-		  'mi_limit' AS 'DATA_TYPE'
+		  ? AS REP_NAME,
+		  'mi_limit' AS DATA_TYPE
 		FROM MI
 		`
 	sqlStartMi := `
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  ESTIMATE_START_TIME AS 'RELATED_TIME',
+		  ESTIMATE_START_TIME AS RELATED_TIME,
 		  CREATE_TIME,
 		  CREATE_APP,
 		  CREATE_DEVICE,
@@ -146,8 +148,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS 'REP_NAME',
-		  'mi_start' AS 'DATA_TYPE'
+		  ? AS REP_NAME,
+		  'mi_start' AS DATA_TYPE
 		FROM MI
 		`
 
@@ -155,7 +157,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  ESTIMATE_END_TIME AS 'RELATED_TIME',
+		  ESTIMATE_END_TIME AS RELATED_TIME,
 		  CREATE_TIME,
 		  CREATE_APP,
 		  CREATE_DEVICE,
@@ -164,8 +166,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS 'REP_NAME',
-		  'mi_end' AS 'DATA_TYPE'
+		  ? AS REP_NAME,
+		  'mi_end' AS DATA_TYPE
 		FROM MI
 		`
 
@@ -214,20 +216,25 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	if err != nil {
 		return nil, err
 	}
+	sqlWhereForCheck += " AND CHECKED_TIME IS NOT NULL "
 	sqlWhereForLimit, err := m.whereSQLGenerator("LIMIT_TIME", query)
 	if err != nil {
 		return nil, err
 	}
+	sqlWhereForLimit += " AND LIMIT_TIME IS NOT NULL "
 	sqlWhereForStart, err := m.whereSQLGenerator("ESTIMATE_START_TIME", query)
 	if err != nil {
 		return nil, err
 	}
+	sqlWhereForStart += " AND ESTIMATE_START_TIME IS NOT NULL "
 	sqlWhereForEnd, err := m.whereSQLGenerator("ESTIMATE_END_TIME", query)
 	if err != nil {
 		return nil, err
 	}
+	sqlWhereForEnd += " AND ESTIMATE_END_TIME IS NOT NULL "
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -271,6 +278,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
 				&kyou.RepName,
+				&kyou.DataType,
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan mi: %w", err)
@@ -326,7 +334,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 SELECT 
   IS_DELETED,
   ID,
-  CREATE_TIME AS 'RELATED_TIME',
+  CREATE_TIME AS RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
@@ -336,11 +344,12 @@ SELECT
   UPDATE_DEVICE,
   UPDATE_USER,
   ? AS REP_NAME,
-  'mi_create' AS 'DATA_TYPE'
+  'mi_create' AS DATA_TYPE
 FROM MI 
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -461,7 +470,7 @@ SELECT
   UPDATE_DEVICE,
   UPDATE_USER,
   ? AS REP_NAME,
-  'mi_create' AS 'DATA_TYPE'
+  'mi_create' AS DATA_TYPE
 FROM MI 
 `
 	sqlWhereFilterCreateMi := "DATA_TYPE IN ('mi_create')"
@@ -472,6 +481,7 @@ FROM MI
 	}
 	sql := fmt.Sprintf("SELECT * FROM (SELECT * FROM (%s) WHERE %s) WHERE %s", sqlCreateMi, sqlWhereForCreate, sqlWhereFilterCreateMi)
 
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -598,12 +608,13 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS 'REP_NAME'
+  ? AS REP_NAME
 FROM MI
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
 
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get mi histories sql: %w", err)
@@ -670,19 +681,19 @@ ORDER BY UPDATE_TIME DESC
 				err = fmt.Errorf("error at parse update time %s in MI: %w", updateTimeStr, err)
 				return nil, err
 			}
-			if !checkedTime.Valid {
+			if checkedTime.Valid {
 				parsedCheckedTime, _ := time.Parse(sqlite3impl.TimeLayout, checkedTime.String)
 				mi.CheckedTime = &parsedCheckedTime
 			}
-			if !limitTime.Valid {
+			if limitTime.Valid {
 				parsedLimitTime, _ := time.Parse(sqlite3impl.TimeLayout, limitTime.String)
 				mi.LimitTime = &parsedLimitTime
 			}
-			if !estimateStartTime.Valid {
+			if estimateStartTime.Valid {
 				parsedEstimateStartTime, _ := time.Parse(sqlite3impl.TimeLayout, estimateStartTime.String)
 				mi.EstimateStartTime = &parsedEstimateStartTime
 			}
-			if !estimateEndTime.Valid {
+			if estimateEndTime.Valid {
 				parsedEstimateEndTime, _ := time.Parse(sqlite3impl.TimeLayout, estimateEndTime.String)
 				mi.EstimateEndTime = &parsedEstimateEndTime
 			}
@@ -732,6 +743,7 @@ INSERT INTO MI (
   ?,
   ?
 )`
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mi sql %s: %w", mi.ID, err)
@@ -798,12 +810,14 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
-		sqlWhere += "IS_DELETED = 'TRUE'"
+		sqlWhere += "IS_DELETED = TRUE"
+		whereCounter++
 	} else {
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
-		sqlWhere += "IS_DELETED = 'FALSE'"
+		sqlWhere += "IS_DELETED = FALSE"
+		whereCounter++
 	}
 
 	// id検索である場合のSQL追記
@@ -815,12 +829,13 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
-		sqlWhere += "ID IN ("
+		sqlWhere += " ID IN ("
 		for i, id := range ids {
 			sqlWhere += fmt.Sprintf("'%s'", id)
 			if i != len(ids)-1 {
 				sqlWhere += ", "
 			}
+			whereCounter++
 		}
 		sqlWhere += ")"
 	}
@@ -848,19 +863,22 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 			whereCounter++
 		}
 	}
+
+	words := []string{}
+	if query.Words != nil {
+		words = *query.Words
+	}
+	notWords := []string{}
+	if query.NotWords != nil {
+		notWords = *query.NotWords
+	}
+
 	// ワードand検索である場合のSQL追記
 	if query.UseWords != nil && *query.UseWords {
-		if whereCounter != 0 {
-			sqlWhere += " AND "
-		}
-
-		words := []string{}
-		if query.Words != nil {
-			words = *query.Words
-		}
-		notWords := []string{}
-		if query.NotWords != nil {
-			notWords = *query.NotWords
+		if len(words) != 0 {
+			if whereCounter != 0 {
+				sqlWhere += " AND "
+			}
 		}
 
 		if query.WordsAnd != nil && *query.WordsAnd {
@@ -928,6 +946,7 @@ DISTINCT BOARD_NAME
 FROM MI 
 WHERE IS_DELETED = FALSE
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get board names sql: %w", err)

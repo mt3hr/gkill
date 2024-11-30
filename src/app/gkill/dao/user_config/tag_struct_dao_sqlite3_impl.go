@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS "TAG_STRUCT" (
   CHECK_WHEN_INITED NOT NULL,
   IS_FORCE_HIDE NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_STRUCT table statement %s: %w", filename, err)
@@ -66,6 +68,7 @@ SELECT
   IS_FORCE_HIDE
 FROM TAG_STRUCT
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all tag struct sql: %w", err)
@@ -117,6 +120,7 @@ SELECT
 FROM TAG_STRUCT
 WHERE USER_ID = ? AND DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get tag struct sql: %w", err)
@@ -176,6 +180,7 @@ INSERT INTO TAG_STRUCT (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add tag struct sql: %w", err)
@@ -276,6 +281,7 @@ UPDATE TAG_STRUCT SET
   IS_FORCE_HIDE
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update tag struct sql: %w", err)
@@ -306,6 +312,7 @@ func (t *tagStructDAOSQLite3Impl) DeleteTagStruct(ctx context.Context, id string
 DELETE FROM TAG_STRUCT
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete tag struct sql: %w", err)
@@ -326,6 +333,7 @@ func (t *tagStructDAOSQLite3Impl) DeleteUsersTagStructs(ctx context.Context, use
 DELETE FROM TAG_STRUCT
 WHERE USER_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete tag struct sql: %w", err)

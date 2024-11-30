@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS "LATEST_DATA_REPOSITORY_ADDRESS" (
   DATA_UPDATE_TIME NOT NULL,
   PRIMARY KEY(TARGET_ID)
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create table LATEST_DATA_REPOSITORY_ADDRESS statement %s: %w", filename, err)
@@ -60,6 +62,7 @@ SELECT
   DATA_UPDATE_TIME
 FROM LATEST_DATA_REPOSITORY_ADDRESS
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
@@ -109,6 +112,7 @@ SELECT
 FROM LATEST_DATA_REPOSITORY_ADDRESS
 WHERE LATEST_DATA_REPOSITORY_NAME = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
@@ -158,6 +162,7 @@ SELECT
 FROM LATEST_DATA_REPOSITORY_ADDRESS
 WHERE TARGET_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
@@ -202,6 +207,8 @@ WHERE TARGET_ID = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) AddLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
 	sql := `
 INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
   TARGET_ID,
@@ -213,6 +220,7 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add latest data repoisitory address sql: %w", err)
@@ -233,6 +241,8 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
 	sql := `
 UPDATE LATEST_DATA_REPOSITORY_ADDRESS SET
   TARGET_ID = ?,
@@ -240,6 +250,7 @@ UPDATE LATEST_DATA_REPOSITORY_ADDRESS SET
   DATA_UPDATE_TIME = ?
 WHERE TARGET_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update latest data repository address sql: %w", err)
@@ -305,8 +316,8 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 	}
 
 	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-		_, err := l.GetLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress.TargetID)
-		if err == nil { // データが存在する場合は更新する
+		existRecords, err := l.GetLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress.TargetID)
+		if err == nil && existRecords != nil { // データが存在する場合は更新する
 			_, err := l.UpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 			stmt, err := tx.PrepareContext(ctx, updateSQL)
 			if err != nil {
@@ -372,10 +383,13 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) DeleteLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
 	sql := `
-DELETE LLATEST_DATA_REPOSITORY_ADDRESS
+DELETE FROM LATEST_DATA_REPOSITORY_ADDRESS
 WHERE TARGET_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete latest data repository address sql: %w", err)
@@ -384,6 +398,28 @@ WHERE TARGET_ID = ?
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, latestDataRepositoryAddress.TargetID)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+	return true, nil
+}
+
+func (l *latestDataRepositoryAddressSQLite3Impl) DeleteAllLatestDataRepositoryAddress(ctx context.Context) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
+	sql := `
+DELETE FROM LATEST_DATA_REPOSITORY_ADDRESS
+`
+	log.Printf("sql: %s", sql)
+	stmt, err := l.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at delete all latest data repository address sql: %w", err)
+		return false, err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

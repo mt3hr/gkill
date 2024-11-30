@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create URLOG table statement %s: %w", filename, err)
@@ -106,19 +108,21 @@ WHERE
 	}
 	sql += commonWhereSQL
 
+	words := []string{}
+	if query.Words != nil {
+		words = *query.Words
+	}
+	notWords := []string{}
+	if query.NotWords != nil {
+		notWords = *query.NotWords
+	}
+
 	// ワードand検索である場合のSQL追記
 	if query.UseWords != nil && *query.UseWords {
-		if whereCounter != 0 {
-			sql += " AND "
-		}
-
-		words := []string{}
-		if query.Words != nil {
-			words = *query.Words
-		}
-		notWords := []string{}
-		if query.NotWords != nil {
-			notWords = *query.NotWords
+		if len(words) != 0 {
+			if whereCounter != 0 {
+				sql += " AND "
+			}
 		}
 
 		if query.WordsAnd != nil && *query.WordsAnd {
@@ -160,8 +164,10 @@ WHERE
 			}
 		}
 
-		if whereCounter != 0 {
-			sql += " AND "
+		if len(notWords) != 0 {
+			if whereCounter != 0 {
+				sql += " AND "
+			}
 		}
 
 		// notワードを除外するSQLを追記
@@ -188,8 +194,8 @@ WHERE
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-	sql += `;`
 
+	log.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -300,6 +306,7 @@ FROM URLOG
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -431,20 +438,22 @@ WHERE
 	}
 	sql += commonWhereSQL
 
+	words := []string{}
+	if query.Words != nil {
+		words = *query.Words
+	}
+	notWords := []string{}
+	if query.NotWords != nil {
+		notWords = *query.NotWords
+	}
+
 	// ワードand検索である場合のSQL追記
 	if query.UseWords != nil && *query.UseWords {
 		// ワードを解析
-		words := []string{}
-		if query.Words != nil {
-			words = *query.Words
-		}
-		notWords := []string{}
-		if query.NotWords != nil {
-			notWords = *query.NotWords
-		}
-
-		if whereCounter != 0 {
-			sql += " AND "
+		if len(words) != 0 {
+			if whereCounter != 0 {
+				sql += " AND "
+			}
 		}
 
 		if query.WordsAnd != nil && *query.WordsAnd {
@@ -486,8 +495,10 @@ WHERE
 			}
 		}
 
-		if whereCounter != 0 {
-			sql += " AND "
+		if len(notWords) != 0 {
+			if whereCounter != 0 {
+				sql += " AND "
+			}
 		}
 
 		// notワードを除外するSQLを追記
@@ -513,8 +524,8 @@ WHERE
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-	sql += `;`
 
+	log.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -632,6 +643,7 @@ FROM URLOG
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
@@ -734,6 +746,7 @@ INSERT INTO URLOG (
   ?,
   ?
 )`
+	log.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add urlog sql %s: %w", urlog.ID, err)

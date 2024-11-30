@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL 
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create REKYOU table statement %s: %w", filename, err)
@@ -170,6 +172,7 @@ FROM REKYOU
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -338,15 +341,14 @@ SELECT
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM REKYOU
 WHERE TARGET_ID LIKE ?
 `
 
-	sql += `;`
-
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou histories sql: %w", err)
@@ -444,6 +446,7 @@ INSERT INTO REKYOU (
   ?,
   ?
 )`
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add rekyou sql %s: %w", rekyou.ID, err)
@@ -488,7 +491,7 @@ SELECT
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM REKYOU
@@ -500,8 +503,7 @@ GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
 
-	sql += `;`
-
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all rekyous sql: %w", err)

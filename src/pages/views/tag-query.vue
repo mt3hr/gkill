@@ -3,9 +3,9 @@
         <v-checkbox readonly v-model="use_tag" label="タグ" hide-details />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn v-if="!is_and_search" icon="mdi-set-center"
+                <v-btn v-if="is_and_search" icon="mdi-set-center"
                     @click="is_and_search = !is_and_search; emits('request_update_and_search_tags', is_and_search)" />
-                <v-btn v-if="is_and_search" icon="mdi-set-all"
+                <v-btn v-if="!is_and_search" icon="mdi-set-all"
                     @click="is_and_search = !is_and_search; emits('request_update_and_search_tags', is_and_search)" />
             </v-col>
             <v-spacer />
@@ -43,7 +43,7 @@ const use_tag: Ref<boolean> = ref(true)
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const is_and_search: Ref<boolean> = ref(false)
 
-const cloned_query: Ref<FindKyouQuery> = ref(await props.query.clone())
+const cloned_query: Ref<FindKyouQuery> = ref(props.query.clone())
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
 cloned_application_config.value.parse_tag_struct()
