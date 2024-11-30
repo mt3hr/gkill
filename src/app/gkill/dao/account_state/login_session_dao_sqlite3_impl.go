@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -37,6 +38,7 @@ CREATE TABLE IF NOT EXISTS "LOGIN_SESSION" (
   EXPIRATION_TIME NOT NULL,
   IS_LOCAL_APP_USER NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create LOGIN_SESSION table statement %s: %w", filename, err)
@@ -71,6 +73,7 @@ SELECT
   IS_LOCAL_APP_USER
 FROM LOGIN_SESSION
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all login sessions sql: %w", err)
@@ -139,6 +142,7 @@ SELECT
 FROM LOGIN_SESSION
 WHERE USER_ID = ? AND DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get login sessions sql: %w", err)
@@ -207,6 +211,7 @@ SELECT
 FROM LOGIN_SESSION
 WHERE SESSION_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get login sessions sql: %w", err)
@@ -287,6 +292,7 @@ INSERT INTO LOGIN_SESSION (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update login sessions sql: %w", err)
@@ -326,6 +332,7 @@ UPDATE LOGIN_SESSION SET
   IS_LOCAL_APP_USER = ?
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add login sessions sql: %w", err)
@@ -357,6 +364,7 @@ func (l *loginSessionDAOSQLite3Impl) DeleteLoginSession(ctx context.Context, ses
 DELETE LOGIN_SESSION
 WHERE SESSION_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete login session sql: %w", err)

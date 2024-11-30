@@ -1,7 +1,9 @@
 package req_res
 
+import "github.com/mt3hr/gkill/src/app/gkill/api/find"
+
 type GetKyousRequest struct {
 	SessionID string `json:"session_id"`
 
-	Query string `json:"query"`
+	Query *find.FindQuery `json:"query"`
 }

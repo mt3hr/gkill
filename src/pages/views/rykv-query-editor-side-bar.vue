@@ -1,7 +1,7 @@
 <template>
     <div>
         <SidebarHeader :application_config="application_config" :gkill_api="gkill_api" :query="query"
-            @request_search="emits('request_search')" @request_clear_find_query="emits('updated_query', default_query)"
+            @requested_search="emits('requested_search')" @requested_clear_find_query="emits('updated_query', default_query)"
             class="sidebar_header" ref="sidebar_header" />
         <div class="rykv_sidebar">
             <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
@@ -59,7 +59,7 @@ const map_query = ref<InstanceType<typeof MapQuery> | null>(null);
 
 const props = defineProps<rykvQueryEditorSidebarProps>()
 const emits = defineEmits<rykvQueryEditorSidebarEmits>()
-defineExpose(generate_query)
+defineExpose({generate_query})
 
 const header_height: Ref<number> = ref(38)
 const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
@@ -67,6 +67,7 @@ const header_top_px = computed(() => (props.app_content_height.valueOf() - heade
 const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
 
 const default_query: Ref<FindKyouQuery> = ref(((): FindKyouQuery => generate_query())())
+const query: Ref<FindKyouQuery> = ref(default_query.value)
 
 function generate_query(): FindKyouQuery {
     const find_query = new FindKyouQuery()
@@ -74,7 +75,7 @@ function generate_query(): FindKyouQuery {
     find_query.update_cache = true
 
     if (keyword_query.value) {
-        find_query.use_word = keyword_query.value.get_use_words()
+        find_query.use_words = keyword_query.value.get_use_words()
         find_query.keywords = keyword_query.value.get_keywords()
         find_query.words_and = keyword_query.value.get_use_word_and_search()
     }
@@ -111,6 +112,7 @@ function generate_query(): FindKyouQuery {
     }
 
     find_query.parse_words_and_not_words()
+    emits('updated_query', find_query)
     return find_query
 }
 
@@ -119,6 +121,7 @@ function generate_cleard_keyword_query(): FindKyouQuery {
     find_query.keywords = default_query.value.keywords
     find_query.words_and = default_query.value.words_and
     find_query.parse_words_and_not_words()
+    emits('updated_query', find_query)
     return find_query
 }
 
@@ -130,12 +133,14 @@ function generate_cleard_timeis_query(): FindKyouQuery {
     find_query.timeis_tags = default_query.value.timeis_tags
     find_query.timeis_tags_and = default_query.value.timeis_tags_and
     find_query.parse_words_and_not_words()
+    emits('updated_query', find_query)
     return find_query
 }
 
 function generate_cleard_rep_query(): FindKyouQuery {
     const find_query = generate_query()
     find_query.reps = default_query.value.reps
+    emits('updated_query', find_query)
     return find_query
 }
 
@@ -143,6 +148,7 @@ function generate_cleard_tag_query(): FindKyouQuery {
     const find_query = generate_query()
     find_query.tags = default_query.value.tags
     find_query.tags_and = default_query.value.tags_and
+    emits('updated_query', find_query)
     return find_query
 }
 
@@ -151,6 +157,7 @@ function generate_cleard_map_query(): FindKyouQuery {
     find_query.map_latitude = default_query.value.map_latitude
     find_query.map_longitude = default_query.value.map_longitude
     find_query.map_radius = default_query.value.map_radius
+    emits('updated_query', find_query)
     return find_query
 }
 
@@ -158,6 +165,7 @@ function generate_cleard_calendar_query(): FindKyouQuery {
     const find_query = generate_query()
     find_query.calendar_start_date = default_query.value.calendar_start_date
     find_query.calendar_end_date = default_query.value.calendar_end_date
+    emits('updated_query', find_query)
     return find_query
 }
 </script>

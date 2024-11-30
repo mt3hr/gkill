@@ -1112,6 +1112,8 @@ export class GkillAPI {
                 application_config.user_id = response.application_config.user_id
                 response.application_config = application_config
 
+                await response.application_config.append_no_tags()
+                await response.application_config.append_no_devices()
                 await response.application_config.append_not_found_tags()
                 await response.application_config.append_not_found_reps()
                 await response.application_config.append_not_found_rep_types()
