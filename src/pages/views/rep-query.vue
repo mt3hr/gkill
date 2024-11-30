@@ -41,7 +41,8 @@
                 <table>
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true" :query="query"
-                        :struct_obj="application_config.parsed_rep_struct" @requested_update_check_state="update_reps"
+                        :struct_obj="cloned_application_config.parsed_rep_struct"
+                        @requested_update_check_state="update_reps"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @clicked_items="clicked_reps" ref="foldable_struct_reps" />
@@ -76,6 +77,7 @@ const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_
 
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
+    cloned_application_config.value.parse_rep_struct()
     cloned_application_config.value.parse_device_struct()
     cloned_application_config.value.parse_rep_type_struct()
 })
@@ -415,9 +417,11 @@ async function update_check_rep_types(items: Array<string>, is_checked: CheckSta
 }
 
 function get_checked_reps(): Array<string> {
-    const reps = new Array<string>()
-    checked_reps.value.forEach(rep => reps.push(rep.rep_name))
-    return reps
+    const reps = foldable_struct_reps.value?.get_selected_items()
+    if (reps) {
+        return reps
+    }
+    return new Array<string>()
 }
 
 </script>

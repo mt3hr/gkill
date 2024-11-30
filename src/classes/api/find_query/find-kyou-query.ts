@@ -9,7 +9,7 @@ export class FindKyouQuery extends FindQueryBase {
     clone(): FindKyouQuery {
         const cloned = new FindKyouQuery()
         cloned.update_cache = this.update_cache
-        cloned.use_word = this.use_word
+        cloned.use_words = this.use_words
         cloned.keywords = this.keywords
         cloned.words_and = this.words_and
         cloned.words = this.words

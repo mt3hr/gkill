@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
   MI_DEFAULT_BOARD NOT NULL,
   PRIMARY KEY(USER_ID, DEVICE)
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create APPLICATION_CONFIG table statement %s: %w", filename, err)
@@ -65,6 +67,7 @@ SELECT
   MI_DEFAULT_BOARD
 FROM APPLICATION_CONFIG
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all application configs sql: %w", err)
@@ -114,6 +117,7 @@ SELECT
 FROM APPLICATION_CONFIG
 WHERE USER_ID = ? AND DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get application config sql: %w", err)
@@ -175,6 +179,7 @@ INSERT INTO APPLICATION_CONFIG (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add application config sql: %w", err)
@@ -210,6 +215,7 @@ UPDATE APPLICATION_CONFIG SET
   MI_DEFAULT_BOARD = ?
 WHERE USER_ID = ? AND DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update application config sql: %w", err)
@@ -240,6 +246,7 @@ func (a *applicationConfigDAOSQLite3Impl) DeleteApplicationConfig(ctx context.Co
 DELETE APPLICATION_CONFIG 
 WHERE USER_ID = ? AND DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete application config sql: %w", err)

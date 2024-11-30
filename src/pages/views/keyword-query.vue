@@ -30,7 +30,7 @@ const emits = defineEmits<KeywordQueryEmits>()
 defineExpose({get_keywords, get_use_words, get_use_word_and_search})
 
 const keywords: Ref<string> = ref("")
-const use_words: Ref<boolean> = ref(true)
+const use_words: Ref<boolean> = ref(false)
 const use_and_search: Ref<boolean> = ref(true)
 
 function get_keywords(): string {

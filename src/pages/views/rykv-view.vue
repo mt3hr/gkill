@@ -9,8 +9,9 @@
         <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
             :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
             :app_content_width="app_content_width" :query="querys[focused_column_index]"
-            @request_search="search(focused_column_index)"
-            @updated_query="(new_query) => querys.splice(focused_column_index, 1, new_query)" />
+            @requested_search="search(focused_column_index)"
+            @updated_query="(new_query) => querys.splice(focused_column_index, 1, new_query)"
+            ref="query_editor_sidebar" />
     </v-navigation-drawer>
     <v-main class="main">
         <table class="rykv_view_table">
@@ -90,7 +91,7 @@
 </template>
 <script setup lang="ts">
 
-import { computed, type Ref, ref } from 'vue'
+import { computed, nextTick, type Ref, ref } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { Kyou } from '@/classes/datas/kyou'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
@@ -107,6 +108,10 @@ import RykvQueryEditorSideBar from './rykv-query-editor-side-bar.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
 import type { rykvViewEmits } from './rykv-view-emits'
 import type { rykvViewProps } from './rykv-view-props'
+import { GkillAPI } from '@/classes/api/gkill-api'
+import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
+
+const query_editor_sidebar = ref<InstanceType<typeof RykvQueryEditorSideBar> | null>(null);
 
 const querys: Ref<Array<FindKyouQuery>> = ref((() => { const queries = new Array<FindKyouQuery>(); queries.push(new FindKyouQuery()); return queries })())
 const match_kyous_list: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
@@ -127,6 +132,8 @@ const kyou_list_view_height = computed(() => {
 
 const props = defineProps<rykvViewProps>()
 const emits = defineEmits<rykvViewEmits>()
+
+nextTick(() => query_editor_sidebar.value?.generate_query())
 
 async function add_list_view(): Promise<void> {
     throw new Error('Not implemented')
@@ -154,7 +161,19 @@ async function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): Prom
 }
 
 async function search(column_index: number): Promise<void> {
-    throw new Error('Not implemented')
+    match_kyous_list.value = []
+    const req = new GetKyousRequest()
+    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.query = querys.value[column_index]
+    const res = await GkillAPI.get_instance().get_kyous(req)
+    if (res.errors && res.errors.length !== 0) {
+        emits('received_errors', res.errors)
+        return
+    }
+    if (res.messages && res.messages.length !== 0) {
+        emits('received_messages', res.messages)
+    }
+    match_kyous_list.value[column_index] = res.kyous
 }
 
 </script>

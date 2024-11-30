@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -77,6 +78,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 )
 `
 
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF table statement %s: %w", filename, err)
@@ -154,8 +156,8 @@ WHERE
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-	sql += `;`
 
+	log.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyou sql: %w", err)
@@ -391,6 +393,7 @@ WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
 
+	log.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -531,6 +534,7 @@ FROM IDF
 WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -702,8 +706,8 @@ WHERE
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-	sql += `;`
 
+	log.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyou sql: %w", err)
@@ -922,6 +926,7 @@ WHERE ID = ?
 ORDER BY UPDATE_TIME DESC
 `
 
+	log.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get idf histories sql: %w", err)
@@ -1178,6 +1183,7 @@ INSERT INTO IDF (
   ?,
   ?
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add idf sql %s: %w", idfKyou.ID, err)

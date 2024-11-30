@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL 
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG table statement %s: %w", filename, err)
@@ -115,8 +117,10 @@ WHERE
 
 	// ワードand検索である場合のSQL追記
 	if query.UseWords != nil && *query.UseWords {
-		if whereCounter != 0 {
-			sql += " AND "
+		if len(words) != 0 {
+			if whereCounter != 0 {
+				sql += " AND "
+			}
 		}
 
 		if query.WordsAnd != nil && *query.WordsAnd {
@@ -124,10 +128,10 @@ WHERE
 				if i == 0 {
 					sql += " ( "
 				}
-				if whereCounter != 0 {
+				if i != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite("TAG LIKE '" + word + "'")
+				sql += "TAG LIKE '" + sqlite3impl.EscapeSQLite(word) + "'"
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -139,10 +143,10 @@ WHERE
 				if i == 0 {
 					sql += " ( "
 				}
-				if whereCounter != 0 {
+				if i != 0 {
 					sql += " AND "
 				}
-				sql += sqlite3impl.EscapeSQLite("TAG LIKE '" + word + "'")
+				sql += "TAG LIKE '" + sqlite3impl.EscapeSQLite(word) + "'"
 				if i == len(words)-1 {
 					sql += " ) "
 				}
@@ -150,8 +154,10 @@ WHERE
 			}
 		}
 
-		if whereCounter != 0 {
-			sql += " AND "
+		if len(notWords) != 0 {
+			if whereCounter != 0 {
+				sql += " AND "
+			}
 		}
 
 		// notワードを除外するSQLを追記
@@ -178,7 +184,7 @@ WHERE
 			if whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += "ID IN ("
+			sql += " ID IN ("
 			for i, id := range ids {
 				sql += fmt.Sprintf("'%s'", id)
 				if i != len(ids)-1 {
@@ -194,11 +200,11 @@ WHERE
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-	sql += `;`
 
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get tag histories sql: %w", err)
+		err = fmt.Errorf("error at get find tags sql: %w", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -314,11 +320,11 @@ WHERE TAG LIKE ?
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-	sql += `;`
 
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get tag histories sql: %w", err)
+		err = fmt.Errorf("error at get tag by name sql %s: %w", tagname, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -414,11 +420,11 @@ WHERE TARGET_ID LIKE ?
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-	sql += `;`
 
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get tag histories sql: %w", err)
+		err = fmt.Errorf("error at get get target id sql %s: %w", target_id, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -529,8 +535,7 @@ FROM TAG
 WHERE ID LIKE ?
 `
 
-	sql += `;`
-
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
@@ -631,6 +636,7 @@ INSERT INTO TAG (
   ?,
   ?
 )`
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add tag sql %s: %w", tag.ID, err)
@@ -670,6 +676,7 @@ FROM TAG
 WHERE IS_DELETED = FALSE
 
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all tag names sql: %w", err)

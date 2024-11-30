@@ -123,7 +123,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 	repositoriesInDevice, existInUsers := g.gkillRepositories[userID]
 	if !existInUsers {
 		g.gkillRepositories[userID] = map[string]*reps.GkillRepositories{}
-		repositoriesInDevice, _ = g.gkillRepositories[userID]
+		repositoriesInDevice = g.gkillRepositories[userID]
 	}
 
 	repositories, existInDevice := repositoriesInDevice[device]
@@ -140,7 +140,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			err = fmt.Errorf("error at get repositories user=%s device=%s: %w", userID, device, err)
 			return nil, err
 		}
+		fmt.Printf("repositoriesDefine = %+v\n", repositoriesDefine)
 		for _, rep := range repositoriesDefine {
+			fmt.Printf("rep = %+v\n", rep)
 			if !rep.IsEnable {
 				continue
 			}

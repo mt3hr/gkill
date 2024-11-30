@@ -572,9 +572,16 @@ textsloop:
 		}
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
+
+	_, err = g.LatestDataRepositoryAddressDAO.DeleteAllLatestDataRepositoryAddress(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at delete all latest data repository address cache: %w", err)
+		return err
+	}
+
 	_, err = g.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
 	if err != nil {
-		err = fmt.Errorf("error at update cache.")
+		err = fmt.Errorf("error at add latest data repository address cache: %w", err)
 		return err
 	}
 
