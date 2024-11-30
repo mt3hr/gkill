@@ -6,8 +6,6 @@ import (
 )
 
 type FindKyouContext struct {
-	RawFindQueryJSON string
-
 	ParsedFindQuery *find.FindQuery
 
 	Repositories *reps.GkillRepositories

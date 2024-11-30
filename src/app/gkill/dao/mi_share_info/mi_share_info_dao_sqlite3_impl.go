@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS "MI_SHARE_INFO" (
   SHARE_ID NOT NULL,
   FIND_QUERY_JSON NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MI_SHARE_INFO table statement %s: %w", filename, err)
@@ -64,6 +66,7 @@ SELECT
   FIND_QUERY_JSON
 FROM MI_SHARE_INFO
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all mi share infos sql: %w", err)
@@ -113,6 +116,7 @@ SELECT
 FROM MI_SHARE_INFO
 WHERE USER_ID = ? AND DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get mi share infos sql: %w", err)
@@ -162,6 +166,7 @@ SELECT
 FROM MI_SHARE_INFO
 WHERE SHARED_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get mi share infos sql: %w", err)
@@ -221,6 +226,7 @@ INSERT INTO MI_SHARE_INFO (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mi share info sql: %w", err)
@@ -256,6 +262,7 @@ UPDATE MI_SHARE_INFO SET
   FIND_QUERY_JSON = ?
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update mi share info sql: %w", err)
@@ -285,6 +292,7 @@ func (m *miShareInfoDAOSQLite3Impl) DeleteMiShareInfo(ctx context.Context, id st
 DELETE MI_SHARE_INFO
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete mi share info sql: %w", err)

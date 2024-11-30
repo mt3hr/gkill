@@ -432,17 +432,14 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse login request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.AccountInvalidLoginRequestDataError,
-				ErrorMessage: "ログインに失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse login request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidLoginRequestDataError,
+			ErrorMessage: "ログインに失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// 存在するアカウントを取得
@@ -585,17 +582,14 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse logout request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.AccountInvalidLogoutRequestDataError,
-				ErrorMessage: "ログアウトに失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse logout request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidLogoutRequestDataError,
+			ErrorMessage: "ログアウトに失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	ok, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.DeleteLoginSession(r.Context(), request.SessionID)
@@ -640,17 +634,14 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse reset password request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.AccountInvalidResetPasswordRequestDataError,
-				ErrorMessage: "パスワードリセット処理に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse reset password request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidResetPasswordRequestDataError,
+			ErrorMessage: "パスワードリセット処理に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// パスワードリセット操作をしたユーザを特定
@@ -755,17 +746,14 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse login response to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.AccountInvalidSetNewPasswordResponseDataError,
-				ErrorMessage: "パスワード設定に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse login response to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidSetNewPasswordResponseDataError,
+			ErrorMessage: "パスワード設定に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// 対象のアカウント情報を取得してパスワード設定
@@ -830,17 +818,14 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add tag request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddTagRequestDataError,
-				ErrorMessage: "タグ追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add tag request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddTagRequestDataError,
+			ErrorMessage: "タグ追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -974,17 +959,14 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add text request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddTextRequestDataError,
-				ErrorMessage: "テキスト追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add text request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddTextRequestDataError,
+			ErrorMessage: "テキスト追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -1118,17 +1100,14 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add kmemo request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.AccountInvalidAddKmemoRequestDataError,
-				ErrorMessage: "kmemo追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add kmemo request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidAddKmemoRequestDataError,
+			ErrorMessage: "kmemo追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -1262,17 +1241,14 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add kmemo request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddURLogRequestDataError,
-				ErrorMessage: "URLog追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add kmemo request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddURLogRequestDataError,
+			ErrorMessage: "URLog追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -1406,17 +1382,14 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add urlog request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddNlogRequestDataError,
-				ErrorMessage: "Nlog追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add urlog request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddNlogRequestDataError,
+			ErrorMessage: "Nlog追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -1550,17 +1523,14 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add timeis request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddTimeIsRequestDataError,
-				ErrorMessage: "TimeIs追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add timeis request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddTimeIsRequestDataError,
+			ErrorMessage: "TimeIs追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -1694,17 +1664,14 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add lantana request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddLantanaRequestDataError,
-				ErrorMessage: "Lantana追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add lantana request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddLantanaRequestDataError,
+			ErrorMessage: "Lantana追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -1838,17 +1805,14 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add mi request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddMiRequestDataError,
-				ErrorMessage: "Mi追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add mi request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddMiRequestDataError,
+			ErrorMessage: "Mi追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -1982,17 +1946,14 @@ func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Reques
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add kyou info request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddKyouInfoRequestDataError,
-				ErrorMessage: "KyouInfo追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add kyou info request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddKyouInfoRequestDataError,
+			ErrorMessage: "KyouInfo追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -2126,17 +2087,14 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add rekyou request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddReKyouRequestDataError,
-				ErrorMessage: "ReKyou追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add rekyou request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddReKyouRequestDataError,
+			ErrorMessage: "ReKyou追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -2270,17 +2228,14 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update tag request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateTagRequestDataError,
-				ErrorMessage: "タグ更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update tag request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateTagRequestDataError,
+			ErrorMessage: "タグ更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -2427,17 +2382,14 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update text request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateTextRequestDataError,
-				ErrorMessage: "テキスト更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update text request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateTextRequestDataError,
+			ErrorMessage: "テキスト更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -2584,17 +2536,14 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update kmemo request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateKmemoRequestDataError,
-				ErrorMessage: "Kmemo更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update kmemo request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateKmemoRequestDataError,
+			ErrorMessage: "Kmemo更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -2741,17 +2690,14 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update urlog request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateURLogRequestDataError,
-				ErrorMessage: "URLog更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update urlog request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateURLogRequestDataError,
+			ErrorMessage: "URLog更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -2898,17 +2844,14 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update nlog request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateNlogRequestDataError,
-				ErrorMessage: "Nlog更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update nlog request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateNlogRequestDataError,
+			ErrorMessage: "Nlog更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -3055,17 +2998,14 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update timeis request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateTimeIsRequestDataError,
-				ErrorMessage: "TimeIs更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update timeis request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateTimeIsRequestDataError,
+			ErrorMessage: "TimeIs更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -3212,17 +3152,14 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update lantana request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateLantanaRequestDataError,
-				ErrorMessage: "Lantana更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update lantana request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateLantanaRequestDataError,
+			ErrorMessage: "Lantana更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -3369,17 +3306,14 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update mi request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateMiRequestDataError,
-				ErrorMessage: "Mi更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update mi request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateMiRequestDataError,
+			ErrorMessage: "Mi更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -3526,17 +3460,14 @@ func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Req
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update kyou info request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateKyouInfoRequestDataError,
-				ErrorMessage: "KyouInfo更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update kyou info request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateKyouInfoRequestDataError,
+			ErrorMessage: "KyouInfo更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -3683,17 +3614,14 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update rekyou request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateReKyouRequestDataError,
-				ErrorMessage: "ReKyou更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update rekyou request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateReKyouRequestDataError,
+			ErrorMessage: "ReKyou更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -3840,17 +3768,14 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get kyous request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetKyousRequestDataError,
-				ErrorMessage: "Kyou取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get kyous request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetKyousRequestDataError,
+			ErrorMessage: "Kyou取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -3873,7 +3798,7 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	kyous, gkillErrors, err := g.FindFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, request.Query)
+	kyous, gkillErrors, err := g.FindFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, &request.Query)
 	if len(gkillErrors) != 0 || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
@@ -3912,17 +3837,14 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get kyou request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetKyouRequestDataError,
-				ErrorMessage: "Kyou取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get kyou request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetKyouRequestDataError,
+			ErrorMessage: "Kyou取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -4187,17 +4109,14 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get kmemo request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetKmemoRequestDataError,
-				ErrorMessage: "Kmemo取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get kmemo request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetKmemoRequestDataError,
+			ErrorMessage: "Kmemo取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -4273,17 +4192,14 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get urlog request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetURLogRequestDataError,
-				ErrorMessage: "URLog取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get urlog request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetURLogRequestDataError,
+			ErrorMessage: "URLog取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -4359,17 +4275,14 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get nlog request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetNlogRequestDataError,
-				ErrorMessage: "Nlog取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get nlog request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetNlogRequestDataError,
+			ErrorMessage: "Nlog取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -4445,17 +4358,14 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get timeis request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetTimeIsRequestDataError,
-				ErrorMessage: "TimeIs取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get timeis request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetTimeIsRequestDataError,
+			ErrorMessage: "TimeIs取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -4531,17 +4441,14 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get mi request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetMiRequestDataError,
-				ErrorMessage: "Mi取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get mi request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetMiRequestDataError,
+			ErrorMessage: "Mi取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -4617,17 +4524,14 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get lantana request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetLantanaRequestDataError,
-				ErrorMessage: "Lantana取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get lantana request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetLantanaRequestDataError,
+			ErrorMessage: "Lantana取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -4703,17 +4607,14 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get rekyou request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetReKyouRequestDataError,
-				ErrorMessage: "rekyou取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get rekyou request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetReKyouRequestDataError,
+			ErrorMessage: "rekyou取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -4789,17 +4690,14 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get gitCommitLog request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetGitCommitLogRequestDataError,
-				ErrorMessage: "GitCommitLog取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get gitCommitLog request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetGitCommitLogRequestDataError,
+			ErrorMessage: "GitCommitLog取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -4902,17 +4800,14 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get mi board names request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetMiBoardNamesRequestDataError,
-				ErrorMessage: "MiBoardList取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get mi board names request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetMiBoardNamesRequestDataError,
+			ErrorMessage: "MiBoardList取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -5015,17 +4910,14 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get kyous request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetAllTagNamesRequestDataError,
-				ErrorMessage: "タグ名全件取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get kyous request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetAllTagNamesRequestDataError,
+			ErrorMessage: "タグ名全件取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -5101,17 +4993,14 @@ func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Req
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get kyous request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetAllRepNamesRequestDataError,
-				ErrorMessage: "Rep名全件取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get kyous request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetAllRepNamesRequestDataError,
+			ErrorMessage: "Rep名全件取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -5187,17 +5076,14 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get tags by target id request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetTagsByTargetIDRequestDataError,
-				ErrorMessage: "タグ取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get tags by target id request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetTagsByTargetIDRequestDataError,
+			ErrorMessage: "タグ取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -5273,17 +5159,14 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get tag histories by tag id request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetTagHistoriesByTagIDRequestDataError,
-				ErrorMessage: "タグ取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get tag histories by tag id request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetTagHistoriesByTagIDRequestDataError,
+			ErrorMessage: "タグ取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -5359,17 +5242,14 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get texts by target id request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetTextsByTargetIDRequestDataError,
-				ErrorMessage: "テキスト取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get texts by target id request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetTextsByTargetIDRequestDataError,
+			ErrorMessage: "テキスト取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -5445,17 +5325,14 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get text histories by text id request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetTextHistoriesByTextIDRequestDataError,
-				ErrorMessage: "テキスト取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get text histories by text id request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetTextHistoriesByTextIDRequestDataError,
+			ErrorMessage: "テキスト取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -5531,17 +5408,14 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get applicationConfig request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetApplicationConfigRequestDataError,
-				ErrorMessage: "ApplicationConfig取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get applicationConfig request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetApplicationConfigRequestDataError,
+			ErrorMessage: "ApplicationConfig取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -5671,17 +5545,14 @@ func (g *GkillServerAPI) HandleGetServerConfig(w http.ResponseWriter, r *http.Re
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get serverConfig request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetServerConfigRequestDataError,
-				ErrorMessage: "ServerConfig取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get serverConfig request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetServerConfigRequestDataError,
+			ErrorMessage: "ServerConfig取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -5783,17 +5654,14 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse upload files request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUploadFilesRequestDataError,
-				ErrorMessage: "ファイルアップロードに失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse upload files request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUploadFilesRequestDataError,
+			ErrorMessage: "ファイルアップロードに失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -6025,17 +5893,14 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse upload files request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUploadGPSLogFilesRequestDataError,
-				ErrorMessage: "GPSLogファイルアップロードに失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse upload files request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUploadGPSLogFilesRequestDataError,
+			ErrorMessage: "GPSLogファイルアップロードに失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -6330,17 +6195,14 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update tagStruct request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateTagStructRequestDataError,
-				ErrorMessage: "タグ構造更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update tagStruct request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateTagStructRequestDataError,
+			ErrorMessage: "タグ構造更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -6445,17 +6307,14 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update application config request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateApplicationConfigRequestDataError,
-				ErrorMessage: "設定更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update application config request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateApplicationConfigRequestDataError,
+			ErrorMessage: "設定更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -6521,17 +6380,14 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update repStruct request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateRepStructRequestDataError,
-				ErrorMessage: "Rep構造更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update repStruct request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateRepStructRequestDataError,
+			ErrorMessage: "Rep構造更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -6636,17 +6492,14 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update deviceStruct request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateDeviceStructRequestDataError,
-				ErrorMessage: "Device構造更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update deviceStruct request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateDeviceStructRequestDataError,
+			ErrorMessage: "Device構造更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -6751,17 +6604,14 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update repTypeStruct request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateRepTypeStructRequestDataError,
-				ErrorMessage: "RepType構造更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update repTypeStruct request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateRepTypeStructRequestDataError,
+			ErrorMessage: "RepType構造更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -6866,17 +6716,14 @@ func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update kftl template request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateKFTLTemplateRequestDataError,
-				ErrorMessage: "KFTLテンプレート構造更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update kftl template request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateKFTLTemplateRequestDataError,
+			ErrorMessage: "KFTLテンプレート構造更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -6981,17 +6828,14 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update accountStatus request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateAccountStatusRequestDataError,
-				ErrorMessage: "アカウントステータス構造更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update accountStatus request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateAccountStatusRequestDataError,
+			ErrorMessage: "アカウントステータス構造更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -7088,17 +6932,14 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update userReps request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateUserRepsRequestDataError,
-				ErrorMessage: "Rep更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update userReps request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateUserRepsRequestDataError,
+			ErrorMessage: "Rep更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -7190,17 +7031,14 @@ func (g *GkillServerAPI) HandleUpdateServerConfig(w http.ResponseWriter, r *http
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update server config request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateServerConfigRequestDataError,
-				ErrorMessage: "設定更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse update server config request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateServerConfigRequestDataError,
+			ErrorMessage: "設定更新に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -7278,17 +7116,14 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add account request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.AccountInvalidAddAccountRequestDataError,
-				ErrorMessage: "account追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add account request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidAddAccountRequestDataError,
+			ErrorMessage: "account追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -7444,17 +7279,14 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse generate tls request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.AccountInvalidGenerateTLSFileRequestDataError,
-				ErrorMessage: "TLSファイル作成処理に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse generate tls request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidGenerateTLSFileRequestDataError,
+			ErrorMessage: "TLSファイル作成処理に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// TLSファイル作成操作をしたユーザを特定
@@ -7788,17 +7620,14 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get gpsLog request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetGPSLogRequestDataError,
-				ErrorMessage: "GPSLog取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get gpsLog request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetGPSLogRequestDataError,
+			ErrorMessage: "GPSLog取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -7874,17 +7703,14 @@ func (g *GkillServerAPI) HandleGetKFTLTemplate(w http.ResponseWriter, r *http.Re
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get kftl template request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetKFTLTemplateRequestDataError,
-				ErrorMessage: "kftlTemplate取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get kftl template request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetKFTLTemplateRequestDataError,
+			ErrorMessage: "kftlTemplate取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -7948,17 +7774,14 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get gkillInfo request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetGkillInfoRequestDataError,
-				ErrorMessage: "GkillInfo取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get gkillInfo request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetGkillInfoRequestDataError,
+			ErrorMessage: "GkillInfo取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -8012,17 +7835,14 @@ func (g *GkillServerAPI) HandleAddShareMiTaskListInfo(w http.ResponseWriter, r *
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add shareMiTaskListInfo request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddShareMiTaskListInfoRequestDataError,
-				ErrorMessage: "shareMiTaskListInfo追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse add shareMiTaskListInfo request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddShareMiTaskListInfoRequestDataError,
+			ErrorMessage: "shareMiTaskListInfo追加に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -8133,17 +7953,14 @@ func (g *GkillServerAPI) HandleGetShareMiTaskListInfos(w http.ResponseWriter, r 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get shareMiTaskListInfos request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetShareMiTaskListInfosRequestDataError,
-				ErrorMessage: "ShareMiTaskListInfos取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get shareMiTaskListInfos request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetShareMiTaskListInfosRequestDataError,
+			ErrorMessage: "ShareMiTaskListInfos取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得
@@ -8207,17 +8024,14 @@ func (g *GkillServerAPI) HandleDeleteShareMiTaskListInfos(w http.ResponseWriter,
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse delete shareMiTaskListInfos request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidDeleteShareMiTaskListInfosRequestDataError,
-				ErrorMessage: "ShareMiTaskListInfos削除に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse delete shareMiTaskListInfos request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidDeleteShareMiTaskListInfosRequestDataError,
+			ErrorMessage: "ShareMiTaskListInfos削除に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを削除
@@ -8282,17 +8096,14 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse delete shareMiTaskListInfos request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetMiSharedTasksRequestDataError,
-				ErrorMessage: "ShareMiTaskListInfos取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse delete shareMiTaskListInfos request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetMiSharedTasksRequestDataError,
+			ErrorMessage: "ShareMiTaskListInfos取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	sharedMiInfo, err := g.GkillDAOManager.ConfigDAOs.MiShareInfoDAO.GetMiShareInfo(r.Context(), request.SharedID)
@@ -8377,17 +8188,14 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get repositories request to json: %w", err)
-			log.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetRepositoriesRequestDataError,
-				ErrorMessage: "Repositoriesの取得に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+		err = fmt.Errorf("error at parse get repositories request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetRepositoriesRequestDataError,
+			ErrorMessage: "Repositoriesの取得に失敗しました",
 		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
 
 	// アカウントを取得

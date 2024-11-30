@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS "REP_STRUCT" (
   CHECK_WHEN_INITED NOT NULL,
   IGNORE_CHECK_REP_RYKV NOT NULL
 );`
+	log.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create REP_STRUCT table statement %s: %w", filename, err)
@@ -66,6 +68,7 @@ SELECT
   IGNORE_CHECK_REP_RYKV
 FROM REP_STRUCT
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all rep struct sql: %w", err)
@@ -117,6 +120,7 @@ SELECT
 FROM REP_STRUCT
 WHERE USER_ID = ? AND DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get rep struct sql: %w", err)
@@ -176,6 +180,7 @@ INSERT INTO REP_STRUCT (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add rep struct sql: %w", err)
@@ -285,6 +290,7 @@ UPDATE REP_STRUCT SET
   IGNORE_CHECK_REP_RYKV = ?
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update rep struct sql: %w", err)
@@ -315,6 +321,7 @@ func (r *repStructDAOSQLite3Impl) DeleteRepStruct(ctx context.Context, id string
 DELETE FROM REP_STRUCT
 WHERE ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete rep struct sql: %w", err)
@@ -336,6 +343,7 @@ func (r *repStructDAOSQLite3Impl) DeleteUsersRepStructs(ctx context.Context, use
 DELETE FROM REP_STRUCT
 WHERE USER_ID = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete rep struct sql: %w", err)
