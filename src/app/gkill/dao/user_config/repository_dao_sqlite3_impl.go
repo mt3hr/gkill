@@ -127,6 +127,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", userID, device)
 	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -191,6 +192,17 @@ INSERT INTO REPOSITORY (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s",
+		repository.ID,
+		repository.UserID,
+		repository.Device,
+		repository.Type,
+		repository.File,
+		repository.UseToWrite,
+		repository.IsExecuteIDFWhenReload,
+		repository.IsEnable,
+	)
 	_, err = stmt.ExecContext(ctx,
 		repository.ID,
 		repository.UserID,
@@ -262,6 +274,17 @@ INSERT INTO REPOSITORY (
 		}
 		defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s",
+		repository.ID,
+		repository.UserID,
+		repository.Device,
+		repository.Type,
+		repository.File,
+		repository.UseToWrite,
+		repository.IsExecuteIDFWhenReload,
+		repository.IsEnable,
+	)
 		_, err = stmt.ExecContext(ctx,
 			repository.ID,
 			repository.UserID,
@@ -329,6 +352,17 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s",
+		repository.ID,
+		repository.UserID,
+		repository.Device,
+		repository.Type,
+		repository.File,
+		repository.UseToWrite,
+		repository.IsExecuteIDFWhenReload,
+		repository.IsEnable,
+	)
 	_, err = stmt.ExecContext(ctx, ctx,
 		repository.ID,
 		repository.UserID,
@@ -373,6 +407,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", id)
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -394,6 +429,7 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", userID)
 	_, err = stmt.ExecContext(ctx, userID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -421,6 +457,7 @@ GROUP BY TYPE
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", true, userID)
 	rows, err := stmt.QueryContext(ctx, true, userID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

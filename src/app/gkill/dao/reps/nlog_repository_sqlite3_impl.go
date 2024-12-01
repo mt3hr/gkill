@@ -200,6 +200,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "nlog"
+	log.Printf("%s, %s", repName, dataType)
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from NLOG %s: %w", err)
@@ -304,7 +305,8 @@ ORDER BY UPDATE_TIME DESC
 	defer stmt.Close()
 
 	dataType := "nlog"
-	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
+	log.Printf("%s, %s, %s", repName, dataType, id)
+	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from NLOG %s: %w", id, err)
 		return nil, err
@@ -511,6 +513,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		return nil, err
 	}
 
+	log.Printf("%s", repName)
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from NLOG %s: %w", err)
@@ -618,6 +621,7 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", repName, id)
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at query ")
@@ -714,6 +718,23 @@ INSERT INTO NLOG (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		nlog.IsDeleted,
+		nlog.ID,
+		nlog.Shop,
+		nlog.Title,
+		nlog.Amount,
+		nlog.RelatedTime.Format(sqlite3impl.TimeLayout),
+		nlog.CreateTime.Format(sqlite3impl.TimeLayout),
+		nlog.CreateApp,
+		nlog.CreateDevice,
+		nlog.CreateUser,
+		nlog.UpdateTime.Format(sqlite3impl.TimeLayout),
+		nlog.UpdateApp,
+		nlog.UpdateDevice,
+		nlog.UpdateUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		nlog.IsDeleted,
 		nlog.ID,

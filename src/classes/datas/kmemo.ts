@@ -26,7 +26,7 @@ export class Kmemo extends InfoBase {
         throw new Error('Not implemented')
     }
 
-    async clone(): Promise<Kmemo> {
+    clone(): Kmemo {
         throw new Error('Not implemented')
     }
 

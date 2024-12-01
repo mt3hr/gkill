@@ -50,6 +50,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, er
 	}
 
 	if useIDs {
+		if query.IDs != nil && len(*query.IDs) != 0 {
 		if *whereCounter != 0 {
 			sql += " AND "
 		}
@@ -61,6 +62,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, er
 			}
 		}
 		sql += ")"
+	}
 	}
 
 	// 日付範囲指定ありの場合

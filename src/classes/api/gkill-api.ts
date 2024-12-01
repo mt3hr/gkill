@@ -48,7 +48,7 @@ import type { GetKmemoResponse } from "./req_res/get-kmemo-response"
 import type { GetKmemosRequest } from "./req_res/get-kmemos-request"
 import type { GetKmemosResponse } from "./req_res/get-kmemos-response"
 import type { GetKyouRequest } from "./req_res/get-kyou-request"
-import type { GetKyouResponse } from "./req_res/get-kyou-response"
+import { GetKyouResponse } from "./req_res/get-kyou-response"
 import type { GetKyousRequest } from "./req_res/get-kyous-request"
 import type { GetKyousResponse } from "./req_res/get-kyous-response"
 import type { GetLantanaRequest } from "./req_res/get-lantana-request"
@@ -145,17 +145,14 @@ import type { UploadGPSLogFilesRequest } from "./req_res/upload-gps-log-files-re
 import type { UploadGPSLogFilesResponse } from "./req_res/upload-gps-log-files-response"
 import type { UpdateServerConfigRequest } from "./req_res/update-server-config-request"
 import type { UpdateServerConfigResponse } from "./req_res/update-server-config-response"
-import { DeviceStruct } from "../datas/config/device-struct"
-import { KFTLTemplateStruct } from "../datas/config/kftl-template-struct"
-import { RepStruct } from "../datas/config/rep-struct"
-import { RepTypeStruct } from "../datas/config/rep-type-struct"
-import { generateCodeFrame } from "vue/compiler-sfc"
 import type { GkillAPIResponse } from "./gkill-api-response"
 import router from "@/router"
 import type { GetRepositoriesResponse } from "./req_res/get-repositories-response"
 import type { GetRepositoriesRequest } from "./req_res/get-repositories-request"
 import type { GetAllRepNamesRequest } from "./req_res/get-all-rep-names-request"
 import type { GetAllRepNamesResponse } from "./req_res/get-all-rep-names-response"
+import { Kyou } from "../datas/kyou"
+import moment from "moment"
 
 export class GkillAPI {
         private static gkill_api: GkillAPI = new GkillAPI()
@@ -796,8 +793,31 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetKyousResponse = json
                 this.check_auth(response)
+                if (!response.kyous) {
+                        response.kyous = new Array<Kyou>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.kyous.length; i++) {
+                        const kyou = new Kyou()
+                        for (let key in response.kyous[i]) {
+                                (kyou as any)[key] = (response.kyous[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time")) {
+                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                }
+                        }
+                        response.kyous[i] = kyou
+                }
+
                 return response
         }
 
@@ -810,7 +830,25 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
-                const response: GetKyouResponse = json
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: GetKyouResponse = new GetKyouResponse()
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.kyou_histories.length; i++) {
+                        const kyou = new Kyou()
+                        for (let key in response.kyou_histories[i]) {
+                                (kyou as any)[key] = (response.kyou_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time")) {
+                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                }
+                        }
+                        response.kyou_histories[i] = kyou
+                }
                 this.check_auth(response)
                 return response
         }

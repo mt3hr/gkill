@@ -150,6 +150,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", userID, device)
 	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -219,6 +220,7 @@ WHERE SESSION_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", sessionID)
 	rows, err := stmt.QueryContext(ctx, sessionID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -300,6 +302,18 @@ INSERT INTO LOGIN_SESSION (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s",
+		loginSession.ID,
+		loginSession.UserID,
+		loginSession.Device,
+		loginSession.ApplicationName,
+		loginSession.SessionID,
+		loginSession.ClientIPAddress,
+		loginSession.LoginTime.Format(sqlite3impl.TimeLayout),
+		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
+		loginSession.IsLocalAppUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		loginSession.ID,
 		loginSession.UserID,
@@ -340,6 +354,19 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		loginSession.ID,
+		loginSession.UserID,
+		loginSession.Device,
+		loginSession.ApplicationName,
+		loginSession.SessionID,
+		loginSession.ClientIPAddress,
+		loginSession.LoginTime.Format(sqlite3impl.TimeLayout),
+		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
+		loginSession.IsLocalAppUser,
+		loginSession.ID,
+	)
 	_, err = stmt.ExecContext(ctx,
 		loginSession.ID,
 		loginSession.UserID,
@@ -372,6 +399,7 @@ WHERE SESSION_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", sessionID)
 	_, err = stmt.ExecContext(ctx, sessionID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
