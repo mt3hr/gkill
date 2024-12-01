@@ -873,7 +873,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if existTag != nil {
-		err = fmt.Errorf("not exist tag id = %s", request.Tag.ID)
+		err = fmt.Errorf("exist tag id = %s", request.Tag.ID)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistTagError,
@@ -906,7 +906,11 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Tag.ID,
+		DataUpdateTime:           request.Tag.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
 		log.Printf(err.Error())
@@ -1014,7 +1018,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if existText != nil {
-		err = fmt.Errorf("not exist text id = %s", request.Text.ID)
+		err = fmt.Errorf("exist text id = %s", request.Text.ID)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistTextError,
@@ -1047,7 +1051,11 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Text.ID,
+		DataUpdateTime:           request.Text.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
 		log.Printf(err.Error())
@@ -1154,8 +1162,9 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	fmt.Printf("existKmemo = %#v\n", existKmemo)
 	if existKmemo != nil {
-		err = fmt.Errorf("not exist kmemo id = %s", request.Kmemo.ID)
+		err = fmt.Errorf("exist kmemo id = %s", request.Kmemo.ID)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistKmemoError,
@@ -1188,7 +1197,12 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	fmt.Printf("request.Kmemo = %#v\n", request.Kmemo)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Kmemo.ID,
+		DataUpdateTime:           request.Kmemo.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
 		log.Printf(err.Error())
@@ -1296,7 +1310,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if existURLog != nil {
-		err = fmt.Errorf("not exist urlog id = %s", request.URLog.ID)
+		err = fmt.Errorf("exist urlog id = %s", request.URLog.ID)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistURLogError,
@@ -1329,7 +1343,11 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.URLog.ID,
+		DataUpdateTime:           request.URLog.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
 		log.Printf(err.Error())
@@ -1437,7 +1455,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if existNlog != nil {
-		err = fmt.Errorf("not exist nlog id = %s", request.Nlog.ID)
+		err = fmt.Errorf("exist nlog id = %s", request.Nlog.ID)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistNlogError,
@@ -1470,7 +1488,11 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Nlog.ID,
+		DataUpdateTime:           request.Nlog.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
 		log.Printf(err.Error())
@@ -1578,7 +1600,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if existTimeIs != nil {
-		err = fmt.Errorf("not exist timeis id = %s", request.TimeIs.ID)
+		err = fmt.Errorf("exist timeis id = %s", request.TimeIs.ID)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistTimeIsError,
@@ -1611,7 +1633,11 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.TimeIs.ID,
+		DataUpdateTime:           request.TimeIs.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
 		log.Printf(err.Error())
@@ -1719,7 +1745,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		return
 	}
 	if existLantana != nil {
-		err = fmt.Errorf("not exist lantana id = %s", request.Lantana.ID)
+		err = fmt.Errorf("exist lantana id = %s", request.Lantana.ID)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistLantanaError,
@@ -1752,7 +1778,11 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Lantana.ID,
+		DataUpdateTime:           request.Lantana.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		log.Printf(err.Error())
@@ -1860,7 +1890,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if existMi != nil {
-		err = fmt.Errorf("not exist mi id = %s", request.Mi.ID)
+		err = fmt.Errorf("exist mi id = %s", request.Mi.ID)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistMiError,
@@ -1893,7 +1923,11 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Mi.ID,
+		DataUpdateTime:           request.Mi.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
 		log.Printf(err.Error())
@@ -2001,7 +2035,7 @@ func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if existKyouInfo != nil {
-		err = fmt.Errorf("not exist kyouInfo id = %s", request.Kyou.ID)
+		err = fmt.Errorf("exist kyouInfo id = %s", request.Kyou.ID)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistKyouInfoError,
@@ -2034,7 +2068,11 @@ func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Reques
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Kyou.ID,
+		DataUpdateTime:           request.Kyou.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
@@ -2142,7 +2180,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if existReKyou != nil {
-		err = fmt.Errorf("not exist rekyou id = %s", request.ReKyou.ID)
+		err = fmt.Errorf("exist rekyou id = %s", request.ReKyou.ID)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistReKyouError,
@@ -2175,7 +2213,11 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.ReKyou.ID,
+		DataUpdateTime:           request.ReKyou.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
 		log.Printf(err.Error())
@@ -2306,7 +2348,11 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Tag.ID,
+		DataUpdateTime:           request.Tag.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
 		log.Printf(err.Error())
@@ -2460,7 +2506,11 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Text.ID,
+		DataUpdateTime:           request.Text.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
 		log.Printf(err.Error())
@@ -2614,7 +2664,11 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Kmemo.ID,
+		DataUpdateTime:           request.Kmemo.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
 		log.Printf(err.Error())
@@ -2768,7 +2822,11 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.URLog.ID,
+		DataUpdateTime:           request.URLog.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
 		log.Printf(err.Error())
@@ -2922,7 +2980,11 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Nlog.ID,
+		DataUpdateTime:           request.Nlog.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
 		log.Printf(err.Error())
@@ -3076,7 +3138,11 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.TimeIs.ID,
+		DataUpdateTime:           request.TimeIs.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
 		log.Printf(err.Error())
@@ -3230,7 +3296,11 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Lantana.ID,
+		DataUpdateTime:           request.Lantana.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		log.Printf(err.Error())
@@ -3384,7 +3454,11 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Mi.ID,
+		DataUpdateTime:           request.Mi.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
 		log.Printf(err.Error())
@@ -3538,7 +3612,11 @@ func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Req
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.Kyou.ID,
+		DataUpdateTime:           request.Kyou.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
@@ -3692,7 +3770,11 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	err = repositories.UpdateCacheByRepName(r.Context(), repName)
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.ReKyou.ID,
+		DataUpdateTime:           request.ReKyou.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
 		log.Printf(err.Error())
@@ -3798,7 +3880,7 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	kyous, gkillErrors, err := g.FindFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, &request.Query)
+	kyous, gkillErrors, err := g.FindFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, request.Query)
 	if len(gkillErrors) != 0 || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)

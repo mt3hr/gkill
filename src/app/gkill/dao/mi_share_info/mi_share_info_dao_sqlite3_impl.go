@@ -124,6 +124,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", userID, device)
 	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -174,6 +175,7 @@ WHERE SHARED_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", sharedID)
 	rows, err := stmt.QueryContext(ctx, sharedID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -234,6 +236,16 @@ INSERT INTO MI_SHARE_INFO (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s",
+		miShareInfo.ID,
+		miShareInfo.UserID,
+		miShareInfo.Device,
+		miShareInfo.ShareTitle,
+		miShareInfo.IsShareDetail,
+		miShareInfo.ShareID,
+		miShareInfo.FindQueryJSON,
+	)
 	_, err = stmt.ExecContext(ctx,
 		miShareInfo.ID,
 		miShareInfo.UserID,
@@ -270,6 +282,17 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s",
+		miShareInfo.ID,
+		miShareInfo.UserID,
+		miShareInfo.Device,
+		miShareInfo.ShareTitle,
+		miShareInfo.IsShareDetail,
+		miShareInfo.ShareID,
+		miShareInfo.FindQueryJSON,
+		miShareInfo.ID,
+	)
 	_, err = stmt.ExecContext(ctx,
 		miShareInfo.ID,
 		miShareInfo.UserID,
@@ -300,6 +323,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", id)
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

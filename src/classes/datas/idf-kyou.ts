@@ -28,7 +28,7 @@ export class IDFKyou extends InfoBase {
         throw new Error('Not implemented')
     }
 
-    async clone(): Promise<IDFKyou> {
+    clone(): IDFKyou {
         throw new Error('Not implemented')
     }
 

@@ -7,41 +7,23 @@ import type { Text } from "./text"
 import type { TimeIs } from "./time-is"
 
 export abstract class InfoBase {
-
     is_deleted: boolean
-
     id: string
-
     rep_name: string
-
     related_time: Date
-
     data_type: string
-
     create_time: Date
-
     create_app: string
-
     create_device: string
-
     create_user: string
-
     update_time: Date
-
     update_app: string
-
     update_user: string
-
     update_device: string
-
     attached_tags: Array<Tag>
-
     attached_texts: Array<Text>
-
     attached_timeis_kyou: Array<Kyou>
-
     is_checked: boolean
-
     async load_attached_tags(): Promise<Array<GkillError>> {
         throw new Error('Not implemented')
     }
@@ -82,7 +64,7 @@ export abstract class InfoBase {
         throw new Error('Not implemented')
     }
 
-    abstract clone(): Promise<InfoBase>
+    abstract clone(): InfoBase
 
     constructor() {
 

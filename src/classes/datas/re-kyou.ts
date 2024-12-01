@@ -35,7 +35,7 @@ export class ReKyou extends InfoBase {
         throw new Error('Not implemented')
     }
 
-    async clone(): Promise<ReKyou> {
+    clone(): ReKyou {
         throw new Error('Not implemented')
     }
 

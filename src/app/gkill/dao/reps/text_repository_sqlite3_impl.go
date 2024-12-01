@@ -197,6 +197,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "text"
+	log.Printf("%s, %s", repName, dataType)
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from TEXT %s: %w", err)
@@ -317,6 +318,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "text"
+	log.Printf("%s, %s, %s", repName, dataType, target_id)
 	rows, err := stmt.QueryContext(ctx, repName, dataType, target_id)
 	if err != nil {
 		err = fmt.Errorf("error at select from TEXT %s: %w", err)
@@ -431,6 +433,7 @@ WHERE ID LIKE ?
 	}
 
 	dataType := "text"
+	log.Printf("%s, %s, %s", repName, dataType, id)
 	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from TEXT %s: %w", err)
@@ -524,6 +527,22 @@ INSERT INTO TEXT (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		text.IsDeleted,
+		text.ID,
+		text.Text,
+		text.TargetID,
+		text.RelatedTime.Format(sqlite3impl.TimeLayout),
+		text.CreateTime.Format(sqlite3impl.TimeLayout),
+		text.CreateApp,
+		text.CreateDevice,
+		text.CreateUser,
+		text.UpdateTime.Format(sqlite3impl.TimeLayout),
+		text.UpdateApp,
+		text.UpdateDevice,
+		text.UpdateUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		text.IsDeleted,
 		text.ID,

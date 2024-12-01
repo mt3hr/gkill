@@ -30,7 +30,7 @@ export class Nlog extends InfoBase {
         throw new Error('Not implemented')
     }
 
-    async clone(): Promise<Nlog> {
+    clone(): Nlog {
         throw new Error('Not implemented')
     }
 

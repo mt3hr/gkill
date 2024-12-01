@@ -248,6 +248,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		return nil, err
 	}
 
+	log.Printf("%s, %s, %s, %s, %s", repName, repName, repName, repName, repName)
 	rows, err := stmt.QueryContext(ctx, repName, repName, repName, repName, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI: %w", err)
@@ -357,6 +358,7 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", repName, id)
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI %s: %w", id, err)
@@ -495,6 +497,7 @@ FROM MI
 		return nil, err
 	}
 
+	log.Printf("%s", repName)
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI %s: %w", err)
@@ -628,6 +631,7 @@ ORDER BY UPDATE_TIME DESC
 		return nil, err
 	}
 
+	log.Printf("%s, %s", repName, id)
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI %s: %w", err)
@@ -775,6 +779,27 @@ INSERT INTO MI (
 	} else {
 		endTimeStr = mi.EstimateEndTime.Format(sqlite3impl.TimeLayout)
 	}
+
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		mi.IsDeleted,
+		mi.ID,
+		mi.Title,
+		mi.IsChecked,
+		checkedTimeStr,
+		mi.BoardName,
+		limitTimeStr,
+		startTimeStr,
+		endTimeStr,
+		mi.CreateTime.Format(sqlite3impl.TimeLayout),
+		mi.CreateApp,
+		mi.CreateDevice,
+		mi.CreateUser,
+		mi.UpdateTime.Format(sqlite3impl.TimeLayout),
+		mi.UpdateApp,
+		mi.UpdateDevice,
+		mi.UpdateUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		mi.IsDeleted,
 		mi.ID,
@@ -826,6 +851,7 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 		ids = *query.IDs
 	}
 	if query.UseIDs != nil && *query.UseIDs {
+		if query.IDs != nil && len(*query.IDs) != 0 {
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
@@ -838,6 +864,7 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 			whereCounter++
 		}
 		sqlWhere += ")"
+	}
 	}
 
 	// 日付範囲指定ありの場合
