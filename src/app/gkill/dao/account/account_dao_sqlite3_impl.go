@@ -117,6 +117,7 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", userID)
 	rows, err := stmt.QueryContext(ctx, userID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -173,6 +174,14 @@ VALUES (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s",
+		account.UserID,
+		account.PasswordSha256,
+		account.IsAdmin,
+		account.IsEnable,
+		account.PasswordResetToken,
+	)
 	_, err = stmt.ExecContext(ctx,
 		account.UserID,
 		account.PasswordSha256,
@@ -203,6 +212,15 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s",
+		account.UserID,
+		account.PasswordSha256,
+		account.IsAdmin,
+		account.IsEnable,
+		account.PasswordResetToken,
+		account.UserID,
+	)
 	_, err = stmt.ExecContext(ctx,
 		account.UserID,
 		account.PasswordSha256,
@@ -228,7 +246,10 @@ WHERE USER_ID = ?
 		return false, err
 	}
 	defer stmt.Close()
-
+	log.Printf(
+		"%s",
+		userID,
+	)
 	_, err = stmt.ExecContext(ctx, userID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

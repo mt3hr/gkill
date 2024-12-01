@@ -25,7 +25,7 @@ func (k KmemoRepositories) FindKyous(ctx context.Context, query *find.FindQuery)
 	// 並列処理
 	for _, rep := range k {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep KmemoRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
@@ -103,7 +103,7 @@ func (k KmemoRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error
 	// 並列処理
 	for _, rep := range k {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep KmemoRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -167,7 +167,7 @@ func (k KmemoRepositories) GetKyouHistories(ctx context.Context, id string) ([]*
 	// 並列処理
 	for _, rep := range k {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep KmemoRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
@@ -247,7 +247,7 @@ func (k KmemoRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range k {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep KmemoRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -291,7 +291,7 @@ func (k KmemoRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range k {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep KmemoRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -334,7 +334,7 @@ func (k KmemoRepositories) FindKmemo(ctx context.Context, query *find.FindQuery)
 	// 並列処理
 	for _, rep := range k {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep KmemoRepository) {
 			defer wg.Done()
 			matchKmemosInRep, err := rep.FindKmemo(ctx, query)
@@ -412,7 +412,7 @@ func (k KmemoRepositories) GetKmemo(ctx context.Context, id string) (*Kmemo, err
 	// 並列処理
 	for _, rep := range k {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep KmemoRepository) {
 			defer wg.Done()
 			matchKmemoInRep, err := rep.GetKmemo(ctx, id)
@@ -476,7 +476,7 @@ func (k KmemoRepositories) GetKmemoHistories(ctx context.Context, id string) ([]
 	// 並列処理
 	for _, rep := range k {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep KmemoRepository) {
 			defer wg.Done()
 			matchKmemosInRep, err := rep.GetKmemoHistories(ctx, id)

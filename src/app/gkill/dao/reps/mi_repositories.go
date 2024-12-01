@@ -25,7 +25,7 @@ func (m MiRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([
 	// 並列処理
 	for _, rep := range m {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep MiRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
@@ -103,7 +103,7 @@ func (m MiRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
 	// 並列処理
 	for _, rep := range m {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep MiRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -167,7 +167,7 @@ func (m MiRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyo
 	// 並列処理
 	for _, rep := range m {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep MiRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
@@ -247,7 +247,7 @@ func (m MiRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range m {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep MiRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -291,7 +291,7 @@ func (m MiRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range m {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep MiRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -334,7 +334,7 @@ func (m MiRepositories) FindMi(ctx context.Context, query *find.FindQuery) ([]*M
 	// 並列処理
 	for _, rep := range m {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep MiRepository) {
 			defer wg.Done()
 			matchMisInRep, err := rep.FindMi(ctx, query)
@@ -412,7 +412,7 @@ func (m MiRepositories) GetMi(ctx context.Context, id string) (*Mi, error) {
 	// 並列処理
 	for _, rep := range m {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep MiRepository) {
 			defer wg.Done()
 			matchMiInRep, err := rep.GetMi(ctx, id)
@@ -476,7 +476,7 @@ func (m MiRepositories) GetMiHistories(ctx context.Context, id string) ([]*Mi, e
 	// 並列処理
 	for _, rep := range m {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep MiRepository) {
 			defer wg.Done()
 			matchMisInRep, err := rep.GetMiHistories(ctx, id)
@@ -559,7 +559,7 @@ func (m MiRepositories) GetBoardNames(ctx context.Context) ([]string, error) {
 	// 並列処理
 	for _, rep := range m {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep MiRepository) {
 			defer wg.Done()
 			boardNamesInRep, err := rep.GetBoardNames(ctx)

@@ -34,7 +34,7 @@ export class URLog extends InfoBase {
         throw new Error('Not implemented')
     }
 
-    async clone(): Promise<URLog> {
+    clone(): URLog {
         throw new Error('Not implemented')
     }
 

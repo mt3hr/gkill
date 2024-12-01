@@ -25,7 +25,7 @@ func (t TagRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagsInRep, err := rep.FindTags(ctx, query)
@@ -99,7 +99,7 @@ func (t TagRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -143,7 +143,7 @@ func (t TagRepositories) GetTag(ctx context.Context, id string) (*Tag, error) {
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagInRep, err := rep.GetTag(ctx, id)
@@ -207,7 +207,7 @@ func (t TagRepositories) GetTagsByTagName(ctx context.Context, tagname string) (
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagsByTagName(ctx, tagname)
@@ -285,7 +285,7 @@ func (t TagRepositories) GetTagsByTargetID(ctx context.Context, target_id string
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagsByTargetID(ctx, target_id)
@@ -360,7 +360,7 @@ func (t TagRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -412,7 +412,7 @@ func (t TagRepositories) GetTagHistories(ctx context.Context, id string) ([]*Tag
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagHistories(ctx, id)
@@ -495,7 +495,7 @@ func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagNamesInRep, err := rep.GetAllTagNames(ctx)
