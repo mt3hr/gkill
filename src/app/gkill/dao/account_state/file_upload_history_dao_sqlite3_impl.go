@@ -138,6 +138,7 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", userID)
 	rows, err := stmt.QueryContext(ctx, userID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -207,6 +208,16 @@ VALUES (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s",
+		fileUploadHistory.ID,
+		fileUploadHistory.UserID,
+		fileUploadHistory.Device,
+		fileUploadHistory.FileName,
+		fileUploadHistory.FileSizeByte,
+		fileUploadHistory.Successed,
+		fileUploadHistory.UploadTime.Format(sqlite3impl.TimeLayout),
+	)
 	_, err = stmt.ExecContext(ctx,
 		fileUploadHistory.ID,
 		fileUploadHistory.UserID,
@@ -244,6 +255,17 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s",
+		fileUploadHistory.ID,
+		fileUploadHistory.UserID,
+		fileUploadHistory.Device,
+		fileUploadHistory.FileName,
+		fileUploadHistory.FileSizeByte,
+		fileUploadHistory.Successed,
+		fileUploadHistory.UploadTime.Format(sqlite3impl.TimeLayout),
+		fileUploadHistory.ID,
+	)
 	_, err = stmt.ExecContext(ctx,
 		fileUploadHistory.ID,
 		fileUploadHistory.UserID,
@@ -274,6 +296,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", id)
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

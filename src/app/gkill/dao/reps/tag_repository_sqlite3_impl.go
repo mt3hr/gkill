@@ -177,6 +177,7 @@ WHERE
 
 		// id検索である場合のSQL追記
 		if query.UseIDs != nil && *query.UseIDs {
+		if query.IDs != nil && len(*query.IDs) != 0 {
 			ids := []string{}
 			if query.IDs != nil {
 				ids = *query.IDs
@@ -193,6 +194,7 @@ WHERE
 			}
 			sql += ")"
 		}
+	}
 
 	}
 	// UPDATE_TIMEが一番上のものだけを抽出
@@ -216,6 +218,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "tag"
+	log.Printf("%s, %s", repName, dataType)
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
@@ -336,6 +339,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "tag"
+	log.Printf("%s, %s, %s", repName, dataType, tagname)
 	rows, err := stmt.QueryContext(ctx, repName, dataType, tagname)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
@@ -436,6 +440,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "tag"
+	log.Printf("%s, %s, %s", repName, dataType, target_id)
 	rows, err := stmt.QueryContext(ctx, repName, dataType, target_id)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
@@ -550,6 +555,7 @@ WHERE ID LIKE ?
 	}
 
 	dataType := "tag"
+	log.Printf("%s, %s, %s", repName, dataType, id)
 	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
@@ -644,6 +650,22 @@ INSERT INTO TAG (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		tag.IsDeleted,
+		tag.ID,
+		tag.Tag,
+		tag.TargetID,
+		tag.RelatedTime.Format(sqlite3impl.TimeLayout),
+		tag.CreateTime.Format(sqlite3impl.TimeLayout),
+		tag.CreateApp,
+		tag.CreateDevice,
+		tag.CreateUser,
+		tag.UpdateTime.Format(sqlite3impl.TimeLayout),
+		tag.UpdateApp,
+		tag.UpdateDevice,
+		tag.UpdateUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		tag.IsDeleted,
 		tag.ID,

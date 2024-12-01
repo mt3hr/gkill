@@ -172,6 +172,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "idf"
+	log.Printf("%s, %s", repName, dataType)
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
@@ -408,6 +409,7 @@ ORDER BY UPDATE_TIME DESC
 	}
 
 	dataType := "idf"
+	log.Printf("%s, %s, %s", repName, dataType, id)
 	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
@@ -549,6 +551,7 @@ ORDER BY UPDATE_TIME DESC
 	}
 
 	dataType := "idf"
+	log.Printf("%s, %s, %s", repName, dataType, id)
 	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
@@ -722,6 +725,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "idf"
+	log.Printf("%s, %s", repName, dataType)
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
@@ -941,6 +945,7 @@ ORDER BY UPDATE_TIME DESC
 	}
 
 	dataType := "idf"
+	log.Printf("%s, %s, %s", repName, dataType, id)
 	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
@@ -1191,6 +1196,22 @@ INSERT INTO IDF (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		idfKyou.IsDeleted,
+		idfKyou.ID,
+		idfKyou.RepName,
+		idfKyou.FileName,
+		idfKyou.RelatedTime.Format(sqlite3impl.TimeLayout),
+		idfKyou.CreateTime.Format(sqlite3impl.TimeLayout),
+		idfKyou.CreateApp,
+		idfKyou.CreateDevice,
+		idfKyou.CreateUser,
+		idfKyou.UpdateTime.Format(sqlite3impl.TimeLayout),
+		idfKyou.UpdateApp,
+		idfKyou.UpdateDevice,
+		idfKyou.UpdateUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		idfKyou.IsDeleted,
 		idfKyou.ID,

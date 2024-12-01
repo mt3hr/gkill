@@ -181,7 +181,8 @@ ORDER BY UPDATE_TIME DESC
 	defer stmt.Close()
 
 	dataType := "rekyou"
-	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
+	log.Printf("%s, %s, %s", repName, dataType, id)
+	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from REKYOU %s: %w", id, err)
 		return nil, err
@@ -363,6 +364,7 @@ WHERE TARGET_ID LIKE ?
 	}
 
 	dataType := "rekyou"
+	log.Printf("%s, %s, %s", repName, dataType, id)
 	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from REKYOU %s: %w", err)
@@ -454,6 +456,21 @@ INSERT INTO REKYOU (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		rekyou.IsDeleted,
+		rekyou.ID,
+		rekyou.TargetID,
+		rekyou.RelatedTime.Format(sqlite3impl.TimeLayout),
+		rekyou.CreateTime.Format(sqlite3impl.TimeLayout),
+		rekyou.CreateApp,
+		rekyou.CreateDevice,
+		rekyou.CreateUser,
+		rekyou.UpdateTime.Format(sqlite3impl.TimeLayout),
+		rekyou.UpdateApp,
+		rekyou.UpdateDevice,
+		rekyou.UpdateUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		rekyou.IsDeleted,
 		rekyou.ID,
@@ -518,6 +535,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "rekyou"
+	log.Printf("%s, %s", repName, dataType)
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from REKYOU %s: %w", err)

@@ -192,6 +192,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "lantana"
+	log.Printf("%s, %s", repName, dataType)
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from LANTANA%s: %w", err)
@@ -296,7 +297,8 @@ ORDER BY UPDATE_TIME DESC
 	defer stmt.Close()
 
 	dataType := "lantana"
-	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
+	log.Printf("%s, %s, %s", repName, dataType, id)
+	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from LANTANA %s: %w", id, err)
 		return nil, err
@@ -502,6 +504,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		return nil, err
 	}
 
+	log.Printf("%s", repName)
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from LANTANA %s: %w", err)
@@ -605,6 +608,7 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", repName, id)
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at query ")
@@ -695,6 +699,21 @@ INSERT INTO LANTANA (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		lantana.IsDeleted,
+		lantana.ID,
+		lantana.Mood,
+		lantana.RelatedTime.Format(sqlite3impl.TimeLayout),
+		lantana.CreateTime.Format(sqlite3impl.TimeLayout),
+		lantana.CreateApp,
+		lantana.CreateDevice,
+		lantana.CreateUser,
+		lantana.UpdateTime.Format(sqlite3impl.TimeLayout),
+		lantana.UpdateApp,
+		lantana.UpdateDevice,
+		lantana.UpdateUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		lantana.IsDeleted,
 		lantana.ID,

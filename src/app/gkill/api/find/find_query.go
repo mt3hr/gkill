@@ -16,6 +16,7 @@ type FindQuery struct {
 	Reps              *[]string  `json:"reps"`
 	Tags              *[]string  `json:"tags"`
 	TagsAnd           *bool      `json:"tags_and"`
+	UseTimeIs         *bool      `json:"use_time_is"`
 	TimeIsWords       *[]string  `json:"timeis_words"`
 	TimeIsNotWords    *[]string  `json:"timeis_not_words"`
 	TimeIsWordsAnd    *bool      `json:"timeis_words_and"`
@@ -24,6 +25,7 @@ type FindQuery struct {
 	UseCalendar       *bool      `json:"use_calendar"`
 	CalendarStartDate *time.Time `json:"calendar_start_date"`
 	CalendarEndDate   *time.Time `json:"calendar_end_date"`
+	UseMap            *bool      `json:"use_map"`
 	MapRadius         *float64   `json:"map_radius"`
 	MapLatitude       *float64   `json:"map_latitude"`
 	MapLongitude      *float64   `json:"map_longitude"`

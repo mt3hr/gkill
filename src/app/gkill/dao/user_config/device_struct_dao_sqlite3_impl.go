@@ -124,6 +124,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", userID, device)
 	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -181,6 +182,16 @@ INSERT INTO DEVICE_STRUCT (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s",
+		deviceStruct.ID,
+		deviceStruct.UserID,
+		deviceStruct.Device,
+		deviceStruct.DeviceName,
+		deviceStruct.ParentFolderID,
+		deviceStruct.Seq,
+		deviceStruct.CheckWhenInited,
+	)
 	_, err = stmt.ExecContext(ctx,
 		deviceStruct.ID,
 		deviceStruct.UserID,
@@ -234,6 +245,16 @@ INSERT INTO DEVICE_STRUCT (
 		}
 		defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s",
+		deviceStruct.ID,
+		deviceStruct.UserID,
+		deviceStruct.Device,
+		deviceStruct.DeviceName,
+		deviceStruct.ParentFolderID,
+		deviceStruct.Seq,
+		deviceStruct.CheckWhenInited,
+	)
 		_, err = stmt.ExecContext(ctx,
 			deviceStruct.ID,
 			deviceStruct.UserID,
@@ -285,6 +306,17 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s",
+		deviceStruct.ID,
+		deviceStruct.UserID,
+		deviceStruct.Device,
+		deviceStruct.DeviceName,
+		deviceStruct.ParentFolderID,
+		deviceStruct.Seq,
+		deviceStruct.CheckWhenInited,
+		deviceStruct.ID,
+	)
 	_, err = stmt.ExecContext(ctx,
 		deviceStruct.ID,
 		deviceStruct.UserID,
@@ -315,6 +347,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", id)
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -336,6 +369,7 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", userID)
 	_, err = stmt.ExecContext(ctx, userID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

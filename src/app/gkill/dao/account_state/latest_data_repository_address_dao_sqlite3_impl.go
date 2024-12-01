@@ -120,6 +120,7 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", repName)
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -170,6 +171,7 @@ WHERE TARGET_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", targetID)
 	rows, err := stmt.QueryContext(ctx, targetID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -228,6 +230,11 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s, %s",
+		latestDataRepositoryAddress.TargetID,
+		latestDataRepositoryAddress.LatestDataRepositoryName,
+		latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
+	)
 	_, err = stmt.ExecContext(ctx,
 		latestDataRepositoryAddress.TargetID,
 		latestDataRepositoryAddress.LatestDataRepositoryName,
@@ -258,6 +265,12 @@ WHERE TARGET_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s, %s, %s",
+		latestDataRepositoryAddress.TargetID,
+		latestDataRepositoryAddress.LatestDataRepositoryName,
+		latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
+		latestDataRepositoryAddress.TargetID,
+	)
 	_, err = stmt.ExecContext(ctx,
 		latestDataRepositoryAddress.TargetID,
 		latestDataRepositoryAddress.LatestDataRepositoryName,
@@ -272,8 +285,8 @@ WHERE TARGET_ID = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) UpdateOrAddLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error) {
-	latestDataRepositoryAddress, err := l.GetLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress.TargetID)
-	if err == nil { // データが存在する場合は更新する
+	existLatestDataRepositoryAddress, err := l.GetLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress.TargetID)
+	if err == nil && existLatestDataRepositoryAddress != nil { // データが存在する場合は更新する
 		_, err := l.UpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
 		if err != nil {
 			err = fmt.Errorf("error at update latest data repository address %s: %w", latestDataRepositoryAddress.TargetID, err)
@@ -329,6 +342,12 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 				return false, err
 			}
 
+			log.Printf("%s, %s, %s, %s",
+				latestDataRepositoryAddress.TargetID,
+				latestDataRepositoryAddress.LatestDataRepositoryName,
+				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
+				latestDataRepositoryAddress.TargetID,
+			)
 			_, err = stmt.ExecContext(ctx,
 				latestDataRepositoryAddress.TargetID,
 				latestDataRepositoryAddress.LatestDataRepositoryName,
@@ -354,6 +373,11 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 				return false, err
 			}
 
+			log.Printf("%s, %s, %s, %s",
+				latestDataRepositoryAddress.TargetID,
+				latestDataRepositoryAddress.LatestDataRepositoryName,
+				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
+			)
 			_, err = stmt.ExecContext(ctx,
 				latestDataRepositoryAddress.TargetID,
 				latestDataRepositoryAddress.LatestDataRepositoryName,
@@ -397,6 +421,9 @@ WHERE TARGET_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s, %s, %s",
+		latestDataRepositoryAddress.TargetID,
+	)
 	_, err = stmt.ExecContext(ctx, latestDataRepositoryAddress.TargetID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -420,6 +447,30 @@ DELETE FROM LATEST_DATA_REPOSITORY_ADDRESS
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+	return true, nil
+}
+
+func (l *latestDataRepositoryAddressSQLite3Impl) DeleteLatestDataRepositoryAddressInRep(ctx context.Context, repName string) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
+	sql := `
+DELETE FROM LATEST_DATA_REPOSITORY_ADDRESS
+WHERE LATEST_DATA_REPOSITORY_NAME  = ?
+`
+	log.Printf("sql: %s", sql)
+	stmt, err := l.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at delete all latest data repository address sql: %w", err)
+		return false, err
+	}
+	defer stmt.Close()
+
+	log.Printf("%s", repName)
+	_, err = stmt.ExecContext(ctx, repName)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

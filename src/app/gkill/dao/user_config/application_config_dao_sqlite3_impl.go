@@ -125,6 +125,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", userID, device)
 	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -187,6 +188,16 @@ INSERT INTO APPLICATION_CONFIG (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s",
+		applicationConfig.UserID,
+		applicationConfig.Device,
+		applicationConfig.EnableBrowserCache,
+		applicationConfig.GoogleMapAPIKey,
+		applicationConfig.RykvImageListColumnNumber,
+		applicationConfig.RykvHotReload,
+		applicationConfig.MiDefaultBoard,
+	)
 	_, err = stmt.ExecContext(ctx,
 		applicationConfig.UserID,
 		applicationConfig.Device,
@@ -223,6 +234,19 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s",
+		applicationConfig.UserID,
+		applicationConfig.Device,
+		applicationConfig.EnableBrowserCache,
+		applicationConfig.GoogleMapAPIKey,
+		applicationConfig.RykvImageListColumnNumber,
+		applicationConfig.RykvHotReload,
+		applicationConfig.MiDefaultBoard,
+		applicationConfig.UserID,
+		applicationConfig.Device,
+	)
+	
 	_, err = stmt.ExecContext(ctx,
 		applicationConfig.UserID,
 		applicationConfig.Device,
@@ -254,6 +278,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", device)
 	_, err = stmt.ExecContext(ctx, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

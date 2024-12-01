@@ -25,7 +25,7 @@ func (t TextRepositories) FindTexts(ctx context.Context, query *find.FindQuery) 
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			matchTextsInRep, err := rep.FindTexts(ctx, query)
@@ -99,7 +99,7 @@ func (t TextRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -143,7 +143,7 @@ func (t TextRepositories) GetText(ctx context.Context, id string) (*Text, error)
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			matchTextInRep, err := rep.GetText(ctx, id)
@@ -207,7 +207,7 @@ func (t TextRepositories) GetTextsByTargetID(ctx context.Context, target_id stri
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			matchTextsInRep, err := rep.GetTextsByTargetID(ctx, target_id)
@@ -282,7 +282,7 @@ func (t TextRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -334,7 +334,7 @@ func (t TextRepositories) GetTextHistories(ctx context.Context, id string) ([]*T
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			matchTextsInRep, err := rep.GetTextHistories(ctx, id)

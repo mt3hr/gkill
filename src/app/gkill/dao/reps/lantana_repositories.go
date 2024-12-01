@@ -25,7 +25,7 @@ func (l LantanaRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 	// 並列処理
 	for _, rep := range l {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep LantanaRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
@@ -103,7 +103,7 @@ func (l LantanaRepositories) GetKyou(ctx context.Context, id string) (*Kyou, err
 	// 並列処理
 	for _, rep := range l {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep LantanaRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -167,7 +167,7 @@ func (l LantanaRepositories) GetKyouHistories(ctx context.Context, id string) ([
 	// 並列処理
 	for _, rep := range l {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep LantanaRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
@@ -247,7 +247,7 @@ func (l LantanaRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range l {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep LantanaRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -291,7 +291,7 @@ func (l LantanaRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range l {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep LantanaRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -334,7 +334,7 @@ func (l LantanaRepositories) FindLantana(ctx context.Context, query *find.FindQu
 	// 並列処理
 	for _, rep := range l {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep LantanaRepository) {
 			defer wg.Done()
 			matchLantanasInRep, err := rep.FindLantana(ctx, query)
@@ -412,7 +412,7 @@ func (l LantanaRepositories) GetLantana(ctx context.Context, id string) (*Lantan
 	// 並列処理
 	for _, rep := range l {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep LantanaRepository) {
 			defer wg.Done()
 			matchLantanaInRep, err := rep.GetLantana(ctx, id)
@@ -476,7 +476,7 @@ func (l LantanaRepositories) GetLantanaHistories(ctx context.Context, id string)
 	// 並列処理
 	for _, rep := range l {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep LantanaRepository) {
 			defer wg.Done()
 			matchLantanasInRep, err := rep.GetLantanaHistories(ctx, id)

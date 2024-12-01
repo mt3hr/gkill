@@ -149,6 +149,7 @@ WHERE DEVICE = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", device)
 	rows, err := stmt.QueryContext(ctx, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -229,6 +230,22 @@ INSERT INTO SERVER_CONFIG (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		serverConfig.EnableThisDevice,
+		serverConfig.Device,
+		serverConfig.IsLocalOnlyAccess,
+		serverConfig.Address,
+		serverConfig.EnableTLS,
+		serverConfig.TLSCertFile,
+		serverConfig.TLSKeyFile,
+		serverConfig.OpenDirectoryCommand,
+		serverConfig.OpenFileCommand,
+		serverConfig.URLogTimeout,
+		serverConfig.URLogUserAgent,
+		serverConfig.UploadSizeLimitMonth,
+		serverConfig.UserDataDirectory,
+	)
 	_, err = stmt.ExecContext(ctx,
 		serverConfig.EnableThisDevice,
 		serverConfig.Device,
@@ -286,6 +303,23 @@ WHERE DEVICE = ?
 		}
 		defer stmt.Close()
 
+log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		serverConfig.EnableThisDevice,
+		serverConfig.Device,
+		serverConfig.IsLocalOnlyAccess,
+		serverConfig.Address,
+		serverConfig.EnableTLS,
+		serverConfig.TLSCertFile,
+		serverConfig.TLSKeyFile,
+		serverConfig.OpenDirectoryCommand,
+		serverConfig.OpenFileCommand,
+		serverConfig.URLogTimeout,
+		serverConfig.URLogUserAgent,
+		serverConfig.UploadSizeLimitMonth,
+		serverConfig.UserDataDirectory,
+		serverConfig.Device,
+	)
 		_, err = stmt.ExecContext(ctx,
 			serverConfig.EnableThisDevice,
 			serverConfig.Device,
@@ -329,6 +363,7 @@ WHERE ENABLE_THIS_DEVICE = ?
 	defer checkEnableDeviceStmt.Close()
 
 	enableDeviceCount := 0
+	log.Printf("%s", true)
 	rows, err := checkEnableDeviceStmt.QueryContext(ctx, true)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -411,6 +446,23 @@ WHERE DEVICE = ?
 	}
 	defer stmt.Close()
 
+log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		serverConfig.EnableThisDevice,
+		serverConfig.Device,
+		serverConfig.IsLocalOnlyAccess,
+		serverConfig.Address,
+		serverConfig.EnableTLS,
+		serverConfig.TLSCertFile,
+		serverConfig.TLSKeyFile,
+		serverConfig.OpenDirectoryCommand,
+		serverConfig.OpenFileCommand,
+		serverConfig.URLogTimeout,
+		serverConfig.URLogUserAgent,
+		serverConfig.UploadSizeLimitMonth,
+		serverConfig.UserDataDirectory,
+		serverConfig.Device,
+	)
 	_, err = stmt.ExecContext(ctx,
 		serverConfig.EnableThisDevice,
 		serverConfig.Device,
@@ -453,6 +505,7 @@ WHERE ENABLE_THIS_DEVICE = ?
 	}
 	defer checkEnableDeviceStmt.Close()
 
+	log.Printf("%s", true)
 	rows, err := checkEnableDeviceStmt.QueryContext(ctx, true)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -514,6 +567,7 @@ WHERE DEVICE = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", device)
 	_, err = stmt.ExecContext(ctx, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

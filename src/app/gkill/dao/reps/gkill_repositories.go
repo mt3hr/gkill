@@ -195,7 +195,7 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 	// 並列処理
 	for _, rep := range g.Reps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep Repository) {
 			defer wg.Done()
 			// jsonからパースする
@@ -312,7 +312,7 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string) (*Kyou, erro
 	// 並列処理
 	for _, rep := range g.Reps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep Repository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -383,7 +383,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	// UpdateCache並列処理
 	for _, rep := range g.Reps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep Repository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -398,7 +398,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	// kyouを集める
 	for _, rep := range g.Reps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep Repository) {
 			defer wg.Done()
 			repName, err := rep.GetRepName(ctx)
@@ -421,7 +421,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	// tagを集める
 	for _, rep := range g.TagReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			repName, err := rep.GetRepName(ctx)
@@ -444,7 +444,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	// textを集める
 	for _, rep := range g.TextReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			repName, err := rep.GetRepName(ctx)
@@ -588,127 +588,6 @@ textsloop:
 	return nil
 }
 
-func (g *GkillRepositories) UpdateCacheByRepName(ctx context.Context, repName string) error {
-	existErr := false
-	var err error
-	wg := &sync.WaitGroup{}
-	kyousCh := make(chan []*Kyou, len(g.Reps))
-	errch := make(chan error, len(g.Reps))
-	defer close(kyousCh)
-	defer close(errch)
-
-	allKyous := []*Kyou{}
-
-	// UpdateCache並列処理
-	for _, rep := range g.Reps {
-		wg.Add(1)
-		rep := rep
-		go func(rep Repository) {
-			defer wg.Done()
-
-			repNameInList, err := rep.GetRepName(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get rep name: %w", err)
-				errch <- err
-				return
-			}
-			if repName != repNameInList {
-				return
-			}
-
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
-	}
-	wg.Wait()
-
-	for _, rep := range g.Reps {
-		wg.Add(1)
-		rep := rep
-		go func(rep Repository) {
-			defer wg.Done()
-			repNameInList, err := rep.GetRepName(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get rep name: %w", err)
-				errch <- err
-				return
-			}
-
-			if repName != repNameInList {
-				return
-			}
-
-			reps := []string{repName}
-			kyous, err := rep.FindKyous(ctx, &find.FindQuery{Reps: &reps})
-			if err != nil {
-				errch <- err
-				return
-			}
-			kyousCh <- kyous
-		}(rep)
-	}
-	wg.Wait()
-
-	// エラー集約
-errloop:
-	for {
-		select {
-		case e := <-errch:
-			err = fmt.Errorf("error at update cache: %w", e)
-			existErr = true
-		default:
-			break errloop
-		}
-	}
-	if existErr {
-		return err
-	}
-
-	// kyou集約
-kyousloop:
-	for {
-		select {
-		case kyous := <-kyousCh:
-			allKyous = append(allKyous, kyous...)
-		default:
-			break kyousloop
-		}
-	}
-
-	// 最新のKyouのみにする
-	latestKyousMap := map[string]*Kyou{}
-	for _, kyou := range allKyous {
-		if existKyou, exist := latestKyousMap[kyou.ID]; exist {
-			if kyou.UpdateTime.Before(existKyou.UpdateTime) {
-				latestKyousMap[kyou.ID] = kyou
-			}
-		} else {
-			latestKyousMap[kyou.ID] = kyou
-		}
-	}
-
-	// 最新のKyouの状態をLatestDataRepositoryAddressにいれる
-	latestDataRepositoryAddresses := []*account_state.LatestDataRepositoryAddress{}
-	for _, kyou := range latestKyousMap {
-		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
-			TargetID:                 kyou.ID,
-			LatestDataRepositoryName: kyou.RepName,
-			DataUpdateTime:           kyou.UpdateTime,
-		}
-		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
-	}
-	_, err = g.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
-	if err != nil {
-		err = fmt.Errorf("error at update cache.")
-		return err
-	}
-
-	return nil
-}
-
 func (g *GkillRepositories) GetPath(ctx context.Context, id string) (string, error) {
 	err := fmt.Errorf("not implements GetPath")
 	return "", err
@@ -731,7 +610,7 @@ func (g *GkillRepositories) GetKyouHistories(ctx context.Context, id string) ([]
 	// 並列処理
 	for _, rep := range g.Reps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep Repository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
@@ -809,7 +688,7 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 	// 並列処理
 	for _, rep := range g.TagReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			// jsonからパースする
@@ -925,7 +804,7 @@ func (g *GkillRepositories) GetTag(ctx context.Context, id string) (*Tag, error)
 	// 並列処理
 	for _, rep := range g.TagReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagInRep, err := rep.GetTag(ctx, id)
@@ -989,7 +868,7 @@ func (g *GkillRepositories) GetTagsByTagName(ctx context.Context, tagname string
 	// 並列処理
 	for _, rep := range g.TagReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagsByTagName(ctx, tagname)
@@ -1068,7 +947,7 @@ func (g *GkillRepositories) GetTagsByTargetID(ctx context.Context, target_id str
 	// 並列処理
 	for _, rep := range g.TagReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagsByTargetID(ctx, target_id)
@@ -1146,7 +1025,7 @@ func (g *GkillRepositories) GetTagHistories(ctx context.Context, id string) ([]*
 	// 並列処理
 	for _, rep := range g.TagReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagHistories(ctx, id)
@@ -1229,7 +1108,7 @@ func (g *GkillRepositories) GetAllTagNames(ctx context.Context) ([]string, error
 	// 並列処理
 	for _, rep := range g.TagReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TagRepository) {
 			defer wg.Done()
 			matchTagNamesInRep, err := rep.GetAllTagNames(ctx)
@@ -1298,7 +1177,7 @@ func (g *GkillRepositories) GetAllRepNames(ctx context.Context) ([]string, error
 	// 並列処理
 	for _, rep := range g.Reps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep Repository) {
 			defer wg.Done()
 			repName, err := rep.GetRepName(ctx)
@@ -1362,7 +1241,7 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 	// 並列処理
 	for _, rep := range g.TextReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			// jsonからパースする
@@ -1480,7 +1359,7 @@ func (g *GkillRepositories) GetText(ctx context.Context, id string) (*Text, erro
 	// 並列処理
 	for _, rep := range g.TextReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			matchTextInRep, err := rep.GetText(ctx, id)
@@ -1544,7 +1423,7 @@ func (g *GkillRepositories) GetTextsByTargetID(ctx context.Context, target_id st
 	// 並列処理
 	for _, rep := range g.TextReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			matchTextsInRep, err := rep.GetTextsByTargetID(ctx, target_id)
@@ -1622,7 +1501,7 @@ func (g *GkillRepositories) GetTextHistories(ctx context.Context, id string) ([]
 	// 並列処理
 	for _, rep := range g.TextReps {
 		wg.Add(1)
-		rep := rep
+		
 		go func(rep TextRepository) {
 			defer wg.Done()
 			matchTextsInRep, err := rep.GetTextHistories(ctx, id)
