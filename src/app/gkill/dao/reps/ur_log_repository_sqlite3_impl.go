@@ -210,6 +210,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "urlog"
+	log.Printf("%s, %s", repName, dataType)
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from URLOG%s: %w", err)
@@ -315,7 +316,8 @@ ORDER BY UPDATE_TIME DESC
 	defer stmt.Close()
 
 	dataType := "urlog"
-	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
+	log.Printf("%s, %s, %s", repName, dataType, id)
+	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from URLOG %s: %w", id, err)
 		return nil, err
@@ -539,6 +541,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		return nil, err
 	}
 
+	log.Printf("%s", repName)
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from URLOG %s: %w", err)
@@ -651,6 +654,7 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", repName, id)
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at query ")
@@ -754,6 +758,25 @@ INSERT INTO URLOG (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		urlog.IsDeleted,
+		urlog.ID,
+		urlog.URL,
+		urlog.Title,
+		urlog.Description,
+		urlog.FaviconImage,
+		urlog.ThumbnailImage,
+		urlog.RelatedTime.Format(sqlite3impl.TimeLayout),
+		urlog.CreateTime.Format(sqlite3impl.TimeLayout),
+		urlog.CreateApp,
+		urlog.CreateDevice,
+		urlog.CreateUser,
+		urlog.UpdateTime.Format(sqlite3impl.TimeLayout),
+		urlog.UpdateApp,
+		urlog.UpdateDevice,
+		urlog.UpdateUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		urlog.IsDeleted,
 		urlog.ID,

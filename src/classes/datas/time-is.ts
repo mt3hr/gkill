@@ -30,7 +30,7 @@ export class TimeIs extends InfoBase {
         throw new Error('Not implemented')
     }
 
-    async clone(): Promise<TimeIs> {
+    clone(): TimeIs {
         throw new Error('Not implemented')
     }
 

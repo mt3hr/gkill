@@ -26,7 +26,7 @@ export class Lantana extends InfoBase {
         throw new Error('Not implemented')
     }
 
-    async clone(): Promise<Lantana> {
+    clone(): Lantana {
         throw new Error('Not implemented')
     }
  

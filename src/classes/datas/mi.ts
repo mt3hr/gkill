@@ -36,7 +36,7 @@ export class Mi extends InfoBase {
         throw new Error('Not implemented')
     }
 
-    async clone(): Promise<Mi> {
+    clone(): Mi {
         throw new Error('Not implemented')
     }
 

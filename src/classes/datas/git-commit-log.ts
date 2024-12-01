@@ -23,7 +23,7 @@ export class GitCommitLog extends InfoBase {
         throw new Error('Not implemented')
     }
 
-    async clone(): Promise<GitCommitLog> {
+    clone(): GitCommitLog {
         throw new Error('Not implemented')
     }
 

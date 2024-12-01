@@ -147,6 +147,7 @@ FROM TIMEIS
 		return nil, err
 	}
 
+	log.Printf("%s, %s", repName, repName)
 	rows, err := stmt.QueryContext(ctx, repName, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
@@ -252,6 +253,7 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", repName, id)
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS %s: %w", id, err)
@@ -392,6 +394,7 @@ FROM TIMEIS
 		return nil, err
 	}
 
+	log.Printf("%s", repName)
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
@@ -509,6 +512,7 @@ ORDER BY UPDATE_TIME DESC
 		return nil, err
 	}
 
+	log.Printf("%s, %s", repName, id)
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
@@ -619,6 +623,23 @@ INSERT INTO TIMEIS (
 	} else {
 		endTimeStr = timeis.EndTime.Format(sqlite3impl.TimeLayout)
 	}
+
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		timeis.IsDeleted,
+		timeis.ID,
+		timeis.Title,
+		timeis.StartTime.Format(sqlite3impl.TimeLayout),
+		endTimeStr,
+		timeis.CreateTime.Format(sqlite3impl.TimeLayout),
+		timeis.CreateApp,
+		timeis.CreateDevice,
+		timeis.CreateUser,
+		timeis.UpdateTime.Format(sqlite3impl.TimeLayout),
+		timeis.UpdateApp,
+		timeis.UpdateDevice,
+		timeis.UpdateUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		timeis.IsDeleted,
 		timeis.ID,
@@ -666,6 +687,7 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 		ids = *query.IDs
 	}
 	if query.UseIDs != nil && *query.UseIDs {
+		if query.IDs != nil && len(*query.IDs) != 0 {
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
@@ -678,6 +700,7 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 		}
 		sqlWhere += ")"
 		whereCounter++
+	}
 	}
 
 	// 日付範囲指定ありの場合

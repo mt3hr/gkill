@@ -53,7 +53,7 @@
 </template>
 <script setup lang="ts">
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch, nextTick, onMounted } from 'vue'
 import FoldableStruct from './foldable-struct.vue'
 import type { RepQueryEmits } from './rep-query-emits'
 import type { RepQueryProps } from './rep-query-props'
@@ -80,6 +80,12 @@ watch(() => props.application_config, async () => {
     cloned_application_config.value.parse_rep_struct()
     cloned_application_config.value.parse_device_struct()
     cloned_application_config.value.parse_rep_type_struct()
+
+    await calc_reps_by_types_and_devices_promise()
+    const checked_items = await foldable_struct_reps.value?.get_selected_items()
+    if (checked_items) {
+        emits('request_update_checked_reps', checked_items)
+    }
 })
 
 const tab = ref(2)

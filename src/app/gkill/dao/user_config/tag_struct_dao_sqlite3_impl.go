@@ -128,6 +128,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", userID, device)
 	rows, err := stmt.QueryContext(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -188,6 +189,17 @@ INSERT INTO TAG_STRUCT (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s",
+		tagStruct.ID,
+		tagStruct.UserID,
+		tagStruct.Device,
+		tagStruct.TagName,
+		tagStruct.ParentFolderID,
+		tagStruct.Seq,
+		tagStruct.CheckWhenInited,
+		tagStruct.IsForceHide,
+	)
 	_, err = stmt.ExecContext(ctx,
 		tagStruct.ID,
 		tagStruct.UserID,
@@ -244,6 +256,17 @@ INSERT INTO TAG_STRUCT (
 		}
 		defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s",
+		tagStruct.ID,
+		tagStruct.UserID,
+		tagStruct.Device,
+		tagStruct.TagName,
+		tagStruct.ParentFolderID,
+		tagStruct.Seq,
+		tagStruct.CheckWhenInited,
+		tagStruct.IsForceHide,
+	)
 		_, err = stmt.ExecContext(ctx,
 			tagStruct.ID,
 			tagStruct.UserID,
@@ -289,6 +312,18 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s",
+		tagStruct.ID,
+		tagStruct.UserID,
+		tagStruct.Device,
+		tagStruct.TagName,
+		tagStruct.ParentFolderID,
+		tagStruct.Seq,
+		tagStruct.CheckWhenInited,
+		tagStruct.IsForceHide,
+		tagStruct.ID,
+	)
 	_, err = stmt.ExecContext(ctx,
 		tagStruct.ID,
 		tagStruct.UserID,
@@ -320,6 +355,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", id)
 	_, err = stmt.ExecContext(ctx, id)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -341,6 +377,7 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
+	log.Printf("%s", userID)
 	_, err = stmt.ExecContext(ctx, userID)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

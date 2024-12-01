@@ -174,6 +174,7 @@ WHERE
 		}
 		// id検索である場合のSQL追記
 		if query.UseIDs != nil && *query.UseIDs {
+			if query.IDs != nil && len(*query.IDs) != 0 {
 			ids := []string{}
 			if query.IDs != nil {
 				ids = *query.IDs
@@ -190,6 +191,7 @@ WHERE
 				}
 			}
 			sql += ")"
+			}
 		}
 	}
 	// UPDATE_TIMEが一番上のものだけを抽出
@@ -213,6 +215,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "kmemo"
+	log.Printf("%s, %s", repName, dataType)
 	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
@@ -317,7 +320,8 @@ ORDER BY UPDATE_TIME DESC
 	defer stmt.Close()
 
 	dataType := "kmemo"
-	rows, err := stmt.QueryContext(ctx, repName, id, dataType)
+	log.Printf("%s, %s, %s", repName, dataType, id)
+	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
 	if err != nil {
 		err = fmt.Errorf("error at select from KMEMO %s: %w", id, err)
 		return nil, err
@@ -543,6 +547,7 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		return nil, err
 	}
 
+	log.Printf("%s", repName)
 	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
@@ -646,6 +651,7 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
+	log.Printf("%s, %s", repName, id)
 	rows, err := stmt.QueryContext(ctx, repName, id)
 	if err != nil {
 		err = fmt.Errorf("error at query ")
@@ -736,6 +742,21 @@ INSERT INTO KMEMO (
 	}
 	defer stmt.Close()
 
+	log.Printf(
+		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+		kmemo.IsDeleted,
+		kmemo.ID,
+		kmemo.Content,
+		kmemo.RelatedTime.Format(sqlite3impl.TimeLayout),
+		kmemo.CreateTime.Format(sqlite3impl.TimeLayout),
+		kmemo.CreateApp,
+		kmemo.CreateDevice,
+		kmemo.CreateUser,
+		kmemo.UpdateTime.Format(sqlite3impl.TimeLayout),
+		kmemo.UpdateApp,
+		kmemo.UpdateDevice,
+		kmemo.UpdateUser,
+	)
 	_, err = stmt.ExecContext(ctx,
 		kmemo.IsDeleted,
 		kmemo.ID,
