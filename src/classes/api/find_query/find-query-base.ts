@@ -55,6 +55,7 @@ export abstract class FindQueryBase {
     abstract clone(): FindQueryBase
 
     constructor() {
+
         this.update_cache = false
 
         this.use_words = false
