@@ -13,7 +13,7 @@
 
 <script lang="ts" setup>
 'use strict'
-import { computed, nextTick, ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'

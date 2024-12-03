@@ -63,6 +63,17 @@ export class ApplicationConfig {
         application_config.account_is_admin = this.account_is_admin
         return application_config
     }
+    async load_all(): Promise<Array<GkillError>> {
+        let errors = Array<GkillError>()
+        errors.concat(await this.parse_template_and_struct())
+        errors.concat(await this.append_not_found_devices())
+        errors.concat(await this.append_not_found_rep_types())
+        errors.concat(await this.append_not_found_reps())
+        errors.concat(await this.append_not_found_tags())
+        errors.concat(await this.append_no_devices())
+        errors.concat(await this.append_no_tags())
+        return errors
+    }
     async append_not_found_reps(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
         req.session_id = GkillAPI.get_instance().get_session_id()
