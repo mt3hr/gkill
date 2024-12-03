@@ -15,8 +15,8 @@
         </v-row>
         <table v-show="use_tag" class="taglist">
             <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-                :is_open="true" :query="query" :struct_obj="cloned_application_config.parsed_tag_struct"
-                :is_editable="false" :is_root="true" :is_show_checkbox="true" @clicked_items="clicked_items"
+                :is_open="true" :struct_obj="cloned_application_config.parsed_tag_struct" :is_editable="false"
+                :is_root="true" :is_show_checkbox="true" @clicked_items="clicked_items"
                 @requested_update_check_state="update_check_state"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)" ref="foldable_struct" />
@@ -24,33 +24,49 @@
     </div>
 </template>
 <script setup lang="ts">
-import { readonly, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { TagQueryEmits } from './tag-query-emits'
 import type { TagQueryProps } from './tag-query-props'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import FoldableStruct from './foldable-struct.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { CheckState } from './check-state'
-import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import type { FoldableStructModel } from './foldable-struct-model'
-import type { RefSymbol } from '@vue/reactivity'
 
 const props = defineProps<TagQueryProps>()
 const emits = defineEmits<TagQueryEmits>()
-defineExpose({get_use_tag, get_tags, get_is_and_search})
+defineExpose({ get_use_tag, get_tags, get_is_and_search })
 
 const use_tag: Ref<boolean> = ref(true)
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const is_and_search: Ref<boolean> = ref(false)
 
-const cloned_query: Ref<FindKyouQuery> = ref(props.query.clone())
+const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
-
-cloned_application_config.value.parse_tag_struct()
 
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
-    cloned_application_config.value.parse_tag_struct()
+    const errors = await cloned_application_config.value.load_all()
+    if (errors !== null && errors.length !== 0) {
+        emits('received_errors', errors)
+        return
+    }
+    await update_check_state(cloned_query.value.tags, CheckState.checked)
+    const checked_items = foldable_struct.value?.get_selected_items()
+    if (checked_items) {
+        emits('request_update_checked_tags', checked_items, false)
+        emits('inited')
+    }
+})
+
+watch(() => props.find_kyou_query, async () => {
+    cloned_query.value = props.find_kyou_query.clone()
+    is_and_search.value = props.find_kyou_query.tags_and
+    await update_check_state(cloned_query.value.tags, CheckState.checked)
+    const checked_items = foldable_struct.value?.get_selected_items()
+    if (checked_items) {
+        emits('request_update_checked_tags', checked_items, false)
+    }
 })
 
 async function clicked_items(e: MouseEvent, items: Array<string>, is_checked: CheckState): Promise<void> {
@@ -107,21 +123,21 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
         f(cloned_application_config.value.parsed_tag_struct)
     }
 
-    const checked_items = await foldable_struct.value?.get_selected_items()
+    const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {
-        emits('request_update_checked_tags', checked_items)
+        emits('request_update_checked_tags', checked_items, true)
     }
 }
 
 function get_use_tag(): boolean {
     return use_tag.value
 }
-function get_tags(): Array<string> {
+function get_tags(): Array<string> | null {
     const tags = foldable_struct.value?.get_selected_items()
-    if (tags) {
-        return tags
+    if (!tags) {
+        return null
     }
-    return new Array<string>()
+    return tags
 }
 function get_is_and_search(): boolean {
     return is_and_search.value

@@ -32,7 +32,7 @@ import type { CircleOptions } from '@/classes/datas/circle-options';
 
 const props = defineProps<MapQueryProps>()
 const emits = defineEmits<MapQueryEmits>()
-defineExpose({get_use_map, get_latitude, get_longitude, get_radius})
+defineExpose({ get_use_map, get_latitude, get_longitude, get_radius })
 
 const gmap = ref<InstanceType<typeof GoogleMap> | null>(null);
 
@@ -42,6 +42,13 @@ const is_enable_circle = ref(false)
 const circle_radius = ref(300)
 const use_map_search = ref(false)
 const circles: Ref<Array<CircleOptions>> = ref(new Array<CircleOptions>())
+
+watch(() => props.find_kyou_query, () => {
+    use_map_search.value = props.find_kyou_query.use_map
+    center.value.lat = props.find_kyou_query.map_latitude.valueOf()
+    center.value.lng = props.find_kyou_query.map_longitude.valueOf()
+    circle_radius.value = props.find_kyou_query.map_radius.valueOf()
+})
 
 function update_circles(): void {
     circles.value = []

@@ -6,7 +6,6 @@ import type { ApplicationConfig } from "@/classes/datas/config/application-confi
 import type { SidebarProps } from "./sidebar-props"
 
 export interface RepQueryProps extends SidebarProps {
-    query: FindKyouQuery
     application_config: ApplicationConfig
     gkill_api: GkillAPI
 }

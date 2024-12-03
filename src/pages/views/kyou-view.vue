@@ -158,6 +158,7 @@ const delete_target_text: Ref<Text> = ref(new Text())
 
 watch(() => props.kyou, () => {
     cloned_kyou.value = props.kyou.clone()
+    cloned_kyou.value.load_attached_datas()
 })
 
 onMounted(() => {
