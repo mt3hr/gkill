@@ -23,11 +23,16 @@
 <script lang="ts" setup>
 import type { KeywordQueryEmits } from './keyword-query-emits'
 import type { KeywordQueryProps } from './keyword-query-props'
-import { ref, type Ref } from 'vue'
+import { ref, watch, type Ref } from 'vue'
 
 const props = defineProps<KeywordQueryProps>()
 const emits = defineEmits<KeywordQueryEmits>()
 defineExpose({get_keywords, get_use_words, get_use_word_and_search})
+
+watch(() => props.find_kyou_query, () => {
+    keywords.value = props.find_kyou_query.keywords
+    use_words.value = props.find_kyou_query.use_words
+})
 
 const keywords: Ref<string> = ref("")
 const use_words: Ref<boolean> = ref(false)

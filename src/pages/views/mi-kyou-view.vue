@@ -35,7 +35,7 @@
 </template>
 <script lang="ts" setup>
 import type { Mi } from '@/classes/datas/mi'
-import { nextTick, type Ref, ref } from 'vue'
+import { type Ref, ref } from 'vue'
 import MiContextMenu from './mi-context-menu.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { miKyouViewProps } from './mi-kyou-view-props'

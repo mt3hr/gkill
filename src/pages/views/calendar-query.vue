@@ -9,8 +9,9 @@
             <v-btn @click="clicked_clear_calendar_button" hide-details class="pb-0 mb-0">クリア</v-btn>
         </v-col>
     </v-row>
-    <VDatePicker v-show="use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates" :color="'primary'"
-        :multiple="'range'" @wheel.prevent.stop="(e: any) => on_wheel(e)" @update:model-value="clicked_date" />
+    <VDatePicker v-show="use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates"
+        :color="'primary'" :multiple="'range'" @wheel.prevent.stop="(e: any) => on_wheel(e)"
+        @update:model-value="clicked_date" />
 </template>
 <script lang="ts" setup>
 import moment from 'moment';
@@ -26,17 +27,27 @@ const date_picker = ref<InstanceType<typeof VDatePicker> | null>(null)
 
 const dates: Ref<Array<Date>> = ref([])
 const use_calendar: Ref<boolean> = ref(false)
-defineExpose({get_use_calendar, get_start_date, get_end_date})
+defineExpose({ get_use_calendar, get_start_date, get_end_date })
 
-watch(props.query, () => {
-    use_calendar.value = props.query.use_calendar
+watch(() => props.find_kyou_query, () => {
+    use_calendar.value = props.find_kyou_query.use_calendar
 
     dates.value = []
-    const start_date = moment(props.query.calendar_start_date)
-    const end_date = moment(props.query.calendar_end_date)
+
+    const start_date = moment(props.find_kyou_query.calendar_start_date)
+    const end_date = moment(props.find_kyou_query.calendar_end_date)
     const date_list = Array<Date>()
-    for (let date = start_date; date.unix() !== end_date.unix(); date = date.add('days', 1)) {
-        date_list.push(date.toDate())
+    if (props.find_kyou_query.calendar_start_date && props.find_kyou_query.calendar_end_date) {
+        for (let date = start_date; date.unix() !== end_date.unix(); date = date.add('days', 1)) {
+            date_list.push(date.toDate())
+        }
+    } else {
+        if (props.find_kyou_query.calendar_start_date) {
+            date_list.push(start_date.toDate())
+        }
+        if (props.find_kyou_query.calendar_end_date) {
+            date_list.push(start_date.toDate())
+        }
     }
     dates.value = date_list
 })
@@ -44,7 +55,7 @@ watch(props.query, () => {
 // 日付がクリックされた時、日時を更新してclicked_timeをemitする
 function clicked_date(recved_dates: any): void {
     dates.value = recved_dates
-    if (dates.value && dates.value.length !== 0) {
+    if (dates.value) {
         emits('request_update_dates', moment(dates.value[0]).toDate(), moment(dates.value[dates.value.length - 1]).toDate())
     } else {
         emits('request_update_dates', null, null)
@@ -77,7 +88,7 @@ function get_start_date(): Date | null {
     }
     return null
 }
-function get_end_date() : Date | null {
+function get_end_date(): Date | null {
     if (dates.value.length == 2) {
         return dates.value[2]
     }

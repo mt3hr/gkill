@@ -1,38 +1,35 @@
 <template>
     <div>
-        <SidebarHeader :application_config="application_config" :gkill_api="gkill_api" :query="query"
-            @requested_search="emits('requested_search')" @requested_clear_find_query="emits('updated_query', default_query)"
+        <SidebarHeader :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+            @requested_search="emits('requested_search')" @requested_clear_find_query="emits_default_query()"
             class="sidebar_header" ref="sidebar_header" />
         <div class="rykv_sidebar">
-            <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-                @request_update_and_search="emits('updated_query', generate_query())"
-                @request_update_keywords="emits('updated_query', generate_query())"
-                @request_update_use_keyword_query="emits('updated_query', generate_query())"
-                @request_clear_keyword_query="emits('updated_query', generate_cleard_keyword_query())"
-                ref="keyword_query" />
-            <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-                @request_update_and_search_timeis_tags="emits('updated_query', generate_query())"
-                @request_update_and_search_timeis_word="emits('updated_query', generate_query())"
-                @request_update_timeis_keywords="emits('updated_query', generate_query())"
-                @request_update_use_timeis_query="emits('updated_query', generate_query())"
-                @request_clear_timeis_query="emits('updated_query', generate_cleard_timeis_query())"
-                ref="timeis_query" />
-            <RepQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-                @request_update_checked_reps="emits('updated_query', generate_query())"
-                @request_clear_rep_query="emits('updated_query', generate_cleard_rep_query())" ref="rep_query" />
-            <TagQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-                @request_update_and_search_tags="emits('updated_query', generate_query())"
-                @request_update_checked_tags="emits('updated_query', generate_query())"
-                @request_clear_tag_query="emits('updated_query', generate_cleard_tag_query())" ref="tag_query" />
-            <CalendarQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-                @request_update_dates="emits('updated_query', generate_query())"
-                @request_update_use_calendar_query="emits('updated_query', generate_query())"
-                @request_clear_calendar_query="emits('updated_query', generate_cleard_calendar_query())"
-                ref="calendar_query" />
-            <MapQuery :application_config="application_config" :gkill_api="gkill_api" :query="query"
-                @request_update_area="emits('updated_query', generate_query())"
-                @request_update_use_map_query="emits('updated_query', generate_query())"
-                @request_clear_map_query="emits('updated_query', generate_cleard_map_query())" ref="map_query" />
+            <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                @request_update_and_search="emits_current_query()" @request_update_keywords="emits_current_query()"
+                @request_update_use_keyword_query="emits_current_query()"
+                @request_clear_keyword_query="() => { emits_cleard_keyword_query() }" ref="keyword_query" />
+            <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                @request_update_and_search_timeis_tags="emits_current_query()"
+                @request_update_and_search_timeis_word="emits_current_query()"
+                @request_update_checked_timeis_tags="() => { emits_current_query(); inited_timeis_query_for_query_sidebar = true }"
+                @request_update_timeis_keywords="emits_current_query()"
+                @request_update_use_timeis_query="emits_current_query()"
+                @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
+            <RepQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                @request_update_checked_reps="emits_current_query()" @request_clear_rep_query="emits_cleard_rep_query()"
+                @request_update_checked_devices="emits_current_query()"
+                @request_update_checked_rep_types="emits_current_query()" ref="rep_query"
+                @inited="inited_rep_query_for_query_sidebar = true" />
+            <TagQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                @request_update_and_search_tags="emits_current_query()"
+                @request_update_checked_tags="emits_current_query()" @request_clear_tag_query="emits_cleard_tag_query()"
+                ref="tag_query" @inited="inited_tag_query_for_query_sidebar = true" />
+            <CalendarQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                @request_update_dates="emits_current_query()" @request_update_use_calendar_query="emits_current_query()"
+                @request_clear_calendar_query="emits_cleard_calendar_query()" ref="calendar_query" />
+            <MapQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                @request_update_area="emits_current_query()" @request_update_use_map_query="emits_current_query()"
+                @request_clear_map_query="emits_cleard_map_query()" ref="map_query" />
         </div>
     </div>
 </template>
@@ -47,7 +44,7 @@ import TagQuery from './tag-query.vue'
 import TimeIsQuery from './time-is-query.vue'
 import type { rykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-emits'
 import type { rykvQueryEditorSidebarProps } from './rykv-query-editor-sidebar-props'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, type Ref, ref, watch } from 'vue'
 
 const sidebar_header = ref<InstanceType<typeof SidebarHeader> | null>(null);
 const keyword_query = ref<InstanceType<typeof KeywordQuery> | null>(null);
@@ -59,15 +56,59 @@ const map_query = ref<InstanceType<typeof MapQuery> | null>(null);
 
 const props = defineProps<rykvQueryEditorSidebarProps>()
 const emits = defineEmits<rykvQueryEditorSidebarEmits>()
-defineExpose({generate_query})
+defineExpose({ generate_query })
 
 const header_height: Ref<number> = ref(38)
 const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
 
-const default_query: Ref<FindKyouQuery> = ref(((): FindKyouQuery => generate_query())())
+const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 const query: Ref<FindKyouQuery> = ref(default_query.value)
+
+const is_mounted = ref(false)
+nextTick(() => is_mounted.value = true)
+
+const inited = computed(() => {
+    if (!is_mounted.value) {
+        return false
+    }
+    return inited_keyword_query_for_query_sidebar.value &&
+        // TODO なんか動かない inited_timeis_query_for_query_sidebar.value &&
+        inited_rep_query_for_query_sidebar.value &&
+        inited_tag_query_for_query_sidebar.value &&
+        inited_calendar_query_for_query_sidebar.value &&
+        inited_map_query_for_query_sidebar.value
+})
+
+watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
+    if (old_value !== new_value && new_value) {
+        default_query.value = generate_query()
+    }
+})
+
+const inited_keyword_query_for_query_sidebar = ref(true)
+const inited_timeis_query_for_query_sidebar = ref(false)
+const inited_rep_query_for_query_sidebar = ref(false)
+const inited_tag_query_for_query_sidebar = ref(false)
+const inited_calendar_query_for_query_sidebar = ref(true)
+const inited_map_query_for_query_sidebar = ref(true)
+
+const is_received_this_thick = ref(false)
+watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
+    if(is_received_this_thick.value) { return }
+    is_received_this_thick.value = true
+    nextTick(() => is_received_this_thick.value = false)
+
+    if (JSON.stringify(new_value.clone()) === JSON.stringify(old_value.clone())) {
+        return
+    }
+    query.value = props.find_kyou_query
+})
+
+function emits_current_query(): void {
+    emits('updated_query', generate_query())
+}
 
 function generate_query(): FindKyouQuery {
     const find_query = new FindKyouQuery()
@@ -90,11 +131,25 @@ function generate_query(): FindKyouQuery {
     }
 
     if (rep_query.value) {
-        find_query.reps = rep_query.value.get_checked_reps()
+        const reps = rep_query.value.get_checked_reps()
+        const devices = rep_query.value.get_checked_devices()
+        const rep_types = rep_query.value.get_checked_rep_types()
+        if (reps) {
+            find_query.reps = reps
+        }
+        if (devices) {
+            find_query.devices = devices
+        }
+        if (rep_types) {
+            find_query.rep_types = rep_types
+        }
     }
 
     if (tag_query.value) {
-        find_query.tags = tag_query.value.get_tags()
+        const tags = tag_query.value.get_tags()
+        if (tags) {
+            find_query.tags = tags
+        }
         find_query.tags_and = tag_query.value.get_is_and_search()
     }
 
@@ -112,21 +167,22 @@ function generate_query(): FindKyouQuery {
     }
 
     find_query.parse_words_and_not_words()
-    emits('updated_query', find_query)
     return find_query
 }
 
-function generate_cleard_keyword_query(): FindKyouQuery {
+function emits_cleard_keyword_query(): void {
     const find_query = generate_query()
+    find_query.use_words = default_query.value.use_words
     find_query.keywords = default_query.value.keywords
     find_query.words_and = default_query.value.words_and
     find_query.parse_words_and_not_words()
     emits('updated_query', find_query)
-    return find_query
 }
 
-function generate_cleard_timeis_query(): FindKyouQuery {
+function emits_cleard_timeis_query(): void {
     const find_query = generate_query()
+    find_query.use_timeis = default_query.value.use_timeis
+    find_query.use_timeis_tags = default_query.value.use_timeis_tags
     find_query.timeis_keywords = default_query.value.timeis_keywords
     find_query.timeis_words_and = default_query.value.timeis_words_and
     find_query.use_timeis_tags = default_query.value.use_timeis_tags
@@ -134,39 +190,43 @@ function generate_cleard_timeis_query(): FindKyouQuery {
     find_query.timeis_tags_and = default_query.value.timeis_tags_and
     find_query.parse_words_and_not_words()
     emits('updated_query', find_query)
-    return find_query
 }
 
-function generate_cleard_rep_query(): FindKyouQuery {
+function emits_cleard_rep_query(): void {
     const find_query = generate_query()
     find_query.reps = default_query.value.reps
+    find_query.devices = default_query.value.devices
+    find_query.rep_types = default_query.value.rep_types
     emits('updated_query', find_query)
-    return find_query
 }
 
-function generate_cleard_tag_query(): FindKyouQuery {
+function emits_cleard_tag_query(): void {
     const find_query = generate_query()
     find_query.tags = default_query.value.tags
     find_query.tags_and = default_query.value.tags_and
     emits('updated_query', find_query)
-    return find_query
 }
 
-function generate_cleard_map_query(): FindKyouQuery {
+function emits_cleard_map_query(): void {
     const find_query = generate_query()
+    find_query.use_map = default_query.value.use_map
     find_query.map_latitude = default_query.value.map_latitude
     find_query.map_longitude = default_query.value.map_longitude
     find_query.map_radius = default_query.value.map_radius
     emits('updated_query', find_query)
-    return find_query
 }
 
-function generate_cleard_calendar_query(): FindKyouQuery {
+function emits_cleard_calendar_query(): void {
     const find_query = generate_query()
+    find_query.use_calendar = default_query.value.use_calendar
     find_query.calendar_start_date = default_query.value.calendar_start_date
     find_query.calendar_end_date = default_query.value.calendar_end_date
     emits('updated_query', find_query)
-    return find_query
+}
+
+function emits_default_query(): void {
+    const find_query = default_query.value.clone()
+    emits('updated_query', find_query)
 }
 </script>
 <style lang="css">

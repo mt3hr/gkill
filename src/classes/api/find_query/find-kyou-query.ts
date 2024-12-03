@@ -6,6 +6,10 @@ export class FindKyouQuery extends FindQueryBase {
     reps: Array<string>
     is_image_only: boolean
 
+    devices: Array<string>
+    rep_types: Array<string>
+
+
     clone(): FindKyouQuery {
         const cloned = new FindKyouQuery()
         cloned.update_cache = this.update_cache
@@ -33,6 +37,8 @@ export class FindKyouQuery extends FindQueryBase {
         cloned.calendar_end_date = this.calendar_end_date
         cloned.reps = this.reps
         cloned.is_image_only = this.is_image_only
+        cloned.devices = this.devices
+        cloned.rep_types = this.rep_types
         return cloned
     }
 
@@ -40,5 +46,7 @@ export class FindKyouQuery extends FindQueryBase {
         super()
         this.reps = new Array<string>()
         this.is_image_only = false
+        this.devices = new Array<string>()
+        this.rep_types = new Array<string>()
     }
 }
