@@ -8,9 +8,9 @@
     <v-navigation-drawer v-model="drawer" app :width="300">
         <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
             :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
-            :app_content_width="app_content_width" :query="querys[focused_column_index]"
+            :app_content_width="app_content_width" :find_kyou_query="querys[focused_column_index]"
             @requested_search="search(focused_column_index)"
-            @updated_query="(new_query) => querys.splice(focused_column_index, 1, new_query)"
+            @updated_query="new_query => querys.splice(focused_column_index, 1, new_query)"
             ref="query_editor_sidebar" />
     </v-navigation-drawer>
     <v-main class="main">

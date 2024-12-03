@@ -62,18 +62,32 @@ const use_timeis: Ref<boolean> = ref(false)
 const use_timeis_tags: Ref<boolean> = ref(false)
 const use_and_search_timeis_words: Ref<boolean> = ref(false)
 const use_and_search_timeis_tags: Ref<boolean> = ref(false)
-const timeis_keywords: Ref<string> = ref(props.query.timeis_words.join(" ") + props.query.timeis_not_words.join(" -"))
+const timeis_keywords: Ref<string> = ref(props.find_kyou_query.timeis_words.join(" ") + props.find_kyou_query.timeis_not_words.join(" -"))
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
-    cloned_application_config.value.parse_tag_struct()
+    const errors = await cloned_application_config.value.load_all()
+    if (errors !== null && errors.length !== 0) {
+        emits('received_errors', errors)
+        return
+    }
 })
 
-const query: Ref<FindKyouQuery> = ref(props.query.clone())
+watch(() => props.find_kyou_query, () => {
+    query.value = props.find_kyou_query
+    use_timeis.value = props.find_kyou_query.use_timeis
+    use_timeis_tags.value = props.find_kyou_query.use_timeis_tags
+    use_and_search_timeis_tags.value = props.find_kyou_query.timeis_tags_and
+    use_and_search_timeis_words.value = props.find_kyou_query.timeis_words_and
+    timeis_keywords.value = props.find_kyou_query.timeis_keywords
+    cloned_application_config.value = props.application_config
+})
+
+const query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 
 async function clicked_items(e: MouseEvent, items: Array<string>, check_state: CheckState, is_user: boolean): Promise<void> {
-    const checked_items = await foldable_struct.value?.get_selected_items()
+    const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {
         emits('request_update_checked_timeis_tags', checked_items)
     }

@@ -1158,7 +1158,6 @@ export class GkillAPI {
                 await response.application_config.append_not_found_devices()
                 await response.application_config.parse_template_and_struct()
                 this.check_auth(response)
-                console.log(response.application_config)
                 return response
         }
 
