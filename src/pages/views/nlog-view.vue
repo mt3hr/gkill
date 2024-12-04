@@ -1,5 +1,5 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu">
+    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <v-row class="ma-0 pa-0">
             <v-col v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() > 0" cols="auto" class="ma-0 pa-0">
                 ↑

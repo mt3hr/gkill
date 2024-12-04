@@ -14,8 +14,6 @@ import { type Ref, ref, watch } from 'vue'
 import type { EditKmemoDialogProps } from './edit-kmemo-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import EditKmemoView from '../views/edit-kmemo-view.vue'
-import KyouView from '../views/kyou-view.vue'
-import type { Kyou } from '@/classes/datas/kyou'
 
 const props = defineProps<EditKmemoDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
