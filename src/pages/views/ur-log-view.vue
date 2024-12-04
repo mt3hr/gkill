@@ -1,5 +1,5 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu">
+    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <div>{{ kyou.typed_urlog?.title }}</div>
@@ -23,14 +23,14 @@
                 <div v-if="kyou.typed_urlog" class="urlog_description">{{ kyou.typed_urlog.description }}</div>
             </v-col>
         </v-row>
+        <URLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
+            :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
+            ref="context_menu" @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+            @requested_reload_list="() => emits('requested_reload_list')"
+            @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
     </v-card>
-    <URLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
-        ref="context_menu" @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
-        @requested_reload_list="() => emits('requested_reload_list')"
-        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script setup lang="ts">
 import { type Ref, ref } from 'vue'

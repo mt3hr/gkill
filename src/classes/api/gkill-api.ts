@@ -153,8 +153,11 @@ import type { GetAllRepNamesRequest } from "./req_res/get-all-rep-names-request"
 import type { GetAllRepNamesResponse } from "./req_res/get-all-rep-names-response"
 import { Kyou } from "../datas/kyou"
 import moment from "moment"
+import { Tag } from "../datas/tag"
+import { Text } from "../datas/text"
 
 export class GkillAPI {
+
         private static gkill_api: GkillAPI = new GkillAPI()
         static get_instance(): GkillAPI {
                 return this.gkill_api
@@ -304,6 +307,7 @@ export class GkillAPI {
         get_repositories_method: string
 
         private constructor() {
+                this.saved_application_config = null
                 this.login_address = "/api/login"
                 this.logout_address = "/api/logout"
                 this.reset_password_address = "/api/reset_password"
@@ -811,7 +815,7 @@ export class GkillAPI {
                                 (kyou as any)[key] = (response.kyous[i] as any)[key]
 
                                 // 時刻はDate型に変換
-                                if (key.endsWith("time")) {
+                                if (key.endsWith("time") && (kyou as any)[key]) {
                                         (kyou as any)[key] = moment((kyou as any)[key]).toDate()
                                 }
                         }
@@ -843,7 +847,7 @@ export class GkillAPI {
                                 (kyou as any)[key] = (response.kyou_histories[i] as any)[key]
 
                                 // 時刻はDate型に変換
-                                if (key.endsWith("time")) {
+                                if (key.endsWith("time") && (kyou as any)[key]) {
                                         (kyou as any)[key] = moment((kyou as any)[key]).toDate()
                                 }
                         }
@@ -1062,7 +1066,29 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetTagsByTargetIDResponse = json
+                this.check_auth(response)
+                if (!response.tags) {
+                        response.tags = new Array<Tag>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したTagリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.tags.length; i++) {
+                        const tag = new Tag()
+                        for (let key in response.tags[i]) {
+                                (tag as any)[key] = (response.tags[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (tag as any)[key]) {
+                                        (tag as any)[key] = moment((tag as any)[key]).toDate()
+                                }
+                        }
+                        response.tags[i] = tag
+                }
                 this.check_auth(response)
                 return response
         }
@@ -1076,7 +1102,29 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetTagHistoryByTagIDResponse = json
+                this.check_auth(response)
+                if (!response.tag_histories) {
+                        response.tag_histories = new Array<Tag>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したTagリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.tag_histories.length; i++) {
+                        const tag = new Tag()
+                        for (let key in response.tag_histories[i]) {
+                                (tag as any)[key] = (response.tag_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (tag as any)[key]) {
+                                        (tag as any)[key] = moment((tag as any)[key]).toDate()
+                                }
+                        }
+                        response.tag_histories[i] = tag
+                }
                 this.check_auth(response)
                 return response
         }
@@ -1090,7 +1138,29 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetTextsByTargetIDResponse = json
+                this.check_auth(response)
+                if (!response.texts) {
+                        response.texts = new Array<Text>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したTextリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.texts.length; i++) {
+                        const text = new Text()
+                        for (let key in response.texts[i]) {
+                                (text as any)[key] = (response.texts[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (text as any)[key]) {
+                                        (text as any)[key] = moment((text as any)[key]).toDate()
+                                }
+                        }
+                        response.texts[i] = text
+                }
                 this.check_auth(response)
                 return response
         }
@@ -1104,7 +1174,29 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetTextHistoryByTextIDResponse = json
+                this.check_auth(response)
+                if (!response.text_histories) {
+                        response.text_histories = new Array<Text>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したTextリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.text_histories.length; i++) {
+                        const text = new Text()
+                        for (let key in response.text_histories[i]) {
+                                (text as any)[key] = (response.text_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (text as any)[key]) {
+                                        (text as any)[key] = moment((text as any)[key]).toDate()
+                                }
+                        }
+                        response.text_histories[i] = text
+                }
                 this.check_auth(response)
                 return response
         }
@@ -1533,6 +1625,14 @@ export class GkillAPI {
                                 }
                         })
                 }
+        }
+
+        private saved_application_config: ApplicationConfig | null
+        set_saved_application_config(application_config: ApplicationConfig) {
+                this.saved_application_config = application_config
+        }
+        get_saved_application_config(): ApplicationConfig | null {
+                return this.saved_application_config
         }
 }
 

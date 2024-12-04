@@ -1,11 +1,10 @@
 'use strict'
 
-import type { InfoIdentifier } from "@/classes/datas/info-identifier"
 import type { Kyou } from "@/classes/datas/kyou"
-import type { GkillPropsBase } from "./gkill-props-base"
+import type { KyouViewPropsBase } from "./kyou-view-props-base"
 
-export interface miKyouViewProps extends GkillPropsBase {
+export interface miKyouViewProps extends KyouViewPropsBase {
     kyou: Kyou
-    highlight_targets: Array<InfoIdentifier>
-    last_added_tag: string
+    height: number | string
+    width: number | string
 }

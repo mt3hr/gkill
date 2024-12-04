@@ -14,7 +14,6 @@ import { type Ref, ref, watch } from 'vue'
 import type { EditLantanaDialogProps } from './edit-lantana-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import AddLantanaView from '../views/add-lantana-view.vue'
-import KyouView from '../views/kyou-view.vue'
 
 const props = defineProps<EditLantanaDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()

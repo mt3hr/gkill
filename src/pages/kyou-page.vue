@@ -8,7 +8,8 @@
             :highlight_targets="hightlight_targets" :is_image_view="is_image_view" :kyou="kyou" :last_added_tag="''"
             :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
             :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-            :show_timeis_plaing_end_button="true" @received_errors="write_errors" @received_messages="write_messages" />
+            :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
+            :width="app_content_width.valueOf()" @received_errors="write_errors" @received_messages="write_messages" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
             :is_show="is_show_application_config_dialog" @received_errors="write_errors"
@@ -32,7 +33,7 @@ const element_height: Ref<Number> = ref(0)
 const browser_url_bar_height: Ref<Number> = ref(0)
 const app_title_bar_height: Ref<Number> = ref(50)
 const app_title_bar_height_px = computed(() => app_title_bar_height.value.toString().concat("px"))
-const gkill_api: Ref<GkillAPI> = ref(GkillAPI.get_instance())
+const gkill_api = computed(() => GkillAPI.get_instance())
 const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
@@ -54,6 +55,7 @@ async function load_application_config(): Promise<void> {
             }
 
             application_config.value = res.application_config
+            GkillAPI.get_instance().set_saved_application_config(res.application_config)
 
             if (res.messages && res.messages.length != 0) {
                 write_messages(res.messages)

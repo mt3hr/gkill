@@ -30,7 +30,7 @@ const element_height: Ref<Number> = ref(0)
 const browser_url_bar_height: Ref<Number> = ref(0)
 const app_title_bar_height: Ref<Number> = ref(50)
 const app_title_bar_height_px = computed(() => app_title_bar_height.value.toString().concat("px"))
-const gkill_api: Ref<GkillAPI> = ref(GkillAPI.get_instance())
+const gkill_api = computed(() => GkillAPI.get_instance())
 const application_config = ref(new ApplicationConfig())
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
@@ -50,6 +50,7 @@ async function load_application_config(): Promise<void> {
             }
 
             application_config.value = res.application_config
+            GkillAPI.get_instance().set_saved_application_config(res.application_config)
 
             if (res.messages && res.messages.length != 0) {
                 write_messages(res.messages)
