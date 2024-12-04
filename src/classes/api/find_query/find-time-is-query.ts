@@ -9,7 +9,7 @@ export class FindTimeIsQuery extends FindQueryBase {
 
     use_plaing: boolean
 
-    plaing_time: Date
+    plaing_time: Date | null
 
     include_end_timeis: boolean
 
@@ -25,7 +25,7 @@ export class FindTimeIsQuery extends FindQueryBase {
         super()
         this.plaing_only = false
         this.use_plaing = false
-        this.plaing_time = new Date(0)
+        this.plaing_time = null
         this.include_end_timeis = false
     }
 

@@ -51,6 +51,7 @@
                 :is_image_view="false" :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
                 :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                 :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_urlog_plaing_end_button="true"
+                :height="'100%'" :width="'100%'"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"

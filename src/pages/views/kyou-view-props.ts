@@ -15,4 +15,6 @@ export interface KyouViewProps extends KyouViewPropsBase {
     show_mi_estimate_end_time: boolean
     show_timeis_plaing_end_button: boolean
     highlight_targets: Array<InfoIdentifier>
+    height: number | string
+    width: number | string
 }

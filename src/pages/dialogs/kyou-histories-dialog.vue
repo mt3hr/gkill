@@ -12,8 +12,9 @@
                     </v-col>
                 </v-row>
             </v-card-title>
-            <KyouHistoriesView :application_config="application_config" :gkill_api="gkill_api" :kyou="kyou" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
+            <KyouHistoriesView :application_config="application_config" :gkill_api="gkill_api" :kyou="kyou"
+                :highlight_targets="[]" :last_added_tag="last_added_tag"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
@@ -23,7 +24,7 @@
                     :highlight_targets="[kyou.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
                     :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                     :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                    :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
+                    :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
                     @received_errors="(errors) => emits('received_errors', errors)"
                     @received_messages="(messages) => emits('received_messages', messages)"
                     @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"

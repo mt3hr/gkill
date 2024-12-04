@@ -1,14 +1,14 @@
 <template>
-    <v-card v-if="kyou.typed_git_commit_log" @contextmenu.prevent="show_context_menu">
+    <v-card v-if="kyou.typed_git_commit_log" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <div>{{ kyou.typed_git_commit_log.commit_message }}</div>
+        <GitCommitLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
+            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+            @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+            @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
+            @requested_reload_list="emits('requested_reload_list')"
+            @requested_update_check_kyous="(kyou: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyou, is_checked)" />
     </v-card>
-    <GitCommitLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
-        @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
-        @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
-        @requested_reload_list="emits('requested_reload_list')"
-        @requested_update_check_kyous="(kyou: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyou, is_checked)" />
 </template>
 <script setup lang="ts">
 import { ref, type Ref } from 'vue'
