@@ -1,5 +1,5 @@
-<template @contextmenu.prevent="" show_context_menu>
-    <div>
+<template>
+    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <div v-if="kyou.typed_kmemo" class="kmemo_text_content">{{ kyou.typed_kmemo.content }}</div>
         <KmemoContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
@@ -9,7 +9,7 @@
             @requested_reload_list="() => emits('requested_reload_list')"
             @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
             ref="context_menu" />
-    </div>
+    </v-card>
 </template>
 <script setup lang="ts">
 import { type Ref, ref } from 'vue'

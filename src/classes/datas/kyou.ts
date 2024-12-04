@@ -2,15 +2,15 @@
 
 import { InfoBase } from './info-base'
 import { GkillError } from '../api/gkill-error'
-import type { GitCommitLog } from './git-commit-log'
+import { GitCommitLog } from './git-commit-log'
 import type { IDFKyou } from './idf-kyou'
-import type { Kmemo } from './kmemo'
-import type { Lantana } from './lantana'
-import type { Mi } from './mi'
-import type { Nlog } from './nlog'
-import type { ReKyou } from './re-kyou'
-import type { TimeIs } from './time-is'
-import type { URLog } from './ur-log'
+import { Kmemo } from './kmemo'
+import { Lantana } from './lantana'
+import { Mi } from './mi'
+import { Nlog } from './nlog'
+import { ReKyou } from './re-kyou'
+import { TimeIs } from './time-is'
+import { URLog } from './ur-log'
 import { InfoIdentifier } from './info-identifier'
 import { GkillAPI } from '../api/gkill-api'
 import { GetKyouRequest } from '../api/req_res/get-kyou-request'
@@ -22,6 +22,7 @@ import { GetMiRequest } from '../api/req_res/get-mi-request'
 import { GetLantanaRequest } from '../api/req_res/get-lantana-request'
 import { GetGitCommitLogRequest } from '../api/req_res/get-git-commit-log-request'
 import { GetReKyouRequest } from '../api/req_res/get-re-kyou-request'
+import moment from 'moment'
 
 export class Kyou extends InfoBase {
     is_deleted: boolean
@@ -49,7 +50,23 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_attached_datas(): Promise<Array<GkillError>> {
+    async load_all(): Promise<Array<GkillError>> {
+        let errors = new Array<GkillError>()
+        errors = errors.concat(await this.load_typed_datas())
+        errors = errors.concat(await this.load_attached_datas())
+        errors = errors.concat(await this.load_attached_histories())
+        return errors
+    }
+
+    async clear_all(): Promise<Array<GkillError>> {
+        let errors = new Array<GkillError>()
+        errors = errors.concat(await this.clear_attached_datas())
+        errors = errors.concat(await this.clear_typed_datas())
+        errors = errors.concat(await this.clear_attached_histories())
+        return errors
+    }
+
+    async load_typed_datas(): Promise<Array<GkillError>> {
         let errors = new Array<GkillError>()
         if (this.data_type.startsWith("kmemo")) {
             const e = await this.load_typed_kmemo()
@@ -90,16 +107,22 @@ export class Kyou extends InfoBase {
         return errors
     }
 
+    async load_attached_datas(): Promise<Array<GkillError>> {
+        let errors = new Array<GkillError>()
+        errors = errors.concat(await this.load_attached_tags())
+        errors = errors.concat(await this.load_attached_texts())
+        errors = errors.concat(await this.load_attached_timeis())
+        errors = errors.concat(await this.load_attached_histories())
+        return errors
+    }
+
     async clear_attached_histories(): Promise<Array<GkillError>> {
         this.attached_histories = []
         return new Array<GkillError>()
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        this.attached_tags = []
-        this.attached_texts = []
-        this.attached_timeis_kyou = []
-        return new Array<GkillError>()
+        return super.clear_attached_datas()
     }
 
     async load_typed_kmemo(): Promise<Array<GkillError>> {
@@ -116,6 +139,20 @@ export class Kyou extends InfoBase {
             error.error_code = "//TODO"
             error.error_message = "Kmemoが見つかりませんでした"
             return [error]
+        }
+
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.kmemo_histories.length; i++) {
+            const kmemo = new Kmemo()
+            for (let key in res.kmemo_histories[i]) {
+                (kmemo as any)[key] = (res.kmemo_histories[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (kmemo as any)[key]) {
+                    (kmemo as any)[key] = moment((kmemo as any)[key]).toDate()
+                }
+            }
+            res.kmemo_histories[i] = kmemo
         }
 
         this.typed_kmemo = res.kmemo_histories[0]
@@ -139,6 +176,20 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.urlog_histories.length; i++) {
+            const urlog = new URLog()
+            for (let key in res.urlog_histories[i]) {
+                (urlog as any)[key] = (res.urlog_histories[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (urlog as any)[key]) {
+                    (urlog as any)[key] = moment((urlog as any)[key]).toDate()
+                }
+            }
+            res.urlog_histories[i] = urlog
+        }
+
         this.typed_urlog = res.urlog_histories[0]
 
         return new Array<GkillError>()
@@ -159,6 +210,21 @@ export class Kyou extends InfoBase {
             error.error_message = "Nlogが見つかりませんでした"
             return [error]
         }
+
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.nlog_histories.length; i++) {
+            const nlog = new Nlog()
+            for (let key in res.nlog_histories[i]) {
+                (nlog as any)[key] = (res.nlog_histories[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (nlog as any)[key]) {
+                    (nlog as any)[key] = moment((nlog as any)[key]).toDate()
+                }
+            }
+            res.nlog_histories[i] = nlog
+        }
+
 
         this.typed_nlog = res.nlog_histories[0]
 
@@ -181,6 +247,21 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.timeis_histories.length; i++) {
+            const timeis = new TimeIs()
+            for (let key in res.timeis_histories[i]) {
+                (timeis as any)[key] = (res.timeis_histories[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (timeis as any)[key]) {
+                    (timeis as any)[key] = moment((timeis as any)[key]).toDate()
+                }
+            }
+            res.timeis_histories[i] = timeis
+        }
+
+
         this.typed_timeis = res.timeis_histories[0]
 
         return new Array<GkillError>()
@@ -202,6 +283,21 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.mi_histories.length; i++) {
+            const mi = new Mi()
+            for (let key in res.mi_histories[i]) {
+                (mi as any)[key] = (res.mi_histories[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (mi as any)[key]) {
+                    (mi as any)[key] = moment((mi as any)[key]).toDate()
+                }
+            }
+            res.mi_histories[i] = mi
+        }
+
+
         this.typed_mi = res.mi_histories[0]
 
         return new Array<GkillError>()
@@ -222,6 +318,21 @@ export class Kyou extends InfoBase {
             error.error_message = "Lantanaが見つかりませんでした"
             return [error]
         }
+
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.lantana_histories.length; i++) {
+            const lantana = new Lantana()
+            for (let key in res.lantana_histories[i]) {
+                (lantana as any)[key] = (res.lantana_histories[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (lantana as any)[key]) {
+                    (lantana as any)[key] = moment((lantana as any)[key]).toDate()
+                }
+            }
+            res.lantana_histories[i] = lantana
+        }
+
 
         this.typed_lantana = res.lantana_histories[0]
 
@@ -248,6 +359,21 @@ export class Kyou extends InfoBase {
             return [error]
         }
 
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.git_commit_logs.length; i++) {
+            const git_commit_log = new GitCommitLog()
+            for (let key in res.git_commit_logs[i]) {
+                (git_commit_log as any)[key] = (res.git_commit_logs[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (git_commit_log as any)[key]) {
+                    (git_commit_log as any)[key] = moment((git_commit_log as any)[key]).toDate()
+                }
+            }
+            res.git_commit_logs[i] = git_commit_log
+        }
+
+
         this.typed_git_commit_log = res.git_commit_logs[0]
 
         return new Array<GkillError>()
@@ -262,14 +388,29 @@ export class Kyou extends InfoBase {
             return res.errors
         }
 
-        if (!res.rekyous|| res.rekyous.length < 1) {
+        if (!res.rekyous || res.rekyous.length < 1) {
             const error = new GkillError()
             error.error_code = "//TODO"
             error.error_message = "ReKyouが見つかりませんでした"
             return [error]
         }
 
-        this.typed_rekyou= res.rekyous[0]
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.rekyous.length; i++) {
+            const rekyou = new ReKyou()
+            for (let key in res.rekyous[i]) {
+                (rekyou as any)[key] = (res.rekyous[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (rekyou as any)[key]) {
+                    (rekyou as any)[key] = moment((rekyou as any)[key]).toDate()
+                }
+            }
+            res.rekyous[i] = rekyou
+        }
+
+
+        this.typed_rekyou = res.rekyous[0]
 
         return new Array<GkillError>()
     }

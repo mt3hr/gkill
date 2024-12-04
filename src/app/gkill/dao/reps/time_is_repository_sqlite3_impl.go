@@ -119,7 +119,7 @@ FROM TIMEIS
 	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME IS NOT NULL"
 	} else {
-		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start') AND END_TIME IS NOT NULL"
+		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
 	sqlWhereForStart, err := t.whereSQLGenerator(true, query)
@@ -688,19 +688,19 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 	}
 	if query.UseIDs != nil && *query.UseIDs {
 		if query.IDs != nil && len(*query.IDs) != 0 {
-		if whereCounter != 0 {
-			sqlWhere += " AND "
-		}
-		sqlWhere += " ID IN ("
-		for i, id := range ids {
-			sqlWhere += fmt.Sprintf("'%s'", id)
-			if i != len(ids)-1 {
-				sqlWhere += ", "
+			if whereCounter != 0 {
+				sqlWhere += " AND "
 			}
+			sqlWhere += " ID IN ("
+			for i, id := range ids {
+				sqlWhere += fmt.Sprintf("'%s'", id)
+				if i != len(ids)-1 {
+					sqlWhere += ", "
+				}
+			}
+			sqlWhere += ")"
+			whereCounter++
 		}
-		sqlWhere += ")"
-		whereCounter++
-	}
 	}
 
 	// 日付範囲指定ありの場合
@@ -807,8 +807,13 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 		if whereCounter != 0 {
 			sqlWhere += " AND "
 		}
-		sqlWhere += fmt.Sprintf("(datetime('"+plaingTime.Format(sqlite3impl.TimeLayout)+"', 'localtime') BETWEEN datetime(START_TIME, 'localtime') AND datetime(START_TIME, 'localtime'))", plaingTime.Format(sqlite3impl.TimeLayout))
+		sqlWhere += " ( "
+		sqlWhere += fmt.Sprintf("(datetime('" + plaingTime.Format(sqlite3impl.TimeLayout) + "', 'localtime') BETWEEN datetime(START_TIME, 'localtime') AND datetime(END_TIME, 'localtime'))")
+		sqlWhere += " OR "
+		sqlWhere += fmt.Sprintf("(datetime('" + plaingTime.Format(sqlite3impl.TimeLayout) + "', 'localtime') >= datetime(START_TIME, 'localtime') AND END_TIME IS NULL)")
+		sqlWhere += " ) "
 	}
+
 	// UPDATE_TIMEが一番上のものだけを抽出
 	sqlWhere += `
 GROUP BY ID
