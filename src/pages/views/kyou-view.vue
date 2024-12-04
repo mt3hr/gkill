@@ -42,7 +42,7 @@
         <div :class="kyou_class">
             <KmemoView v-if="cloned_kyou.typed_kmemo" :kmemo="cloned_kyou.typed_kmemo"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -51,13 +51,13 @@
             <miKyouView v-if="cloned_kyou.typed_mi" :mi="cloned_kyou.typed_mi" :application_config="application_config"
                 :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
-                @received_messages="(messages) => emits('received_messages', messages)"
+                :height="height" :width="width" @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="() => emits('requested_reload_list')"
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
             <NlogView v-if="cloned_kyou.typed_nlog" :nlog="cloned_kyou.typed_nlog"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -65,7 +65,7 @@
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
             <LantanaView v-if="cloned_kyou.typed_lantana" :lantana="cloned_kyou.typed_lantana"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -74,14 +74,14 @@
             <TimeIsView v-if="cloned_kyou.typed_timeis" :timeis="cloned_kyou.typed_timeis"
                 :show_timeis_plaing_end_button="true" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :height="height" :width="width" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="() => emits('requested_reload_list')"
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
             <URLogView v-if="cloned_kyou.typed_urlog" :urlog="cloned_kyou.typed_urlog"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -89,7 +89,7 @@
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
             <IDFKyouView v-if="cloned_kyou.typed_idf_kyou" :idf_kyou="cloned_kyou.typed_idf_kyou"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -97,7 +97,7 @@
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
             <ReKyouView v-if="cloned_kyou.typed_rekyou" :rekyou="cloned_kyou.typed_rekyou"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -105,7 +105,7 @@
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
             <GitCommitLogView v-if="cloned_kyou.typed_git_commit_log" :git_commit_log="cloned_kyou.typed_git_commit_log"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -156,9 +156,9 @@ const focused_text: Ref<Text> = ref(new Text())
 const delete_target_tag: Ref<Tag> = ref(new Tag())
 const delete_target_text: Ref<Text> = ref(new Text())
 
-watch(() => props.kyou, () => {
+watch(() => props.kyou, async () => {
     cloned_kyou.value = props.kyou.clone()
-    cloned_kyou.value.load_attached_datas()
+    return load_attached_infos()
 })
 
 onMounted(() => {
@@ -168,6 +168,8 @@ onMounted(() => {
 onUnmounted(() => {
     clear_attached_infos()
 })
+
+load_attached_infos()
 
 const kyou_class = computed(() => {
     let highlighted = false;
@@ -186,10 +188,17 @@ const kyou_class = computed(() => {
 })
 
 async function load_attached_infos(): Promise<void> {
-    cloned_kyou.value.load_attached_datas()
+    const errors = await cloned_kyou.value.load_all()
+    if (errors && errors.length !== 0) {
+        emits('received_errors', errors)
+    }
 }
 async function clear_attached_infos(): Promise<void> {
-    cloned_kyou.value.clear_attached_histories()
+    const errors = await cloned_kyou.value.clear_all()
+    if (errors && errors.length !== 0) {
+        emits('received_errors', errors)
+    }
+    return
 }
 async function update_check(is_checked: boolean): Promise<void> {
     emits('requested_update_check_kyous', [cloned_kyou.value], is_checked)

@@ -222,6 +222,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetKyousAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetKyous(w, r)
 	}).Methods(g.APIAddress.GetKyousMethod)
+	router.HandleFunc(g.APIAddress.GetKyouAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleGetKyou(w, r)
+	}).Methods(g.APIAddress.GetKyouMethod)
 	router.HandleFunc(g.APIAddress.GetKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetKmemo(w, r)
 	}).Methods(g.APIAddress.GetKmemoMethod)
@@ -267,6 +270,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetTagHistoriesByTagIDAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetTagHistoriesByTagID(w, r)
 	}).Methods(g.APIAddress.GetTagHistoriesByTagIDMethod)
+	router.HandleFunc(g.APIAddress.GetTextsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleGetTextsByTargetID(w, r)
+	}).Methods(g.APIAddress.GetTextsByTargetIDMethod)
 	router.HandleFunc(g.APIAddress.GetTextHistoriesByTextIDAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetTextHistoriesByTextID(w, r)
 	}).Methods(g.APIAddress.GetTextHistoriesByTagIDMethod)
@@ -1162,7 +1168,6 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	fmt.Printf("existKmemo = %#v\n", existKmemo)
 	if existKmemo != nil {
 		err = fmt.Errorf("exist kmemo id = %s", request.Kmemo.ID)
 		log.Printf(err.Error())
@@ -1197,7 +1202,6 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	fmt.Printf("request.Kmemo = %#v\n", request.Kmemo)
 	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		TargetID:                 request.Kmemo.ID,
 		DataUpdateTime:           request.Kmemo.UpdateTime,

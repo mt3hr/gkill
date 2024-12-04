@@ -1,5 +1,5 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu">
+    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <div>{{ kyou.typed_timeis?.title }}</div>
         <div v-if="kyou.typed_timeis && kyou.typed_timeis.start_time">{{
             format_duration(kyou.typed_timeis?.start_time, kyou.typed_timeis?.end_time) }}</div>
@@ -8,14 +8,14 @@
         <div v-if="kyou.typed_timeis && kyou.typed_timeis.end_time">終了日時：<span>{{
             format_time(kyou.typed_timeis?.end_time) }}</span></div>
         <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time">実行中</div>
+        <TimeIsContextMenu :application_config="application_config" :gkill_api="gkill_api"
+            :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
+            ref="context_menu" @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+            @requested_reload_list="() => emits('requested_reload_list')"
+            @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
     </v-card>
-    <TimeIsContextMenu :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
-        ref="context_menu" @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
-        @requested_reload_list="() => emits('requested_reload_list')"
-        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script setup lang="ts">
 import { type Ref, ref } from 'vue'

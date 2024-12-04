@@ -45,6 +45,9 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext.MatchKyousAtFilterTags = map[string]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFilterTimeIs = map[string]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFilterLocation = map[string]*reps.Kyou{}
+	json.NewEncoder(os.Stdout).Encode(findKyouContext.ParsedFindQuery)            //TODO けして
+	json.NewEncoder(os.Stdout).Encode(findKyouContext.ParsedFindQuery.PlaingTime) //TODO けして
+	json.NewEncoder(os.Stdout).Encode(findKyouContext.ParsedFindQuery.UsePlaing)  //TODO けして
 
 	// フィルタ
 	gkillErr, err := f.getRepositories(ctx, userID, device, gkillDAOManager, findKyouContext)
@@ -194,6 +197,16 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 		wg.Add(1)
 		go func(rep reps.Repository) {
 			defer wg.Done()
+
+			// PlaingだったらTimeIsRep以外は無視する
+			if findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing {
+				_, isTimeIsRep := rep.(reps.TimeIsRepository)
+				if !isTimeIsRep {
+					errch <- nil
+					return
+				}
+			}
+
 			repName, err := rep.GetRepName(ctx)
 			if err != nil {
 				errch <- err
@@ -745,7 +758,6 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 						hasAllMatchTagsKyousMap[kyou.ID] = kyou
 					}
 				}
-				fmt.Printf("hasAllMatchTagsKyousMap = %+v\n", hasAllMatchTagsKyousMap)
 			default:
 				matchThisLoopKyousMap := map[string]*reps.Kyou{}
 				for _, kyou := range kyouIDMap {
@@ -762,7 +774,6 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 						}
 					}
 				}
-				fmt.Printf("matchThisLoopKyousMap = %+v\n", matchThisLoopKyousMap)
 				hasAllMatchTagsKyousMap = matchThisLoopKyousMap
 			}
 			index++
@@ -939,7 +950,10 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 }
 
 func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.UsePlaing == nil || !(*findCtx.ParsedFindQuery.UsePlaing) {
+	// if findCtx.ParsedFindQuery.UsePlaing == nil || !(*findCtx.ParsedFindQuery.UsePlaing) {
+	// return nil, nil
+	// }
+	if findCtx.ParsedFindQuery.UseTimeIs == nil || !(*findCtx.ParsedFindQuery.UseTimeIs) {
 		return nil, nil
 	}
 
