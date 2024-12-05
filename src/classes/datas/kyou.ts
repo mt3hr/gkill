@@ -388,7 +388,7 @@ export class Kyou extends InfoBase {
             return res.errors
         }
 
-        if (!res.rekyous || res.rekyous.length < 1) {
+        if (!res.rekyou_histories || res.rekyou_histories.length < 1) {
             const error = new GkillError()
             error.error_code = "//TODO"
             error.error_message = "ReKyouが見つかりませんでした"
@@ -396,21 +396,20 @@ export class Kyou extends InfoBase {
         }
 
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.rekyous.length; i++) {
+        for (let i = 0; i < res.rekyou_histories.length; i++) {
             const rekyou = new ReKyou()
-            for (let key in res.rekyous[i]) {
-                (rekyou as any)[key] = (res.rekyous[i] as any)[key]
+            for (let key in res.rekyou_histories[i]) {
+                (rekyou as any)[key] = (res.rekyou_histories[i] as any)[key]
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (rekyou as any)[key]) {
                     (rekyou as any)[key] = moment((rekyou as any)[key]).toDate()
                 }
             }
-            res.rekyous[i] = rekyou
+            res.rekyou_histories[i] = rekyou
         }
 
-
-        this.typed_rekyou = res.rekyous[0]
+        this.typed_rekyou = res.rekyou_histories[0]
 
         return new Array<GkillError>()
     }

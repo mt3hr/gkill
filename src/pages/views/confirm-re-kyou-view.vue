@@ -69,7 +69,7 @@ async function rekyou(): Promise<void> {
     new_rekyou.create_device = gkill_info_res.device
     new_rekyou.create_time = new Date(Date.now())
     new_rekyou.create_user = gkill_info_res.user_id
-    new_rekyou.create_app = "gkill"
+    new_rekyou.update_app = "gkill"
     new_rekyou.update_device = gkill_info_res.device
     new_rekyou.update_time = new Date(Date.now())
     new_rekyou.update_user = gkill_info_res.user_id
