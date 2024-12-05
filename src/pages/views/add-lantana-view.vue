@@ -104,7 +104,7 @@ async function save(): Promise<void> {
     new_lantana.create_app = "gkill"
     new_lantana.create_device = gkill_info_res.device
     new_lantana.create_time = new Date(Date.now())
-    new_lantana.create_app = "gkill"
+    new_lantana.update_app = "gkill"
     new_lantana.update_device = gkill_info_res.device
     new_lantana.update_time = new Date(Date.now())
     new_lantana.update_user = gkill_info_res.user_id

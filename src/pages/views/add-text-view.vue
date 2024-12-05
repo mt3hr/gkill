@@ -84,7 +84,7 @@ async function save(): Promise<void> {
     new_text.create_device = gkill_info_res.device
     new_text.create_time = new Date(Date.now())
     new_text.create_user = gkill_info_res.user_id
-    new_text.create_app = "gkill"
+    new_text.update_app = "gkill"
     new_text.update_app = "gkill"
     new_text.update_device = gkill_info_res.device
     new_text.update_time = new Date(Date.now())
