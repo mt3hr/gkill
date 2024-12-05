@@ -102,8 +102,15 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 		return nil, err
 	}
 
+	withoutRekyouReps := Repositories{}
+	for _, rep := range reps.Reps {
+		if _, repIsReKyouRep := rep.(ReKyouRepository); !repIsReKyouRep {
+			withoutRekyouReps = append(withoutRekyouReps, rep)
+		}
+	}
+
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.Reps.FindKyous(ctx, findQuery)
+		kyous, err := withoutRekyouReps.FindKyous(ctx, findQuery)
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -296,8 +303,15 @@ func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *fin
 		return nil, err
 	}
 
+	withoutRekyouReps := Repositories{}
+	for _, rep := range reps.Reps {
+		if _, repIsReKyouRep := rep.(ReKyouRepository); !repIsReKyouRep {
+			withoutRekyouReps = append(withoutRekyouReps, rep)
+		}
+	}
+
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.Reps.FindKyous(ctx, findQuery)
+		kyous, err := withoutRekyouReps.FindKyous(ctx, findQuery)
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -346,7 +360,7 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM REKYOU
-WHERE TARGET_ID LIKE ?
+WHERE ID LIKE ?
 `
 
 	log.Printf("sql: %s", sql)
@@ -380,7 +394,6 @@ WHERE TARGET_ID LIKE ?
 		default:
 			reKyou := &ReKyou{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			repName, dataType := "", ""
 
 			err = rows.Scan(&reKyou.IsDeleted,
 				&reKyou.ID,
@@ -394,8 +407,8 @@ WHERE TARGET_ID LIKE ?
 				&reKyou.UpdateApp,
 				&reKyou.UpdateDevice,
 				&reKyou.UpdateUser,
-				&repName,
-				&dataType,
+				&reKyou.RepName,
+				&reKyou.DataType,
 			)
 
 			reKyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -551,7 +564,6 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		default:
 			reKyou := &ReKyou{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			repName, dataType := "", ""
 
 			err = rows.Scan(&reKyou.IsDeleted,
 				&reKyou.ID,
@@ -565,8 +577,8 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 				&reKyou.UpdateApp,
 				&reKyou.UpdateDevice,
 				&reKyou.UpdateUser,
-				&repName,
-				&dataType,
+				&reKyou.RepName,
+				&reKyou.DataType,
 			)
 
 			reKyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
