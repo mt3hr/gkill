@@ -5,11 +5,11 @@ import { GkillAPIResponse } from '../gkill-api-response'
 
 export class GetReKyouResponse extends GkillAPIResponse {
 
-    rekyous: Array<ReKyou>
+    rekyou_histories: Array<ReKyou>
 
     constructor() {
         super()
-        this.rekyous = new Array<ReKyou>()
+        this.rekyou_histories = new Array<ReKyou>()
     }
 
 }
