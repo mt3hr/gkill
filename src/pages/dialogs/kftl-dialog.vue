@@ -1,6 +1,6 @@
 <template>
     <v-dialog v-model="is_show_dialog">
-        <KFTLView :app_content_height="app_content_height" :app_content_width="app_content_width"
+        <KFTLView :app_content_height="app_content_height" :app_content_width="app_content_width.valueOf() - 50"
             :application_config="application_config" :gkill_api="gkill_api"
             @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)" />

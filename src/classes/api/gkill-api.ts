@@ -484,7 +484,6 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: LogoutResponse = json
-                this.check_auth(response)
                 return response
         }
 
