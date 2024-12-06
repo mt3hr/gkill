@@ -34,8 +34,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import type { Mi } from '@/classes/datas/mi'
-import { type Ref, ref } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import MiContextMenu from './mi-context-menu.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { miKyouViewProps } from './mi-kyou-view-props'
@@ -44,7 +43,6 @@ import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
-import router from '@/router'
 import { GkillAPI } from '@/classes/api/gkill-api'
 
 const context_menu = ref<InstanceType<typeof MiContextMenu> | null>(null);
@@ -53,6 +51,10 @@ const props = defineProps<miKyouViewProps>()
 const emits = defineEmits<miKyouViewEmits>()
 
 const is_checked_mi: Ref<boolean> = ref(props.kyou.typed_mi ? props.kyou.typed_mi.is_checked : false)
+
+watch(() => props.kyou, () => {
+    is_checked_mi.value = props.kyou.typed_mi ? props.kyou.typed_mi.is_checked : false
+})
 
 function format_time(time: Date): string {
     return moment(time).format("yyyy-MM-DD HH:mm:ss")
@@ -76,7 +78,7 @@ async function clicked_mi_check(): Promise<void> {
     }
 
     // 更新がなかったらエラーメッセージを出力する
-    if (mi.is_checked === is_checked_mi.value) {
+    if (mi.is_checked === !is_checked_mi.value) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "miが更新されていません"
@@ -96,12 +98,17 @@ async function clicked_mi_check(): Promise<void> {
     }
 
     // 更新後mi情報を用意する
-    const updated_mi = await mi.clone()
-    updated_mi.is_checked = !is_checked_mi.value
+    const updated_mi = mi.clone()
+    updated_mi.is_checked = is_checked_mi.value
     updated_mi.update_app = "gkill"
     updated_mi.update_device = gkill_info_res.device
     updated_mi.update_time = new Date(Date.now())
     updated_mi.update_user = gkill_info_res.user_id
+    if (updated_mi.is_checked) {
+        updated_mi.checked_time = new Date(Date.now())
+    } else {
+        updated_mi.checked_time = null
+    }
 
     // 更新リクエストを飛ばす
     const req = new UpdateMiRequest()

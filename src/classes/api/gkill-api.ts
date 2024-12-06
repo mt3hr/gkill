@@ -155,6 +155,14 @@ import { Kyou } from "../datas/kyou"
 import moment from "moment"
 import { Tag } from "../datas/tag"
 import { Text } from "../datas/text"
+import { Kmemo } from "../datas/kmemo"
+import { URLog } from "../datas/ur-log"
+import { Nlog } from "../datas/nlog"
+import { TimeIs } from "../datas/time-is"
+import { Mi } from "../datas/mi"
+import { Lantana } from "../datas/lantana"
+import { ReKyou } from "../datas/re-kyou"
+import { GitCommitLog } from "../datas/git-commit-log"
 
 export class GkillAPI {
 
@@ -866,7 +874,30 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetKmemoResponse = json
+                if (!response.kmemo_histories) {
+                        response.kmemo_histories = new Array<Kmemo>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.kmemo_histories.length; i++) {
+                        const kmemo = new Kmemo()
+                        for (let key in response.kmemo_histories[i]) {
+                                (kmemo as any)[key] = (response.kmemo_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (kmemo as any)[key]) {
+                                        (kmemo as any)[key] = moment((kmemo as any)[key]).toDate()
+                                }
+                        }
+                        response.kmemo_histories[i] = kmemo
+                }
+
                 this.check_auth(response)
                 return response
         }
@@ -880,7 +911,30 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetURLogResponse = json
+                if (!response.urlog_histories) {
+                        response.urlog_histories = new Array<URLog>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.urlog_histories.length; i++) {
+                        const urlog = new URLog()
+                        for (let key in response.urlog_histories[i]) {
+                                (urlog as any)[key] = (response.urlog_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (urlog as any)[key]) {
+                                        (urlog as any)[key] = moment((urlog as any)[key]).toDate()
+                                }
+                        }
+                        response.urlog_histories[i] = urlog
+                }
+
                 this.check_auth(response)
                 return response
         }
@@ -894,7 +948,30 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetNlogResponse = json
+                if (!response.nlog_histories) {
+                        response.nlog_histories = new Array<Nlog>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.nlog_histories.length; i++) {
+                        const nlog = new Nlog()
+                        for (let key in response.nlog_histories[i]) {
+                                (nlog as any)[key] = (response.nlog_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (nlog as any)[key]) {
+                                        (nlog as any)[key] = moment((nlog as any)[key]).toDate()
+                                }
+                        }
+                        response.nlog_histories[i] = nlog
+                }
+
                 this.check_auth(response)
                 return response
         }
@@ -908,7 +985,30 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetTimeisResponse = json
+                if (!response.timeis_histories) {
+                        response.timeis_histories = new Array<TimeIs>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.timeis_histories.length; i++) {
+                        const timeis = new TimeIs()
+                        for (let key in response.timeis_histories[i]) {
+                                (timeis as any)[key] = (response.timeis_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (timeis as any)[key]) {
+                                        (timeis as any)[key] = moment((timeis as any)[key]).toDate()
+                                }
+                        }
+                        response.timeis_histories[i] = timeis
+                }
+
                 this.check_auth(response)
                 return response
         }
@@ -922,7 +1022,30 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetMiResponse = json
+                if (!response.mi_histories) {
+                        response.mi_histories = new Array<Mi>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.mi_histories.length; i++) {
+                        const mis = new Mi()
+                        for (let key in response.mi_histories[i]) {
+                                (mis as any)[key] = (response.mi_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (mis as any)[key]) {
+                                        (mis as any)[key] = moment((mis as any)[key]).toDate()
+                                }
+                        }
+                        response.mi_histories[i] = mis
+                }
+
                 this.check_auth(response)
                 return response
         }
@@ -936,7 +1059,30 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetLantanaResponse = json
+                if (!response.lantana_histories) {
+                        response.lantana_histories = new Array<Lantana>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.lantana_histories.length; i++) {
+                        const lantanas = new Lantana()
+                        for (let key in response.lantana_histories[i]) {
+                                (lantanas as any)[key] = (response.lantana_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (lantanas as any)[key]) {
+                                        (lantanas as any)[key] = moment((lantanas as any)[key]).toDate()
+                                }
+                        }
+                        response.lantana_histories[i] = lantanas
+                }
+
                 this.check_auth(response)
                 return response
         }
@@ -950,7 +1096,30 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetReKyouResponse = json
+                if (!response.rekyou_histories) {
+                        response.rekyou_histories = new Array<ReKyou>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.rekyou_histories.length; i++) {
+                        const rekyou = new ReKyou()
+                        for (let key in response.rekyou_histories[i]) {
+                                (rekyou as any)[key] = (response.rekyou_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (rekyou as any)[key]) {
+                                        (rekyou as any)[key] = moment((rekyou as any)[key]).toDate()
+                                }
+                        }
+                        response.rekyou_histories[i] = rekyou
+                }
+
                 this.check_auth(response)
                 return response
         }
@@ -964,11 +1133,35 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                 })
                 const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetGitCommitLogResponse = json
+                if (!response.git_commit_logs) {
+                        response.git_commit_logs = new Array<GitCommitLog>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.git_commit_logs.length; i++) {
+                        const git_commit_log = new GitCommitLog()
+                        for (let key in response.git_commit_logs[i]) {
+                                (git_commit_log as any)[key] = (response.git_commit_logs[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (git_commit_log as any)[key]) {
+                                        (git_commit_log as any)[key] = moment((git_commit_log as any)[key]).toDate()
+                                }
+                        }
+                        response.git_commit_logs[i] = git_commit_log
+                }
+
                 this.check_auth(response)
                 return response
         }
 
+        /*
         async get_kmemos(req: GetKmemosRequest): Promise<GetKmemosResponse> {
                 throw new Error('Not implemented')
         }
@@ -1000,6 +1193,7 @@ export class GkillAPI {
         async get_git_commit_logs(req: GetGitCommitLogsRequest): Promise<GetGitCommitLogsResponse> {
                 throw new Error('Not implemented')
         }
+        */
 
         async get_mi_board_list(req: GetMiBoardRequest): Promise<GetMiBoardResponse> {
                 const res = await fetch(this.get_mi_board_list_address, {
@@ -1165,7 +1359,7 @@ export class GkillAPI {
                 return response
         }
 
-        async get_text_history_by_tag_id(req: GetTextHistoryByTextIDRequest): Promise<GetTextHistoryByTextIDResponse> {
+        async get_text_history_by_text_id(req: GetTextHistoryByTextIDRequest): Promise<GetTextHistoryByTextIDResponse> {
                 const res = await fetch(this.get_text_histories_by_text_id_address, {
                         'method': this.get_text_histories_by_text_id_method,
                         headers: {

@@ -1,6 +1,8 @@
 'use strict'
 
+import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
+import { GetLantanaRequest } from '../api/req_res/get-lantana-request'
 import { InfoBase } from './info-base'
 import { InfoIdentifier } from './info-identifier'
 
@@ -11,25 +13,54 @@ export class Lantana extends InfoBase {
     attached_histories: Array<Lantana>
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        const req = new GetLantanaRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.id = this.id
+        const res = await GkillAPI.get_instance().get_lantana(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+        this.attached_histories = res.lantana_histories
+        return new Array<GkillError>()
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        return this.load_attached_histories()
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        this.attached_histories = []
+        return new Array<GkillError>()
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        let errors = new Array<GkillError>()
+        errors = errors.concat(await this.clear_attached_tags())
+        errors = errors.concat(await this.clear_attached_texts())
+        errors = errors.concat(await this.clear_attached_timeis())
+        errors = errors.concat(await this.clear_attached_histories())
+        return errors
     }
 
     clone(): Lantana {
-        throw new Error('Not implemented')
+        const lantana = new Lantana()
+        lantana.is_deleted = this.is_deleted
+        lantana.id = this.id
+        lantana.rep_name = this.rep_name
+        lantana.related_time = this.related_time
+        lantana.data_type = this.data_type
+        lantana.create_time = this.create_time
+        lantana.create_app = this.create_app
+        lantana.create_device = this.create_device
+        lantana.create_user = this.create_user
+        lantana.update_time = this.update_time
+        lantana.update_app = this.update_app
+        lantana.update_user = this.update_user
+        lantana.update_device = this.update_device
+        lantana.mood = this.mood
+        return lantana
     }
- 
+
     generate_info_identifer(): InfoIdentifier {
         const info_identifer = new InfoIdentifier()
         info_identifer.id = this.id

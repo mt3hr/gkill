@@ -27,8 +27,7 @@
                 :highlight_targets="[kyou.typed_rekyou.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
-                :height="'100%'" :width="'100%'"
+                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -50,6 +49,7 @@ import { UpdateKyouInfoRequest } from '@/classes/api/req_res/update-kyou-info-re
 import router from '@/router'
 import moment from 'moment'
 import { GkillAPI } from '@/classes/api/gkill-api'
+import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-request'
 
 const props = defineProps<EditReKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -92,33 +92,18 @@ async function save(): Promise<void> {
     }
 
     // 更新後ReKyou情報を用意する
-    const updated_rekyou = await rekyou.clone()
-    updated_rekyou.related_time = moment(related_date.value + related_time.value).toDate()
+    const updated_rekyou = rekyou.clone()
+    updated_rekyou.related_time = moment(related_date.value + " " + related_time.value).toDate()
     updated_rekyou.update_app = "gkill"
     updated_rekyou.update_device = gkill_info_res.device
     updated_rekyou.update_time = new Date(Date.now())
     updated_rekyou.update_user = gkill_info_res.user_id
 
-    const updated_kyou = new Kyou()
-    updated_kyou.is_deleted = updated_rekyou.is_deleted
-    updated_kyou.id = updated_rekyou.id
-    updated_kyou.related_time = updated_rekyou.related_time
-    updated_kyou.rep_name = updated_rekyou.rep_name
-    updated_kyou.create_app = updated_rekyou.create_app
-    updated_kyou.create_device = updated_rekyou.create_device
-    updated_kyou.create_time = updated_rekyou.create_time
-    updated_kyou.create_user = updated_rekyou.create_user
-    updated_kyou.data_type = updated_rekyou.data_type
-    updated_kyou.update_app = updated_rekyou.update_app
-    updated_kyou.update_device = updated_rekyou.update_device
-    updated_kyou.update_time = updated_rekyou.update_time
-    updated_kyou.update_user = updated_rekyou.update_user
-
     // 更新リクエストを飛ばす
-    const req = new UpdateKyouInfoRequest()
+    const req = new UpdateReKyouRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
-    req.kyou = updated_kyou
-    const res = await props.gkill_api.update_kyou_info(req)
+    req.rekyou = updated_rekyou
+    const res = await props.gkill_api.update_rekyou(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -126,7 +111,8 @@ async function save(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
-    emits('updated_kyou', res.updated_kyou)
+    emits('updated_kyou', res.updated_rekyou_kyou)
+    emits('requested_close_dialog')
     return
 }
 </script>
