@@ -59,8 +59,7 @@
                 :highlight_targets="[kyou.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
-                :height="'100%'" :width="'100%'"
+                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -162,8 +161,8 @@ async function save(): Promise<void> {
 
     // 更新がなかったらエラーメッセージを出力する
     if (timeis.title === timeis_title.value &&
-        moment(timeis.start_time) === (moment(timeis_start_date.value + timeis_start_time.value)) &&
-        moment(timeis.end_time) === moment(timeis_end_date.value + timeis_end_time.value)) {
+        moment(timeis.start_time) === (moment(timeis_start_date.value + " " + timeis_start_time.value)) &&
+        moment(timeis.end_time) === moment(timeis_end_date.value + " " + timeis_end_time.value)) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "TimeIsが更新されていません"
@@ -185,12 +184,12 @@ async function save(): Promise<void> {
     // 更新後TimeIs情報を用意する
     let end_time: Date | null = null
     if (timeis_end_date.value !== "" && timeis_end_time.value !== "") {
-        end_time = moment(timeis_end_date.value + timeis_end_time.value).toDate()
+        end_time = moment(timeis_end_date.value + " " + timeis_end_time.value).toDate()
     }
     const updated_timeis = await timeis.clone()
     updated_timeis.title = timeis_title.value
-    updated_timeis.start_time = moment(timeis_start_date.value + timeis_start_time.value).toDate()
-    updated_timeis.end_time = end_time
+    updated_timeis.start_time = moment(timeis_start_date.value + " " + timeis_start_time.value).toDate()
+    updated_timeis.end_time = moment(timeis_end_date.value + " " + timeis_end_time.value).toDate()
     updated_timeis.update_app = "gkill"
     updated_timeis.update_device = gkill_info_res.device
     updated_timeis.update_time = new Date(Date.now())
@@ -209,6 +208,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits("updated_kyou", res.updated_timeis_kyou)
+    emits('requested_close_dialog')
     return
 }
 

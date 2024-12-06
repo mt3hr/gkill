@@ -88,8 +88,7 @@
                 :is_image_view="false" :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
                 :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                 :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_mi_plaing_end_button="true"
-                :height="'100%'" :width="'100%'"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :height="'100%'" :width="'100%'" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="() => { }"
@@ -256,9 +255,9 @@ async function save(): Promise<void> {
 
     // 更新がなかったらエラーメッセージを出力する
     if (mi.title === mi_title.value &&
-        moment(mi.estimate_start_time) === (moment(mi_estimate_start_date.value + mi_estimate_start_time.value)) &&
-        moment(mi.estimate_end_time) === moment(mi_estimate_end_date.value + mi_estimate_end_time.value) &&
-        moment(mi.limit_time) === (moment(mi_limit_date.value + mi_limit_time.value))
+        moment(mi.estimate_start_time) === (moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value)) &&
+        moment(mi.estimate_end_time) === moment(mi_estimate_end_date.value + " " + mi_estimate_end_time.value) &&
+        moment(mi.limit_time) === (moment(mi_limit_date.value + " " + mi_limit_time.value))
     ) {
         const error = new GkillError()
         error.error_code = "//TODO"
@@ -283,13 +282,13 @@ async function save(): Promise<void> {
     let estimate_end_time: Date | null = null
     let limit_time: Date | null = null
     if (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value !== "") {
-        estimate_start_time = moment(mi_estimate_start_date.value + mi_estimate_start_time.value).toDate()
+        estimate_start_time = moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value).toDate()
     }
     if (mi_estimate_end_date.value !== "" && mi_estimate_end_time.value !== "") {
-        estimate_end_time = moment(mi_estimate_end_date.value + mi_estimate_end_time.value).toDate()
+        estimate_end_time = moment(mi_estimate_end_date.value + " " + mi_estimate_end_time.value).toDate()
     }
     if (mi_limit_date.value !== "" && mi_limit_time.value !== "") {
-        limit_time = moment(mi_limit_date.value + mi_limit_time.value).toDate()
+        limit_time = moment(mi_limit_date.value + " " + mi_limit_time.value).toDate()
     }
     const updated_mi = await mi.clone()
     updated_mi.title = mi_title.value
@@ -301,6 +300,11 @@ async function save(): Promise<void> {
     updated_mi.update_device = gkill_info_res.device
     updated_mi.update_time = new Date(Date.now())
     updated_mi.update_user = gkill_info_res.user_id
+    if (updated_mi.is_checked) {
+        updated_mi.checked_time = new Date(Date.now())
+    } else {
+        updated_mi.checked_time = null
+    }
 
     // 更新リクエストを飛ばす
     const req = new UpdateMiRequest()
@@ -315,6 +319,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits("updated_kyou", res.updated_mi_kyou)
+    emits('requested_close_dialog')
     return
 }
 

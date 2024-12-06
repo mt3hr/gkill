@@ -86,6 +86,7 @@ async function rekyou(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
+    emits('requested_close_dialog')
     return
 }
 </script>

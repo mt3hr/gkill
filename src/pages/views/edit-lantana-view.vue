@@ -109,7 +109,7 @@ async function save(): Promise<void> {
     // 更新後Lantana情報を用意する
     const updated_lantana = await lantana.clone()
     updated_lantana.mood = await edit_lantana_flowers.value!.get_mood()
-    updated_lantana.related_time = moment(related_date.value + related_time.value).toDate()
+    updated_lantana.related_time = moment(related_date.value + " " + related_time.value).toDate()
     updated_lantana.update_app = "gkill"
     updated_lantana.update_device = gkill_info_res.device
     updated_lantana.update_time = new Date(Date.now())
@@ -128,6 +128,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits('updated_kyou', res.updated_lantana_kyou)
+    emits('requested_close_dialog')
     return
 }
 </script>

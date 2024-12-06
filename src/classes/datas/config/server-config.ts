@@ -36,7 +36,23 @@ export class ServerConfig {
     accounts: Array<Account>
 
     async clone(): Promise<ServerConfig> {
-        throw new Error('Not implemented')
+        const server_config = new ServerConfig()
+        server_config.enable_this_device = this.enable_this_device 
+        server_config.device = this.device
+        server_config.is_local_only_access = this.is_local_only_access
+        server_config.address = this.address
+        server_config.enable_tls = this.enable_tls
+        server_config.tls_cert_file = this.tls_cert_file
+        server_config.tls_key_file = this.tls_key_file
+        server_config.open_directory_command = this.open_directory_command
+        server_config.open_file_command = this.open_file_command
+        server_config.urlog_timeout = this.urlog_timeout
+        server_config.urlog_useragent = this.urlog_useragent
+        server_config.upload_size_limit_month = this.upload_size_limit_month
+        server_config.user_data_directory = this.user_data_directory
+        server_config.repositories = this.repositories
+        server_config.accounts = this.accounts
+        return server_config
     }
 
     constructor() {
