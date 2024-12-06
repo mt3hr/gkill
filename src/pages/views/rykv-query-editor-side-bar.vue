@@ -83,7 +83,8 @@ const inited = computed(() => {
 
 watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
     if (old_value !== new_value && new_value) {
-        default_query.value = generate_query()
+        default_query.value = generate_query().clone()
+        console.log(default_query.value)
     }
 })
 
@@ -117,8 +118,8 @@ function generate_query(): FindKyouQuery {
 
     if (keyword_query.value) {
         find_query.use_words = keyword_query.value.get_use_words()
-        find_query.keywords = keyword_query.value.get_keywords()
         find_query.words_and = keyword_query.value.get_use_word_and_search()
+        find_query.keywords = keyword_query.value.get_keywords()
     }
 
     if (timeis_query.value) {
@@ -226,6 +227,7 @@ function emits_cleard_calendar_query(): void {
 
 function emits_default_query(): void {
     const find_query = default_query.value.clone()
+    console.log(find_query)
     emits('updated_query', find_query)
 }
 </script>

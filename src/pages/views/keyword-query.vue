@@ -27,16 +27,17 @@ import { ref, watch, type Ref } from 'vue'
 
 const props = defineProps<KeywordQueryProps>()
 const emits = defineEmits<KeywordQueryEmits>()
-defineExpose({get_keywords, get_use_words, get_use_word_and_search})
+defineExpose({ get_keywords, get_use_words, get_use_word_and_search })
 
 watch(() => props.find_kyou_query, () => {
-    keywords.value = props.find_kyou_query.keywords
     use_words.value = props.find_kyou_query.use_words
+    use_and_search.value = props.find_kyou_query.words_and
+    keywords.value = props.find_kyou_query.keywords
 })
 
-const keywords: Ref<string> = ref("")
 const use_words: Ref<boolean> = ref(false)
 const use_and_search: Ref<boolean> = ref(true)
+const keywords: Ref<string> = ref("")
 
 function get_keywords(): string {
     return keywords.value
