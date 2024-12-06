@@ -3,9 +3,19 @@
         <v-app-bar-nav-icon @click.stop="() => { drawer = !drawer }" />
         <v-toolbar-title>rykv</v-toolbar-title>
         <v-spacer />
+        <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
+            <v-icon>mdi-file-document</v-icon>
+        </v-btn>
+        <v-btn icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
+            <v-icon>mdi-calendar</v-icon>
+        </v-btn>
+        <v-btn icon @click="is_show_gps_log_map = !is_show_gps_log_map">
+            <v-icon>mdi-map</v-icon>
+        </v-btn>
+        <v-divider vertical />
         <v-btn icon="mdi-cog" @click="emits('requested_show_application_config_dialog')" />
     </v-app-bar>
-    <v-navigation-drawer v-model="drawer" app :width="300">
+    <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height">
         <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
             :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
             :app_content_width="app_content_width" :find_kyou_query="querys[focused_column_index]"
@@ -26,10 +36,11 @@
                         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
                 </td>
                 <td valign="top">
-                    <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                        :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag"
-                        :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
-                        :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                    <KyouView v-if="focused_kyou" :application_config="application_config" :gkill_api="gkill_api"
+                        :highlight_targets="[]" :is_image_view="false" :kyou="focused_kyou"
+                        :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
+                        :show_mi_create_time="true" :show_mi_estimate_end_time="true"
+                        :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                         :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()" :width="400"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
@@ -37,12 +48,13 @@
                         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
                 </td>
                 <td valign="top">
-                    <KyouCountCalendar :application_config="application_config" :gkill_api="gkill_api"
-                        :kyous="focused_column_kyous" @requested_focus_time="(time) => focused_time = time" />
+                    <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
+                        :gkill_api="gkill_api" :kyous="focused_column_kyous"
+                        @requested_focus_time="(time) => focused_time = time" />
                 </td>
                 <td valign="top">
-                    <GPSLogMap :application_config="application_config" :gkill_api="gkill_api"
-                        :start_date="focused_time" :end_date="focused_time"
+                    <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
+                        :gkill_api="gkill_api" :start_date="focused_time" :end_date="focused_time"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @requested_focus_time="(time) => focused_time = time" />
@@ -152,7 +164,7 @@ const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
 const querys: Ref<Array<FindKyouQuery>> = ref((() => { const queries = new Array<FindKyouQuery>(); queries.push(new FindKyouQuery()); return queries })())
 const match_kyous_list: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
 const focused_column_index: Ref<number> = ref(0)
-const focused_kyou: Ref<Kyou> = ref(new Kyou())
+const focused_kyou: Ref<Kyou | null> = ref(null)
 const focused_list_views_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_time: Ref<Date> = ref(new Date())
 const focused_column_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
@@ -170,6 +182,12 @@ const position_y: Ref<Number> = ref(0)
 
 const props = defineProps<rykvViewProps>()
 const emits = defineEmits<rykvViewEmits>()
+
+nextTick(() => {
+    is_show_kyou_detail_view.value = props.app_content_width.valueOf() >= 420
+    is_show_kyou_count_calendar.value = props.app_content_width.valueOf() >= 420
+    is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
+})
 
 nextTick(() => query_editor_sidebar.value?.generate_query())
 
