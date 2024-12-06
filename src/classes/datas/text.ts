@@ -1,6 +1,8 @@
 'use strict'
 
+import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
+import { GetTextHistoryByTextIDRequest } from '../api/req_res/get-text-history-by-tag-id-request'
 import { InfoIdentifier } from './info-identifier'
 import { MetaInfoBase } from './meta-info-base'
 
@@ -11,23 +13,46 @@ export class Text extends MetaInfoBase {
     attached_histories: Array<Text>
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        const req = new GetTextHistoryByTextIDRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.id = this.id
+        const res = await GkillAPI.get_instance().get_text_history_by_text_id(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+        this.attached_histories = res.text_histories
+        return new Array<GkillError>()
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        return this.load_attached_histories()
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        this.attached_histories = []
+        return new Array<GkillError>()
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        return this.clear_attached_histories()
     }
 
-    async clone(): Promise<Text> {
-        throw new Error('Not implemented')
+    clone(): Text {
+        const text = new Text()
+        text.is_deleted = this.is_deleted
+        text.id = this.id
+        text.target_id = this.target_id
+        text.related_time = this.related_time
+        text.create_time = this.create_time
+        text.create_app = this.create_app
+        text.create_device = this.create_device
+        text.create_user = this.create_user
+        text.update_time = this.update_time
+        text.update_app = this.update_app
+        text.update_device = this.update_device
+        text.update_user = this.update_user
+        text.text = this.text
+        return text
     }
 
     generate_info_identifer(): InfoIdentifier {

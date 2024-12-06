@@ -1,35 +1,71 @@
 'use strict'
 
+import { GkillAPI } from "../api/gkill-api"
 import type { GkillError } from "../api/gkill-error"
+import { GetGitCommitLogRequest } from "../api/req_res/get-git-commit-log-request"
 import { InfoBase } from "./info-base"
 
 export class GitCommitLog extends InfoBase {
 
     commit_message: string
 
+    attached_histories: Array<GitCommitLog>
+
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        const req = new GetGitCommitLogRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.id = this.id
+        const res = await GkillAPI.get_instance().get_git_commit_log(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+        this.attached_histories = res.git_commit_logs
+        return new Array<GkillError>()
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        return this.load_attached_histories()
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        this.attached_histories = []
+        return new Array<GkillError>()
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        let errors = new Array<GkillError>()
+        errors = errors.concat(await this.clear_attached_tags())
+        errors = errors.concat(await this.clear_attached_texts())
+        errors = errors.concat(await this.clear_attached_timeis())
+        errors = errors.concat(await this.clear_attached_histories())
+        return errors
     }
 
+
+
     clone(): GitCommitLog {
-        throw new Error('Not implemented')
+        const git_commit_log = new GitCommitLog()
+        git_commit_log.is_deleted = this.is_deleted
+        git_commit_log.id = this.id
+        git_commit_log.rep_name = this.rep_name
+        git_commit_log.related_time = this.related_time
+        git_commit_log.data_type = this.data_type
+        git_commit_log.create_time = this.create_time
+        git_commit_log.create_app = this.create_app
+        git_commit_log.create_device = this.create_device
+        git_commit_log.create_user = this.create_user
+        git_commit_log.update_time = this.update_time
+        git_commit_log.update_app = this.update_app
+        git_commit_log.update_user = this.update_user
+        git_commit_log.update_device = this.update_device
+        git_commit_log.commit_message = this.commit_message
+        return git_commit_log
     }
 
     constructor() {
         super()
         this.commit_message = ""
+        this.attached_histories = new Array<GitCommitLog>()
     }
 
 }

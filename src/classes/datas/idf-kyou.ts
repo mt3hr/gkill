@@ -1,5 +1,6 @@
 'use strict'
 
+import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
 import { InfoBase } from './info-base'
 import { InfoIdentifier } from './info-identifier'
@@ -12,24 +13,62 @@ export class IDFKyou extends InfoBase {
 
     is_image: boolean
 
+    attached_histories: Array<IDFKyou>
+
     async load_attached_histories(): Promise<Array<GkillError>> {
         throw new Error('Not implemented')
+        /*
+        const req = new GetIDFKyouRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.id = this.id
+        const res = await GkillAPI.get_instance().get_idf_kyou(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+        this.attached_histories = res.kmemo_histories
+        return new Array<GkillError>()
+        */
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        return this.load_attached_histories()
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        this.attached_histories = []
+        return new Array<GkillError>()
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        let errors = new Array<GkillError>()
+        errors = errors.concat(await this.clear_attached_tags())
+        errors = errors.concat(await this.clear_attached_texts())
+        errors = errors.concat(await this.clear_attached_timeis())
+        errors = errors.concat(await this.clear_attached_histories())
+        return errors
     }
 
+
+
     clone(): IDFKyou {
-        throw new Error('Not implemented')
+        const idf_kyou = new IDFKyou()
+        idf_kyou.is_deleted = this.is_deleted
+        idf_kyou.id = this.id
+        idf_kyou.rep_name = this.rep_name
+        idf_kyou.related_time = this.related_time
+        idf_kyou.data_type = this.data_type
+        idf_kyou.create_time = this.create_time
+        idf_kyou.create_app = this.create_app
+        idf_kyou.create_device = this.create_device
+        idf_kyou.create_user = this.create_user
+        idf_kyou.update_time = this.update_time
+        idf_kyou.update_app = this.update_app
+        idf_kyou.update_user = this.update_user
+        idf_kyou.update_device = this.update_device
+        idf_kyou.file_name = this.file_name
+        idf_kyou.file_url = this.file_url
+        idf_kyou.is_image = this.is_image
+        return idf_kyou
     }
 
     generate_info_identifer(): InfoIdentifier {
@@ -45,6 +84,7 @@ export class IDFKyou extends InfoBase {
         this.file_name = ""
         this.file_url = ""
         this.is_image = false
+        this.attached_histories = new Array<IDFKyou>()
     }
 
 }

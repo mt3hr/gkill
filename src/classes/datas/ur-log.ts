@@ -1,6 +1,8 @@
 'use strict'
 
+import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
+import { GetURLogRequest } from '../api/req_res/get-ur-log-request'
 import { InfoBase } from './info-base'
 import { InfoIdentifier } from './info-identifier'
 
@@ -19,23 +21,56 @@ export class URLog extends InfoBase {
     attached_histories: Array<URLog>
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        const req = new GetURLogRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.id = this.id
+        const res = await GkillAPI.get_instance().get_urlog(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+        this.attached_histories = res.urlog_histories
+        return new Array<GkillError>()
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        return this.load_attached_histories()
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        this.attached_histories = []
+        return new Array<GkillError>()
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        let errors = new Array<GkillError>()
+        errors = errors.concat(await this.clear_attached_tags())
+        errors = errors.concat(await this.clear_attached_texts())
+        errors = errors.concat(await this.clear_attached_timeis())
+        errors = errors.concat(await this.clear_attached_histories())
+        return errors
     }
 
     clone(): URLog {
-        throw new Error('Not implemented')
+        const urlog = new URLog()
+        urlog.is_deleted = this.is_deleted
+        urlog.id = this.id
+        urlog.rep_name = this.rep_name
+        urlog.related_time = this.related_time
+        urlog.data_type = this.data_type
+        urlog.create_time = this.create_time
+        urlog.create_app = this.create_app
+        urlog.create_device = this.create_device
+        urlog.create_user = this.create_user
+        urlog.update_time = this.update_time
+        urlog.update_app = this.update_app
+        urlog.update_user = this.update_user
+        urlog.update_device = this.update_device
+        urlog.url = this.url
+        urlog.title = this.title
+        urlog.description = this.description
+        urlog.favicon_image = this.favicon_image
+        urlog.thumbnail_image = this.thumbnail_image
+        return urlog
     }
 
     generate_info_identifer(): InfoIdentifier {

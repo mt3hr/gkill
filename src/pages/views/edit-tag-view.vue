@@ -92,6 +92,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits("updated_tag", res.updated_tag)
+    emits('requested_close_dialog')
     return
 }
 </script>

@@ -102,7 +102,7 @@ async function save(): Promise<void> {
     new_nlog.amount = nlog_amount_value.value
     new_nlog.shop = nlog_shop_value.value
     new_nlog.title = nlog_title_value.value
-    new_nlog.related_time = moment(related_date.value + related_time.value).toDate()
+    new_nlog.related_time = moment(related_date.value + " " + related_time.value).toDate()
     new_nlog.create_app = "gkill"
     new_nlog.create_device = gkill_info_res.device
     new_nlog.create_time = new Date(Date.now())
@@ -125,6 +125,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits('registered_kyou', res.added_nlog_kyou)
+    emits('requested_close_dialog')
     return
 }
 </script>
