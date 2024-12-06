@@ -388,7 +388,7 @@ WHERE ID = ?
 
 func (l *loginSessionDAOSQLite3Impl) DeleteLoginSession(ctx context.Context, sessionID string) (bool, error) {
 	sql := `
-DELETE LOGIN_SESSION
+DELETE FROM LOGIN_SESSION
 WHERE SESSION_ID = ?
 `
 	log.Printf("sql: %s", sql)
