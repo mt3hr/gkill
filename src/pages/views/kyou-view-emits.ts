@@ -21,4 +21,5 @@ export interface KyouViewEmits {
     (e: 'requested_update_check_kyous', kyou: Array<Kyou>, is_checked: boolean): void
     (e: 'requested_reload_kyou', kyou: Kyou): void
     (e: 'requested_reload_list'): void
+    (e: 'requested_close_dialog'): void
 }

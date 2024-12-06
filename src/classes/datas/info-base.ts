@@ -1,17 +1,13 @@
 'use strict'
 
-import moment from "moment"
 import { GkillAPI } from "../api/gkill-api"
 import { GkillError } from "../api/gkill-error"
-import { GetApplicationConfigRequest } from "../api/req_res/get-application-config-request"
 import { GetKyousRequest } from "../api/req_res/get-kyous-request"
-import { GetPlaingTimeisRequest } from "../api/req_res/get-plaing-timeis-request"
 import { GetTagsByTargetIDRequest } from "../api/req_res/get-tags-by-target-id-request"
 import { GetTextsByTargetIDRequest } from "../api/req_res/get-texts-by-target-id-request"
 import type { Kyou } from "./kyou"
 import type { Tag } from "./tag"
 import type { Text } from "./text"
-import type { TimeIs } from "./time-is"
 
 export abstract class InfoBase {
     is_deleted: boolean
@@ -133,42 +129,24 @@ export abstract class InfoBase {
     abstract clone(): InfoBase
 
     constructor() {
-
         this.is_deleted = false
-
         this.id = ""
-
         this.rep_name = ""
-
         this.related_time = new Date(0)
-
         this.data_type = ""
-
         this.create_time = new Date(0)
-
         this.create_app = ""
-
         this.create_device = ""
-
         this.create_user = ""
-
         this.update_time = new Date(0)
-
         this.update_app = ""
-
         this.update_user = ""
-
         this.update_device = ""
-
         this.attached_tags = new Array<Tag>()
-
         this.attached_texts = new Array<Text>()
-
         this.attached_timeis_kyou = new Array<Kyou>()
-
         this.is_checked = false
     }
-
 }
 
 
