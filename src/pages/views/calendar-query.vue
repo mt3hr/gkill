@@ -10,7 +10,7 @@
         </v-col>
     </v-row>
     <VDatePicker v-show="use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates"
-        :color="'primary'" :multiple="'range'" @wheel.prevent.stop="(e: any) => on_wheel(e)"
+        :multible="true" :color="'primary'" :multiple="'range'" @wheel.prevent.stop="(e: any) => on_wheel(e)"
         @update:model-value="clicked_date" />
 </template>
 <script lang="ts" setup>
@@ -38,7 +38,7 @@ watch(() => props.find_kyou_query, () => {
     const end_date = moment(props.find_kyou_query.calendar_end_date)
     const date_list = Array<Date>()
     if (props.find_kyou_query.calendar_start_date && props.find_kyou_query.calendar_end_date) {
-        for (let date = start_date; date.unix() !== end_date.unix(); date = date.add('days', 1)) {
+        for (let date = start_date; date.unix() <= end_date.unix(); date = date.add('days', 1)) {
             date_list.push(date.toDate())
         }
     } else {
@@ -89,10 +89,10 @@ function get_start_date(): Date | null {
     return null
 }
 function get_end_date(): Date | null {
-    if (dates.value.length == 2) {
-        return dates.value[2]
+    if (dates.value.length >= 2) {
+        return dates.value[dates.value.length-1]
     }
-    return null
+    return get_start_date()
 }
 </script>
 <style lang="css">

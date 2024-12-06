@@ -852,19 +852,19 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 	}
 	if query.UseIDs != nil && *query.UseIDs {
 		if query.IDs != nil && len(*query.IDs) != 0 {
-		if whereCounter != 0 {
-			sqlWhere += " AND "
-		}
-		sqlWhere += " ID IN ("
-		for i, id := range ids {
-			sqlWhere += fmt.Sprintf("'%s'", id)
-			if i != len(ids)-1 {
-				sqlWhere += ", "
+			if whereCounter != 0 {
+				sqlWhere += " AND "
 			}
-			whereCounter++
+			sqlWhere += " ID IN ("
+			for i, id := range ids {
+				sqlWhere += fmt.Sprintf("'%s'", id)
+				if i != len(ids)-1 {
+					sqlWhere += ", "
+				}
+				whereCounter++
+			}
+			sqlWhere += ")"
 		}
-		sqlWhere += ")"
-	}
 	}
 
 	// 日付範囲指定ありの場合
@@ -876,17 +876,17 @@ func (m *miRepositorySQLite3Impl) whereSQLGenerator(timeColmunName string, query
 			if whereCounter != 0 {
 				sqlWhere += " AND "
 			}
-			sqlWhere += sqlite3impl.EscapeSQLite(fmt.Sprintf("datetime("+columnName+", 'localtime') >= datetime('%s', 'localtime')", startDate.Format(sqlite3impl.TimeLayout)))
+			sqlWhere += fmt.Sprintf("datetime("+columnName+", 'localtime') >= datetime('%s', 'localtime')", startDate.Format(sqlite3impl.TimeLayout))
 			whereCounter++
 		}
 
 		// 終了日時を指定するSQLを追記
-		if query.UseCalendar != nil && *query.UseCalendar {
+		if query.CalendarEndDate != nil {
 			endDate := *query.CalendarEndDate
 			if whereCounter != 0 {
 				sqlWhere += " AND "
 			}
-			sqlWhere += sqlite3impl.EscapeSQLite(fmt.Sprintf("datetime("+columnName+", 'localtime') <= datetime('%s', 'localtime')", endDate.Format(sqlite3impl.TimeLayout)))
+			sqlWhere += fmt.Sprintf("datetime("+columnName+", 'localtime') <= datetime('%s', 'localtime')", endDate.Add(time.Hour*24).Add(time.Millisecond*-1).Format(sqlite3impl.TimeLayout))
 			whereCounter++
 		}
 	}

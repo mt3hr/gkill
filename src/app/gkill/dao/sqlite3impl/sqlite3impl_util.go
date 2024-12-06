@@ -51,18 +51,18 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, er
 
 	if useIDs {
 		if query.IDs != nil && len(*query.IDs) != 0 {
-		if *whereCounter != 0 {
-			sql += " AND "
-		}
-		sql += " ID IN ("
-		for i, id := range ids {
-			sql += fmt.Sprintf("'%s'", id)
-			if i != len(ids)-1 {
-				sql += ", "
+			if *whereCounter != 0 {
+				sql += " AND "
 			}
+			sql += " ID IN ("
+			for i, id := range ids {
+				sql += fmt.Sprintf("'%s'", id)
+				if i != len(ids)-1 {
+					sql += ", "
+				}
+			}
+			sql += ")"
 		}
-		sql += ")"
-	}
 	}
 
 	// 日付範囲指定ありの場合
@@ -85,7 +85,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, er
 			if *whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += EscapeSQLite(fmt.Sprintf("datetime(RELATED_TIME, 'localtime') >= datetime('%s', 'localtime')", calendarStartDate.Format(TimeLayout)))
+			sql += fmt.Sprintf("datetime(RELATED_TIME, 'localtime') >= datetime('%s', 'localtime')", calendarStartDate.Format(TimeLayout))
 			*whereCounter++
 		}
 
@@ -94,7 +94,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, er
 			if *whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += EscapeSQLite(fmt.Sprintf("datetime(RELATED_TIME, 'localtime') <= datetime('%s', 'localtime')", calendarEndDate.Format(TimeLayout)))
+			sql += fmt.Sprintf("datetime(RELATED_TIME, 'localtime') <= datetime('%s', 'localtime')", calendarEndDate.Add(time.Hour*24).Add(time.Millisecond*-1).Format(TimeLayout))
 			*whereCounter++
 		}
 	}
