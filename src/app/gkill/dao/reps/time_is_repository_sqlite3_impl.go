@@ -717,7 +717,7 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 			if whereCounter != 0 {
 				sqlWhere += " AND "
 			}
-			sqlWhere += sqlite3impl.EscapeSQLite(fmt.Sprintf("datetime("+columnName+", 'localtime') >= datetime('%s', 'localtime')", startDate.Format(sqlite3impl.TimeLayout)))
+			sqlWhere += fmt.Sprintf("datetime("+columnName+", 'localtime') >= datetime('%s', 'localtime')", startDate.Format(sqlite3impl.TimeLayout))
 			whereCounter++
 		}
 
@@ -727,7 +727,7 @@ func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query
 			if whereCounter != 0 {
 				sqlWhere += " AND "
 			}
-			sqlWhere += sqlite3impl.EscapeSQLite(fmt.Sprintf("datetime("+columnName+", 'localtime') <= datetime('%s', 'localtime')", endDate.Format(sqlite3impl.TimeLayout)))
+			sqlWhere += fmt.Sprintf("datetime("+columnName+", 'localtime') <= datetime('%s', 'localtime')", endDate.Add(time.Hour*24).Add(time.Millisecond*-1).Format(sqlite3impl.TimeLayout))
 			whereCounter++
 		}
 	}
