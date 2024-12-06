@@ -244,9 +244,9 @@ async function save(): Promise<void> {
 
     // 更新がなかったらエラーメッセージを出力する
     if (mi.title === mi_title.value &&
-        moment(mi.estimate_start_time) === (moment(mi_estimate_start_date.value + mi_estimate_start_time.value)) &&
-        moment(mi.estimate_end_time) === moment(mi_estimate_end_date.value + mi_estimate_end_time.value) &&
-        moment(mi.limit_time) === (moment(mi_limit_date.value + mi_limit_time.value))
+        moment(mi.estimate_start_time) === (moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value)) &&
+        moment(mi.estimate_end_time) === moment(mi_estimate_end_date.value + " " + mi_estimate_end_time.value) &&
+        moment(mi.limit_time) === (moment(mi_limit_date.value + " " + mi_limit_time.value))
     ) {
         const error = new GkillError()
         error.error_code = "//TODO"
@@ -271,13 +271,13 @@ async function save(): Promise<void> {
     let estimate_end_time: Date | null = null
     let limit_time: Date | null = null
     if (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value !== "") {
-        estimate_start_time = moment(mi_estimate_start_date.value + mi_estimate_start_time.value).toDate()
+        estimate_start_time = moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value).toDate()
     }
     if (mi_estimate_end_date.value !== "" && mi_estimate_end_time.value !== "") {
-        estimate_end_time = moment(mi_estimate_end_date.value + mi_estimate_end_time.value).toDate()
+        estimate_end_time = moment(mi_estimate_end_date.value + " " + mi_estimate_end_time.value).toDate()
     }
     if (mi_limit_date.value !== "" && mi_limit_time.value !== "") {
-        limit_time = moment(mi_limit_date.value + mi_limit_time.value).toDate()
+        limit_time = moment(mi_limit_date.value + " " + mi_limit_time.value).toDate()
     }
     const new_mi = await mi.clone()
     new_mi.title = mi_title.value
@@ -307,6 +307,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits("registered_kyou", res.added_mi_kyou)
+    emits('requested_close_dialog')
     return
 }
 

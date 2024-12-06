@@ -7,6 +7,9 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
+                    <v-btn @click="logout()" color="'primary'">ログアウト</v-btn>
+                </v-col>
+                <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn v-if="cloned_application_config.account_is_admin" @click="show_server_config_dialog()"
                         color="'primary'">サーバ設定</v-btn>
                 </v-col>
@@ -143,6 +146,8 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 import { UpdateApplicationConfigRequest } from '@/classes/api/req_res/update-application-config-request'
 import { ServerConfig } from '@/classes/datas/config/server-config'
 import ServerConfigDialog from '../dialogs/server-config-dialog.vue'
+import { LogoutRequest } from '@/classes/api/req_res/logout-request'
+import router from '@/router'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 const edit_device_struct_dialog = ref<InstanceType<typeof EditDeviceStructDialog> | null>(null);
@@ -218,6 +223,17 @@ async function update_application_config(): Promise<void> {
     }
     emits('requested_reload_application_config')
     emits('requested_close_dialog')
+}
+
+async function logout(): Promise<void> {
+    const req = new LogoutRequest()
+    req.session_id = GkillAPI.get_instance().get_session_id()
+    const res = await GkillAPI.get_instance().logout(req)
+    if (res.errors && res.errors.length !== 0) {
+        emits('received_errors', res.errors)
+        return
+    }
+    router.replace("/")
 }
 
 function show_edit_device_dialog() {

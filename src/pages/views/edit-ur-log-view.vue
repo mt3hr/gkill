@@ -117,8 +117,8 @@ async function save(): Promise<void> {
 
     // 更新がなかったらエラーメッセージを出力する
     if (urlog.title === urlog_title.value &&
-        moment(urlog.related_time) === (moment(urlog_related_date.value + urlog_related_time.value)) &&
-        moment(urlog.related_time) === moment(urlog_related_date.value + urlog_related_time.value)) {
+        moment(urlog.related_time) === (moment(urlog_related_date.value + " " + urlog_related_time.value)) &&
+        moment(urlog.related_time) === moment(urlog_related_date.value + " " + urlog_related_time.value)) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "URLogが更新されていません"
@@ -141,7 +141,7 @@ async function save(): Promise<void> {
     const updated_urlog = await urlog.clone()
     updated_urlog.title = urlog_title.value
     updated_urlog.url = urlog_url.value
-    updated_urlog.related_time = moment(urlog_related_date.value + urlog_related_time.value).toDate()
+    updated_urlog.related_time = moment(urlog_related_date.value + " " + urlog_related_time.value).toDate()
     updated_urlog.update_time = new Date(Date.now())
     updated_urlog.update_app = "gkill"
     updated_urlog.update_device = gkill_info_res.device
@@ -161,6 +161,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits("updated_kyou", res.updated_urlog_kyou)
+    emits('requested_close_dialog')
     return
 }
 </script>

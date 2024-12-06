@@ -30,8 +30,7 @@
                         :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag"
                         :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                         :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                        :show_timeis_plaing_end_button="true"
-                        :height="app_content_height.valueOf()" :width="400"
+                        :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()" :width="400"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
@@ -58,36 +57,67 @@
             :checked_kyous="focused_column_checked_kyous"
             @received_messages="(messages) => emits('received_messages', messages)"
             @received_errors="(errors) => emits('received_errors', errors)" />
+
         <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+            ref="add_mi_dialog" />
         <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+            ref="add_nlog_dialog" />
         <EndTimeIsPlaingDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+            ref="end_timeis_plaing_dialog" />
         <StartTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+            ref="start_timeis_dialog" />
         <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
             :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+            ref="kftl_dialog" />
+
+        <v-avatar :style="floatingActionButtonStyle()" color="indigo" class="position-fixed">
+            <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
+                <template v-slot:activator="{ props }">
+                    <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" />
+                </template>
+                <v-list>
+                    <v-list-item @click="show_kftl_dialog()">
+                        <v-list-item-title>kftl</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="show_timeis_start_dialog()">
+                        <v-list-item-title>timeis start</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="show_mi_dialog()">
+                        <v-list-item-title>mi</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="show_nlog_dialog()">
+                        <v-list-item-title>nlog</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="show_lantana_dialog()">
+                        <v-list-item-title>lantana</v-list-item-title>
+                    </v-list-item>
+                </v-list>
+            </v-menu>
+        </v-avatar>
     </v-main>
 </template>
 <script setup lang="ts">
@@ -111,8 +141,13 @@ import type { rykvViewEmits } from './rykv-view-emits'
 import type { rykvViewProps } from './rykv-view-props'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
+import type KftlDialog from '../dialogs/kftl-dialog.vue'
 
 const query_editor_sidebar = ref<InstanceType<typeof RykvQueryEditorSideBar> | null>(null);
+const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
+const add_nlog_dialog = ref<InstanceType<typeof AddNlogDialog> | null>(null);
+const start_timeis_dialog = ref<InstanceType<typeof StartTimeIsDialog> | null>(null);
+const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
 
 const querys: Ref<Array<FindKyouQuery>> = ref((() => { const queries = new Array<FindKyouQuery>(); queries.push(new FindKyouQuery()); return queries })())
 const match_kyous_list: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
@@ -127,9 +162,11 @@ const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
 const is_show_gps_log_map: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
 const drawer: Ref<boolean | null> = ref(null)
-const kyou_list_view_height = computed(() => {
-    return props.app_content_height
-})
+const kyou_list_view_height = computed(() => props.app_content_height)
+const is_show_add_kyou_menu: Ref<boolean> = ref(false)
+
+const position_x: Ref<Number> = ref(0)
+const position_y: Ref<Number> = ref(0)
 
 const props = defineProps<rykvViewProps>()
 const emits = defineEmits<rykvViewEmits>()
@@ -175,6 +212,42 @@ async function search(column_index: number): Promise<void> {
         emits('received_messages', res.messages)
     }
     match_kyous_list.value[column_index] = res.kyous
+}
+
+function floatingActionButtonStyle() {
+    return {
+        'bottom': '10px',
+        'right': '10px',
+        'height': '50px',
+        'width': '50px'
+    }
+}
+
+const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
+
+async function show_add_kyou_menu(e: PointerEvent): Promise<void> {
+    position_x.value = e.clientX
+    position_y.value = e.clientY
+    is_show_add_kyou_menu.value = true
+}
+
+function show_kftl_dialog(): void {
+    kftl_dialog.value?.show()
+}
+
+function show_timeis_start_dialog(): void {
+    start_timeis_dialog.value?.show()
+}
+function show_mi_dialog(): void {
+    add_mi_dialog.value?.show()
+}
+
+function show_nlog_dialog(): void {
+    add_nlog_dialog.value?.show()
+}
+
+function show_lantana_dialog(): void {
+    // TODO
 }
 
 </script>

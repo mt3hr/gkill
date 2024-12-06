@@ -28,8 +28,7 @@
                 :highlight_targets="[kyou.typed_kmemo.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
-                :height="'100%'" :width="'100%'"
+                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -107,7 +106,7 @@ async function save(): Promise<void> {
     // 更新後Kmemo情報を用意する
     const updated_kmemo = await kmemo.clone()
     updated_kmemo.content = kmemo_value.value
-    updated_kmemo.related_time = moment(related_date.value + related_time.value).toDate()
+    updated_kmemo.related_time = moment(related_date.value + " " + related_time.value).toDate()
     updated_kmemo.update_app = "gkill"
     updated_kmemo.update_device = gkill_info_res.device
     updated_kmemo.update_time = new Date(Date.now())
@@ -126,6 +125,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits('updated_kyou', res.updated_kmemo_kyou)
+    emits('requested_close_dialog')
     return
 }
 </script>

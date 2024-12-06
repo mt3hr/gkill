@@ -1,6 +1,8 @@
 'use strict'
 
-import type { GkillError } from '../api/gkill-error'
+import { GkillAPI } from '../api/gkill-api'
+import { GkillError } from '../api/gkill-error'
+import { GetTimeisRequest } from '../api/req_res/get-timeis-request'
 import { InfoBase } from './info-base'
 import { InfoIdentifier } from './info-identifier'
 
@@ -15,23 +17,54 @@ export class TimeIs extends InfoBase {
     attached_histories: Array<TimeIs>
 
     async load_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        const req = new GetTimeisRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.id = this.id
+        const res = await GkillAPI.get_instance().get_timeis(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+        this.attached_histories = res.timeis_histories
+        return new Array<GkillError>()
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        return this.load_attached_histories()
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        this.attached_histories = []
+        return new Array<GkillError>()
     }
 
     async clear_attached_datas(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        let errors = new Array<GkillError>()
+        errors = errors.concat(await this.clear_attached_tags())
+        errors = errors.concat(await this.clear_attached_texts())
+        errors = errors.concat(await this.clear_attached_timeis())
+        errors = errors.concat(await this.clear_attached_histories())
+        return errors
     }
 
     clone(): TimeIs {
-        throw new Error('Not implemented')
+        const timeis = new TimeIs()
+        timeis.is_deleted = this.is_deleted
+        timeis.id = this.id
+        timeis.rep_name = this.rep_name
+        timeis.related_time = this.related_time
+        timeis.data_type = this.data_type
+        timeis.create_time = this.create_time
+        timeis.create_app = this.create_app
+        timeis.create_device = this.create_device
+        timeis.create_user = this.create_user
+        timeis.update_time = this.update_time
+        timeis.update_app = this.update_app
+        timeis.update_user = this.update_user
+        timeis.update_device = this.update_device
+        timeis.title = this.title
+        timeis.start_time = this.start_time
+        timeis.end_time = this.end_time
+        return timeis
     }
 
     generate_info_identifer(): InfoIdentifier {
