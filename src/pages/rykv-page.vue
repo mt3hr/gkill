@@ -94,3 +94,14 @@ window.addEventListener('resize', () => {
 resize_content()
 load_application_config()
 </script>
+<style lang="css">
+body,
+.v-application--wrap,
+.v-navigation-drawer--open {
+  overflow-y: hidden !important;
+  overflow-x: auto !important;
+  height: calc(actual_height) !important;
+  min-height: calc(actual_height) !important;
+  max-height: calc(actual_height) !important;
+}
+</style>

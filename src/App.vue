@@ -8,12 +8,20 @@ const locale: Ref<string> = ref(window.navigator.language)
 </script>
 
 <template>
-  <v-app>
-    <VLocaleProvider :locale="locale">
-      <RouterView />
-    </VLocaleProvider>
-  </v-app>
-  <div id="control-height"></div>
+  <table>
+    <tr>
+      <td>
+        <div id="control-height"></div>
+      </td>
+      <td>
+        <v-app>
+          <VLocaleProvider :locale="locale">
+            <RouterView />
+          </VLocaleProvider>
+        </v-app>
+      </td>
+    </tr>
+  </table>
 </template>
 
 <style scoped></style>
@@ -22,7 +30,9 @@ const locale: Ref<string> = ref(window.navigator.language)
   height: 100vh;
   width: 0;
   position: absolute;
+  overflow-y: hidden;
 }
+
 * {
   scrollbar-width: none;
 }
