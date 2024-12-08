@@ -94,7 +94,7 @@ func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string) (*Kyou, err
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
-		
+
 		go func(rep ReKyouRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -158,7 +158,7 @@ func (r *ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
-		
+
 		go func(rep ReKyouRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
@@ -238,7 +238,7 @@ func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
-		
+
 		go func(rep ReKyouRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -282,7 +282,7 @@ func (r *ReKyouRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
-		
+
 		go func(rep ReKyouRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -377,7 +377,7 @@ func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string) (*ReKyou,
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
-		
+
 		go func(rep ReKyouRepository) {
 			defer wg.Done()
 			matchReKyouInRep, err := rep.GetReKyou(ctx, id)
@@ -441,7 +441,7 @@ func (r *ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) 
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
-		
+
 		go func(rep ReKyouRepository) {
 			defer wg.Done()
 			matchReKyousInRep, err := rep.GetReKyouHistories(ctx, id)
@@ -524,7 +524,7 @@ func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
-		
+
 		go func(rep ReKyouRepository) {
 			defer wg.Done()
 			matchReKyousInRep, err := rep.GetReKyousAllLatest(ctx)

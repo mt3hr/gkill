@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create ACCOUNT table to %s: %w", filename, err)
@@ -72,6 +73,7 @@ FROM ACCOUNT
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -117,8 +119,12 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", userID)
-	rows, err := stmt.QueryContext(ctx, userID)
+	queryArgs := []interface{}{
+		userID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -174,20 +180,16 @@ VALUES (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		account.UserID,
 		account.PasswordSha256,
 		account.IsAdmin,
 		account.IsEnable,
 		account.PasswordResetToken,
-	)
-	_, err = stmt.ExecContext(ctx,
-		account.UserID,
-		account.PasswordSha256,
-		account.IsAdmin,
-		account.IsEnable,
-		account.PasswordResetToken)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -212,22 +214,17 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		account.UserID,
 		account.PasswordSha256,
 		account.IsAdmin,
 		account.IsEnable,
 		account.PasswordResetToken,
 		account.UserID,
-	)
-	_, err = stmt.ExecContext(ctx,
-		account.UserID,
-		account.PasswordSha256,
-		account.IsAdmin,
-		account.IsEnable,
-		account.PasswordResetToken,
-		account.UserID)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -236,7 +233,7 @@ WHERE USER_ID = ?
 }
 func (a *accountDAOSQLite3Impl) DeleteAccount(ctx context.Context, userID string) (bool, error) {
 	sql := `
-DELETE ACCOUNT
+DELETE FROM ACCOUNT
 WHERE USER_ID = ?
 `
 	log.Printf("sql: %s", sql)
@@ -246,11 +243,12 @@ WHERE USER_ID = ?
 		return false, err
 	}
 	defer stmt.Close()
-	log.Printf(
-		"%s",
+	queryArgs := []interface{}{
 		userID,
-	)
-	_, err = stmt.ExecContext(ctx, userID)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

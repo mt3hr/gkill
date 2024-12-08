@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create URLOG table to %s: %w", filename, err)
@@ -101,99 +102,29 @@ FROM URLOG
 WHERE
 `
 
+	repName, err := u.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at urlog: %w", err)
+		return nil, err
+	}
+	dataType := "urlog"
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
-
-	words := []string{}
-	if query.Words != nil {
-		words = *query.Words
-	}
-	notWords := []string{}
-	if query.NotWords != nil {
-		notWords = *query.NotWords
-	}
-
-	// ワードand検索である場合のSQL追記
-	if query.UseWords != nil && *query.UseWords {
-		if len(words) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		if query.WordsAnd != nil && *query.WordsAnd {
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		} else {
-			// ワードor検索である場合のSQL追記
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		}
-
-		if len(notWords) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		// notワードを除外するSQLを追記
-		for i, notWord := range notWords {
-			if i == 0 {
-				sql += " ( "
-			}
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
-			sql += sqlite3impl.EscapeSQLite(" AND ")
-			sql += sqlite3impl.EscapeSQLite("DESCRIPTION NOT LIKE '%" + notWord + "%'")
-			sql += sqlite3impl.EscapeSQLite(" AND ")
-			sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + notWord + "%'")
-			if i == len(words)-1 {
-				sql += " ) "
-			}
-			whereCounter++
-		}
-	}
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
 
 	log.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
@@ -203,15 +134,9 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := u.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
-		return nil, err
-	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
-	dataType := "urlog"
-	log.Printf("%s, %s", repName, dataType)
-	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from URLOG%s: %w", err)
 		return nil, err
@@ -316,8 +241,15 @@ ORDER BY UPDATE_TIME DESC
 	defer stmt.Close()
 
 	dataType := "urlog"
-	log.Printf("%s, %s, %s", repName, dataType, id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at select from URLOG %s: %w", id, err)
 		return nil, err
@@ -433,99 +365,29 @@ FROM URLOG
 WHERE
 `
 
+	repName, err := u.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
+		return nil, err
+	}
+	dataType := "urlog"
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
-
-	words := []string{}
-	if query.Words != nil {
-		words = *query.Words
-	}
-	notWords := []string{}
-	if query.NotWords != nil {
-		notWords = *query.NotWords
-	}
-
-	// ワードand検索である場合のSQL追記
-	if query.UseWords != nil && *query.UseWords {
-		// ワードを解析
-		if len(words) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		if query.WordsAnd != nil && *query.WordsAnd {
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		} else {
-			// ワードor検索である場合のSQL追記
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("DESCRIPTION LIKE '%" + word + "%'")
-				sql += sqlite3impl.EscapeSQLite(" OR ")
-				sql += sqlite3impl.EscapeSQLite("URL LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		}
-
-		if len(notWords) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		// notワードを除外するSQLを追記
-		for i, notWord := range notWords {
-			if i == 0 {
-				sql += " ( "
-			}
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
-			sql += sqlite3impl.EscapeSQLite(" AND ")
-			sql += sqlite3impl.EscapeSQLite("DESCRIPTION NOT LIKE '%" + notWord + "%'")
-			if i == len(words)-1 {
-				sql += " ) "
-			}
-			whereCounter++
-		}
-	}
-
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
 
 	log.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
@@ -535,14 +397,9 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := u.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
-		return nil, err
-	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
-	log.Printf("%s", repName)
-	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from URLOG %s: %w", err)
 		return nil, err
@@ -649,13 +506,18 @@ ORDER BY UPDATE_TIME DESC
 	log.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
+		err = fmt.Errorf("error at get urlog histories sql %s: %w", id, err)
 		return nil, err
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", repName, id)
-	rows, err := stmt.QueryContext(ctx, repName, id)
+	queryArgs := []interface{}{
+		repName,
+		id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query ")
 		return nil, err
@@ -758,8 +620,7 @@ INSERT INTO URLOG (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		urlog.IsDeleted,
 		urlog.ID,
 		urlog.URL,
@@ -776,25 +637,10 @@ INSERT INTO URLOG (
 		urlog.UpdateApp,
 		urlog.UpdateDevice,
 		urlog.UpdateUser,
-	)
-	_, err = stmt.ExecContext(ctx,
-		urlog.IsDeleted,
-		urlog.ID,
-		urlog.URL,
-		urlog.Title,
-		urlog.Description,
-		urlog.FaviconImage,
-		urlog.ThumbnailImage,
-		urlog.RelatedTime.Format(sqlite3impl.TimeLayout),
-		urlog.CreateTime.Format(sqlite3impl.TimeLayout),
-		urlog.CreateApp,
-		urlog.CreateDevice,
-		urlog.CreateUser,
-		urlog.UpdateTime.Format(sqlite3impl.TimeLayout),
-		urlog.UpdateApp,
-		urlog.UpdateDevice,
-		urlog.UpdateUser,
-	)
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at insert in to URLog %s: %w", urlog.ID, err)
 		return err

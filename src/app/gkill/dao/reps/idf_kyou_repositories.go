@@ -25,7 +25,7 @@ func (i IDFKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 	// 並列処理
 	for _, rep := range i {
 		wg.Add(1)
-		
+
 		go func(rep IDFKyouRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
@@ -103,7 +103,7 @@ func (i IDFKyouRepositories) GetKyou(ctx context.Context, id string) (*Kyou, err
 	// 並列処理
 	for _, rep := range i {
 		wg.Add(1)
-		
+
 		go func(rep IDFKyouRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -167,7 +167,7 @@ func (i IDFKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([
 	// 並列処理
 	for _, rep := range i {
 		wg.Add(1)
-		
+
 		go func(rep IDFKyouRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
@@ -247,7 +247,7 @@ func (i IDFKyouRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range i {
 		wg.Add(1)
-		
+
 		go func(rep IDFKyouRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -291,7 +291,7 @@ func (i IDFKyouRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range i {
 		wg.Add(1)
-		
+
 		go func(rep IDFKyouRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -334,7 +334,7 @@ func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, query *find.FindQu
 	// 並列処理
 	for _, rep := range i {
 		wg.Add(1)
-		
+
 		go func(rep IDFKyouRepository) {
 			defer wg.Done()
 			matchIDFKyousInRep, err := rep.FindIDFKyou(ctx, query)
@@ -412,7 +412,7 @@ func (i IDFKyouRepositories) GetIDFKyou(ctx context.Context, id string) (*IDFKyo
 	// 並列処理
 	for _, rep := range i {
 		wg.Add(1)
-		
+
 		go func(rep IDFKyouRepository) {
 			defer wg.Done()
 			matchIDFKyouInRep, err := rep.GetIDFKyou(ctx, id)
@@ -476,7 +476,7 @@ func (i IDFKyouRepositories) GetIDFKyouHistories(ctx context.Context, id string)
 	// 並列処理
 	for _, rep := range i {
 		wg.Add(1)
-		
+
 		go func(rep IDFKyouRepository) {
 			defer wg.Done()
 			matchIDFKyousInRep, err := rep.GetIDFKyouHistories(ctx, id)

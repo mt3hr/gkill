@@ -2,13 +2,10 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math"
-	"os"
 	"runtime"
 	"sort"
-	"strconv"
 	"sync"
 	"time"
 
@@ -45,9 +42,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext.MatchKyousAtFilterTags = map[string]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFilterTimeIs = map[string]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFilterLocation = map[string]*reps.Kyou{}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.ParsedFindQuery)            //TODO けして
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.ParsedFindQuery.PlaingTime) //TODO けして
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.ParsedFindQuery.UsePlaing)  //TODO けして
+	i := 1
 
 	// フィルタ
 	gkillErr, err := f.getRepositories(ctx, userID, device, gkillDAOManager, findKyouContext)
@@ -55,105 +50,125 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at get repositories: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.selectMatchRepsFromQuery(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at select match reps: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.updateCache(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at update cache: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.parseTagFilterModeFromQuery(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at parse tag filter mode: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.parseTimeIsTagFilterModeFromQuery(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at parse timeis tag filter mode: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.getAllTags(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.findTags(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find tags: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.findTexts(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find texts: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.findTimeIsTexts(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis texts: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.findTimeIs(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis tags: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.filterTagsTimeIs(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter tags timeis: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.findKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.filterTagsKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter tags kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.filterPlaingTimeIsKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter plaing time is kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.filterLocationKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter location kyous: %w", err)
 		return nil, gkillErr, err
 	}
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	for _, rep := range findKyouContext.MatchKyousCurrent {
 		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, rep)
 	}
-	json.NewEncoder(os.Stdout).Encode(findKyouContext.MatchKyousCurrent) //TODO けして
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 	gkillErr, err = f.sortResultKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at sort result kyous: %w", err)
 		return nil, gkillErr, err
 	}
+	fmt.Printf("%d = %+v\n", i, findKyouContext.MatchKyousCurrent) //TODO けして
+	i++                                                            //TODO けして
 
 	return findKyouContext.ResultKyous, nil, nil
 }
@@ -279,10 +294,7 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	var err error
 
-	lenOfTagReps := 0
-	for _ = range findCtx.Repositories.TagReps {
-		lenOfTagReps++
-	}
+	lenOfTagReps := len(findCtx.Repositories.TagReps)
 
 	// 全タグ取得用検索クエリ
 	falseValue := false
@@ -318,6 +330,9 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 			existErr = true
 		}
 	}
+	if existErr {
+		return nil, err
+	}
 	// Tag集約
 	for _ = range lenOfTagReps {
 		matchTags := <-tagsCh
@@ -332,25 +347,22 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 		}
 	}
 
-	if existErr {
-		return nil, err
-	}
 	return nil, nil
 }
 
 func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	var err error
 
-	lenOfTagReps := 0
-	for _ = range findCtx.Repositories.TagReps {
-		lenOfTagReps++
-	}
+	lenOfTagReps := len(findCtx.Repositories.TagReps)
 
 	// 対象タグ取得用検索クエリ
 	trueValue := true
 	falseValue := false
 	findTagsQueries := []*find.FindQuery{}
 	for _, tag := range *findCtx.ParsedFindQuery.TimeIsTags {
+		if tag == NoTags {
+			continue
+		}
 		words := []string{tag}
 		findTagsQuery := &find.FindQuery{IsDeleted: &falseValue,
 			UseWords: &trueValue,
@@ -394,6 +406,11 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 			existErr = true
 		}
 	}
+
+	if existErr {
+		return nil, err
+	}
+
 	// TimeIsのTag集約
 	for _ = range lenOfTagReps {
 		matchTags := <-tagsCh
@@ -406,10 +423,6 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 				findCtx.MatchTimeIsTags[tag.ID] = tag
 			}
 		}
-	}
-
-	if existErr {
-		return nil, err
 	}
 
 	return nil, nil
@@ -428,11 +441,15 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 	falseValue := false
 	findTagsQueries := []*find.FindQuery{}
 	for _, tag := range *findCtx.ParsedFindQuery.Tags {
+		if tag == NoTags {
+			continue
+		}
 		words := []string{tag}
-		findTagsQuery := &find.FindQuery{IsDeleted: &falseValue,
-			UseWords: &trueValue,
-			Words:    &words,
-			WordsAnd: &falseValue,
+		findTagsQuery := &find.FindQuery{
+			IsDeleted: &falseValue,
+			UseWords:  &trueValue,
+			Words:     &words,
+			WordsAnd:  &falseValue,
 		}
 		findTagsQueries = append(findTagsQueries, findTagsQuery)
 	}
@@ -471,6 +488,11 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 			existErr = true
 		}
 	}
+
+	if existErr {
+		return nil, err
+	}
+
 	// Tag集約
 	for _ = range lenOfTagReps {
 		matchTags := <-tagsCh
@@ -483,10 +505,6 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 				findCtx.MatchTags[tag.ID] = tag
 			}
 		}
-	}
-
-	if existErr {
-		return nil, err
 	}
 
 	return nil, nil
@@ -528,20 +546,7 @@ func (f *FindFilter) parseTimeIsTagFilterModeFromQuery(ctx context.Context, find
 
 func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	var err error
-	repsCount := 0
-	if findCtx.Repositories != nil {
-		for _, _ = range findCtx.Repositories.Reps {
-			repsCount++
-		}
-	}
-	if repsCount == 0 {
-		return nil, nil
-	}
-
-	lenOfReps := 0
-	for _ = range findCtx.MatchReps {
-		lenOfReps++
-	}
+	lenOfReps := len(findCtx.MatchReps)
 
 	existErr := false
 	wg := &sync.WaitGroup{}
@@ -556,11 +561,9 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 		targetIDs = append(targetIDs, text.TargetID)
 	}
 	trueValue := true
-	falseValue := false
 	matchTextFindByIDQuery := &find.FindQuery{
-		IsDeleted: &falseValue,
-		UseIDs:    &trueValue,
-		IDs:       &targetIDs,
+		UseIDs: &trueValue,
+		IDs:    &targetIDs,
 	}
 
 	// 並列処理
@@ -576,10 +579,13 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 			}
 
 			// textでマッチしたものをID検索
-			textMatchKyous, err := rep.FindKyous(ctx, matchTextFindByIDQuery)
-			if err != nil {
-				errch <- err
-				return
+			textMatchKyous := []*reps.Kyou{}
+			if len(*matchTextFindByIDQuery.IDs) != 0 {
+				textMatchKyous, err = rep.FindKyous(ctx, matchTextFindByIDQuery)
+				if err != nil {
+					errch <- err
+					return
+				}
 			}
 
 			kyousCh <- append(kyous, textMatchKyous...)
@@ -595,6 +601,11 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 			existErr = true
 		}
 	}
+
+	if existErr {
+		return nil, err
+	}
+
 	// Kyou集約
 	for _ = range lenOfReps {
 		matchKyousInRep := <-kyousCh
@@ -609,8 +620,21 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 		}
 	}
 
-	if existErr {
-		return nil, err
+	// 削除済み判定
+	isDeleted := false
+	if findCtx.ParsedFindQuery.IsDeleted != nil {
+		isDeleted = *findCtx.ParsedFindQuery.IsDeleted
+	}
+	for _, kyou := range findCtx.MatchKyousAtFindKyou {
+		if isDeleted {
+			if !kyou.IsDeleted {
+				delete(findCtx.MatchKyousAtFindKyou, kyou.ID)
+			}
+		} else {
+			if kyou.IsDeleted {
+				delete(findCtx.MatchKyousAtFindKyou, kyou.ID)
+			}
+		}
 	}
 
 	findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFindKyou
@@ -975,63 +999,26 @@ func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindK
 }
 
 func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	var err error
 	if findCtx.ParsedFindQuery.UseTimeIs == nil || !*findCtx.ParsedFindQuery.UseTimeIs {
 		return nil, nil
 	}
 
+	trueValue := true
+	falseValue := false
+
 	// 対象TimeIs取得用検索クエリ
-	timeisWords := []string{}
-	if findCtx.ParsedFindQuery.TimeIsWords != nil {
-		timeisWords = *findCtx.ParsedFindQuery.TimeIsWords
+	timeisFindKyouQuery := &find.FindQuery{
+		IsDeleted:         &falseValue,
+		CalendarStartDate: findCtx.ParsedFindQuery.CalendarStartDate,
+		CalendarEndDate:   findCtx.ParsedFindQuery.CalendarEndDate,
 	}
-	timeisWordsJSON, err := json.Marshal(timeisWords)
-	if err != nil {
-		err = fmt.Errorf("error at marshal json timeis words %s: %w", timeisWords, err)
-		return nil, err
-	}
-
-	timeisNotWords := []string{}
-	if findCtx.ParsedFindQuery.TimeIsNotWords != nil {
-		timeisWords = *findCtx.ParsedFindQuery.TimeIsNotWords
-	}
-	timeisNotWordsJSON, err := json.Marshal(timeisNotWords)
-	if err != nil {
-		err = fmt.Errorf("error at marshal json timeis not words %s: %w", timeisNotWords, err)
-		return nil, err
-	}
-
-	timeisWordsAnd := false
-	if findCtx.ParsedFindQuery.TimeIsWordsAnd != nil {
-		timeisWordsAnd = *findCtx.ParsedFindQuery.TimeIsWordsAnd
-	}
-
-	findTagsQueryJSON := ""
-	findTagsQueryJSON += "{\n"
-	findTagsQueryJSON += "  is_deleted: false,\n"
-	findTagsQueryJSON += "  use_word: true,\n"
-	findTagsQueryJSON += "  words: "
-	findTagsQueryJSON += string(timeisWordsJSON)
-	findTagsQueryJSON += ",\n"
-	findTagsQueryJSON += "  not_words: "
-	findTagsQueryJSON += string(timeisNotWordsJSON)
-	findTagsQueryJSON += ",\n"
-	findTagsQueryJSON += "  words_and: "
-	findTagsQueryJSON += strconv.FormatBool(timeisWordsAnd)
-	findTagsQueryJSON += "\n"
-	findTagsQueryJSON += "}"
 
 	// text検索用クエリ
-	lenOfTexts := 0
-	for _ = range findCtx.MatchTimeIsTexts {
-		lenOfTexts++
-	}
-
 	targetIDs := []string{}
 	for _, text := range findCtx.MatchTimeIsTexts {
 		targetIDs = append(targetIDs, text.TargetID)
 	}
-	trueValue := true
-	falseValue := false
 	matchTextFindByIDQuery := &find.FindQuery{
 		IsDeleted: &falseValue,
 		UseIDs:    &trueValue,
@@ -1055,7 +1042,7 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 		wg.Add(1)
 		go func(rep reps.TimeIsRepository) {
 			defer wg.Done()
-			timeiss, err := rep.FindTimeIs(ctx, findCtx.ParsedFindQuery)
+			timeiss, err := rep.FindTimeIs(ctx, timeisFindKyouQuery)
 			if err != nil {
 				errch <- err
 				return
@@ -1080,6 +1067,11 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 			existErr = true
 		}
 	}
+
+	if existErr {
+		return nil, err
+	}
+
 	// TimeIs集約
 	for _ = range lenOfReps {
 		matchtimeissInRep := <-timeIssCh
@@ -1094,9 +1086,6 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 		}
 	}
 
-	if existErr {
-		return nil, err
-	}
 	return nil, nil
 }
 
@@ -1185,15 +1174,17 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 			existErr = true
 		}
 	}
+
+	if existErr {
+		return nil, err
+	}
+
 	// GPSLog集約
 	for _ = range lenOfReps {
 		matchGPSLogsInRep := <-gpsLogsCh
 		gpsLogs = append(gpsLogs, matchGPSLogsInRep...)
 	}
 
-	if existErr {
-		return nil, err
-	}
 	return nil, nil
 
 	// 並び替え
@@ -1430,6 +1421,11 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 			existErr = true
 		}
 	}
+
+	if existErr {
+		return nil, err
+	}
+
 	// Text集約
 	for _ = range lenOfTextReps {
 		matchTexts := <-textsCh
@@ -1442,10 +1438,6 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 				findCtx.MatchTexts[text.ID] = text
 			}
 		}
-	}
-
-	if existErr {
-		return nil, err
 	}
 
 	return nil, nil
@@ -1513,6 +1505,11 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 			existErr = true
 		}
 	}
+
+	if existErr {
+		return nil, err
+	}
+
 	// Text集約
 	for _ = range lenOfTextReps {
 		matchTexts := <-textsCh
@@ -1525,10 +1522,6 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 				findCtx.MatchTimeIsTexts[text.ID] = text
 			}
 		}
-	}
-
-	if existErr {
-		return nil, err
 	}
 
 	return nil, nil

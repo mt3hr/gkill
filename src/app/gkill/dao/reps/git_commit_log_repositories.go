@@ -25,7 +25,7 @@ func (g GitCommitLogRepositories) FindKyous(ctx context.Context, query *find.Fin
 	// 並列処理
 	for _, rep := range g {
 		wg.Add(1)
-		
+
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
@@ -103,7 +103,7 @@ func (g GitCommitLogRepositories) GetKyou(ctx context.Context, id string) (*Kyou
 	// 並列処理
 	for _, rep := range g {
 		wg.Add(1)
-		
+
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -167,7 +167,7 @@ func (g GitCommitLogRepositories) GetKyouHistories(ctx context.Context, id strin
 	// 並列処理
 	for _, rep := range g {
 		wg.Add(1)
-		
+
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
@@ -247,7 +247,7 @@ func (g GitCommitLogRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range g {
 		wg.Add(1)
-		
+
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -291,7 +291,7 @@ func (g GitCommitLogRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range g {
 		wg.Add(1)
-		
+
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -334,7 +334,7 @@ func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, query *f
 	// 並列処理
 	for _, rep := range g {
 		wg.Add(1)
-		
+
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
 			matchGitCommitLogsInRep, err := rep.FindGitCommitLog(ctx, query)
@@ -412,7 +412,7 @@ func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string
 	// 並列処理
 	for _, rep := range g {
 		wg.Add(1)
-		
+
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
 			matchGitCommitLogInRep, err := rep.GetGitCommitLog(ctx, id)

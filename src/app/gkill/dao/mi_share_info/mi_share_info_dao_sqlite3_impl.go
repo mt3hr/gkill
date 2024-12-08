@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS "MI_SHARE_INFO" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MI_SHARE_INFO table to %s: %w", filename, err)
@@ -74,6 +75,7 @@ FROM MI_SHARE_INFO
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -124,8 +126,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", userID, device)
-	rows, err := stmt.QueryContext(ctx, userID, device)
+	queryArgs := []interface{}{
+		userID,
+		device,
+	}
+	log.Printf("%#v", queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -175,8 +181,11 @@ WHERE SHARED_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", sharedID)
-	rows, err := stmt.QueryContext(ctx, sharedID)
+	queryArgs := []interface{}{
+		sharedID,
+	}
+	log.Printf("%#v", queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -236,8 +245,7 @@ INSERT INTO MI_SHARE_INFO (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		miShareInfo.ID,
 		miShareInfo.UserID,
 		miShareInfo.Device,
@@ -245,16 +253,9 @@ INSERT INTO MI_SHARE_INFO (
 		miShareInfo.IsShareDetail,
 		miShareInfo.ShareID,
 		miShareInfo.FindQueryJSON,
-	)
-	_, err = stmt.ExecContext(ctx,
-		miShareInfo.ID,
-		miShareInfo.UserID,
-		miShareInfo.Device,
-		miShareInfo.ShareTitle,
-		miShareInfo.IsShareDetail,
-		miShareInfo.ShareID,
-		miShareInfo.FindQueryJSON,
-	)
+	}
+	log.Printf("%#v", queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -282,8 +283,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		miShareInfo.ID,
 		miShareInfo.UserID,
 		miShareInfo.Device,
@@ -292,17 +292,10 @@ WHERE ID = ?
 		miShareInfo.ShareID,
 		miShareInfo.FindQueryJSON,
 		miShareInfo.ID,
-	)
-	_, err = stmt.ExecContext(ctx,
-		miShareInfo.ID,
-		miShareInfo.UserID,
-		miShareInfo.Device,
-		miShareInfo.ShareTitle,
-		miShareInfo.IsShareDetail,
-		miShareInfo.ShareID,
-		miShareInfo.FindQueryJSON,
-		miShareInfo.ID,
-	)
+	}
+	log.Printf("%#v", queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -312,7 +305,7 @@ WHERE ID = ?
 
 func (m *miShareInfoDAOSQLite3Impl) DeleteMiShareInfo(ctx context.Context, id string) (bool, error) {
 	sql := `
-DELETE MI_SHARE_INFO
+DELETE FROM MI_SHARE_INFO
 WHERE ID = ?
 `
 	log.Printf("sql: %s", sql)
@@ -323,8 +316,11 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", id)
-	_, err = stmt.ExecContext(ctx, id)
+	queryArgs := []interface{}{
+		id,
+	}
+	log.Printf("%#v", queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
