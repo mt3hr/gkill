@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF table to %s: %w", filename, err)
@@ -142,20 +143,29 @@ SELECT
 FROM IDF
 WHERE
 `
-
-	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
+	repName, err := i.GetRepName(ctx)
 	if err != nil {
+		err = fmt.Errorf("error at get rep name at idf : %w", err)
 		return nil, err
 	}
 
-	sql += commonWhereSQL
+	dataType := "idf"
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
 
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
+	whereCounter := 0
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+	sql += commonWhereSQL
 
 	log.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
@@ -165,15 +175,8 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := i.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at idf : %w", err)
-		return nil, err
-	}
-
-	dataType := "idf"
-	log.Printf("%s, %s", repName, dataType)
-	rows, err := stmt.QueryContext(ctx, repName, dataType)
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
 		return nil, err
@@ -390,9 +393,33 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM IDF
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE ID = ? 
 `
+
+	repName, err := i.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at idf : %w", err)
+		return nil, err
+	}
+
+	dataType := "idf"
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		id,
+	}
+
+	query := &find.FindQuery{}
+
+	whereCounter := 1
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+
+	sql += commonWhereSQL
 
 	log.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
@@ -402,15 +429,8 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	repName, err := i.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at idf : %w", err)
-		return nil, err
-	}
-
-	dataType := "idf"
-	log.Printf("%s, %s, %s", repName, dataType, id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
 		return nil, err
@@ -551,8 +571,13 @@ ORDER BY UPDATE_TIME DESC
 	}
 
 	dataType := "idf"
-	log.Printf("%s, %s, %s", repName, dataType, id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		id,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
 		return "", err
@@ -695,20 +720,31 @@ SELECT
 FROM IDF
 WHERE
 `
+	repName, err := i.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at idf : %w", err)
+		return nil, err
+	}
+
+	dataType := "idf"
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+
 	if err != nil {
 		return nil, err
 	}
 
 	sql += commonWhereSQL
-
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
 
 	log.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
@@ -718,15 +754,8 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := i.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at idf : %w", err)
-		return nil, err
-	}
-
-	dataType := "idf"
-	log.Printf("%s, %s", repName, dataType)
-	rows, err := stmt.QueryContext(ctx, repName, dataType)
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
 		return nil, err
@@ -945,8 +974,13 @@ ORDER BY UPDATE_TIME DESC
 	}
 
 	dataType := "idf"
-	log.Printf("%s, %s, %s", repName, dataType, id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		id,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
 		return nil, err
@@ -1196,8 +1230,7 @@ INSERT INTO IDF (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		idfKyou.IsDeleted,
 		idfKyou.ID,
 		idfKyou.RepName,
@@ -1211,22 +1244,10 @@ INSERT INTO IDF (
 		idfKyou.UpdateApp,
 		idfKyou.UpdateDevice,
 		idfKyou.UpdateUser,
-	)
-	_, err = stmt.ExecContext(ctx,
-		idfKyou.IsDeleted,
-		idfKyou.ID,
-		idfKyou.RepName,
-		idfKyou.FileName,
-		idfKyou.RelatedTime.Format(sqlite3impl.TimeLayout),
-		idfKyou.CreateTime.Format(sqlite3impl.TimeLayout),
-		idfKyou.CreateApp,
-		idfKyou.CreateDevice,
-		idfKyou.CreateUser,
-		idfKyou.UpdateTime.Format(sqlite3impl.TimeLayout),
-		idfKyou.UpdateApp,
-		idfKyou.UpdateDevice,
-		idfKyou.UpdateUser,
-	)
+	}
+
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to idf %s: %w", idfKyou.ID, err)
 		return err

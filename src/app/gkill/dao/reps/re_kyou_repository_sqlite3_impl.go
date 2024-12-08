@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REKYOU table to %s: %w", filename, err)
@@ -88,14 +89,6 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 		ids = append(ids, rekyou.TargetID)
 	}
 
-	falseValue := false
-	trueValue := true
-	findQuery := &find.FindQuery{
-		IsDeleted: &falseValue,
-		UseIDs:    &trueValue,
-		IDs:       &ids,
-	}
-
 	reps, err := r.GetRepositories(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories: %w", err)
@@ -110,7 +103,7 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := withoutRekyouReps.FindKyous(ctx, findQuery)
+		kyous, err := withoutRekyouReps.FindKyous(ctx, query)
 		if err != nil {
 			err = fmt.Errorf("error at find kyous: %w", err)
 			return nil, err
@@ -188,8 +181,14 @@ ORDER BY UPDATE_TIME DESC
 	defer stmt.Close()
 
 	dataType := "rekyou"
-	log.Printf("%s, %s, %s", repName, dataType, id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from REKYOU %s: %w", id, err)
 		return nil, err
@@ -378,8 +377,14 @@ WHERE ID LIKE ?
 	}
 
 	dataType := "rekyou"
-	log.Printf("%s, %s, %s", repName, dataType, id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at select from REKYOU %s: %w", err)
 		return nil, err
@@ -469,8 +474,7 @@ INSERT INTO REKYOU (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		rekyou.IsDeleted,
 		rekyou.ID,
 		rekyou.TargetID,
@@ -483,21 +487,9 @@ INSERT INTO REKYOU (
 		rekyou.UpdateApp,
 		rekyou.UpdateDevice,
 		rekyou.UpdateUser,
-	)
-	_, err = stmt.ExecContext(ctx,
-		rekyou.IsDeleted,
-		rekyou.ID,
-		rekyou.TargetID,
-		rekyou.RelatedTime.Format(sqlite3impl.TimeLayout),
-		rekyou.CreateTime.Format(sqlite3impl.TimeLayout),
-		rekyou.CreateApp,
-		rekyou.CreateDevice,
-		rekyou.CreateUser,
-		rekyou.UpdateTime.Format(sqlite3impl.TimeLayout),
-		rekyou.UpdateApp,
-		rekyou.UpdateDevice,
-		rekyou.UpdateUser,
-	)
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to REKYOU %s: %w", rekyou.ID, err)
 		return err
@@ -548,8 +540,14 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "rekyou"
-	log.Printf("%s, %s", repName, dataType)
-	rows, err := stmt.QueryContext(ctx, repName, dataType)
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at select from REKYOU %s: %w", err)
 		return nil, err

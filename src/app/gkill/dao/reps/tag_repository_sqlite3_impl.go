@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG table to %s: %w", filename, err)
@@ -98,110 +99,28 @@ SELECT
 FROM TAG
 WHERE
 `
+	repName, err := t.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at tag: %w", err)
+		return nil, err
+	}
+	dataType := "tag"
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"TAG"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
-
-	words := []string{}
-	if query.Words != nil {
-		words = *query.Words
-	}
-	notWords := []string{}
-	if query.NotWords != nil {
-		notWords = *query.NotWords
-	}
-
-	// ワードand検索である場合のSQL追記
-	if query.UseWords != nil && *query.UseWords {
-		if len(words) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		if query.WordsAnd != nil && *query.WordsAnd {
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if i != 0 {
-					sql += " AND "
-				}
-				sql += "TAG LIKE '" + sqlite3impl.EscapeSQLite(word) + "'"
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		} else {
-			// ワードor検索である場合のSQL追記
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if i != 0 {
-					sql += " AND "
-				}
-				sql += "TAG LIKE '" + sqlite3impl.EscapeSQLite(word) + "'"
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		}
-
-		if len(notWords) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		// notワードを除外するSQLを追記
-		for i, notWord := range notWords {
-			if i == 0 {
-				sql += " ( "
-			}
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += sqlite3impl.EscapeSQLite("TAG NOT LIKE '" + notWord + "'")
-			if i == len(words)-1 {
-				sql += " ) "
-			}
-			whereCounter++
-		}
-
-		// id検索である場合のSQL追記
-		if query.UseIDs != nil && *query.UseIDs {
-		if query.IDs != nil && len(*query.IDs) != 0 {
-			ids := []string{}
-			if query.IDs != nil {
-				ids = *query.IDs
-			}
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += " ID IN ("
-			for i, id := range ids {
-				sql += fmt.Sprintf("'%s'", id)
-				if i != len(ids)-1 {
-					sql += ", "
-				}
-			}
-			sql += ")"
-		}
-	}
-
-	}
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
 
 	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
@@ -211,15 +130,9 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at tag: %w", err)
-		return nil, err
-	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
-	dataType := "tag"
-	log.Printf("%s, %s", repName, dataType)
-	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
 		return nil, err
@@ -323,7 +236,6 @@ WHERE TAG LIKE ?
 GROUP BY ID
 HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 `
-
 	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -339,8 +251,14 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "tag"
-	log.Printf("%s, %s, %s", repName, dataType, tagname)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, tagname)
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		tagname,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
 		return nil, err
@@ -440,8 +358,14 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "tag"
-	log.Printf("%s, %s, %s", repName, dataType, target_id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, target_id)
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		target_id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
 		return nil, err
@@ -555,8 +479,14 @@ WHERE ID LIKE ?
 	}
 
 	dataType := "tag"
-	log.Printf("%s, %s, %s", repName, dataType, id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG %s: %w", err)
 		return nil, err
@@ -650,8 +580,7 @@ INSERT INTO TAG (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		tag.IsDeleted,
 		tag.ID,
 		tag.Tag,
@@ -665,22 +594,9 @@ INSERT INTO TAG (
 		tag.UpdateApp,
 		tag.UpdateDevice,
 		tag.UpdateUser,
-	)
-	_, err = stmt.ExecContext(ctx,
-		tag.IsDeleted,
-		tag.ID,
-		tag.Tag,
-		tag.TargetID,
-		tag.RelatedTime.Format(sqlite3impl.TimeLayout),
-		tag.CreateTime.Format(sqlite3impl.TimeLayout),
-		tag.CreateApp,
-		tag.CreateDevice,
-		tag.CreateUser,
-		tag.UpdateTime.Format(sqlite3impl.TimeLayout),
-		tag.UpdateApp,
-		tag.UpdateDevice,
-		tag.UpdateUser,
-	)
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to TAG %s: %w", tag.ID, err)
 		return err
@@ -706,6 +622,7 @@ WHERE IS_DELETED = FALSE
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at select all tag names from TAG %s: %w", err)

@@ -25,7 +25,7 @@ func (u URLogRepositories) FindKyous(ctx context.Context, query *find.FindQuery)
 	// 並列処理
 	for _, rep := range u {
 		wg.Add(1)
-		
+
 		go func(rep URLogRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
@@ -103,7 +103,7 @@ func (u URLogRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error
 	// 並列処理
 	for _, rep := range u {
 		wg.Add(1)
-		
+
 		go func(rep URLogRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -167,7 +167,7 @@ func (u URLogRepositories) GetKyouHistories(ctx context.Context, id string) ([]*
 	// 並列処理
 	for _, rep := range u {
 		wg.Add(1)
-		
+
 		go func(rep URLogRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
@@ -247,7 +247,7 @@ func (u URLogRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range u {
 		wg.Add(1)
-		
+
 		go func(rep URLogRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -291,7 +291,7 @@ func (u URLogRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range u {
 		wg.Add(1)
-		
+
 		go func(rep URLogRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -334,7 +334,7 @@ func (u URLogRepositories) FindURLog(ctx context.Context, query *find.FindQuery)
 	// 並列処理
 	for _, rep := range u {
 		wg.Add(1)
-		
+
 		go func(rep URLogRepository) {
 			defer wg.Done()
 			matchURLogsInRep, err := rep.FindURLog(ctx, query)
@@ -412,7 +412,7 @@ func (u URLogRepositories) GetURLog(ctx context.Context, id string) (*URLog, err
 	// 並列処理
 	for _, rep := range u {
 		wg.Add(1)
-		
+
 		go func(rep URLogRepository) {
 			defer wg.Done()
 			matchURLogInRep, err := rep.GetURLog(ctx, id)
@@ -476,7 +476,7 @@ func (u URLogRepositories) GetURLogHistories(ctx context.Context, id string) ([]
 	// 並列処理
 	for _, rep := range u {
 		wg.Add(1)
-		
+
 		go func(rep URLogRepository) {
 			defer wg.Done()
 			matchURLogsInRep, err := rep.GetURLogHistories(ctx, id)

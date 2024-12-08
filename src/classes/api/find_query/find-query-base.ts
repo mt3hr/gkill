@@ -62,9 +62,64 @@ export abstract class FindQueryBase {
     }
 
     parse_words_and_not_words() {
-        //TODO
-        //TODO timeis
+        const words = new Array<string>()
+        const not_words = new Array<string>()
+        let nextIsNotWord = false
+        const words_list = this.keywords.split(" ")
+        for (let i = 0; i < words_list.length; i++) {
+            const words_list_ = words_list[i].split("　")
+            for (let j = 0; j < words_list_.length; j++) {
+                let word = words_list_[j]
+                if (word.startsWith("-")) {
+                    nextIsNotWord = true
+                    word = word.replace("-", "")
+                }
+                if (word === "") {
+                    continue
+                } else if (word === "-") {
+                    nextIsNotWord = true
+                    continue
+                } else {
+                    if (nextIsNotWord) {
+                        not_words.push(word)
+                    } else {
+                        words.push(word)
+                    }
+                    nextIsNotWord = false
+                }
+            }
+        }
+        this.words = words
+        this.not_words = not_words
+
+        const timeis_words = new Array<string>()
+        const timeis_not_words = new Array<string>()
+        nextIsNotWord = false
+        const timeis_words_list = this.timeis_keywords.split(" ")
+        for (let i = 0; i < timeis_words_list.length; i++) {
+            const timeis_words_list_ = timeis_words_list[i].split("　")
+            for (let j = 0; j < timeis_words_list_.length; j++) {
+                let word = timeis_words_list_[j]
+                if (word.startsWith("-")) {
+                    nextIsNotWord = true
+                    word = word.replace("-", "")
+                }
+                if (word === "") {
+                    continue
+                } else if (word === "-") {
+                    nextIsNotWord = true
+                    continue
+                } else {
+                    if (nextIsNotWord) {
+                        timeis_not_words.push(word)
+                    } else {
+                        timeis_words.push(word)
+                    }
+                    nextIsNotWord = false
+                }
+            }
+        }
+        this.timeis_words = timeis_words
+        this.timeis_not_words = timeis_not_words
     }
 }
-
-

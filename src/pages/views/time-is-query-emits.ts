@@ -11,5 +11,6 @@ export interface TimeIsQueryEmits {
     (e: 'request_update_timeis_keywords', timeis_keyword: string): void
     (e: 'request_update_and_search_timeis_word', and_search_timeis_word: boolean): void
     (e: 'request_update_and_search_timeis_tags', and_search_timeis_tags: boolean): void
-    (e: 'request_update_checked_timeis_tags', checked_tags: Array<string>): void
+    (e: 'request_update_checked_timeis_tags', checked_tags: Array<string>, is_by_user: boolean): void
+    (e: 'inited'): void
 }

@@ -15,30 +15,10 @@ func EscapeSQLite(str string) string {
 	return strings.ReplaceAll(str, "'", "''")
 }
 
-func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, error) {
+func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, ignoreFindWord bool, appendOrderBy bool, queryArgs *[]interface{}) (string, error) {
 	sql := ""
 
-	// jsonからパースする
-
-	// 削除済みであるかどうかのSQL追記
-	isDeleted := false
-	if query.IsDeleted != nil {
-		isDeleted = *query.IsDeleted
-	}
-	if isDeleted {
-		if *whereCounter != 0 {
-			sql += " AND "
-		}
-		sql += "IS_DELETED = TRUE"
-		*whereCounter++
-	} else {
-		if *whereCounter != 0 {
-			sql += " AND "
-		}
-		sql += "IS_DELETED = FALSE"
-		*whereCounter++
-	}
-
+	// WHERE
 	// id検索である場合のSQL追記
 	useIDs := false
 	ids := []string{}
@@ -50,16 +30,18 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, er
 	}
 
 	if useIDs {
-		if query.IDs != nil && len(*query.IDs) != 0 {
+		if len(ids) != 0 {
 			if *whereCounter != 0 {
 				sql += " AND "
 			}
 			sql += " ID IN ("
 			for i, id := range ids {
-				sql += fmt.Sprintf("'%s'", id)
+				sql += " ? "
+				*queryArgs = append(*queryArgs, id)
 				if i != len(ids)-1 {
 					sql += ", "
 				}
+				*whereCounter++
 			}
 			sql += ")"
 		}
@@ -85,7 +67,8 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, er
 			if *whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += fmt.Sprintf("datetime(RELATED_TIME, 'localtime') >= datetime('%s', 'localtime')", calendarStartDate.Format(TimeLayout))
+			sql += fmt.Sprintf("datetime(%s, 'localtime') >= datetime(?, 'localtime')", relatedTimeColumnName)
+			*queryArgs = append(*queryArgs, calendarStartDate.Format(TimeLayout))
 			*whereCounter++
 		}
 
@@ -94,10 +77,168 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int) (string, er
 			if *whereCounter != 0 {
 				sql += " AND "
 			}
-			sql += fmt.Sprintf("datetime(RELATED_TIME, 'localtime') <= datetime('%s', 'localtime')", calendarEndDate.Add(time.Hour*24).Add(time.Millisecond*-1).Format(TimeLayout))
+			sql += fmt.Sprintf("datetime(%s, 'localtime') <= datetime(?, 'localtime')", relatedTimeColumnName)
+			*queryArgs = append(*queryArgs, calendarEndDate.Add(time.Hour*24).Add(time.Millisecond*-1).Format(TimeLayout))
 			*whereCounter++
 		}
 	}
+
+	// ワードand検索である場合のSQL追記
+	if query.UseWords != nil && *query.UseWords {
+		if query.Words != nil && len(*query.Words) != 0 {
+			if query.WordsAnd != nil && *query.WordsAnd {
+				for j, findWordTargetColumnName := range findWordTargetColumns {
+					if j == 0 {
+						sql += " ( "
+					} else {
+						sql += " OR "
+					}
+
+					for i, word := range *query.Words {
+						if i == 0 {
+							sql += " ( "
+						} else {
+							sql += " AND "
+						}
+						sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+						*queryArgs = append(*queryArgs, "%"+word+"%")
+						if i == len(*query.Words)-1 {
+							sql += " ) "
+						}
+						*whereCounter++
+					}
+
+					if j == len(findWordTargetColumns)-1 {
+						sql += " ) "
+					}
+				}
+			} else {
+				// ワードor検索である場合のSQL追記
+				for j, findWordTargetColumnName := range findWordTargetColumns {
+					if j == 0 {
+						sql += " ( "
+					} else {
+						sql += " OR "
+					}
+
+					for i, word := range *query.Words {
+						if i == 0 {
+							sql += " ( "
+						} else {
+							sql += " OR "
+						}
+						sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+						*queryArgs = append(*queryArgs, "%"+word+"%")
+						if i == len(*query.Words)-1 {
+							sql += " ) "
+						}
+						*whereCounter++
+					}
+
+					if j == len(findWordTargetColumns)-1 {
+						sql += " ) "
+					}
+				}
+			}
+		}
+
+		if query.NotWords != nil && len(*query.NotWords) != 0 {
+			// notワードを除外するSQLを追記
+			for j, findWordTargetColumnName := range findWordTargetColumns {
+				if j == 0 {
+					sql += " ( "
+				} else {
+					sql += " AND "
+				}
+
+				for i, notWord := range *query.NotWords {
+					if i == 0 {
+						sql += " ( "
+					} else {
+						sql += " AND "
+					}
+					sql += fmt.Sprintf("%s NOT LIKE ?", findWordTargetColumnName)
+					*queryArgs = append(*queryArgs, "%"+notWord+"%")
+					if i == len(*query.NotWords)-1 {
+						sql += " ) "
+					}
+					*whereCounter++
+				}
+
+				if j == len(findWordTargetColumns)-1 {
+					sql += " ) "
+				}
+			}
+		}
+
+		// ワード指定ありで検索対象列がない場合は全部false
+		if ignoreFindWord && len(findWordTargetColumns) == 0 {
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += " 1 = 0 "
+			*whereCounter++
+		}
+	}
+	if *whereCounter == 0 {
+		sql += " 0 = 0 "
+	}
+	*whereCounter++
+
+	// 全部取得するのであればGROUP BYする前に返す
+	if !onlyLatestData {
+		if appendOrderBy {
+			sql += fmt.Sprintf(" ORDER BY %s ", relatedTimeColumnName)
+		}
+		return sql, nil
+	}
+
+	// GROUP BY
+	groupByCounter := 0
+	sql += " GROUP BY "
+
+	// IDでGROUP BYする。
+	if groupByCounter != 0 {
+		sql += ", "
+	}
+	sql += " ID "
+	groupByCounter++
+
+	// HAVING
+	havingCount := 0
+	sql += " HAVING "
+
+	// 最新のレコードのみ取得
+	if havingCount != 0 {
+		sql += " AND "
+	}
+	sql += " UPDATE_TIME = MAX(UPDATE_TIME) "
+	havingCount++
+
+	// 削除済みであるかどうかのSQL追記
+	// Repをまたぐことがあるのでここでは判定しない
+	// FindFilterで判定する
+	/*
+		isDeleted := false
+		if query.IsDeleted != nil {
+			isDeleted = *query.IsDeleted
+		}
+		if havingCount != 0 {
+			sql += "AND "
+		}
+		sql += " IS_DELETED = ? "
+		if isDeleted {
+			*queryArgs = append(*queryArgs, true)
+		} else {
+			*queryArgs = append(*queryArgs, false)
+		}
+	*/
+
+	// ORDER BY
+	if appendOrderBy {
+		sql += fmt.Sprintf(" ORDER BY %s ", relatedTimeColumnName)
+	}
+
 	return sql, nil
 }
 

@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS "FILE_UPLOAD_HISTORY" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create FILE_UPLOAD_HISTORY table to %s: %w", filename, err)
@@ -78,6 +79,7 @@ FROM FILE_UPLOAD_HISTORY
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -138,8 +140,11 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", userID)
-	rows, err := stmt.QueryContext(ctx, userID)
+	queryArgs := []interface{}{
+		userID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -208,8 +213,7 @@ VALUES (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		fileUploadHistory.ID,
 		fileUploadHistory.UserID,
 		fileUploadHistory.Device,
@@ -217,16 +221,9 @@ VALUES (
 		fileUploadHistory.FileSizeByte,
 		fileUploadHistory.Successed,
 		fileUploadHistory.UploadTime.Format(sqlite3impl.TimeLayout),
-	)
-	_, err = stmt.ExecContext(ctx,
-		fileUploadHistory.ID,
-		fileUploadHistory.UserID,
-		fileUploadHistory.Device,
-		fileUploadHistory.FileName,
-		fileUploadHistory.FileSizeByte,
-		fileUploadHistory.Successed,
-		fileUploadHistory.UploadTime.Format(sqlite3impl.TimeLayout),
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -255,8 +252,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		fileUploadHistory.ID,
 		fileUploadHistory.UserID,
 		fileUploadHistory.Device,
@@ -265,17 +261,9 @@ WHERE ID = ?
 		fileUploadHistory.Successed,
 		fileUploadHistory.UploadTime.Format(sqlite3impl.TimeLayout),
 		fileUploadHistory.ID,
-	)
-	_, err = stmt.ExecContext(ctx,
-		fileUploadHistory.ID,
-		fileUploadHistory.UserID,
-		fileUploadHistory.Device,
-		fileUploadHistory.FileName,
-		fileUploadHistory.FileSizeByte,
-		fileUploadHistory.Successed,
-		fileUploadHistory.UploadTime.Format(sqlite3impl.TimeLayout),
-		fileUploadHistory.ID,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -285,7 +273,7 @@ WHERE ID = ?
 
 func (f *fileUploadHistoryDAOSQLite3Impl) DeleteFileUploadHistory(ctx context.Context, id string) (bool, error) {
 	sql := `
-DELETE FILE_UPLOAD_HISTORY
+DELETE FROM FILE_UPLOAD_HISTORY
 WHERE ID = ?
 `
 	log.Printf("sql: %s", sql)
@@ -296,8 +284,12 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", id)
-	_, err = stmt.ExecContext(ctx, id)
+	queryArgs := []interface{}{
+		id,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

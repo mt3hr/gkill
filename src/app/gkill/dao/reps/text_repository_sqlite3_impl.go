@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT table to %s: %w", filename, err)
@@ -99,88 +100,28 @@ FROM TEXT
 WHERE
 `
 
+	repName, err := t.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at text: %w", err)
+		return nil, err
+	}
+	dataType := "text"
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"TEXT"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
-
-	words := []string{}
-	if query.Words != nil {
-		words = *query.Words
-	}
-	notWords := []string{}
-	if query.NotWords != nil {
-		notWords = *query.NotWords
-	}
-
-	// ワードand検索である場合のSQL追記
-	if query.UseWords != nil && *query.UseWords {
-		// ワードを解析
-		if len(words) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		if query.WordsAnd != nil && *query.WordsAnd {
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("TEXT LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		} else {
-			// ワードor検索である場合のSQL追記
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("TEXT LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		}
-
-		if len(notWords) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		// notワードを除外するSQLを追記
-		for i, notWord := range notWords {
-			if i == 0 {
-				sql += " ( "
-			}
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += sqlite3impl.EscapeSQLite("TEXT NOT LIKE '%" + notWord + "%'")
-			if i == len(words)-1 {
-				sql += " ) "
-			}
-			whereCounter++
-		}
-	}
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
 
 	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
@@ -190,15 +131,9 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at text: %w", err)
-		return nil, err
-	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
-	dataType := "text"
-	log.Printf("%s, %s", repName, dataType)
-	rows, err := stmt.QueryContext(ctx, repName, dataType)
 	if err != nil {
 		err = fmt.Errorf("error at select from TEXT %s: %w", err)
 		return nil, err
@@ -318,8 +253,15 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 
 	dataType := "text"
-	log.Printf("%s, %s, %s", repName, dataType, target_id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, target_id)
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		target_id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at select from TEXT %s: %w", err)
 		return nil, err
@@ -433,8 +375,15 @@ WHERE ID LIKE ?
 	}
 
 	dataType := "text"
-	log.Printf("%s, %s, %s", repName, dataType, id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at select from TEXT %s: %w", err)
 		return nil, err
@@ -527,8 +476,7 @@ INSERT INTO TEXT (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		text.IsDeleted,
 		text.ID,
 		text.Text,
@@ -542,22 +490,10 @@ INSERT INTO TEXT (
 		text.UpdateApp,
 		text.UpdateDevice,
 		text.UpdateUser,
-	)
-	_, err = stmt.ExecContext(ctx,
-		text.IsDeleted,
-		text.ID,
-		text.Text,
-		text.TargetID,
-		text.RelatedTime.Format(sqlite3impl.TimeLayout),
-		text.CreateTime.Format(sqlite3impl.TimeLayout),
-		text.CreateApp,
-		text.CreateDevice,
-		text.CreateUser,
-		text.UpdateTime.Format(sqlite3impl.TimeLayout),
-		text.UpdateApp,
-		text.UpdateDevice,
-		text.UpdateUser,
-	)
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at insert in to TEXT %s: %w", text.ID, err)
 		return err
