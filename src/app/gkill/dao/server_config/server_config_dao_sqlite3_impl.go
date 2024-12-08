@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create SERVER_CONFIG table to %s: %w", filename, err)
@@ -87,6 +88,7 @@ FROM SERVER_CONFIG
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -149,8 +151,12 @@ WHERE DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", device)
-	rows, err := stmt.QueryContext(ctx, device)
+	queryArgs := []interface{}{
+		device,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -230,8 +236,7 @@ INSERT INTO SERVER_CONFIG (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		serverConfig.EnableThisDevice,
 		serverConfig.Device,
 		serverConfig.IsLocalOnlyAccess,
@@ -245,22 +250,10 @@ INSERT INTO SERVER_CONFIG (
 		serverConfig.URLogUserAgent,
 		serverConfig.UploadSizeLimitMonth,
 		serverConfig.UserDataDirectory,
-	)
-	_, err = stmt.ExecContext(ctx,
-		serverConfig.EnableThisDevice,
-		serverConfig.Device,
-		serverConfig.IsLocalOnlyAccess,
-		serverConfig.Address,
-		serverConfig.EnableTLS,
-		serverConfig.TLSCertFile,
-		serverConfig.TLSKeyFile,
-		serverConfig.OpenDirectoryCommand,
-		serverConfig.OpenFileCommand,
-		serverConfig.URLogTimeout,
-		serverConfig.URLogUserAgent,
-		serverConfig.UploadSizeLimitMonth,
-		serverConfig.UserDataDirectory,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -292,6 +285,7 @@ UPDATE SERVER_CONFIG SET
   USER_DATA_DIRECTORY = ?
 WHERE DEVICE = ?
 `
+		log.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at update server config sql: %w", err)
@@ -303,24 +297,7 @@ WHERE DEVICE = ?
 		}
 		defer stmt.Close()
 
-log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
-		serverConfig.EnableThisDevice,
-		serverConfig.Device,
-		serverConfig.IsLocalOnlyAccess,
-		serverConfig.Address,
-		serverConfig.EnableTLS,
-		serverConfig.TLSCertFile,
-		serverConfig.TLSKeyFile,
-		serverConfig.OpenDirectoryCommand,
-		serverConfig.OpenFileCommand,
-		serverConfig.URLogTimeout,
-		serverConfig.URLogUserAgent,
-		serverConfig.UploadSizeLimitMonth,
-		serverConfig.UserDataDirectory,
-		serverConfig.Device,
-	)
-		_, err = stmt.ExecContext(ctx,
+		queryArgs := []interface{}{
 			serverConfig.EnableThisDevice,
 			serverConfig.Device,
 			serverConfig.IsLocalOnlyAccess,
@@ -335,7 +312,10 @@ log.Printf(
 			serverConfig.UploadSizeLimitMonth,
 			serverConfig.UserDataDirectory,
 			serverConfig.Device,
-		)
+		}
+		log.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
 			rollbackErr := tx.Rollback()
@@ -351,6 +331,7 @@ SELECT COUNT(*) AS COUNT
 FROM SERVER_CONFIG
 WHERE ENABLE_THIS_DEVICE = ?
 `
+	log.Printf("sql: %s", checkEnableDeviceCountSQL)
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
@@ -363,8 +344,11 @@ WHERE ENABLE_THIS_DEVICE = ?
 	defer checkEnableDeviceStmt.Close()
 
 	enableDeviceCount := 0
-	log.Printf("%s", true)
-	rows, err := checkEnableDeviceStmt.QueryContext(ctx, true)
+	queryArgs := []interface{}{
+		true,
+	}
+	log.Printf("sql: %s query: %#v", checkEnableDeviceCountSQL, queryArgs)
+	rows, err := checkEnableDeviceStmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		rollbackErr := tx.Rollback()
@@ -435,6 +419,7 @@ UPDATE SERVER_CONFIG SET
   USER_DATA_DIRECTORY = ?
 WHERE DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update server config sql: %w", err)
@@ -446,8 +431,7 @@ WHERE DEVICE = ?
 	}
 	defer stmt.Close()
 
-log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		serverConfig.EnableThisDevice,
 		serverConfig.Device,
 		serverConfig.IsLocalOnlyAccess,
@@ -462,23 +446,10 @@ log.Printf(
 		serverConfig.UploadSizeLimitMonth,
 		serverConfig.UserDataDirectory,
 		serverConfig.Device,
-	)
-	_, err = stmt.ExecContext(ctx,
-		serverConfig.EnableThisDevice,
-		serverConfig.Device,
-		serverConfig.IsLocalOnlyAccess,
-		serverConfig.Address,
-		serverConfig.EnableTLS,
-		serverConfig.TLSCertFile,
-		serverConfig.TLSKeyFile,
-		serverConfig.OpenDirectoryCommand,
-		serverConfig.OpenFileCommand,
-		serverConfig.URLogTimeout,
-		serverConfig.URLogUserAgent,
-		serverConfig.UploadSizeLimitMonth,
-		serverConfig.UserDataDirectory,
-		serverConfig.Device,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		rollbackErr := tx.Rollback()
@@ -494,6 +465,7 @@ SELECT COUNT(*)
 FROM SERVER_CONFIG
 WHERE ENABLE_THIS_DEVICE = ?
 `
+	log.Printf("sql: %s", sql)
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
@@ -505,8 +477,12 @@ WHERE ENABLE_THIS_DEVICE = ?
 	}
 	defer checkEnableDeviceStmt.Close()
 
-	log.Printf("%s", true)
-	rows, err := checkEnableDeviceStmt.QueryContext(ctx, true)
+	queryArgs = []interface{}{
+		true,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err = stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		rollbackErr := tx.Rollback()
@@ -567,8 +543,12 @@ WHERE DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", device)
-	_, err = stmt.ExecContext(ctx, device)
+	queryArgs := []interface{}{
+		device,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

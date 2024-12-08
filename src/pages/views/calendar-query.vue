@@ -1,7 +1,7 @@
 <template>
     <v-row class="pa-0 ma-0">
         <v-col cols="auto" class="pa-0 ma-0">
-            <v-checkbox v-model="use_calendar" @click="clicked_use_calendar_checkbox" label="日付" hide-details
+            <v-checkbox v-model="query.use_calendar" @change="clicked_use_calendar_checkbox" label="日付" hide-details
                 class="pb-0 mb-0" />
         </v-col>
         <v-spacer class="pa-0 ma-0" />
@@ -9,7 +9,7 @@
             <v-btn @click="clicked_clear_calendar_button" hide-details class="pb-0 mb-0">クリア</v-btn>
         </v-col>
     </v-row>
-    <VDatePicker v-show="use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates"
+    <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates"
         :multible="true" :color="'primary'" :multiple="'range'" @wheel.prevent.stop="(e: any) => on_wheel(e)"
         @update:model-value="clicked_date" />
 </template>
@@ -19,18 +19,20 @@ import type { CalendarQueryEmits } from './calendar-query-emits'
 import type { CalendarQueryProps } from './calendar-query-props'
 import { computed, ref, type Ref, defineEmits, defineProps, watch } from 'vue'
 import { VDatePicker } from 'vuetify/components';
+import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 
 const props = defineProps<CalendarQueryProps>()
 const emits = defineEmits<CalendarQueryEmits>()
 
 const date_picker = ref<InstanceType<typeof VDatePicker> | null>(null)
 
+const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
+
 const dates: Ref<Array<Date>> = ref([])
-const use_calendar: Ref<boolean> = ref(false)
 defineExpose({ get_use_calendar, get_start_date, get_end_date })
 
 watch(() => props.find_kyou_query, () => {
-    use_calendar.value = props.find_kyou_query.use_calendar
+    query.value = props.find_kyou_query.clone()
 
     dates.value = []
 
@@ -71,16 +73,15 @@ function on_wheel(e: any) {
 }
 
 function clicked_clear_calendar_button(): void {
-    dates.value = []
-    emits('request_update_dates', null, null)
+    emits('request_clear_calendar_query')
 }
 
 function clicked_use_calendar_checkbox(): void {
-    emits('request_update_use_calendar_query', use_calendar.value)
+    emits('request_update_use_calendar_query', query.value.use_calendar)
 }
 
 function get_use_calendar(): boolean {
-    return use_calendar.value
+    return query.value.use_calendar
 }
 function get_start_date(): Date | null {
     if (dates.value.length >= 1) {

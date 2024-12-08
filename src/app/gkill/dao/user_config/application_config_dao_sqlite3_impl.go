@@ -43,7 +43,9 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
+
 	if err != nil {
 		err = fmt.Errorf("error at create APPLICATION_CONFIG table to %s: %w", filename, err)
 		return nil, err
@@ -75,6 +77,7 @@ FROM APPLICATION_CONFIG
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -125,8 +128,13 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", userID, device)
-	rows, err := stmt.QueryContext(ctx, userID, device)
+	queryArgs := []interface{}{
+		userID,
+		device,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -188,8 +196,7 @@ INSERT INTO APPLICATION_CONFIG (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		applicationConfig.UserID,
 		applicationConfig.Device,
 		applicationConfig.EnableBrowserCache,
@@ -197,16 +204,10 @@ INSERT INTO APPLICATION_CONFIG (
 		applicationConfig.RykvImageListColumnNumber,
 		applicationConfig.RykvHotReload,
 		applicationConfig.MiDefaultBoard,
-	)
-	_, err = stmt.ExecContext(ctx,
-		applicationConfig.UserID,
-		applicationConfig.Device,
-		applicationConfig.EnableBrowserCache,
-		applicationConfig.GoogleMapAPIKey,
-		applicationConfig.RykvImageListColumnNumber,
-		applicationConfig.RykvHotReload,
-		applicationConfig.MiDefaultBoard,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -234,8 +235,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		applicationConfig.UserID,
 		applicationConfig.Device,
 		applicationConfig.EnableBrowserCache,
@@ -245,19 +245,10 @@ WHERE USER_ID = ? AND DEVICE = ?
 		applicationConfig.MiDefaultBoard,
 		applicationConfig.UserID,
 		applicationConfig.Device,
-	)
-	
-	_, err = stmt.ExecContext(ctx,
-		applicationConfig.UserID,
-		applicationConfig.Device,
-		applicationConfig.EnableBrowserCache,
-		applicationConfig.GoogleMapAPIKey,
-		applicationConfig.RykvImageListColumnNumber,
-		applicationConfig.RykvHotReload,
-		applicationConfig.MiDefaultBoard,
-		applicationConfig.UserID,
-		applicationConfig.Device,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -267,7 +258,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 
 func (a *applicationConfigDAOSQLite3Impl) DeleteApplicationConfig(ctx context.Context, userID string, device string) (bool, error) {
 	sql := `
-DELETE APPLICATION_CONFIG 
+DELETE FROM APPLICATION_CONFIG 
 WHERE USER_ID = ? AND DEVICE = ?
 `
 	log.Printf("sql: %s", sql)
@@ -278,8 +269,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", device)
-	_, err = stmt.ExecContext(ctx, device)
+	queryArgs := []interface{}{
+		device,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

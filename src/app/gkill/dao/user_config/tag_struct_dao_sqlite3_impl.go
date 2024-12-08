@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS "TAG_STRUCT" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_STRUCT table to %s: %w", filename, err)
@@ -76,6 +77,7 @@ FROM TAG_STRUCT
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -128,8 +130,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", userID, device)
-	rows, err := stmt.QueryContext(ctx, userID, device)
+	queryArgs := []interface{}{
+		userID,
+		device,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -189,8 +195,7 @@ INSERT INTO TAG_STRUCT (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		tagStruct.ID,
 		tagStruct.UserID,
 		tagStruct.Device,
@@ -199,17 +204,9 @@ INSERT INTO TAG_STRUCT (
 		tagStruct.Seq,
 		tagStruct.CheckWhenInited,
 		tagStruct.IsForceHide,
-	)
-	_, err = stmt.ExecContext(ctx,
-		tagStruct.ID,
-		tagStruct.UserID,
-		tagStruct.Device,
-		tagStruct.TagName,
-		tagStruct.ParentFolderID,
-		tagStruct.Seq,
-		tagStruct.CheckWhenInited,
-		tagStruct.IsForceHide,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -245,6 +242,7 @@ INSERT INTO TAG_STRUCT (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add tag struct sql: %w", err)
@@ -256,18 +254,7 @@ INSERT INTO TAG_STRUCT (
 		}
 		defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
-		tagStruct.ID,
-		tagStruct.UserID,
-		tagStruct.Device,
-		tagStruct.TagName,
-		tagStruct.ParentFolderID,
-		tagStruct.Seq,
-		tagStruct.CheckWhenInited,
-		tagStruct.IsForceHide,
-	)
-		_, err = stmt.ExecContext(ctx,
+		queryArgs := []interface{}{
 			tagStruct.ID,
 			tagStruct.UserID,
 			tagStruct.Device,
@@ -276,7 +263,9 @@ INSERT INTO TAG_STRUCT (
 			tagStruct.Seq,
 			tagStruct.CheckWhenInited,
 			tagStruct.IsForceHide,
-		)
+		}
+		log.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
 			return false, err
@@ -312,8 +301,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		tagStruct.ID,
 		tagStruct.UserID,
 		tagStruct.Device,
@@ -323,18 +311,9 @@ log.Printf(
 		tagStruct.CheckWhenInited,
 		tagStruct.IsForceHide,
 		tagStruct.ID,
-	)
-	_, err = stmt.ExecContext(ctx,
-		tagStruct.ID,
-		tagStruct.UserID,
-		tagStruct.Device,
-		tagStruct.TagName,
-		tagStruct.ParentFolderID,
-		tagStruct.Seq,
-		tagStruct.CheckWhenInited,
-		tagStruct.IsForceHide,
-		tagStruct.ID,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -355,8 +334,12 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", id)
-	_, err = stmt.ExecContext(ctx, id)
+	queryArgs := []interface{}{
+		id,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -377,8 +360,11 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", userID)
-	_, err = stmt.ExecContext(ctx, userID)
+	queryArgs := []interface{}{
+		userID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

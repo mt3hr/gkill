@@ -25,7 +25,7 @@ func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		
+
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
@@ -103,7 +103,7 @@ func (t TimeIsRepositories) GetKyou(ctx context.Context, id string) (*Kyou, erro
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		
+
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -167,7 +167,7 @@ func (t TimeIsRepositories) GetKyouHistories(ctx context.Context, id string) ([]
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		
+
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
@@ -247,7 +247,7 @@ func (t TimeIsRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		
+
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -291,7 +291,7 @@ func (t TimeIsRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		
+
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -334,7 +334,7 @@ func (t TimeIsRepositories) FindTimeIs(ctx context.Context, query *find.FindQuer
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		
+
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
 			matchTimeIssInRep, err := rep.FindTimeIs(ctx, query)
@@ -412,7 +412,7 @@ func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string) (*TimeIs, 
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		
+
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
 			matchTimeIsInRep, err := rep.GetTimeIs(ctx, id)
@@ -476,7 +476,7 @@ func (t TimeIsRepositories) GetTimeIsHistories(ctx context.Context, id string) (
 	// 並列処理
 	for _, rep := range t {
 		wg.Add(1)
-		
+
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
 			matchTimeIssInRep, err := rep.GetTimeIsHistories(ctx, id)
