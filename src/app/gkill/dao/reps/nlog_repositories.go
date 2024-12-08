@@ -25,7 +25,7 @@ func (n NlogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) 
 	// 並列処理
 	for _, rep := range n {
 		wg.Add(1)
-		
+
 		go func(rep NlogRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
@@ -103,7 +103,7 @@ func (n NlogRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error)
 	// 並列処理
 	for _, rep := range n {
 		wg.Add(1)
-		
+
 		go func(rep NlogRepository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -167,7 +167,7 @@ func (n NlogRepositories) GetKyouHistories(ctx context.Context, id string) ([]*K
 	// 並列処理
 	for _, rep := range n {
 		wg.Add(1)
-		
+
 		go func(rep NlogRepository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
@@ -247,7 +247,7 @@ func (n NlogRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range n {
 		wg.Add(1)
-		
+
 		go func(rep NlogRepository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -291,7 +291,7 @@ func (n NlogRepositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range n {
 		wg.Add(1)
-		
+
 		go func(rep NlogRepository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -334,7 +334,7 @@ func (n NlogRepositories) FindNlog(ctx context.Context, query *find.FindQuery) (
 	// 並列処理
 	for _, rep := range n {
 		wg.Add(1)
-		
+
 		go func(rep NlogRepository) {
 			defer wg.Done()
 			matchNlogsInRep, err := rep.FindNlog(ctx, query)
@@ -412,7 +412,7 @@ func (n NlogRepositories) GetNlog(ctx context.Context, id string) (*Nlog, error)
 	// 並列処理
 	for _, rep := range n {
 		wg.Add(1)
-		
+
 		go func(rep NlogRepository) {
 			defer wg.Done()
 			matchNlogInRep, err := rep.GetNlog(ctx, id)
@@ -476,7 +476,7 @@ func (n NlogRepositories) GetNlogHistories(ctx context.Context, id string) ([]*N
 	// 並列処理
 	for _, rep := range n {
 		wg.Add(1)
-		
+
 		go func(rep NlogRepository) {
 			defer wg.Done()
 			matchNlogsInRep, err := rep.GetNlogHistories(ctx, id)

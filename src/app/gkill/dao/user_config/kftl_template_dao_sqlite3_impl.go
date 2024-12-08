@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS "KFTL_TEMPLATE" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create KFTL_TEMPLATE table to %s: %w", filename, err)
@@ -74,6 +75,7 @@ FROM KFTL_TEMPLATE
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -124,8 +126,13 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", userID, device)
-	rows, err := stmt.QueryContext(ctx, userID, device)
+	queryArgs := []interface{}{
+		userID,
+		device,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -182,8 +189,7 @@ INSERT INTO KFTL_TEMPLATE (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		kftlTemplate.ID,
 		kftlTemplate.UserID,
 		kftlTemplate.Device,
@@ -191,16 +197,10 @@ INSERT INTO KFTL_TEMPLATE (
 		kftlTemplate.Template,
 		kftlTemplate.ParentFolderID,
 		kftlTemplate.Seq,
-	)
-	_, err = stmt.ExecContext(ctx,
-		kftlTemplate.ID,
-		kftlTemplate.UserID,
-		kftlTemplate.Device,
-		kftlTemplate.Title,
-		kftlTemplate.Template,
-		kftlTemplate.ParentFolderID,
-		kftlTemplate.Seq,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -234,6 +234,7 @@ INSERT INTO KFTL_TEMPLATE (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add kftl template sql: %w", err)
@@ -245,18 +246,7 @@ INSERT INTO KFTL_TEMPLATE (
 		}
 		defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s",
-		kftlTemplate.ID,
-		kftlTemplate.UserID,
-		kftlTemplate.Device,
-		kftlTemplate.Title,
-		kftlTemplate.Template,
-		kftlTemplate.ParentFolderID,
-		kftlTemplate.Seq,
-	)
-		_, err = stmt.ExecContext(
-			ctx,
+		queryArgs := []interface{}{
 			kftlTemplate.ID,
 			kftlTemplate.UserID,
 			kftlTemplate.Device,
@@ -264,7 +254,10 @@ INSERT INTO KFTL_TEMPLATE (
 			kftlTemplate.Template,
 			kftlTemplate.ParentFolderID,
 			kftlTemplate.Seq,
-		)
+		}
+		log.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
 			rollbackErr := tx.Rollback()
@@ -306,8 +299,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		kftlTemplate.ID,
 		kftlTemplate.UserID,
 		kftlTemplate.Device,
@@ -316,17 +308,10 @@ log.Printf(
 		kftlTemplate.ParentFolderID,
 		kftlTemplate.Seq,
 		kftlTemplate.ID,
-	)
-	_, err = stmt.ExecContext(ctx,
-		kftlTemplate.ID,
-		kftlTemplate.UserID,
-		kftlTemplate.Device,
-		kftlTemplate.Title,
-		kftlTemplate.Template,
-		kftlTemplate.ParentFolderID,
-		kftlTemplate.Seq,
-		kftlTemplate.ID,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -347,8 +332,12 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", id)
-	_, err = stmt.ExecContext(ctx, id)
+	queryArgs := []interface{}{
+		id,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -369,8 +358,12 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", userID)
-	_, err = stmt.ExecContext(ctx, userID)
+	queryArgs := []interface{}{
+		userID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

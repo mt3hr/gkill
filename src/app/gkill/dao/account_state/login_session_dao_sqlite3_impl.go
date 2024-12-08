@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS "LOGIN_SESSION" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create LOGIN_SESSION table to %s: %w", filename, err)
@@ -81,6 +82,7 @@ FROM LOGIN_SESSION
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -150,8 +152,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", userID, device)
-	rows, err := stmt.QueryContext(ctx, userID, device)
+	queryArgs := []interface{}{
+		userID,
+		device,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -220,8 +226,11 @@ WHERE SESSION_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", sessionID)
-	rows, err := stmt.QueryContext(ctx, sessionID)
+	queryArgs := []interface{}{
+		sessionID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -302,8 +311,7 @@ INSERT INTO LOGIN_SESSION (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		loginSession.ID,
 		loginSession.UserID,
 		loginSession.Device,
@@ -313,18 +321,9 @@ INSERT INTO LOGIN_SESSION (
 		loginSession.LoginTime.Format(sqlite3impl.TimeLayout),
 		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
 		loginSession.IsLocalAppUser,
-	)
-	_, err = stmt.ExecContext(ctx,
-		loginSession.ID,
-		loginSession.UserID,
-		loginSession.Device,
-		loginSession.ApplicationName,
-		loginSession.SessionID,
-		loginSession.ClientIPAddress,
-		loginSession.LoginTime.Format(sqlite3impl.TimeLayout),
-		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
-		loginSession.IsLocalAppUser,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -354,8 +353,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		loginSession.ID,
 		loginSession.UserID,
 		loginSession.Device,
@@ -366,19 +364,9 @@ WHERE ID = ?
 		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
 		loginSession.IsLocalAppUser,
 		loginSession.ID,
-	)
-	_, err = stmt.ExecContext(ctx,
-		loginSession.ID,
-		loginSession.UserID,
-		loginSession.Device,
-		loginSession.ApplicationName,
-		loginSession.SessionID,
-		loginSession.ClientIPAddress,
-		loginSession.LoginTime.Format(sqlite3impl.TimeLayout),
-		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
-		loginSession.IsLocalAppUser,
-		loginSession.ID,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -399,8 +387,11 @@ WHERE SESSION_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", sessionID)
-	_, err = stmt.ExecContext(ctx, sessionID)
+	queryArgs := []interface{}{
+		sessionID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

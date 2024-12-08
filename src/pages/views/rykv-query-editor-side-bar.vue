@@ -7,11 +7,13 @@
             <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search="emits_current_query()" @request_update_keywords="emits_current_query()"
                 @request_update_use_keyword_query="emits_current_query()"
-                @request_clear_keyword_query="() => { emits_cleard_keyword_query() }" ref="keyword_query" />
+                @request_clear_keyword_query="emits_cleard_keyword_query()"
+                @inited="inited_keyword_query_for_query_sidebar = true" ref="keyword_query" />
             <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_timeis_tags="emits_current_query()"
                 @request_update_and_search_timeis_word="emits_current_query()"
-                @request_update_checked_timeis_tags="() => { emits_current_query(); inited_timeis_query_for_query_sidebar = true }"
+                @request_update_checked_timeis_tags="emits_current_query()"
+                @inited="inited_timeis_query_for_query_sidebar = true"
                 @request_update_timeis_keywords="emits_current_query()"
                 @request_update_use_timeis_query="emits_current_query()"
                 @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
@@ -74,7 +76,7 @@ const inited = computed(() => {
         return false
     }
     return inited_keyword_query_for_query_sidebar.value &&
-        // TODO なんか動かない inited_timeis_query_for_query_sidebar.value &&
+        inited_timeis_query_for_query_sidebar.value &&
         inited_rep_query_for_query_sidebar.value &&
         inited_tag_query_for_query_sidebar.value &&
         inited_calendar_query_for_query_sidebar.value &&
@@ -84,11 +86,11 @@ const inited = computed(() => {
 watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
     if (old_value !== new_value && new_value) {
         default_query.value = generate_query().clone()
-        console.log(default_query.value)
+        default_query.value.parse_words_and_not_words()
     }
 })
 
-const inited_keyword_query_for_query_sidebar = ref(true)
+const inited_keyword_query_for_query_sidebar = ref(false)
 const inited_timeis_query_for_query_sidebar = ref(false)
 const inited_rep_query_for_query_sidebar = ref(false)
 const inited_tag_query_for_query_sidebar = ref(false)
@@ -97,14 +99,14 @@ const inited_map_query_for_query_sidebar = ref(true)
 
 const is_received_this_thick = ref(false)
 watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
-    if(is_received_this_thick.value) { return }
+    if (is_received_this_thick.value) { return }
     is_received_this_thick.value = true
     nextTick(() => is_received_this_thick.value = false)
 
-    if (JSON.stringify(new_value.clone()) === JSON.stringify(old_value.clone())) {
+    if (JSON.stringify(new_value) === JSON.stringify(old_value)) {
         return
     }
-    query.value = props.find_kyou_query
+    query.value = props.find_kyou_query.clone()
 })
 
 function emits_current_query(): void {

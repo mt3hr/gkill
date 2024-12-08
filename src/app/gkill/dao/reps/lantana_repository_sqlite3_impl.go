@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create LANTANA table to %s: %w", filename, err)
@@ -94,88 +95,29 @@ SELECT
 FROM  LANTANA
 WHERE
 `
+	repName, err := l.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at lantana: %w", err)
+		return nil, err
+	}
 
+	dataType := "lantana"
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
-
-	words := []string{}
-	notWords := []string{}
-	if query.Words != nil {
-		words = *query.Words
-	}
-	if query.NotWords != nil {
-		notWords = *query.NotWords
-	}
-
-	// ワードand検索である場合のSQL追記
-	if query.UseWords != nil && *query.UseWords {
-		if len(words) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		if query.WordsAnd != nil && *query.WordsAnd {
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		} else {
-			// ワードor検索である場合のSQL追記
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		}
-
-		if len(notWords) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		// notワードを除外するSQLを追記
-		for i, notWord := range notWords {
-			if i == 0 {
-				sql += " ( "
-			}
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += sqlite3impl.EscapeSQLite("CONTENT NOT LIKE '%" + notWord + "%'")
-			if i == len(words)-1 {
-				sql += " ) "
-			}
-			whereCounter++
-		}
-	}
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
 
 	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
@@ -185,15 +127,8 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := l.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at lantana: %w", err)
-		return nil, err
-	}
-
-	dataType := "lantana"
-	log.Printf("%s, %s", repName, dataType)
-	rows, err := stmt.QueryContext(ctx, repName, dataType)
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from LANTANA%s: %w", err)
 		return nil, err
@@ -297,8 +232,14 @@ ORDER BY UPDATE_TIME DESC
 	defer stmt.Close()
 
 	dataType := "lantana"
-	log.Printf("%s, %s, %s", repName, dataType, id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+		id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from LANTANA %s: %w", id, err)
 		return nil, err
@@ -407,88 +348,26 @@ SELECT
 FROM LANTANA
 WHERE
 `
+	repName, err := l.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at lantana: %w", err)
+		return nil, err
+	}
+	queryArgs := []interface{}{
+		repName,
+	}
 
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
-
-	words := []string{}
-	notWords := []string{}
-	if query.Words != nil {
-		words = *query.Words
-	}
-	if query.NotWords != nil {
-		notWords = *query.NotWords
-	}
-
-	// ワードand検索である場合のSQL追記
-	if query.UseWords != nil && *query.UseWords {
-		if len(words) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		if query.WordsAnd != nil && *query.WordsAnd {
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		} else {
-			// ワードor検索である場合のSQL追記
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		}
-
-		if len(notWords) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		// notワードを除外するSQLを追記
-		for i, notWord := range notWords {
-			if i == 0 {
-				sql += " ( "
-			}
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("CONTENT NOT LIKE '%s'", notWord))
-			if i == len(words)-1 {
-				sql += " ) "
-			}
-			whereCounter++
-		}
-	}
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
 
 	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
@@ -498,14 +377,9 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := l.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at lantana: %w", err)
-		return nil, err
-	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
-	log.Printf("%s", repName)
-	rows, err := stmt.QueryContext(ctx, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from LANTANA %s: %w", err)
 		return nil, err
@@ -608,8 +482,13 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", repName, id)
-	rows, err := stmt.QueryContext(ctx, repName, id)
+	queryArgs := []interface{}{
+		repName,
+		id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query ")
 		return nil, err
@@ -699,8 +578,7 @@ INSERT INTO LANTANA (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		lantana.IsDeleted,
 		lantana.ID,
 		lantana.Mood,
@@ -713,21 +591,10 @@ INSERT INTO LANTANA (
 		lantana.UpdateApp,
 		lantana.UpdateDevice,
 		lantana.UpdateUser,
-	)
-	_, err = stmt.ExecContext(ctx,
-		lantana.IsDeleted,
-		lantana.ID,
-		lantana.Mood,
-		lantana.RelatedTime.Format(sqlite3impl.TimeLayout),
-		lantana.CreateTime.Format(sqlite3impl.TimeLayout),
-		lantana.CreateApp,
-		lantana.CreateDevice,
-		lantana.CreateUser,
-		lantana.UpdateTime.Format(sqlite3impl.TimeLayout),
-		lantana.UpdateApp,
-		lantana.UpdateDevice,
-		lantana.UpdateUser,
-	)
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at insert in to LANTANA %s: %w", lantana.ID, err)
 		return err
