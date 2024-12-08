@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS "REP_TYPE_STRUCT" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REP_TYPE_STRUCT table to %s: %w", filename, err)
@@ -74,6 +75,7 @@ FROM REP_TYPE
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -124,8 +126,13 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", userID, device)
-	rows, err := stmt.QueryContext(ctx, userID, device)
+	queryArgs := []interface{}{
+		userID,
+		device,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -182,8 +189,7 @@ INSERT INTO REP_TYPE_STRUCT (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		repTypeStruct.ID,
 		repTypeStruct.UserID,
 		repTypeStruct.Device,
@@ -191,16 +197,10 @@ INSERT INTO REP_TYPE_STRUCT (
 		repTypeStruct.ParentFolderID,
 		repTypeStruct.Seq,
 		repTypeStruct.CheckWhenInited,
-	)
-	_, err = stmt.ExecContext(ctx,
-		repTypeStruct.ID,
-		repTypeStruct.UserID,
-		repTypeStruct.Device,
-		repTypeStruct.RepTypeName,
-		repTypeStruct.ParentFolderID,
-		repTypeStruct.Seq,
-		repTypeStruct.CheckWhenInited,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -234,6 +234,7 @@ INSERT INTO REP_TYPE_STRUCT (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add rep type struct sql: %w", err)
@@ -245,17 +246,7 @@ INSERT INTO REP_TYPE_STRUCT (
 		}
 		defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s",
-		repTypeStruct.ID,
-		repTypeStruct.UserID,
-		repTypeStruct.Device,
-		repTypeStruct.RepTypeName,
-		repTypeStruct.ParentFolderID,
-		repTypeStruct.Seq,
-		repTypeStruct.CheckWhenInited,
-	)
-		_, err = stmt.ExecContext(ctx,
+		queryArgs := []interface{}{
 			repTypeStruct.ID,
 			repTypeStruct.UserID,
 			repTypeStruct.Device,
@@ -263,7 +254,10 @@ INSERT INTO REP_TYPE_STRUCT (
 			repTypeStruct.ParentFolderID,
 			repTypeStruct.Seq,
 			repTypeStruct.CheckWhenInited,
-		)
+		}
+		log.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
 			rollbackErr := tx.Rollback()
@@ -306,8 +300,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		repTypeStruct.ID,
 		repTypeStruct.UserID,
 		repTypeStruct.Device,
@@ -316,17 +309,10 @@ WHERE ID = ?
 		repTypeStruct.Seq,
 		repTypeStruct.CheckWhenInited,
 		repTypeStruct.ID,
-	)
-	_, err = stmt.ExecContext(ctx,
-		repTypeStruct.ID,
-		repTypeStruct.UserID,
-		repTypeStruct.Device,
-		repTypeStruct.RepTypeName,
-		repTypeStruct.ParentFolderID,
-		repTypeStruct.Seq,
-		repTypeStruct.CheckWhenInited,
-		repTypeStruct.ID,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -347,8 +333,12 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", id)
-	_, err = stmt.ExecContext(ctx, id)
+	queryArgs := []interface{}{
+		id,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -369,8 +359,12 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", userID)
-	_, err = stmt.ExecContext(ctx, userID)
+	queryArgs := []interface{}{
+		userID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

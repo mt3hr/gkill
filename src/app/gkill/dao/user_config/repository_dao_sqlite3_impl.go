@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REPOSITORY table to %s: %w", filename, err)
@@ -75,6 +76,7 @@ FROM REPOSITORY
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -127,8 +129,13 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", userID, device)
-	rows, err := stmt.QueryContext(ctx, userID, device)
+	queryArgs := []interface{}{
+		userID,
+		device,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -185,6 +192,7 @@ INSERT INTO REPOSITORY (
 		err = fmt.Errorf("error at begin update repository: %w", err)
 		return false, err
 	}
+	log.Printf("sql: %s", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add repository sql: %w", err)
@@ -192,8 +200,7 @@ INSERT INTO REPOSITORY (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		repository.ID,
 		repository.UserID,
 		repository.Device,
@@ -202,17 +209,9 @@ INSERT INTO REPOSITORY (
 		repository.UseToWrite,
 		repository.IsExecuteIDFWhenReload,
 		repository.IsEnable,
-	)
-	_, err = stmt.ExecContext(ctx,
-		repository.ID,
-		repository.UserID,
-		repository.Device,
-		repository.Type,
-		repository.File,
-		repository.UseToWrite,
-		repository.IsExecuteIDFWhenReload,
-		repository.IsEnable,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		errAtRollback := tx.Rollback()
 		err = fmt.Errorf("%w, %w", err, errAtRollback)
@@ -263,6 +262,7 @@ INSERT INTO REPOSITORY (
 )
 `
 
+	log.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add repositories sql: %w", err)
@@ -274,18 +274,7 @@ INSERT INTO REPOSITORY (
 		}
 		defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
-		repository.ID,
-		repository.UserID,
-		repository.Device,
-		repository.Type,
-		repository.File,
-		repository.UseToWrite,
-		repository.IsExecuteIDFWhenReload,
-		repository.IsEnable,
-	)
-		_, err = stmt.ExecContext(ctx,
+		queryArgs := []interface{}{
 			repository.ID,
 			repository.UserID,
 			repository.Device,
@@ -294,7 +283,10 @@ INSERT INTO REPOSITORY (
 			repository.UseToWrite,
 			repository.IsExecuteIDFWhenReload,
 			repository.IsEnable,
-		)
+		}
+		log.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
 			rollbackErr := tx.Rollback()
@@ -345,6 +337,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at begin update repository: %w", err)
 		return false, err
 	}
+	log.Printf("sql: %s", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update repository sql: %w", err)
@@ -352,8 +345,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		repository.ID,
 		repository.UserID,
 		repository.Device,
@@ -362,17 +354,9 @@ WHERE ID = ?
 		repository.UseToWrite,
 		repository.IsExecuteIDFWhenReload,
 		repository.IsEnable,
-	)
-	_, err = stmt.ExecContext(ctx, ctx,
-		repository.ID,
-		repository.UserID,
-		repository.Device,
-		repository.Type,
-		repository.File,
-		repository.UseToWrite,
-		repository.IsExecuteIDFWhenReload,
-		repository.IsEnable,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		errAtRollback := tx.Rollback()
 		err = fmt.Errorf("%w, %w", err, errAtRollback)
@@ -407,8 +391,11 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", id)
-	_, err = stmt.ExecContext(ctx, id)
+	queryArgs := []interface{}{
+		id,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -429,8 +416,12 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", userID)
-	_, err = stmt.ExecContext(ctx, userID)
+	queryArgs := []interface{}{
+		userID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -450,6 +441,7 @@ WHERE REPOSITORY.IS_ENABLE = ?
 AND USER_ID = ?
 GROUP BY TYPE
 `
+	log.Printf("sql: %s", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get enable repository count sql: %w", err)
@@ -457,8 +449,13 @@ GROUP BY TYPE
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", true, userID)
-	rows, err := stmt.QueryContext(ctx, true, userID)
+	queryArgs := []interface{}{
+		true,
+		userID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return err

@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS "REP_STRUCT" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REP_STRUCT table to %s: %w", filename, err)
@@ -76,6 +77,7 @@ FROM REP_STRUCT
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -128,8 +130,13 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", userID, device)
-	rows, err := stmt.QueryContext(ctx, userID, device)
+	queryArgs := []interface{}{
+		userID,
+		device,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -189,8 +196,7 @@ INSERT INTO REP_STRUCT (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		repStruct.ID,
 		repStruct.UserID,
 		repStruct.Device,
@@ -199,17 +205,10 @@ INSERT INTO REP_STRUCT (
 		repStruct.Seq,
 		repStruct.CheckWhenInited,
 		repStruct.IgnoreCheckRepRykv,
-	)
-	_, err = stmt.ExecContext(ctx,
-		repStruct.ID,
-		repStruct.UserID,
-		repStruct.Device,
-		repStruct.RepName,
-		repStruct.ParentFolderID,
-		repStruct.Seq,
-		repStruct.CheckWhenInited,
-		repStruct.IgnoreCheckRepRykv,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -245,6 +244,7 @@ INSERT INTO REP_STRUCT (
   ?
 )
 `
+	log.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add rep struct sql: %w", err)
@@ -256,18 +256,7 @@ INSERT INTO REP_STRUCT (
 		}
 		defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s",
-		repStruct.ID,
-		repStruct.UserID,
-		repStruct.Device,
-		repStruct.RepName,
-		repStruct.ParentFolderID,
-		repStruct.Seq,
-		repStruct.CheckWhenInited,
-		repStruct.IgnoreCheckRepRykv,
-	)
-		_, err = stmt.ExecContext(ctx,
+		queryArgs := []interface{}{
 			repStruct.ID,
 			repStruct.UserID,
 			repStruct.Device,
@@ -276,7 +265,10 @@ INSERT INTO REP_STRUCT (
 			repStruct.Seq,
 			repStruct.CheckWhenInited,
 			repStruct.IgnoreCheckRepRykv,
-		)
+		}
+		log.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
 			rollbackErr := tx.Rollback()
@@ -321,8 +313,7 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		repStruct.ID,
 		repStruct.UserID,
 		repStruct.Device,
@@ -332,18 +323,10 @@ WHERE ID = ?
 		repStruct.CheckWhenInited,
 		repStruct.IgnoreCheckRepRykv,
 		repStruct.ID,
-	)
-	_, err = stmt.ExecContext(ctx,
-		repStruct.ID,
-		repStruct.UserID,
-		repStruct.Device,
-		repStruct.RepName,
-		repStruct.ParentFolderID,
-		repStruct.Seq,
-		repStruct.CheckWhenInited,
-		repStruct.IgnoreCheckRepRykv,
-		repStruct.ID,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -364,8 +347,12 @@ WHERE ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", id)
-	_, err = stmt.ExecContext(ctx, id)
+	queryArgs := []interface{}{
+		id,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -387,8 +374,12 @@ WHERE USER_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", userID)
-	_, err = stmt.ExecContext(ctx, userID)
+	queryArgs := []interface{}{
+		userID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err

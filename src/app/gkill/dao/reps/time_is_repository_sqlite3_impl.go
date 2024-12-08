@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS table to %s: %w", filename, err)
@@ -122,11 +123,39 @@ FROM TIMEIS
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
-	sqlWhereForStart, err := t.whereSQLGenerator(true, query)
+	repName, err := t.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
+		return nil, err
+	}
+
+	queryArgsForStart := []interface{}{
+		repName,
+	}
+
+	whereCounter := 0
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"TITLE"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgsForStart)
+
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForEnd, err := t.whereSQLGenerator(false, query)
+
+	queryArgsForEnd := []interface{}{
+		repName,
+	}
+
+	whereCounter = 0
+	onlyLatestData = true
+	relatedTimeColumnName = "RELATED_TIME"
+	findWordTargetColumns = []string{"TITLE"}
+	ignoreFindWord = false
+	appendOrderBy = false
+	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -141,14 +170,9 @@ FROM TIMEIS
 	}
 	defer stmt.Close()
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
-		return nil, err
-	}
+	log.Printf("sql: %s params: %#v %#v", sql, queryArgsForStart, queryArgsForEnd)
+	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, queryArgsForEnd...)...)
 
-	log.Printf("%s, %s", repName, repName)
-	rows, err := stmt.QueryContext(ctx, repName, repName)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
 		return nil, err
@@ -253,8 +277,13 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", repName, id)
-	rows, err := stmt.QueryContext(ctx, repName, id)
+	queryArgs := []interface{}{
+		repName,
+		id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS %s: %w", id, err)
 		return nil, err
@@ -373,7 +402,16 @@ FROM TIMEIS
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
-	sqlWhereForStart, err := t.whereSQLGenerator(true, query)
+	queryArgs := []interface{}{}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"TITLE"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+
 	if err != nil {
 		return nil, err
 	}
@@ -394,8 +432,9 @@ FROM TIMEIS
 		return nil, err
 	}
 
-	log.Printf("%s", repName)
-	rows, err := stmt.QueryContext(ctx, repName)
+	queryArgs = append(queryArgs, repName)
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
 		return nil, err
@@ -512,8 +551,13 @@ ORDER BY UPDATE_TIME DESC
 		return nil, err
 	}
 
-	log.Printf("%s, %s", repName, id)
-	rows, err := stmt.QueryContext(ctx, repName, id)
+	queryArgs := []interface{}{
+		repName,
+		id,
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
 		return nil, err
@@ -624,8 +668,7 @@ INSERT INTO TIMEIS (
 		endTimeStr = timeis.EndTime.Format(sqlite3impl.TimeLayout)
 	}
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		timeis.IsDeleted,
 		timeis.ID,
 		timeis.Title,
@@ -639,185 +682,13 @@ INSERT INTO TIMEIS (
 		timeis.UpdateApp,
 		timeis.UpdateDevice,
 		timeis.UpdateUser,
-	)
-	_, err = stmt.ExecContext(ctx,
-		timeis.IsDeleted,
-		timeis.ID,
-		timeis.Title,
-		timeis.StartTime.Format(sqlite3impl.TimeLayout),
-		endTimeStr,
-		timeis.CreateTime.Format(sqlite3impl.TimeLayout),
-		timeis.CreateApp,
-		timeis.CreateDevice,
-		timeis.CreateUser,
-		timeis.UpdateTime.Format(sqlite3impl.TimeLayout),
-		timeis.UpdateApp,
-		timeis.UpdateDevice,
-		timeis.UpdateUser,
-	)
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at insert in to timeis %s: %w", timeis.ID, err)
 		return err
 	}
 	return nil
-}
-
-func (t *timeIsRepositorySQLite3Impl) whereSQLGenerator(forStartTime bool, query *find.FindQuery) (string, error) {
-	sqlWhere := ""
-	whereCounter := 0
-
-	// 削除済みであるかどうかのSQL追記
-	if query.IsDeleted != nil && *query.IsDeleted {
-		if whereCounter != 0 {
-			sqlWhere += " AND "
-		}
-		sqlWhere += "IS_DELETED = TRUE"
-		whereCounter++
-	} else {
-		if whereCounter != 0 {
-			sqlWhere += " AND "
-		}
-		sqlWhere += "IS_DELETED = FALSE"
-		whereCounter++
-	}
-
-	// id検索である場合のSQL追記
-	ids := []string{}
-	if query.IDs != nil {
-		ids = *query.IDs
-	}
-	if query.UseIDs != nil && *query.UseIDs {
-		if query.IDs != nil && len(*query.IDs) != 0 {
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-			sqlWhere += " ID IN ("
-			for i, id := range ids {
-				sqlWhere += fmt.Sprintf("'%s'", id)
-				if i != len(ids)-1 {
-					sqlWhere += ", "
-				}
-			}
-			sqlWhere += ")"
-			whereCounter++
-		}
-	}
-
-	// 日付範囲指定ありの場合
-	if query.UseCalendar != nil && *query.UseCalendar {
-		// 開始日時を指定するSQLを追記
-		columnName := ""
-		if forStartTime {
-			columnName = "START_TIME"
-		} else {
-			columnName = "END_TIME"
-		}
-		if query.CalendarStartDate != nil {
-			startDate := query.CalendarStartDate
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-			sqlWhere += fmt.Sprintf("datetime("+columnName+", 'localtime') >= datetime('%s', 'localtime')", startDate.Format(sqlite3impl.TimeLayout))
-			whereCounter++
-		}
-
-		// 終了日時を指定するSQLを追記
-		if query.CalendarEndDate != nil {
-			endDate := query.CalendarEndDate
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-			sqlWhere += fmt.Sprintf("datetime("+columnName+", 'localtime') <= datetime('%s', 'localtime')", endDate.Add(time.Hour*24).Add(time.Millisecond*-1).Format(sqlite3impl.TimeLayout))
-			whereCounter++
-		}
-	}
-
-	words := []string{}
-	if query.Words != nil {
-		words = *query.Words
-	}
-	notWords := []string{}
-	if query.NotWords != nil {
-		notWords = *query.NotWords
-	}
-
-	// ワードand検索である場合のSQL追記
-	if query.UseWords != nil && *query.UseWords {
-		if len(words) != 0 {
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-		}
-
-		if query.WordsAnd != nil && *query.WordsAnd {
-			for i, word := range words {
-				if i == 0 {
-					sqlWhere += " ( "
-				}
-				if whereCounter != 0 {
-					sqlWhere += " AND "
-				}
-				sqlWhere += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sqlWhere += " ) "
-				}
-				whereCounter++
-			}
-		} else {
-			// ワードor検索である場合のSQL追記
-			for i, word := range words {
-				if i == 0 {
-					sqlWhere += " ( "
-				}
-				if whereCounter != 0 {
-					sqlWhere += " AND "
-				}
-				sqlWhere += sqlite3impl.EscapeSQLite("TITLE LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sqlWhere += " ) "
-				}
-				whereCounter++
-			}
-		}
-
-		if len(notWords) != 0 {
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-		}
-
-		// notワードを除外するSQLを追記
-		for i, notWord := range notWords {
-			if i == 0 {
-				sqlWhere += " ( "
-			}
-			if whereCounter != 0 {
-				sqlWhere += " AND "
-			}
-			sqlWhere += sqlite3impl.EscapeSQLite("TITLE NOT LIKE '%" + notWord + "%'")
-			if i == len(words)-1 {
-				sqlWhere += " ) "
-			}
-			whereCounter++
-		}
-	}
-	// plaingの場合
-	if query.UsePlaing != nil && *query.UsePlaing {
-		plaingTime := query.PlaingTime
-		if whereCounter != 0 {
-			sqlWhere += " AND "
-		}
-		sqlWhere += " ( "
-		sqlWhere += fmt.Sprintf("(datetime('" + plaingTime.Format(sqlite3impl.TimeLayout) + "', 'localtime') BETWEEN datetime(START_TIME, 'localtime') AND datetime(END_TIME, 'localtime'))")
-		sqlWhere += " OR "
-		sqlWhere += fmt.Sprintf("(datetime('" + plaingTime.Format(sqlite3impl.TimeLayout) + "', 'localtime') >= datetime(START_TIME, 'localtime') AND END_TIME IS NULL)")
-		sqlWhere += " ) "
-	}
-
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sqlWhere += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
-	return sqlWhere, nil
 }

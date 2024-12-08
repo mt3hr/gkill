@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create KMEMO table to %s: %w", filename, err)
@@ -74,7 +75,6 @@ func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
-
 	}
 
 	sql := `
@@ -96,109 +96,29 @@ FROM KMEMO
 WHERE
 `
 
+	repName, err := k.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
+		return nil, err
+	}
+
+	dataType := "kmemo"
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"CONTENT"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
-
-	words := []string{}
-	notWords := []string{}
-	if query.Words != nil {
-		words = *query.Words
-	}
-	if query.NotWords != nil {
-		notWords = *query.NotWords
-	}
-
-	// ワードand検索である場合のSQL追記
-	if query.UseWords != nil && *query.UseWords {
-		// ワードを解析
-		if len(words) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		if query.WordsAnd != nil && *query.WordsAnd {
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		} else {
-			// ワードor検索である場合のSQL追記
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		}
-
-		if len(notWords) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		// notワードを除外するSQLを追記
-		for i, notWord := range notWords {
-			if i == 0 {
-				sql += " ( "
-			}
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += sqlite3impl.EscapeSQLite("CONTENT NOT LIKE '%" + notWord + "%'")
-			if i == len(words)-1 {
-				sql += " ) "
-			}
-			whereCounter++
-		}
-		// id検索である場合のSQL追記
-		if query.UseIDs != nil && *query.UseIDs {
-			if query.IDs != nil && len(*query.IDs) != 0 {
-			ids := []string{}
-			if query.IDs != nil {
-				ids = *query.IDs
-			}
-
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += " ID IN ("
-			for i, id := range ids {
-				sql += fmt.Sprintf("'%s'", id)
-				if i != len(ids)-1 {
-					sql += ", "
-				}
-			}
-			sql += ")"
-			}
-		}
-	}
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
 
 	log.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
@@ -208,15 +128,8 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := k.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
-		return nil, err
-	}
-
-	dataType := "kmemo"
-	log.Printf("%s, %s", repName, dataType)
-	rows, err := stmt.QueryContext(ctx, repName, dataType)
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
 		return nil, err
@@ -308,9 +221,34 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM KMEMO
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE 
 `
+	dataType := "kmemo"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"CONTENT"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
 	log.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -319,9 +257,8 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	dataType := "kmemo"
-	log.Printf("%s, %s, %s", repName, dataType, id)
-	rows, err := stmt.QueryContext(ctx, repName, dataType, id)
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from KMEMO %s: %w", id, err)
 		return nil, err
@@ -431,107 +368,28 @@ FROM KMEMO
 WHERE
 `
 
+	repName, err := k.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
+		return nil, err
+	}
+
+	queryArgs := []interface{}{
+		repName,
+	}
+
 	whereCounter := 0
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter)
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"CONTENT"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
+
 	sql += commonWhereSQL
-
-	// ワードand検索である場合のSQL追記
-	words := []string{}
-	notWords := []string{}
-	if query.Words != nil {
-		words = *query.Words
-	}
-	if query.NotWords != nil {
-		notWords = *query.NotWords
-	}
-
-	if query.UseWords != nil && *query.UseWords {
-		// ワードを解析
-		if len(words) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		if query.WordsAnd != nil && *query.WordsAnd {
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		} else {
-			// ワードor検索である場合のSQL追記
-			for i, word := range words {
-				if i == 0 {
-					sql += " ( "
-				}
-				if whereCounter != 0 {
-					sql += " AND "
-				}
-				sql += sqlite3impl.EscapeSQLite("CONTENT LIKE '%" + word + "%'")
-				if i == len(words)-1 {
-					sql += " ) "
-				}
-				whereCounter++
-			}
-		}
-
-		if len(notWords) != 0 {
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-		}
-
-		// notワードを除外するSQLを追記
-		for i, notWord := range notWords {
-			if i == 0 {
-				sql += " ( "
-			}
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += sqlite3impl.EscapeSQLite(fmt.Sprintf("CONTENT NOT LIKE '%s'", notWord))
-			if i == len(words)-1 {
-				sql += " ) "
-			}
-			whereCounter++
-		}
-
-		// id検索である場合のSQL追記
-		if query.UseIDs != nil && *query.UseIDs {
-			ids := []string{}
-			if query.IDs != nil {
-				ids = *query.IDs
-			}
-			if whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += " ID IN ("
-			for i, id := range ids {
-				sql += fmt.Sprintf("'%s'", id)
-				if i != len(ids)-1 {
-					sql += ", "
-				}
-			}
-			sql += ")"
-		}
-	}
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
 
 	log.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
@@ -541,14 +399,8 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := k.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
-		return nil, err
-	}
-
-	log.Printf("%s", repName)
-	rows, err := stmt.QueryContext(ctx, repName)
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
 		return nil, err
@@ -640,9 +492,32 @@ SELECT
   CONTENT,
   ? AS REP_NAME
 FROM KMEMO
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE 
 `
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+
+	queryArgs := []interface{}{
+		repName,
+	}
+
+	whereCounter := 0
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"CONTENT"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
 	log.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -651,8 +526,8 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s", repName, id)
-	rows, err := stmt.QueryContext(ctx, repName, id)
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query ")
 		return nil, err
@@ -742,8 +617,7 @@ INSERT INTO KMEMO (
 	}
 	defer stmt.Close()
 
-	log.Printf(
-		"%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s",
+	queryArgs := []interface{}{
 		kmemo.IsDeleted,
 		kmemo.ID,
 		kmemo.Content,
@@ -756,21 +630,10 @@ INSERT INTO KMEMO (
 		kmemo.UpdateApp,
 		kmemo.UpdateDevice,
 		kmemo.UpdateUser,
-	)
-	_, err = stmt.ExecContext(ctx,
-		kmemo.IsDeleted,
-		kmemo.ID,
-		kmemo.Content,
-		kmemo.RelatedTime.Format(sqlite3impl.TimeLayout),
-		kmemo.CreateTime.Format(sqlite3impl.TimeLayout),
-		kmemo.CreateApp,
-		kmemo.CreateDevice,
-		kmemo.CreateUser,
-		kmemo.UpdateTime.Format(sqlite3impl.TimeLayout),
-		kmemo.UpdateApp,
-		kmemo.UpdateDevice,
-		kmemo.UpdateUser,
-	)
+	}
+	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
 	if err != nil {
 		err = fmt.Errorf("error at insert in to KMEMO %s: %w", kmemo.ID, err)
 		return err

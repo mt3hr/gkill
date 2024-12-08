@@ -25,11 +25,13 @@ func (r Repositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*
 	// 並列処理
 	for _, rep := range r {
 		wg.Add(1)
-		
+
 		go func(rep Repository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
+				repName, _ := rep.GetRepName(ctx)
+				err = fmt.Errorf("error at %s: %w", repName, err)
 				errch <- err
 				return
 			}
@@ -99,7 +101,7 @@ func (r Repositories) Close(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range r {
 		wg.Add(1)
-		
+
 		go func(rep Repository) {
 			defer wg.Done()
 			err = rep.Close(ctx)
@@ -143,7 +145,7 @@ func (r Repositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
 	// 並列処理
 	for _, rep := range r {
 		wg.Add(1)
-		
+
 		go func(rep Repository) {
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id)
@@ -204,7 +206,7 @@ func (r Repositories) UpdateCache(ctx context.Context) error {
 	// UpdateCache並列処理
 	for _, rep := range r {
 		wg.Add(1)
-		
+
 		go func(rep Repository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -255,7 +257,7 @@ func (r Repositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyou,
 	// 並列処理
 	for _, rep := range r {
 		wg.Add(1)
-		
+
 		go func(rep Repository) {
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)

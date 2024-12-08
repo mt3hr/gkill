@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS "LATEST_DATA_REPOSITORY_ADDRESS" (
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create LATEST_DATA_REPOSITORY_ADDRESS table to %s: %w", filename, err)
@@ -70,6 +71,7 @@ FROM LATEST_DATA_REPOSITORY_ADDRESS
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -120,8 +122,11 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", repName)
-	rows, err := stmt.QueryContext(ctx, repName)
+	queryArgs := []interface{}{
+		repName,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -171,8 +176,11 @@ WHERE TARGET_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", targetID)
-	rows, err := stmt.QueryContext(ctx, targetID)
+	queryArgs := []interface{}{
+		targetID,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
@@ -230,16 +238,13 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s, %s",
+	queryArgs := []interface{}{
 		latestDataRepositoryAddress.TargetID,
 		latestDataRepositoryAddress.LatestDataRepositoryName,
 		latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
-	)
-	_, err = stmt.ExecContext(ctx,
-		latestDataRepositoryAddress.TargetID,
-		latestDataRepositoryAddress.LatestDataRepositoryName,
-		latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -265,18 +270,14 @@ WHERE TARGET_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s, %s, %s",
+	queryArgs := []interface{}{
 		latestDataRepositoryAddress.TargetID,
 		latestDataRepositoryAddress.LatestDataRepositoryName,
 		latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
 		latestDataRepositoryAddress.TargetID,
-	)
-	_, err = stmt.ExecContext(ctx,
-		latestDataRepositoryAddress.TargetID,
-		latestDataRepositoryAddress.LatestDataRepositoryName,
-		latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
-		latestDataRepositoryAddress.TargetID,
-	)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -332,6 +333,7 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 		existRecords, err := l.GetLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress.TargetID)
 		if err == nil && existRecords != nil { // データが存在する場合は更新する
 			_, err := l.UpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
+			log.Printf("sql: %s", updateSQL)
 			stmt, err := tx.PrepareContext(ctx, updateSQL)
 			if err != nil {
 				err = fmt.Errorf("error at update latest data repository address sql: %w", err)
@@ -342,18 +344,15 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 				return false, err
 			}
 
-			log.Printf("%s, %s, %s, %s",
+			queryArgs := []interface{}{
 				latestDataRepositoryAddress.TargetID,
 				latestDataRepositoryAddress.LatestDataRepositoryName,
 				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
 				latestDataRepositoryAddress.TargetID,
-			)
-			_, err = stmt.ExecContext(ctx,
-				latestDataRepositoryAddress.TargetID,
-				latestDataRepositoryAddress.LatestDataRepositoryName,
-				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
-				latestDataRepositoryAddress.TargetID,
-			)
+			}
+			log.Printf("sql: %s query: %#v", updateSQL, queryArgs)
+			_, err = stmt.ExecContext(ctx, queryArgs...)
+
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
 				rollbackErr := tx.Rollback()
@@ -363,6 +362,7 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 				return false, err
 			}
 		} else { // データが存在しない場合は作成する
+			log.Printf("sql: %s", insertSQL)
 			stmt, err := tx.PrepareContext(ctx, insertSQL)
 			if err != nil {
 				err = fmt.Errorf("error at add latest data repoisitory address sql: %w", err)
@@ -373,16 +373,14 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 				return false, err
 			}
 
-			log.Printf("%s, %s, %s, %s",
+			queryArgs := []interface{}{
 				latestDataRepositoryAddress.TargetID,
 				latestDataRepositoryAddress.LatestDataRepositoryName,
 				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
-			)
-			_, err = stmt.ExecContext(ctx,
-				latestDataRepositoryAddress.TargetID,
-				latestDataRepositoryAddress.LatestDataRepositoryName,
-				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
-			)
+			}
+			log.Printf("sql: %s query: %#v", insertSQL, queryArgs)
+			_, err = stmt.ExecContext(ctx, queryArgs...)
+
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
 				rollbackErr := tx.Rollback()
@@ -421,10 +419,11 @@ WHERE TARGET_ID = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s, %s, %s, %s",
+	queryArgs := []interface{}{
 		latestDataRepositoryAddress.TargetID,
-	)
-	_, err = stmt.ExecContext(ctx, latestDataRepositoryAddress.TargetID)
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -446,6 +445,7 @@ DELETE FROM LATEST_DATA_REPOSITORY_ADDRESS
 	}
 	defer stmt.Close()
 
+	log.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -469,8 +469,11 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 	}
 	defer stmt.Close()
 
-	log.Printf("%s", repName)
-	_, err = stmt.ExecContext(ctx, repName)
+	queryArgs := []interface{}{
+		repName,
+	}
+	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
