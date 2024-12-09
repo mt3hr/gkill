@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 )
@@ -9,7 +10,7 @@ import (
 type GitCommitLogRepository interface {
 	FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error)
 
-	GetKyou(ctx context.Context, id string) (*Kyou, error)
+	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
 	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
 
@@ -23,5 +24,5 @@ type GitCommitLogRepository interface {
 
 	FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]*GitCommitLog, error)
 
-	GetGitCommitLog(ctx context.Context, id string) (*GitCommitLog, error)
+	GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error)
 }

@@ -41,6 +41,8 @@ export class FindKyouQuery extends FindQueryBase {
         cloned.is_image_only = this.is_image_only
         cloned.devices = this.devices
         cloned.rep_types = this.rep_types
+        cloned.use_update_time = this.use_update_time
+        cloned.update_time = this.update_time
         return cloned
     }
 
