@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
@@ -72,7 +73,7 @@ type GkillRepositories struct {
 
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
 func NewGkillRepositories(userID string) (*GkillRepositories, error) {
-	configDBRootDir := os.ExpandEnv("$HOME/gkill/configs")
+	configDBRootDir := os.ExpandEnv("$HOME/gkill/caches")
 	err := os.MkdirAll(configDBRootDir, fs.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at create directory %s: %w", err)
@@ -192,14 +193,23 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 	defer close(ch)
 	defer close(errch)
 
+	matchReps, err := g.selectMatchRepsFromQuery(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at select match reps from query: %w", err)
+		return nil, err
+	}
+
 	// 並列処理
-	for _, rep := range g.Reps {
+	for _, rep := range matchReps {
 		wg.Add(1)
+
+		// Rep名が一致していなければスキップする
 
 		go func(rep Repository) {
 			defer wg.Done()
 			// jsonからパースする
-			queryLatest := query
+			queryLatestValue := *query
+			queryLatest := &queryLatestValue
 
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
 			if query.IDs != nil {
@@ -274,7 +284,7 @@ loop:
 			}
 			for _, kyou := range matchKyousInRep {
 				if existKyou, exist := matchKyous[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						matchKyous[kyou.ID] = kyou
 					}
 				} else {
@@ -300,7 +310,7 @@ loop:
 	return matchKyousList, nil
 }
 
-func (g *GkillRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -311,13 +321,29 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string) (*Kyou, erro
 	defer close(ch)
 	defer close(errch)
 
+	latestDataRepositoryAddress, err := g.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddress(ctx, id)
+	if err != nil {
+		err = fmt.Errorf("error at get latest data repository addresses by id %s: %w", id, err)
+		return nil, err
+	}
+
 	// 並列処理
 	for _, rep := range g.Reps {
 		wg.Add(1)
-
 		go func(rep Repository) {
 			defer wg.Done()
-			matchKyouInRep, err := rep.GetKyou(ctx, id)
+			repName, err := rep.GetRepName(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
+
+			if repName != latestDataRepositoryAddress.LatestDataRepositoryName {
+				ch <- nil
+				return
+			}
+
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -522,7 +548,7 @@ textsloop:
 	latestKyousMap := map[string]*Kyou{}
 	for _, kyou := range allKyous {
 		if existKyou, exist := latestKyousMap[kyou.ID]; exist {
-			if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+			if kyou.UpdateTime.After(existKyou.UpdateTime) {
 				latestKyousMap[kyou.ID] = kyou
 			}
 		} else {
@@ -532,7 +558,7 @@ textsloop:
 	latestTagsMap := map[string]*Tag{}
 	for _, tag := range allTags {
 		if existTag, exist := latestTagsMap[tag.ID]; exist {
-			if tag.UpdateTime.Before(existTag.UpdateTime) {
+			if tag.UpdateTime.After(existTag.UpdateTime) {
 				latestTagsMap[tag.ID] = tag
 			}
 		} else {
@@ -542,7 +568,7 @@ textsloop:
 	latestTextsMap := map[string]*Text{}
 	for _, text := range allTexts {
 		if existText, exist := latestTextsMap[text.ID]; exist {
-			if text.UpdateTime.Before(existText.UpdateTime) {
+			if text.UpdateTime.After(existText.UpdateTime) {
 				latestTextsMap[text.ID] = text
 			}
 		} else {
@@ -652,7 +678,7 @@ loop:
 			}
 			for _, kyou := range matchKyousInRep {
 				if existKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
@@ -695,8 +721,8 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 
 		go func(rep TagRepository) {
 			defer wg.Done()
-			// jsonからパースする
-			queryLatest := query
+			queryLatestValue := *query
+			queryLatest := &queryLatestValue
 
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
 			if query.IDs != nil {
@@ -768,7 +794,7 @@ loop:
 			}
 			for _, tag := range matchTagsInRep {
 				if existTag, exist := matchTags[tag.ID]; exist {
-					if tag.UpdateTime.Before(existTag.UpdateTime) {
+					if tag.UpdateTime.After(existTag.UpdateTime) {
 						matchTags[tag.ID] = tag
 					}
 				} else {
@@ -794,7 +820,7 @@ loop:
 	return matchTagsList, nil
 }
 
-func (g *GkillRepositories) GetTag(ctx context.Context, id string) (*Tag, error) {
+func (g *GkillRepositories) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
 	matchTag := &Tag{}
 	matchTag = nil
 	existErr := false
@@ -811,7 +837,7 @@ func (g *GkillRepositories) GetTag(ctx context.Context, id string) (*Tag, error)
 
 		go func(rep TagRepository) {
 			defer wg.Done()
-			matchTagInRep, err := rep.GetTag(ctx, id)
+			matchTagInRep, err := rep.GetTag(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -910,7 +936,7 @@ loop:
 			}
 			for _, tag := range matchTagsInRep {
 				if existTag, exist := matchTags[tag.ID]; exist {
-					if tag.UpdateTime.Before(existTag.UpdateTime) {
+					if tag.UpdateTime.After(existTag.UpdateTime) {
 						matchTags[tag.ID] = tag
 					}
 				} else {
@@ -989,7 +1015,7 @@ loop:
 			}
 			for _, tag := range matchTagsInRep {
 				if existTag, exist := matchTags[tag.ID]; exist {
-					if tag.UpdateTime.Before(existTag.UpdateTime) {
+					if tag.UpdateTime.After(existTag.UpdateTime) {
 						matchTags[tag.ID] = tag
 					}
 				} else {
@@ -1067,7 +1093,7 @@ loop:
 			}
 			for _, tag := range matchTagsInRep {
 				if existTag, exist := tagHistories[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if tag.UpdateTime.Before(existTag.UpdateTime) {
+					if tag.UpdateTime.After(existTag.UpdateTime) {
 						tagHistories[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)] = tag
 					}
 				} else {
@@ -1323,7 +1349,7 @@ loop:
 			}
 			for _, text := range matchTextsInRep {
 				if existText, exist := matchTexts[text.ID]; exist {
-					if text.UpdateTime.Before(existText.UpdateTime) {
+					if text.UpdateTime.After(existText.UpdateTime) {
 						matchTexts[text.ID] = text
 					}
 				} else {
@@ -1349,7 +1375,7 @@ loop:
 	return matchTextsList, nil
 }
 
-func (g *GkillRepositories) GetText(ctx context.Context, id string) (*Text, error) {
+func (g *GkillRepositories) GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error) {
 	matchText := &Text{}
 	matchText = nil
 	existErr := false
@@ -1366,7 +1392,7 @@ func (g *GkillRepositories) GetText(ctx context.Context, id string) (*Text, erro
 
 		go func(rep TextRepository) {
 			defer wg.Done()
-			matchTextInRep, err := rep.GetText(ctx, id)
+			matchTextInRep, err := rep.GetText(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -1465,7 +1491,7 @@ loop:
 			}
 			for _, text := range matchTextsInRep {
 				if existText, exist := matchTexts[text.ID]; exist {
-					if text.UpdateTime.Before(existText.UpdateTime) {
+					if text.UpdateTime.After(existText.UpdateTime) {
 						matchTexts[text.ID] = text
 					}
 				} else {
@@ -1543,7 +1569,7 @@ loop:
 			}
 			for _, text := range matchTextsInRep {
 				if existText, exist := textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if text.UpdateTime.Before(existText.UpdateTime) {
+					if text.UpdateTime.After(existText.UpdateTime) {
 						textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
 					}
 				} else {
@@ -1573,4 +1599,64 @@ loop:
 func (g *GkillRepositories) AddTextInfo(ctx context.Context, text *Text) error {
 	err := fmt.Errorf("not implements GkillRepositories.AddTextInfo")
 	return err
+}
+
+func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query *find.FindQuery) (map[string]Repository, error) {
+	matchReps := map[string]Repository{}
+
+	var err error
+	existErr := false
+	wg := &sync.WaitGroup{}
+	errch := make(chan error, len(g.Reps))
+	defer close(errch)
+
+	// 並列処理
+	m := &sync.Mutex{}
+	for _, rep := range g.Reps {
+		wg.Add(1)
+		go func(rep Repository) {
+			defer wg.Done()
+
+			// PlaingだったらTimeIsRep以外は無視する
+			if query.UsePlaing != nil && *query.UsePlaing {
+				_, isTimeIsRep := rep.(TimeIsRepository)
+				if !isTimeIsRep {
+					errch <- nil
+					return
+				}
+			}
+
+			repName, err := rep.GetRepName(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
+
+			if query.Reps != nil {
+				for _, targetRepName := range *query.Reps {
+					if targetRepName == repName {
+						m.Lock()
+						if _, exist := matchReps[repName]; !exist {
+							matchReps[repName] = rep
+						}
+						m.Unlock()
+					}
+				}
+			}
+			errch <- nil
+		}(rep)
+	}
+	wg.Wait()
+	// エラー集約
+	for range len(g.Reps) {
+		e := <-errch
+		if e != nil {
+			err = fmt.Errorf("error at update cache: %w: %w", e, err)
+			existErr = true
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+	return matchReps, nil
 }

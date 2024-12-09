@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
@@ -80,7 +81,7 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 	return matchKyous, nil
 }
 
-func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -97,7 +98,7 @@ func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string) (*Kyou, err
 
 		go func(rep ReKyouRepository) {
 			defer wg.Done()
-			matchKyouInRep, err := rep.GetKyou(ctx, id)
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -196,7 +197,7 @@ loop:
 			}
 			for _, kyou := range matchKyousInRep {
 				if existKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
@@ -363,7 +364,7 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQue
 	return matchReKyous, nil
 }
 
-func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string) (*ReKyou, error) {
+func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string, updateTime *time.Time) (*ReKyou, error) {
 	matchReKyou := &ReKyou{}
 	matchReKyou = nil
 	existErr := false
@@ -380,7 +381,7 @@ func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string) (*ReKyou,
 
 		go func(rep ReKyouRepository) {
 			defer wg.Done()
-			matchReKyouInRep, err := rep.GetReKyou(ctx, id)
+			matchReKyouInRep, err := rep.GetReKyou(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -479,7 +480,7 @@ loop:
 			}
 			for _, kyou := range matchReKyousInRep {
 				if existReKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existReKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existReKyou.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
@@ -562,7 +563,7 @@ loop:
 			}
 			for _, kyou := range matchReKyousInRep {
 				if existReKyou, exist := matchReKyous[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existReKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existReKyou.UpdateTime) {
 						matchReKyous[kyou.ID] = kyou
 					}
 				} else {

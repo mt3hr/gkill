@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
 type gitCommitLogRepositoryLocalImpl struct {
@@ -136,7 +138,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	return kyous, nil
 }
 
-func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	var err error
 
 	repName, err := g.GetRepName(ctx)
@@ -181,7 +183,7 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	kyou, err := g.GetKyou(ctx, id)
+	kyou, err := g.GetKyou(ctx, id, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories git commit log repositories %s: %w", id, err)
 		return nil, err
@@ -312,7 +314,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 	return gitCommitLogs, nil
 }
 
-func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, id string) (*GitCommitLog, error) {
+func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
 	var err error
 
 	repName, err := g.GetRepName(ctx)
@@ -330,6 +332,9 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 		match := true
 		if id == fmt.Sprintf("%s", commit.Hash) {
 			match = true
+		}
+		if updateTime != nil && updateTime.Format(sqlite3impl.TimeLayout) != commit.Committer.When.Format(sqlite3impl.TimeLayout) {
+			match = false
 		}
 		if !match {
 			return nil

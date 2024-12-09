@@ -867,7 +867,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 対象が存在する場合はエラー
-	existTag, err := repositories.GetTag(r.Context(), request.Tag.ID)
+	existTag, err := repositories.GetTag(r.Context(), request.Tag.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
 		log.Printf(err.Error())
@@ -928,7 +928,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tag, err := repositories.GetTag(r.Context(), request.Tag.ID)
+	tag, err := repositories.GetTag(r.Context(), request.Tag.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
 		log.Printf(err.Error())
@@ -1012,7 +1012,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 対象が存在する場合はエラー
-	existText, err := repositories.GetText(r.Context(), request.Text.ID)
+	existText, err := repositories.GetText(r.Context(), request.Text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
 		log.Printf(err.Error())
@@ -1073,7 +1073,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	text, err := repositories.GetText(r.Context(), request.Text.ID)
+	text, err := repositories.GetText(r.Context(), request.Text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
 		log.Printf(err.Error())
@@ -1157,7 +1157,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 対象が存在する場合はエラー
-	existKmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID)
+	existKmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
 		log.Printf(err.Error())
@@ -1218,7 +1218,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	kmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID)
+	kmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
 		log.Printf(err.Error())
@@ -1302,7 +1302,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 対象が存在する場合はエラー
-	existURLog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID)
+	existURLog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
 		log.Printf(err.Error())
@@ -1363,7 +1363,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	urlog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID)
+	urlog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
 		log.Printf(err.Error())
@@ -1447,7 +1447,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 対象が存在する場合はエラー
-	existNlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID)
+	existNlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
 		log.Printf(err.Error())
@@ -1508,7 +1508,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID)
+	nlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
 		log.Printf(err.Error())
@@ -1592,7 +1592,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 	}
 
 	// 対象が存在する場合はエラー
-	existTimeIs, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID)
+	existTimeIs, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
 		log.Printf(err.Error())
@@ -1653,7 +1653,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	timeis, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID)
+	timeis, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
 		log.Printf(err.Error())
@@ -1737,7 +1737,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 	}
 
 	// 対象が存在する場合はエラー
-	existLantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID)
+	existLantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		log.Printf(err.Error())
@@ -1798,7 +1798,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	lantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID)
+	lantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		log.Printf(err.Error())
@@ -1882,7 +1882,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 対象が存在する場合はエラー
-	existMi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID)
+	existMi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
 		log.Printf(err.Error())
@@ -1943,7 +1943,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID)
+	mi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
 		log.Printf(err.Error())
@@ -2027,7 +2027,7 @@ func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Reques
 	}
 
 	// 対象が存在する場合はエラー
-	existKyouInfo, err := repositories.IDFKyouReps.GetKyou(r.Context(), request.Kyou.ID)
+	existKyouInfo, err := repositories.IDFKyouReps.GetKyou(r.Context(), request.Kyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kyouInfo user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
@@ -2088,7 +2088,7 @@ func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	kyou, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.Kyou.ID)
+	kyou, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.Kyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kyouInfo user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
@@ -2172,7 +2172,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 	}
 
 	// 対象が存在する場合はエラー
-	existReKyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID)
+	existReKyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
 		log.Printf(err.Error())
@@ -2233,7 +2233,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	rekyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID)
+	rekyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
 		log.Printf(err.Error())
@@ -2317,7 +2317,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 	}
 
 	// すでに存在する場合はエラー
-	_, err = repositories.GetTag(r.Context(), request.Tag.ID)
+	_, err = repositories.GetTag(r.Context(), request.Tag.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
 		log.Printf(err.Error())
@@ -2368,7 +2368,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tag, err := repositories.GetTag(r.Context(), request.Tag.ID)
+	tag, err := repositories.GetTag(r.Context(), request.Tag.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
 		log.Printf(err.Error())
@@ -2381,7 +2381,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 	}
 
 	// 対象が存在しない場合はエラー
-	existTag, err := repositories.GetTag(r.Context(), request.Tag.ID)
+	existTag, err := repositories.GetTag(r.Context(), request.Tag.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
 		log.Printf(err.Error())
@@ -2475,7 +2475,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 	}
 
 	// すでに存在する場合はエラー
-	_, err = repositories.GetText(r.Context(), request.Text.ID)
+	_, err = repositories.GetText(r.Context(), request.Text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
 		log.Printf(err.Error())
@@ -2526,7 +2526,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	text, err := repositories.GetText(r.Context(), request.Text.ID)
+	text, err := repositories.GetText(r.Context(), request.Text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
 		log.Printf(err.Error())
@@ -2539,7 +2539,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 	}
 
 	// 対象が存在しない場合はエラー
-	existText, err := repositories.GetText(r.Context(), request.Text.ID)
+	existText, err := repositories.GetText(r.Context(), request.Text.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
 		log.Printf(err.Error())
@@ -2633,7 +2633,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 	}
 
 	// すでに存在する場合はエラー
-	_, err = repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID)
+	_, err = repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
 		log.Printf(err.Error())
@@ -2684,7 +2684,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	kmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID)
+	kmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
 		log.Printf(err.Error())
@@ -2697,7 +2697,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 	}
 
 	// 対象が存在しない場合はエラー
-	existKmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID)
+	existKmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
 		log.Printf(err.Error())
@@ -2791,7 +2791,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 	}
 
 	// すでに存在する場合はエラー
-	_, err = repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID)
+	_, err = repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
 		log.Printf(err.Error())
@@ -2842,7 +2842,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	urlog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID)
+	urlog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
 		log.Printf(err.Error())
@@ -2855,7 +2855,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 	}
 
 	// 対象が存在しない場合はエラー
-	existURLog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID)
+	existURLog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
 		log.Printf(err.Error())
@@ -2949,7 +2949,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 	}
 
 	// すでに存在する場合はエラー
-	_, err = repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID)
+	_, err = repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
 		log.Printf(err.Error())
@@ -3000,7 +3000,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	nlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID)
+	nlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
 		log.Printf(err.Error())
@@ -3013,7 +3013,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 	}
 
 	// 対象が存在しない場合はエラー
-	existNlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID)
+	existNlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
 		log.Printf(err.Error())
@@ -3107,7 +3107,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 	}
 
 	// すでに存在する場合はエラー
-	_, err = repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID)
+	_, err = repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
 		log.Printf(err.Error())
@@ -3158,7 +3158,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	timeis, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID)
+	timeis, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
 		log.Printf(err.Error())
@@ -3171,7 +3171,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 	}
 
 	// 対象が存在しない場合はエラー
-	existTimeIs, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID)
+	existTimeIs, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
 		log.Printf(err.Error())
@@ -3265,7 +3265,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 	}
 
 	// すでに存在する場合はエラー
-	_, err = repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID)
+	_, err = repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		log.Printf(err.Error())
@@ -3316,7 +3316,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	lantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID)
+	lantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		log.Printf(err.Error())
@@ -3329,7 +3329,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 	}
 
 	// 対象が存在しない場合はエラー
-	existLantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID)
+	existLantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		log.Printf(err.Error())
@@ -3423,7 +3423,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// すでに存在する場合はエラー
-	_, err = repositories.MiReps.GetMi(r.Context(), request.Mi.ID)
+	_, err = repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
 		log.Printf(err.Error())
@@ -3474,7 +3474,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	mi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID)
+	mi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
 		log.Printf(err.Error())
@@ -3487,7 +3487,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 対象が存在しない場合はエラー
-	existMi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID)
+	existMi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
 		log.Printf(err.Error())
@@ -3581,7 +3581,7 @@ func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Req
 	}
 
 	// すでに存在する場合はエラー
-	_, err = repositories.IDFKyouReps.GetKyou(r.Context(), request.Kyou.ID)
+	_, err = repositories.IDFKyouReps.GetKyou(r.Context(), request.Kyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kyouInfo user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
@@ -3632,7 +3632,7 @@ func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	kyouInfo, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.Kyou.ID)
+	kyouInfo, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.Kyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kyouInfo user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
@@ -3645,7 +3645,7 @@ func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Req
 	}
 
 	// 対象が存在しない場合はエラー
-	existKyouInfo, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.Kyou.ID)
+	existKyouInfo, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.Kyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get kyouInfo user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
 		log.Printf(err.Error())
@@ -3739,7 +3739,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 	}
 
 	// すでに存在する場合はエラー
-	_, err = repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID)
+	_, err = repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
 		log.Printf(err.Error())
@@ -3790,7 +3790,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	rekyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID)
+	rekyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
 		log.Printf(err.Error())
@@ -3803,7 +3803,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 	}
 
 	// 対象が存在しない場合はエラー
-	existReKyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID)
+	existReKyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
 		log.Printf(err.Error())
@@ -3965,7 +3965,16 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kyouHistories, err := repositories.GetKyouHistories(r.Context(), request.ID)
+	// UpdateTimeが指定されていれば一致するものを、そうでなければIDが一致する履歴全部を取得する
+	kyouHistories := []*reps.Kyou{}
+	if request.UpdateTime != nil {
+		kyou := &reps.Kyou{}
+		kyou, err = repositories.GetKyou(r.Context(), request.ID, request.UpdateTime)
+		kyouHistories = []*reps.Kyou{kyou}
+	} else {
+		kyouHistories, err = repositories.GetKyouHistories(r.Context(), request.ID)
+	}
+
 	if err != nil {
 		err = fmt.Errorf("error at get kyou user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		log.Printf(err.Error())
@@ -4818,7 +4827,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	gitCommitLog, err := repositories.GitCommitLogReps.GetGitCommitLog(r.Context(), request.ID)
+	gitCommitLog, err := repositories.GitCommitLogReps.GetGitCommitLog(r.Context(), request.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get gitCommitLog user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		log.Printf(err.Error())
@@ -5287,7 +5296,16 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 		return
 	}
 
-	tags, err := repositories.GetTagHistories(r.Context(), request.ID)
+	// UpdateTimeが指定されていれば一致するものを、そうでなければIDが一致する履歴全部を取得する
+	tags := []*reps.Tag{}
+	if request.UpdateTime != nil {
+		tag := &reps.Tag{}
+		tag, err = repositories.GetTag(r.Context(), request.ID, request.UpdateTime)
+		tags = []*reps.Tag{tag}
+	} else {
+		tags, err = repositories.GetTagHistories(r.Context(), request.ID)
+	}
+
 	if err != nil {
 		err = fmt.Errorf("error at get tag histories by tag id user id = %s device = %s target id = %s: %w", userID, device, request.ID, err)
 		log.Printf(err.Error())
@@ -5453,7 +5471,16 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 		return
 	}
 
-	texts, err := repositories.GetTextHistories(r.Context(), request.ID)
+	// UpdateTimeが指定されていれば一致するものを、そうでなければIDが一致する履歴全部を取得する
+	texts := []*reps.Text{}
+	if request.UpdateTime != nil {
+		text := &reps.Text{}
+		text, err = repositories.GetText(r.Context(), request.ID, request.UpdateTime)
+		texts = []*reps.Text{text}
+	} else {
+		texts, err = repositories.GetTextHistories(r.Context(), request.ID)
+	}
+
 	if err != nil {
 		err = fmt.Errorf("error at get text histories by text id user id = %s device = %s target id = %s: %w", userID, device, request.ID, err)
 		log.Printf(err.Error())
@@ -5908,6 +5935,18 @@ errloop:
 		response.Errors = gkillErrors
 		return
 	}
+
+	repName, err := targetRep.GetRepName(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get rep name: %w", err)
+		log.Printf(err.Error())
+		gkillError = &message.GkillError{
+			ErrorCode:    message.GetRepPathError,
+			ErrorMessage: "ファイルアップロードに失敗しました",
+		}
+		return
+	}
+
 	// idfKyou集約
 loop:
 	for {
@@ -5925,6 +5964,11 @@ loop:
 					}
 					return
 				}
+				_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+					TargetID:                 idfKyou.ID,
+					DataUpdateTime:           idfKyou.UpdateTime,
+					LatestDataRepositoryName: repName,
+				})
 			}
 		default:
 			break loop
@@ -5933,7 +5977,7 @@ loop:
 
 	kyous := []*reps.Kyou{}
 	for _, idfKyouID := range savedIDFKyouIDs {
-		kyou, err := targetRep.GetKyou(r.Context(), idfKyouID)
+		kyou, err := targetRep.GetKyou(r.Context(), idfKyouID, nil)
 		if err != nil {
 			err := fmt.Errorf("error at get kyou at %s: %w", request.TargetRepName, err)
 			log.Printf(err.Error())

@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 )
@@ -9,7 +10,7 @@ import (
 type IDFKyouRepository interface {
 	FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error)
 
-	GetKyou(ctx context.Context, id string) (*Kyou, error)
+	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
 	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
 
@@ -23,7 +24,7 @@ type IDFKyouRepository interface {
 
 	FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error)
 
-	GetIDFKyou(ctx context.Context, id string) (*IDFKyou, error)
+	GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error)
 
 	GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error)
 

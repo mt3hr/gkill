@@ -109,7 +109,13 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 			return nil, err
 		}
 		// 存在すれば検索ヒットとする
-		if len(kyous) != 0 {
+		notDeletedKyouCount := 0
+		for _, kyou := range kyous {
+			if kyou.IsDeleted {
+				notDeletedKyouCount++
+			}
+		}
+		if notDeletedKyouCount != 0 {
 			kyou := &Kyou{}
 			kyou.IsDeleted = rekyou.IsDeleted
 			kyou.ID = rekyou.ID
@@ -130,7 +136,7 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 	return matchKyous, nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (r *reKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := r.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -140,6 +146,16 @@ func (r *reKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*
 
 	// なければnilを返す
 	if len(kyouHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range kyouHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 
@@ -323,7 +339,7 @@ func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *fin
 	return matchReKyous, nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetReKyou(ctx context.Context, id string) (*ReKyou, error) {
+func (r *reKyouRepositorySQLite3Impl) GetReKyou(ctx context.Context, id string, updateTime *time.Time) (*ReKyou, error) {
 	// 最新のデータを返す
 	reKyouHistories, err := r.GetReKyouHistories(ctx, id)
 	if err != nil {
@@ -333,6 +349,16 @@ func (r *reKyouRepositorySQLite3Impl) GetReKyou(ctx context.Context, id string) 
 
 	// なければnilを返す
 	if len(reKyouHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range reKyouHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 

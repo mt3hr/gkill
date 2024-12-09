@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 )
@@ -11,7 +12,7 @@ type TextRepository interface {
 
 	Close(ctx context.Context) error
 
-	GetText(ctx context.Context, id string) (*Text, error)
+	GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error)
 
 	GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error)
 

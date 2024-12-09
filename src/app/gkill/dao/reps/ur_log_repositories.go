@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
@@ -63,7 +64,7 @@ loop:
 			}
 			for _, kyou := range matchKyousInRep {
 				if existKyou, exist := matchKyous[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						matchKyous[kyou.ID] = kyou
 					}
 				} else {
@@ -89,7 +90,7 @@ loop:
 	return matchKyousList, nil
 }
 
-func (u URLogRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (u URLogRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -106,7 +107,7 @@ func (u URLogRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error
 
 		go func(rep URLogRepository) {
 			defer wg.Done()
-			matchKyouInRep, err := rep.GetKyou(ctx, id)
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -205,7 +206,7 @@ loop:
 			}
 			for _, kyou := range matchKyousInRep {
 				if existKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
@@ -372,7 +373,7 @@ loop:
 			}
 			for _, kyou := range matchURLogsInRep {
 				if existURLog, exist := matchURLogs[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existURLog.UpdateTime) {
+					if kyou.UpdateTime.After(existURLog.UpdateTime) {
 						matchURLogs[kyou.ID] = kyou
 					}
 				} else {
@@ -398,7 +399,7 @@ loop:
 	return matchURLogsList, nil
 }
 
-func (u URLogRepositories) GetURLog(ctx context.Context, id string) (*URLog, error) {
+func (u URLogRepositories) GetURLog(ctx context.Context, id string, updateTime *time.Time) (*URLog, error) {
 	matchURLog := &URLog{}
 	matchURLog = nil
 	existErr := false
@@ -415,7 +416,7 @@ func (u URLogRepositories) GetURLog(ctx context.Context, id string) (*URLog, err
 
 		go func(rep URLogRepository) {
 			defer wg.Done()
-			matchURLogInRep, err := rep.GetURLog(ctx, id)
+			matchURLogInRep, err := rep.GetURLog(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -514,7 +515,7 @@ loop:
 			}
 			for _, kyou := range matchURLogsInRep {
 				if existURLog, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existURLog.UpdateTime) {
+					if kyou.UpdateTime.After(existURLog.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
