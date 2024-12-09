@@ -11,9 +11,10 @@ import { type Ref, ref, watch } from 'vue'
 import type { ConfirmDeleteKyouDialogProps } from './confirm-delete-kyou-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import ConfirmDeleteKyouView from '../views/confirm-delete-kyou-view.vue'
+import type { ConfirmDeleteKyouDialogEmits } from './confirm-delete-kyou-dialog-emits';
 
 const props = defineProps<ConfirmDeleteKyouDialogProps>()
-const emits = defineEmits<KyouDialogEmits>()
+const emits = defineEmits<ConfirmDeleteKyouDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

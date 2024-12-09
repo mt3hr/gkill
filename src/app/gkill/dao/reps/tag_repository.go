@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 )
@@ -11,7 +12,7 @@ type TagRepository interface {
 
 	Close(ctx context.Context) error
 
-	GetTag(ctx context.Context, id string) (*Tag, error)
+	GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error)
 
 	GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error)
 

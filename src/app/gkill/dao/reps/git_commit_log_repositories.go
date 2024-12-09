@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
@@ -63,7 +64,7 @@ loop:
 			}
 			for _, kyou := range matchKyousInRep {
 				if existKyou, exist := matchKyous[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						matchKyous[kyou.ID] = kyou
 					}
 				} else {
@@ -89,7 +90,7 @@ loop:
 	return matchKyousList, nil
 }
 
-func (g GitCommitLogRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (g GitCommitLogRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -106,7 +107,7 @@ func (g GitCommitLogRepositories) GetKyou(ctx context.Context, id string) (*Kyou
 
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
-			matchKyouInRep, err := rep.GetKyou(ctx, id)
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -205,7 +206,7 @@ loop:
 			}
 			for _, kyou := range matchKyousInRep {
 				if existKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
@@ -372,7 +373,7 @@ loop:
 			}
 			for _, kyou := range matchGitCommitLogsInRep {
 				if existGitCommitLog, exist := matchGitCommitLogs[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existGitCommitLog.UpdateTime) {
+					if kyou.UpdateTime.After(existGitCommitLog.UpdateTime) {
 						matchGitCommitLogs[kyou.ID] = kyou
 					}
 				} else {
@@ -398,7 +399,7 @@ loop:
 	return matchGitCommitLogsList, nil
 }
 
-func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string) (*GitCommitLog, error) {
+func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
 	matchGitCommitLog := &GitCommitLog{}
 	matchGitCommitLog = nil
 	existErr := false
@@ -415,7 +416,7 @@ func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string
 
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
-			matchGitCommitLogInRep, err := rep.GetGitCommitLog(ctx, id)
+			matchGitCommitLogInRep, err := rep.GetGitCommitLog(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return

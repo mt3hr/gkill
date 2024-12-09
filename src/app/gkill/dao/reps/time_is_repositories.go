@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
@@ -63,7 +64,7 @@ loop:
 			}
 			for _, kyou := range matchKyousInRep {
 				if existKyou, exist := matchKyous[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						matchKyous[kyou.ID] = kyou
 					}
 				} else {
@@ -89,7 +90,7 @@ loop:
 	return matchKyousList, nil
 }
 
-func (t TimeIsRepositories) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (t TimeIsRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	matchKyou := &Kyou{}
 	matchKyou = nil
 	existErr := false
@@ -106,7 +107,7 @@ func (t TimeIsRepositories) GetKyou(ctx context.Context, id string) (*Kyou, erro
 
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
-			matchKyouInRep, err := rep.GetKyou(ctx, id)
+			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -205,7 +206,7 @@ loop:
 			}
 			for _, kyou := range matchKyousInRep {
 				if existKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
@@ -372,7 +373,7 @@ loop:
 			}
 			for _, kyou := range matchTimeIssInRep {
 				if existTimeIs, exist := matchTimeIss[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existTimeIs.UpdateTime) {
+					if kyou.UpdateTime.After(existTimeIs.UpdateTime) {
 						matchTimeIss[kyou.ID] = kyou
 					}
 				} else {
@@ -398,7 +399,7 @@ loop:
 	return matchTimeIssList, nil
 }
 
-func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string) (*TimeIs, error) {
+func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error) {
 	matchTimeIs := &TimeIs{}
 	matchTimeIs = nil
 	existErr := false
@@ -415,7 +416,7 @@ func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string) (*TimeIs, 
 
 		go func(rep TimeIsRepository) {
 			defer wg.Done()
-			matchTimeIsInRep, err := rep.GetTimeIs(ctx, id)
+			matchTimeIsInRep, err := rep.GetTimeIs(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -514,7 +515,7 @@ loop:
 			}
 			for _, kyou := range matchTimeIssInRep {
 				if existTimeIs, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if kyou.UpdateTime.Before(existTimeIs.UpdateTime) {
+					if kyou.UpdateTime.After(existTimeIs.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
 					}
 				} else {
