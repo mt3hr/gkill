@@ -359,6 +359,7 @@ export class ApplicationConfig {
             let item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new TagStructElementData()
+                struct_element.seq_in_parent = item.seq.valueOf()
                 struct_element.check_when_inited = item.check_when_inited
                 struct_element.id = item.id
                 struct_element.indeterminate = false
@@ -401,6 +402,7 @@ export class ApplicationConfig {
                 const parent_struct = walk(struct, item.parent_folder_id)
                 if (parent_struct) {
                     const struct_element = new TagStructElementData()
+                    struct_element.seq_in_parent = item.seq.valueOf()
                     struct_element.check_when_inited = item.check_when_inited
                     struct_element.id = item.id
                     struct_element.indeterminate = false
@@ -419,6 +421,16 @@ export class ApplicationConfig {
                 }
             }
         }
+        let sort = (struct: TagStructElementData): void => { }
+        sort = (struct: TagStructElementData): void => {
+            if (struct.children) {
+                struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
+                for (let i = 0; i < struct.children.length; i++) {
+                    sort(struct.children[i])
+                }
+            }
+        }
+        sort(struct)
         this.parsed_tag_struct = struct
         return new Array<GkillError>()
     }
@@ -433,11 +445,12 @@ export class ApplicationConfig {
             let item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new RepStructElementData()
+                struct_element.seq_in_parent = item.seq.valueOf()
                 struct_element.check_when_inited = item.check_when_inited
                 struct_element.id = item.id
                 struct_element.indeterminate = false
                 struct_element.is_checked = item.check_when_inited
-                struct_element.ignore_check_rep_rykv = struct_element.ignore_check_rep_rykv
+                struct_element.ignore_check_rep_rykv = item.ignore_check_rep_rykv
                 struct_element.key = item.rep_name
                 struct_element.rep_name = item.rep_name
 
@@ -475,11 +488,12 @@ export class ApplicationConfig {
                 const parent_struct = walk(struct, item.parent_folder_id)
                 if (parent_struct) {
                     const struct_element = new RepStructElementData()
+                    struct_element.seq_in_parent = item.seq.valueOf()
                     struct_element.check_when_inited = item.check_when_inited
                     struct_element.id = item.id
                     struct_element.indeterminate = false
                     struct_element.is_checked = item.check_when_inited
-                    struct_element.ignore_check_rep_rykv = struct_element.ignore_check_rep_rykv
+                    struct_element.ignore_check_rep_rykv = item.ignore_check_rep_rykv
                     struct_element.key = item.rep_name
                     struct_element.rep_name = item.rep_name
 
@@ -493,6 +507,16 @@ export class ApplicationConfig {
                 }
             }
         }
+        let sort = (struct: RepStructElementData): void => { }
+        sort = (struct: RepStructElementData): void => {
+            if (struct.children) {
+                struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
+                for (let i = 0; i < struct.children.length; i++) {
+                    sort(struct.children[i])
+                }
+            }
+        }
+        sort(struct)
         this.parsed_rep_struct = struct
         return new Array<GkillError>()
     }
@@ -507,6 +531,7 @@ export class ApplicationConfig {
             let item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new DeviceStructElementData()
+                struct_element.seq_in_parent = item.seq.valueOf()
                 struct_element.check_when_inited = item.check_when_inited
                 struct_element.id = item.id
                 struct_element.indeterminate = false
@@ -548,6 +573,7 @@ export class ApplicationConfig {
                 const parent_struct = walk(struct, item.parent_folder_id)
                 if (parent_struct) {
                     const struct_element = new DeviceStructElementData()
+                    struct_element.seq_in_parent = item.seq.valueOf()
                     struct_element.check_when_inited = item.check_when_inited
                     struct_element.id = item.id
                     struct_element.indeterminate = false
@@ -565,6 +591,16 @@ export class ApplicationConfig {
                 }
             }
         }
+        let sort = (struct: DeviceStructElementData): void => { }
+        sort = (struct: DeviceStructElementData): void => {
+            if (struct.children) {
+                struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
+                for (let i = 0; i < struct.children.length; i++) {
+                    sort(struct.children[i])
+                }
+            }
+        }
+        sort(struct)
         this.parsed_device_struct = struct
         return new Array<GkillError>()
     }
@@ -579,6 +615,7 @@ export class ApplicationConfig {
             let item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new RepTypeStructElementData()
+                    struct_element.seq_in_parent = item.seq.valueOf()
                 struct_element.check_when_inited = item.check_when_inited
                 struct_element.id = item.id
                 struct_element.indeterminate = false
@@ -620,6 +657,7 @@ export class ApplicationConfig {
                 const parent_struct = walk(struct, item.parent_folder_id)
                 if (parent_struct) {
                     const struct_element = new RepTypeStructElementData()
+                    struct_element.seq_in_parent = item.seq.valueOf()
                     struct_element.check_when_inited = item.check_when_inited
                     struct_element.id = item.id
                     struct_element.indeterminate = false
@@ -637,6 +675,16 @@ export class ApplicationConfig {
                 }
             }
         }
+        let sort = (struct: RepTypeStructElementData): void => { }
+        sort = (struct: RepTypeStructElementData): void => {
+            if (struct.children) {
+                struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
+                for (let i = 0; i < struct.children.length; i++) {
+                    sort(struct.children[i])
+                }
+            }
+        }
+        sort(struct)
         this.parsed_rep_type_struct = struct
         return new Array<GkillError>()
 
