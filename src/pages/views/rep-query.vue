@@ -53,7 +53,7 @@
 </template>
 <script setup lang="ts">
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { nextTick, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import FoldableStruct from './foldable-struct.vue'
 import type { RepQueryEmits } from './rep-query-emits'
 import type { RepQueryProps } from './rep-query-props'
@@ -61,6 +61,7 @@ import type { ApplicationConfig } from '@/classes/datas/config/application-confi
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
+import type { RepStruct } from '@/classes/datas/config/rep-struct'
 
 const foldable_struct_reps = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const foldable_struct_devices = ref<InstanceType<typeof FoldableStruct> | null>(null)
@@ -101,18 +102,27 @@ watch(() => props.application_config, async () => {
     if (errors !== null && errors.length !== 0) {
         emits('received_errors', errors)
     }
-    const devices = get_checked_devices()
-    const rep_types = get_checked_rep_types()
-    const reps = get_checked_reps()
-    if (devices) {
-        await update_check_devices(devices, CheckState.checked, true)
-    }
-    if (rep_types) {
-        await update_check_rep_types(rep_types, CheckState.checked, true)
-    }
-    if (reps) {
-        await update_check_reps(reps, CheckState.checked, true)
-    }
+    const reps = new Array<string>()
+    const devices = new Array<string>()
+    const rep_types = new Array<string>()
+    cloned_application_config.value.rep_struct.forEach(rep => {
+        if (rep.check_when_inited) {
+            reps.push(rep.rep_name)
+        }
+    })
+    cloned_application_config.value.device_struct.forEach(device => {
+        if (device.check_when_inited) {
+            devices.push(device.device_name)
+        }
+    })
+    cloned_application_config.value.rep_type_struct.forEach(rep_type => {
+        if (rep_type.check_when_inited) {
+            rep_types.push(rep_type.rep_type_name)
+        }
+    })
+    await update_check_reps(reps, CheckState.checked, true)
+    await update_check_devices(devices, CheckState.checked, true)
+    await update_check_reps(rep_types, CheckState.checked, true)
 })
 
 watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
@@ -145,29 +155,46 @@ function calc_reps_by_types_and_devices(): Array<string> | null {
     }
 
     const check_target_rep_names = new Array<string>()
-    reps.forEach(rep => {
+    let walk_rep = (rep: RepStructElementData): void => { }
+    walk_rep = (rep: RepStructElementData): void => {
         rep.is_checked = false
         const rep_struct = rep_to_struct(rep)
 
         let type_is_match = false
         let device_is_match = false
-        rep_types.forEach(rep_type => {
-            rep_type.indeterminate = false
-            if (rep_type.is_checked && rep_type.key === rep_struct.type) {
+        let walk = (struct: FoldableStructModel): void => { }
+
+        walk = (struct: FoldableStructModel): void => {
+            struct.indeterminate = false
+            if (struct.is_checked && struct.key == rep_struct.type) {
                 type_is_match = true
             }
-        })
-        devices.forEach(device => {
-            device.indeterminate = false
-            if (device.is_checked && device.key === rep_struct.device) {
+            if (struct.children) {
+                struct.children.forEach(child => walk(child))
+            }
+        }
+        rep_types.forEach(rep_type => walk(rep_type))
+
+        walk = (struct: FoldableStructModel): void => {
+            struct.indeterminate = false
+            if (struct.is_checked && struct.key == rep_struct.device) {
                 device_is_match = true
             }
-        })
+            if (struct.children) {
+                struct.children.forEach(child => walk(child))
+            }
+        }
+        devices.forEach(device => walk(device))
 
-        if (type_is_match && device_is_match) {
+        if (type_is_match && device_is_match && !rep.ignore_check_rep_rykv) {
             check_target_rep_names.push(rep.rep_name)
         }
-    })
+
+        if (rep.children) {
+            rep.children.forEach(child_rep => walk_rep(child_rep))
+        }
+    }
+    reps.forEach(child_rep => walk_rep(child_rep))
     return check_target_rep_names
 }
 // 引数のrep.nameから{type: "", device: "", time: ""}なオブジェクトを作ります。
@@ -219,9 +246,7 @@ async function update_check_reps(items: Array<string>, is_checked: CheckState, p
             struct.is_checked = false
             struct.indeterminate = false
             if (struct.children) {
-                struct.children.forEach(child => {
-                    f(child)
-                })
+                struct.children.forEach(child => f(child))
             }
         }
         f = func
@@ -230,8 +255,8 @@ async function update_check_reps(items: Array<string>, is_checked: CheckState, p
 
     for (let i = 0; i < items.length; i++) {
         const key_name = items[i]
-        let f = (struct: FoldableStructModel) => { }
-        let func = (struct: FoldableStructModel) => {
+        let f = (struct: RepStructElementData) => { }
+        let func = (struct: RepStructElementData) => {
             if (struct.key === key_name) {
                 switch (is_checked) {
                     case CheckState.checked:
@@ -249,9 +274,7 @@ async function update_check_reps(items: Array<string>, is_checked: CheckState, p
                 }
             }
             if (struct.children) {
-                struct.children.forEach(child => {
-                    f(child)
-                })
+                struct.children.forEach(child => f(child))
             }
         }
         f = func
@@ -270,9 +293,7 @@ async function update_check_devices(items: Array<string>, is_checked: CheckState
             struct.is_checked = false
             struct.indeterminate = false
             if (struct.children) {
-                struct.children.forEach(child => {
-                    f(child)
-                })
+                struct.children.forEach(child => f(child))
             }
         }
         f = func
@@ -300,9 +321,7 @@ async function update_check_devices(items: Array<string>, is_checked: CheckState
                 }
             }
             if (struct.children) {
-                struct.children.forEach(child => {
-                    f(child)
-                })
+                struct.children.forEach(child => f(child))
             }
         }
         f = func
@@ -328,9 +347,7 @@ async function update_check_rep_types(items: Array<string>, is_checked: CheckSta
             struct.is_checked = false
             struct.indeterminate = false
             if (struct.children) {
-                struct.children.forEach(child => {
-                    f(child)
-                })
+                struct.children.forEach(child => f(child))
             }
         }
         f = func
@@ -358,9 +375,7 @@ async function update_check_rep_types(items: Array<string>, is_checked: CheckSta
                 }
             }
             if (struct.children) {
-                struct.children.forEach(child => {
-                    f(child)
-                })
+                struct.children.forEach(child => f(child))
             }
         }
         f = func

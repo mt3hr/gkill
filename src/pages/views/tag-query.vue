@@ -51,7 +51,13 @@ watch(() => props.application_config, async () => {
         emits('received_errors', errors)
         return
     }
-    await update_check_state(cloned_query.value.tags, CheckState.checked)
+    const tags = Array<string>()
+    cloned_application_config.value.tag_struct.forEach(tag => {
+        if (tag.check_when_inited) {
+            tags.push(tag.tag_name)
+        }
+    })
+    await update_check_state(tags, CheckState.checked)
     const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {
         emits('request_update_checked_tags', checked_items, false)
