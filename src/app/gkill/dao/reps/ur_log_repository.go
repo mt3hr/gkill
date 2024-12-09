@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 )
@@ -9,7 +10,7 @@ import (
 type URLogRepository interface {
 	FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error)
 
-	GetKyou(ctx context.Context, id string) (*Kyou, error)
+	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 
 	GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error)
 
@@ -23,7 +24,7 @@ type URLogRepository interface {
 
 	FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error)
 
-	GetURLog(ctx context.Context, id string) (*URLog, error)
+	GetURLog(ctx context.Context, id string, updateTime *time.Time) (*URLog, error)
 
 	GetURLogHistories(ctx context.Context, id string) ([]*URLog, error)
 

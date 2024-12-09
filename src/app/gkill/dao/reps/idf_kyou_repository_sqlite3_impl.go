@@ -161,7 +161,8 @@ WHERE
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +358,7 @@ WHERE
 	return kyous, nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (i *idfKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := i.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -367,6 +368,16 @@ func (i *idfKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (
 
 	// なければnilを返す
 	if len(kyouHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range kyouHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 
@@ -417,7 +428,8 @@ WHERE ID = ?
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	appendGroupBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 
 	sql += commonWhereSQL
 
@@ -738,7 +750,8 @@ WHERE
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 
 	if err != nil {
 		return nil, err
@@ -919,7 +932,7 @@ WHERE
 	return idfKyous, nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) GetIDFKyou(ctx context.Context, id string) (*IDFKyou, error) {
+func (i *idfKyouRepositorySQLite3Impl) GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error) {
 	// 最新のデータを返す
 	idfHistories, err := i.GetIDFKyouHistories(ctx, id)
 	if err != nil {
@@ -929,6 +942,16 @@ func (i *idfKyouRepositorySQLite3Impl) GetIDFKyou(ctx context.Context, id string
 
 	// なければnilを返す
 	if len(idfHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range idfHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 
@@ -955,17 +978,15 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM IDF
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE 
 `
 
-	log.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at get idf histories sql: %w", err)
-		return nil, err
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
 	}
-	defer stmt.Close()
 
 	repName, err := i.GetRepName(ctx)
 	if err != nil {
@@ -979,6 +1000,29 @@ ORDER BY UPDATE_TIME DESC
 		dataType,
 		id,
 	}
+
+	whereCounter := 0
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"CONTENT"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	appendGroupBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
+	log.Printf("sql: %s", sql)
+	stmt, err := i.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get idf histories sql: %w", err)
+		return nil, err
+	}
+	defer stmt.Close()
+
 	log.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {

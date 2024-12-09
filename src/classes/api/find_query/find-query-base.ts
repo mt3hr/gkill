@@ -26,6 +26,8 @@ export abstract class FindQueryBase {
     calendar_end_date: Date | null
     use_plaing: boolean
     plaing_time: Date | null
+    use_update_time: boolean
+    update_time: Date | null
 
     async set_other_value(key: string, value: Object): Promise<void> {
         (this as any)[key] = value
@@ -59,6 +61,8 @@ export abstract class FindQueryBase {
         this.calendar_end_date = null
         this.use_plaing = false
         this.plaing_time = null
+        this.use_update_time = false
+        this.update_time = null
     }
 
     parse_words_and_not_words() {

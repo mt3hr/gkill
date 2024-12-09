@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
@@ -63,7 +64,7 @@ loop:
 			}
 			for _, tag := range matchTagsInRep {
 				if existTag, exist := matchTags[tag.ID]; exist {
-					if tag.UpdateTime.Before(existTag.UpdateTime) {
+					if tag.UpdateTime.After(existTag.UpdateTime) {
 						matchTags[tag.ID] = tag
 					}
 				} else {
@@ -129,7 +130,7 @@ errloop:
 	return nil
 }
 
-func (t TagRepositories) GetTag(ctx context.Context, id string) (*Tag, error) {
+func (t TagRepositories) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
 	matchTag := &Tag{}
 	matchTag = nil
 	existErr := false
@@ -146,7 +147,7 @@ func (t TagRepositories) GetTag(ctx context.Context, id string) (*Tag, error) {
 
 		go func(rep TagRepository) {
 			defer wg.Done()
-			matchTagInRep, err := rep.GetTag(ctx, id)
+			matchTagInRep, err := rep.GetTag(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -245,7 +246,7 @@ loop:
 			}
 			for _, tag := range matchTagsInRep {
 				if existTag, exist := matchTags[tag.ID]; exist {
-					if tag.UpdateTime.Before(existTag.UpdateTime) {
+					if tag.UpdateTime.After(existTag.UpdateTime) {
 						matchTags[tag.ID] = tag
 					}
 				} else {
@@ -323,7 +324,7 @@ loop:
 			}
 			for _, tag := range matchTagsInRep {
 				if existTag, exist := matchTags[tag.ID]; exist {
-					if tag.UpdateTime.Before(existTag.UpdateTime) {
+					if tag.UpdateTime.After(existTag.UpdateTime) {
 						matchTags[tag.ID] = tag
 					}
 				} else {
@@ -450,7 +451,7 @@ loop:
 			}
 			for _, tag := range matchTagsInRep {
 				if existTag, exist := tagHistories[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if tag.UpdateTime.Before(existTag.UpdateTime) {
+					if tag.UpdateTime.After(existTag.UpdateTime) {
 						tagHistories[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)] = tag
 					}
 				} else {

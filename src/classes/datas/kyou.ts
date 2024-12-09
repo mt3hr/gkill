@@ -155,7 +155,13 @@ export class Kyou extends InfoBase {
             res.kmemo_histories[i] = kmemo
         }
 
-        this.typed_kmemo = res.kmemo_histories[0]
+        let match_kmemo: Kmemo | null = null
+        res.kmemo_histories.forEach(kmemo => {
+            if (moment(kmemo.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+                match_kmemo = kmemo
+            }
+        })
+        this.typed_kmemo = match_kmemo
 
         return new Array<GkillError>()
     }
@@ -190,7 +196,13 @@ export class Kyou extends InfoBase {
             res.urlog_histories[i] = urlog
         }
 
-        this.typed_urlog = res.urlog_histories[0]
+        let match_urlog: URLog | null = null
+        res.urlog_histories.forEach(urlog => {
+            if (moment(urlog.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+                match_urlog = urlog
+            }
+        })
+        this.typed_urlog = match_urlog
 
         return new Array<GkillError>()
     }
@@ -225,8 +237,13 @@ export class Kyou extends InfoBase {
             res.nlog_histories[i] = nlog
         }
 
-
-        this.typed_nlog = res.nlog_histories[0]
+        let match_nlog: Nlog | null = null
+        res.nlog_histories.forEach(nlog => {
+            if (moment(nlog.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+                match_nlog = nlog
+            }
+        })
+        this.typed_nlog = match_nlog
 
         return new Array<GkillError>()
     }
@@ -261,8 +278,13 @@ export class Kyou extends InfoBase {
             res.timeis_histories[i] = timeis
         }
 
-
-        this.typed_timeis = res.timeis_histories[0]
+        let match_timeis: TimeIs | null = null
+        res.timeis_histories.forEach(timeis => {
+            if (moment(timeis.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+                match_timeis = timeis
+            }
+        })
+        this.typed_timeis= match_timeis
 
         return new Array<GkillError>()
     }
@@ -297,8 +319,13 @@ export class Kyou extends InfoBase {
             res.mi_histories[i] = mi
         }
 
-
-        this.typed_mi = res.mi_histories[0]
+        let match_mi: Mi | null = null
+        res.mi_histories.forEach(mi => {
+            if (moment(mi.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+                match_mi = mi
+            }
+        })
+        this.typed_mi = match_mi
 
         return new Array<GkillError>()
     }
@@ -333,8 +360,13 @@ export class Kyou extends InfoBase {
             res.lantana_histories[i] = lantana
         }
 
-
-        this.typed_lantana = res.lantana_histories[0]
+        let match_lantana: Lantana | null = null
+        res.lantana_histories.forEach(lantana => {
+            if (moment(lantana.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+                match_lantana = lantana
+            }
+        })
+        this.typed_lantana= match_lantana
 
         return new Array<GkillError>()
     }
@@ -373,8 +405,13 @@ export class Kyou extends InfoBase {
             res.git_commit_logs[i] = git_commit_log
         }
 
-
-        this.typed_git_commit_log = res.git_commit_logs[0]
+        let match_git_commit_log: GitCommitLog| null = null
+        res.git_commit_logs.forEach(git_commit_log => {
+            if (moment(git_commit_log.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+                match_git_commit_log = git_commit_log
+            }
+        })
+        this.typed_git_commit_log= match_git_commit_log
 
         return new Array<GkillError>()
     }
@@ -409,7 +446,13 @@ export class Kyou extends InfoBase {
             res.rekyou_histories[i] = rekyou
         }
 
-        this.typed_rekyou = res.rekyou_histories[0]
+        let match_rekyou: ReKyou| null = null
+        res.rekyou_histories.forEach(rekyou => {
+            if (moment(rekyou.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+                match_rekyou = rekyou
+            }
+        })
+        this.typed_rekyou = match_rekyou
 
         return new Array<GkillError>()
     }

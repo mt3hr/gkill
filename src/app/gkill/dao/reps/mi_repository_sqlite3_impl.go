@@ -224,7 +224,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgsForCreate)
+	appendGroupBy := true
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +240,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
-	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgsForCheck)
+	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +255,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
-	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgsForLimit)
+	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +270,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
-	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgsForStart)
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +285,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
-	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgsForEnd)
+	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +367,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	return kyous, nil
 }
 
-func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := m.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -376,6 +377,16 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou
 
 	// なければnilを返す
 	if len(kyouHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range kyouHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 
@@ -389,7 +400,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		return nil, err
 	}
 
-	// startのみ
+	// createのみ
 	sql := `
 SELECT 
   IS_DELETED,
@@ -406,9 +417,33 @@ SELECT
   ? AS REP_NAME,
   'mi_create' AS DATA_TYPE
 FROM MI 
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE 
 `
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+
+	queryArgsForCreate := []interface{}{
+		repName,
+	}
+	whereCounter := 0
+	onlyLatestData := true
+	relatedTimeColumnName := "CREATE_TIME"
+	findWordTargetColumns := []string{"TITLE"}
+	ignoreFindWord := false
+	appendOrderBy := false
+	appendGroupBy := true
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForCreate)
+	if err != nil {
+		return nil, err
+	}
+	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
+
+	sql += sqlWhereForCreate
+
 	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -417,12 +452,8 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	queryArgs := []interface{}{
-		repName,
-		id,
-	}
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
-	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	log.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
+	rows, err := stmt.QueryContext(ctx, queryArgsForCreate...)
 
 	if err != nil {
 		err = fmt.Errorf("error at select from MI %s: %w", id, err)
@@ -543,6 +574,7 @@ SELECT
   ? AS REP_NAME,
   'mi_create' AS DATA_TYPE
 FROM MI 
+WHERE 
 `
 	sqlWhereFilterCreateMi := "DATA_TYPE IN ('mi_create')"
 
@@ -551,18 +583,19 @@ FROM MI
 	}
 
 	whereCounter := 0
-	onlyLatestData := false
+	onlyLatestData := true
 	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgsForCreate)
+	appendGroupBy := true
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
 	}
 	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
 
-	sql := fmt.Sprintf("SELECT * FROM (SELECT * FROM (%s) WHERE %s) WHERE %s", sqlCreateMi, sqlWhereForCreate, sqlWhereFilterCreateMi)
+	sql := fmt.Sprintf("%s AND %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlWhereFilterCreateMi)
 
 	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
@@ -572,11 +605,8 @@ FROM MI
 	}
 	defer stmt.Close()
 
-	queryArgs := []interface{}{
-		repName,
-	}
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
-	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	log.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
+	rows, err := stmt.QueryContext(ctx, queryArgsForCreate...)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI %s: %w", err)
 		return nil, err
@@ -651,7 +681,7 @@ FROM MI
 	return mis, nil
 }
 
-func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string) (*Mi, error) {
+func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTime *time.Time) (*Mi, error) {
 	// 最新のデータを返す
 	miHistories, err := m.GetMiHistories(ctx, id)
 	if err != nil {
@@ -661,6 +691,16 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string) (*Mi, er
 
 	// なければnilを返す
 	if len(miHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range miHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 
@@ -691,9 +731,39 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME
 FROM MI
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE
 `
+	repName, err := m.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at MI: %w", err)
+		return nil, err
+	}
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+
+	queryArgsForCreate := []interface{}{
+		repName,
+	}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "CREATE_TIME"
+	findWordTargetColumns := []string{"TITLE"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	appendGroupBy := false
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForCreate)
+	if err != nil {
+		return nil, err
+	}
+	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
+
+	sql += sqlWhereForCreate
 
 	log.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
@@ -703,18 +773,8 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	repName, err := m.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at MI: %w", err)
-		return nil, err
-	}
-
-	queryArgs := []interface{}{
-		repName,
-		id,
-	}
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
-	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	log.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
+	rows, err := stmt.QueryContext(ctx, queryArgsForCreate...)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI %s: %w", err)
 		return nil, err

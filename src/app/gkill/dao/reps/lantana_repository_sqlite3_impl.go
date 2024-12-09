@@ -113,7 +113,8 @@ WHERE
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +182,7 @@ WHERE
 	return kyous, nil
 }
 
-func (l *lantanaRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (l *lantanaRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := l.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -191,6 +192,16 @@ func (l *lantanaRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (
 
 	// なければnilを返す
 	if len(kyouHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range kyouHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 
@@ -220,9 +231,37 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM  LANTANA
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE 
 `
+
+	dataType := "lantana"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	appendGroupBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
 	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -231,13 +270,6 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	dataType := "lantana"
-
-	queryArgs := []interface{}{
-		repName,
-		dataType,
-		id,
-	}
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
@@ -348,25 +380,31 @@ SELECT
 FROM LANTANA
 WHERE
 `
+
 	repName, err := l.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at lantana: %w", err)
 		return nil, err
 	}
+
+	dataType := "lantana"
+
 	queryArgs := []interface{}{
-		repName,
+		dataType,
 	}
 
 	whereCounter := 0
-	onlyLatestData := false
+	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
+
 	sql += commonWhereSQL
 
 	log.Printf("sql: %s", sql)
@@ -432,7 +470,7 @@ WHERE
 	return lantanas, nil
 }
 
-func (l *lantanaRepositorySQLite3Impl) GetLantana(ctx context.Context, id string) (*Lantana, error) {
+func (l *lantanaRepositorySQLite3Impl) GetLantana(ctx context.Context, id string, updateTime *time.Time) (*Lantana, error) {
 	// 最新のデータを返す
 	lantanaHistories, err := l.GetLantanaHistories(ctx, id)
 	if err != nil {
@@ -445,16 +483,20 @@ func (l *lantanaRepositorySQLite3Impl) GetLantana(ctx context.Context, id string
 		return nil, nil
 	}
 
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range lantanaHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
+		return nil, nil
+	}
+
 	return lantanaHistories[0], nil
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
-	repName, err := l.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at lantana: %w", err)
-		return nil, err
-	}
-
 	sql := `
 SELECT 
   IS_DELETED,
@@ -471,9 +513,40 @@ SELECT
   MOOD,
   ? AS REP_NAME
 FROM LANTANA
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE
 `
+
+	repName, err := l.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at lantana: %w", err)
+		return nil, err
+	}
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+
+	queryArgs := []interface{}{
+		repName,
+	}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	appendGroupBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
 	log.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -482,10 +555,6 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	queryArgs := []interface{}{
-		repName,
-		id,
-	}
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 

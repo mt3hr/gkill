@@ -116,7 +116,8 @@ WHERE
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 
 	if err != nil {
 		return nil, err
@@ -185,7 +186,7 @@ WHERE
 	return kyous, nil
 }
 
-func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Kyou, error) {
+func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := n.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -195,6 +196,16 @@ func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string) (*Ky
 
 	// なければnilを返す
 	if len(kyouHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range kyouHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 
@@ -224,9 +235,36 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM NLOG
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE 
 `
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+
+	dataType := "nlog"
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"TITLE", "SHOP"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	appendGroupBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+
+	if err != nil {
+		return nil, err
+	}
+	sql += commonWhereSQL
+
 	log.Printf("sql: %s", sql)
 	stmt, err := n.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -235,13 +273,6 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	dataType := "nlog"
-
-	queryArgs := []interface{}{
-		repName,
-		dataType,
-		id,
-	}
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
@@ -370,7 +401,8 @@ WHERE
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +472,7 @@ WHERE
 	return nlogs, nil
 }
 
-func (n *nlogRepositorySQLite3Impl) GetNlog(ctx context.Context, id string) (*Nlog, error) {
+func (n *nlogRepositorySQLite3Impl) GetNlog(ctx context.Context, id string, updateTime *time.Time) (*Nlog, error) {
 	// 最新のデータを返す
 	nlogHistories, err := n.GetNlogHistories(ctx, id)
 	if err != nil {
@@ -450,6 +482,16 @@ func (n *nlogRepositorySQLite3Impl) GetNlog(ctx context.Context, id string) (*Nl
 
 	// なければnilを返す
 	if len(nlogHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range nlogHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 
@@ -481,9 +523,33 @@ SELECT
   AMOUNT,
   ? AS REP_NAME
 FROM NLOG 
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE 
 `
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+
+	queryArgs := []interface{}{
+		repName,
+	}
+
+	whereCounter := 0
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"TITLE", "SHOP"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+
+	if err != nil {
+		return nil, err
+	}
+	sql += commonWhereSQL
+
 	log.Printf("sql: %s", sql)
 	stmt, err := n.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -492,10 +558,6 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	queryArgs := []interface{}{
-		repName,
-		id,
-	}
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {

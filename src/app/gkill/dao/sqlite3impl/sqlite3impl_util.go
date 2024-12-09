@@ -15,7 +15,7 @@ func EscapeSQLite(str string) string {
 	return strings.ReplaceAll(str, "'", "''")
 }
 
-func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, ignoreFindWord bool, appendOrderBy bool, queryArgs *[]interface{}) (string, error) {
+func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, ignoreFindWord bool, appendGroupBy bool, appendOrderBy bool, queryArgs *[]interface{}) (string, error) {
 	sql := ""
 
 	// WHERE
@@ -61,7 +61,17 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 		calendarEndDate = query.CalendarEndDate
 	}
 
-	if useCalendar {
+	// UPDATE_TIMEか、Calendarの条件をSQLに追記
+	if query.UseUpdateTime != nil && *query.UseUpdateTime && query.UpdateTime != nil {
+		if query.UpdateTime != nil {
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += fmt.Sprintf("datetime(%s, 'localtime') = datetime(?, 'localtime')", "UPDATE_TIME")
+			*queryArgs = append(*queryArgs, ((*query.UpdateTime).Format(TimeLayout)))
+			*whereCounter++
+		}
+	} else if useCalendar {
 		// 開始日時を指定するSQLを追記
 		if calendarStartDate != nil {
 			if *whereCounter != 0 {
@@ -194,45 +204,47 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 	}
 
 	// GROUP BY
-	groupByCounter := 0
-	sql += " GROUP BY "
+	if appendGroupBy {
+		groupByCounter := 0
+		sql += " GROUP BY "
 
-	// IDでGROUP BYする。
-	if groupByCounter != 0 {
-		sql += ", "
-	}
-	sql += " ID "
-	groupByCounter++
-
-	// HAVING
-	havingCount := 0
-	sql += " HAVING "
-
-	// 最新のレコードのみ取得
-	if havingCount != 0 {
-		sql += " AND "
-	}
-	sql += " UPDATE_TIME = MAX(UPDATE_TIME) "
-	havingCount++
-
-	// 削除済みであるかどうかのSQL追記
-	// Repをまたぐことがあるのでここでは判定しない
-	// FindFilterで判定する
-	/*
-		isDeleted := false
-		if query.IsDeleted != nil {
-			isDeleted = *query.IsDeleted
+		// IDでGROUP BYする。
+		if groupByCounter != 0 {
+			sql += ", "
 		}
+		sql += " ID "
+		groupByCounter++
+
+		// HAVING
+		havingCount := 0
+		sql += " HAVING "
+
+		// 最新のレコードのみ取得
 		if havingCount != 0 {
-			sql += "AND "
+			sql += " AND "
 		}
-		sql += " IS_DELETED = ? "
-		if isDeleted {
-			*queryArgs = append(*queryArgs, true)
-		} else {
-			*queryArgs = append(*queryArgs, false)
-		}
-	*/
+		sql += " UPDATE_TIME = MAX(UPDATE_TIME) "
+		havingCount++
+
+		// 削除済みであるかどうかのSQL追記
+		// Repをまたぐことがあるのでここでは判定しない
+		// FindFilterで判定する
+		/*
+			isDeleted := false
+			if query.IsDeleted != nil {
+				isDeleted = *query.IsDeleted
+			}
+			if havingCount != 0 {
+				sql += "AND "
+			}
+			sql += " IS_DELETED = ? "
+			if isDeleted {
+				*queryArgs = append(*queryArgs, true)
+			} else {
+				*queryArgs = append(*queryArgs, false)
+			}
+		*/
+	}
 
 	// ORDER BY
 	if appendOrderBy {
