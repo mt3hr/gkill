@@ -103,7 +103,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
 		  ? AS REP_NAME,
-		  'mi_limit' AS DATA_TYPE
+		  'mi_create' AS DATA_TYPE
 		FROM MI
 		`
 
@@ -121,7 +121,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
 		  ? AS REP_NAME,
-		  'mi_limit' AS DATA_TYPE
+		  'mi_check' AS DATA_TYPE
 		FROM MI
 		`
 
@@ -182,36 +182,43 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	filterWhereCounter := 0
 	sqlWhereFilterEndMi := ""
 	sqlWhereFilterEndMi += "DATA_TYPE IN ("
+
+	if filterWhereCounter != 0 {
+		sqlWhereFilterEndMi += ", "
+	}
+	filterWhereCounter++
+	sqlWhereFilterEndMi += "'mi_create'"
+
 	if query.IncludeCheckMi != nil && *query.IncludeCheckMi {
-		if filterWhereCounter == 0 {
+		if filterWhereCounter != 0 {
 			sqlWhereFilterEndMi += ", "
 		}
 		filterWhereCounter++
 		sqlWhereFilterEndMi += "'mi_check'"
 	}
 	if query.IncludeLimitMi != nil && *query.IncludeLimitMi {
-		if filterWhereCounter == 0 {
+		if filterWhereCounter != 0 {
 			sqlWhereFilterEndMi += ", "
 		}
 		filterWhereCounter++
 		sqlWhereFilterEndMi += "'mi_limit'"
 	}
 	if query.IncludeStartMi != nil && *query.IncludeStartMi {
-		if filterWhereCounter == 0 {
+		if filterWhereCounter != 0 {
 			sqlWhereFilterEndMi += ", "
 		}
 		filterWhereCounter++
 		sqlWhereFilterEndMi += "'mi_start'"
 	}
 	if query.IncludeEndMi != nil && *query.IncludeEndMi {
-		if filterWhereCounter == 0 {
+		if filterWhereCounter != 0 {
 			sqlWhereFilterEndMi += ", "
 		}
 		filterWhereCounter++
 		sqlWhereFilterEndMi += "'mi_end'"
 	}
 	sqlWhereFilterEndMi += ")"
-	if filterWhereCounter == 0 {
+	if filterWhereCounter != 0 {
 		sqlWhereFilterEndMi = ""
 	}
 
