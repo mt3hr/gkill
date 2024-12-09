@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
+	"os"
 	"runtime"
 	"sort"
 	"sync"
@@ -242,7 +244,7 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	}
 	wg.Wait()
 	// エラー集約
-	for _ = range len(repositories.Reps) {
+	for range len(repositories.Reps) {
 		e := <-errch
 		if e != nil {
 			err = fmt.Errorf("error at update cache: %w: %w", e, err)
@@ -278,7 +280,7 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 	wg.Wait()
 
 	// エラー集約
-	for _ = range len(findCtx.MatchReps) {
+	for range len(findCtx.MatchReps) {
 		e := <-errch
 		if e != nil {
 			err = fmt.Errorf("error at update cache: %w: %w:", e, err)
@@ -288,6 +290,8 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 	if existErr {
 		return nil, err
 	}
+	falseValue := false
+	findCtx.ParsedFindQuery.UpdateCache = &falseValue
 	return nil, nil
 }
 
@@ -323,7 +327,7 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 	}
 	wg.Wait()
 	// エラー集約
-	for _ = range lenOfTagReps {
+	for range lenOfTagReps {
 		e := <-errch
 		if e != nil {
 			err = fmt.Errorf("error at get all tags: %w: %w:", e, err)
@@ -334,11 +338,11 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 		return nil, err
 	}
 	// Tag集約
-	for _ = range lenOfTagReps {
+	for range lenOfTagReps {
 		matchTags := <-tagsCh
 		for _, tag := range matchTags {
 			if existTag, exist := findCtx.AllTags[tag.ID]; exist {
-				if tag.UpdateTime.Before(existTag.UpdateTime) {
+				if tag.UpdateTime.After(existTag.UpdateTime) {
 					findCtx.AllTags[tag.ID] = tag
 				}
 			} else {
@@ -399,7 +403,7 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 	}
 	wg.Wait()
 	// エラー集約
-	for _ = range lenOfTagReps {
+	for range lenOfTagReps {
 		e := <-errch
 		if e != nil {
 			err = fmt.Errorf("error at find timeis tags: %w: %w:", e, err)
@@ -412,11 +416,11 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 	}
 
 	// TimeIsのTag集約
-	for _ = range lenOfTagReps {
+	for range lenOfTagReps {
 		matchTags := <-tagsCh
 		for _, tag := range matchTags {
 			if existTag, exist := findCtx.MatchTimeIsTags[tag.ID]; exist {
-				if tag.UpdateTime.Before(existTag.UpdateTime) {
+				if tag.UpdateTime.After(existTag.UpdateTime) {
 					findCtx.MatchTimeIsTags[tag.ID] = tag
 				}
 			} else {
@@ -432,7 +436,7 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 	var err error
 
 	lenOfTagReps := 0
-	for _ = range findCtx.Repositories.TagReps {
+	for range findCtx.Repositories.TagReps {
 		lenOfTagReps++
 	}
 
@@ -481,7 +485,7 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 	}
 	wg.Wait()
 	// エラー集約
-	for _ = range lenOfTagReps {
+	for range lenOfTagReps {
 		e := <-errch
 		if e != nil {
 			err = fmt.Errorf("error at find  tags: %w: %w:", e, err)
@@ -494,11 +498,11 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 	}
 
 	// Tag集約
-	for _ = range lenOfTagReps {
+	for range lenOfTagReps {
 		matchTags := <-tagsCh
 		for _, tag := range matchTags {
 			if existTag, exist := findCtx.MatchTags[tag.ID]; exist {
-				if tag.UpdateTime.Before(existTag.UpdateTime) {
+				if tag.UpdateTime.After(existTag.UpdateTime) {
 					findCtx.MatchTags[tag.ID] = tag
 				}
 			} else {
@@ -546,14 +550,6 @@ func (f *FindFilter) parseTimeIsTagFilterModeFromQuery(ctx context.Context, find
 
 func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	var err error
-	lenOfReps := len(findCtx.MatchReps)
-
-	existErr := false
-	wg := &sync.WaitGroup{}
-	kyousCh := make(chan []*reps.Kyou, lenOfReps)
-	errch := make(chan error, lenOfReps)
-	defer close(kyousCh)
-	defer close(errch)
 
 	// text検索用クエリ
 	targetIDs := []string{}
@@ -566,57 +562,30 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 		IDs:    &targetIDs,
 	}
 
-	// 並列処理
-	for _, rep := range findCtx.MatchReps {
-		wg.Add(1)
-		go func(rep reps.Repository) {
-			defer wg.Done()
-			// repで検索
-			kyous, err := rep.FindKyous(ctx, findCtx.ParsedFindQuery)
-			if err != nil {
-				errch <- err
-				return
-			}
-
-			// textでマッチしたものをID検索
-			textMatchKyous := []*reps.Kyou{}
-			if len(*matchTextFindByIDQuery.IDs) != 0 {
-				textMatchKyous, err = rep.FindKyous(ctx, matchTextFindByIDQuery)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}
-
-			kyousCh <- append(kyous, textMatchKyous...)
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-	// エラー集約
-	for _ = range lenOfReps {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at find kyous: %w: %w:", e, err)
-			existErr = true
-		}
-	}
-
-	if existErr {
+	// repで検索
+	kyous, err := findCtx.Repositories.FindKyous(ctx, findCtx.ParsedFindQuery)
+	if err != nil {
 		return nil, err
 	}
+	json.NewEncoder(os.Stdout).Encode(kyous)
+	// textでマッチしたものをID検索
+	textMatchKyous := []*reps.Kyou{}
+	if len(targetIDs) != 0 {
+		textMatchKyous, err = findCtx.Repositories.FindKyous(ctx, matchTextFindByIDQuery)
+		if err != nil {
+			return nil, err
+		}
+	}
+	kyous = append(kyous, textMatchKyous...)
 
-	// Kyou集約
-	for _ = range lenOfReps {
-		matchKyousInRep := <-kyousCh
-		for _, kyou := range matchKyousInRep {
-			if existKyou, exist := findCtx.MatchKyousAtFindKyou[kyou.ID]; exist {
-				if kyou.UpdateTime.Before(existKyou.UpdateTime) {
-					findCtx.MatchKyousAtFindKyou[kyou.ID] = kyou
-				}
-			} else {
+	for _, kyou := range kyous {
+		existKyou, exist := findCtx.MatchKyousAtFindKyou[kyou.ID]
+		if exist {
+			if kyou.UpdateTime.After(existKyou.UpdateTime) {
 				findCtx.MatchKyousAtFindKyou[kyou.ID] = kyou
 			}
+		} else {
+			findCtx.MatchKyousAtFindKyou[kyou.ID] = kyou
 		}
 	}
 
@@ -666,7 +635,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			}
 			if !relatedTagKyou {
 				if existKyou, exist := noTagKyous[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						noTagKyous[kyou.ID] = kyou
 					}
 				} else {
@@ -692,7 +661,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		// タグフィルタしたものをCtxに収める
 		for _, kyou := range matchOrTagKyous {
 			if existKyou, exist := findCtx.MatchKyousAtFilterTags[kyou.ID]; exist {
-				if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+				if kyou.UpdateTime.After(existKyou.UpdateTime) {
 					findCtx.MatchKyousAtFilterTags[kyou.ID] = kyou
 				}
 			} else {
@@ -702,7 +671,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		if existNoTags {
 			for _, kyou := range noTagKyous {
 				if existKyou, exist := findCtx.MatchKyousAtFilterTags[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						findCtx.MatchKyousAtFilterTags[kyou.ID] = kyou
 					}
 				} else {
@@ -720,7 +689,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			for _, tag := range findCtx.MatchTags {
 				if kyou.ID == tag.TargetID {
 					if existKyou, exist := tagNameMap[tag.Tag][kyou.ID]; exist {
-						if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+						if kyou.UpdateTime.After(existKyou.UpdateTime) {
 							tagNameMap[tag.Tag][kyou.ID] = kyou
 						}
 					} else {
@@ -755,7 +724,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 				}
 				if !relatedTagKyou {
 					if existKyou, exist := tagNameMap[NoTags][kyou.ID]; exist {
-						if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+						if kyou.UpdateTime.After(existKyou.UpdateTime) {
 							tagNameMap[NoTags][kyou.ID] = kyou
 						}
 					} else {
@@ -775,7 +744,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 				// 初回ループは全部いれる
 				for _, kyou := range kyouIDMap {
 					if existKyou, exist := hasAllMatchTagsKyousMap[kyou.ID]; exist {
-						if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+						if kyou.UpdateTime.After(existKyou.UpdateTime) {
 							hasAllMatchTagsKyousMap[kyou.ID] = kyou
 						}
 					} else {
@@ -790,7 +759,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 					// 今回のタグにマッチしたもの　をいれる。
 					if existKyou, exist := hasAllMatchTagsKyousMap[kyou.ID]; exist {
 						if _, exist := matchThisLoopKyousMap[kyou.ID]; exist {
-							if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+							if kyou.UpdateTime.After(existKyou.UpdateTime) {
 								matchThisLoopKyousMap[kyou.ID] = kyou
 							}
 						} else {
@@ -834,7 +803,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 			}
 			if !relatedTagTimeIs {
 				if existTimeIs, exist := noTagTimeIss[timeis.ID]; exist {
-					if timeis.UpdateTime.Before(existTimeIs.UpdateTime) {
+					if timeis.UpdateTime.After(existTimeIs.UpdateTime) {
 						noTagTimeIss[timeis.ID] = timeis
 					}
 				} else {
@@ -859,7 +828,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 		// タグフィルタしたものをCtxに収める
 		for _, timeis := range matchOrTagTimeIss {
 			if existTimeIs, exist := findCtx.MatchTimeIssAtFindTimeIs[timeis.ID]; exist {
-				if timeis.UpdateTime.Before(existTimeIs.UpdateTime) {
+				if timeis.UpdateTime.After(existTimeIs.UpdateTime) {
 					findCtx.MatchTimeIssAtFilterTags[timeis.ID] = timeis
 				}
 			} else {
@@ -869,7 +838,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 		if existNoTags {
 			for _, timeis := range noTagTimeIss {
 				if existTimeIs, exist := findCtx.MatchTimeIssAtFindTimeIs[timeis.ID]; exist {
-					if timeis.UpdateTime.Before(existTimeIs.UpdateTime) {
+					if timeis.UpdateTime.After(existTimeIs.UpdateTime) {
 						findCtx.MatchTimeIssAtFilterTags[timeis.ID] = timeis
 					}
 				} else {
@@ -886,7 +855,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 			for _, tag := range findCtx.MatchTimeIsTags {
 				if timeis.ID == tag.TargetID {
 					if existTimeIs, exist := tagNameMap[tag.Tag][timeis.ID]; exist {
-						if timeis.UpdateTime.Before(existTimeIs.UpdateTime) {
+						if timeis.UpdateTime.After(existTimeIs.UpdateTime) {
 							tagNameMap[tag.Tag][timeis.ID] = timeis
 						}
 					} else {
@@ -919,7 +888,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 				}
 				if !relatedTagTimeIs {
 					if existTimeIs, exist := tagNameMap[NoTags][timeis.ID]; exist {
-						if timeis.UpdateTime.Before(existTimeIs.UpdateTime) {
+						if timeis.UpdateTime.After(existTimeIs.UpdateTime) {
 							tagNameMap[NoTags][timeis.ID] = timeis
 						}
 					} else {
@@ -938,7 +907,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 				// 初回ループは全部いれる
 				for _, timeis := range timeisIDMap {
 					if existTimeIs, exist := hasAllMatchTagsTimeIssMap[timeis.ID]; exist {
-						if timeis.UpdateTime.Before(existTimeIs.UpdateTime) {
+						if timeis.UpdateTime.After(existTimeIs.UpdateTime) {
 							hasAllMatchTagsTimeIssMap[timeis.ID] = timeis
 						}
 					} else {
@@ -954,7 +923,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 					for timeisID, hasAllMatchTagsTimeIs := range hasAllMatchTagsTimeIssMap {
 						if timeis.ID == timeisID {
 							if existTimeIs, exist := matchThisLoopTimeIssMap[timeisID]; exist {
-								if hasAllMatchTagsTimeIs.UpdateTime.Before(existTimeIs.UpdateTime) {
+								if hasAllMatchTagsTimeIs.UpdateTime.After(existTimeIs.UpdateTime) {
 									matchThisLoopTimeIssMap[timeisID] = hasAllMatchTagsTimeIs
 								}
 							} else {
@@ -985,7 +954,7 @@ func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindK
 		for _, kyou := range findCtx.MatchKyousCurrent {
 			if (timeis.EndTime != nil && kyou.RelatedTime.After(timeis.StartTime) && kyou.RelatedTime.Before(*timeis.EndTime)) || (timeis.EndTime == nil && kyou.RelatedTime.After(timeis.StartTime)) {
 				if existKyou, exist := findCtx.MatchKyousAtFilterTimeIs[kyou.ID]; exist {
-					if kyou.UpdateTime.Before(existKyou.UpdateTime) {
+					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						findCtx.MatchKyousAtFilterTimeIs[kyou.ID] = kyou
 					}
 				} else {
@@ -1026,7 +995,7 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 	}
 
 	lenOfReps := 0
-	for _ = range findCtx.Repositories.TimeIsReps {
+	for range findCtx.Repositories.TimeIsReps {
 		lenOfReps++
 	}
 
@@ -1060,7 +1029,7 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 	}
 	wg.Wait()
 	// エラー集約
-	for _ = range lenOfReps {
+	for range lenOfReps {
 		e := <-errch
 		if e != nil {
 			err = fmt.Errorf("error at find timeiss: %w: %w:", e, err)
@@ -1073,11 +1042,11 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 	}
 
 	// TimeIs集約
-	for _ = range lenOfReps {
+	for range lenOfReps {
 		matchtimeissInRep := <-timeIssCh
 		for _, timeis := range matchtimeissInRep {
 			if existtimeis, exist := findCtx.MatchTimeIssAtFindTimeIs[timeis.ID]; exist {
-				if timeis.UpdateTime.Before(existtimeis.UpdateTime) {
+				if timeis.UpdateTime.After(existtimeis.UpdateTime) {
 					findCtx.MatchTimeIssAtFindTimeIs[timeis.ID] = timeis
 				}
 			} else {
@@ -1133,7 +1102,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	// GPSLogを取得する
 	gpsLogs := []*reps.GPSLog{}
 	lenOfReps := 0
-	for _ = range findCtx.Repositories.GPSLogReps {
+	for range findCtx.Repositories.GPSLogReps {
 		lenOfReps++
 	}
 
@@ -1146,7 +1115,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 
 	// text検索用クエリ
 	lenOfTexts := 0
-	for _ = range findCtx.Repositories.GPSLogReps {
+	for range findCtx.Repositories.GPSLogReps {
 		lenOfTexts++
 	}
 
@@ -1167,7 +1136,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	}
 	wg.Wait()
 	// エラー集約
-	for _ = range lenOfReps {
+	for range lenOfReps {
 		e := <-errch
 		if e != nil {
 			err = fmt.Errorf("error at filter gpslogs: %w: %w:", e, err)
@@ -1180,7 +1149,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	}
 
 	// GPSLog集約
-	for _ = range lenOfReps {
+	for range lenOfReps {
 		matchGPSLogsInRep := <-gpsLogsCh
 		gpsLogs = append(gpsLogs, matchGPSLogsInRep...)
 	}
@@ -1247,7 +1216,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	matchGPSLogWg.Wait()
 	existError := false
 	// エラー集約
-	for _ = range lenOfReps {
+	for range lenOfReps {
 		e := <-errchForGPSLog
 		if e != nil {
 			err = fmt.Errorf("error at filter location: %w: %w:", e, err)
@@ -1258,7 +1227,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 		return nil, err
 	}
 	// GPSLog集約
-	for _ = range lenOfReps {
+	for range lenOfReps {
 		pointsList := <-matchGPSLogCh
 		for _, points := range pointsList {
 			pointOfStart := points[0]
@@ -1362,10 +1331,12 @@ func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouConte
 }
 
 func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	if findCtx.ParsedFindQuery.UseWords == nil || !(*findCtx.ParsedFindQuery.UseWords) || (len(*findCtx.ParsedFindQuery.Words) == 0 && (len(*findCtx.ParsedFindQuery.NotWords) == 0)) {
+	}
 	var err error
 
 	lenOfTextReps := 0
-	for _ = range findCtx.Repositories.TextReps {
+	for range findCtx.Repositories.TextReps {
 		lenOfTextReps++
 	}
 
@@ -1414,7 +1385,7 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 	}
 	wg.Wait()
 	// エラー集約
-	for _ = range lenOfTextReps {
+	for range lenOfTextReps {
 		e := <-errch
 		if e != nil {
 			err = fmt.Errorf("error at find  texts: %w: %w:", e, err)
@@ -1427,11 +1398,11 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 	}
 
 	// Text集約
-	for _ = range lenOfTextReps {
+	for range lenOfTextReps {
 		matchTexts := <-textsCh
 		for _, text := range matchTexts {
 			if existText, exist := findCtx.MatchTexts[text.ID]; exist {
-				if text.UpdateTime.Before(existText.UpdateTime) {
+				if text.UpdateTime.After(existText.UpdateTime) {
 					findCtx.MatchTexts[text.ID] = text
 				}
 			} else {
@@ -1450,7 +1421,7 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	}
 
 	lenOfTextReps := 0
-	for _ = range findCtx.Repositories.TextReps {
+	for range findCtx.Repositories.TextReps {
 		lenOfTextReps++
 	}
 
@@ -1498,7 +1469,7 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	}
 	wg.Wait()
 	// エラー集約
-	for _ = range lenOfTextReps {
+	for range lenOfTextReps {
 		e := <-errch
 		if e != nil {
 			err = fmt.Errorf("error at find  texts: %w: %w:", e, err)
@@ -1511,11 +1482,11 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	}
 
 	// Text集約
-	for _ = range lenOfTextReps {
+	for range lenOfTextReps {
 		matchTexts := <-textsCh
 		for _, text := range matchTexts {
 			if existText, exist := findCtx.MatchTimeIsTexts[text.ID]; exist {
-				if text.UpdateTime.Before(existText.UpdateTime) {
+				if text.UpdateTime.After(existText.UpdateTime) {
 					findCtx.MatchTimeIsTexts[text.ID] = text
 				}
 			} else {

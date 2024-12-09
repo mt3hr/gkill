@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
@@ -63,7 +64,7 @@ loop:
 			}
 			for _, text := range matchTextsInRep {
 				if existText, exist := matchTexts[text.ID]; exist {
-					if text.UpdateTime.Before(existText.UpdateTime) {
+					if text.UpdateTime.After(existText.UpdateTime) {
 						matchTexts[text.ID] = text
 					}
 				} else {
@@ -129,7 +130,7 @@ errloop:
 	return nil
 }
 
-func (t TextRepositories) GetText(ctx context.Context, id string) (*Text, error) {
+func (t TextRepositories) GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error) {
 	matchText := &Text{}
 	matchText = nil
 	existErr := false
@@ -146,7 +147,7 @@ func (t TextRepositories) GetText(ctx context.Context, id string) (*Text, error)
 
 		go func(rep TextRepository) {
 			defer wg.Done()
-			matchTextInRep, err := rep.GetText(ctx, id)
+			matchTextInRep, err := rep.GetText(ctx, id, updateTime)
 			if err != nil {
 				errch <- err
 				return
@@ -245,7 +246,7 @@ loop:
 			}
 			for _, text := range matchTextsInRep {
 				if existText, exist := matchTexts[text.ID]; exist {
-					if text.UpdateTime.Before(existText.UpdateTime) {
+					if text.UpdateTime.After(existText.UpdateTime) {
 						matchTexts[text.ID] = text
 					}
 				} else {
@@ -372,7 +373,7 @@ loop:
 			}
 			for _, text := range matchTextsInRep {
 				if existText, exist := textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if text.UpdateTime.Before(existText.UpdateTime) {
+					if text.UpdateTime.After(existText.UpdateTime) {
 						textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
 					}
 				} else {

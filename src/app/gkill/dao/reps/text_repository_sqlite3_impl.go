@@ -97,7 +97,7 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TEXT
-WHERE
+WHERE IS_DELETED = FALSE
 `
 
 	repName, err := t.GetRepName(ctx)
@@ -111,13 +111,14 @@ WHERE
 		repName,
 		dataType,
 	}
-	whereCounter := 0
+	whereCounter := 1
 	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TEXT"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +193,7 @@ func (t *textRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return t.db.Close()
 }
 
-func (t *textRepositorySQLite3Impl) GetText(ctx context.Context, id string) (*Text, error) {
+func (t *textRepositorySQLite3Impl) GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error) {
 	// 最新のデータを返す
 	textHistories, err := t.GetTextHistories(ctx, id)
 	if err != nil {
@@ -202,6 +203,16 @@ func (t *textRepositorySQLite3Impl) GetText(ctx context.Context, id string) (*Te
 
 	// なければnilを返す
 	if len(textHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range textHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 
@@ -229,7 +240,7 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TEXT
-WHERE TARGET_ID LIKE ?
+WHERE IS_DELETED = FALSE AND TARGET_ID LIKE ?
 `
 
 	// UPDATE_TIMEが一番上のものだけを抽出
@@ -357,7 +368,7 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TEXT
-WHERE ID LIKE ?
+WHERE IS_DELETED = FALSE AND ID LIKE ?
 `
 
 	log.Printf("sql: %s", sql)

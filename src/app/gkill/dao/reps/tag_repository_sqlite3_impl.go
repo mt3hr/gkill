@@ -116,7 +116,8 @@ WHERE
 	findWordTargetColumns := []string{"TAG"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendOrderBy, &queryArgs)
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +192,7 @@ func (t *tagRepositorySQLite3Impl) Close(ctx context.Context) error {
 	return t.db.Close()
 }
 
-func (t *tagRepositorySQLite3Impl) GetTag(ctx context.Context, id string) (*Tag, error) {
+func (t *tagRepositorySQLite3Impl) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
 	// 最新のデータを返す
 	tagHistories, err := t.GetTagHistories(ctx, id)
 	if err != nil {
@@ -201,6 +202,16 @@ func (t *tagRepositorySQLite3Impl) GetTag(ctx context.Context, id string) (*Tag,
 
 	// なければnilを返す
 	if len(tagHistories) == 0 {
+		return nil, nil
+	}
+
+	// updateTimeが指定されていれば一致するものを返す
+	if updateTime != nil {
+		for _, kyou := range tagHistories {
+			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return kyou, nil
+			}
+		}
 		return nil, nil
 	}
 
@@ -228,7 +239,7 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TAG
-WHERE TAG LIKE ?
+WHERE IS_DELETED = FALSE AND TAG LIKE ?
 `
 
 	// UPDATE_TIMEが一番上のものだけを抽出
@@ -334,7 +345,7 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TAG
-WHERE TARGET_ID LIKE ?
+WHERE IS_DELETED = FALSE AND TARGET_ID LIKE ?
 `
 
 	// UPDATE_TIMEが一番上のものだけを抽出
@@ -461,7 +472,7 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TAG
-WHERE ID LIKE ?
+WHERE IS_DELETED = FALSE AND ID LIKE ?
 `
 
 	log.Printf("sql: %s", sql)

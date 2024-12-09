@@ -25,10 +25,10 @@
         </v-row>
         <v-row v-show="query.use_timeis" class="pa-0 ma-0">
             <v-col cols="2" class="pa-0 ma-0">
-                <v-btn v-if="query.use_timeis_tags" icon="mdi-set-center"
-                    @click="query.use_timeis_tags = !query.use_timeis_tags; emits('request_update_and_search_timeis_tags', query.use_timeis_tags)" />
-                <v-btn v-if="!query.use_timeis_tags" icon="mdi-set-all"
-                    @click="query.use_timeis_tags = !query.use_timeis_tags; emits('request_update_and_search_timeis_tags', query.use_timeis_tags)" />
+                <v-btn v-if="query.timeis_tags_and" icon="mdi-set-center"
+                    @click="query.timeis_tags_and = !query.timeis_tags_and; emits('request_update_and_search_timeis_tags', query.timeis_tags_and)" />
+                <v-btn v-if="query.timeis_tags_and" icon="mdi-set-all"
+                    @click="query.timeis_tags_and = !query.timeis_tags_and; emits('request_update_and_search_timeis_tags', query.timeis_tags_and)" />
             </v-col>
             <v-col cols="10" class="pt-4 pa-0 ma-0">
                 <v-checkbox v-model="query.use_timeis_tags"
