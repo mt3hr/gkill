@@ -4,7 +4,7 @@
             {{ tag.tag }}
         </span>
         <AttachedTagContextMenu :application_config="application_config" :gkill_api="gkill_api" :tag="tag" :kyou="kyou"
-            :last_added_tag="last_added_tag" :highlight_targets="[tag.generate_info_identifer()]"
+            :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -28,8 +28,8 @@ const tag_class = computed(() => {
     let highlighted = false;
     for (let i = 0; i < props.highlight_targets.length; i++) {
         if (props.highlight_targets[i].id === props.tag.id
-            && props.highlight_targets[i].create_time === props.tag.create_time
-            && props.highlight_targets[i].update_time === props.tag.update_time) {
+            && props.highlight_targets[i].create_time.getTime() === props.tag.create_time.getTime()
+            && props.highlight_targets[i].update_time.getTime() === props.tag.update_time.getTime()) {
             highlighted = true
             break
         }
@@ -44,7 +44,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     context_menu.value?.show(e)
 }
 </script>
-<style scoped>
+<style lang="css" scoped>
 .tag {
     border: solid white 2px;
     border-left: 0px;
