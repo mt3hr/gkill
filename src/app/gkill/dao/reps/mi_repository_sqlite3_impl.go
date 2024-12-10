@@ -437,12 +437,12 @@ WHERE
 		repName,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	onlyLatestData := false
 	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	appendGroupBy := true
+	appendGroupBy := false
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForCreate)
 	if err != nil {
 		return nil, err

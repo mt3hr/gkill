@@ -8,7 +8,7 @@
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field label="ユーザID" v-model="user_id" />
+                    <v-text-field label="ユーザID" v-model="user_id" autofocus />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
@@ -55,6 +55,15 @@ const password_sha256 = computed(async () => {
         .join('');
     return hashHex;
 })
+
+check_logined()
+
+async function check_logined(): Promise<void> {
+    const session_id = GkillAPI.get_instance().get_session_id()
+    if (session_id && session_id !== "") {
+        router.replace("/rykv")
+    }
+}
 
 async function try_login(user_id: string, password_sha256: Promise<string>): Promise<boolean> {
     // 未入力チェック
