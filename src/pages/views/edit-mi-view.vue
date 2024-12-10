@@ -16,7 +16,7 @@
                 <label>タイトル</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input" type="text" v-model="mi_title" label="タイトル" />
+                <input class="input text" type="text" v-model="mi_title" label="タイトル" autofocus />
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -39,11 +39,12 @@
                 <label>開始日時</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input" type="date" v-model="mi_estimate_start_date" label="開始日付" />
-                <input class="input" type="time" v-model="mi_estimate_start_time" label="開始時刻" />
+                <input class="input date" type="date" v-model="mi_estimate_start_date" label="開始日付" />
+                <input class="input time" type="time" v-model="mi_estimate_start_time" label="開始時刻" />
             </v-col>
             <v-col cols="auto">
                 <v-btn color="primary" @click="clear_estimate_start_date_time()">クリア</v-btn>
+                <v-btn color="primary" @click="reset_estimate_start_date_time()">リセット</v-btn>
                 <v-btn color="primary" @click="now_to_estimate_start_date_time()">現在日時</v-btn>
             </v-col>
         </v-row>
@@ -52,11 +53,12 @@
                 <label>終了日時</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input" type="date" v-model="mi_estimate_end_date" label="終了日付" />
-                <input class="input" type="time" v-model="mi_estimate_end_time" label="終了時刻" />
+                <input class="input date" type="date" v-model="mi_estimate_end_date" label="終了日付" />
+                <input class="input time" type="time" v-model="mi_estimate_end_time" label="終了時刻" />
             </v-col>
             <v-col cols="auto">
                 <v-btn color="primary" @click="clear_estimate_end_date_time()">クリア</v-btn>
+                <v-btn color="primary" @click="reset_estimate_end_date_time()">リセット</v-btn>
                 <v-btn color="primary" @click="now_to_estimate_end_date_time()">現在日時</v-btn>
             </v-col>
         </v-row>
@@ -65,11 +67,12 @@
                 <label>期限日時</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input" type="date" v-model="mi_limit_date" label="期限日付" />
-                <input class="input" type="time" v-model="mi_limit_time" label="期限時刻" />
+                <input class="input date" type="date" v-model="mi_limit_date" label="期限日付" />
+                <input class="input time" type="time" v-model="mi_limit_time" label="期限時刻" />
             </v-col>
             <v-col cols="auto">
                 <v-btn color="primary" @click="clear_limit_date_time()">クリア</v-btn>
+                <v-btn color="primary" @click="reset_limit_date_time()">リセット</v-btn>
                 <v-btn color="primary" @click="now_to_limit_date_time()">現在日時</v-btn>
             </v-col>
         </v-row>
@@ -84,25 +87,26 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
-                :show_timeis_plaing_end_button="false" :highlight_targets="[kyou.generate_info_identifer()]"
-                :is_image_view="false" :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
-                :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-                :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_mi_plaing_end_button="true"
-                :height="'100%'" :width="'100%'" @received_errors="(errors) => emits('received_errors', errors)"
+                :show_timeis_plaing_end_button="false"
+                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
+                :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
+                :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
+                :show_mi_limit_time="true" :show_mi_plaing_end_button="true" :height="'100%'" :width="'100%'"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="() => { }"
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
         </v-card>
+        <NewBoardNameDialog v-if="kyou.typed_mi" :application_config="application_config" :gkill_api="gkill_api"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
+            ref="new_board_name_dialog" />
     </v-card>
-    <NewBoardNameDialog v-if="kyou.typed_mi" :application_config="application_config" :gkill_api="gkill_api"
-        @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
-        @setted_new_board_name="(board_name: string) => update_board_name(board_name)" ref="new_board_name_dialog" />
-
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { EditMiViewProps } from './edit-mi-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { Mi } from '@/classes/datas/mi'
@@ -115,29 +119,47 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import { GkillAPI } from '@/classes/api/gkill-api'
+import type { Kyou } from '@/classes/datas/kyou'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 
 const props = defineProps<EditMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
+const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const show_kyou: Ref<boolean> = ref(false)
 const mi_board_names: Ref<Array<string>> = ref(new Array())
 
-const mi_title: Ref<string> = ref(props.kyou.typed_mi ? props.kyou.typed_mi.title : "")
-const mi_board_name: Ref<string> = ref(props.kyou.typed_mi ? props.kyou.typed_mi.board_name : "")
-const mi_estimate_start_date: Ref<string> = ref(props.kyou.typed_mi && props.kyou.typed_mi.estimate_start_time ? moment(props.kyou.typed_mi.estimate_start_time).format("YYYY-MM-DD") : "")
-const mi_estimate_start_time: Ref<string> = ref(props.kyou.typed_mi && props.kyou.typed_mi.estimate_start_time ? moment(props.kyou.typed_mi.estimate_start_time).format("HH:mm:ss") : "")
-const mi_estimate_end_date: Ref<string> = ref(props.kyou.typed_mi && props.kyou.typed_mi.estimate_end_time ? moment(props.kyou.typed_mi.estimate_end_time).format("YYYY-MM-DD") : "")
-const mi_estimate_end_time: Ref<string> = ref(props.kyou.typed_mi && props.kyou.typed_mi.estimate_end_time ? moment(props.kyou.typed_mi.estimate_end_time).format("HH:mm:ss") : "")
-const mi_limit_date: Ref<string> = ref(props.kyou.typed_mi && props.kyou.typed_mi.limit_time ? moment(props.kyou.typed_mi.limit_time).format("YYYY-MM-DD") : "")
-const mi_limit_time: Ref<string> = ref(props.kyou.typed_mi && props.kyou.typed_mi.limit_time ? moment(props.kyou.typed_mi.limit_time).format("HH:mm:ss") : "")
+const mi_title: Ref<string> = ref(cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.title : "")
+const mi_board_name: Ref<string> = ref(cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.board_name : "")
+const mi_estimate_start_date: Ref<string> = ref(cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("YYYY-MM-DD") : "")
+const mi_estimate_start_time: Ref<string> = ref(cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("HH:mm:ss") : "")
+const mi_estimate_end_date: Ref<string> = ref(cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).format("YYYY-MM-DD") : "")
+const mi_estimate_end_time: Ref<string> = ref(cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).format("HH:mm:ss") : "")
+const mi_limit_date: Ref<string> = ref(cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).format("YYYY-MM-DD") : "")
+const mi_limit_time: Ref<string> = ref(cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).format("HH:mm:ss") : "")
+
+watch(() => props.kyou, () => load())
+load()
+
+async function load(): Promise<void> {
+    cloned_kyou.value = props.kyou.clone()
+    await cloned_kyou.value.load_all()
+    mi_title.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.title : ""
+    mi_board_name.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.board_name : ""
+    mi_estimate_start_date.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("YYYY-MM-DD") : ""
+    mi_estimate_start_time.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("HH:mm:ss") : ""
+    mi_estimate_end_date.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).format("YYYY-MM-DD") : ""
+    mi_estimate_end_time.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).format("HH:mm:ss") : ""
+    mi_limit_date.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).format("YYYY-MM-DD") : ""
+    mi_limit_time.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).format("HH:mm:ss") : ""
+}
 
 async function load_mi_board_names(): Promise<void> {
     const req = new GetMiBoardRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
 
-    const res = await props.gkill_api.get_mi_board_list(req)
+    const res = await GkillAPI.get_instance().get_mi_board_list(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -172,6 +194,21 @@ function clear_limit_date_time(): void {
     mi_limit_time.value = ""
 }
 
+function reset_estimate_start_date_time(): void {
+    mi_estimate_start_date.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("YYYY-MM-DD") : ""
+    mi_estimate_start_time.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("HH:mm:ss") : ""
+}
+
+function reset_estimate_end_date_time(): void {
+    mi_estimate_end_date.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).format("YYYY-MM-DD") : ""
+    mi_estimate_end_time.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).format("HH:mm:ss") : ""
+}
+
+function reset_limit_date_time(): void {
+    mi_limit_date.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).format("YYYY-MM-DD") : ""
+    mi_limit_time.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).format("HH:mm:ss") : ""
+}
+
 function now_to_estimate_start_date_time(): void {
     mi_estimate_start_date.value = moment().format("YYYY-MM-DD")
     mi_estimate_start_time.value = moment().format("HH:mm:ss")
@@ -188,19 +225,19 @@ function now_to_limit_date_time(): void {
 }
 
 function reset(): void {
-    mi_title.value = props.kyou.typed_mi!.title
-    mi_board_name.value = props.kyou.typed_mi!.board_name
-    mi_estimate_start_date.value = props.kyou.typed_mi && props.kyou.typed_mi.estimate_start_time ? moment(props.kyou.typed_mi.estimate_start_time).format("YYYY-MM-DD") : ""
-    mi_estimate_start_time.value = props.kyou.typed_mi && props.kyou.typed_mi.estimate_start_time ? moment(props.kyou.typed_mi.estimate_start_time).format("HH:mm:ss") : ""
-    mi_estimate_end_date.value = props.kyou.typed_mi && props.kyou.typed_mi.estimate_end_time ? moment(props.kyou.typed_mi.estimate_end_time).format("YYYY-MM-DD") : ""
-    mi_estimate_end_time.value = props.kyou.typed_mi && props.kyou.typed_mi.estimate_end_time ? moment(props.kyou.typed_mi.estimate_end_time).format("HH:mm:ss") : ""
-    mi_limit_date.value = props.kyou.typed_mi && props.kyou.typed_mi.limit_time ? moment(props.kyou.typed_mi.limit_time).format("YYYY-MM-DD") : ""
-    mi_limit_time.value = props.kyou.typed_mi && props.kyou.typed_mi.limit_time ? moment(props.kyou.typed_mi.limit_time).format("HH:mm:ss") : ""
+    mi_title.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.title : ""
+    mi_board_name.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.board_name : ""
+    mi_estimate_start_date.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("YYYY-MM-DD") : ""
+    mi_estimate_start_time.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("HH:mm:ss") : ""
+    mi_estimate_end_date.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).format("YYYY-MM-DD") : ""
+    mi_estimate_end_time.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_end_time ? moment(cloned_kyou.value.typed_mi.estimate_end_time).format("HH:mm:ss") : ""
+    mi_limit_date.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).format("YYYY-MM-DD") : ""
+    mi_limit_time.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.limit_time ? moment(cloned_kyou.value.typed_mi.limit_time).format("HH:mm:ss") : ""
 }
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const mi = props.kyou.typed_mi
+    const mi = cloned_kyou.value.typed_mi
     if (!mi) {
         const error = new GkillError()
         error.error_code = "//TODO"
@@ -271,7 +308,7 @@ async function save(): Promise<void> {
     // UserIDやDevice情報を取得する
     const get_gkill_req = new GetGkillInfoRequest()
     get_gkill_req.session_id = GkillAPI.get_instance().get_session_id()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+    const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(get_gkill_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
         return
@@ -310,7 +347,7 @@ async function save(): Promise<void> {
     const req = new UpdateMiRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
     req.mi = updated_mi
-    const res = await props.gkill_api.update_mi(req)
+    const res = await GkillAPI.get_instance().update_mi(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -327,11 +364,13 @@ load_mi_board_names()
 </script>
 
 <style lang="css" scoped>
-.input {
+.select {
     border: solid 1px silver;
 }
 
-.select {
+.input.date,
+.input.time,
+.input.text {
     border: solid 1px silver;
 }
 </style>

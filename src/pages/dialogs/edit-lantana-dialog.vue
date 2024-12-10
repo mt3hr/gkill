@@ -1,7 +1,7 @@
 <template>
     <v-dialog v-model="is_show_dialog">
-        <AddLantanaView :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+        <EditLantanaView :application_config="application_config" :gkill_api="gkill_api"
+            :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -13,7 +13,7 @@
 import { type Ref, ref, watch } from 'vue'
 import type { EditLantanaDialogProps } from './edit-lantana-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
-import AddLantanaView from '../views/add-lantana-view.vue'
+import EditLantanaView from '../views/edit-lantana-view.vue';
 
 const props = defineProps<EditLantanaDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()

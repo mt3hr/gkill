@@ -20,7 +20,7 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
-                :highlight_targets="[text.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
+                :highlight_targets="text_highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
@@ -37,14 +37,20 @@
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import type { ConfirmDeleteTextViewProps } from './confirm-delete-text-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { type Ref, ref } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import { UpdateTextRequest } from '@/classes/api/req_res/update-text-request';
 import KyouView from './kyou-view.vue'
 import router from '@/router';
 import { GkillAPI } from '@/classes/api/gkill-api';
+import type { InfoIdentifier } from '@/classes/datas/info-identifier';
 
 const props = defineProps<ConfirmDeleteTextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+
+const text_highlight_targets = computed<Array<InfoIdentifier>>(() => {
+    const info_identifer = props.text.generate_info_identifer()
+    return [info_identifer]
+})
 
 const show_kyou: Ref<boolean> = ref(true)
 
