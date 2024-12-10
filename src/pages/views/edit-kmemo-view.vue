@@ -11,12 +11,19 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="kmemo_value" label="Kmemo" />
+        <v-textarea v-model="kmemo_value" label="Kmemo" autofocus />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>日時</label>
-                <input class="input" type="date" v-model="related_date" label="日付" />
-                <input class="input" type="time" v-model="related_time" label="時刻" />
+                <input class="input date" type="date" v-model="related_date" label="日付" />
+                <input class="input time" type="time" v-model="related_time" label="時刻" />
+                <v-btn color="primary" @click="reset_related_date_time()">リセット</v-btn>
+                <v-btn color="primary" @click="now_to_related_date_time()">現在日時</v-btn>
+            </v-col>
+        </v-row>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-btn color="primary" @click="reset()">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
@@ -25,8 +32,8 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView v-if="kyou.typed_kmemo" :application_config="application_config" :gkill_api="gkill_api"
-                :highlight_targets="[kyou.typed_kmemo.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
-                :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
+                :highlight_targets="highlight_targets" :is_image_view="false"
+                :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
                 @received_errors="(errors) => emits('received_errors', errors)"
@@ -38,30 +45,40 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { EditKmemoViewProps } from './edit-kmemo-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
-import { Kmemo } from '@/classes/datas/kmemo'
 import { Kyou } from '@/classes/datas/kyou'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateKmemoRequest } from '@/classes/api/req_res/update-kmemo-request'
-import router from '@/router'
 import moment from 'moment'
 import { GkillAPI } from '@/classes/api/gkill-api'
 
 const props = defineProps<EditKmemoViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const kmemo_value: Ref<string> = ref(props.kyou.typed_kmemo ? props.kyou.typed_kmemo.content : "")
-const related_date: Ref<string> = ref(moment(props.kyou.related_time).format("YYYY-MM-DD"))
-const related_time: Ref<string> = ref(moment(props.kyou.related_time).format("HH:mm:ss"))
+const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
+const kmemo_value: Ref<string> = ref(cloned_kyou.value.typed_kmemo ? cloned_kyou.value.typed_kmemo.content : "")
+const related_date: Ref<string> = ref(moment(cloned_kyou.value.related_time).format("YYYY-MM-DD"))
+const related_time: Ref<string> = ref(moment(cloned_kyou.value.related_time).format("HH:mm:ss"))
 const show_kyou: Ref<boolean> = ref(false)
+
+watch(() => props.kyou, () => load())
+load()
+
+async function load(): Promise<void> {
+    cloned_kyou.value = props.kyou.clone()
+    await cloned_kyou.value.load_all()
+    kmemo_value.value = cloned_kyou.value.typed_kmemo?cloned_kyou.value.typed_kmemo.content: ""
+    related_date.value = moment(cloned_kyou.value.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+}
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const kmemo = props.kyou.typed_kmemo
+    const kmemo = cloned_kyou.value.typed_kmemo
     if (!kmemo) {
         const error = new GkillError()
         error.error_code = "//TODO"
@@ -97,7 +114,7 @@ async function save(): Promise<void> {
     // UserIDやDevice情報を取得する
     const get_gkill_req = new GetGkillInfoRequest()
     get_gkill_req.session_id = GkillAPI.get_instance().get_session_id()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+    const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(get_gkill_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
         return
@@ -116,7 +133,7 @@ async function save(): Promise<void> {
     const req = new UpdateKmemoRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
     req.kmemo = updated_kmemo
-    const res = await props.gkill_api.update_kmemo(req)
+    const res = await GkillAPI.get_instance().update_kmemo(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -128,9 +145,28 @@ async function save(): Promise<void> {
     emits('requested_close_dialog')
     return
 }
+
+function now_to_related_date_time(): void {
+    related_date.value = moment().format("YYYY-MM-DD")
+    related_time.value = moment().format("HH:mm:ss")
+}
+
+function reset_related_date_time(): void {
+    related_date.value = moment(cloned_kyou.value.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+}
+
+function reset(): void {
+    kmemo_value.value = cloned_kyou.value.typed_kmemo?cloned_kyou.value.typed_kmemo.content: ""
+    related_date.value = moment(cloned_kyou.value.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+}
 </script>
+
 <style lang="css" scoped>
-.input {
+.input.date,
+.input.time,
+.input.text {
     border: solid 1px silver;
 }
 </style>

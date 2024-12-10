@@ -33,7 +33,7 @@
         </v-row>
     </v-card>
     <NlogContextMenu :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         ref="context_menu" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -58,10 +58,10 @@ function show_context_menu(e: PointerEvent): void {
 </script>
 <style lang="css" scoped>
 .nlog_amount_plus {
-    color: crimson;
+    color: springgreen;
 }
 
 .nlog_amount_minus {
-    color: dodgerblue;
+    color: crimson;
 }
 </style>

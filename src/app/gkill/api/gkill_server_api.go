@@ -1748,6 +1748,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+
 	if existLantana != nil {
 		err = fmt.Errorf("exist lantana id = %s", request.Lantana.ID)
 		log.Printf(err.Error())
@@ -3264,14 +3265,14 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// すでに存在する場合はエラー
-	_, err = repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
+	// 対象が存在しない場合はエラー
+	existLantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		log.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana更新後取得に失敗しました",
+			ErrorMessage: "Lantana更新に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3329,7 +3330,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 	}
 
 	// 対象が存在しない場合はエラー
-	existLantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
+	existLantana, err = repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
 		log.Printf(err.Error())

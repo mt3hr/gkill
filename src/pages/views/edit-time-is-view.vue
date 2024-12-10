@@ -16,7 +16,7 @@
                 <label>タイトル</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input" type="text" v-model="timeis_title" label="タイトル" />
+                <input class="input text" type="text" v-model="timeis_title" label="タイトル" autofocus />
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -24,11 +24,11 @@
                 <label>開始日時</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input" type="date" v-model="timeis_start_date" label="開始日付" />
-                <input class="input" type="time" v-model="timeis_start_time" label="開始時刻" />
+                <input class="input date" type="date" v-model="timeis_start_date" label="開始日付" />
+                <input class="input time" type="time" v-model="timeis_start_time" label="開始時刻" />
             </v-col>
             <v-col cols="auto">
-                <v-btn color="primary" @click="clear_start_date_time()">クリア</v-btn>
+                <v-btn color="primary" @click="reset_start_date_time()">リセット</v-btn>
                 <v-btn color="primary" @click="now_to_start_date_time()">現在日時</v-btn>
             </v-col>
         </v-row>
@@ -37,10 +37,11 @@
                 <label>終了日時</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input" type="date" v-model="timeis_end_date" label="終了日付" />
-                <input class="input" type="time" v-model="timeis_end_time" label="終了時刻" />
+                <input class="input date" type="date" v-model="timeis_end_date" label="終了日付" />
+                <input class="input date" type="time" v-model="timeis_end_time" label="終了時刻" />
             </v-col>
             <v-col cols="auto">
+                <v-btn color="primary" @click="reset_end_date_time()">リセット</v-btn>
                 <v-btn color="primary" @click="clear_end_date_time()">クリア</v-btn>
                 <v-btn color="primary" @click="now_to_end_date_time()">現在日時</v-btn>
             </v-col>
@@ -56,7 +57,7 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
-                :highlight_targets="[kyou.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
+                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
@@ -69,7 +70,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { computed, type Ref, ref } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import type { EditTimeIsViewProps } from './edit-time-is-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { Kyou } from '@/classes/datas/kyou'
@@ -86,25 +87,44 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 const props = defineProps<EditTimeIsViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const timeis_title: Ref<string> = ref(props.kyou.typed_timeis!.title)
-const timeis_start_date: Ref<string> = ref(moment(props.kyou.typed_timeis!.start_time).format("YYYY-MM-DD"))
-const timeis_start_time: Ref<string> = ref(moment(props.kyou.typed_timeis!.start_time).format("HH:mm:ss"))
-const timeis_end_date: Ref<string> = ref(moment(props.kyou.typed_timeis!.end_time).format("YYYY-MM-DD"))
-const timeis_end_time: Ref<string> = ref(moment(props.kyou.typed_timeis!.end_time).format("HH:mm:ss"))
+const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
+const timeis_title: Ref<string> = ref(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : "")
+const timeis_start_date: Ref<string> = ref(moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("YYYY-MM-DD"))
+const timeis_start_time: Ref<string> = ref(moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss"))
+const timeis_end_date: Ref<string> = ref(moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("YYYY-MM-DD"))
+const timeis_end_time: Ref<string> = ref(moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("HH:mm:ss"))
 
 const show_kyou: Ref<boolean> = ref(false)
 
-function reset(): void {
-    timeis_title.value = props.kyou.typed_timeis!.title
-    timeis_start_date.value = moment(props.kyou.typed_timeis!.start_time).format("YYYY-MM-DD")
-    timeis_start_time.value = moment(props.kyou.typed_timeis!.start_time).format("HH:mm:ss")
-    timeis_end_date.value = moment(props.kyou.typed_timeis!.end_time).format("YYYY-MM-DD")
-    timeis_end_time.value = moment(props.kyou.typed_timeis!.end_time).format("HH:mm:ss")
+watch(() => props.kyou, () => load())
+load()
+
+async function load(): Promise<void> {
+    cloned_kyou.value = props.kyou.clone()
+    await cloned_kyou.value.load_all()
+    timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
+    timeis_start_date.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("YYYY-MM-DD")
+    timeis_start_time.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
+    timeis_end_date.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("YYYY-MM-DD")
+    timeis_end_time.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("HH:mm:ss")
 }
 
-function clear_start_date_time(): void {
-    timeis_start_date.value = ""
-    timeis_start_time.value = ""
+function reset(): void {
+    timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
+    timeis_start_date.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("YYYY-MM-DD")
+    timeis_start_time.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
+    timeis_end_date.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("YYYY-MM-DD")
+    timeis_end_time.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("HH:mm:ss")
+}
+
+function reset_start_date_time(): void {
+    timeis_start_date.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("YYYY-MM-DD")
+    timeis_start_time.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
+}
+
+function reset_end_date_time(): void {
+    timeis_end_date.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("YYYY-MM-DD")
+    timeis_end_time.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("HH:mm:ss")
 }
 
 function clear_end_date_time(): void {
@@ -124,7 +144,7 @@ function now_to_end_date_time(): void {
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const timeis = props.kyou.typed_timeis
+    const timeis = cloned_kyou.value.typed_timeis
     if (!timeis) {
         const error = new GkillError()
         error.error_code = "//TODO"
@@ -214,8 +234,11 @@ async function save(): Promise<void> {
 
 
 </script>
+
 <style lang="css" scoped>
-.input {
+.input.date,
+.input.time,
+.input.text {
     border: solid 1px silver;
 }
 </style>

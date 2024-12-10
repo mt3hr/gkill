@@ -175,8 +175,8 @@ const kyou_class = computed(() => {
     let highlighted = false;
     for (let i = 0; i < props.highlight_targets.length; i++) {
         if (props.highlight_targets[i].id === props.kyou.id
-            && props.highlight_targets[i].create_time === props.kyou.create_time
-            && props.highlight_targets[i].update_time === props.kyou.update_time) {
+            && props.highlight_targets[i].create_time.getTime() === props.kyou.create_time.getTime()
+            && props.highlight_targets[i].update_time.getTime() === props.kyou.update_time.getTime()) {
             highlighted = true
             break
         }
@@ -225,19 +225,9 @@ function format_time(time: Date) {
 }
 
 </script>
-<style lang="css">
-.kyou .v-card,
-.highlighted_kyou .v-card {
-    background-color: #776ef300;
-}
-</style>
 <style lang="css" scoped>
-.highlighted_kyou {
-    background: lightgreen;
-}
-
-.kyou {
-    background-color: #776ef300;
+.highlighted_kyou>* {
+    background-color: lightgreen;
 }
 
 .kyou_related_time,

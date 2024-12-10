@@ -1,7 +1,7 @@
 <template>
     <v-dialog v-model="is_show_dialog">
         <ConfirmDeleteTextView :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag" :text="text"
+            :highlight_targets="[text.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag" :text="text"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" />
     </v-dialog>
