@@ -11,23 +11,31 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_title_value" label="タイトル" />
+        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_title_value" label="タイトル" autofocus />
         <v-text-field v-if="kyou.typed_nlog" v-model="nlog_shop_value" label="店名" />
         <v-text-field v-if="kyou.typed_nlog" v-model="nlog_amount_value" type="number" label="金額" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>日時</label>
-                <input class="input" type="date" v-model="related_date" label="日付" />
-                <input class="input" type="time" v-model="related_time" label="時刻" />
+                <input class="input date" type="date" v-model="related_date" label="日付" />
+                <input class="input time" type="time" v-model="related_time" label="時刻" />
+                <v-btn color="primary" @click="reset_related_date_time()">リセット</v-btn>
+                <v-btn color="primary" @click="now_to_related_date_time()">現在日時</v-btn>
+            </v-col>
+        </v-row>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-btn color="primary" @click="reset()">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn color="primary" @click="save()">保存</v-btn>
             </v-col>
         </v-row>
+
         <v-card v-if="show_kyou">
             <KyouView v-if="kyou.typed_nlog" :application_config="application_config" :gkill_api="gkill_api"
-                :highlight_targets="[kyou.typed_nlog.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
+                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
@@ -40,7 +48,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -50,10 +58,12 @@ import moment from 'moment'
 import { UpdateNlogRequest } from '@/classes/api/req_res/update-nlog-request'
 import type { EditNlogViewProps } from './edit-nlog-view-props'
 import { GkillAPI } from '@/classes/api/gkill-api'
+import type { Kyou } from '@/classes/datas/kyou'
 
 const props = defineProps<EditNlogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
+const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const nlog_title_value: Ref<string> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.title : "")
 const nlog_amount_value: Ref<Number> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.amount : 0)
 const nlog_shop_value: Ref<string> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.shop : "")
@@ -61,6 +71,19 @@ const nlog_shop_value: Ref<string> = ref(props.kyou.typed_nlog ? props.kyou.type
 const related_date: Ref<string> = ref(moment(props.kyou.related_time).format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment(props.kyou.related_time).format("HH:mm:ss"))
 const show_kyou: Ref<boolean> = ref(false)
+
+watch(() => props.kyou, () => load())
+load()
+
+async function load(): Promise<void> {
+    cloned_kyou.value = props.kyou.clone()
+    await cloned_kyou.value.load_all()
+    nlog_title_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.title : ""
+    nlog_amount_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.amount : 0
+    nlog_shop_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.shop : ""
+    related_date.value = moment(props.kyou.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(props.kyou.related_time).format("HH:mm:ss")
+}
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
@@ -135,4 +158,31 @@ async function save(): Promise<void> {
     emits('requested_close_dialog')
     return
 }
+
+function now_to_related_date_time(): void {
+    related_date.value = moment().format("YYYY-MM-DD")
+    related_time.value = moment().format("HH:mm:ss")
+}
+
+function reset_related_date_time(): void {
+    related_date.value = moment(props.kyou.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(props.kyou.related_time).format("HH:mm:ss")
+}
+
+function reset(): void {
+    nlog_title_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.title : ""
+    nlog_amount_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.amount : 0
+    nlog_shop_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.shop : ""
+    related_date.value = moment(props.kyou.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(props.kyou.related_time).format("HH:mm:ss")
+
+}
 </script>
+
+<style lang="css" scoped>
+.input.date,
+.input.time,
+.input.text {
+    border: solid 1px silver;
+}
+</style>

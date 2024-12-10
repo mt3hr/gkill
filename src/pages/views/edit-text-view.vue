@@ -11,7 +11,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="text_value" label="テキスト" />
+        <v-textarea v-model="text_value" label="テキスト" autofocus />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
@@ -20,11 +20,10 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
-                :highlight_targets="[text.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
+                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
-                :height="'100%'" :width="'100%'"
+                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -34,7 +33,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { EditTextViewProps } from './edit-text-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
@@ -43,16 +42,26 @@ import router from '@/router';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillAPI } from '@/classes/api/gkill-api';
+import type { Text } from '@/classes/datas/text';
 
 const props = defineProps<EditTextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const text_value: Ref<string> = ref(props.text.text)
+const cloned_text: Ref<Text> = ref(props.text.clone())
+const text_value: Ref<string> = ref(cloned_text.value.text)
 const show_kyou: Ref<boolean> = ref(false)
+
+watch(() => props.text, () => load())
+load()
+
+async function load(): Promise<void> {
+    cloned_text.value = props.text.clone()
+    text_value.value = cloned_text.value.text
+}
 
 async function save(): Promise<void> {
     // 更新がなかったらエラーメッセージを出力する
-    if (props.text.text === text_value.value) {
+    if (cloned_text.value.text === text_value.value) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "テキストが更新されていません"
@@ -72,7 +81,7 @@ async function save(): Promise<void> {
     }
 
     // 更新後テキスト情報を用意する
-    const updated_text = await props.text.clone()
+    const updated_text = await cloned_text.value.clone()
     updated_text.text = text_value.value
     updated_text.update_app = "gkill"
     updated_text.update_device = gkill_info_res.device
@@ -96,3 +105,11 @@ async function save(): Promise<void> {
     return
 }
 </script>
+
+<style lang="css" scoped>
+.input.date,
+.input.time,
+.input.text {
+    border: solid 1px silver;
+}
+</style>
