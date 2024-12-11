@@ -9,7 +9,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { nextTick, type Ref, ref, watch } from 'vue'
 import type { ConfirmResetPasswordDialogEmits } from './confirm-reset-password-dialog-emits'
 import type { ConfirmResetPasswordDialogProps } from './confirm-reset-password-dialog-props'
 import ConfirmResetPasswordView from '../views/confirm-reset-password-view.vue'

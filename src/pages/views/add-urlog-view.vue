@@ -1,0 +1,178 @@
+<template>
+    <v-card class="pa-2">
+        <v-card-title>
+            <v-row class="pa-0 ma-0">
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <span>URLog追加</span>
+                </v-col>
+            </v-row>
+        </v-card-title>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto">
+                <label>タイトル</label>
+            </v-col>
+            <v-col cols="auto">
+                <input class="input text" type="text" v-model="title" label="タイトル" autofocus />
+            </v-col>
+        </v-row>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto">
+                <label>URL</label>
+            </v-col>
+            <v-col cols="auto">
+                <input class="input text" type="text" v-model="url" label="URL" />
+            </v-col>
+        </v-row>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0">
+                <label>日時</label>
+                <input class="input date" type="date" v-model="related_date" label="日付" />
+                <input class="input time" type="time" v-model="related_time" label="時刻" />
+                <v-btn color="primary" @click="reset_related_date_time()">リセット</v-btn>
+                <v-btn color="primary" @click="now_to_related_date_time()">現在日時</v-btn>
+            </v-col>
+        </v-row>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-btn color="primary" @click="reset()">リセット</v-btn>
+            </v-col>
+            <v-spacer />
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-btn color="primary" @click="save()">保存</v-btn>
+            </v-col>
+        </v-row>
+    </v-card>
+</template>
+<script lang="ts" setup>
+import { computed, type Ref, ref, watch } from 'vue'
+import type { EditURLogViewProps } from './edit-ur-log-view-props'
+import { URLog } from '@/classes/datas/ur-log'
+import moment from 'moment'
+import { useDisplay } from 'vuetify'
+import { GkillError } from '@/classes/api/gkill-error'
+import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { UpdateURLogRequest } from '@/classes/api/req_res/update-ur-log-request'
+import router from '@/router'
+import type { KyouViewEmits } from './kyou-view-emits'
+import KyouView from './kyou-view.vue'
+import { GkillAPI } from '@/classes/api/gkill-api'
+import type { Kyou } from '@/classes/datas/kyou'
+import { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
+
+const props = defineProps<EditURLogViewProps>()
+const emits = defineEmits<KyouViewEmits>()
+
+const urlog: Ref<URLog> = ref((() => {
+    const urlog = new URLog()
+    urlog.related_time = new Date(Date.now())
+    return urlog
+})())
+const title: Ref<string> = ref(urlog.value.title)
+const url: Ref<string> = ref(urlog.value.url)
+const related_date: Ref<string> = ref(moment(urlog.value.related_time).format("YYYY-MM-DD"))
+const related_time: Ref<string> = ref(moment(urlog.value.related_time).format("HH:mm:ss"))
+
+const show_kyou: Ref<boolean> = ref(false)
+
+function reset(): void {
+    title.value = urlog.value.title
+    url.value = urlog.value.url
+    related_date.value = moment(urlog.value.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(urlog.value.related_time).format("HH:mm:ss")
+}
+
+async function save(): Promise<void> {
+    // データがちゃんとあるか確認。なければエラーメッセージを出力する
+    if (!urlog) {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "クライアントのデータが変です"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
+    // 日時必須入力チェック
+    if (related_date.value === "" || related_time.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "日時が入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
+    // 更新がなかったらエラーメッセージを出力する
+    if (urlog.value.title === title.value &&
+        moment(urlog.value.related_time) === (moment(related_date.value + " " + related_time.value)) &&
+        moment(urlog.value.related_time) === moment(related_date.value + " " + related_time.value)) {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "URLogが更新されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
+    // UserIDやDevice情報を取得する
+    const get_gkill_req = new GetGkillInfoRequest()
+    get_gkill_req.session_id = GkillAPI.get_instance().get_session_id()
+    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+        emits('received_errors', gkill_info_res.errors)
+        return
+    }
+
+    // 更新後URLog情報を用意する
+    const new_urlog = await urlog.value.clone()
+    new_urlog.id = GkillAPI.get_instance().generate_uuid()
+    new_urlog.title = title.value
+    new_urlog.url = url.value
+    new_urlog.related_time = moment(related_date.value + " " + related_time.value).toDate()
+    new_urlog.create_app = "gkill"
+    new_urlog.create_device = gkill_info_res.device
+    new_urlog.create_time = new Date(Date.now())
+    new_urlog.create_user = gkill_info_res.user_id
+    new_urlog.update_app = "gkill"
+    new_urlog.update_device = gkill_info_res.device
+    new_urlog.update_time = new Date(Date.now())
+    new_urlog.update_user = gkill_info_res.user_id
+
+    // 追加リクエストを飛ばす
+    const req = new AddURLogRequest()
+    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.urlog = new_urlog
+    const res = await props.gkill_api.add_urlog(req)
+    if (res.errors && res.errors.length !== 0) {
+        emits('received_errors', res.errors)
+        return
+    }
+    if (res.messages && res.messages.length !== 0) {
+        emits('received_messages', res.messages)
+    }
+    emits("updated_kyou", res.added_urlog_kyou)
+    emits('requested_close_dialog')
+    return
+}
+
+function now_to_related_date_time(): void {
+    related_date.value = moment().format("YYYY-MM-DD")
+    related_time.value = moment().format("HH:mm:ss")
+}
+
+function reset_related_date_time(): void {
+    related_date.value = moment(urlog.value.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(urlog.value.related_time).format("HH:mm:ss")
+}
+</script>
+
+<style lang="css" scoped>
+.input.date,
+.input.time,
+.input.text {
+    border: solid 1px silver;
+}
+</style>

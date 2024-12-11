@@ -6,12 +6,15 @@ export class SetNewPasswordRequest extends GkillAPIRequest {
 
     user_id: string
 
-    new_password: string
+    reset_token: string
+
+    new_password_sha256: string
 
     constructor() {
         super()
         this.user_id = ""
-        this.new_password = ""
+        this.reset_token = ""
+        this.new_password_sha256 = ""
 
     }
 

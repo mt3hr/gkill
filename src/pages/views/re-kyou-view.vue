@@ -1,18 +1,18 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
-        <KyouView :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :is_image_view="false" :kyou="target_kyou"
-            :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
-            :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-            :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="height" :width="width"
+    <v-card @contextmenu.prevent.stop="show_context_menu" :width="width" :height="height">
+        <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+            :is_image_view="false" :kyou="target_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
+            :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
+            :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
+            :height="height" :width="width" :is_readonly_mi_check="false"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" @requested_reload_list="() => { }"
             @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
             @dblclick.prevent.stop="() => { }" />
         <ReKyouContextMenu :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
-            ref="context_menu" @received_errors="(errors) => emits('received_errors', errors)"
+            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag" ref="context_menu"
+            @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
             @requested_reload_list="() => emits('requested_reload_list')"

@@ -16,10 +16,11 @@ type FindQuery struct {
 	Reps              *[]string   `json:"reps"`
 	Tags              *[]string   `json:"tags"`
 	TagsAnd           *bool       `json:"tags_and"`
-	UseTimeIs         *bool       `json:"use_time_is"`
+	UseTimeIs         *bool       `json:"use_timeis"`
 	TimeIsWords       *[]string   `json:"timeis_words"`
 	TimeIsNotWords    *[]string   `json:"timeis_not_words"`
 	TimeIsWordsAnd    *bool       `json:"timeis_words_and"`
+	UseTimeIsTags     *bool       `json:"use_timeis_tags"`
 	TimeIsTags        *[]string   `json:"timeis_tags"`
 	TimeIsTagsAnd     *bool       `json:"timeis_tags_and"`
 	UseCalendar       *bool       `json:"use_calendar"`
@@ -33,7 +34,7 @@ type FindQuery struct {
 	IncludeLimitMi    *bool       `json:"include_limit_mi"`
 	IncludeStartMi    *bool       `json:"include_start_mi"`
 	IncludeEndMi      *bool       `json:"include_end_mi"`
-	IncludeEndTimeIs  *bool       `json:"include_end_time_is"`
+	IncludeEndTimeIs  *bool       `json:"include_end_timeis"`
 	UsePlaing         *bool       `json:"use_plaing"`
 	PlaingTime        *time.Time  `json:"plaing_time"`
 	UseUpdateTime     *bool       `json:"use_update_time"`

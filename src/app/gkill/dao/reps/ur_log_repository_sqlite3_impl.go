@@ -240,9 +240,35 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM URLOG 
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE 
 `
+	dataType := "urlog"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+	sql += commonWhereSQL
+
 	log.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -251,13 +277,6 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	dataType := "urlog"
-
-	queryArgs := []interface{}{
-		repName,
-		dataType,
-		id,
-	}
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -371,7 +390,8 @@ SELECT
   DESCRIPTION,
   FAVICON_IMAGE,
   THUMBNAIL_IMAGE,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM URLOG
 WHERE
 `
@@ -446,6 +466,7 @@ WHERE
 				&urlog.FaviconImage,
 				&urlog.ThumbnailImage,
 				&urlog.RepName,
+				&urlog.DataType,
 			)
 
 			urlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -520,23 +541,47 @@ SELECT
   DESCRIPTION,
   FAVICON_IMAGE,
   THUMBNAIL_IMAGE,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM URLOG
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE
 `
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+	dataType := "urlog"
+
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	appendGroupBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
 	log.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get urlog histories sql %s: %w", id, err)
+		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
 		return nil, err
 	}
 	defer stmt.Close()
 
-	queryArgs := []interface{}{
-		repName,
-		id,
-	}
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -574,6 +619,7 @@ ORDER BY UPDATE_TIME DESC
 				&urlog.FaviconImage,
 				&urlog.ThumbnailImage,
 				&urlog.RepName,
+				&urlog.DataType,
 			)
 
 			urlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)

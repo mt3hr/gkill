@@ -3,7 +3,7 @@
         <ServerConfigView :application_config="application_config" :gkill_api="gkill_api" :server_config="server_config"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_server_config="(server_config) => reload_server_config(server_config)"
+            @requested_reload_server_config="load_server_config()"
             @requested_close_dialog="hide" />
     </v-dialog>
 </template>
@@ -30,9 +30,6 @@ async function show(): Promise<void> {
 }
 async function hide(): Promise<void> {
     is_show_dialog.value = false
-}
-function reload_server_config(updated_server_config: ServerConfig): void {
-    server_config.value = updated_server_config
 }
 async function load_server_config(): Promise<void> {
     const req = new GetServerConfigRequest()

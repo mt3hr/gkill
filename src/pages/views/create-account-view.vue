@@ -29,6 +29,7 @@ import type { CreateAccountViewProps } from './create-account-view-props'
 import { AddAccountRequest } from '@/classes/api/req_res/add-account-request';
 import { GkillAPI } from '@/classes/api/gkill-api';
 import { GetServerConfigRequest } from '@/classes/api/req_res/get-server-config-request';
+import type { Account } from '@/classes/datas/config/account';
 
 const props = defineProps<CreateAccountViewProps>()
 const emits = defineEmits<CreateAccountViewEmits>()
@@ -64,6 +65,7 @@ async function create_account(): Promise<void> {
         emits('received_messages', server_config_res.messages)
     }
 
+    emits('created_account', res.added_account_info)
     emits('requested_reload_server_config', server_config_res.server_config)
     emits('requested_close_dialog')
 }
