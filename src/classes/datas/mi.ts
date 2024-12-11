@@ -79,11 +79,11 @@ export class Mi extends InfoBase {
 
         this.board_name = ""
 
-        this.limit_time = new Date(0)
+        this.limit_time = null
 
-        this.estimate_start_time = new Date(0)
+        this.estimate_start_time = null
 
-        this.estimate_end_time = new Date(0)
+        this.estimate_end_time = null
 
         this.checked_time = null
 

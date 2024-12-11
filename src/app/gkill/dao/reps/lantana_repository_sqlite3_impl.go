@@ -92,7 +92,7 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM  LANTANA
+FROM LANTANA
 WHERE
 `
 	repName, err := l.GetRepName(ctx)
@@ -376,7 +376,8 @@ SELECT
   UPDATE_DEVICE,
   UPDATE_USER,
   MOOD,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM LANTANA
 WHERE
 `
@@ -390,6 +391,7 @@ WHERE
 	dataType := "lantana"
 
 	queryArgs := []interface{}{
+		repName,
 		dataType,
 	}
 
@@ -447,6 +449,7 @@ WHERE
 				&lantana.UpdateUser,
 				&lantana.Mood,
 				&lantana.RepName,
+				&lantana.DataType,
 			)
 
 			lantana.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -511,7 +514,8 @@ SELECT
   UPDATE_DEVICE,
   UPDATE_USER,
   MOOD,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM LANTANA
 WHERE
 `
@@ -529,8 +533,11 @@ WHERE
 		IDs:    &ids,
 	}
 
+	dataType := "lantana"
+
 	queryArgs := []interface{}{
 		repName,
+		dataType,
 	}
 
 	whereCounter := 0
@@ -587,6 +594,7 @@ WHERE
 				&lantana.UpdateUser,
 				&lantana.Mood,
 				&lantana.RepName,
+				&lantana.DataType,
 			)
 
 			lantana.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)

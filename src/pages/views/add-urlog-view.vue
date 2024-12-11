@@ -3,11 +3,7 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>URLog編集</span>
-                </v-col>
-                <v-spacer />
-                <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                    <span>URLog追加</span>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -45,18 +41,6 @@
                 <v-btn color="primary" @click="save()">保存</v-btn>
             </v-col>
         </v-row>
-        <v-card v-if="show_kyou">
-            <KyouView :application_config="application_config" :gkill_api="gkill_api"
-                :show_timeis_plaing_end_button="true" :highlight_targets="highlight_targets" :is_image_view="false"
-                :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
-                :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                :show_mi_limit_time="true" :show_urlog_plaing_end_button="true" :height="'100%'" :width="'100%'"
-                :is_readonly_mi_check="true" @received_errors="(errors) => emits('received_errors', errors)"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
-                @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
-        </v-card>
     </v-card>
 </template>
 <script lang="ts" setup>
@@ -73,40 +57,32 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import type { Kyou } from '@/classes/datas/kyou'
+import { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
 
 const props = defineProps<EditURLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
-const title: Ref<string> = ref(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.title : "")
-const url: Ref<string> = ref(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.url : "")
-const related_date: Ref<string> = ref(moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("YYYY-MM-DD"))
-const related_time: Ref<string> = ref(moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("HH:mm:ss"))
+const urlog: Ref<URLog> = ref((() => {
+    const urlog = new URLog()
+    urlog.related_time = new Date(Date.now())
+    return urlog
+})())
+const title: Ref<string> = ref(urlog.value.title)
+const url: Ref<string> = ref(urlog.value.url)
+const related_date: Ref<string> = ref(moment(urlog.value.related_time).format("YYYY-MM-DD"))
+const related_time: Ref<string> = ref(moment(urlog.value.related_time).format("HH:mm:ss"))
 
 const show_kyou: Ref<boolean> = ref(false)
 
-watch(() => props.kyou, () => load())
-load()
-
-async function load(): Promise<void> {
-    cloned_kyou.value = props.kyou.clone()
-    await cloned_kyou.value.load_all()
-    title.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.title : ""
-    url.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.url : ""
-    related_date.value = moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("YYYY-MM-DD")
-    related_time.value = moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("HH:mm:ss")
-}
-
 function reset(): void {
-    title.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.title : ""
-    url.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.url : ""
-    related_date.value = moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("YYYY-MM-DD")
-    related_time.value = moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("HH:mm:ss")
+    title.value = urlog.value.title
+    url.value = urlog.value.url
+    related_date.value = moment(urlog.value.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(urlog.value.related_time).format("HH:mm:ss")
 }
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const urlog = cloned_kyou.value.typed_urlog
     if (!urlog) {
         const error = new GkillError()
         error.error_code = "//TODO"
@@ -129,9 +105,9 @@ async function save(): Promise<void> {
     }
 
     // 更新がなかったらエラーメッセージを出力する
-    if (urlog.title === title.value &&
-        moment(urlog.related_time) === (moment(related_date.value + " " + related_time.value)) &&
-        moment(urlog.related_time) === moment(related_date.value + " " + related_time.value)) {
+    if (urlog.value.title === title.value &&
+        moment(urlog.value.related_time) === (moment(related_date.value + " " + related_time.value)) &&
+        moment(urlog.value.related_time) === moment(related_date.value + " " + related_time.value)) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "URLogが更新されていません"
@@ -151,20 +127,25 @@ async function save(): Promise<void> {
     }
 
     // 更新後URLog情報を用意する
-    const updated_urlog = await urlog.clone()
-    updated_urlog.title = title.value
-    updated_urlog.url = url.value
-    updated_urlog.related_time = moment(related_date.value + " " + related_time.value).toDate()
-    updated_urlog.update_app = "gkill"
-    updated_urlog.update_device = gkill_info_res.device
-    updated_urlog.update_time = new Date(Date.now())
-    updated_urlog.update_user = gkill_info_res.user_id
+    const new_urlog = await urlog.value.clone()
+    new_urlog.id = GkillAPI.get_instance().generate_uuid()
+    new_urlog.title = title.value
+    new_urlog.url = url.value
+    new_urlog.related_time = moment(related_date.value + " " + related_time.value).toDate()
+    new_urlog.create_app = "gkill"
+    new_urlog.create_device = gkill_info_res.device
+    new_urlog.create_time = new Date(Date.now())
+    new_urlog.create_user = gkill_info_res.user_id
+    new_urlog.update_app = "gkill"
+    new_urlog.update_device = gkill_info_res.device
+    new_urlog.update_time = new Date(Date.now())
+    new_urlog.update_user = gkill_info_res.user_id
 
-    // 更新リクエストを飛ばす
-    const req = new UpdateURLogRequest()
+    // 追加リクエストを飛ばす
+    const req = new AddURLogRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
-    req.urlog = updated_urlog
-    const res = await props.gkill_api.update_urlog(req)
+    req.urlog = new_urlog
+    const res = await props.gkill_api.add_urlog(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -172,7 +153,7 @@ async function save(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
-    emits("updated_kyou", res.updated_urlog_kyou)
+    emits("updated_kyou", res.added_urlog_kyou)
     emits('requested_close_dialog')
     return
 }
@@ -183,8 +164,8 @@ function now_to_related_date_time(): void {
 }
 
 function reset_related_date_time(): void {
-    related_date.value = moment(cloned_kyou.value.related_time).format("YYYY-MM-DD")
-    related_time.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+    related_date.value = moment(urlog.value.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(urlog.value.related_time).format("HH:mm:ss")
 }
 </script>
 

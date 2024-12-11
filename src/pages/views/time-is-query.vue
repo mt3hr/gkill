@@ -14,9 +14,9 @@
         <v-row v-show="query.use_timeis" class="pa-0 ma-0">
             <v-col cols="2" class="pa-0 ma-0">
                 <v-btn v-if="query.timeis_words_and" icon="mdi-set-center"
-                    @click="query.timeis_words_and = !query.timeis_words_and ;emits('request_update_and_search_timeis_word', query.timeis_words_and)" />
+                    @click="query.timeis_words_and = !query.timeis_words_and; emits('request_update_and_search_timeis_word', query.timeis_words_and)" />
                 <v-btn v-if="!query.timeis_words_and" icon="mdi-set-all"
-                    @click="query.timeis_words_and = !query.timeis_words_and ;emits('request_update_and_search_timeis_word', query.timeis_words_and)" />
+                    @click="query.timeis_words_and = !query.timeis_words_and; emits('request_update_and_search_timeis_word', query.timeis_words_and)" />
             </v-col>
             <v-col cols="10" class="pa-0 ma-0">
                 <v-text-field v-model="query.timeis_keywords" label="状況キーワード" hide-details
@@ -27,13 +27,13 @@
             <v-col cols="2" class="pa-0 ma-0">
                 <v-btn v-if="query.timeis_tags_and" icon="mdi-set-center"
                     @click="query.timeis_tags_and = !query.timeis_tags_and; emits('request_update_and_search_timeis_tags', query.timeis_tags_and)" />
-                <v-btn v-if="query.timeis_tags_and" icon="mdi-set-all"
+                <v-btn v-if="!query.timeis_tags_and" icon="mdi-set-all"
                     @click="query.timeis_tags_and = !query.timeis_tags_and; emits('request_update_and_search_timeis_tags', query.timeis_tags_and)" />
             </v-col>
             <v-col cols="10" class="pt-4 pa-0 ma-0">
                 <v-checkbox v-model="query.use_timeis_tags"
-                    @change="emits('request_update_use_timeis_query', query.use_timeis_tags)" label="状況タグ" hide-details
-                    class="pa-0 ma-0" />
+                    @click="query.use_timeis_tags = !query.use_timeis_tags; emits('request_update_use_timeis_query', query.use_timeis_tags)"
+                    label="状況タグ" hide-details class="pa-0 ma-0" />
             </v-col>
         </v-row>
     </div>
@@ -64,6 +64,8 @@ defineExpose({ get_use_timeis, get_use_and_search_timeis_words, get_use_and_sear
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
+const query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
+
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
     const errors = await cloned_application_config.value.load_all()
@@ -71,16 +73,13 @@ watch(() => props.application_config, async () => {
         emits('received_errors', errors)
         return
     }
-    await update_check_state(query.value.timeis_tags, CheckState.checked)
-    const checked_items = foldable_struct.value?.get_selected_items()
-    if (checked_items) {
-        emits('request_update_checked_timeis_tags', checked_items, false)
-    }
-})
-
-watch(() => props.find_kyou_query, async () => {
-    query.value = props.find_kyou_query.clone()
-    await update_check_state(query.value.timeis_tags, CheckState.checked)
+    const tags = Array<string>()
+    cloned_application_config.value.tag_struct.forEach(tag => {
+        if (tag.check_when_inited) {
+            tags.push(tag.tag_name)
+        }
+    })
+    await update_check_state(tags, CheckState.checked)
     const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {
         emits('request_update_checked_timeis_tags', checked_items, false)
@@ -88,7 +87,16 @@ watch(() => props.find_kyou_query, async () => {
     }
 })
 
-const query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
+watch(() => props.find_kyou_query, async () => {
+    query.value = props.find_kyou_query.clone()
+    await update_check_state(query.value.tags, CheckState.checked)
+    const checked_items = foldable_struct.value?.get_selected_items()
+    if (checked_items) {
+        emits('request_update_checked_timeis_tags', checked_items, false)
+        emits('inited')
+    }
+})
+
 
 async function clicked_items(e: MouseEvent, items: Array<string>, check_state: CheckState, is_user: boolean): Promise<void> {
     const checked_items = foldable_struct.value?.get_selected_items()

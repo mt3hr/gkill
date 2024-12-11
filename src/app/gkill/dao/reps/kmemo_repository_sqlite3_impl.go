@@ -375,7 +375,8 @@ SELECT
   UPDATE_DEVICE,
   UPDATE_USER,
   CONTENT,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM KMEMO
 WHERE
 `
@@ -385,9 +386,11 @@ WHERE
 		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
 		return nil, err
 	}
+	dataType := "kmemo"
 
 	queryArgs := []interface{}{
 		repName,
+		dataType,
 	}
 
 	whereCounter := 0
@@ -443,6 +446,7 @@ WHERE
 				&kmemo.UpdateUser,
 				&kmemo.Content,
 				&kmemo.RepName,
+				&kmemo.DataType,
 			)
 
 			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -513,7 +517,8 @@ SELECT
   UPDATE_DEVICE,
   UPDATE_USER,
   CONTENT,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM KMEMO
 WHERE 
 `
@@ -523,9 +528,11 @@ WHERE
 		UseIDs: &trueValue,
 		IDs:    &ids,
 	}
+	dataType := "kmemo"
 
 	queryArgs := []interface{}{
 		repName,
+		dataType,
 	}
 
 	whereCounter := 0
@@ -581,6 +588,7 @@ WHERE
 				&kmemo.UpdateUser,
 				&kmemo.Content,
 				&kmemo.RepName,
+				&kmemo.DataType,
 			)
 
 			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)

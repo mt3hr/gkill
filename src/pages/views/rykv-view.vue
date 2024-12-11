@@ -41,7 +41,8 @@
                         :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                         :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                         :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                        :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()" :width="400"
+                        :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
+                        :is_readonly_mi_check="false" :width="400"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
@@ -70,6 +71,27 @@
             @received_messages="(messages) => emits('received_messages', messages)"
             @received_errors="(errors) => emits('received_errors', errors)" />
 
+        <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :last_added_tag="last_added_tag" :kyou="new Kyou()"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+            ref="add_timeis_dialog" />
+        <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :last_added_tag="last_added_tag" :kyou="new Kyou()"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+            ref="add_lantana_dialog" />
+        <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :last_added_tag="last_added_tag" :kyou="new Kyou()"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+            ref="add_urlog_dialog" />
         <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()"
             @received_errors="(errors) => emits('received_errors', errors)"
@@ -84,20 +106,6 @@
             @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
             @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
             ref="add_nlog_dialog" />
-        <EndTimeIsPlaingDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="last_added_tag" :kyou="new Kyou()"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-            ref="end_timeis_plaing_dialog" />
-        <StartTimeIsDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="last_added_tag" :kyou="new Kyou()"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-            ref="start_timeis_dialog" />
         <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
             :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
@@ -115,8 +123,11 @@
                     <v-list-item @click="show_kftl_dialog()">
                         <v-list-item-title>kftl</v-list-item-title>
                     </v-list-item>
-                    <v-list-item @click="show_timeis_start_dialog()">
-                        <v-list-item-title>timeis start</v-list-item-title>
+                    <v-list-item @click="show_urlog_dialog()">
+                        <v-list-item-title>urlog</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="show_timeis_dialog()">
+                        <v-list-item-title>timeis</v-list-item-title>
                     </v-list-item>
                     <v-list-item @click="show_mi_dialog()">
                         <v-list-item-title>mi</v-list-item-title>
@@ -154,11 +165,16 @@ import type { rykvViewProps } from './rykv-view-props'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import type KftlDialog from '../dialogs/kftl-dialog.vue'
+import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
+import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
+import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 
 const query_editor_sidebar = ref<InstanceType<typeof RykvQueryEditorSideBar> | null>(null);
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
 const add_nlog_dialog = ref<InstanceType<typeof AddNlogDialog> | null>(null);
-const start_timeis_dialog = ref<InstanceType<typeof StartTimeIsDialog> | null>(null);
+const add_lantana_dialog = ref<InstanceType<typeof AddLantanaDialog> | null>(null);
+const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null);
+const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
 
 const querys: Ref<Array<FindKyouQuery>> = ref((() => { const queries = new Array<FindKyouQuery>(); queries.push(new FindKyouQuery()); return queries })())
@@ -253,8 +269,8 @@ function show_kftl_dialog(): void {
     kftl_dialog.value?.show()
 }
 
-function show_timeis_start_dialog(): void {
-    start_timeis_dialog.value?.show()
+function show_timeis_dialog(): void {
+    add_timeis_dialog.value?.show()
 }
 function show_mi_dialog(): void {
     add_mi_dialog.value?.show()
@@ -265,7 +281,11 @@ function show_nlog_dialog(): void {
 }
 
 function show_lantana_dialog(): void {
-    // TODO
+    add_lantana_dialog.value?.show()
+}
+
+function show_urlog_dialog(): void {
+    add_urlog_dialog.value?.show()
 }
 
 </script>
