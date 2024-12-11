@@ -61,7 +61,7 @@
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :is_readonly_mi_check="true" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="() => { }"
@@ -209,7 +209,7 @@ async function save(): Promise<void> {
     const updated_timeis = await timeis.clone()
     updated_timeis.title = timeis_title.value
     updated_timeis.start_time = moment(timeis_start_date.value + " " + timeis_start_time.value).toDate()
-    updated_timeis.end_time = moment(timeis_end_date.value + " " + timeis_end_time.value).toDate()
+    updated_timeis.end_time = end_time
     updated_timeis.update_app = "gkill"
     updated_timeis.update_device = gkill_info_res.device
     updated_timeis.update_time = new Date(Date.now())

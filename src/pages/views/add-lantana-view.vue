@@ -3,12 +3,9 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>Lantana編集</span>
+                    <span>Lantana追加</span>
                 </v-col>
                 <v-spacer />
-                <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
-                </v-col>
             </v-row>
         </v-card-title>
         <LantanaFlowersView :application_config="application_config" :gkill_api="gkill_api" :editable="true"
@@ -18,6 +15,13 @@
                 <label>日時</label>
                 <input class="input" type="date" v-model="related_date" label="日付" />
                 <input class="input" type="time" v-model="related_time" label="時刻" />
+                <v-btn color="primary" @click="reset_related_time()">リセット</v-btn>
+                <v-btn color="primary" @click="now_to_related_time()">現在日時</v-btn>
+            </v-col>
+        </v-row>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-btn color="primary" @click="reset()">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
@@ -48,8 +52,12 @@ const edit_lantana_flowers = ref<InstanceType<typeof LantanaFlowersView> | null>
 const props = defineProps<AddLantanaViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const lantana: Lantana = new Lantana()
-const mood: Ref<Number> = ref(lantana!.mood)
+const lantana: Ref<Lantana> = ref((() => {
+    const lantana = new Lantana()
+    lantana.related_time = new Date(Date.now())
+    return lantana
+})())
+const mood: Ref<Number> = ref(lantana.value.mood)
 const related_date: Ref<string> = ref(moment().format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment().format("HH:mm:ss"))
 const show_kyou: Ref<boolean> = ref(false)
@@ -78,7 +86,7 @@ async function save(): Promise<void> {
     }
 
     // 更新がなかったらエラーメッセージを出力する
-    if (lantana.mood === await edit_lantana_flowers.value?.get_mood()) {
+    if (lantana.value.mood === await edit_lantana_flowers.value?.get_mood()) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "Lantanaが更新されていません"
@@ -98,7 +106,8 @@ async function save(): Promise<void> {
     }
 
     // 追加するLantana情報を用意する
-    const new_lantana = await lantana.clone()
+    const new_lantana = await lantana.value.clone()
+    new_lantana.id = GkillAPI.get_instance().generate_uuid()
     new_lantana.mood = await edit_lantana_flowers.value!.get_mood()
     new_lantana.related_time = moment(related_date.value + " " + related_time.value).toDate()
     new_lantana.create_app = "gkill"
@@ -109,7 +118,7 @@ async function save(): Promise<void> {
     new_lantana.update_time = new Date(Date.now())
     new_lantana.update_user = gkill_info_res.user_id
 
-    // 更新リクエストを飛ばす
+    // 追加リクエストを飛ばす
     const req = new AddLantanaRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
     req.lantana = new_lantana
@@ -125,9 +134,28 @@ async function save(): Promise<void> {
     emits('requested_close_dialog')
     return
 }
+
+function reset_related_time(): void {
+    related_date.value = moment(lantana.value.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(lantana.value.related_time).format("HH:mm:ss")
+}
+
+function now_to_related_time(): void {
+    related_date.value = moment().format("YYYY-MM-DD")
+    related_time.value = moment().format("HH:mm:ss")
+}
+
+function reset(): void {
+    mood.value = lantana.value.mood
+    related_date.value = moment().format("YYYY-MM-DD")
+    related_time.value = moment().format("HH:mm:ss")
+}
 </script>
+
 <style lang="css" scoped>
-.input {
+.input.date,
+.input.time,
+.input.text {
     border: solid 1px silver;
 }
 </style>

@@ -47,12 +47,11 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
-                :show_timeis_plaing_end_button="true"
-                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
-                :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
+                :show_timeis_plaing_end_button="true" :highlight_targets="highlight_targets" :is_image_view="false"
+                :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_urlog_plaing_end_button="true" :height="'100%'" :width="'100%'"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :is_readonly_mi_check="true" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="() => { }"
@@ -81,8 +80,8 @@ const emits = defineEmits<KyouViewEmits>()
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const title: Ref<string> = ref(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.title : "")
 const url: Ref<string> = ref(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.url : "")
-const related_date: Ref<string> = ref(moment(cloned_kyou.value.typed_urlog?cloned_kyou.value.typed_urlog.related_time:"").format("YYYY-MM-DD"))
-const related_time: Ref<string> = ref(moment(cloned_kyou.value.typed_urlog?cloned_kyou.value.typed_urlog.related_time:"").format("HH:mm:ss"))
+const related_date: Ref<string> = ref(moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("YYYY-MM-DD"))
+const related_time: Ref<string> = ref(moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("HH:mm:ss"))
 
 const show_kyou: Ref<boolean> = ref(false)
 
@@ -92,17 +91,17 @@ load()
 async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.load_all()
-    title.value = cloned_kyou.value.typed_urlog?cloned_kyou.value.typed_urlog.title:""
-    url.value = cloned_kyou.value.typed_urlog?cloned_kyou.value.typed_urlog.url:""
-    related_date.value = moment(cloned_kyou.value.typed_urlog?cloned_kyou.value.typed_urlog.related_time:"").format("YYYY-MM-DD")
-    related_time.value = moment(cloned_kyou.value.typed_urlog?cloned_kyou.value.typed_urlog.related_time:"").format("HH:mm:ss")
+    title.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.title : ""
+    url.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.url : ""
+    related_date.value = moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("YYYY-MM-DD")
+    related_time.value = moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("HH:mm:ss")
 }
 
 function reset(): void {
-    title.value = cloned_kyou.value.typed_urlog?cloned_kyou.value.typed_urlog.title:""
-    url.value = cloned_kyou.value.typed_urlog?cloned_kyou.value.typed_urlog.url:""
-    related_date.value = moment(cloned_kyou.value.typed_urlog?cloned_kyou.value.typed_urlog.related_time:"").format("YYYY-MM-DD")
-    related_time.value = moment(cloned_kyou.value.typed_urlog?cloned_kyou.value.typed_urlog.related_time:"").format("HH:mm:ss")
+    title.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.title : ""
+    url.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.url : ""
+    related_date.value = moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("YYYY-MM-DD")
+    related_time.value = moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("HH:mm:ss")
 }
 
 async function save(): Promise<void> {

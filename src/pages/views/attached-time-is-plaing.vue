@@ -1,10 +1,10 @@
 <template>
-    <span v-if="kyou.typed_timeis" :class="plaing_class"
+    <span v-if="timeis_kyou.typed_timeis" :class="plaing_class"
         @contextmenu.prevent="async (e) => show_context_menu(e as PointerEvent)">
-        {{ kyou.typed_timeis.title }}
+        {{ timeis_kyou.typed_timeis.title }}
     </span>
-    <AttachedTimeIsPlaingContextMenu :application_config="application_config" :gkill_api="gkill_api" :kyou="kyou"
-        v-if="kyou.typed_timeis" :timeis="kyou.typed_timeis" :last_added_tag="last_added_tag"
+    <AttachedTimeIsPlaingContextMenu :application_config="application_config" :gkill_api="gkill_api" :target_kyou="kyou"
+        v-if="timeis_kyou.typed_timeis" :timeis_kyou="timeis_kyou" :last_added_tag="last_added_tag"
         :highlight_targets="highlight_targets" @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"

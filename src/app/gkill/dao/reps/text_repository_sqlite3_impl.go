@@ -97,7 +97,7 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TEXT
-WHERE IS_DELETED = FALSE
+WHERE 
 `
 
 	repName, err := t.GetRepName(ctx)
@@ -106,17 +106,17 @@ WHERE IS_DELETED = FALSE
 		return nil, err
 	}
 	dataType := "text"
-
 	queryArgs := []interface{}{
 		repName,
 		dataType,
 	}
-	whereCounter := 1
+
+	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TEXT"}
 	ignoreFindWord := false
-	appendOrderBy := false
+	appendOrderBy := true
 	appendGroupBy := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
@@ -240,14 +240,41 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TEXT
-WHERE IS_DELETED = FALSE AND TARGET_ID LIKE ?
+WHERE 
 `
 
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
+	repName, err := t.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at tag: %w", err)
+		return nil, err
+	}
+
+	dataType := "tag"
+
+	trueValue := true
+	targetIDs := []string{target_id}
+	query := &find.FindQuery{
+		UseWords: &trueValue,
+		Words:    &targetIDs,
+	}
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	whereCounter := 0
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"ID"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
 
 	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
@@ -257,19 +284,6 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 	}
 	defer stmt.Close()
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at text: %w", err)
-		return nil, err
-	}
-
-	dataType := "text"
-
-	queryArgs := []interface{}{
-		repName,
-		dataType,
-		target_id,
-	}
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -368,8 +382,40 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM TEXT
-WHERE IS_DELETED = FALSE AND ID LIKE ?
+WHERE 
 `
+
+	repName, err := t.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at tag: %w", err)
+		return nil, err
+	}
+	dataType := "text"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{"TEXT"}
+	ignoreFindWord := false
+	appendOrderBy := true
+	appendGroupBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
 
 	log.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
@@ -379,19 +425,6 @@ WHERE IS_DELETED = FALSE AND ID LIKE ?
 	}
 	defer stmt.Close()
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at text: %w", err)
-		return nil, err
-	}
-
-	dataType := "text"
-
-	queryArgs := []interface{}{
-		repName,
-		dataType,
-		id,
-	}
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 

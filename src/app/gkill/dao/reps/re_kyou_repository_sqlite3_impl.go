@@ -185,9 +185,35 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM REKYOU
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE 
 `
+	dataType := "rekyou"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	appendGroupBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
+
 	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -196,13 +222,6 @@ ORDER BY UPDATE_TIME DESC
 	}
 	defer stmt.Close()
 
-	dataType := "rekyou"
-
-	queryArgs := []interface{}{
-		repName,
-		dataType,
-		id,
-	}
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
@@ -385,8 +404,40 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM REKYOU
-WHERE ID LIKE ?
+WHERE  
 `
+	repName, err := r.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at rekyou: %w", err)
+		return nil, err
+	}
+
+	dataType := "rekyou"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
+	queryArgs := []interface{}{
+		repName,
+		dataType,
+	}
+
+	whereCounter := 0
+	onlyLatestData := false
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	appendGroupBy := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql += commonWhereSQL
 
 	log.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
@@ -396,18 +447,6 @@ WHERE ID LIKE ?
 	}
 	defer stmt.Close()
 
-	repName, err := r.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at rekyou: %w", err)
-		return nil, err
-	}
-
-	dataType := "rekyou"
-	queryArgs := []interface{}{
-		repName,
-		dataType,
-		id,
-	}
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -543,21 +582,8 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM REKYOU
+WHERE 
 `
-
-	// UPDATE_TIMEが一番上のものだけを抽出
-	sql += `
-GROUP BY ID
-HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
-`
-
-	log.Printf("sql: %s", sql)
-	stmt, err := r.db.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at get all rekyous sql: %w", err)
-		return nil, err
-	}
-	defer stmt.Close()
 
 	repName, err := r.GetRepName(ctx)
 	if err != nil {
@@ -571,6 +597,29 @@ HAVING MAX(datetime(UPDATE_TIME, 'localtime'))
 		repName,
 		dataType,
 	}
+	query := &find.FindQuery{}
+
+	whereCounter := 0
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+	sql += commonWhereSQL
+
+	log.Printf("sql: %s", sql)
+	stmt, err := r.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get all rekyous sql: %w", err)
+		return nil, err
+	}
+	defer stmt.Close()
+
 	log.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 

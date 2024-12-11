@@ -87,12 +87,11 @@
         </v-row>
         <v-card v-if="show_kyou">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
-                :show_timeis_plaing_end_button="false"
-                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
-                :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
+                :show_timeis_plaing_end_button="false" :highlight_targets="highlight_targets" :is_image_view="false"
+                :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_mi_plaing_end_button="true" :height="'100%'" :width="'100%'"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :is_readonly_mi_check="true" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="() => { }"

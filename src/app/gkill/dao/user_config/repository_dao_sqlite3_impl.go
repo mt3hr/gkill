@@ -262,7 +262,7 @@ INSERT INTO REPOSITORY (
 )
 `
 
-	log.Printf("sql: %s", sql)
+		log.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add repositories sql: %w", err)
@@ -322,7 +322,7 @@ INSERT INTO REPOSITORY (
 
 func (r *repositoryDAOSQLite3Impl) UpdateRepository(ctx context.Context, repository *Repository) (bool, error) {
 	sql := `
-UPDATE DEVICE_STRUCT SET
+UPDATE REPOSITORY SET
   ID = ?,
   USER_ID = ?,
   DEVICE = ?,

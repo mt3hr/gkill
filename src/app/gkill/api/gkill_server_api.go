@@ -775,6 +775,18 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	// リセットトークンがあっているか確認
+	if targetAccount.PasswordResetToken == nil || request.ResetToken != *targetAccount.PasswordResetToken {
+		err = fmt.Errorf("error at reset token is not match user id = %s requested token = %s: %w", request.UserID, request.ResetToken, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidPasswordResetTokenError,
+			ErrorMessage: "パスワード設定に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	updateTargetAccount := &account.Account{
 		UserID:             targetAccount.UserID,
 		IsAdmin:            targetAccount.IsAdmin,

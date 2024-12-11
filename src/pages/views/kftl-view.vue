@@ -23,8 +23,8 @@
                     </td>
                     <td>
                         <div class="kftl_text_area_wrap">
-                            <textarea :autofocus="true" id="kftl_text_area" class="kftl_text_area"
-                                v-model="text_area_content"></textarea>
+                            <textarea id="kftl_text_area" class="kftl_text_area" v-model="text_area_content"
+                                autofocus></textarea>
                         </div>
                     </td>
                 </tr>
