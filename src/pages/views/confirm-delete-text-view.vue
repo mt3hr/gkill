@@ -23,9 +23,8 @@
                 :highlight_targets="text_highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
-                :height="'100%'" :width="'100%'"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
+                :is_readonly_mi_check="false" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="() => { }"
@@ -85,6 +84,7 @@ async function delete_text(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits('deleted_text', res.updated_text)
+    emits('requested_close_dialog')
     return
 }
 </script>

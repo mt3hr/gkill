@@ -11,4 +11,5 @@ export interface CreateAccountViewEmits {
     (e: 'added_account', account: Account): void
     (e: 'requested_reload_server_config', server_config: ServerConfig): void
     (e: 'requested_close_dialog'): void
+    (e: 'created_account', account: Account): void
 }

@@ -404,7 +404,7 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM IDF
-WHERE ID = ? 
+WHERE
 `
 
 	repName, err := i.GetRepName(ctx)
@@ -417,12 +417,16 @@ WHERE ID = ?
 	queryArgs := []interface{}{
 		repName,
 		dataType,
-		id,
 	}
 
-	query := &find.FindQuery{}
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
 
-	whereCounter := 1
+	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{}
@@ -565,16 +569,8 @@ SELECT
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM IDF
-WHERE ID = ?
-ORDER BY UPDATE_TIME DESC
+WHERE
 `
-	log.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql: %w", err)
-		return "", err
-	}
-	defer stmt.Close()
 
 	repName, err := i.GetRepName(ctx)
 	if err != nil {
@@ -583,11 +579,40 @@ ORDER BY UPDATE_TIME DESC
 	}
 
 	dataType := "idf"
+
+	trueValue := true
+	ids := []string{id}
+	query := &find.FindQuery{
+		UseIDs: &trueValue,
+		IDs:    &ids,
+	}
 	queryArgs := []interface{}{
 		repName,
 		dataType,
-		id,
 	}
+
+	whereCounter := 0
+	onlyLatestData := true
+	relatedTimeColumnName := "RELATED_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	appendGroupBy := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return "", err
+	}
+
+	sql += commonWhereSQL
+
+	log.Printf("sql: %s", sql)
+	stmt, err := i.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		return "", err
+	}
+	defer stmt.Close()
+
 	log.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {

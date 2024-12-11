@@ -53,7 +53,8 @@
             @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
             ref="confirm_reset_password_dialog" />
         <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            :server_config="server_config" @added_account="(account) => show_show_password_reset_link_dialog(account)"
+            @received_errors="(errors) => emits('received_errors', errors)"
             @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
             @received_messages="(messages) => emits('received_messages', messages)" ref="create_account_dialog" />
         <ShowPasswordResetLinkDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -63,7 +64,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue'
+import { nextTick, type Ref, ref, watch } from 'vue'
 import type { ManageAccountViewEmits } from './manage-account-view-emits'
 import type { ManageAccountViewProps } from './manage-account-view-props'
 import AllocateRepDialog from '../dialogs/allocate-rep-dialog.vue'
@@ -129,7 +130,19 @@ function show_confirm_reset_password_dialog(account: Account): void {
     confirm_reset_password_dialog.value?.show(account)
 }
 
-function show_show_password_reset_link_dialog(account: Account): void {
-    show_password_reset_link_dialog.value?.show(account)
+async function show_show_password_reset_link_dialog(account: Account): Promise<void> {
+    const req = new GetServerConfigRequest()
+    req.session_id = GkillAPI.get_instance().get_session_id()
+    const res = await GkillAPI.get_instance().get_server_config(req)
+    if (res.errors && res.errors.length !== 0) {
+        emits('received_errors', res.errors)
+        return
+    }
+    const accounts = res.server_config.accounts
+    for (let i = 0; i < accounts.length; i++) {
+        if (account.user_id === accounts[i].user_id) {
+            show_password_reset_link_dialog.value?.show(accounts[i])
+        }
+    }
 }
 </script>
