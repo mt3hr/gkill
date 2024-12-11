@@ -56,6 +56,8 @@ export class KFTLTimeIsRequest extends KFTLRequest {
         const timeis_req = new AddTimeisRequest()
         timeis_req.session_id = GkillAPI.get_instance().get_session_id()
         timeis_req.timeis.id = this.get_request_id()
+        const related_time = this.get_related_time()
+        await this.set_start_time(related_time ? related_time : new Date(Date.now()))
         timeis_req.timeis.start_time = this.start_time
         timeis_req.timeis.end_time = this.end_time
         timeis_req.timeis.title = this.title
