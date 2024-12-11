@@ -3,7 +3,9 @@
         <ConfirmDeleteTextView :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="[text.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag" :text="text"
             @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" />
+            @received_messages="(messages) => emits('received_messages', messages)" 
+            @requested_close_dialog="hide()"
+            />
     </v-dialog>
 </template>
 <script setup lang="ts">

@@ -381,7 +381,8 @@ SELECT
   SHOP,
   TITLE,
   AMOUNT,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM NLOG
 WHERE
 `
@@ -449,6 +450,7 @@ WHERE
 				&nlog.Title,
 				&nlog.Amount,
 				&nlog.RepName,
+				&nlog.DataType,
 			)
 
 			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
@@ -521,7 +523,8 @@ SELECT
   SHOP,
   TITLE,
   AMOUNT,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYHPE
 FROM NLOG 
 WHERE 
 `
@@ -532,8 +535,10 @@ WHERE
 		IDs:    &ids,
 	}
 
+	dataType := "nlog"
 	queryArgs := []interface{}{
 		repName,
+		dataType,
 	}
 
 	whereCounter := 0
@@ -591,6 +596,7 @@ WHERE
 				&nlog.Title,
 				&nlog.Amount,
 				&nlog.RepName,
+				&nlog.DataType,
 			)
 
 			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)

@@ -5,7 +5,8 @@
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
             @requested_reload_list="emits('requested_reload_list')"
-            @requested_update_check_kyous="(kyou, is_checked) => emits('requested_update_check_kyous', kyou, is_checked)" />
+            @requested_update_check_kyous="(kyou, is_checked) => emits('requested_update_check_kyous', kyou, is_checked)"
+            @requested_close_dialog="hide()" />
     </v-dialog>
 </template>
 <script lang="ts" setup>

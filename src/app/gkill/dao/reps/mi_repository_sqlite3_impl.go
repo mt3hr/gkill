@@ -650,6 +650,7 @@ WHERE
 				&mi.UpdateDevice,
 				&mi.UpdateUser,
 				&mi.RepName,
+				&mi.DataType,
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan mi: %w", err)
@@ -736,7 +737,8 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME
+  ? AS REP_NAME,
+  ? AS DATA_TYPE
 FROM MI
 WHERE
 `
@@ -753,8 +755,11 @@ WHERE
 		IDs:    &ids,
 	}
 
+	dataType := "mi"
+
 	queryArgsForCreate := []interface{}{
 		repName,
+		dataType,
 	}
 
 	whereCounter := 0
@@ -818,6 +823,7 @@ WHERE
 				&mi.UpdateDevice,
 				&mi.UpdateUser,
 				&mi.RepName,
+				&mi.DataType,
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan mi: %w", err)

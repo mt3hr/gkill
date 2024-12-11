@@ -5,13 +5,9 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <span>Nlog追加</span>
                 </v-col>
-                <v-spacer />
-                <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
-                </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-if="nlog" v-model="nlog_title_value" label="タイトル" />
+        <v-text-field v-if="nlog" v-model="nlog_title_value" label="タイトル" autofocus />
         <v-text-field v-if="nlog" v-model="nlog_shop_value" label="店名" />
         <v-text-field v-if="nlog" v-model="nlog_amount_value" type="number" label="金額" />
         <v-row class="pa-0 ma-0">
@@ -19,6 +15,13 @@
                 <label>日時</label>
                 <input class="input" type="date" v-model="related_date" label="日付" />
                 <input class="input" type="time" v-model="related_time" label="時刻" />
+                <v-btn color="primary" @click="reset_related_time()">リセット</v-btn>
+                <v-btn color="primary" @click="now_to_related_time()">現在日時</v-btn>
+            </v-col>
+        </v-row>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-btn color="primary" @click="reset()">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
@@ -43,10 +46,14 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 const props = defineProps<AddNlogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const nlog: Nlog = new Nlog()
-const nlog_title_value: Ref<string> = ref(nlog ? nlog.title : "")
-const nlog_amount_value: Ref<Number> = ref(nlog ? nlog.amount : 0)
-const nlog_shop_value: Ref<string> = ref(nlog ? nlog.shop : "")
+const nlog: Ref<Nlog> = ref((() => {
+    const nlog = new Nlog()
+    nlog.related_time = new Date(Date.now())
+    return nlog
+})())
+const nlog_title_value: Ref<string> = ref(nlog ? nlog.value.title : "")
+const nlog_amount_value: Ref<Number> = ref(nlog ? nlog.value.amount : 0)
+const nlog_shop_value: Ref<string> = ref(nlog ? nlog.value.shop : "")
 
 const related_date: Ref<string> = ref(moment().format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment().format("HH:mm:ss"))
@@ -76,12 +83,12 @@ async function save(): Promise<void> {
     }
 
     // 更新がなかったらエラーメッセージを出力する
-    if (nlog_amount_value.value === nlog.amount &&
-        nlog_shop_value.value === nlog.shop &&
-        nlog_title_value.value === nlog.title) {
+    if (nlog_amount_value.value === nlog.value.amount &&
+        nlog_shop_value.value === nlog.value.shop &&
+        nlog_title_value.value === nlog.value.title) {
         const error = new GkillError()
         error.error_code = "//TODO"
-        error.error_message = "Nlog更新されていません"
+        error.error_message = "Nlogが入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -97,8 +104,9 @@ async function save(): Promise<void> {
         return
     }
 
-    // 更新後Kmemo情報を用意する
-    const new_nlog = await nlog.clone()
+    // 更新後Nlog情報を用意する
+    const new_nlog = await nlog.value.clone()
+    new_nlog.id = GkillAPI.get_instance().generate_uuid()
     new_nlog.amount = nlog_amount_value.value
     new_nlog.shop = nlog_shop_value.value
     new_nlog.title = nlog_title_value.value
@@ -112,7 +120,7 @@ async function save(): Promise<void> {
     new_nlog.update_time = new Date(Date.now())
     new_nlog.update_user = gkill_info_res.user_id
 
-    // 更新リクエストを飛ばす
+    // 追加リクエストを飛ばす
     const req = new AddNlogRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
     req.nlog = new_nlog
@@ -128,4 +136,30 @@ async function save(): Promise<void> {
     emits('requested_close_dialog')
     return
 }
+
+function reset_related_time(): void {
+    related_date.value = moment(nlog.value.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(nlog.value.related_time).format("HH:mm:ss")
+}
+
+function now_to_related_time(): void {
+    related_date.value = moment().format("YYYY-MM-DD")
+    related_time.value = moment().format("HH:mm:ss")
+}
+
+function reset(): void {
+    nlog_title_value.value = (nlog ? nlog.value.title : "")
+    nlog_amount_value.value = (nlog ? nlog.value.amount : 0)
+    nlog_shop_value.value = (nlog ? nlog.value.shop : "")
+    related_date.value = (moment().format("YYYY-MM-DD"))
+    related_time.value = (moment().format("HH:mm:ss"))
+}
 </script>
+
+<style lang="css" scoped>
+.input.date,
+.input.time,
+.input.text {
+    border: solid 1px silver;
+}
+</style>

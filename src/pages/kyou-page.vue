@@ -9,7 +9,7 @@
             :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
             :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
             :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
-            :width="app_content_width.valueOf()" @received_errors="write_errors" @received_messages="write_messages" />
+            :width="app_content_width.valueOf()" :is_readonly_mi_check="false" @received_errors="write_errors" @received_messages="write_messages" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
             :is_show="is_show_application_config_dialog" @received_errors="write_errors"
