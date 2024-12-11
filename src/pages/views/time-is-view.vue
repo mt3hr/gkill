@@ -32,16 +32,18 @@ const duration = computed(() => {
     let time1 = props.timeis.start_time
     let time2 = props.timeis.end_time
 
+    const zero_time = moment(new Date(0)).toDate()
+
     let diff_str = ""
     time1 = moment(time1).toDate()
     time2 = time2 ? moment(time2).toDate() : new Date(Date.now())
-    const diff = time1.getTime() - time2.getTime()
+    const diff = Math.abs(time2.getTime() - time1.getTime())
     const diff_date = new Date(diff)
     if (diff_date.getFullYear() - 1970 !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += diff_date.getFullYear() + "年"
+        diff_str += diff_date.getFullYear() - 1970 + "年"
     }
     if (diff_date.getMonth() !== 0) {
         if (diff_str !== "") {
@@ -55,11 +57,11 @@ const duration = computed(() => {
         }
         diff_str += (diff_date.getDate() - 1) + "日"
     }
-    if (diff_date.getHours() !== 0) {
+    if (diff_date.getHours() - zero_time.getHours() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += (diff_date.getHours()) + "時間"
+        diff_str += (diff_date.getHours() - zero_time.getHours()) + "時間"
     }
     if (diff_date.getMinutes() !== 0) {
         if (diff_str !== "") {
@@ -67,12 +69,14 @@ const duration = computed(() => {
         }
         diff_str += diff_date.getMinutes() + "分"
     }
+    /*
     if (diff_date.getSeconds() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
         diff_str += diff_date.getSeconds() + "秒"
     }
+    */
     return diff_str
 })
 
