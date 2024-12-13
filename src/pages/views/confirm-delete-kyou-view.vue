@@ -100,6 +100,7 @@ async function delete_kyou(): Promise<void> {
     if (errors && errors.length != 0) {
         emits('received_errors', errors)
     }
+    emits('requested_close_dialog')
 }
 
 async function delete_kmemo(): Promise<Array<GkillError>> {
