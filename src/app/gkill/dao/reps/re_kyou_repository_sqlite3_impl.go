@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"sort"
 	"sync"
 	"time"
 
@@ -109,13 +110,10 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 			return nil, err
 		}
 		// 存在すれば検索ヒットとする
-		notDeletedKyouCount := 0
-		for _, kyou := range kyous {
-			if kyou.IsDeleted {
-				notDeletedKyouCount++
-			}
-		}
-		if notDeletedKyouCount != 0 {
+		sort.Slice(kyous, func(i, j int) bool {
+			return kyous[i].RelatedTime.After(kyous[j].RelatedTime)
+		})
+		if len(kyous) != 0 && !kyous[0].IsDeleted {
 			kyou := &Kyou{}
 			kyou.IsDeleted = rekyou.IsDeleted
 			kyou.ID = rekyou.ID
