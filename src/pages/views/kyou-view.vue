@@ -1,5 +1,5 @@
 <template>
-    <div @dblclick="show_kyou_dialog()">
+    <div @dblclick="show_kyou_dialog()" @click="emits('clicked_kyou', cloned_kyou)">
         <AttachedTag v-for="attached_tag, index in cloned_kyou.attached_tags" :tag="attached_tag"
             :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
             :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
@@ -51,7 +51,8 @@
             <miKyouView v-if="cloned_kyou.typed_mi" :mi="cloned_kyou.typed_mi" :application_config="application_config"
                 :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
-                :height="height" :width="width" :is_readonly_mi_check="is_readonly_mi_check" @received_messages="(messages) => emits('received_messages', messages)"
+                :height="height" :width="width" :is_readonly_mi_check="is_readonly_mi_check"
+                @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="() => emits('requested_reload_list')"
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
