@@ -1,10 +1,11 @@
 <template>
     <v-sheet>
-        <v-calendar :width="350" :v-slot:event="events" :weeks-in-month="'static'"
-            :v-model="new Date(Date.now())" :allowed-dates="(date: unknown): boolean => { return true }"
-            ref="kyou_counter_calendar" :color="'primary'" :events="events" type="day" @wheel.prevent.stop="on_wheel">
-            <template v-slot:event="{ day, allDay, event }">
-                <p class="kyou_counter" @click="clicked_date(event.start as Date)">{{ event.title }}</p>
+        <v-calendar :width="350" :weeks-in-month="'static'" :v-model="new Date(Date.now())" ref="kyou_counter_calendar"
+            :events="events" @wheel.prevent.stop="on_wheel">
+            <template v-slot:event="{ event }">
+                <div class="kyou_count">
+                    {{ event["title"] }}
+                </div>
             </template>
         </v-calendar>
         <v-slider min="0" max="86399" v-model="slider_model" :label="time" />
@@ -21,11 +22,17 @@ const kyou_counter_calendar = ref<InstanceType<typeof VCalendar> | null>(null)
 const props = defineProps<KyouCountCalendarProps>()
 const emits = defineEmits<KyouCountCalendarEmits>()
 
-const dates: Ref<Array<Date>> = ref([moment('2024-11-10 00:00:00').toDate()])
 const slider_model: Ref<number> = ref(86399)
 const events: Ref<Array<any>> = ref(new Array<any>())
 
 watch(props.kyous, () => {
+    update_events()
+})
+
+update_events()
+
+function update_events(): void {
+    console.log(props.kyous)
     const date_event_map: Map<string, Number> = new Map<string, Number>()
     for (let i = 0; i < props.kyous.length; i++) {
         const kyou = props.kyous[i]
@@ -42,12 +49,12 @@ watch(props.kyous, () => {
     date_event_map.forEach((count: Number, date_str: string): void => {
         event_list.push({
             title: count.toString(),
-            start: date_str,
-            end: date_str,
+            start: moment(date_str).toDate(),
+            end: moment(date_str).add('day', 1).add('millisecond', -1).toDate(),
         })
     })
     events.value = event_list
-})
+}
 
 function on_wheel(e: any) {
     if (0 < e.deltaY) {
@@ -71,20 +78,35 @@ const time = computed(() => {
         ('00' + Math.floor(slider_model.value % 60).toString()).slice(-2)
 })
 nextTick(() => {
-    document.querySelectorAll("div.v-calendar__container.days__7 > div.v-calendar-month__days.days-with-weeknumbers__7.v-calendar-month__weeknumbers > div > div.v-calendar-weekly__day-label > button > span.v-btn__content").forEach((element, key, parent) => {
-        element.addEventListener('click', (() => {
-            let year = 0
-            let month = 0
-            kyou_counter_calendar.value?.daysInMonth.forEach(date => {
-                if (moment((date.date as Date).toString()).date() === 14) {
-                    year = date.year
-                    month = date.month
-                }
+    const calendar_year_month_selector = "div.v-calendar.v-calendar-monthly > div:nth-child(1) > div > div"
+    const calendar_date_cell_selectors = [
+        "div.v-calendar.v-calendar-monthly > div.v-calendar__container.days__7 > div.v-calendar-month__days.days-with-weeknumbers__7.v-calendar-month__weeknumbers > div:nth-child(n+2):nth-child(-n+8)",
+        "div.v-calendar.v-calendar-monthly > div.v-calendar__container.days__7 > div.v-calendar-month__days.days-with-weeknumbers__7.v-calendar-month__weeknumbers > div:nth-child(n+10):nth-child(-n+16)",
+        "div.v-calendar.v-calendar-monthly > div.v-calendar__container.days__7 > div.v-calendar-month__days.days-with-weeknumbers__7.v-calendar-month__weeknumbers > div:nth-child(n+18):nth-child(-n+24)",
+        "div.v-calendar.v-calendar-monthly > div.v-calendar__container.days__7 > div.v-calendar-month__days.days-with-weeknumbers__7.v-calendar-month__weeknumbers > div:nth-child(n+26):nth-child(-n+32)",
+        "div.v-calendar.v-calendar-monthly > div.v-calendar__container.days__7 > div.v-calendar-month__days.days-with-weeknumbers__7.v-calendar-month__weeknumbers > div:nth-child(n+34):nth-child(-n+40)",
+        "div.v-calendar.v-calendar-monthly > div.v-calendar__container.days__7 > div.v-calendar-month__days.days-with-weeknumbers__7.v-calendar-month__weeknumbers > div:nth-child(n+42):nth-child(-n+48)",
+    ]
+    const calendar_date_text_selector = "div.v-calendar-weekly__day-label > button > span.v-btn__content"
+    document.querySelectorAll(calendar_year_month_selector).forEach(year_month_element => {
+        calendar_date_cell_selectors.forEach(date_cell_selector => {
+            document.querySelectorAll(date_cell_selector).forEach((element, key, parent) => {
+                element.addEventListener('click', (() => {
+                    if (!element.textContent || element.textContent.trim() === "") {
+                        return
+                    }
+                    let year = year_month_element.textContent?.substring(0, 4)
+                    let month = year_month_element.textContent?.substring(5, 7).replace("月", "")
+                    let date: string | null = ""
+                    element.querySelectorAll(calendar_date_text_selector).forEach(date_text_element => date = ("0" + date_text_element.textContent).slice(-2))
+                    clicked_date(moment(year + "-" + month + "-" + date).toDate())
+                    console.log(year + "-" + month + "-" + ("0" + element.textContent).slice(-2))
+                }))
             })
-            clicked_date(moment(year + "-" + month + "-" + element.textContent).toDate())
-        }))
+        })
     })
 })
+
 </script>
 
 <style lang="css">
@@ -96,11 +118,13 @@ nextTick(() => {
     display: none;
 }
 
-.kyou_counter {
-    text-align: center;
+.kyou_count {
     color: white;
-    font-weight: bold;
-    background-color: #2672ed;
+    background-color: rgb(var(--v-theme-primary));
     border-radius: 20px;
+    width: 100%;
+    font-weight: bold;
+    text-align: center;
+    font-size: 85%;
 }
 </style>

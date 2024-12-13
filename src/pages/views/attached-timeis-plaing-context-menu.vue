@@ -16,7 +16,7 @@
         </v-list>
     </v-menu>
     <EditTimeIsDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="timeis_kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="highlight_targets" :kyou="cloned_timeis_kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -24,7 +24,7 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
         ref="edit_timeis_dialog" />
     <ConfirmDeleteKyouDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="timeis_kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="highlight_targets" :kyou="cloned_timeis_kyou" :last_added_tag="last_added_tag"
          @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -32,7 +32,7 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
         ref="confirm_delete_kyou_dialog" />
     <KyouHistoriesDialog :application_config="application_config" :gkill_api="gkill_api"
-        :highlight_targets="highlight_targets" :kyou="timeis_kyou" :last_added_tag="last_added_tag"
+        :highlight_targets="highlight_targets" :kyou="cloned_timeis_kyou" :last_added_tag="last_added_tag"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -44,12 +44,13 @@
 import type { AttachedTimeisPlaingContextMenuProps } from './attached-timeis-plaing-context-menu-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { TimeIs } from '@/classes/datas/time-is'
-import { computed, type Ref, ref } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import EditTimeIsDialog from '../dialogs/edit-time-is-dialog.vue'
 import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-kyou-dialog.vue'
 import KyouHistoriesDialog from '../dialogs/kyou-histories-dialog.vue'
 import { InfoIdentifier } from '@/classes/datas/info-identifier'
 import { GkillMessage } from '@/classes/api/gkill-message'
+import type { Kyou } from '@/classes/datas/kyou'
 
 const edit_timeis_dialog = ref<InstanceType<typeof EditTimeIsDialog> | null>(null);
 const confirm_delete_kyou_dialog = ref<InstanceType<typeof ConfirmDeleteKyouDialog> | null>(null);
@@ -59,10 +60,23 @@ const props = defineProps<AttachedTimeisPlaingContextMenuProps>()
 const emits = defineEmits<KyouViewEmits>()
 defineExpose({ show, hide })
 
+const cloned_timeis_kyou: Ref<Kyou> = ref(props.timeis_kyou.clone())
+
+watch(() => props.timeis_kyou, () => {
+    reload_cloned_timeis_kyou()
+})
+
+reload_cloned_timeis_kyou()
+
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
 const context_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
+
+function reload_cloned_timeis_kyou(): void {
+    cloned_timeis_kyou.value = props.timeis_kyou.clone()
+    cloned_timeis_kyou.value.load_all()
+}
 
 async function show(e: PointerEvent): Promise<void> {
     position_x.value = e.clientX

@@ -30,19 +30,22 @@
                     <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
                         v-for="query, index in querys" :application_config="application_config" :gkill_api="gkill_api"
                         :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
+                        @clicked_kyou="(kyou) => { focused_kyou = kyou; focused_column_index = index; }"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="reload_list(index)"
-                        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+                        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                        ref="kyou_list_views" />
                 </td>
                 <td valign="top">
-                    <KyouView v-if="focused_kyou" :application_config="application_config" :gkill_api="gkill_api"
-                        :highlight_targets="[]" :is_image_view="false" :kyou="focused_kyou"
+                    <div v-if="!focused_kyou" class="kyou_detail_view dummy" />
+                    <KyouView v-if="focused_kyou && is_show_kyou_detail_view" :application_config="application_config"
+                        :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="false" :kyou="focused_kyou"
                         :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                         :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                         :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                         :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
-                        :is_readonly_mi_check="false" :width="400"
+                        :is_readonly_mi_check="false" :width="400" class="kyou_detail_view"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
@@ -145,7 +148,7 @@
 </template>
 <script setup lang="ts">
 
-import { computed, nextTick, type Ref, ref } from 'vue'
+import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { Kyou } from '@/classes/datas/kyou'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
@@ -176,14 +179,14 @@ const add_lantana_dialog = ref<InstanceType<typeof AddLantanaDialog> | null>(nul
 const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null);
 const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
+const kyou_list_views = ref();
 
 const querys: Ref<Array<FindKyouQuery>> = ref((() => { const queries = new Array<FindKyouQuery>(); queries.push(new FindKyouQuery()); return queries })())
 const match_kyous_list: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
 const focused_column_index: Ref<number> = ref(0)
+const focused_column_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_kyou: Ref<Kyou | null> = ref(null)
-const focused_list_views_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_time: Ref<Date> = ref(new Date())
-const focused_column_kyous = computed (() => match_kyous_list.value[focused_column_index.value])
 const focused_column_checked_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const is_show_kyou_detail_view: Ref<boolean> = ref(false)
 const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
@@ -198,6 +201,19 @@ const position_y: Ref<Number> = ref(0)
 
 const props = defineProps<rykvViewProps>()
 const emits = defineEmits<rykvViewEmits>()
+
+watch(() => focused_column_index.value, () => {
+    focused_column_kyous.value.splice(0, focused_column_kyous.value.length - 1)
+    focused_column_kyous.value.push(...match_kyous_list.value[focused_column_index.value])
+})
+
+watch(() => focused_time.value, () => {
+    if (!kyou_list_views) {
+        return
+    }
+    const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any
+    kyou_list_view.scroll_to_time(focused_time.value)
+})
 
 nextTick(() => {
     is_show_kyou_detail_view.value = props.app_content_width.valueOf() >= 420
@@ -233,7 +249,7 @@ async function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): Prom
 }
 
 async function search(column_index: number): Promise<void> {
-    match_kyous_list.value = []
+    match_kyous_list.value[column_index] = []
     const req = new GetKyousRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
     req.query = querys.value[column_index]
@@ -246,6 +262,8 @@ async function search(column_index: number): Promise<void> {
         emits('received_messages', res.messages)
     }
     match_kyous_list.value[column_index] = res.kyous
+    focused_column_kyous.value.splice(0, focused_column_kyous.value.length - 1)
+    focused_column_kyous.value.push(...res.kyous)
 }
 
 function floatingActionButtonStyle() {
@@ -292,5 +310,11 @@ function show_urlog_dialog(): void {
 <style lang="css">
 .rykv_view_table {
     padding-top: 0px;
+}
+
+.kyou_detail_view {
+    width: 400px;
+    max-width: 400px;
+    min-width: 400px;
 }
 </style>
