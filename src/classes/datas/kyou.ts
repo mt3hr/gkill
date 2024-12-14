@@ -3,7 +3,7 @@
 import { InfoBase } from './info-base'
 import { GkillError } from '../api/gkill-error'
 import { GitCommitLog } from './git-commit-log'
-import type { IDFKyou } from './idf-kyou'
+import { IDFKyou } from './idf-kyou'
 import { Kmemo } from './kmemo'
 import { Lantana } from './lantana'
 import { Mi } from './mi'
@@ -23,6 +23,7 @@ import { GetLantanaRequest } from '../api/req_res/get-lantana-request'
 import { GetGitCommitLogRequest } from '../api/req_res/get-git-commit-log-request'
 import { GetReKyouRequest } from '../api/req_res/get-re-kyou-request'
 import moment from 'moment'
+import { GetIDFKyouRequest } from '../api/req_res/get-idf-kyou-request'
 
 export class Kyou extends InfoBase {
     is_deleted: boolean
@@ -372,7 +373,44 @@ export class Kyou extends InfoBase {
     }
 
     async load_typed_idf_kyou(): Promise<Array<GkillError>> {
-        throw new Error('Not implemented')
+        const req = new GetIDFKyouRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.id = this.id
+        const res = await GkillAPI.get_instance().get_idf_kyou(req)
+        if (res.errors && res.errors.length != 0) {
+            return res.errors
+        }
+
+        if (!res.idf_kyou_histories || res.idf_kyou_histories.length < 1) {
+            const error = new GkillError()
+            error.error_code = "//TODO"
+            error.error_message = "IDFKyouが見つかりませんでした"
+            return [error]
+        }
+
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.idf_kyou_histories.length; i++) {
+            const idf_kyou = new IDFKyou()
+            for (let key in res.idf_kyou_histories[i]) {
+                (idf_kyou as any)[key] = (res.idf_kyou_histories[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (idf_kyou as any)[key]) {
+                    (idf_kyou as any)[key] = moment((idf_kyou as any)[key]).toDate()
+                }
+            }
+            res.idf_kyou_histories[i] = idf_kyou
+        }
+
+        let match_idf_kyou: IDFKyou | null = null
+        res.idf_kyou_histories.forEach(idf_kyou => {
+            if (moment(idf_kyou.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+                match_idf_kyou = idf_kyou
+            }
+        })
+        this.typed_idf_kyou= match_idf_kyou
+
+        return new Array<GkillError>()
     }
 
     async load_typed_git_commit_log(): Promise<Array<GkillError>> {

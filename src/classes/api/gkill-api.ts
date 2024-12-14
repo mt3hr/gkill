@@ -163,6 +163,9 @@ import { Mi } from "../datas/mi"
 import { Lantana } from "../datas/lantana"
 import { ReKyou } from "../datas/re-kyou"
 import { GitCommitLog } from "../datas/git-commit-log"
+import { IDFKyou } from "../datas/idf-kyou"
+import type { GetIDFKyouRequest } from "./req_res/get-idf-kyou-request"
+import type { GetIDFKyouResponse } from "./req_res/get-idf-kyou-response"
 
 export class GkillAPI {
 
@@ -213,6 +216,7 @@ export class GkillAPI {
         get_rekyou_address: string
         get_git_commit_log_address: string
         get_git_commit_logs_address: string
+        get_idf_kyou_address: string
         get_mi_board_list_address: string
         get_plaing_timeis_address: string
         get_all_tag_names_address: string
@@ -278,6 +282,7 @@ export class GkillAPI {
         get_mi_method: string
         get_lantana_method: string
         get_git_commit_log_method: string
+        get_idf_kyou_method: string
         get_rekyou_method: string
         get_rekyous_method: string
         get_git_commit_logs_method: string
@@ -357,6 +362,7 @@ export class GkillAPI {
                 this.get_lantana_address = "/api/get_lantana"
                 this.get_rekyou_address = "/api/get_rekyou"
                 this.get_git_commit_log_address = "/api/get_git_commit_log"
+                this.get_idf_kyou_address = "/api/get_idf_kyou"
                 this.get_git_commit_logs_address = "/api/get_git_commit_logs"
                 this.get_mi_board_list_address = "/api/get_mi_board_list"
                 this.get_plaing_timeis_address = "/api/get_plaing_timeis"
@@ -423,6 +429,7 @@ export class GkillAPI {
                 this.get_mi_method = "POST"
                 this.get_lantana_method = "POST"
                 this.get_git_commit_log_method = "POST"
+                this.get_idf_kyou_method = "POST"
                 this.get_rekyou_method = "POST"
                 this.get_rekyous_method = "POST"
                 this.get_git_commit_logs_method = "POST"
@@ -1160,6 +1167,43 @@ export class GkillAPI {
                 return response
         }
 
+        async get_idf_kyou(req: GetIDFKyouRequest): Promise<GetIDFKyouResponse> {
+                const res = await fetch(this.get_idf_kyou_address, {
+                        'method': this.get_idf_kyou_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                })
+                const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: GetIDFKyouResponse = json
+                if (!response.idf_kyou_histories) {
+                        response.idf_kyou_histories = new Array<IDFKyou>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.idf_kyou_histories.length; i++) {
+                        const idf_kyou = new IDFKyou()
+                        for (let key in response.idf_kyou_histories[i]) {
+                                (idf_kyou as any)[key] = (response.idf_kyou_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (idf_kyou as any)[key]) {
+                                        (idf_kyou as any)[key] = moment((idf_kyou as any)[key]).toDate()
+                                }
+                        }
+                        response.idf_kyou_histories[i] = idf_kyou
+                }
+
+                this.check_auth(response)
+                return response
+        }
+
         /*
         async get_kmemos(req: GetKmemosRequest): Promise<GetKmemosResponse> {
                 throw new Error('Not implemented')
@@ -1769,17 +1813,27 @@ export class GkillAPI {
                 return response
         }
 
+        private gkill_session_id_cookie_key = "gkill_session_id"
+
         get_session_id(): string {
-                let session_id = window.localStorage.getItem("gkill_session_id")
+                const cookies = document.cookie.split(';')
+                let session_id = cookies.find(
+                        (cookie) => cookie.split('=')[0].trim() === this.gkill_session_id_cookie_key.trim()
+                )?.replace(this.gkill_session_id_cookie_key + "=", "")
+
                 if (!session_id) {
-                        window.localStorage.removeItem("gkill_session_id")
+                        this.set_session_id("")
                         session_id = ""
                 }
                 return session_id
         }
 
         set_session_id(session_id: string): void {
-                window.localStorage.setItem("gkill_session_id", session_id)
+                if (session_id == "") {
+                        document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + "; max-age=0"
+                } else {
+                        document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + ";" + moment().add('day', 400).toDate().toUTCString()
+                }
         }
 
         generate_uuid(): string {

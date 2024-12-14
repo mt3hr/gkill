@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sort"
 	"sync"
 	"time"
@@ -540,6 +541,10 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
+}
+
+func (i IDFKyouRepositories) HandleFileServe(w http.ResponseWriter, r *http.Request) {
+	http.NotFoundHandler().ServeHTTP(w, r)
 }
 
 func (i IDFKyouRepositories) IDF(ctx context.Context) error {
