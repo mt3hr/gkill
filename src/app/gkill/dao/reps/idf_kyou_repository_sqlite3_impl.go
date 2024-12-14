@@ -707,6 +707,14 @@ WHERE
 }
 
 func (i *idfKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	if *i.autoIDF {
+		err := i.IDF(ctx)
+		if err != nil {
+			repName, _ := i.GetRepName(ctx)
+			err = fmt.Errorf("error at idf %s: %w", repName, err)
+			return err
+		}
+	}
 	return nil
 }
 
