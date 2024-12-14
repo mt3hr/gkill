@@ -34,7 +34,9 @@ func NewGkillDAOManager(autoIDF bool) (*GkillDAOManager, error) {
 		router:  &mux.Router{},
 		autoIDF: &autoIDF,
 		IDFIgnore: []string{
+			".gkill",
 			".kyou",
+			"gkill_id.db",
 			".nomedia",
 			"desktop.ini",
 			"thumbnails",
@@ -300,14 +302,14 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 				case "directory":
 					autoIDF := rep.IsExecuteIDFWhenReload
-					parentDir := filepath.Join(filename, ".kyou")
+					parentDir := filepath.Join(filename, ".gkill")
 					err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
 					if err != nil {
 						err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
 						return nil, err
 					}
 
-					idDBFilename := filepath.Join(parentDir, "id.db")
+					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
 					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, g.router, &autoIDF, &g.IDFIgnore, repositories)
 					if err != nil {
 						return nil, err
