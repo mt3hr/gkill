@@ -299,6 +299,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						repositories.WriteReKyouRep = reKyouRep
 					}
 				case "directory":
+					autoIDF := rep.IsExecuteIDFWhenReload
 					parentDir := filepath.Join(filename, ".kyou")
 					err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
 					if err != nil {
@@ -307,7 +308,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					idDBFilename := filepath.Join(parentDir, "id.db")
-					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, g.router, g.autoIDF, &g.IDFIgnore, repositories)
+					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, g.router, &autoIDF, &g.IDFIgnore, repositories)
 					if err != nil {
 						return nil, err
 					}

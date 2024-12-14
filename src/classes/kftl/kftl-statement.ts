@@ -124,7 +124,6 @@ export class KFTLStatement {
                 await line.apply_this_line_to_request_map(map)
             } catch (e: any) {
                 invalid_line_indexs.push(i)
-                console.log(e)
             }
         }
         return invalid_line_indexs

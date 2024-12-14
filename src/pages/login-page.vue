@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar :height="app_title_bar_height" class="app_bar" app color="primary" flat >
+    <v-app-bar :height="app_title_bar_height" class="app_bar" app color="primary" flat>
         <v-toolbar-title>gkill ログイン</v-toolbar-title>
         <v-spacer />
         <span class="gkill_version">version: {{ gkill_version }}</span>
@@ -8,6 +8,14 @@
         <LoginView :gkill_api="gkill_api" :app_content_height="app_content_height"
             :app_content_width="app_content_width" @received_errors="write_errors" @received_messages="write_messages"
             @successed_login="handle_success_login" />
+        <div class="alert_container">
+            <v-slide-y-transition group>
+                <v-alert v-for="message in messages" theme="dark">
+                    {{ message.message }}
+                </v-alert>
+            </v-slide-y-transition>
+        </div>
+
     </v-main>
 </template>
 
@@ -38,23 +46,47 @@ async function resize_content(): Promise<void> {
     app_content_width.value = window.innerWidth
 }
 
-async function write_errors(errors: Array<GkillError>) {
-    //TODO エラーメッセージを画面に出力するように
-    errors.forEach(error => {
-        console.log(error)
-    })
-}
-
-async function write_messages(messages: Array<GkillMessage>) {
-    //TODO メッセージを画面に出力するように
-    messages.forEach(message => {
-        console.log(message)
-    })
-}
-
 async function handle_success_login(session_id: string): Promise<void> {
     GkillAPI.get_instance().set_session_id(session_id)
 }
+
+const messages: Ref<Array<{ message: string, id: string, show_snackbar: boolean }>> = ref([])
+
+async function write_errors(errors: Array<GkillError>) {
+    const received_messages = new Array<{ message: string, id: string, show_snackbar: boolean }>()
+    for (let i = 0; i < errors.length; i++) {
+        received_messages.push({
+            message: errors[i].error_message,
+            id: GkillAPI.get_instance().generate_uuid(),
+            show_snackbar: true,
+        })
+    }
+    messages.value.push(...received_messages)
+    sleep(2500).then(() => {
+        for (let i = 0; i < received_messages.length; i++) {
+            messages.value.splice(0, 1)
+        }
+    })
+}
+
+async function write_messages(messages_: Array<GkillMessage>) {
+    const received_messages = new Array<{ message: string, id: string, show_snackbar: boolean }>()
+    for (let i = 0; i < messages_.length; i++) {
+        received_messages.push({
+            message: messages_[i].message,
+            id: GkillAPI.get_instance().generate_uuid(),
+            show_snackbar: true,
+        })
+    }
+    messages.value.push(...received_messages)
+    sleep(2500).then(() => {
+        for (let i = 0; i < received_messages.length; i++) {
+            messages.value.splice(0, 1)
+        }
+    })
+}
+
+const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
 window.addEventListener('resize', () => {
     resize_content()

@@ -229,7 +229,6 @@ function emits_cleard_calendar_query(): void {
 
 function emits_default_query(): void {
     const find_query = default_query.value.clone()
-    console.log(find_query)
     emits('updated_query', find_query)
 }
 </script>
