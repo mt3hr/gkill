@@ -2,6 +2,7 @@ package reps
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
@@ -31,4 +32,6 @@ type IDFKyouRepository interface {
 	IDF(ctx context.Context) error
 
 	AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error
+
+	HandleFileServe(w http.ResponseWriter, r *http.Request)
 }
