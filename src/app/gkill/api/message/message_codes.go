@@ -65,4 +65,5 @@ const (
 	UpdateServerConfigSuccessMessage         = "MSG000059"
 	GetRepositoriesSuccessMessage            = "MSG000060"
 	GetAllRepNamesSuccessMessage             = "MSG000061"
+	GetIDFKyouSuccessMessage                 = "MSG000062"
 )

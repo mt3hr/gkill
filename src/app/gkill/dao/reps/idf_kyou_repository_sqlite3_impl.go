@@ -594,8 +594,8 @@ WHERE
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
-	findWordTargetColumns := []string{}
-	ignoreFindWord := true
+	findWordTargetColumns := []string{"ID"}
+	ignoreFindWord := false
 	appendOrderBy := true
 	appendGroupBy := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
@@ -1031,13 +1031,12 @@ WHERE
 	queryArgs := []interface{}{
 		repName,
 		dataType,
-		id,
 	}
 
 	whereCounter := 0
-	onlyLatestData := true
+	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
-	findWordTargetColumns := []string{"CONTENT"}
+	findWordTargetColumns := []string{"ID"}
 	ignoreFindWord := false
 	appendOrderBy := true
 	appendGroupBy := false
@@ -1344,7 +1343,7 @@ func (i *idfKyouRepositorySQLite3Impl) isDUID(filename string) bool {
 }
 
 func (i *idfKyouRepositorySQLite3Impl) parseDUID(str string) (id uuid.UUID, t time.Time, err error) {
-	if len(str) != len(DUIDLayout)+37*len("_") {
+	if len(str) != len(DUIDLayout)+36*len("_") {
 		err := fmt.Errorf("%s is not duid", str)
 		return uuid.UUID{}, time.Time{}, err
 	}
@@ -1362,4 +1361,8 @@ func (i *idfKyouRepositorySQLite3Impl) parseDUID(str string) (id uuid.UUID, t ti
 		return uuid.UUID{}, time.Time{}, err
 	}
 	return id, t, nil
+}
+
+func (i *idfKyouRepositorySQLite3Impl) HandleFileServe(w http.ResponseWriter, r *http.Request) {
+	http.FileServer(http.Dir(i.contentDir)).ServeHTTP(w, r)
 }
