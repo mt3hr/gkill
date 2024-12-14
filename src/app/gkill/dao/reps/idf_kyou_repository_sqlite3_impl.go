@@ -1160,7 +1160,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 	existFileInfos := []fileinfo{}
 	err = filepath.WalkDir(contentDirAbs, fs.WalkDirFunc(func(path string, d os.DirEntry, err error) error {
 		for _, ignore := range *i.idfIgnore {
-			if strings.Contains(filepath.Base(path), ignore) {
+			if filepath.Base(path) == ignore {
 				return nil
 			}
 		}
@@ -1215,6 +1215,9 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 		}
 
 		trimedFileName := strings.TrimLeft(idfTargetFileName, contentDirAbs)
+		if trimedFileName == "" {
+			continue
+		}
 		if i.isDUID(trimedFileName) {
 			id, time, err := i.parseDUID(trimedFileName)
 			if err != nil {
