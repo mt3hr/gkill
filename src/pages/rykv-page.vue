@@ -1,14 +1,24 @@
 <template>
-    <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
-        :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
-        @requested_show_application_config_dialog="show_application_config_dialog()" @received_errors="write_errors"
-        @received_messages="write_messages" />
-    <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
-        :app_content_height="app_content_height" :app_content_width="app_content_width"
-        :is_show="is_show_application_config_dialog" @received_errors="write_errors" @received_messages="write_messages"
-        @requested_reload_application_config="load_application_config" ref="application_config_dialog" />
-    <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-        :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="last_added_tag" />
+    <div>
+        <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
+            @requested_show_application_config_dialog="show_application_config_dialog()" @received_errors="write_errors"
+            @received_messages="write_messages" />
+        <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
+            :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :is_show="is_show_application_config_dialog" @received_errors="write_errors"
+            @received_messages="write_messages" @requested_reload_application_config="load_application_config"
+            ref="application_config_dialog" />
+        <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="last_added_tag" />
+        <div class="alert_container">
+            <v-slide-y-transition group>
+                <v-alert v-for="message in messages" theme="dark">
+                    {{ message.message }}
+                </v-alert>
+            </v-slide-y-transition>
+        </div>
+    </div>
 </template>
 
 <script lang="ts" setup>
@@ -69,23 +79,47 @@ async function resize_content(): Promise<void> {
     app_content_width.value = window.innerWidth
 }
 
+const messages: Ref<Array<{ message: string, id: string, show_snackbar: boolean }>> = ref([])
+
 async function write_errors(errors: Array<GkillError>) {
-    //TODO エラーメッセージを画面に出力するように
-    errors.forEach(error => {
-        console.log(error)
+    const received_messages = new Array<{ message: string, id: string, show_snackbar: boolean }>()
+    for (let i = 0; i < errors.length; i++) {
+        received_messages.push({
+            message: errors[i].error_message,
+            id: GkillAPI.get_instance().generate_uuid(),
+            show_snackbar: true,
+        })
+    }
+    messages.value.push(...received_messages)
+    sleep(2500).then(() => {
+        for (let i = 0; i < received_messages.length; i++) {
+            messages.value.splice(0, 1)
+        }
     })
 }
 
-async function write_messages(messages: Array<GkillMessage>) {
-    //TODO メッセージを画面に出力するように
-    messages.forEach(message => {
-        console.log(message)
+async function write_messages(messages_: Array<GkillMessage>) {
+    const received_messages = new Array<{ message: string, id: string, show_snackbar: boolean }>()
+    for (let i = 0; i < messages_.length; i++) {
+        received_messages.push({
+            message: messages_[i].message,
+            id: GkillAPI.get_instance().generate_uuid(),
+            show_snackbar: true,
+        })
+    }
+    messages.value.push(...received_messages)
+    sleep(2500).then(() => {
+        for (let i = 0; i < received_messages.length; i++) {
+            messages.value.splice(0, 1)
+        }
     })
 }
 
 function show_application_config_dialog(): void {
     application_config_dialog.value?.show()
 }
+
+const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
 window.addEventListener('resize', () => {
     resize_content()
@@ -98,10 +132,19 @@ load_application_config()
 body,
 .v-application--wrap,
 .v-navigation-drawer--open {
-  overflow-y: hidden !important;
-  overflow-x: auto !important;
-  height: calc(actual_height) !important;
-  min-height: calc(actual_height) !important;
-  max-height: calc(actual_height) !important;
+    overflow-y: hidden !important;
+    overflow-x: auto !important;
+    height: calc(actual_height) !important;
+    min-height: calc(actual_height) !important;
+    max-height: calc(actual_height) !important;
+}
+
+.alert_container {
+  position: fixed;
+  top: 60px;
+  right: 10px;
+  display: grid;
+  grid-gap: .5em;
+  z-index: 99;
 }
 </style>
