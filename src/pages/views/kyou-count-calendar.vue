@@ -32,7 +32,6 @@ watch(props.kyous, () => {
 update_events()
 
 function update_events(): void {
-    console.log(props.kyous)
     const date_event_map: Map<string, Number> = new Map<string, Number>()
     for (let i = 0; i < props.kyous.length; i++) {
         const kyou = props.kyous[i]
@@ -100,7 +99,6 @@ nextTick(() => {
                     let date: string | null = ""
                     element.querySelectorAll(calendar_date_text_selector).forEach(date_text_element => date = ("0" + date_text_element.textContent).slice(-2))
                     clicked_date(moment(year + "-" + month + "-" + date).toDate())
-                    console.log(year + "-" + month + "-" + ("0" + element.textContent).slice(-2))
                 }))
             })
         })
