@@ -251,4 +251,6 @@ const (
 	GetAllRepNamesError                                = "ERR000245"
 	InvalidGetAllRepNamesResponseDataError             = "ERR000246"
 	InvalidPasswordResetTokenError                     = "ERR000247"
+	InvalidGetIDFKyouResponseDataError                 = "ERR000248"
+	InvalidGetIDFKyouRequestDataError                  = "ERR000249"
 )

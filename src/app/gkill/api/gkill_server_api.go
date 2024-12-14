@@ -147,6 +147,9 @@ type GkillServerAPI struct {
 
 func (g *GkillServerAPI) Serve() error {
 	router := g.GkillDAOManager.GetRouter()
+	router.PathPrefix("/files/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		g.HandleFileServe(w, r)
+	})
 	router.HandleFunc(g.APIAddress.LoginAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleLogin(w, r)
 	}).Methods(g.APIAddress.LoginMethod)
@@ -249,6 +252,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetGitCommitLogAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetGitCommitLog(w, r)
 	}).Methods(g.APIAddress.GetGitCommitLogMethod)
+	router.HandleFunc(g.APIAddress.GetIDFKyouAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleGetIDFKyou(w, r)
+	}).Methods(g.APIAddress.GetIDFKyouMethod)
 	router.HandleFunc(g.APIAddress.GetGitCommitLogsAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetGitCommitLogs(w, r)
 	}).Methods(g.APIAddress.GetGitCommitLogsAddress)
@@ -4859,6 +4865,89 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 	})
 }
 
+func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.GetIDFKyouRequest{}
+	response := &req_res.GetIDFKyouResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse get idfKyou response to json: %w", err)
+			log.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidGetIDFKyouResponseDataError,
+				ErrorMessage: "IDFKyou取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse get idfKyou request to json: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetIDFKyouRequestDataError,
+			ErrorMessage: "IDFKyou取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "IDFKyou取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	idfKyouHistories, err := repositories.IDFKyouReps.GetIDFKyouHistories(r.Context(), request.ID)
+	if err != nil {
+		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
+		log.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetIDFKyouError,
+			ErrorMessage: "IDFKyou取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.IDFKyouHistories = idfKyouHistories
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.GetIDFKyouSuccessMessage,
+		Message:     "取得完了",
+	})
+}
+
 func (g *GkillServerAPI) HandleGetGitCommitLogs(w http.ResponseWriter, r *http.Request) {
 	response := &req_res.GetGitCommitLogsResponse{}
 	defer r.Body.Close()
@@ -8630,6 +8719,75 @@ func (g *GkillServerAPI) getTLSFileNames(device string) (certFileName string, pe
 		return "", "", err
 	}
 	return serverConfig.TLSCertFile, serverConfig.TLSKeyFile, nil
+}
+
+func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request) {
+	// クッキーを見て認証する
+	sessionIDCookie, err := r.Cookie("gkill_session_id")
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		err = fmt.Errorf("error at handle file serve: %w", err)
+		log.Printf("%#v", err)
+		return
+	}
+	sessionID := sessionIDCookie.Value
+
+	// アカウントを取得
+	// NGであれば403でreturn
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), sessionID)
+	if account == nil || gkillError != nil || err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		err = fmt.Errorf("error at handle file serve: %w", err)
+		log.Printf("%#v", err)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		err = fmt.Errorf("error at handle file serve: %w", err)
+		log.Printf("%#v", err)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		err = fmt.Errorf("error at handle file serve: %w", err)
+		log.Printf("%#v", err)
+		return
+	}
+
+	// リクエストPathから対象Rep名を抽出
+	fmt.Printf("r.UR.Path = %+v\n", r.URL.Path)
+	targetRepName := strings.SplitN(r.URL.Path, "/", 4)[2]
+
+	// OKであればRepNameが一致するIDFRepを探す
+	var targetIDFRep reps.IDFKyouRepository
+	for _, idfRep := range repositories.IDFKyouReps {
+		repName, err := idfRep.GetRepName(r.Context())
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			err = fmt.Errorf("error at handle file serve: %w", err)
+			log.Printf("%#v", err)
+			return
+		}
+		if repName == targetRepName {
+			targetIDFRep = idfRep
+			break
+		}
+	}
+	if targetIDFRep == nil {
+		w.WriteHeader(http.StatusNotFound)
+		err = fmt.Errorf("error at handle file serve: %w", err)
+		log.Printf("%#v", err)
+		return
+	}
+
+	// StripPrefixしてIDFサーバのハンドラにわたす
+	rootAddress := "/files/" + targetRepName
+	http.StripPrefix(rootAddress, http.HandlerFunc(targetIDFRep.HandleFileServe)).ServeHTTP(w, r)
 }
 
 func (g *GkillServerAPI) GetDevice() (string, error) {
