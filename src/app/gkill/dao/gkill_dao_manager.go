@@ -16,6 +16,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type GkillDAOManager struct {
@@ -26,13 +27,18 @@ type GkillDAOManager struct {
 	router    *mux.Router
 	autoIDF   *bool
 	IDFIgnore []string
+
+	enableOutputLogs bool
+	infoLogFile      *os.File
+	debugLogFile     *os.File
+	traceLogFile     *os.File
+	traceSQLLogFile  *os.File
 }
 
-func NewGkillDAOManager(autoIDF bool) (*GkillDAOManager, error) {
+func NewGkillDAOManager() (*GkillDAOManager, error) {
 	ctx := context.Background()
 	gkillDAOManager := &GkillDAOManager{
-		router:  &mux.Router{},
-		autoIDF: &autoIDF,
+		router: &mux.Router{},
 		IDFIgnore: []string{
 			".gkill",
 			".kyou",
@@ -103,6 +109,51 @@ func NewGkillDAOManager(autoIDF bool) (*GkillDAOManager, error) {
 	gkillDAOManager.ConfigDAOs.RepTypeStructDAO, err = user_config.NewRepTypeStructDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
 	if err != nil {
 		return nil, err
+	}
+
+	// ログ出力先設定
+	gkillDAOManager.enableOutputLogs = false
+	if gkillDAOManager.enableOutputLogs {
+		logRootDir := os.ExpandEnv("$HOME/gkill/logs")
+		err := os.MkdirAll(logRootDir, os.ModePerm)
+		if err != nil {
+			err = fmt.Errorf("error at mkdir %s: %w", logRootDir, err)
+		}
+		infoLogFileName := filepath.Join(logRootDir, "gkill_info.log")
+		infoLogFile, err := os.OpenFile(infoLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
+		if err != nil {
+			err = fmt.Errorf("error at create info log file %s: %w", infoLogFile, err)
+			return nil, err
+		}
+		gkillDAOManager.infoLogFile = infoLogFile
+		gkill_log.Info.SetOutput(infoLogFile)
+
+		debugLogFileName := filepath.Join(logRootDir, "gkill_debug.log")
+		debugLogFile, err := os.OpenFile(debugLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
+		if err != nil {
+			err = fmt.Errorf("error at create debug log file %s: %w", debugLogFile, err)
+			return nil, err
+		}
+		gkillDAOManager.debugLogFile = debugLogFile
+		gkill_log.Debug.SetOutput(debugLogFile)
+
+		trageLogFileName := filepath.Join(logRootDir, "gkill_trage.log")
+		traceLogFile, err := os.OpenFile(trageLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
+		if err != nil {
+			err = fmt.Errorf("error at create trage log file %s: %w", traceLogFile, err)
+			return nil, err
+		}
+		gkillDAOManager.traceLogFile = traceLogFile
+		gkill_log.TraceSQL.SetOutput(traceLogFile)
+
+		traceSQLLogFileName := filepath.Join(logRootDir, "gkill_traceSQL.log")
+		traceSQLLogFile, err := os.OpenFile(traceSQLLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
+		if err != nil {
+			err = fmt.Errorf("error at create traceSQL log file %s: %w", traceSQLLogFile, err)
+			return nil, err
+		}
+		gkillDAOManager.traceSQLLogFile = traceSQLLogFile
+		gkill_log.TraceSQL.SetOutput(traceSQLLogFile)
 	}
 
 	return gkillDAOManager, nil
@@ -325,6 +376,18 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteIDFKyouRep = idfKyouRep
 					}
+				case "gpslog":
+					err := os.MkdirAll(os.ExpandEnv(filename), os.ModePerm)
+					if err != nil {
+						err = fmt.Errorf("error at make directory %s: %w", filename, err)
+						return nil, err
+					}
+
+					gpslogRep := reps.NewGPXDirRep(filename)
+					repositories.GPSLogReps = append(repositories.GPSLogReps, gpslogRep)
+					if rep.UseToWrite {
+						repositories.WriteGPSLogRep = gpslogRep
+					}
 				}
 			}
 		}
@@ -395,6 +458,24 @@ func (g *GkillDAOManager) Close() error {
 	g.router = nil
 	g.autoIDF = nil
 	g.IDFIgnore = []string{}
+
+	if g.enableOutputLogs {
+		if e := g.infoLogFile.Close(); e != nil {
+			err = fmt.Errorf("error at close info log file %s: %w: %w", g.infoLogFile.Name(), e, err)
+		}
+
+		if e := g.debugLogFile.Close(); e != nil {
+			err = fmt.Errorf("error at close debug log file %s: %w : %w", g.debugLogFile.Name(), e, err)
+		}
+
+		if e := g.traceLogFile.Close(); e != nil {
+			err = fmt.Errorf("error at close trace log file %s: %w : %w", g.traceLogFile.Name(), e, err)
+		}
+
+		if e := g.traceSQLLogFile.Close(); e != nil {
+			err = fmt.Errorf("error at close trace sql log file %s: %w : %w", g.traceSQLLogFile.Name(), e, err)
+		}
+	}
 
 	return err
 }

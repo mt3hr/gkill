@@ -33,6 +33,7 @@ import type { AddRepViewEmits } from './add-rep-view-emits'
 import type { AddRepViewProps } from './add-rep-view-props'
 import { Repository } from '@/classes/datas/config/repository';
 import { GkillAPI } from '@/classes/api/gkill-api';
+import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 
 const props = defineProps<AddRepViewProps>()
 const emits = defineEmits<AddRepViewEmits>()
@@ -54,17 +55,20 @@ const rep_types: Ref<Array<string>> = ref([
     "text",
     "rekyou",
     "directory",
+    "gpslog",
 ])
 
 async function add_rep(): Promise<void> {
     const repository = new Repository()
     repository.id = GkillAPI.get_instance().generate_uuid()
     repository.device = device.value
+    repository.user_id = props.account.user_id
     repository.type = type.value
     repository.file = file.value
     repository.use_to_write = use_to_write.value
     repository.is_execute_idf_when_reload = is_execute_idf_when_reload.value
     repository.is_enable = is_enable.value
     emits('requested_add_rep', repository)
+    emits('requested_close_dialog')
 }
 </script>

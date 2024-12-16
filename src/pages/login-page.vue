@@ -15,7 +15,6 @@
                 </v-alert>
             </v-slide-y-transition>
         </div>
-
     </v-main>
 </template>
 
@@ -111,4 +110,14 @@ html {
     font-size: small;
     margin-right: 15px;
 }
+
+.alert_container {
+  position: fixed;
+  top: 60px;
+  right: 10px;
+  display: grid;
+  grid-gap: .5em;
+  z-index: 99;
+}
+
 </style>

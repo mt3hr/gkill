@@ -66,6 +66,15 @@ const password_sha256 = computed(async () => {
     return hashHex;
 })
 
+check_logined()
+
+async function check_logined(): Promise<void> {
+    const session_id = GkillAPI.get_instance().get_session_id()
+    if (session_id && session_id !== "") {
+        router.replace("/rykv")
+    }
+}
+
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
 async function try_set_new_password(): Promise<boolean> {

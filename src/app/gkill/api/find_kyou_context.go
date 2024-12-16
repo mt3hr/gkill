@@ -41,4 +41,6 @@ type FindKyouContext struct {
 	TagFilterMode *find.TagFilterMode `json:"tag_filter_mode"`
 
 	TimeIsTagFilterMode *find.TagFilterMode `json:"time_is_tag_filter_mode"`
+
+	MatchKyousAtFilterImage map[string]*reps.Kyou `json:"match_kyous_at_filter_image"`
 }

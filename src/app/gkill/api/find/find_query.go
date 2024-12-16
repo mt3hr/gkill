@@ -39,4 +39,5 @@ type FindQuery struct {
 	PlaingTime        *time.Time  `json:"plaing_time"`
 	UseUpdateTime     *bool       `json:"use_update_time"`
 	UpdateTime        **time.Time `json:"update_time"`
+	IsImageOnly       *bool       `json:"is_image_only"`
 }
