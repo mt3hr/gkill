@@ -25,4 +25,8 @@ export interface KyouListViewEmits {
     (e: 'requested_focus_kyou', kyou: Kyou): void
     (e: 'requested_update_check_kyous', kyou: Array<Kyou>, is_checked: boolean): void
     (e: 'clicked_kyou', kyou: Kyou): void
+    (e: 'requested_search'): void
+    (e: 'requested_close_column'): void
+    (e: 'requested_change_is_image_only_view', is_image_only_view: boolean): void
+    (e: 'requested_change_focus_kyou', is_focus_kyou: boolean): void
 }

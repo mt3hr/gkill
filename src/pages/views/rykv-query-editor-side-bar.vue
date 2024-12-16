@@ -58,7 +58,7 @@ const map_query = ref<InstanceType<typeof MapQuery> | null>(null);
 
 const props = defineProps<rykvQueryEditorSidebarProps>()
 const emits = defineEmits<rykvQueryEditorSidebarEmits>()
-defineExpose({ generate_query })
+defineExpose({ generate_query, get_default_query })
 
 const header_height: Ref<number> = ref(38)
 const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
@@ -109,6 +109,10 @@ watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyo
     query.value = props.find_kyou_query.clone()
 })
 
+function get_default_query(): FindKyouQuery {
+    return default_query.value.clone()
+}
+
 function emits_current_query(): void {
     emits('updated_query', generate_query())
 }
@@ -117,6 +121,9 @@ function generate_query(): FindKyouQuery {
     const find_query = new FindKyouQuery()
 
     find_query.update_cache = true
+
+    find_query.is_focus_kyou = props.find_kyou_query.is_focus_kyou
+    find_query.is_image_only = props.find_kyou_query.is_image_only
 
     if (keyword_query.value) {
         find_query.use_words = keyword_query.value.get_use_words()

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"runtime"
 	"sort"
 	"sync"
 	"time"
@@ -1036,7 +1037,9 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	}
 
 	matchKyous := map[string]*reps.Kyou{}
+	const dateLayout = "2006-01-02"
 	var err error
+	matchGPSLogs := []*reps.GPSLog{}
 
 	// 開始日を取得
 	startTime := findCtx.ParsedFindQuery.CalendarStartDate
@@ -1048,7 +1051,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	var longitude float64
 
 	if findCtx.ParsedFindQuery.MapRadius != nil {
-		radius = *findCtx.ParsedFindQuery.MapRadius / 1000
+		radius = *findCtx.ParsedFindQuery.MapRadius
 	}
 	if findCtx.ParsedFindQuery.MapLatitude != nil {
 		latitude = *findCtx.ParsedFindQuery.MapLatitude
@@ -1097,7 +1100,6 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 			}
 			if err != nil {
 				errch <- err
-				panic(err)
 				return
 			}
 			gpsLogsCh <- gpsLogs
@@ -1113,44 +1115,122 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 			existErr = true
 		}
 	}
+
 	if existErr {
 		return nil, err
 	}
 
 	// GPSLog集約
 	for range lenOfReps {
-		gpsLogs = append(gpsLogs, <-gpsLogsCh...)
+		matchGPSLogsInRep := <-gpsLogsCh
+		gpsLogs = append(gpsLogs, matchGPSLogsInRep...)
 	}
 
 	// 並び替え
-	sort.Slice(gpsLogs, func(i, j int) bool { return gpsLogs[i].RelatedTime.Before(gpsLogs[j].RelatedTime) })
+	sort.Slice(matchGPSLogs, func(i, j int) bool { return matchGPSLogs[i].RelatedTime.Before(matchGPSLogs[j].RelatedTime) })
 
 	// 該当する時間を出す
 	matchGPSLogSetList := [][]*reps.GPSLog{}
 
 	preTrue := false // 一つ前の時間でtrueだった
-	for i := range gpsLogs {
-		if preTrue {
-			matchGPSLogSetList = append(matchGPSLogSetList, []*reps.GPSLog{
-				gpsLogs[i-1],
-				gpsLogs[i],
-			})
-		}
+	for i, gpslog := range matchGPSLogs {
+		select {
+		case <-ctx.Done():
+			if err != nil {
+				err = fmt.Errorf("error at judge gps log: %w", err)
+				return nil, err
+			}
+		default:
+			if preTrue {
+				matchGPSLogSetList = append(matchGPSLogSetList, []*reps.GPSLog{
+					matchGPSLogs[i-1],
+					matchGPSLogs[i],
+				})
+			}
 
-		if calcDistance(latitude, longitude, gpsLogs[i].Latitude, gpsLogs[i].Longitude) <= radius {
-			preTrue = true
-		} else {
-			preTrue = false
+			if calcDistance(latitude, longitude, matchGPSLog[i].Latitude, matchGPSLog[i].Longitude) <= radius {
+				preTrue = true
+			} else {
+				preTrue = false
+			}
 		}
 	}
 
 	// KyouがLocation内か判定
-	for _, gpsLogSet := range matchGPSLogSetList {
-		for _, kyou := range findCtx.MatchKyousCurrent {
-			if kyou.RelatedTime.After(gpsLogSet[0].RelatedTime) && kyou.RelatedTime.Before(gpsLogSet[1].RelatedTime) {
-				matchKyous[kyou.ID] = kyou
+	workerCount := runtime.NumCPU() * 3
+	matchKyouCh := make(chan *reps.Kyou)
+	processingKyouCh := make(chan struct{}, workerCount)
+	procesFinishKyouCh := make(chan struct{}, workerCount)
+	errch2 := make(chan error, len(matchGPSLogSetList))
+	calcWg := &sync.WaitGroup{}
+	defer close(matchKyouCh)
+	defer close(errch2)
+
+	timeMatchJudgementer := func(kyou *reps.Kyou, locationTime1 time.Time, locationTime2 time.Time) {
+		defer calcWg.Done()
+		defer func() { procesFinishKyouCh <- struct{}{} }()
+		if kyou.RelatedTime.After(locationTime1) && kyou.RelatedTime.Before(locationTime2) {
+			matchKyouCh <- kyou
+		}
+	}
+
+	// 全部みおわったか判定
+	finishCh := make(chan struct{})
+	defer close(finishCh)
+	go func() {
+	collectLoop:
+		for {
+			select {
+			case <-processingKyouCh:
+				select {
+				case collectedKyou := <-matchKyouCh:
+					matchKyous[collectedKyou.ID] = collectedKyou
+					<-procesFinishKyouCh
+				case <-procesFinishKyouCh:
+				}
+			case <-finishCh:
+				break collectLoop
+			default:
 			}
 		}
+	}()
+
+	// 場所内判定していく
+	func() {
+		processingKyouCh <- struct{}{}
+		defer func() { procesFinishKyouCh <- struct{}{} }()
+		calcWg.Add(1)
+		defer calcWg.Done()
+		for _, gpsLogSet := range matchGPSLogSetList {
+			select {
+			case <-ctx.Done():
+				errch2 <- ctx.Err()
+			default:
+				for _, kyou := range findCtx.MatchKyousCurrent {
+					calcWg.Add(1)
+					processingKyouCh <- struct{}{}
+					go timeMatchJudgementer(kyou, gpsLogSet[0].RelatedTime, gpsLogSet[1].RelatedTime)
+				}
+			}
+		}
+	}()
+	calcWg.Wait()
+	finishCh <- struct{}{}
+
+	// エラー集約
+	existError = false
+errloop2:
+	for {
+		select {
+		case e := <-errch2:
+			err = fmt.Errorf("error at filter location: %w: %w:", e, err)
+			existError = true
+		default:
+			break errloop2
+		}
+	}
+	if existError {
+		return nil, err
 	}
 
 	findCtx.MatchKyousAtFilterLocation = matchKyous

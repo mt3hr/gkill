@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -12,6 +11,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type textRepositorySQLite3Impl struct {
@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL 
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT table statement %s: %w", filename, err)
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT table to %s: %w", filename, err)
@@ -124,7 +124,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get TEXT histories sql: %w", err)
@@ -132,7 +132,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -276,7 +276,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get text histories sql: %w", err)
@@ -284,7 +284,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -417,7 +417,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get text histories sql: %w", err)
@@ -425,7 +425,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -512,7 +512,7 @@ INSERT INTO TEXT (
   ?,
   ?
 )`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add text sql %s: %w", text.ID, err)
@@ -535,7 +535,7 @@ INSERT INTO TEXT (
 		text.UpdateDevice,
 		text.UpdateUser,
 	}
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {

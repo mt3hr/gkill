@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"path/filepath"
 	"sort"
 	"sync"
@@ -13,6 +12,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type reKyouRepositorySQLite3Impl struct {
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL 
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create REKYOU table statement %s: %w", filename, err)
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REKYOU table to %s: %w", filename, err)
@@ -212,7 +212,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -220,7 +220,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from REKYOU %s: %w", id, err)
@@ -437,7 +437,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou histories sql: %w", err)
@@ -445,7 +445,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -529,7 +529,7 @@ INSERT INTO REKYOU (
   ?,
   ?
 )`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add rekyou sql %s: %w", rekyou.ID, err)
@@ -551,7 +551,7 @@ INSERT INTO REKYOU (
 		rekyou.UpdateDevice,
 		rekyou.UpdateUser,
 	}
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to REKYOU %s: %w", rekyou.ID, err)
@@ -610,7 +610,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all rekyous sql: %w", err)
@@ -618,7 +618,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
