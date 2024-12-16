@@ -5,9 +5,9 @@ import { FindQueryBase } from './find-query-base'
 export class FindKyouQuery extends FindQueryBase {
     reps: Array<string>
     is_image_only: boolean
-
     devices: Array<string>
     rep_types: Array<string>
+    is_focus_kyou: boolean
 
 
     clone(): FindKyouQuery {
@@ -52,5 +52,6 @@ export class FindKyouQuery extends FindQueryBase {
         this.is_image_only = false
         this.devices = new Array<string>()
         this.rep_types = new Array<string>()
+        this.is_focus_kyou = false
     }
 }

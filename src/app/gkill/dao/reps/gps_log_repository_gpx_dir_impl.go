@@ -52,49 +52,75 @@ func (g *gpsLogRepositoryDirectoryImpl) GetAllGPSLogs(ctx context.Context) ([]*G
 	return gpsLogs, nil
 }
 
-func (g *gpsLogRepositoryDirectoryImpl) GetGPSLogs(ctx context.Context, startTime time.Time, endTime time.Time) ([]*GPSLog, error) {
-	// 順番がおかしかったら入れ替える
-	if startTime.After(endTime) {
-		startTime, endTime = endTime, startTime
-	}
-
-	// ファイル名をリストアップ
-	dates := []string{}
-	TimeLayout := "20060102"
-	startDate := startTime.Format(TimeLayout)
-	endDate := endTime.Format(TimeLayout)
-	currentDate, err := time.Parse(TimeLayout, startDate)
-	if err != nil {
-		err = fmt.Errorf("error at parse date at get gps logs %s: %w", startDate, err)
-		return nil, err
-	}
-	for {
-		currentDateStr := currentDate.Format(TimeLayout)
-		dates = append(dates, currentDateStr)
-		if currentDateStr == endDate {
-			break
-		}
-	}
-
-	// gpsLogs集約
+func (g *gpsLogRepositoryDirectoryImpl) GetGPSLogs(ctx context.Context, startTime *time.Time, endTime *time.Time) ([]*GPSLog, error) {
+	var err error
 	gpsLogs := []*GPSLog{}
-	for _, date := range dates {
-		gpxFileName, err := g.findGPXFileByDate(ctx, date)
+
+	if startTime == nil && endTime == nil {
+		gpsLogs, err = g.GetAllGPSLogs(ctx)
 		if err != nil {
-			err = fmt.Errorf("fialed to find gpx file by date %s. %w", date, err)
+			repName, _ := g.GetRepName(ctx)
+			err = fmt.Errorf("error at get all gps logs at %s: %w", repName, err)
 			return nil, err
 		}
-
-		if _, err := os.Stat(gpxFileName); err != nil {
-			return nil, nil
+	} else {
+		if startTime == nil {
+			startTime = endTime
 		}
-		matchGPSLogs, err := g.gpxFileToPoints(gpxFileName)
+		if endTime == nil {
+			endTime = startTime
+		}
+		// 順番がおかしかったら入れ替える
+		if startTime.After(*endTime) {
+			startTime, endTime = endTime, startTime
+		}
+
+		// ファイル名をリストアップ
+		dates := []string{}
+		TimeLayout := "20060102"
+		// startDate := startTime.Format(TimeLayout)
+		// endDate := endTime.Format(TimeLayout)
+
+		startDateMargin := startTime.Add(time.Hour * -24).Format(TimeLayout)
+		endDateMargin := endTime.Add(time.Hour * 24).Format(TimeLayout)
+
+		currentDate, err := time.Parse(TimeLayout, startDateMargin)
 		if err != nil {
-			err = fmt.Errorf("error at gpx file to points %s: %w", gpxFileName, err)
+			err = fmt.Errorf("error at parse date at get gps logs %s: %w", currentDate, err)
 			return nil, err
 		}
+		for {
+			currentDateStr := currentDate.Format(TimeLayout)
+			dates = append(dates, currentDateStr)
+			if currentDateStr == endDateMargin {
+				break
+			}
+			currentDate = currentDate.Add(time.Hour * 24)
+		}
 
-		gpsLogs = append(gpsLogs, matchGPSLogs...)
+		// gpsLogs集約
+		for _, date := range dates {
+			gpxFileName, err := g.findGPXFileByDate(ctx, date)
+			if err != nil {
+				err = fmt.Errorf("fialed to find gpx file by date %s. %w", date, err)
+				return nil, err
+			}
+
+			if _, err := os.Stat(gpxFileName); err != nil {
+				continue
+			}
+			matchGPSLogs, err := g.gpxFileToPoints(gpxFileName)
+			if err != nil {
+				err = fmt.Errorf("error at gpx file to points %s: %w", gpxFileName, err)
+				return nil, err
+			}
+
+			for _, gpslog := range matchGPSLogs {
+				if gpslog.RelatedTime.After(*startTime) && gpslog.RelatedTime.Before(*endTime) {
+					gpsLogs = append(gpsLogs, gpslog)
+				}
+			}
+		}
 	}
 	return gpsLogs, nil
 }
@@ -140,7 +166,7 @@ func (g *gpsLogRepositoryDirectoryImpl) gpxFileToGPSLogs(gpxfilename string) (gp
 }
 
 func (g *gpsLogRepositoryDirectoryImpl) findGPXFileByDate(ctx context.Context, date string) (filename string, err error) {
-	parsedDate, err := time.Parse("2006-01-02", date)
+	parsedDate, err := time.Parse("20060102", date)
 	if err != nil {
 		err = fmt.Errorf("failed to parse time %s. %w", date, err)
 		return "", err

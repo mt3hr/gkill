@@ -6,20 +6,22 @@
         </v-col>
         <v-spacer />
         <v-col cols="auto" class="pb-0 mb-0">
-            <v-btn @click="circles = []; emits('request_clear_map_query')">クリア</v-btn>
+            <v-btn @click="emits('request_clear_map_query')">クリア</v-btn>
         </v-col>
     </v-row>
     <v-sheet v-show="query.use_map">
-        <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="application_config.google_map_api_key"
-            @click="($event) => { update_circles(); center.lat = $event.latLng.lat(); center.lng = $event.latLng.lng(); is_enable_circle = true; emits('request update_area', center.lat, center.lng, query.map_radius); is_enable_circle = true; }"
-            style="width: 100%; height: 400px" class="googlemap search_google_map">
-            <Circle v-for="opt in circles" :options="opt"
-                :key="(opt.center?.lat.toString().concat(opt.center?.lng.toString()).concat(query.map_radius.toString()))" />
+        <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key" @click="($event) => {
+            is_enable_circle = true;
+            latitude = $event.latLng.lat();
+            longitude = $event.latLng.lng();
+            emits('request_update_area', $event.latLng.lat(), $event.latLng.lng(), radius)
+        }" style="width: 100%; height: 400px" class="googlemap search_google_map">
+            <Circle :options="circle"
+                :key="(circle.center?.lat.toString().concat(circle.center?.lng.toString()).concat(radius.toString()))" />
         </GoogleMap>
     </v-sheet>
     <v-sheet v-show="query.use_map">
-        <v-slider min="0" max="5000" v-model="query.map_radius" :label="'範囲'"
-            @click="update_circles(); emits('request update_area', center.lat, center.lng, query.map_radius)" />
+        <v-slider min="0" max="10000" v-model="radius" :label="'範囲'" />
     </v-sheet>
 </template>
 <script lang="ts" setup>
@@ -27,9 +29,9 @@
 import { Circle, GoogleMap } from 'vue3-google-map';
 import type { MapQueryEmits } from './map-query-emits'
 import type { MapQueryProps } from './map-query-props'
-import { computed, ref, watch, type Ref } from 'vue';
-import type { CircleOptions } from '@/classes/datas/circle-options';
+import { computed, ref, watch, nextTick, type Ref } from 'vue';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
+import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<MapQueryProps>()
 const emits = defineEmits<MapQueryEmits>()
@@ -39,41 +41,57 @@ const gmap = ref<InstanceType<typeof GoogleMap> | null>(null);
 
 const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
-const center = ref({ lat: 35.6586295, lng: 139.7449018 }) // mapの中心点
+const google_map_api_key: Ref<string> = ref(GkillAPI.get_instance().get_google_map_api_key())
+
+const latitude: Ref<number> = ref(35.6586295)
+const longitude: Ref<number> = ref(139.7449018)
+const radius: Ref<number> = ref(500)
+
+
 const zoom = ref(11) // mapのズーム
 const is_enable_circle = ref(false)
-const circles: Ref<Array<CircleOptions>> = ref(new Array<CircleOptions>())
 
-watch(() => props.find_kyou_query, () => {
-    query.value = props.find_kyou_query.clone()
-    center.value.lat = props.find_kyou_query.map_latitude.valueOf()
-    center.value.lng = props.find_kyou_query.map_longitude.valueOf()
+const center = ref({ lat: 35.6586295, lng: 139.7449018 })
+const circle = computed(() => {
+    return {
+        visible: is_enable_circle.value,
+        center: { lat: latitude.value, lng: longitude.value },
+        radius: radius.value,
+        strokeColor: 'black',
+        strokeOpacity: 1,
+        strokeWeight: 2,
+    }
 })
 
-function update_circles(): void {
-    circles.value = []
-    circles.value.push(
-        {
-            visible: is_enable_circle.value,
-            center: center.value,
-            radius: query.value.map_radius.valueOf(),
-            strokeColor: 'black',
-            strokeOpacity: 0.7,
-            strokeWeight: 2
-        }
-    )
-}
+watch(() => props.find_kyou_query, () => {
+    if (JSON.stringify(query.value) === JSON.stringify(props.find_kyou_query)) {
+        return
+    }
+    query.value = props.find_kyou_query.clone()
+    latitude.value = props.find_kyou_query.map_latitude.valueOf()
+    longitude.value = props.find_kyou_query.map_longitude.valueOf()
+    radius.value = props.find_kyou_query.map_radius.valueOf()
+    emits('request_update_area', latitude.value, longitude.value, radius.value)
+})
+
+watch(() => radius.value, () => {
+    emits('request_update_area', latitude.value, longitude.value, radius.value)
+})
+
+watch(() => props.application_config, () => {
+    google_map_api_key.value = props.application_config.google_map_api_key
+})
 
 function get_use_map(): boolean {
     return query.value.use_map
 }
 function get_latitude(): number {
-    return center.value.lat
+    return latitude.value
 }
 function get_longitude(): number {
-    return center.value.lng
+    return longitude.value
 }
 function get_radius(): number {
-    return query.value.map_radius.valueOf()
+    return radius.value
 }
 </script>

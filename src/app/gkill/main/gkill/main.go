@@ -12,6 +12,7 @@ import (
 	"github.com/asticode/go-astikit"
 	"github.com/asticode/go-astilectron"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/spf13/cobra"
 )
 
@@ -80,7 +81,7 @@ var (
 				SkipSetup:          false,
 			})
 			if err != nil {
-				fmt.Println("Electronが動かない環境であるかもしれません。その場合gkillは動きませんので変わりにgkill_serverを起動し、ブラウザからのアクセスを試みてください。")
+				gkill_log.Info.Println("Electronが動かない環境であるかもしれません。その場合gkillは動きませんので変わりにgkill_serverを起動し、ブラウザからのアクセスを試みてください。")
 				log.Fatal(err)
 			}
 			defer a.Close()

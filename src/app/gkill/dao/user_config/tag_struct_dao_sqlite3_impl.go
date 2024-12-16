@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type tagStructDAOSQLite3Impl struct {
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS "TAG_STRUCT" (
   CHECK_WHEN_INITED NOT NULL,
   IS_FORCE_HIDE NOT NULL
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_STRUCT table statement %s: %w", filename, err)
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS "TAG_STRUCT" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_STRUCT table to %s: %w", filename, err)
@@ -69,7 +69,7 @@ SELECT
   IS_FORCE_HIDE
 FROM TAG_STRUCT
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all tag struct sql: %w", err)
@@ -77,7 +77,7 @@ FROM TAG_STRUCT
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -122,7 +122,7 @@ SELECT
 FROM TAG_STRUCT
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get tag struct sql: %w", err)
@@ -134,7 +134,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -187,7 +187,7 @@ INSERT INTO TAG_STRUCT (
   ?
 )
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add tag struct sql: %w", err)
@@ -205,7 +205,7 @@ INSERT INTO TAG_STRUCT (
 		tagStruct.CheckWhenInited,
 		tagStruct.IsForceHide,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -242,7 +242,7 @@ INSERT INTO TAG_STRUCT (
   ?
 )
 `
-	log.Printf("sql: %s", sql)
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add tag struct sql: %w", err)
@@ -264,7 +264,7 @@ INSERT INTO TAG_STRUCT (
 			tagStruct.CheckWhenInited,
 			tagStruct.IsForceHide,
 		}
-		log.Printf("sql: %s query: %#v", sql, queryArgs)
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 		_, err = stmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
@@ -293,7 +293,7 @@ UPDATE TAG_STRUCT SET
   IS_FORCE_HIDE
 WHERE ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update tag struct sql: %w", err)
@@ -312,7 +312,7 @@ WHERE ID = ?
 		tagStruct.IsForceHide,
 		tagStruct.ID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -326,7 +326,7 @@ func (t *tagStructDAOSQLite3Impl) DeleteTagStruct(ctx context.Context, id string
 DELETE FROM TAG_STRUCT
 WHERE ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete tag struct sql: %w", err)
@@ -337,7 +337,7 @@ WHERE ID = ?
 	queryArgs := []interface{}{
 		id,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -352,7 +352,7 @@ func (t *tagStructDAOSQLite3Impl) DeleteUsersTagStructs(ctx context.Context, use
 DELETE FROM TAG_STRUCT
 WHERE USER_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete tag struct sql: %w", err)
@@ -363,7 +363,7 @@ WHERE USER_ID = ?
 	queryArgs := []interface{}{
 		userID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

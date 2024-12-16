@@ -1,44 +1,38 @@
 <template>
     <div @dblclick="show_kyou_dialog()" @click="emits('clicked_kyou', cloned_kyou)">
-        <AttachedTag v-for="attached_tag, index in cloned_kyou.attached_tags" :tag="attached_tag"
-            :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
-            :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
-            @requested_reload_list="() => emits('requested_reload_list')"
-            @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)" />
-        <AttachedTimeIsPlaing v-for="attached_timeis_plaing, index in cloned_kyou.attached_timeis_kyou"
-            :timeis_kyou="attached_timeis_plaing" :application_config="application_config" :gkill_api="gkill_api"
-            :kyou="cloned_kyou" :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
-            @requested_reload_list="() => emits('requested_reload_list')"
-            @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)" />
-        <kyouDialog :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
-            @requested_reload_list="() => emits('requested_reload_list')"
-            @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)"
-            ref="kyou_dialog" />
-        <v-row class="pa-0 ma-0">
-            <v-col class="kyou_related_time pa-0 ma-0" cols="auto">
-                {{ format_time(cloned_kyou.related_time) }}
-            </v-col>
-            <v-spacer />
-            <v-col class="kyou_data_type pa-0 ma-0" cols="auto">
-                {{ cloned_kyou.data_type }}
-            </v-col>
-            <v-col class="kyou_rep_name pa-0 ma-0" cols="auto">
-                _{{ cloned_kyou.rep_name }}_
-            </v-col>
-            <v-col class="kyou_device pa-0 ma-0" cols="auto">
-                {{ cloned_kyou.update_device }}
-            </v-col>
-        </v-row>
+        <div v-if="!show_content_only">
+            <AttachedTag v-for="attached_tag, index in cloned_kyou.attached_tags" :tag="attached_tag"
+                :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
+                :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
+                @requested_reload_list="() => emits('requested_reload_list')"
+                @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)" />
+            <AttachedTimeIsPlaing v-for="attached_timeis_plaing, index in cloned_kyou.attached_timeis_kyou"
+                :timeis_kyou="attached_timeis_plaing" :application_config="application_config" :gkill_api="gkill_api"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
+                @requested_reload_list="() => emits('requested_reload_list')"
+                @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)" />
+            <v-row class="pa-0 ma-0">
+                <v-col class="kyou_related_time pa-0 ma-0" cols="auto">
+                    {{ format_time(cloned_kyou.related_time) }}
+                </v-col>
+                <v-spacer />
+                <v-col class="kyou_data_type pa-0 ma-0" cols="auto">
+                    {{ cloned_kyou.data_type }}
+                </v-col>
+                <v-col class="kyou_rep_name pa-0 ma-0" cols="auto">
+                    _{{ cloned_kyou.rep_name }}_
+                </v-col>
+                <v-col class="kyou_device pa-0 ma-0" cols="auto">
+                    {{ cloned_kyou.update_device }}
+                </v-col>
+            </v-row>
+        </div>
         <div :class="kyou_class">
             <KmemoView v-if="cloned_kyou.typed_kmemo" :kmemo="cloned_kyou.typed_kmemo"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
@@ -113,14 +107,24 @@
                 @requested_reload_list="() => emits('requested_reload_list')"
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
         </div>
-        <AttachedText v-for="attached_text, index in cloned_kyou.attached_texts" :text="attached_text"
-            :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
-            :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+        <div v-if="!show_content_only">
+            <AttachedText v-for="attached_text, index in cloned_kyou.attached_texts" :text="attached_text"
+                :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
+                :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', cloned_kyou)"
+                @requested_reload_list="() => emits('requested_reload_list')"
+                @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
+        </div>
+        <kyouDialog :application_config="application_config" :gkill_api="gkill_api"
+            :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', cloned_kyou)"
+            @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
             @requested_reload_list="() => emits('requested_reload_list')"
-            @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
+            @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)"
+            ref="kyou_dialog" />
     </div>
 </template>
 <script setup lang="ts">
@@ -189,12 +193,22 @@ const kyou_class = computed(() => {
 })
 
 async function load_attached_infos(): Promise<void> {
+    if (cloned_kyou.value.abort_controller) {
+        cloned_kyou.value.abort_controller.abort()
+    }
+    cloned_kyou.value.abort_controller = new AbortController()
+
     const errors = await cloned_kyou.value.load_all()
     if (errors && errors.length !== 0) {
         emits('received_errors', errors)
     }
 }
 async function clear_attached_infos(): Promise<void> {
+    if (cloned_kyou.value.abort_controller) {
+        cloned_kyou.value.abort_controller.abort()
+    }
+    cloned_kyou.value.abort_controller = new AbortController()
+
     const errors = await cloned_kyou.value.clear_all()
     if (errors && errors.length !== 0) {
         emits('received_errors', errors)

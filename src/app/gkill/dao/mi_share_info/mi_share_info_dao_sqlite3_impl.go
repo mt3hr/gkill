@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type miShareInfoDAOSQLite3Impl struct {
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS "MI_SHARE_INFO" (
   SHARE_ID NOT NULL,
   FIND_QUERY_JSON NOT NULL
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MI_SHARE_INFO table statement %s: %w", filename, err)
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS "MI_SHARE_INFO" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MI_SHARE_INFO table to %s: %w", filename, err)
@@ -67,7 +67,7 @@ SELECT
   FIND_QUERY_JSON
 FROM MI_SHARE_INFO
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all mi share infos sql: %w", err)
@@ -75,7 +75,7 @@ FROM MI_SHARE_INFO
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -118,7 +118,7 @@ SELECT
 FROM MI_SHARE_INFO
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get mi share infos sql: %w", err)
@@ -130,7 +130,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	log.Printf("%#v", queryArgs)
+	gkill_log.TraceSQL.Printf("%#v", queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -173,7 +173,7 @@ SELECT
 FROM MI_SHARE_INFO
 WHERE SHARED_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get mi share infos sql: %w", err)
@@ -184,7 +184,7 @@ WHERE SHARED_ID = ?
 	queryArgs := []interface{}{
 		sharedID,
 	}
-	log.Printf("%#v", queryArgs)
+	gkill_log.TraceSQL.Printf("%#v", queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -237,7 +237,7 @@ INSERT INTO MI_SHARE_INFO (
   ?
 )
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mi share info sql: %w", err)
@@ -254,7 +254,7 @@ INSERT INTO MI_SHARE_INFO (
 		miShareInfo.ShareID,
 		miShareInfo.FindQueryJSON,
 	}
-	log.Printf("%#v", queryArgs)
+	gkill_log.TraceSQL.Printf("%#v", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -275,7 +275,7 @@ UPDATE MI_SHARE_INFO SET
   FIND_QUERY_JSON = ?
 WHERE ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update mi share info sql: %w", err)
@@ -293,7 +293,7 @@ WHERE ID = ?
 		miShareInfo.FindQueryJSON,
 		miShareInfo.ID,
 	}
-	log.Printf("%#v", queryArgs)
+	gkill_log.TraceSQL.Printf("%#v", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -308,7 +308,7 @@ func (m *miShareInfoDAOSQLite3Impl) DeleteMiShareInfo(ctx context.Context, id st
 DELETE FROM MI_SHARE_INFO
 WHERE ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete mi share info sql: %w", err)
@@ -319,7 +319,7 @@ WHERE ID = ?
 	queryArgs := []interface{}{
 		id,
 	}
-	log.Printf("%#v", queryArgs)
+	gkill_log.TraceSQL.Printf("%#v", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

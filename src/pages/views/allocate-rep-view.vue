@@ -91,6 +91,7 @@ const rep_types: Ref<Array<string>> = ref([
     "text",
     "rekyou",
     "directory",
+    "gpslog",
 ])
 
 watch(() => props.server_config, () => {

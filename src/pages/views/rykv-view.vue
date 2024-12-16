@@ -19,37 +19,47 @@
         <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
             :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
             :app_content_width="app_content_width" :find_kyou_query="querys[focused_column_index]"
-            @requested_search="search(focused_column_index)"
+            @requested_search="focused_column_kyous.splice(0, focused_column_checked_kyous.length); search(focused_column_index)"
             @updated_query="new_query => querys.splice(focused_column_index, 1, new_query)"
             ref="query_editor_sidebar" />
     </v-navigation-drawer>
     <v-main class="main">
         <table class="rykv_view_table">
             <tr>
-                <td valign="top">
+                <td valign="top" v-for="query, index in querys">
                     <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
-                        v-for="query, index in querys" :application_config="application_config" :gkill_api="gkill_api"
+                        :application_config="application_config" :gkill_api="gkill_api"
                         :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
-                        @clicked_kyou="(kyou) => { focused_kyou = kyou; focused_column_index = index; }"
+                        :is_focused_list="focused_column_index === index" @click="focused_column_index = index"
+                        @clicked_kyou="(kyou) => clicked_kyou_in_list_view(index, kyou)"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="reload_list(index)"
                         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-                        ref="kyou_list_views" />
+                        @requested_change_focus_kyou="(is_focus_kyou) => query.is_focus_kyou = is_focus_kyou"
+                        @requested_search="focused_column_kyous.splice(0, focused_column_checked_kyous.length); search(index)"
+                        ref="kyou_list_views"
+                        @requested_change_is_image_only_view="(is_image_only_view: boolean) => { focused_column_kyous.splice(0, focused_column_checked_kyous.length); querys[index].is_image_only = is_image_only_view; search(index) }"
+                        @requested_close_column="querys.splice(index, 1); match_kyous_list.splice(index, 1); abort_controllers.splice(index, 1); focused_column_kyous.splice(0, focused_column_checked_kyous.length)" />
                 </td>
                 <td valign="top">
-                    <div v-if="!focused_kyou" class="kyou_detail_view dummy" />
-                    <KyouView v-if="focused_kyou && is_show_kyou_detail_view" :application_config="application_config"
-                        :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="false" :kyou="focused_kyou"
-                        :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
-                        :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-                        :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                        :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
-                        :is_readonly_mi_check="false" :width="400" class="kyou_detail_view"
-                        @received_errors="(errors) => emits('received_errors', errors)"
-                        @received_messages="(messages) => emits('received_messages', messages)"
-                        @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+                    <v-btn class="rounded-sm mx-auto" :height="app_content_height.valueOf()" :width="30"
+                        :color="'primary'" @click="add_list_view()" icon="mdi-plus" variant="text" />
+                </td>
+                <td valign="top" v-if="is_show_kyou_detail_view">
+                    <div class="kyou_detail_view dummy">
+                        <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
+                            :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                            :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag"
+                            :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
+                            :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
+                            :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
+                            :height="app_content_height.valueOf()" :is_readonly_mi_check="false" :width="400"
+                            class="kyou_detail_view" @received_errors="(errors) => emits('received_errors', errors)"
+                            @received_messages="(messages) => emits('received_messages', messages)"
+                            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+                    </div>
                 </td>
                 <td valign="top">
                     <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
@@ -171,6 +181,7 @@ import type KftlDialog from '../dialogs/kftl-dialog.vue'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
+import moment from 'moment'
 
 const query_editor_sidebar = ref<InstanceType<typeof RykvQueryEditorSideBar> | null>(null);
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
@@ -186,7 +197,7 @@ const match_kyous_list: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
 const focused_column_index: Ref<number> = ref(0)
 const focused_column_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_kyou: Ref<Kyou | null> = ref(null)
-const focused_time: Ref<Date> = ref(new Date())
+const focused_time: Ref<Date> = ref(moment().toDate())
 const focused_column_checked_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const is_show_kyou_detail_view: Ref<boolean> = ref(false)
 const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
@@ -216,7 +227,6 @@ watch(() => focused_time.value, () => {
 })
 
 nextTick(() => {
-    is_show_kyou_detail_view.value = props.app_content_width.valueOf() >= 420
     is_show_kyou_count_calendar.value = props.app_content_width.valueOf() >= 420
     is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
 })
@@ -224,10 +234,13 @@ nextTick(() => {
 nextTick(() => query_editor_sidebar.value?.generate_query())
 
 async function add_list_view(): Promise<void> {
-    throw new Error('Not implemented')
-}
-async function close_list_view(query_index: Number): Promise<void> {
-    throw new Error('Not implemented')
+    const default_query = query_editor_sidebar.value?.get_default_query().clone()
+    if (default_query) {
+        querys.value.push(default_query)
+        match_kyous_list.value.push([])
+        focused_column_index.value = match_kyous_list.value.length - 1
+        abort_controllers.value.push(null)
+    }
 }
 async function update_queries(query_index: Number, by_user: boolean): Promise<void> {
     throw new Error('Not implemented')
@@ -248,9 +261,41 @@ async function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): Prom
     throw new Error('Not implemented')
 }
 
+async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
+    focused_kyou.value = kyou
+    focused_column_index.value = column_index
+
+    const update_target_column_indexs = new Array<number>()
+    for (let i = 0; i < querys.value.length; i++) {
+        if (querys.value[i].is_focus_kyou) {
+            update_target_column_indexs.push(i)
+        }
+    }
+
+    for (let i = 0; i < update_target_column_indexs.length; i++) {
+        const target_column_index = update_target_column_indexs[i]
+        for (let j = 0; j < match_kyous_list.value[target_column_index].length; j++) {
+            const kyou_in_list = match_kyous_list.value[target_column_index][j]
+            if (kyou.id = kyou_in_list.id) {
+                kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
+            }
+        }
+    }
+}
+
+
+const abort_controllers: Ref<Array<AbortController | null>> = ref([])
 async function search(column_index: number): Promise<void> {
+    if (abort_controllers.value[column_index]) {
+        abort_controllers.value[column_index]?.abort()
+    }
+
+    const kyou_list_view = kyou_list_views.value[column_index] as any
+    kyou_list_view.set_loading(true)
+
     match_kyous_list.value[column_index] = []
     const req = new GetKyousRequest()
+    abort_controllers.value[column_index] = req.abort_controller
     req.session_id = GkillAPI.get_instance().get_session_id()
     req.query = querys.value[column_index]
     const res = await GkillAPI.get_instance().get_kyous(req)
@@ -262,8 +307,9 @@ async function search(column_index: number): Promise<void> {
         emits('received_messages', res.messages)
     }
     match_kyous_list.value[column_index] = res.kyous
-    focused_column_kyous.value.splice(0, focused_column_kyous.value.length - 1)
+    focused_column_kyous.value.splice(0, column_index - 1)
     focused_column_kyous.value.push(...res.kyous)
+    kyou_list_view.set_loading(false)
 }
 
 function floatingActionButtonStyle() {
