@@ -18,6 +18,7 @@
     "install_server": "npm run preparate_install && cd src/app/gkill/main/gkill_server && go install"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.8",
     "@mdi/font": "^7.4.47",
     "@mdi/js": "^7.4.47",
     "copyfiles": "^2.4.1",
@@ -31,6 +32,7 @@
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.8.0",
     "@tsconfig/node20": "^20.1.4",
+    "@types/google.maps": "^3.58.1",
     "@types/node": "^20.14.5",
     "@vitejs/plugin-vue": "^5.0.5",
     "@vue/eslint-config-typescript": "^13.0.0",

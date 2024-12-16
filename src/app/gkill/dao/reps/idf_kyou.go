@@ -29,7 +29,7 @@ type IDFKyou struct {
 
 	UpdateDevice string `json:"update_device"`
 
-	FileName string `json:"file_name"`
+	TargetFile string `json:"file_name"`
 
 	FileURL string `json:"file_url"`
 

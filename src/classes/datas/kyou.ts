@@ -41,6 +41,7 @@ export class Kyou extends InfoBase {
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         const req = new GetKyouRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_kyou(req)
@@ -128,6 +129,7 @@ export class Kyou extends InfoBase {
 
     async load_typed_kmemo(): Promise<Array<GkillError>> {
         const req = new GetKmemoRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_kmemo(req)
@@ -169,6 +171,7 @@ export class Kyou extends InfoBase {
 
     async load_typed_urlog(): Promise<Array<GkillError>> {
         const req = new GetURLogRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_urlog(req)
@@ -210,6 +213,7 @@ export class Kyou extends InfoBase {
 
     async load_typed_nlog(): Promise<Array<GkillError>> {
         const req = new GetNlogRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_nlog(req)
@@ -251,6 +255,7 @@ export class Kyou extends InfoBase {
 
     async load_typed_timeis(): Promise<Array<GkillError>> {
         const req = new GetTimeisRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_timeis(req)
@@ -292,6 +297,7 @@ export class Kyou extends InfoBase {
 
     async load_typed_mi(): Promise<Array<GkillError>> {
         const req = new GetMiRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_mi(req)
@@ -333,6 +339,7 @@ export class Kyou extends InfoBase {
 
     async load_typed_lantana(): Promise<Array<GkillError>> {
         const req = new GetLantanaRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_lantana(req)
@@ -374,6 +381,7 @@ export class Kyou extends InfoBase {
 
     async load_typed_idf_kyou(): Promise<Array<GkillError>> {
         const req = new GetIDFKyouRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_idf_kyou(req)
@@ -415,6 +423,7 @@ export class Kyou extends InfoBase {
 
     async load_typed_git_commit_log(): Promise<Array<GkillError>> {
         const req = new GetGitCommitLogRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_git_commit_log(req)
@@ -456,6 +465,7 @@ export class Kyou extends InfoBase {
 
     async load_typed_rekyou(): Promise<Array<GkillError>> {
         const req = new GetReKyouRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_rekyou(req)
@@ -510,6 +520,7 @@ export class Kyou extends InfoBase {
 
     async reload(): Promise<Array<GkillError>> {
         const req = new GetKyouRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_instance().get_kyou(req)

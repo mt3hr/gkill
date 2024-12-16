@@ -22,7 +22,7 @@ export class ApplicationConfig {
     device: string
     enable_browser_cache: boolean
     google_map_api_key: string
-    rykv_image_list_column_number: Number
+    rykv_image_list_column_number: number
     rykv_hot_reload: boolean
     mi_default_board: string
     account_is_admin: boolean

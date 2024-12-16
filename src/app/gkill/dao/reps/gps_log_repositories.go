@@ -71,7 +71,7 @@ loop:
 	return gpsLogs, nil
 }
 
-func (g GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime time.Time, endTime time.Time) ([]*GPSLog, error) {
+func (g GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime *time.Time, endTime *time.Time) ([]*GPSLog, error) {
 	gpsLogs := []*GPSLog{}
 	existErr := false
 	var err error

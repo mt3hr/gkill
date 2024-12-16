@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type loginSessionDAOSQLite3Impl struct {
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS "LOGIN_SESSION" (
   EXPIRATION_TIME NOT NULL,
   IS_LOCAL_APP_USER NOT NULL
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create LOGIN_SESSION table statement %s: %w", filename, err)
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS "LOGIN_SESSION" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create LOGIN_SESSION table to %s: %w", filename, err)
@@ -74,7 +74,7 @@ SELECT
   IS_LOCAL_APP_USER
 FROM LOGIN_SESSION
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all login sessions sql: %w", err)
@@ -82,7 +82,7 @@ FROM LOGIN_SESSION
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -144,7 +144,7 @@ SELECT
 FROM LOGIN_SESSION
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get login sessions sql: %w", err)
@@ -156,7 +156,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -218,7 +218,7 @@ SELECT
 FROM LOGIN_SESSION
 WHERE SESSION_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get login sessions sql: %w", err)
@@ -229,7 +229,7 @@ WHERE SESSION_ID = ?
 	queryArgs := []interface{}{
 		sessionID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -303,7 +303,7 @@ INSERT INTO LOGIN_SESSION (
   ?
 )
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update login sessions sql: %w", err)
@@ -322,7 +322,7 @@ INSERT INTO LOGIN_SESSION (
 		loginSession.ExpirationTime.Format(sqlite3impl.TimeLayout),
 		loginSession.IsLocalAppUser,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -345,7 +345,7 @@ UPDATE LOGIN_SESSION SET
   IS_LOCAL_APP_USER = ?
 WHERE ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add login sessions sql: %w", err)
@@ -365,7 +365,7 @@ WHERE ID = ?
 		loginSession.IsLocalAppUser,
 		loginSession.ID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -379,7 +379,7 @@ func (l *loginSessionDAOSQLite3Impl) DeleteLoginSession(ctx context.Context, ses
 DELETE FROM LOGIN_SESSION
 WHERE SESSION_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete login session sql: %w", err)
@@ -390,7 +390,7 @@ WHERE SESSION_ID = ?
 	queryArgs := []interface{}{
 		sessionID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

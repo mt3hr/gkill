@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"sync"
+
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type repositoryDAOSQLite3Impl struct {
@@ -33,7 +34,7 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
   IS_EXECUTE_IDF_WHEN_RELOAD NOT NULL,
   IS_ENABLE NOT NULL
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create REPOSITORY table statement %s: %w", filename, err)
@@ -41,7 +42,7 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REPOSITORY table to %s: %w", filename, err)
@@ -68,7 +69,7 @@ SELECT
   IS_ENABLE
 FROM REPOSITORY
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all repositories sql: %w", err)
@@ -76,7 +77,7 @@ FROM REPOSITORY
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -121,7 +122,7 @@ SELECT
 FROM REPOSITORY
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get repositories sql: %w", err)
@@ -133,7 +134,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -192,7 +193,7 @@ INSERT INTO REPOSITORY (
 		err = fmt.Errorf("error at begin update repository: %w", err)
 		return false, err
 	}
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add repository sql: %w", err)
@@ -210,7 +211,7 @@ INSERT INTO REPOSITORY (
 		repository.IsExecuteIDFWhenReload,
 		repository.IsEnable,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		errAtRollback := tx.Rollback()
@@ -218,7 +219,7 @@ INSERT INTO REPOSITORY (
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
 	}
-	err = r.checkEnableRepositoryCount(ctx, tx, repository.UserID)
+	err = r.checkUseToWriteRepositoryCount(ctx, tx, repository.UserID)
 	if err != nil {
 		errAtRollback := tx.Rollback()
 		err = fmt.Errorf("%w, %w", err, errAtRollback)
@@ -258,11 +259,12 @@ INSERT INTO REPOSITORY (
   ?,
   ?,
   ?,
+  ?,
   ?
 )
 `
 
-		log.Printf("sql: %s", sql)
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add repositories sql: %w", err)
@@ -284,7 +286,7 @@ INSERT INTO REPOSITORY (
 			repository.IsExecuteIDFWhenReload,
 			repository.IsEnable,
 		}
-		log.Printf("sql: %s query: %#v", sql, queryArgs)
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 		_, err = stmt.ExecContext(ctx, queryArgs...)
 
 		if err != nil {
@@ -298,7 +300,7 @@ INSERT INTO REPOSITORY (
 	}
 
 	for _, repository := range repositories {
-		err = r.checkEnableRepositoryCount(ctx, tx, repository.UserID)
+		err = r.checkUseToWriteRepositoryCount(ctx, tx, repository.UserID)
 		if err != nil {
 			errAtRollback := tx.Rollback()
 			err = fmt.Errorf("%w, %w", err, errAtRollback)
@@ -337,7 +339,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at begin update repository: %w", err)
 		return false, err
 	}
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update repository sql: %w", err)
@@ -355,7 +357,7 @@ WHERE ID = ?
 		repository.IsExecuteIDFWhenReload,
 		repository.IsEnable,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		errAtRollback := tx.Rollback()
@@ -363,7 +365,7 @@ WHERE ID = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
 	}
-	err = r.checkEnableRepositoryCount(ctx, tx, repository.UserID)
+	err = r.checkUseToWriteRepositoryCount(ctx, tx, repository.UserID)
 	if err != nil {
 		errAtRollback := tx.Rollback()
 		err = fmt.Errorf("%w, %w", err, errAtRollback)
@@ -383,7 +385,7 @@ func (r *repositoryDAOSQLite3Impl) DeleteRepository(ctx context.Context, id stri
 DELETE FROM REPOSITORY
 WHERE ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete repository sql: %w", err)
@@ -394,7 +396,7 @@ WHERE ID = ?
 	queryArgs := []interface{}{
 		id,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -408,7 +410,7 @@ func (r *repositoryDAOSQLite3Impl) DeleteAllRepositoriesByUser(ctx context.Conte
 DELETE FROM REPOSITORY
 WHERE USER_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := r.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete repository sql: %w", err)
@@ -419,7 +421,7 @@ WHERE USER_ID = ?
 	queryArgs := []interface{}{
 		userID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -433,18 +435,18 @@ func (r *repositoryDAOSQLite3Impl) Close(ctx context.Context) error {
 	return r.db.Close()
 }
 
-func (r *repositoryDAOSQLite3Impl) checkEnableRepositoryCount(ctx context.Context, tx *sql.Tx, userID string) error {
+func (r *repositoryDAOSQLite3Impl) checkUseToWriteRepositoryCount(ctx context.Context, tx *sql.Tx, userID string) error {
 	sql := `
 SELECT TYPE, DEVICE, COUNT(*) AS COUNT
 FROM REPOSITORY
-WHERE REPOSITORY.IS_ENABLE = ?
+WHERE REPOSITORY.USE_TO_WRITE = ?
 AND USER_ID = ?
 GROUP BY TYPE
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get enable repository count sql: %w", err)
+		err = fmt.Errorf("error at get use to write repository count sql: %w", err)
 		return err
 	}
 	defer stmt.Close()
@@ -453,7 +455,7 @@ GROUP BY TYPE
 		true,
 		userID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -476,13 +478,13 @@ GROUP BY TYPE
 				&count,
 			)
 			if err != nil {
-				err = fmt.Errorf("error at get enable repository count: %w", err)
+				err = fmt.Errorf("error at get use to write repository count: %w", err)
 				return err
 			}
 
 			if count >= 2 {
-				err = fmt.Errorf("error at check enable repository count")
-				err = fmt.Errorf("rep type %s enable count is %d: %w", repType, count, err)
+				err = fmt.Errorf("error at check use to write repository count")
+				err = fmt.Errorf("rep type %s use to write rep count is %d: %w", repType, count, err)
 				return err
 			}
 		}

@@ -2,7 +2,8 @@
     <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()" :readonly="is_readonly_mi_check" />
+                <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()"
+                    :readonly="is_readonly_mi_check" />
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-card-title>
@@ -65,6 +66,11 @@ function show_context_menu(e: PointerEvent): void {
 }
 
 async function clicked_mi_check(): Promise<void> {
+    // 読み取り専用表示だったら何もしない
+    if (props.is_readonly_mi_check) {
+        return
+    }
+
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
     const mi = props.kyou.typed_mi
     if (!mi) {

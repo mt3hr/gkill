@@ -169,7 +169,7 @@ watch(() => props.application_config, async () => {
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
 const google_map_api_key: Ref<string> = ref(cloned_application_config.value.google_map_api_key)
-const rykv_image_list_column_number: Ref<Number> = ref(cloned_application_config.value.rykv_image_list_column_number)
+const rykv_image_list_column_number: Ref<number> = ref(cloned_application_config.value.rykv_image_list_column_number)
 const enable_browser_cache: Ref<boolean> = ref(cloned_application_config.value.enable_browser_cache)
 const rykv_hot_reload: Ref<boolean> = ref(cloned_application_config.value.rykv_hot_reload)
 const mi_default_board: Ref<string> = ref(cloned_application_config.value.mi_default_board)
@@ -204,7 +204,7 @@ async function load_mi_board_names(): Promise<void> {
 async function update_application_config(): Promise<void> {
     const application_config = new ApplicationConfig()
     application_config.google_map_api_key = google_map_api_key.value
-    application_config.rykv_image_list_column_number = rykv_image_list_column_number.value
+    application_config.rykv_image_list_column_number = parseInt(rykv_image_list_column_number.value.toString())
     application_config.enable_browser_cache = enable_browser_cache.value
     application_config.rykv_hot_reload = rykv_hot_reload.value
     application_config.mi_default_board = mi_default_board.value

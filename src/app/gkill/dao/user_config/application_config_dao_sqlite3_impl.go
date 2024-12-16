@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type applicationConfigDAOSQLite3Impl struct {
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
   MI_DEFAULT_BOARD NOT NULL,
   PRIMARY KEY(USER_ID, DEVICE)
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create APPLICATION_CONFIG table statement %s: %w", filename, err)
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 
 	if err != nil {
@@ -69,7 +69,7 @@ SELECT
   MI_DEFAULT_BOARD
 FROM APPLICATION_CONFIG
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all application configs sql: %w", err)
@@ -77,7 +77,7 @@ FROM APPLICATION_CONFIG
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -120,7 +120,7 @@ SELECT
 FROM APPLICATION_CONFIG
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get application config sql: %w", err)
@@ -132,7 +132,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -188,7 +188,7 @@ INSERT INTO APPLICATION_CONFIG (
   ?
 )
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add application config sql: %w", err)
@@ -205,7 +205,7 @@ INSERT INTO APPLICATION_CONFIG (
 		applicationConfig.RykvHotReload,
 		applicationConfig.MiDefaultBoard,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -227,7 +227,7 @@ UPDATE APPLICATION_CONFIG SET
   MI_DEFAULT_BOARD = ?
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update application config sql: %w", err)
@@ -246,7 +246,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		applicationConfig.UserID,
 		applicationConfig.Device,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -261,7 +261,7 @@ func (a *applicationConfigDAOSQLite3Impl) DeleteApplicationConfig(ctx context.Co
 DELETE FROM APPLICATION_CONFIG 
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete application config sql: %w", err)
@@ -272,7 +272,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	queryArgs := []interface{}{
 		device,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {

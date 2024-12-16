@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,6 +19,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type idfKyouRepositorySQLite3Impl struct {
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 )
 `
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF table statement %s: %w", filename, err)
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF table to %s: %w", filename, err)
@@ -168,7 +168,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyou sql: %w", err)
@@ -176,7 +176,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
@@ -193,12 +193,13 @@ WHERE
 			idf := &IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			targetRepName, targetFile := "", ""
+			targetRepName := ""
 
-			err = rows.Scan(&idf.IsDeleted,
+			err = rows.Scan(
+				&idf.IsDeleted,
 				&idf.ID,
 				&targetRepName,
-				&targetFile,
+				&idf.TargetFile,
 				&relatedTimeStr,
 				&createTimeStr,
 				&idf.CreateApp,
@@ -211,7 +212,6 @@ WHERE
 				&idf.RepName,
 				&idf.DataType,
 			)
-			idf.FileName = filepath.Base(targetFile)
 
 			// 対象IDFRepsからファイルURLを取得
 			var targetRep Repository
@@ -222,23 +222,13 @@ WHERE
 					return nil, err
 				}
 				if repName == targetRepName {
-					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.FileName))
+					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.TargetFile))
 					targetRep = rep
 				}
 			}
 
 			// 画像であるか判定
-			idf.IsImage = false
-			ext := strings.ToLower(filepath.Ext(idf.FileName))
-			switch ext {
-			case ".jpg",
-				".jpeg",
-				".jfif",
-				".png",
-				".gif",
-				".bmp":
-				idf.IsImage = true
-			}
+			idf.IsImage = i.isImage(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -265,7 +255,7 @@ WHERE
 				return nil, err
 			}
 			fileContentText += filename
-			switch filepath.Ext(idf.FileName) {
+			switch filepath.Ext(idf.TargetFile) {
 			case ".md":
 				fallthrough
 			case ".txt":
@@ -347,6 +337,7 @@ WHERE
 				kyou.UpdateApp = idf.UpdateApp
 				kyou.UpdateUser = idf.UpdateUser
 				kyou.UpdateDevice = idf.UpdateDevice
+				kyou.IsImage = idf.IsImage
 
 				kyous = append(kyous, kyou)
 			}
@@ -437,7 +428,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -445,7 +436,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
@@ -462,12 +453,13 @@ WHERE
 			idf := &IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			targetRepName, targetFile := "", ""
+			targetRepName := ""
 
-			err = rows.Scan(&idf.IsDeleted,
+			err = rows.Scan(
+				&idf.IsDeleted,
 				&idf.ID,
 				&targetRepName,
-				&targetFile,
+				&idf.TargetFile,
 				&relatedTimeStr,
 				&createTimeStr,
 				&idf.CreateApp,
@@ -480,7 +472,6 @@ WHERE
 				&idf.RepName,
 				&idf.DataType,
 			)
-			idf.FileName = filepath.Base(targetFile)
 
 			for _, rep := range i.repositoriesRef.Reps {
 				repName, err := rep.GetRepName(ctx)
@@ -489,22 +480,12 @@ WHERE
 					return nil, err
 				}
 				if repName == targetRepName {
-					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.FileName))
+					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.TargetFile))
 				}
 			}
 
 			// 画像であるか判定
-			idf.IsImage = false
-			ext := strings.ToLower(filepath.Ext(idf.FileName))
-			switch ext {
-			case ".jpg",
-				".jpeg",
-				".jfif",
-				".png",
-				".gif",
-				".bmp":
-				idf.IsImage = true
-			}
+			idf.IsImage = i.isImage(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -536,6 +517,7 @@ WHERE
 			kyou.UpdateApp = idf.UpdateApp
 			kyou.UpdateUser = idf.UpdateUser
 			kyou.UpdateDevice = idf.UpdateDevice
+			kyou.IsImage = idf.IsImage
 
 			kyous = append(kyous, kyou)
 		}
@@ -571,7 +553,6 @@ SELECT
 FROM IDF
 WHERE
 `
-
 	repName, err := i.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at idf : %w", err)
@@ -605,7 +586,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -613,7 +594,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
@@ -630,12 +611,12 @@ WHERE
 			idf := &IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			targetRepName, targetFile := "", ""
+			targetRepName := ""
 
 			err = rows.Scan(&idf.IsDeleted,
 				&idf.ID,
 				&targetRepName,
-				&targetFile,
+				&idf.TargetFile,
 				&relatedTimeStr,
 				&createTimeStr,
 				&idf.CreateApp,
@@ -648,7 +629,6 @@ WHERE
 				&idf.RepName,
 				&idf.DataType,
 			)
-			idf.FileName = filepath.Base(targetFile)
 
 			for _, rep := range i.repositoriesRef.Reps {
 				repName, err := rep.GetRepName(ctx)
@@ -657,22 +637,12 @@ WHERE
 					return "", err
 				}
 				if repName == targetRepName {
-					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.FileName))
+					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.TargetFile))
 				}
 			}
 
 			// 画像であるか判定
-			idf.IsImage = false
-			ext := strings.ToLower(filepath.Ext(idf.FileName))
-			switch ext {
-			case ".jpg",
-				".jpeg",
-				".jfif",
-				".png",
-				".gif",
-				".bmp":
-				idf.IsImage = true
-			}
+			idf.IsImage = i.isImage(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -702,7 +672,7 @@ WHERE
 		return "", err
 	}
 
-	filename := filepath.Join(i.contentDir, idfKyous[0].FileName)
+	filename := filepath.Join(i.contentDir, idfKyous[0].TargetFile)
 	return filename, nil
 }
 
@@ -719,13 +689,7 @@ func (i *idfKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 }
 
 func (i *idfKyouRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := i.GetPath(ctx, "")
-	if err != nil {
-		err = fmt.Errorf("error at get path idf rep: %w", err)
-		return "", err
-	}
-	base := filepath.Base(path)
-	return base, nil
+	return filepath.Base(i.contentDir), nil
 }
 
 func (i *idfKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
@@ -792,7 +756,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyou sql: %w", err)
@@ -800,7 +764,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
@@ -817,12 +781,13 @@ WHERE
 			idf := &IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			targetRepName, targetFile := "", ""
+			targetRepName := ""
 
-			err = rows.Scan(&idf.IsDeleted,
+			err = rows.Scan(
+				&idf.IsDeleted,
 				&idf.ID,
 				&targetRepName,
-				&targetFile,
+				&idf.TargetFile,
 				&relatedTimeStr,
 				&createTimeStr,
 				&idf.CreateApp,
@@ -835,7 +800,6 @@ WHERE
 				&idf.RepName,
 				&idf.DataType,
 			)
-			idf.FileName = filepath.Base(targetFile)
 
 			// 対象IDFRepsからファイルURLを取得
 			var targetRep Repository
@@ -846,23 +810,13 @@ WHERE
 					return nil, err
 				}
 				if repName == targetRepName {
-					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.FileName))
+					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.TargetFile))
 					targetRep = rep
 				}
 			}
 
 			// 画像であるか判定
-			idf.IsImage = false
-			ext := strings.ToLower(filepath.Ext(idf.FileName))
-			switch ext {
-			case ".jpg",
-				".jpeg",
-				".jfif",
-				".png",
-				".gif",
-				".bmp":
-				idf.IsImage = true
-			}
+			idf.IsImage = i.isImage(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -889,7 +843,7 @@ WHERE
 				return nil, err
 			}
 			fileContentText += filename
-			switch filepath.Ext(idf.FileName) {
+			switch filepath.Ext(idf.TargetFile) {
 			case ".md":
 				fallthrough
 			case ".txt":
@@ -1047,7 +1001,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get idf histories sql: %w", err)
@@ -1055,7 +1009,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from idf %s: %w", err)
@@ -1072,12 +1026,13 @@ WHERE
 			idf := &IDFKyou{}
 			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			targetRepName, targetFile := "", ""
+			targetRepName := ""
 
-			err = rows.Scan(&idf.IsDeleted,
+			err = rows.Scan(
+				&idf.IsDeleted,
 				&idf.ID,
 				&targetRepName,
-				&targetFile,
+				&idf.TargetFile,
 				&relatedTimeStr,
 				&createTimeStr,
 				&idf.CreateApp,
@@ -1090,7 +1045,6 @@ WHERE
 				&idf.RepName,
 				&idf.DataType,
 			)
-			idf.FileName = filepath.Base(targetFile)
 
 			for _, rep := range i.repositoriesRef.Reps {
 				repName, err := rep.GetRepName(ctx)
@@ -1099,22 +1053,12 @@ WHERE
 					return nil, err
 				}
 				if repName == targetRepName {
-					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.FileName))
+					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.TargetFile))
 				}
 			}
 
 			// 画像であるか判定
-			idf.IsImage = false
-			ext := strings.ToLower(filepath.Ext(idf.FileName))
-			switch ext {
-			case ".jpg",
-				".jpeg",
-				".jfif",
-				".png",
-				".gif",
-				".bmp":
-				idf.IsImage = true
-			}
+			idf.IsImage = i.isImage(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -1153,11 +1097,13 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 		err = fmt.Errorf("error at get abs path %s: %w", i.contentDir, err)
 		return err
 	}
-
+	contentDirAbs = filepath.Clean(contentDirAbs)
+	contentDirAbs = filepath.ToSlash(contentDirAbs)
 	// 対象内のファイルfullPath
-
-	existFileInfos := []fileinfo{}
+	existFileInfos := map[string]*fileinfo{}
 	err = filepath.WalkDir(contentDirAbs, fs.WalkDirFunc(func(path string, d os.DirEntry, err error) error {
+		path = filepath.ToSlash(path)
+		path = strings.TrimPrefix(path, contentDirAbs+"/")
 		for _, ignore := range *i.idfIgnore {
 			if filepath.Base(path) == ignore {
 				return nil
@@ -1168,10 +1114,10 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 			return err
 		}
 		info.ModTime()
-		existFileInfos = append(existFileInfos, fileinfo{
+		existFileInfos[path] = &fileinfo{
 			Filename: path,
 			Lastmod:  info.ModTime(),
-		})
+		}
 		return nil
 	}))
 	if err != nil {
@@ -1179,21 +1125,20 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 		return err
 	}
 
-	// すでにidfされているもののfullPath
-	idfExistFileNames := map[string]struct{}{}
-	for _, idfKyou := range allIDFKyous {
-		idfFilename := filepath.Join(contentDirAbs, idfKyou.FileName)
-		idfExistFileNames[idfFilename] = struct{}{}
-	}
-
 	// まだidfされていないやつをリストアップする
-	idfTargetList := []string{}
+	idfTargetList := map[string]struct{}{}
 	for _, existFileInfo := range existFileInfos {
-		_, existIDFRecord := idfExistFileNames[existFileInfo.Filename]
-		if existIDFRecord {
-			continue
+		path := existFileInfo.Filename
+		exist := false
+		for _, existIDF := range allIDFKyous {
+			if existIDF.TargetFile == path {
+				exist = true
+				break
+			}
 		}
-		idfTargetList = append(idfTargetList, existFileInfo.Filename)
+		if !exist {
+			idfTargetList[path] = struct{}{}
+		}
 	}
 
 	// 対象をidfする
@@ -1205,7 +1150,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 		return err
 	}
 
-	for _, idfTargetFileName := range idfTargetList {
+	for idfTargetFileName := range idfTargetList {
 		lastMod := now
 		for _, existFileInfo := range existFileInfos {
 			if existFileInfo.Filename == idfTargetFileName {
@@ -1213,7 +1158,10 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 			}
 		}
 
-		trimedFileName := strings.TrimLeft(idfTargetFileName, contentDirAbs)
+		trimedFileName := filepath.Clean(idfTargetFileName)
+		trimedFileName = filepath.ToSlash(trimedFileName)
+		trimedFileName = strings.TrimPrefix(trimedFileName, contentDirAbs)
+		trimedFileName = strings.TrimPrefix(trimedFileName, "/")
 		if trimedFileName == "" {
 			continue
 		}
@@ -1238,7 +1186,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 			idf.UpdateApp = "idf"
 			idf.UpdateUser = ""
 			idf.UpdateDevice = "idf"
-			idf.FileName = trimedFileName
+			idf.TargetFile = trimedFileName
 			idfKyous = append(idfKyous, idf)
 		} else {
 			idf := &IDFKyou{}
@@ -1255,7 +1203,7 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 			idf.UpdateApp = "idf"
 			idf.UpdateUser = ""
 			idf.UpdateDevice = "idf"
-			idf.FileName = trimedFileName
+			idf.TargetFile = trimedFileName
 			idfKyous = append(idfKyous, idf)
 		}
 	}
@@ -1301,7 +1249,7 @@ INSERT INTO IDF (
   ?,
   ?
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := i.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add idf sql %s: %w", idfKyou.ID, err)
@@ -1313,7 +1261,7 @@ INSERT INTO IDF (
 		idfKyou.IsDeleted,
 		idfKyou.ID,
 		idfKyou.RepName,
-		idfKyou.FileName,
+		idfKyou.TargetFile,
 		idfKyou.RelatedTime.Format(sqlite3impl.TimeLayout),
 		idfKyou.CreateTime.Format(sqlite3impl.TimeLayout),
 		idfKyou.CreateApp,
@@ -1325,7 +1273,7 @@ INSERT INTO IDF (
 		idfKyou.UpdateUser,
 	}
 
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to idf %s: %w", idfKyou.ID, err)
@@ -1365,4 +1313,18 @@ func (i *idfKyouRepositorySQLite3Impl) parseDUID(str string) (id uuid.UUID, t ti
 
 func (i *idfKyouRepositorySQLite3Impl) HandleFileServe(w http.ResponseWriter, r *http.Request) {
 	http.FileServer(http.Dir(i.contentDir)).ServeHTTP(w, r)
+}
+
+func (i *idfKyouRepositorySQLite3Impl) isImage(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch ext {
+	case ".jpg",
+		".jpeg",
+		".jfif",
+		".png",
+		".gif",
+		".bmp":
+		return true
+	}
+	return false
 }

@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type kftlTemplateDAOSQLite3Impl struct {
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS "KFTL_TEMPLATE" (
   PARENT_FOLDER_ID,
   SEQ NOT NULL
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create KFTL_TEMPLATE table statement %s: %w", filename, err)
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS "KFTL_TEMPLATE" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create KFTL_TEMPLATE table to %s: %w", filename, err)
@@ -67,7 +67,7 @@ SELECT
   SEQ
 FROM KFTL_TEMPLATE
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all kftl templates sql: %w", err)
@@ -75,7 +75,7 @@ FROM KFTL_TEMPLATE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -118,7 +118,7 @@ SELECT
 FROM KFTL_TEMPLATE
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get kftl templates sql: %w", err)
@@ -130,7 +130,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -181,7 +181,7 @@ INSERT INTO KFTL_TEMPLATE (
   ?
 )
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add device struct sql: %w", err)
@@ -198,7 +198,7 @@ INSERT INTO KFTL_TEMPLATE (
 		kftlTemplate.ParentFolderID,
 		kftlTemplate.Seq,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -234,7 +234,7 @@ INSERT INTO KFTL_TEMPLATE (
   ?
 )
 `
-	log.Printf("sql: %s", sql)
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)
 		if err != nil {
 			err = fmt.Errorf("error at add kftl template sql: %w", err)
@@ -255,7 +255,7 @@ INSERT INTO KFTL_TEMPLATE (
 			kftlTemplate.ParentFolderID,
 			kftlTemplate.Seq,
 		}
-		log.Printf("sql: %s query: %#v", sql, queryArgs)
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 		_, err = stmt.ExecContext(ctx, queryArgs...)
 
 		if err != nil {
@@ -291,7 +291,7 @@ UPDATE KFTL_TEMPLATE SET
   SEQ = ?
 WHERE ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update kftl template sql: %w", err)
@@ -309,7 +309,7 @@ WHERE ID = ?
 		kftlTemplate.Seq,
 		kftlTemplate.ID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -324,7 +324,7 @@ func (k *kftlTemplateDAOSQLite3Impl) DeleteKFTLTemplate(ctx context.Context, id 
 DELETE FROM KFTL_TEMPLATE
 WHERE ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete kftl template sql: %w", err)
@@ -335,7 +335,7 @@ WHERE ID = ?
 	queryArgs := []interface{}{
 		id,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -350,7 +350,7 @@ func (k *kftlTemplateDAOSQLite3Impl) DeleteUsersKFTLTemplates(ctx context.Contex
 DELETE FROM KFTL_TEMPLATE
 WHERE USER_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete kftl template sql: %w", err)
@@ -361,7 +361,7 @@ WHERE USER_ID = ?
 	queryArgs := []interface{}{
 		userID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
