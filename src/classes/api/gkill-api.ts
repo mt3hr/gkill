@@ -166,6 +166,7 @@ import { GitCommitLog } from "../datas/git-commit-log"
 import { IDFKyou } from "../datas/idf-kyou"
 import type { GetIDFKyouRequest } from "./req_res/get-idf-kyou-request"
 import type { GetIDFKyouResponse } from "./req_res/get-idf-kyou-response"
+import { GPSLog } from "../datas/gps-log"
 
 export class GkillAPI {
 
@@ -488,6 +489,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: LogoutResponse = json
@@ -501,6 +503,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: ResetPasswordResponse = json
@@ -515,6 +518,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: SetNewPasswordResponse = json
@@ -529,6 +533,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddTagResponse = json
@@ -543,6 +548,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddTextResponse = json
@@ -557,6 +563,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddKmemoResponse = json
@@ -571,6 +578,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddURLogResponse = json
@@ -585,6 +593,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddNlogResponse = json
@@ -599,6 +608,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddTimeisResponse = json
@@ -613,6 +623,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddMiResponse = json
@@ -627,6 +638,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddLantanaResponse = json
@@ -641,6 +653,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddKyouInfoResponse = json
@@ -655,6 +668,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddReKyouResponse = json
@@ -669,6 +683,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateTagResponse = json
@@ -683,6 +698,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateTextResponse = json
@@ -697,6 +713,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateKmemoResponse = json
@@ -711,6 +728,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateURLogResponse = json
@@ -725,6 +743,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateNlogResponse = json
@@ -739,6 +758,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateTimeisResponse = json
@@ -753,6 +773,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateMiResponse = json
@@ -767,6 +788,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateLantanaResponse = json
@@ -781,6 +803,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateKyouInfoResponse = json
@@ -795,6 +818,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateReKyouResponse = json
@@ -809,6 +833,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -846,6 +871,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -878,6 +904,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -915,6 +942,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -952,6 +980,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -989,6 +1018,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -1026,6 +1056,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -1063,6 +1094,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -1100,6 +1132,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -1137,6 +1170,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -1174,6 +1208,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
 
@@ -1245,6 +1280,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GetMiBoardResponse = json
@@ -1259,6 +1295,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GetPlaingTimeisResponse = json
@@ -1273,6 +1310,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GetAllTagNamesResponse = json
@@ -1287,6 +1325,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GetAllRepNamesResponse = json
@@ -1301,6 +1340,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
@@ -1337,6 +1377,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
@@ -1373,6 +1414,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
@@ -1409,6 +1451,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
@@ -1445,6 +1488,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response = json as unknown as GetApplicationConfigResponse
@@ -1487,6 +1531,8 @@ export class GkillAPI {
                 await response.application_config.append_not_found_devices()
                 await response.application_config.parse_template_and_struct()
                 this.check_auth(response)
+
+                this.set_google_map_api_key(response.application_config.google_map_api_key)
                 return response
         }
 
@@ -1497,6 +1543,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GetServerConfigResponse = json
@@ -1511,6 +1558,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UploadFilesResponse = json
@@ -1525,6 +1573,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UploadGPSLogFilesResponse = json
@@ -1539,6 +1588,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateApplicationConfigResponse = json
@@ -1554,6 +1604,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateTagStructResponse = json
@@ -1568,6 +1619,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateRepStructResponse = json
@@ -1582,6 +1634,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateDeviceStructResponse = json
@@ -1596,6 +1649,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateRepTypeStructResponse = json
@@ -1610,6 +1664,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateKFTLTemplateResponse = json
@@ -1624,6 +1679,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateAccountStatusResponse = json
@@ -1638,6 +1694,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateUserRepsResponse = json
@@ -1652,6 +1709,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateServerConfigResponse = json
@@ -1666,6 +1724,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddAccountResponse = json
@@ -1680,6 +1739,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GenerateTLSFileResponse = json
@@ -1694,9 +1754,33 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
-                const json = await res.json()
-                const response: GetGPSLogResponse = json
+
+      const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: GetGPSLogResponse= json
+                if (!response.gps_logs) {
+                        response.gps_logs= new Array<GPSLog>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.gps_logs.length; i++) {
+                        const gpslog = new GPSLog()
+                        for (let key in response.gps_logs[i]) {
+                                (gpslog as any)[key] = (response.gps_logs[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (gpslog as any)[key]) {
+                                        (gpslog as any)[key] = moment((gpslog as any)[key]).toDate()
+                                }
+                        }
+                        response.gps_logs[i] = gpslog
+                }
                 this.check_auth(response)
                 return response
         }
@@ -1708,6 +1792,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GetKFTLTemplatesResponse = json
@@ -1722,6 +1807,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GetGkillInfoResponse = json
@@ -1736,6 +1822,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GetShareMiTaskListInfosResponse = json
@@ -1750,6 +1837,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: AddShareMiTaskListInfoResponse = json
@@ -1764,6 +1852,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: UpdateShareMiTaskListInfoResponse = json
@@ -1778,6 +1867,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: DeleteShareMiTaskListInfosResponse = json
@@ -1792,6 +1882,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GetSharedMiTasksResponse = json
@@ -1806,6 +1897,7 @@ export class GkillAPI {
                                 'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
                 const response: GetRepositoriesResponse = json
@@ -1833,6 +1925,29 @@ export class GkillAPI {
                         document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + "; max-age=0"
                 } else {
                         document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + ";" + moment().add('day', 400).toDate().toUTCString()
+                }
+        }
+
+        private google_map_api_key_cookie_key = "google_map_api_key"
+
+        get_google_map_api_key(): string {
+                const cookies = document.cookie.split(';')
+                let google_map_api_key = cookies.find(
+                        (cookie) => cookie.split('=')[0].trim() === this.google_map_api_key_cookie_key.trim()
+                )?.replace(this.google_map_api_key_cookie_key + "=", "")
+
+                if (!google_map_api_key) {
+                        this.set_google_map_api_key("")
+                        google_map_api_key = ""
+                }
+                return google_map_api_key
+        }
+
+        set_google_map_api_key(google_map_api_key: string): void {
+                if (google_map_api_key == "") {
+                        document.cookie = this.google_map_api_key_cookie_key + "=" + google_map_api_key + "; max-age=0"
+                } else {
+                        document.cookie = this.google_map_api_key_cookie_key + "=" + google_map_api_key + ";" + moment().add('day', 400).toDate().toUTCString()
                 }
         }
 

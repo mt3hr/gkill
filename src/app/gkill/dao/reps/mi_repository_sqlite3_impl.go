@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -14,6 +13,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type miRepositorySQLite3Impl struct {
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table statement %s: %w", filename, err)
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table to %s: %w", filename, err)
@@ -300,7 +300,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -314,7 +314,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	queryArgs = append(queryArgs, queryArgsForLimit...)
 	queryArgs = append(queryArgs, queryArgsForStart...)
 	queryArgs = append(queryArgs, queryArgsForEnd...)
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -451,7 +451,7 @@ WHERE
 
 	sql += sqlWhereForCreate
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -459,7 +459,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
 	rows, err := stmt.QueryContext(ctx, queryArgsForCreate...)
 
 	if err != nil {
@@ -604,7 +604,7 @@ WHERE
 
 	sql := fmt.Sprintf("%s AND %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlWhereFilterCreateMi)
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -612,7 +612,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
 	rows, err := stmt.QueryContext(ctx, queryArgsForCreate...)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI %s: %w", err)
@@ -777,7 +777,7 @@ WHERE
 
 	sql += sqlWhereForCreate
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get mi histories sql: %w", err)
@@ -785,7 +785,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
 	rows, err := stmt.QueryContext(ctx, queryArgsForCreate...)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI %s: %w", err)
@@ -902,7 +902,7 @@ INSERT INTO MI (
   ?,
   ?
 )`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mi sql %s: %w", mi.ID, err)
@@ -954,7 +954,7 @@ INSERT INTO MI (
 		mi.UpdateDevice,
 		mi.UpdateUser,
 	}
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to mi %s: %w", mi.ID, err)
@@ -970,7 +970,7 @@ DISTINCT BOARD_NAME
 FROM MI 
 WHERE IS_DELETED = FALSE
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get board names sql: %w", err)
@@ -978,7 +978,7 @@ WHERE IS_DELETED = FALSE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at select board names from MI: %w", err)

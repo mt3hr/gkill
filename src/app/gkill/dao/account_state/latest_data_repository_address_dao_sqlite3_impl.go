@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type latestDataRepositoryAddressSQLite3Impl struct {
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS "LATEST_DATA_REPOSITORY_ADDRESS" (
   DATA_UPDATE_TIME NOT NULL,
   PRIMARY KEY(TARGET_ID)
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create table LATEST_DATA_REPOSITORY_ADDRESS statement %s: %w", filename, err)
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS "LATEST_DATA_REPOSITORY_ADDRESS" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create LATEST_DATA_REPOSITORY_ADDRESS table to %s: %w", filename, err)
@@ -63,7 +63,7 @@ SELECT
   DATA_UPDATE_TIME
 FROM LATEST_DATA_REPOSITORY_ADDRESS
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
@@ -71,7 +71,7 @@ FROM LATEST_DATA_REPOSITORY_ADDRESS
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -114,7 +114,7 @@ SELECT
 FROM LATEST_DATA_REPOSITORY_ADDRESS
 WHERE LATEST_DATA_REPOSITORY_NAME = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
@@ -125,7 +125,7 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 	queryArgs := []interface{}{
 		repName,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -168,7 +168,7 @@ SELECT
 FROM LATEST_DATA_REPOSITORY_ADDRESS
 WHERE TARGET_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
@@ -179,7 +179,7 @@ WHERE TARGET_ID = ?
 	queryArgs := []interface{}{
 		targetID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -230,7 +230,7 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
   ?
 )
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add latest data repoisitory address sql: %w", err)
@@ -243,7 +243,7 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 		latestDataRepositoryAddress.LatestDataRepositoryName,
 		latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -262,7 +262,7 @@ UPDATE LATEST_DATA_REPOSITORY_ADDRESS SET
   DATA_UPDATE_TIME = ?
 WHERE TARGET_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update latest data repository address sql: %w", err)
@@ -276,7 +276,7 @@ WHERE TARGET_ID = ?
 		latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
 		latestDataRepositoryAddress.TargetID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -333,7 +333,7 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 		existRecords, err := l.GetLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress.TargetID)
 		if err == nil && existRecords != nil { // データが存在する場合は更新する
 			_, err := l.UpdateLatestDataRepositoryAddress(ctx, latestDataRepositoryAddress)
-			log.Printf("sql: %s", updateSQL)
+			gkill_log.TraceSQL.Printf("sql: %s", updateSQL)
 			stmt, err := tx.PrepareContext(ctx, updateSQL)
 			if err != nil {
 				err = fmt.Errorf("error at update latest data repository address sql: %w", err)
@@ -350,7 +350,7 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
 				latestDataRepositoryAddress.TargetID,
 			}
-			log.Printf("sql: %s query: %#v", updateSQL, queryArgs)
+			gkill_log.TraceSQL.Printf("sql: %s query: %#v", updateSQL, queryArgs)
 			_, err = stmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -362,7 +362,7 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 				return false, err
 			}
 		} else { // データが存在しない場合は作成する
-			log.Printf("sql: %s", insertSQL)
+			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
 			stmt, err := tx.PrepareContext(ctx, insertSQL)
 			if err != nil {
 				err = fmt.Errorf("error at add latest data repoisitory address sql: %w", err)
@@ -378,7 +378,7 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 				latestDataRepositoryAddress.LatestDataRepositoryName,
 				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
 			}
-			log.Printf("sql: %s query: %#v", insertSQL, queryArgs)
+			gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
 			_, err = stmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -411,7 +411,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) DeleteLatestDataRepositoryAddre
 DELETE FROM LATEST_DATA_REPOSITORY_ADDRESS
 WHERE TARGET_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete latest data repository address sql: %w", err)
@@ -422,7 +422,7 @@ WHERE TARGET_ID = ?
 	queryArgs := []interface{}{
 		latestDataRepositoryAddress.TargetID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -437,7 +437,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) DeleteAllLatestDataRepositoryAd
 	sql := `
 DELETE FROM LATEST_DATA_REPOSITORY_ADDRESS
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete all latest data repository address sql: %w", err)
@@ -445,7 +445,7 @@ DELETE FROM LATEST_DATA_REPOSITORY_ADDRESS
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -461,7 +461,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) DeleteLatestDataRepositoryAddre
 DELETE FROM LATEST_DATA_REPOSITORY_ADDRESS
 WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete all latest data repository address sql: %w", err)
@@ -472,7 +472,7 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 	queryArgs := []interface{}{
 		repName,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)

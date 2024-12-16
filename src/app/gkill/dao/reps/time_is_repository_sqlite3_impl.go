@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"path/filepath"
 	"sync"
 	"time"
@@ -14,6 +13,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type timeIsRepositorySQLite3Impl struct {
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", filename, err)
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS table to %s: %w", filename, err)
@@ -184,7 +184,7 @@ FROM TIMEIS
 	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
 	sql += " ORDER BY RELATED_TIME DESC"
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous sql: %w", err)
@@ -192,7 +192,7 @@ FROM TIMEIS
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
 
 	if err != nil {
@@ -325,7 +325,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -334,7 +334,7 @@ WHERE
 	defer stmt.Close()
 
 	sql += " ORDER BY RELATED_TIME DESC"
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -490,7 +490,7 @@ FROM TIMEIS
 	sql := fmt.Sprintf("%s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlWhereFilterEndTimeIs)
 
 	sql += " ORDER BY RELATED_TIME DESC"
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find time is sql: %w", err)
@@ -498,7 +498,7 @@ FROM TIMEIS
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, append(queryArgsForPlaingStart, queryArgs...))
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, append(queryArgsForPlaingStart, queryArgs...))
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
@@ -655,7 +655,7 @@ WHERE
 
 	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
 	sql += " ORDER BY RELATED_TIME DESC"
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get time is histories sql: %w", err)
@@ -663,7 +663,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s params: %#v", sql, append(queryArgsForPlaingStart, queryArgs...))
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, append(queryArgsForPlaingStart, queryArgs...))
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
 
 	if err != nil {
@@ -762,7 +762,7 @@ INSERT INTO TIMEIS (
   ?,
   ?
 )`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add timeis sql %s: %w", timeis.ID, err)
@@ -792,7 +792,7 @@ INSERT INTO TIMEIS (
 		timeis.UpdateDevice,
 		timeis.UpdateUser,
 	}
-	log.Printf("sql: %s params: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {

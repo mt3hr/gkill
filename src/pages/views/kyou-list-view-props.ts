@@ -5,6 +5,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import type { GkillPropsBase } from './gkill-props-base'
 
 export interface KyouListViewProps extends GkillPropsBase {
+    is_focused_list: boolean
     last_added_tag: string
     query: FindKyouQuery
     matched_kyous: Array<Kyou>

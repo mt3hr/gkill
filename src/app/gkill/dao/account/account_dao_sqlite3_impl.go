@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type accountDAOSQLite3Impl struct {
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
   IS_ENABLE NOT NULL,
   PASSWORD_RESET_TOKEN
 );`
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create ACCOUNT table statement %s: %w", filename, err)
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create ACCOUNT table to %s: %w", filename, err)
@@ -65,7 +65,7 @@ SELECT
   PASSWORD_RESET_TOKEN
 FROM ACCOUNT
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all accounts sql: %w", err)
@@ -73,7 +73,7 @@ FROM ACCOUNT
 	}
 	defer stmt.Close()
 
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -111,7 +111,7 @@ SELECT
 FROM ACCOUNT
 WHERE USER_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get account sql: %w", err)
@@ -122,7 +122,7 @@ WHERE USER_ID = ?
 	queryArgs := []interface{}{
 		userID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -172,7 +172,7 @@ VALUES (
   ?
 )
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add account sql: %w", err)
@@ -187,7 +187,7 @@ VALUES (
 		account.IsEnable,
 		account.PasswordResetToken,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -206,7 +206,7 @@ UPDATE ACCOUNT SET
   PASSWORD_RESET_TOKEN = ?
 WHERE USER_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update account sql: %w", err)
@@ -222,7 +222,7 @@ WHERE USER_ID = ?
 		account.PasswordResetToken,
 		account.UserID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -236,7 +236,7 @@ func (a *accountDAOSQLite3Impl) DeleteAccount(ctx context.Context, userID string
 DELETE FROM ACCOUNT
 WHERE USER_ID = ?
 `
-	log.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete account sql: %w", err)
@@ -246,7 +246,7 @@ WHERE USER_ID = ?
 	queryArgs := []interface{}{
 		userID,
 	}
-	log.Printf("sql: %s query: %#v", sql, queryArgs)
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {

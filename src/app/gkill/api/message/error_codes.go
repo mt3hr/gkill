@@ -253,4 +253,5 @@ const (
 	InvalidPasswordResetTokenError                     = "ERR000247"
 	InvalidGetIDFKyouResponseDataError                 = "ERR000248"
 	InvalidGetIDFKyouRequestDataError                  = "ERR000249"
+	AddUpdatedRepositoriesByUser                       = "ERR000250"
 )
