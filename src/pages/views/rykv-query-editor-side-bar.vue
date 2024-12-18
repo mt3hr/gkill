@@ -19,9 +19,7 @@
                 @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
             <RepQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_checked_reps="emits_current_query()" @request_clear_rep_query="emits_cleard_rep_query()"
-                @request_update_checked_devices="emits_current_query()"
-                @request_update_checked_rep_types="emits_current_query()" ref="rep_query"
-                @inited="inited_rep_query_for_query_sidebar = true" />
+                ref="rep_query" @inited="inited_rep_query_for_query_sidebar = true" />
             <TagQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_tags="emits_current_query()"
                 @request_update_checked_tags="emits_current_query()" @request_clear_tag_query="emits_cleard_tag_query()"
@@ -47,6 +45,8 @@ import TimeIsQuery from './time-is-query.vue'
 import type { rykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-emits'
 import type { rykvQueryEditorSidebarProps } from './rykv-query-editor-sidebar-props'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
+import { GkillAPI } from '@/classes/api/gkill-api'
+import { deepEquals } from '@/classes/deep-equals'
 
 const sidebar_header = ref<InstanceType<typeof SidebarHeader> | null>(null);
 const keyword_query = ref<InstanceType<typeof KeywordQuery> | null>(null);
@@ -65,8 +65,8 @@ const sidebar_height = computed(() => (props.app_content_height.valueOf() - head
 const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
 
-const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
-const query: Ref<FindKyouQuery> = ref(default_query.value)
+const default_query: Ref<FindKyouQuery | null> = ref(null)
+const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
 const is_mounted = ref(false)
 nextTick(() => is_mounted.value = true)
@@ -75,6 +75,10 @@ const inited = computed(() => {
     if (!is_mounted.value) {
         return false
     }
+    if (default_query.value) {
+        return true
+    }
+
     return inited_keyword_query_for_query_sidebar.value &&
         inited_timeis_query_for_query_sidebar.value &&
         inited_rep_query_for_query_sidebar.value &&
@@ -84,41 +88,44 @@ const inited = computed(() => {
 })
 
 watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
-    if (old_value !== new_value && new_value) {
+    if (old_value !== new_value && new_value && !default_query.value) {
         default_query.value = generate_query().clone()
+        default_query.value.query_id = ""
         default_query.value.parse_words_and_not_words()
     }
 })
 
-const inited_keyword_query_for_query_sidebar = ref(false)
+const inited_keyword_query_for_query_sidebar = ref(true)
 const inited_timeis_query_for_query_sidebar = ref(false)
 const inited_rep_query_for_query_sidebar = ref(false)
 const inited_tag_query_for_query_sidebar = ref(false)
 const inited_calendar_query_for_query_sidebar = ref(true)
 const inited_map_query_for_query_sidebar = ref(true)
 
-const is_received_this_thick = ref(false)
 watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
-    if (is_received_this_thick.value) { return }
-    is_received_this_thick.value = true
-    nextTick(() => is_received_this_thick.value = false)
-
-    if (JSON.stringify(new_value) === JSON.stringify(old_value)) {
+    if (deepEquals(new_value, old_value)) {
         return
     }
-    query.value = props.find_kyou_query.clone()
+    query.value = new_value
 })
 
-function get_default_query(): FindKyouQuery {
-    return default_query.value.clone()
+function get_default_query(): FindKyouQuery | null {
+    const query = default_query.value?.clone()
+    if (query) {
+        return query
+    }
+    return null
 }
 
 function emits_current_query(): void {
-    emits('updated_query', generate_query())
+    emits('updated_query', generate_query(query.value.query_id))
 }
 
-function generate_query(): FindKyouQuery {
+function generate_query(query_id?: string): FindKyouQuery {
     const find_query = new FindKyouQuery()
+    if (query_id) {
+        find_query.query_id = query_id
+    }
 
     find_query.update_cache = true
 
@@ -181,62 +188,76 @@ function generate_query(): FindKyouQuery {
 }
 
 function emits_cleard_keyword_query(): void {
-    const find_query = generate_query()
-    find_query.use_words = default_query.value.use_words
-    find_query.keywords = default_query.value.keywords
-    find_query.words_and = default_query.value.words_and
-    find_query.parse_words_and_not_words()
-    emits('updated_query', find_query)
+    if (default_query.value) {
+        const find_query = generate_query()
+        find_query.use_words = default_query.value.use_words
+        find_query.keywords = default_query.value.keywords
+        find_query.words_and = default_query.value.words_and
+        find_query.parse_words_and_not_words()
+        emits('updated_query', find_query)
+    }
 }
 
 function emits_cleard_timeis_query(): void {
-    const find_query = generate_query()
-    find_query.use_timeis = default_query.value.use_timeis
-    find_query.use_timeis_tags = default_query.value.use_timeis_tags
-    find_query.timeis_keywords = default_query.value.timeis_keywords
-    find_query.timeis_words_and = default_query.value.timeis_words_and
-    find_query.use_timeis_tags = default_query.value.use_timeis_tags
-    find_query.timeis_tags = default_query.value.timeis_tags
-    find_query.timeis_tags_and = default_query.value.timeis_tags_and
-    find_query.parse_words_and_not_words()
-    emits('updated_query', find_query)
+    if (default_query.value) {
+        const find_query = generate_query()
+        find_query.use_timeis = default_query.value.use_timeis
+        find_query.use_timeis_tags = default_query.value.use_timeis_tags
+        find_query.timeis_keywords = default_query.value.timeis_keywords
+        find_query.timeis_words_and = default_query.value.timeis_words_and
+        find_query.use_timeis_tags = default_query.value.use_timeis_tags
+        find_query.timeis_tags = default_query.value.timeis_tags
+        find_query.timeis_tags_and = default_query.value.timeis_tags_and
+        find_query.parse_words_and_not_words()
+        emits('updated_query', find_query)
+    }
 }
 
 function emits_cleard_rep_query(): void {
-    const find_query = generate_query()
-    find_query.reps = default_query.value.reps
-    find_query.devices = default_query.value.devices
-    find_query.rep_types = default_query.value.rep_types
-    emits('updated_query', find_query)
+    if (default_query.value) {
+        const find_query = generate_query()
+        find_query.reps = default_query.value.reps
+        find_query.devices = default_query.value.devices
+        find_query.rep_types = default_query.value.rep_types
+        emits('updated_query', find_query)
+    }
 }
 
 function emits_cleard_tag_query(): void {
-    const find_query = generate_query()
-    find_query.tags = default_query.value.tags
-    find_query.tags_and = default_query.value.tags_and
-    emits('updated_query', find_query)
+    if (default_query.value) {
+        const find_query = generate_query()
+        find_query.tags = default_query.value.tags
+        find_query.tags_and = default_query.value.tags_and
+        emits('updated_query', find_query)
+    }
 }
 
 function emits_cleard_map_query(): void {
-    const find_query = generate_query()
-    find_query.use_map = default_query.value.use_map
-    find_query.map_latitude = default_query.value.map_latitude
-    find_query.map_longitude = default_query.value.map_longitude
-    find_query.map_radius = default_query.value.map_radius
-    emits('updated_query', find_query)
+    if (default_query.value) {
+        const find_query = generate_query()
+        find_query.use_map = default_query.value.use_map
+        find_query.map_latitude = default_query.value.map_latitude
+        find_query.map_longitude = default_query.value.map_longitude
+        find_query.map_radius = default_query.value.map_radius
+        emits('updated_query', find_query)
+    }
 }
 
 function emits_cleard_calendar_query(): void {
-    const find_query = generate_query()
-    find_query.use_calendar = default_query.value.use_calendar
-    find_query.calendar_start_date = default_query.value.calendar_start_date
-    find_query.calendar_end_date = default_query.value.calendar_end_date
-    emits('updated_query', find_query)
+    if (default_query.value) {
+        const find_query = generate_query()
+        find_query.use_calendar = default_query.value.use_calendar
+        find_query.calendar_start_date = default_query.value.calendar_start_date
+        find_query.calendar_end_date = default_query.value.calendar_end_date
+        emits('updated_query', find_query)
+    }
 }
 
 function emits_default_query(): void {
-    const find_query = default_query.value.clone()
-    emits('updated_query', find_query)
+    if (default_query.value) {
+        const find_query = default_query.value.clone()
+        emits('updated_query', find_query)
+    }
 }
 </script>
 <style lang="css">

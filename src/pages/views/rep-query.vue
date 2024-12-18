@@ -74,11 +74,11 @@ defineExpose({ get_checked_reps, get_checked_devices, get_checked_rep_types })
 const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
-const loading = ref(false)
 
 const tab = ref(2)
 const use_rep = ref(true)
 
+const loading = ref(false)
 watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
     if (new_value !== old_value && new_value) {
         const reps = cloned_query.value.reps
@@ -123,6 +123,7 @@ watch(() => props.application_config, async () => {
     await update_check_reps(reps, CheckState.checked, true)
     await update_check_devices(devices, CheckState.checked, true)
     await update_check_reps(rep_types, CheckState.checked, true)
+    emits('inited')
 })
 
 watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
@@ -140,7 +141,6 @@ watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: F
     if (reps) {
         await update_check_reps(reps, CheckState.checked, true)
     }
-    emits('inited')
     loading.value = false
 })
 

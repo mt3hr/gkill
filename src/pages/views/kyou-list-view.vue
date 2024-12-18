@@ -1,6 +1,6 @@
 <template>
-    <v-card :ripple="false">
-        <v-card :ripple="false">
+    <v-card :ripple="false" :link="false">
+        <v-card :ripple="false" :link="false">
             <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
                 <v-progress-circular indeterminate color="primary" />
             </v-overlay>
@@ -49,7 +49,7 @@
                 </template>
             </v-virtual-scroll>
         </v-card>
-        <v-card :class="footer_class" :ripple="false">
+        <v-card :class="footer_class" :ripple="false" :link="false">
             <v-row no-gutters>
                 <v-col v-if="matched_kyous && matched_kyous.length" cols="auto" class="py-2">
                     {{ matched_kyous.length }}件のアイテム
@@ -129,7 +129,7 @@ const footer_class = computed(() => {
 })
 
 async function update_match_kyous_for_image(): Promise<void> {
-    match_kyous_for_image.value = []
+    match_kyous_for_image.value.splice(0)
     const match_kyous_for_image_result = new Array<Array<Kyou>>()
     for (let i = 0; i < props.matched_kyous.length;) {
         const kyou_row_list = new Array<Kyou>()
@@ -140,7 +140,6 @@ async function update_match_kyous_for_image(): Promise<void> {
         }
         match_kyous_for_image_result.push(kyou_row_list)
     }
-    match_kyous_for_image.value.splice(0, match_kyous_for_image.value.length - 1)
     match_kyous_for_image.value.push(...match_kyous_for_image_result)
 }
 
