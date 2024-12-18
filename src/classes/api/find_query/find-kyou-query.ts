@@ -1,17 +1,20 @@
 'use strict'
 
+import { GkillAPI } from '../gkill-api'
 import { FindQueryBase } from './find-query-base'
 
 export class FindKyouQuery extends FindQueryBase {
+    query_id: string
+
     reps: Array<string>
     is_image_only: boolean
     devices: Array<string>
     rep_types: Array<string>
     is_focus_kyou: boolean
 
-
     clone(): FindKyouQuery {
         const cloned = new FindKyouQuery()
+        cloned.query_id = this.query_id
         cloned.update_cache = this.update_cache
         cloned.use_words = this.use_words
         cloned.keywords = this.keywords
@@ -48,6 +51,7 @@ export class FindKyouQuery extends FindQueryBase {
 
     constructor() {
         super()
+        this.query_id = ""
         this.reps = new Array<string>()
         this.is_image_only = false
         this.devices = new Array<string>()

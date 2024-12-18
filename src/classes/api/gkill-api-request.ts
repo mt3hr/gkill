@@ -2,13 +2,13 @@
 
 export class GkillAPIRequest {
 
-    abort_controller: AbortController | null
+    abort_controller: AbortController
 
     session_id: string
 
     constructor() {
         this.session_id = ""
-        this.abort_controller = null
+        this.abort_controller = new AbortController()
     }
 
 }
