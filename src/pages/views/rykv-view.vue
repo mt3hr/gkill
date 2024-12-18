@@ -16,12 +16,19 @@
         <v-btn icon="mdi-cog" @click="emits('requested_show_application_config_dialog')" />
     </v-app-bar>
     <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height">
-        <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
-            :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
-            :app_content_width="app_content_width" :find_kyou_query="querys[focused_column_index]"
-            @requested_search="focused_column_kyous.splice(0, focused_column_checked_kyous.length); search(focused_column_index)"
-            @updated_query="new_query => querys.splice(focused_column_index, 1, new_query)"
-            ref="query_editor_sidebar" />
+        <RykvQueryEditorSideBar v-if="focused_find_query" :application_config="application_config"
+            :gkill_api="gkill_api" :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
+            :app_content_width="app_content_width" :find_kyou_query="focused_find_query"
+            @requested_search="search(focused_column_index, querys[focused_column_index], true)" @updated_query="(new_query) => {
+                querys.splice(focused_column_index, 1, new_query);
+                if (application_config.rykv_hot_reload) {
+                    if (updated_focused_column_index_in_this_tick) {
+                        nextTick(() => updated_focused_column_index_in_this_tick = false)
+                        return
+                    }
+                    search(focused_column_index, new_query, false)
+                };
+            }" ref="query_editor_sidebar" />
     </v-navigation-drawer>
     <v-main class="main">
         <table class="rykv_view_table">
@@ -37,10 +44,14 @@
                         @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="reload_list(index)"
                         @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                         @requested_change_focus_kyou="(is_focus_kyou) => query.is_focus_kyou = is_focus_kyou"
-                        @requested_search="focused_column_kyous.splice(0, focused_column_checked_kyous.length); search(index)"
-                        ref="kyou_list_views"
-                        @requested_change_is_image_only_view="(is_image_only_view: boolean) => { focused_column_kyous.splice(0, focused_column_checked_kyous.length); querys[index].is_image_only = is_image_only_view; search(index) }"
-                        @requested_close_column="querys.splice(index, 1); match_kyous_list.splice(index, 1); abort_controllers.splice(index, 1); focused_column_kyous.splice(0, focused_column_checked_kyous.length)" />
+                        @requested_search="search(focused_column_index, querys[focused_column_index], true)"
+                        ref="kyou_list_views" @requested_change_is_image_only_view="(is_image_only_view: boolean) => {
+                            const query = querys[index].clone();
+                            query.is_image_only = is_image_only_view;
+                            querys.splice(index, 1, query);
+                            search(focused_column_index, querys[focused_column_index], true);
+                        }"
+                        @requested_close_column="querys.splice(index, 1); match_kyous_list.splice(index, 1); abort_controllers.splice(index, 1); focused_column_kyous.splice(0)" />
                 </td>
                 <td valign="top">
                     <v-btn class="rounded-sm mx-auto" :height="app_content_height.valueOf()" :width="30"
@@ -182,6 +193,8 @@ import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import moment from 'moment'
+import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
+import { deepEquals } from '@/classes/deep-equals'
 
 const query_editor_sidebar = ref<InstanceType<typeof RykvQueryEditorSideBar> | null>(null);
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
@@ -192,9 +205,11 @@ const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
 const kyou_list_views = ref();
 
-const querys: Ref<Array<FindKyouQuery>> = ref((() => { const queries = new Array<FindKyouQuery>(); queries.push(new FindKyouQuery()); return queries })())
+const querys: Ref<Array<FindKyouQuery>> = ref(new Array<FindKyouQuery>())
+const querys_backup: Ref<Array<FindKyouQuery>> = ref(new Array<FindKyouQuery>()) // 更新検知用バックアップ
+const focused_find_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 const match_kyous_list: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
-const focused_column_index: Ref<number> = ref(0)
+const focused_column_index: Ref<number> = ref(-1)
 const focused_column_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_kyou: Ref<Kyou | null> = ref(null)
 const focused_time: Ref<Date> = ref(moment().toDate())
@@ -210,12 +225,18 @@ const is_show_add_kyou_menu: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
 
+const kyou_img_height = computed(() => (props.app_content_height.valueOf() * 0.8).toString().concat("px"))
+const kyou_img_width = computed(() => (props.app_content_width.valueOf() * 0.9).toString().concat("px"))
+
 const props = defineProps<rykvViewProps>()
 const emits = defineEmits<rykvViewEmits>()
 
+const updated_focused_column_index_in_this_tick = ref(false)
 watch(() => focused_column_index.value, () => {
+    updated_focused_column_index_in_this_tick.value = true
     focused_column_kyous.value.splice(0, focused_column_kyous.value.length - 1)
     focused_column_kyous.value.push(...match_kyous_list.value[focused_column_index.value])
+    focused_find_query.value = querys.value[focused_column_index.value]
 })
 
 watch(() => focused_time.value, () => {
@@ -231,16 +252,23 @@ nextTick(() => {
     is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
 })
 
-nextTick(() => query_editor_sidebar.value?.generate_query())
+nextTick(() => add_list_view())
 
 async function add_list_view(): Promise<void> {
-    const default_query = query_editor_sidebar.value?.get_default_query().clone()
+    // 初期化されていないときはDefaultQueryがない。
+    // その場合は初期値のFindKyouQueryをわたして初期化してもらう
+    const default_query = query_editor_sidebar.value?.get_default_query()?.clone()
     if (default_query) {
+        default_query.query_id = GkillAPI.get_instance().generate_uuid()
         querys.value.push(default_query)
-        match_kyous_list.value.push([])
-        focused_column_index.value = match_kyous_list.value.length - 1
-        abort_controllers.value.push(null)
+    } else {
+        const query = new FindKyouQuery()
+        query.query_id = GkillAPI.get_instance().generate_uuid()
+        querys.value.push(query)
     }
+    match_kyous_list.value.push([])
+    abort_controllers.value.push(new AbortController())
+    focused_column_index.value = match_kyous_list.value.length - 1
 }
 async function update_queries(query_index: Number, by_user: boolean): Promise<void> {
     throw new Error('Not implemented')
@@ -283,33 +311,59 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
     }
 }
 
+const abort_controllers: Ref<Array<AbortController>> = ref([])
+async function search(column_index: number, query: FindKyouQuery, force_search: boolean): Promise<void> {
+    querys.value[column_index] = query
+    // 検索する。Tickでまとめる
+    nextTick(async () => {
+        if (!force_search) {
+            if (querys_backup.value.length > column_index) {
+                if (deepEquals(querys_backup.value[column_index], query)) {
+                    return
+                }
+            } else {
+                querys_backup.value.length = column_index + 1
+            }
+        }
+        querys_backup.value[column_index] = query
 
-const abort_controllers: Ref<Array<AbortController | null>> = ref([])
-async function search(column_index: number): Promise<void> {
-    if (abort_controllers.value[column_index]) {
-        abort_controllers.value[column_index]?.abort()
-    }
+        // 前の検索処理を中断する
+        if (abort_controllers.value[column_index]) {
+            abort_controllers.value[column_index].abort()
+        }
 
-    const kyou_list_view = kyou_list_views.value[column_index] as any
-    kyou_list_view.set_loading(true)
+        const kyou_list_view = kyou_list_views.value[column_index] as any
+        kyou_list_view.set_loading(true)
 
-    match_kyous_list.value[column_index] = []
-    const req = new GetKyousRequest()
-    abort_controllers.value[column_index] = req.abort_controller
-    req.session_id = GkillAPI.get_instance().get_session_id()
-    req.query = querys.value[column_index]
-    const res = await GkillAPI.get_instance().get_kyous(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    match_kyous_list.value[column_index] = res.kyous
-    focused_column_kyous.value.splice(0, column_index - 1)
-    focused_column_kyous.value.push(...res.kyous)
-    kyou_list_view.set_loading(false)
+        if (match_kyous_list.value[column_index]) {
+            match_kyous_list.value[column_index].splice(0)
+        }
+        focused_column_kyous.value.splice(0)
+
+        const req = new GetKyousRequest()
+        abort_controllers.value[column_index] = req.abort_controller
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.query = query
+        try {
+            const res = await GkillAPI.get_instance().get_kyous(req)
+            if (res.errors && res.errors.length !== 0) {
+                emits('received_errors', res.errors)
+                return
+            }
+            if (res.messages && res.messages.length !== 0) {
+                emits('received_messages', res.messages)
+            }
+            match_kyous_list.value[column_index] = res.kyous
+            focused_column_kyous.value.push(...res.kyous)
+            kyou_list_view.set_loading(false)
+        } catch (err: any) {
+            // abortは握りつぶす
+            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+                // abort以外はエラー出力する
+                console.error(err)
+            }
+        }
+    })
 }
 
 function floatingActionButtonStyle() {
@@ -362,5 +416,12 @@ function show_urlog_dialog(): void {
     width: 400px;
     max-width: 400px;
     min-width: 400px;
+}
+
+.kyou_dialog img.kyou_image {
+    width: unset !important;
+    height: unset !important;
+    max-width: -webkit-fill-available !important;
+    max-height: 85vh !important;
 }
 </style>

@@ -1,13 +1,12 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog v-model="is_show_dialog" class="kyou_dialog">
         <v-card class="pa-2">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
-                :is_readonly_mi_check="false"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :is_readonly_mi_check="false" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
@@ -16,7 +15,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import type { KyouDialogProps } from './kyou-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import KyouView from '../views/kyou-view.vue'
@@ -35,3 +34,4 @@ async function hide(): Promise<void> {
     is_show_dialog.value = false
 }
 </script>
+

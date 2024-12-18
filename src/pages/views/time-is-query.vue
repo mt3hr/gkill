@@ -83,8 +83,8 @@ watch(() => props.application_config, async () => {
     const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {
         emits('request_update_checked_timeis_tags', checked_items, false)
-        emits('inited')
     }
+    emits('inited')
 })
 
 watch(() => props.find_kyou_query, async () => {
@@ -93,7 +93,6 @@ watch(() => props.find_kyou_query, async () => {
     const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {
         emits('request_update_checked_timeis_tags', checked_items, false)
-        emits('inited')
     }
 })
 

@@ -198,9 +198,18 @@ async function load_attached_infos(): Promise<void> {
     }
     cloned_kyou.value.abort_controller = new AbortController()
 
-    const errors = await cloned_kyou.value.load_all()
-    if (errors && errors.length !== 0) {
-        emits('received_errors', errors)
+    try {
+        const errors = await cloned_kyou.value.load_all()
+
+        if (errors && errors.length !== 0) {
+            emits('received_errors', errors)
+        }
+    } catch (err: any) {
+        // abortは握りつぶす
+        if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            // abort以外はエラー出力する
+            console.error(err)
+        }
     }
 }
 async function clear_attached_infos(): Promise<void> {
@@ -209,11 +218,18 @@ async function clear_attached_infos(): Promise<void> {
     }
     cloned_kyou.value.abort_controller = new AbortController()
 
-    const errors = await cloned_kyou.value.clear_all()
-    if (errors && errors.length !== 0) {
-        emits('received_errors', errors)
+    try {
+        const errors = await cloned_kyou.value.clear_all()
+        if (errors && errors.length !== 0) {
+            emits('received_errors', errors)
+        }
+    } catch (err: any) {
+        // abortは握りつぶす
+        if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            // abort以外はエラー出力する
+            console.error(err)
+        }
     }
-    return
 }
 async function update_check(is_checked: boolean): Promise<void> {
     emits('requested_update_check_kyous', [cloned_kyou.value], is_checked)
