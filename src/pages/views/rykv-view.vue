@@ -20,7 +20,7 @@
             :gkill_api="gkill_api" :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
             :app_content_width="app_content_width" :find_kyou_query="focused_find_query"
             @requested_search="search(focused_column_index, querys[focused_column_index], true)" @updated_query="(new_query) => {
-                querys.splice(focused_column_index, 1, new_query);
+                querys.splice(focused_column_index, 1, new_query.clone());
                 if (application_config.rykv_hot_reload) {
                     if (updated_focused_column_index_in_this_tick) {
                         nextTick(() => updated_focused_column_index_in_this_tick = false)
@@ -28,7 +28,13 @@
                     }
                     search(focused_column_index, new_query, false)
                 };
-            }" ref="query_editor_sidebar" />
+            }" @updated_query_clear="(new_query) => {
+                    querys.splice(focused_column_index, 1, new_query.clone());
+                    if (application_config.rykv_hot_reload) {
+                        search(focused_column_index, new_query, true)
+                    }
+                }
+                " ref="query_editor_sidebar" />
     </v-navigation-drawer>
     <v-main class="main">
         <table class="rykv_view_table">
