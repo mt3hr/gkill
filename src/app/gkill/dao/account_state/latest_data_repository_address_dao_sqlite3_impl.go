@@ -304,6 +304,9 @@ func (l *latestDataRepositoryAddressSQLite3Impl) UpdateOrAddLatestDataRepository
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) UpdateOrAddLatestDataRepositoryAddresses(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
+
 	updateSQL := `
 UPDATE LATEST_DATA_REPOSITORY_ADDRESS SET
   TARGET_ID = ?,

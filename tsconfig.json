@@ -11,7 +11,7 @@
   "compilerOptions": {
     "types": [
       "google.maps"
-    ]
+    ],
   },
   "exclude": [
     "src/app/**/*"

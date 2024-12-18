@@ -26,6 +26,7 @@ import moment from 'moment'
 import { GetIDFKyouRequest } from '../api/req_res/get-idf-kyou-request'
 
 export class Kyou extends InfoBase {
+    abort_controller = new AbortController()
     is_deleted: boolean
     image_source: string
     attached_histories: Array<Kyou>
@@ -53,11 +54,20 @@ export class Kyou extends InfoBase {
     }
 
     async load_all(): Promise<Array<GkillError>> {
-        let errors = new Array<GkillError>()
-        errors = errors.concat(await this.load_typed_datas())
-        errors = errors.concat(await this.load_attached_datas())
-        errors = errors.concat(await this.load_attached_histories())
-        return errors
+        try {
+            let errors = new Array<GkillError>()
+            errors = errors.concat(await this.load_typed_datas())
+            errors = errors.concat(await this.load_attached_datas())
+            errors = errors.concat(await this.load_attached_histories())
+            return errors
+        } catch (err: any) {
+            // abortは握りつぶす
+            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+                // abort以外はエラー出力する
+                console.error(err)
+            }
+            return []
+        }
     }
 
     async clear_all(): Promise<Array<GkillError>> {
@@ -110,12 +120,21 @@ export class Kyou extends InfoBase {
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        let errors = new Array<GkillError>()
-        errors = errors.concat(await this.load_attached_tags())
-        errors = errors.concat(await this.load_attached_texts())
-        errors = errors.concat(await this.load_attached_timeis())
-        errors = errors.concat(await this.load_attached_histories())
-        return errors
+        try {
+            let errors = new Array<GkillError>()
+            errors = errors.concat(await this.load_attached_tags())
+            errors = errors.concat(await this.load_attached_texts())
+            errors = errors.concat(await this.load_attached_timeis())
+            errors = errors.concat(await this.load_attached_histories())
+            return errors
+        } catch (err: any) {
+            // abortは握りつぶす
+            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+                // abort以外はエラー出力する
+                console.error(err)
+            }
+            return []
+        }
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {
@@ -290,7 +309,7 @@ export class Kyou extends InfoBase {
                 match_timeis = timeis
             }
         })
-        this.typed_timeis= match_timeis
+        this.typed_timeis = match_timeis
 
         return new Array<GkillError>()
     }
@@ -374,7 +393,7 @@ export class Kyou extends InfoBase {
                 match_lantana = lantana
             }
         })
-        this.typed_lantana= match_lantana
+        this.typed_lantana = match_lantana
 
         return new Array<GkillError>()
     }
@@ -416,7 +435,7 @@ export class Kyou extends InfoBase {
                 match_idf_kyou = idf_kyou
             }
         })
-        this.typed_idf_kyou= match_idf_kyou
+        this.typed_idf_kyou = match_idf_kyou
 
         return new Array<GkillError>()
     }
@@ -452,13 +471,13 @@ export class Kyou extends InfoBase {
             res.git_commit_logs[i] = git_commit_log
         }
 
-        let match_git_commit_log: GitCommitLog| null = null
+        let match_git_commit_log: GitCommitLog | null = null
         res.git_commit_logs.forEach(git_commit_log => {
             if (moment(git_commit_log.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
                 match_git_commit_log = git_commit_log
             }
         })
-        this.typed_git_commit_log= match_git_commit_log
+        this.typed_git_commit_log = match_git_commit_log
 
         return new Array<GkillError>()
     }
@@ -494,7 +513,7 @@ export class Kyou extends InfoBase {
             res.rekyou_histories[i] = rekyou
         }
 
-        let match_rekyou: ReKyou| null = null
+        let match_rekyou: ReKyou | null = null
         res.rekyou_histories.forEach(rekyou => {
             if (moment(rekyou.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
                 match_rekyou = rekyou
