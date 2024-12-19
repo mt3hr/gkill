@@ -5,8 +5,6 @@ import type { AddAccountRequest } from "./req_res/add-account-request"
 import type { AddAccountResponse } from "./req_res/add-account-response"
 import type { AddKmemoRequest } from "./req_res/add-kmemo-request"
 import type { AddKmemoResponse } from "./req_res/add-kmemo-response"
-import type { AddKyouInfoRequest } from "./req_res/add-kyou-info-request"
-import type { AddKyouInfoResponse } from "./req_res/add-kyou-info-response"
 import type { AddLantanaRequest } from "./req_res/add-lantana-request"
 import type { AddLantanaResponse } from "./req_res/add-lantana-response"
 import type { AddMiRequest } from "./req_res/add-mi-request"
@@ -35,8 +33,6 @@ import type { GetApplicationConfigRequest } from "./req_res/get-application-conf
 import { GetApplicationConfigResponse } from "./req_res/get-application-config-response"
 import type { GetGitCommitLogRequest } from "./req_res/get-git-commit-log-request"
 import type { GetGitCommitLogResponse } from "./req_res/get-git-commit-log-response"
-import type { GetGitCommitLogsRequest } from "./req_res/get-git-commit-logs-request"
-import type { GetGitCommitLogsResponse } from "./req_res/get-git-commit-logs-response"
 import { GetGkillInfoRequest } from "./req_res/get-gkill-info-request"
 import type { GetGkillInfoResponse } from "./req_res/get-gkill-info-response"
 import type { GetGPSLogRequest } from "./req_res/get-gps-log-request"
@@ -45,32 +41,22 @@ import type { GetKFTLTemplatesRequest } from "./req_res/get-kftl-templates-reque
 import type { GetKFTLTemplatesResponse } from "./req_res/get-kftl-templates-response"
 import type { GetKmemoRequest } from "./req_res/get-kmemo-request"
 import type { GetKmemoResponse } from "./req_res/get-kmemo-response"
-import type { GetKmemosRequest } from "./req_res/get-kmemos-request"
-import type { GetKmemosResponse } from "./req_res/get-kmemos-response"
 import type { GetKyouRequest } from "./req_res/get-kyou-request"
 import { GetKyouResponse } from "./req_res/get-kyou-response"
 import type { GetKyousRequest } from "./req_res/get-kyous-request"
 import type { GetKyousResponse } from "./req_res/get-kyous-response"
 import type { GetLantanaRequest } from "./req_res/get-lantana-request"
 import type { GetLantanaResponse } from "./req_res/get-lantana-response"
-import type { GetLantanasRequest } from "./req_res/get-lantanas-request"
-import type { GetLantanasResponse } from "./req_res/get-lantanas-response"
 import type { GetMiBoardRequest } from "./req_res/get-mi-board-request"
 import type { GetMiBoardResponse } from "./req_res/get-mi-board-response"
 import type { GetMiRequest } from "./req_res/get-mi-request"
 import type { GetMiResponse } from "./req_res/get-mi-response"
-import type { GetMisRequest } from "./req_res/get-mis-request"
-import type { GetMisResponse } from "./req_res/get-mis-response"
 import type { GetNlogRequest } from "./req_res/get-nlog-request"
 import type { GetNlogResponse } from "./req_res/get-nlog-response"
-import type { GetNlogsRequest } from "./req_res/get-nlogs-request"
-import type { GetNlogsResponse } from "./req_res/get-nlogs-response"
 import type { GetPlaingTimeisRequest } from "./req_res/get-plaing-timeis-request"
 import type { GetPlaingTimeisResponse } from "./req_res/get-plaing-timeis-response"
 import type { GetReKyouRequest } from "./req_res/get-re-kyou-request"
 import type { GetReKyouResponse } from "./req_res/get-re-kyou-response"
-import type { GetReKyousRequest } from "./req_res/get-re-kyous-request"
-import type { GetReKyousResponse } from "./req_res/get-re-kyous-response"
 import type { GetServerConfigRequest } from "./req_res/get-server-config-request"
 import type { GetServerConfigResponse } from "./req_res/get-server-config-response"
 import type { GetShareMiTaskListInfosRequest } from "./req_res/get-share-mi-task-list-infos-request"
@@ -87,12 +73,8 @@ import type { GetTextsByTargetIDRequest } from "./req_res/get-texts-by-target-id
 import type { GetTextsByTargetIDResponse } from "./req_res/get-texts-by-target-id-response"
 import type { GetTimeisRequest } from "./req_res/get-timeis-request"
 import type { GetTimeisResponse } from "./req_res/get-timeis-response"
-import type { GetTimeissRequest } from "./req_res/get-timeiss-request"
-import type { GetTimeissResponse } from "./req_res/get-timeiss-response"
 import type { GetURLogRequest } from "./req_res/get-ur-log-request"
 import type { GetURLogResponse } from "./req_res/get-ur-log-response"
-import type { GetURLogsRequest } from "./req_res/get-ur-logs-request"
-import type { GetURLogsResponse } from "./req_res/get-ur-logs-response"
 import type { LoginRequest } from "./req_res/login-request"
 import type { LoginResponse } from "./req_res/login-response"
 import type { LogoutRequest } from "./req_res/logout-request"
@@ -109,8 +91,6 @@ import type { UpdateDeviceStructRequest } from "./req_res/update-device-struct-r
 import type { UpdateDeviceStructResponse } from "./req_res/update-device-struct-response"
 import type { UpdateKmemoRequest } from "./req_res/update-kmemo-request"
 import type { UpdateKmemoResponse } from "./req_res/update-kmemo-response"
-import type { UpdateKyouInfoRequest } from "./req_res/update-kyou-info-request"
-import type { UpdateKyouInfoResponse } from "./req_res/update-kyou-info-response"
 import type { UpdateLantanaRequest } from "./req_res/update-lantana-request"
 import type { UpdateLantanaResponse } from "./req_res/update-lantana-response"
 import type { UpdateMiRequest } from "./req_res/update-mi-request"
@@ -167,6 +147,9 @@ import { IDFKyou } from "../datas/idf-kyou"
 import type { GetIDFKyouRequest } from "./req_res/get-idf-kyou-request"
 import type { GetIDFKyouResponse } from "./req_res/get-idf-kyou-response"
 import { GPSLog } from "../datas/gps-log"
+import { FindKyouQuery } from "./find_query/find-kyou-query"
+import type { UpdateIDFKyouRequest } from "./req_res/update-idf-kyou-request"
+import type { UpdateIDFKyouResponse } from "./req_res/update-idf-kyou-response"
 
 export class GkillAPI {
 
@@ -187,7 +170,6 @@ export class GkillAPI {
         add_timeis_address: string
         add_mi_address: string
         add_lantana_address: string
-        add_kyou_info_address: string
         add_rekyou_address: string
         update_tag_address: string
         update_text_address: string
@@ -196,18 +178,11 @@ export class GkillAPI {
         update_nlog_address: string
         update_timeis_address: string
         update_lantana_address: string
+        update_idf_kyou_address: string
         update_mi_address: string
-        update_kyou_info_address: string
         update_rekyou_address: string
         get_kyous_address: string
         get_kyou_address: string
-        get_kmemos_address: string
-        get_urlogs_address: string
-        get_nlogs_address: string
-        get_timeiss_address: string
-        get_rekyous_address: string
-        get_mis_address: string
-        get_lantanas_address: string
         get_kmemo_address: string
         get_urlog_address: string
         get_nlog_address: string
@@ -216,7 +191,6 @@ export class GkillAPI {
         get_lantana_address: string
         get_rekyou_address: string
         get_git_commit_log_address: string
-        get_git_commit_logs_address: string
         get_idf_kyou_address: string
         get_mi_board_list_address: string
         get_plaing_timeis_address: string
@@ -262,7 +236,6 @@ export class GkillAPI {
         add_timeis_method: string
         add_mi_method: string
         add_lantana_method: string
-        add_kyou_info_method: string
         add_rekyou_method: string
         update_tag_method: string
         update_text_method: string
@@ -272,7 +245,7 @@ export class GkillAPI {
         update_timeis_method: string
         update_mi_method: string
         update_lantana_method: string
-        update_kyou_info_method: string
+        update_idf_kyou_method: string
         update_rekyou_method: string
         get_kyous_method: string
         get_kyou_method: string
@@ -334,7 +307,6 @@ export class GkillAPI {
                 this.add_timeis_address = "/api/add_timeis"
                 this.add_mi_address = "/api/add_mi"
                 this.add_lantana_address = "/api/add_lantana"
-                this.add_kyou_info_address = "/api/add_kyou_info"
                 this.add_rekyou_address = "/api/add_rekyou"
                 this.update_tag_address = "/api/update_tag"
                 this.update_text_address = "/api/update_text"
@@ -343,18 +315,11 @@ export class GkillAPI {
                 this.update_nlog_address = "/api/update_nlog"
                 this.update_timeis_address = "/api/update_timeis"
                 this.update_lantana_address = "/api/update_lantana"
+                this.update_idf_kyou_address = "/api/update_idf_kyou"
                 this.update_mi_address = "/api/update_mi"
-                this.update_kyou_info_address = "/api/update_kyou_info"
                 this.update_rekyou_address = "/api/update_rekyou"
                 this.get_kyous_address = "/api/get_kyous"
                 this.get_kyou_address = "/api/get_kyou"
-                this.get_kmemos_address = "/api/get_kmemos"
-                this.get_urlogs_address = "/api/get_urlogs"
-                this.get_nlogs_address = "/api/get_nlogs"
-                this.get_timeiss_address = "/api/get_timeiss"
-                this.get_rekyous_address = "/api/get_rekyous"
-                this.get_mis_address = "/api/get_mis"
-                this.get_lantanas_address = "/api/get_lantanas"
                 this.get_kmemo_address = "/api/get_kmemo"
                 this.get_urlog_address = "/api/get_urlog"
                 this.get_nlog_address = "/api/get_nlog"
@@ -364,7 +329,6 @@ export class GkillAPI {
                 this.get_rekyou_address = "/api/get_rekyou"
                 this.get_git_commit_log_address = "/api/get_git_commit_log"
                 this.get_idf_kyou_address = "/api/get_idf_kyou"
-                this.get_git_commit_logs_address = "/api/get_git_commit_logs"
                 this.get_mi_board_list_address = "/api/get_mi_board_list"
                 this.get_plaing_timeis_address = "/api/get_plaing_timeis"
                 this.get_all_tag_names_address = "/api/get_all_tag_names"
@@ -409,7 +373,6 @@ export class GkillAPI {
                 this.add_timeis_method = "POST"
                 this.add_mi_method = "POST"
                 this.add_lantana_method = "POST"
-                this.add_kyou_info_method = "POST"
                 this.add_rekyou_method = "POST"
                 this.update_tag_method = "POST"
                 this.update_text_method = "POST"
@@ -419,7 +382,7 @@ export class GkillAPI {
                 this.update_timeis_method = "POST"
                 this.update_mi_method = "POST"
                 this.update_lantana_method = "POST"
-                this.update_kyou_info_method = "POST"
+                this.update_idf_kyou_method = "POST"
                 this.update_rekyou_method = "POST"
                 this.get_kyous_method = "POST"
                 this.get_kyou_method = "POST"
@@ -646,21 +609,6 @@ export class GkillAPI {
                 return response
         }
 
-        async add_kyou_info(req: AddKyouInfoRequest): Promise<AddKyouInfoResponse> {
-                const res = await fetch(this.add_kyou_info_address, {
-                        'method': this.add_kyou_info_method,
-                        headers: {
-                                'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(req),
-                        signal: req.abort_controller?.signal,
-                })
-                const json = await res.json()
-                const response: AddKyouInfoResponse = json
-                this.check_auth(response)
-                return response
-        }
-
         async add_rekyou(req: AddReKyouRequest): Promise<AddReKyouResponse> {
                 const res = await fetch(this.add_rekyou_address, {
                         'method': this.add_rekyou_method,
@@ -796,9 +744,9 @@ export class GkillAPI {
                 return response
         }
 
-        async update_kyou_info(req: UpdateKyouInfoRequest): Promise<UpdateKyouInfoResponse> {
-                const res = await fetch(this.update_kyou_info_address, {
-                        'method': this.update_kyou_info_method,
+        async update_idf_kyou(req: UpdateIDFKyouRequest): Promise<UpdateIDFKyouResponse> {
+                const res = await fetch(this.update_idf_kyou_address, {
+                        'method': this.update_idf_kyou_method,
                         headers: {
                                 'Content-Type': 'application/json'
                         },
@@ -806,7 +754,7 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
-                const response: UpdateKyouInfoResponse = json
+                const response: UpdateIDFKyouResponse = json
                 this.check_auth(response)
                 return response
         }
@@ -1757,12 +1705,12 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
 
-      const json = await res.json()
+                const json = await res.json()
 
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
-                const response: GetGPSLogResponse= json
+                const response: GetGPSLogResponse = json
                 if (!response.gps_logs) {
-                        response.gps_logs= new Array<GPSLog>()
+                        response.gps_logs = new Array<GPSLog>()
                 }
 
                 for (let key in json) {
@@ -1990,11 +1938,36 @@ export class GkillAPI {
         }
 
         private saved_application_config: ApplicationConfig | null
-        set_saved_application_config(application_config: ApplicationConfig) {
+        set_saved_application_config(application_config: ApplicationConfig): void {
                 this.saved_application_config = application_config
         }
         get_saved_application_config(): ApplicationConfig | null {
                 return this.saved_application_config
+        }
+
+        private rykv_find_kyou_querys_localstorage_key = "rykv_find_kyou_querys"
+        set_saved_rykv_find_kyou_querys(querys: Array<FindKyouQuery>): void {
+                window.localStorage.setItem(this.rykv_find_kyou_querys_localstorage_key, JSON.stringify(querys))
+        }
+        get_saved_rykv_find_kyou_querys(): Array<FindKyouQuery> {
+                const query_json_string = window.localStorage.getItem(this.rykv_find_kyou_querys_localstorage_key)
+                if (!query_json_string) {
+                        return new Array<FindKyouQuery>()
+                }
+                const querys_json: any = JSON.parse(query_json_string)
+                if (!querys_json) {
+                        return new Array<FindKyouQuery>()
+                }
+                // 型に合わせる（そのままキャストするとメソッドが生えないため）
+                const querys = Array<FindKyouQuery>()
+                for (let i = 0; i < querys_json.length; i++) {
+                        const query = new FindKyouQuery()
+                        for (let key in querys_json[i]) {
+                                (query as any)[key] = querys_json[i][key]
+                        }
+                        querys.push(query)
+                }
+                return querys
         }
 }
 

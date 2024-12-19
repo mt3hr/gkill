@@ -5,10 +5,12 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 )
 
-type UpdateKyouInfoResponse struct {
+type UpdateIDFKyouResponse struct {
 	Messages []*message.GkillMessage `json:"messages"`
 
 	Errors []*message.GkillError `json:"errors"`
 
-	UpdatedKyou *reps.IDFKyou `json:"updated_kyou"`
+	UpdatedIDFKyou *reps.IDFKyou `json:"updated_idf_kyou"`
+
+	UpdatedIDFKyouKyou *reps.Kyou `json:"updated_idf_kyou_kyou"`
 }
