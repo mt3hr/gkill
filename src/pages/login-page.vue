@@ -46,6 +46,7 @@ async function resize_content(): Promise<void> {
 }
 
 async function handle_success_login(session_id: string): Promise<void> {
+    await sleep(500)
     GkillAPI.get_instance().set_session_id(session_id)
 }
 
