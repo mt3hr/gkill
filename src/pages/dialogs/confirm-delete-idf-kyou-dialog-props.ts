@@ -2,5 +2,5 @@
 
 import type { KyouViewPropsBase } from "../views/kyou-view-props-base"
 
-export interface ConfirmDeleteKyouDialogProps extends KyouViewPropsBase {
+export interface ConfirmDeleteIDFKyouDialogProps extends KyouViewPropsBase {
 }

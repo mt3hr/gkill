@@ -45,10 +45,10 @@ import { IDFKyou } from '@/classes/datas/idf-kyou'
 import { Kyou } from '@/classes/datas/kyou'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import { UpdateKyouInfoRequest } from '@/classes/api/req_res/update-kyou-info-request'
 import router from '@/router'
 import moment from 'moment'
 import { GkillAPI } from '@/classes/api/gkill-api'
+import { UpdateIDFKyouRequest } from '@/classes/api/req_res/update-idf-kyou-request'
 
 const props = defineProps<EditIDFKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -98,28 +98,11 @@ async function save(): Promise<void> {
     updated_idf_kyou.update_time = new Date(Date.now())
     updated_idf_kyou.update_user = gkill_info_res.user_id
 
-    const updated_kyou = new Kyou()
-    updated_kyou.is_deleted = updated_idf_kyou.is_deleted
-    updated_kyou.id = updated_idf_kyou.id
-    updated_kyou.related_time = updated_idf_kyou.related_time
-    updated_kyou.rep_name = updated_idf_kyou.rep_name
-    updated_kyou.create_app = updated_idf_kyou.create_app
-    updated_kyou.create_device = updated_idf_kyou.create_device
-    updated_kyou.create_time = updated_idf_kyou.create_time
-    updated_kyou.create_user = updated_idf_kyou.create_user
-    updated_kyou.data_type = updated_idf_kyou.data_type
-    updated_kyou.image_source = updated_idf_kyou.file_url //TODO いらない？
-    updated_kyou.update_app = updated_idf_kyou.update_app
-    updated_kyou.update_device = updated_idf_kyou.update_device
-    updated_kyou.update_time = updated_idf_kyou.update_time
-    updated_kyou.update_user = updated_idf_kyou.update_user
-
-
     // 更新リクエストを飛ばす
-    const req = new UpdateKyouInfoRequest()
+    const req = new UpdateIDFKyouRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
-    req.kyou = updated_kyou
-    const res = await props.gkill_api.update_kyou_info(req)
+    req.idf_kyou= updated_idf_kyou
+    const res = await props.gkill_api.update_idf_kyou(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -127,7 +110,7 @@ async function save(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
-    emits('updated_kyou', res.updated_kyou)
+    emits('updated_kyou', res.updated_idf_kyou_kyou)
     emits('requested_close_dialog')
     return
 }

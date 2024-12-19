@@ -115,12 +115,16 @@ const footer_height_px = computed(() => footer_height.value.toString().concat("p
 watch(() => props.query, () => {
     if (props.query.is_image_only) {
         update_match_kyous_for_image()
+    } else {
+        match_kyous_for_image.value.splice(0)
     }
 })
 
 watch(() => props.matched_kyous, () => {
     if (props.query.is_image_only) {
         update_match_kyous_for_image()
+    } else {
+        match_kyous_for_image.value.splice(0)
     }
 })
 
@@ -134,9 +138,11 @@ async function update_match_kyous_for_image(): Promise<void> {
     for (let i = 0; i < props.matched_kyous.length;) {
         const kyou_row_list = new Array<Kyou>()
         for (let j = 0; j < props.application_config.rykv_image_list_column_number.valueOf(); j++) {
-            const kyou = props.matched_kyous[i]
-            kyou_row_list.push(kyou)
-            i++
+            if (i < props.matched_kyous.length) {
+                const kyou = props.matched_kyous[i]
+                kyou_row_list.push(kyou)
+                i++
+            }
         }
         match_kyous_for_image_result.push(kyou_row_list)
     }

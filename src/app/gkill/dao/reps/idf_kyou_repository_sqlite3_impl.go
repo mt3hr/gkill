@@ -214,18 +214,7 @@ WHERE
 			)
 
 			// 対象IDFRepsからファイルURLを取得
-			var targetRep Repository
-			for _, rep := range i.repositoriesRef.Reps {
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					return nil, err
-				}
-				if repName == targetRepName {
-					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.TargetFile))
-					targetRep = rep
-				}
-			}
+			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
 
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
@@ -248,6 +237,21 @@ WHERE
 
 			// 判定OKであれば追加する
 			// ファイルの内容を取得する
+			var targetRep Repository
+			if targetRepName == "" || targetRepName == repName {
+				targetRep = i
+			} else {
+				for _, rep := range i.repositoriesRef.Reps {
+					repName, err := rep.GetRepName(ctx)
+					if err != nil {
+						err = fmt.Errorf("error at get rep name: %w", err)
+						return nil, err
+					}
+					if repName == targetRepName {
+						targetRep = rep
+					}
+				}
+			}
 			fileContentText := ""
 			filename, err := targetRep.GetPath(ctx, idf.ID)
 			if err != nil {
@@ -473,16 +477,7 @@ WHERE
 				&idf.DataType,
 			)
 
-			for _, rep := range i.repositoriesRef.Reps {
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					return nil, err
-				}
-				if repName == targetRepName {
-					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.TargetFile))
-				}
-			}
+			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
 
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
@@ -630,16 +625,7 @@ WHERE
 				&idf.DataType,
 			)
 
-			for _, rep := range i.repositoriesRef.Reps {
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					return "", err
-				}
-				if repName == targetRepName {
-					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.TargetFile))
-				}
-			}
+			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
 
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
@@ -742,7 +728,7 @@ WHERE
 	}
 
 	whereCounter := 0
-	onlyLatestData := false
+	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
@@ -802,18 +788,7 @@ WHERE
 			)
 
 			// 対象IDFRepsからファイルURLを取得
-			var targetRep Repository
-			for _, rep := range i.repositoriesRef.Reps {
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					return nil, err
-				}
-				if repName == targetRepName {
-					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.TargetFile))
-					targetRep = rep
-				}
-			}
+			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
 
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
@@ -836,8 +811,11 @@ WHERE
 
 			// 判定OKであれば追加する
 			// ファイルの内容を取得する
+			if !(idf.RepName == repName || idf.RepName == "") {
+				continue
+			}
 			fileContentText := ""
-			filename, err := targetRep.GetPath(ctx, idf.ID)
+			filename, err := i.GetPath(ctx, idf.ID)
 			if err != nil {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
@@ -1046,16 +1024,7 @@ WHERE
 				&idf.DataType,
 			)
 
-			for _, rep := range i.repositoriesRef.Reps {
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					return nil, err
-				}
-				if repName == targetRepName {
-					idf.FileURL = fmt.Sprintf("/files/%s/%s", repName, filepath.Base(idf.TargetFile))
-				}
-			}
+			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
 
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
@@ -1102,6 +1071,9 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 	// 対象内のファイルfullPath
 	existFileInfos := map[string]*fileinfo{}
 	err = filepath.WalkDir(contentDirAbs, fs.WalkDirFunc(func(path string, d os.DirEntry, err error) error {
+		if d.IsDir() {
+			return nil
+		}
 		path = filepath.ToSlash(path)
 		path = strings.TrimPrefix(path, contentDirAbs+"/")
 		for _, ignore := range *i.idfIgnore {

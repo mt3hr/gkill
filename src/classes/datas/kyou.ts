@@ -66,8 +66,8 @@ export class Kyou extends InfoBase {
                 // abort以外はエラー出力する
                 console.error(err)
             }
-            return []
         }
+        return []
     }
 
     async clear_all(): Promise<Array<GkillError>> {
@@ -133,8 +133,8 @@ export class Kyou extends InfoBase {
                 // abort以外はエラー出力する
                 console.error(err)
             }
-            return []
         }
+        return []
     }
 
     async clear_attached_histories(): Promise<Array<GkillError>> {

@@ -25,8 +25,6 @@ type GkillServerAPIAddress struct {
 
 	AddLantanaAddress string
 
-	AddKyouInfoAddress string
-
 	AddRekyouAddress string
 
 	UpdateTagAddress string
@@ -43,29 +41,15 @@ type GkillServerAPIAddress struct {
 
 	UpdateLantanaAddress string
 
-	UpdateMiAddress string
+	UpdateIDFKyouAddress string
 
-	UpdateKyouInfoAddress string
+	UpdateMiAddress string
 
 	UpdateRekyouAddress string
 
 	GetKyousAddress string
 
 	GetKyouAddress string
-
-	// GetKmemosAddress string
-
-	// GetURLogsAddress string
-
-	// GetNlogsAddress string
-
-	// GetTimeissAddress string
-
-	// GetRekyousAddress string
-
-	// GetMisAddress string
-
-	// GetLantanasAddress string
 
 	GetKmemoAddress string
 
@@ -175,8 +159,6 @@ type GkillServerAPIAddress struct {
 
 	AddLantanaMethod string
 
-	AddKyouInfoMethod string
-
 	AddRekyouMethod string
 
 	UpdateTagMethod string
@@ -195,7 +177,7 @@ type GkillServerAPIAddress struct {
 
 	UpdateLantanaMethod string
 
-	UpdateKyouInfoMethod string
+	UpdateIDFKyouMethod string
 
 	UpdateRekyouMethod string
 
@@ -305,7 +287,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.AddTimeisAddress = "/api/add_timeis"
 	gkillAPIAddress.AddMiAddress = "/api/add_mi"
 	gkillAPIAddress.AddLantanaAddress = "/api/add_lantana"
-	gkillAPIAddress.AddKyouInfoAddress = "/api/add_kyou_info"
 	gkillAPIAddress.AddRekyouAddress = "/api/add_rekyou"
 	gkillAPIAddress.UpdateTagAddress = "/api/update_tag"
 	gkillAPIAddress.UpdateTextAddress = "/api/update_text"
@@ -314,18 +295,11 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateNlogAddress = "/api/update_nlog"
 	gkillAPIAddress.UpdateTimeisAddress = "/api/update_timeis"
 	gkillAPIAddress.UpdateLantanaAddress = "/api/update_lantana"
+	gkillAPIAddress.UpdateIDFKyouAddress = "/api/update_idf_kyou"
 	gkillAPIAddress.UpdateMiAddress = "/api/update_mi"
-	gkillAPIAddress.UpdateKyouInfoAddress = "/api/update_kyou_info"
 	gkillAPIAddress.UpdateRekyouAddress = "/api/update_rekyou"
 	gkillAPIAddress.GetKyousAddress = "/api/get_kyous"
 	gkillAPIAddress.GetKyouAddress = "/api/get_kyou"
-	// gkillAPIAddress.GetKmemosAddress = "/api/get_kmemos"
-	// gkillAPIAddress.GetURLogsAddress = "/api/get_urlogs"
-	// gkillAPIAddress.GetNlogsAddress = "/api/get_nlogs"
-	// gkillAPIAddress.GetTimeissAddress = "/api/get_timeiss"
-	// gkillAPIAddress.GetRekyousAddress = "/api/get_rekyous"
-	// gkillAPIAddress.GetMisAddress = "/api/get_mis"
-	// gkillAPIAddress.GetLantanasAddress = "/api/get_lantanas"
 	gkillAPIAddress.GetKmemoAddress = "/api/get_kmemo"
 	gkillAPIAddress.GetURLogAddress = "/api/get_urlog"
 	gkillAPIAddress.GetNlogAddress = "/api/get_nlog"
@@ -380,7 +354,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.AddTimeisMethod = "POST"
 	gkillAPIAddress.AddMiMethod = "POST"
 	gkillAPIAddress.AddLantanaMethod = "POST"
-	gkillAPIAddress.AddKyouInfoMethod = "POST"
 	gkillAPIAddress.AddRekyouMethod = "POST"
 	gkillAPIAddress.UpdateTagMethod = "POST"
 	gkillAPIAddress.UpdateTextMethod = "POST"
@@ -390,7 +363,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateTimeisMethod = "POST"
 	gkillAPIAddress.UpdateMiMethod = "POST"
 	gkillAPIAddress.UpdateLantanaMethod = "POST"
-	gkillAPIAddress.UpdateKyouInfoMethod = "POST"
+	gkillAPIAddress.UpdateIDFKyouMethod = "POST"
 	gkillAPIAddress.UpdateRekyouMethod = "POST"
 	gkillAPIAddress.GetKyousMethod = "POST"
 	gkillAPIAddress.GetKmemoMethod = "POST"

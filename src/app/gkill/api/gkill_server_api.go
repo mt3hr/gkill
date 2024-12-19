@@ -186,9 +186,6 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.AddLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddLantana(w, r)
 	}).Methods(g.APIAddress.AddLantanaMethod)
-	router.HandleFunc(g.APIAddress.AddKyouInfoAddress, func(w http.ResponseWriter, r *http.Request) {
-		g.HandleAddKyouInfo(w, r)
-	}).Methods(g.APIAddress.AddKyouInfoMethod)
 	router.HandleFunc(g.APIAddress.AddRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddRekyou(w, r)
 	}).Methods(g.APIAddress.AddRekyouMethod)
@@ -213,12 +210,12 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.UpdateLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateLantana(w, r)
 	}).Methods(g.APIAddress.UpdateLantanaMethod)
+	router.HandleFunc(g.APIAddress.UpdateIDFKyouAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleUpdateIDFKyou(w, r)
+	}).Methods(g.APIAddress.UpdateIDFKyouMethod)
 	router.HandleFunc(g.APIAddress.UpdateMiAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateMi(w, r)
 	}).Methods(g.APIAddress.UpdateMiMethod)
-	router.HandleFunc(g.APIAddress.UpdateKyouInfoAddress, func(w http.ResponseWriter, r *http.Request) {
-		g.HandleUpdateKyouInfo(w, r)
-	}).Methods(g.APIAddress.UpdateKyouInfoMethod)
 	router.HandleFunc(g.APIAddress.UpdateRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateRekyou(w, r)
 	}).Methods(g.APIAddress.UpdateRekyouMethod)
@@ -2009,151 +2006,6 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (g *GkillServerAPI) HandleAddKyouInfo(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.AddKyouInfoRequest{}
-	response := &req_res.AddKyouInfoResponse{}
-
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse add kyouInfo response to json: %w", err)
-			gkill_log.Debug.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddKyouInfoResponseDataError,
-				ErrorMessage: "KyouInfo追加に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		err = fmt.Errorf("error at parse add kyou info request to json: %w", err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidAddKyouInfoRequestDataError,
-			ErrorMessage: "KyouInfo追加に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "KyouInfo追加に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// 対象が存在する場合はエラー
-	existKyouInfo, err := repositories.IDFKyouReps.GetKyou(r.Context(), request.Kyou.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get kyouInfo user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKyouInfoError,
-			ErrorMessage: "Kyou追加に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	if existKyouInfo != nil {
-		err = fmt.Errorf("exist kyouInfo id = %s", request.Kyou.ID)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistKyouInfoError,
-			ErrorMessage: "Kyou追加に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	err = repositories.WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), request.Kyou)
-	if err != nil {
-		err = fmt.Errorf("error at add kyouInfo user id = %s device = %s kyouInfo = %#v: %w", userID, device, request.Kyou, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddKyouInfoError,
-			ErrorMessage: "KyouInfo追加に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	repName, err := repositories.WriteIDFKyouRep.GetRepName(r.Context())
-	if err != nil {
-		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: "IDFKyou追加後取得に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
-		TargetID:                 request.Kyou.ID,
-		DataUpdateTime:           request.Kyou.UpdateTime,
-		LatestDataRepositoryName: repName,
-	})
-	if err != nil {
-		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: "IDFKyou追加後取得に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	kyou, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.Kyou.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get kyouInfo user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKyouInfoError,
-			ErrorMessage: "KyouInfo追加後取得に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.AddedKyou = kyou
-	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.AddKyouInfoSuccessMessage,
-		Message:     "KyouInfoを追加しました",
-	})
-}
-
 func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddReKyouRequest{}
@@ -3405,6 +3257,164 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 	})
 }
 
+func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.UpdateIDFKyouRequest{}
+	response := &req_res.UpdateIDFKyouResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse update idfKyou response to json: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidUpdateIDFKyouResponseDataError,
+				ErrorMessage: "IDFKyou更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse update idfKyou request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateIDFKyouRequestDataError,
+			ErrorMessage: "IDFKyou更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "IDFKyou更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// 対象が存在しない場合はエラー
+	existIDFKyou, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.IDFKyou.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetIDFKyouError,
+			ErrorMessage: "IDFKyou更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	err = repositories.WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), request.IDFKyou)
+	if err != nil {
+		err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddIDFKyouError,
+			ErrorMessage: "IDFKyou更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repName, err := repositories.WriteIDFKyouRep.GetRepName(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetIDFKyouError,
+			ErrorMessage: "IDFKyou更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		TargetID:                 request.IDFKyou.ID,
+		DataUpdateTime:           request.IDFKyou.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
+	if err != nil {
+		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetIDFKyouError,
+			ErrorMessage: "IDFKyou更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	idfKyou, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.IDFKyou.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetIDFKyouError,
+			ErrorMessage: "IDFKyou追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// 対象が存在しない場合はエラー
+	existIDFKyou, err = repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.IDFKyou.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetIDFKyouError,
+			ErrorMessage: "IDFKyou更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if existIDFKyou == nil {
+		err = fmt.Errorf("not exist idfKyou id = %s", request.IDFKyou.ID)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.NotFoundIDFKyouError,
+			ErrorMessage: "IDFKyou更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.UpdatedIDFKyou = idfKyou
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.UpdateIDFKyouSuccessMessage,
+		Message:     "IDFKyouを更新しました",
+	})
+}
+
 func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateMiRequest{}
@@ -3560,164 +3570,6 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateMiSuccessMessage,
 		Message:     "Miを更新しました",
-	})
-}
-
-func (g *GkillServerAPI) HandleUpdateKyouInfo(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.UpdateKyouInfoRequest{}
-	response := &req_res.UpdateKyouInfoResponse{}
-
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update kyouInfo response to json: %w", err)
-			gkill_log.Debug.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateKyouInfoResponseDataError,
-				ErrorMessage: "KyouInfo更新に失敗しました",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		err = fmt.Errorf("error at parse update kyou info request to json: %w", err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidUpdateKyouInfoRequestDataError,
-			ErrorMessage: "KyouInfo更新に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "KyouInfo更新に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// すでに存在する場合はエラー
-	_, err = repositories.IDFKyouReps.GetKyou(r.Context(), request.Kyou.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get kyouInfo user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKyouInfoError,
-			ErrorMessage: "KyouInfo更新後取得に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	err = repositories.WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), request.Kyou)
-	if err != nil {
-		err = fmt.Errorf("error at add kyouInfo user id = %s device = %s kyouInfo = %#v: %w", userID, device, request.Kyou, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddKyouInfoError,
-			ErrorMessage: "KyouInfo更新に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	repName, err := repositories.WriteIDFKyouRep.GetRepName(r.Context())
-	if err != nil {
-		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: "IDFKyou更新後取得に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
-		TargetID:                 request.Kyou.ID,
-		DataUpdateTime:           request.Kyou.UpdateTime,
-		LatestDataRepositoryName: repName,
-	})
-	if err != nil {
-		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: "IDFKyou更新後取得に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	kyouInfo, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.Kyou.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get kyouInfo user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKyouInfoError,
-			ErrorMessage: "KyouInfo追加後取得に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// 対象が存在しない場合はエラー
-	existKyouInfo, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.Kyou.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get kyouInfo user id = %s device = %s id = %s: %w", userID, device, request.Kyou.ID, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKyouInfoError,
-			ErrorMessage: "KyouInfo更新に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	if existKyouInfo == nil {
-		err = fmt.Errorf("not exist kyouInfo id = %s", request.Kyou.ID)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.NotFoundKyouInfoError,
-			ErrorMessage: "KyouInfo更新に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.UpdatedKyou = kyouInfo
-	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.UpdateKyouInfoSuccessMessage,
-		Message:     "KyouInfoを更新しました",
 	})
 }
 

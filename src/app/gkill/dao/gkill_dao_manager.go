@@ -112,6 +112,8 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	}
 
 	// ログ出力先設定
+	gkill_log.Debug.SetOutput(os.Stdout) //TODO けして
+	gkill_log.Info.SetOutput(os.Stdout)  //TODO けして
 	gkillDAOManager.enableOutputLogs = false
 	if gkillDAOManager.enableOutputLogs {
 		logRootDir := os.ExpandEnv("$HOME/gkill/logs")

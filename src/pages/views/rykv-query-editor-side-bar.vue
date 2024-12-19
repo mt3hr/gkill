@@ -1,8 +1,9 @@
 <template>
     <div>
         <SidebarHeader :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-            @requested_search="emits('requested_search')" @requested_clear_find_query="emits_default_query()"
-            class="sidebar_header" ref="sidebar_header" />
+            @requested_search="emits('requested_search', false)"
+            @requested_search_with_update_cache="emits('requested_search', true)"
+            @requested_clear_find_query="emits_default_query()" class="sidebar_header" ref="sidebar_header" />
         <div class="rykv_sidebar">
             <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search="emits_current_query()" @request_update_keywords="emits_current_query()"
@@ -88,6 +89,7 @@ watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
     if (old_value !== new_value && new_value) {
         default_query.value = generate_query().clone()
         default_query.value.parse_words_and_not_words()
+        emits('inited')
     }
 })
 
@@ -116,8 +118,6 @@ function generate_query(query_id?: string): FindKyouQuery {
     if (query_id) {
         find_query.query_id = query_id
     }
-
-    find_query.update_cache = true
 
     find_query.is_focus_kyou = props.find_kyou_query.is_focus_kyou
     find_query.is_image_only = props.find_kyou_query.is_image_only

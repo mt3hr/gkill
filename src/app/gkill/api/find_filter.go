@@ -11,6 +11,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/api/message"
 	"github.com/mt3hr/gkill/src/app/gkill/dao"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 )
 
@@ -43,12 +44,32 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext.MatchKyousAtFilterLocation = map[string]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFilterImage = map[string]*reps.Kyou{}
 
-	// フィルタ
+	// ユーザのRep取得
 	gkillErr, err := f.getRepositories(ctx, userID, device, gkillDAOManager, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories: %w", err)
 		return nil, gkillErr, err
 	}
+
+	// 最新のKyouがどのRepにあるかを取得
+	latestDatasWg := &sync.WaitGroup{}
+	latestDatasCh := make(chan []*account_state.LatestDataRepositoryAddress, 1)
+	errCh := make(chan error, 1)
+	defer close(latestDatasCh)
+	defer close(errCh)
+	latestDatasWg.Add(1)
+	go func() {
+		defer latestDatasWg.Done()
+		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+		if err != nil {
+			latestDatasCh <- nil
+			errCh <- err
+		}
+		latestDatasCh <- latestDatas
+		errCh <- nil
+	}()
+
+	// フィルタ
 	gkillErr, err = f.selectMatchRepsFromQuery(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at select match reps: %w", err)
@@ -129,6 +150,18 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at filter image kyous: %w", err)
 		return nil, gkillErr, err
 	}
+
+	latestDatasWg.Wait()
+	err = <-errCh
+	if err != nil {
+		return nil, nil, err
+	}
+	gkillErr, err = f.replaceLatestKyouInfos(ctx, findKyouContext, <-latestDatasCh)
+	if err != nil {
+		err = fmt.Errorf("error at replace latest kyou infos: %w", err)
+		return nil, gkillErr, err
+	}
+
 	for _, rep := range findKyouContext.MatchKyousCurrent {
 		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, rep)
 	}
@@ -1345,6 +1378,53 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 		}
 	}
 
+	return nil, nil
+}
+func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKyouContext, latestDatas []*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
+	latestKyousMap := map[string]*reps.Kyou{}
+	for _, latestData := range latestDatas {
+		// 対象じゃなければスキップ
+		currentKyou, existInResult := findCtx.MatchKyousCurrent[latestData.TargetID]
+		if !existInResult {
+			continue
+		}
+
+		// すでに最新が入っていそうだったらそのままいれる
+		if currentKyou.RepName == latestData.LatestDataRepositoryName && currentKyou.UpdateTime.Equal(latestData.DataUpdateTime) {
+			latestKyousMap[currentKyou.ID] = currentKyou
+			continue
+		}
+
+		// 最新が入っていなかったらもらってくる
+		for _, rep := range findCtx.Repositories.Reps {
+			repName, err := rep.GetRepName(ctx)
+			if err != nil {
+				err = fmt.Errorf("error at get rep name: %w", err)
+				return nil, err
+			}
+			if repName != latestData.LatestDataRepositoryName {
+				continue
+			}
+
+			kyouHistories, err := rep.GetKyouHistories(ctx, latestData.TargetID)
+			if err != nil {
+				err = fmt.Errorf("error at get kyou histories: %w", err)
+				return nil, err
+			}
+			if len(kyouHistories) == 0 {
+				continue
+			}
+			latestKyou := kyouHistories[0]
+
+			// 削除されていればスキップ
+			if latestKyou.IsDeleted {
+				continue
+			}
+
+			latestKyousMap[latestKyou.ID] = latestKyou
+		}
+	}
+	findCtx.MatchKyousCurrent = latestKyousMap
 	return nil, nil
 }
 
