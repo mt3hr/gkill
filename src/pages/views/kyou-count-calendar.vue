@@ -49,7 +49,7 @@ function update_events(): void {
         event_list.push({
             title: count.toString(),
             start: moment(date_str).toDate(),
-            end: moment(date_str).add('day', 1).add('millisecond', -1).toDate(),
+            end: moment(date_str).add(1, 'day').add(-1, 'milliseconds').toDate(),
         })
     })
     events.value = event_list
@@ -124,5 +124,9 @@ nextTick(() => {
     font-weight: bold;
     text-align: center;
     font-size: 85%;
+}
+
+.v-calendar-header__title {
+    font-size: 20px !important;
 }
 </style>

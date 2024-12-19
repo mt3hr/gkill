@@ -1,7 +1,8 @@
 <template>
     <div>
         <v-sheet tile height="35" class="d-flex">
-            <h1><span>{{ start_date_str }}</span><span v-if="start_date !== end_date">～ {{ end_date_str }}</span></h1>
+            <div class="map_date"><span>{{ start_date_str }}</span><span v-if="start_date !== end_date">～ {{
+                end_date_str }}</span></div>
         </v-sheet>
         <v-sheet>
             <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key"
@@ -17,7 +18,7 @@
 </template>
 <script lang="ts" setup>
 import moment from 'moment';
-import { computed, ref, watch, type Ref } from 'vue';
+import { computed, nextTick, ref, watch, type Ref } from 'vue';
 import { GoogleMap, Polyline, Marker } from 'vue3-google-map';
 import type { GPSLogMapEmits } from './gps-log-map-emits'
 import type { GPSLogMapProps } from './gps-log-map-props'
@@ -32,6 +33,13 @@ const emits = defineEmits<GPSLogMapEmits>()
 const center = ref({ lat: 35.6586295, lng: 139.7449018, timestamp: moment().unix() }) // mapの中心点
 const zoom = ref(11) // mapのズーム
 const time_slider_max = ref(86399)
+
+watch(() => props.marker_time, () => {
+    // start_date更新待ち
+    nextTick(() => {
+        slider_model.value = Math.abs(moment.duration(moment(start_date_str.value).diff(moment(props.marker_time))).asSeconds())
+    })
+})
 
 const gps_logs: Ref<Array<GPSLog>> = ref([])
 const polyline_options = ref({
@@ -66,9 +74,10 @@ watch(() => slider_model.value, () => update_marker_by_time())
 // datetimeが更新されたとき、sliderの値を更新し、マーカーの位置を更新する。
 function update_time_slider_max_value(): void {
     let seconds = 0
-    for (let date_str = start_date_str.value; !end_date_str || date_str === end_date_str.value; date_str = moment(date_str).add('days', 1).format("YYYY-MM-DD")) {
+    for (let date_str = start_date_str.value; !end_date_str || date_str !== end_date_str.value; date_str = moment(date_str).add(1, 'days').format("YYYY-MM-DD")) {
         seconds += 86400
     }
+    seconds += 86400
     seconds--
     time_slider_max.value = seconds
 }
@@ -112,7 +121,7 @@ async function update_gps_log_lines(): Promise<void> {
 // timeに最も関連している地点にマーカーを立てる
 function update_marker_by_time() {
     marker_options.value = null
-    const datetime = moment(start_date_str.value.replace("-", "/") + " 00:00:00").add('second', slider_model.value).toDate().getTime()
+    const datetime = moment(start_date_str.value.replace("-", "/") + " 00:00:00").add(slider_model.value, 'seconds').toDate().getTime()
 
     let target_gps_log: GPSLog | null = null
     for (let i = 0; i < gps_logs.value.length; i++) {
@@ -122,6 +131,9 @@ function update_marker_by_time() {
             break
         }
     }
+    if (!target_gps_log && gps_logs.value.length !== 0) {
+        target_gps_log = gps_logs.value[gps_logs.value.length - 1]
+    }
     if (!target_gps_log) {
         return
     }
@@ -129,7 +141,7 @@ function update_marker_by_time() {
 }
 
 const date_time_str = computed(() => {
-    return moment(start_date_str.value).add('seconds', slider_model.value).format("MM-DD HH:mm:ss")
+    return moment(start_date_str.value).add(slider_model.value, 'seconds').format("MM-DD HH:mm:ss")
 })
 
 async function centering(): Promise<void> {
@@ -165,3 +177,8 @@ watch(gps_logs, () => centering())
 
 update_time_slider_max_value()
 </script>
+<style lang="css" scoped>
+.map_date {
+    font-size: 26px;
+}
+</style>
