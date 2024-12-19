@@ -32,6 +32,10 @@
                     }
                     search(focused_column_index, new_query, false)
                 };
+                if (new_query.calendar_start_date && new_query.calendar_end_date) {
+                    gps_log_map_start_time = new_query.calendar_start_date
+                    gps_log_map_end_time = new_query.calendar_end_date
+                }
             }" @updated_query_clear="(new_query) => {
                 if (!inited) {
                     return
@@ -51,7 +55,7 @@
                         :application_config="application_config" :gkill_api="gkill_api"
                         :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
                         :is_focused_list="focused_column_index === index" @click="focused_column_index = index"
-                        @clicked_kyou="(kyou) => clicked_kyou_in_list_view(index, kyou)"
+                        @clicked_kyou="(kyou) => { clicked_kyou_in_list_view(index, kyou); gps_log_map_start_time = kyou.related_time; gps_log_map_end_time = kyou.related_time; gps_log_map_marker_time = kyou.related_time; }"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="reload_list(index)"
@@ -88,11 +92,12 @@
                 <td valign="top">
                     <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
                         :gkill_api="gkill_api" :kyous="focused_column_kyous"
-                        @requested_focus_time="(time) => focused_time = time" />
+                        @requested_focus_time="(time) => {focused_time = time; gps_log_map_start_time = time; gps_log_map_end_time = time; gps_log_map_marker_time = time}" />
                 </td>
                 <td valign="top">
                     <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
-                        :gkill_api="gkill_api" :start_date="focused_time" :end_date="focused_time"
+                        :gkill_api="gkill_api" :start_date="gps_log_map_start_time" :end_date="gps_log_map_end_time"
+                        :marker_time="gps_log_map_marker_time"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @requested_focus_time="(time) => focused_time = time" />
@@ -227,6 +232,9 @@ const focused_column_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_kyou: Ref<Kyou | null> = ref(null)
 const focused_time: Ref<Date> = ref(moment().toDate())
 const focused_column_checked_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
+const gps_log_map_start_time: Ref<Date> = ref(moment().toDate())
+const gps_log_map_end_time: Ref<Date> = ref(moment().toDate())
+const gps_log_map_marker_time: Ref<Date> = ref(moment().toDate())
 const is_show_kyou_detail_view: Ref<boolean> = ref(false)
 const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
 const is_show_gps_log_map: Ref<boolean> = ref(false)
