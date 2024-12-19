@@ -55,7 +55,7 @@ async function load_application_config(): Promise<void> {
 
     return gkill_api.value.get_application_config(req)
         .then(async res => {
-            if (res.errors && res.errors.length != 0) {
+            if (res.errors && res.errors.length !== 0) {
                 write_errors(res.errors)
                 return
             }
@@ -63,7 +63,7 @@ async function load_application_config(): Promise<void> {
             application_config.value = res.application_config
             GkillAPI.get_instance().set_saved_application_config(res.application_config)
 
-            if (res.messages && res.messages.length != 0) {
+            if (res.messages && res.messages.length !== 0) {
                 write_messages(res.messages)
                 return
             }
@@ -84,11 +84,13 @@ const messages: Ref<Array<{ message: string, id: string, show_snackbar: boolean 
 async function write_errors(errors: Array<GkillError>) {
     const received_messages = new Array<{ message: string, id: string, show_snackbar: boolean }>()
     for (let i = 0; i < errors.length; i++) {
-        received_messages.push({
-            message: errors[i].error_message,
-            id: GkillAPI.get_instance().generate_uuid(),
-            show_snackbar: true,
-        })
+        if (errors[i] && errors[i].error_message) {
+            received_messages.push({
+                message: errors[i].error_message,
+                id: GkillAPI.get_instance().generate_uuid(),
+                show_snackbar: true,
+            })
+        }
     }
     messages.value.push(...received_messages)
     sleep(2500).then(() => {
@@ -101,11 +103,13 @@ async function write_errors(errors: Array<GkillError>) {
 async function write_messages(messages_: Array<GkillMessage>) {
     const received_messages = new Array<{ message: string, id: string, show_snackbar: boolean }>()
     for (let i = 0; i < messages_.length; i++) {
-        received_messages.push({
-            message: messages_[i].message,
-            id: GkillAPI.get_instance().generate_uuid(),
-            show_snackbar: true,
-        })
+        if (messages_[i] && messages_[i].message) {
+            received_messages.push({
+                message: messages_[i].message,
+                id: GkillAPI.get_instance().generate_uuid(),
+                show_snackbar: true,
+            })
+        }
     }
     messages.value.push(...received_messages)
     sleep(2500).then(() => {
@@ -140,11 +144,11 @@ body,
 }
 
 .alert_container {
-  position: fixed;
-  top: 60px;
-  right: 10px;
-  display: grid;
-  grid-gap: .5em;
-  z-index: 99;
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    display: grid;
+    grid-gap: .5em;
+    z-index: 99;
 }
 </style>
