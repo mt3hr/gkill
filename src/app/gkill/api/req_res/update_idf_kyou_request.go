@@ -2,8 +2,8 @@ package req_res
 
 import "github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 
-type UpdateKyouInfoRequest struct {
+type UpdateIDFKyouRequest struct {
 	SessionID string `json:"session_id"`
 
-	Kyou *reps.IDFKyou `json:"kyou"`
+	IDFKyou *reps.IDFKyou `json:"idf_kyou"`
 }

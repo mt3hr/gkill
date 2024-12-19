@@ -3,7 +3,7 @@
         <table>
             <tr>
                 <td>
-                    <div>{{ kyou.typed_urlog?.title }}</div>
+                    <div class="urlog_title">{{ kyou.typed_urlog?.title }}</div>
                 </td>
             </tr>
         </table>

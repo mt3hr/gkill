@@ -254,4 +254,8 @@ const (
 	InvalidGetIDFKyouResponseDataError                 = "ERR000248"
 	InvalidGetIDFKyouRequestDataError                  = "ERR000249"
 	AddUpdatedRepositoriesByUser                       = "ERR000250"
+	InvalidUpdateIDFKyouResponseDataError              = "ERR000251"
+	InvalidUpdateIDFKyouRequestDataError               = "ERR000252"
+	AddIDFKyouError                                    = "ERR000253"
+	NotFoundIDFKyouError                               = "ERR000254"
 )

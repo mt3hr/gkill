@@ -9,13 +9,12 @@
 </template>
 <script setup lang="ts">
 import { type Ref, ref, watch } from 'vue'
-import type { ConfirmDeleteKyouDialogProps } from './confirm-delete-kyou-dialog-props'
-import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
-import ConfirmDeleteKyouView from '../views/confirm-delete-kyou-view.vue'
-import type { ConfirmDeleteKyouDialogEmits } from './confirm-delete-kyou-dialog-emits';
+import ConfirmDeleteKyouView from '../views/confirm-delete-kyou-view.vue';
+import type { ConfirmDeleteIDFKyouDialogEmits } from './confirm-delete-idf-kyou-dialog-emits';
+import type { ConfirmDeleteIDFKyouDialogProps } from './confirm-delete-idf-kyou-dialog-props';
 
-const props = defineProps<ConfirmDeleteKyouDialogProps>()
-const emits = defineEmits<ConfirmDeleteKyouDialogEmits>()
+const props = defineProps<ConfirmDeleteIDFKyouDialogProps>()
+const emits = defineEmits<ConfirmDeleteIDFKyouDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

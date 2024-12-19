@@ -33,12 +33,10 @@
 </template>
 <script lang="ts" setup>
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
-import type { ConfirmDeleteKyouViewProps } from './confirm-delete-kyou-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { type Ref, ref, watch } from 'vue'
 import KyouView from './kyou-view.vue'
 import router from '@/router';
-import { UpdateKyouInfoRequest } from '@/classes/api/req_res/update-kyou-info-request';
 import { GkillAPI } from '@/classes/api/gkill-api';
 import type { Kyou } from '@/classes/datas/kyou';
 import type { GkillError } from '@/classes/api/gkill-error';
@@ -49,6 +47,8 @@ import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request';
 import { UpdateLantanaRequest } from '@/classes/api/req_res/update-lantana-request';
 import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-request';
+import type { ConfirmDeleteKyouViewProps } from './confirm-delete-kyou-view-props';
+import { UpdateIDFKyouRequest } from '@/classes/api/req_res/update-idf-kyou-request';
 
 const props = defineProps<ConfirmDeleteKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -218,7 +218,22 @@ async function delete_lantana(): Promise<Array<GkillError>> {
 }
 
 async function delete_idf_kyou(): Promise<Array<GkillError>> {
-    throw new Error("not implements")
+    const gkill_info_req = new GetGkillInfoRequest()
+    gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
+    const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+
+    const req = new UpdateIDFKyouRequest()
+    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.idf_kyou = cloned_kyou.value.typed_idf_kyou!!.clone()
+    req.idf_kyou.is_deleted = true
+
+    req.idf_kyou.update_app = "gkill"
+    req.idf_kyou.update_device = gkill_info_res.device
+    req.idf_kyou.update_time = new Date(Date.now())
+    req.idf_kyou.update_user = gkill_info_res.user_id
+
+    const res = await GkillAPI.get_instance().update_idf_kyou(req)
+    return res.errors
 }
 
 async function delete_git_commit_log(): Promise<Array<GkillError>> {
