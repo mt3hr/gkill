@@ -1,6 +1,6 @@
 <template>
-    <v-dialog v-model="is_show_dialog" class="kyou_dialog">
-        <v-card class="pa-2">
+    <v-dialog v-model="is_show_dialog" class="kyou_dialog" :width="'fit-content'">
+        <v-card class="pa-2" :width="'fit-content'">
             <KyouView :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
