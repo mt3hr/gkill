@@ -1,31 +1,37 @@
 <template>
     <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto" class="pa-0 ma-0">
-                <div>{{ kyou.typed_urlog?.title }}</div>
-            </v-col>
-        </v-row>
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto" class="pa-0 ma-0">
-                <img v-if="kyou.typed_urlog" class="urlog_favicon"
-                    :src="'data:image;base64,' + (kyou.typed_urlog.favicon_image)" />
-            </v-col>
-            <v-col cols="auto" class="pa-0 ma-0">
-                <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url">{{ kyou.typed_urlog.url }}</a>
-            </v-col>
-        </v-row>
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto" class="pa-0 ma-0">
-                <img v-if="kyou.typed_urlog" class="urlog_thumbnail"
-                    :src="'data:image;base64,' + (kyou.typed_urlog.thumbnail_image)" />
-            </v-col>
-            <v-col cols="auto" class="pa-0 ma-0">
-                <div v-if="kyou.typed_urlog" class="urlog_description">{{ kyou.typed_urlog.description }}</div>
-            </v-col>
-        </v-row>
+        <table>
+            <tr>
+                <td>
+                    <div>{{ kyou.typed_urlog?.title }}</div>
+                </td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td>
+                    <img v-if="kyou.typed_urlog" class="urlog_favicon"
+                        :src="'data:image;base64,' + (kyou.typed_urlog.favicon_image)" />
+                </td>
+                <td>
+                    <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url">{{ kyou.typed_urlog.url }}</a>
+                </td>
+            </tr>
+        </table>
+        <table>
+            <tr>
+                <td>
+                    <img v-if="kyou.typed_urlog" class="urlog_thumbnail"
+                        :src="'data:image;base64,' + (kyou.typed_urlog.thumbnail_image)" />
+                </td>
+                <td>
+                    <div v-if="kyou.typed_urlog" class="urlog_description">{{ kyou.typed_urlog.description }}</div>
+                </td>
+            </tr>
+        </table>
         <URLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
-            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
-            ref="context_menu" @received_errors="(errors) => emits('received_errors', errors)"
+            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag" ref="context_menu"
+            @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
             @requested_reload_list="() => emits('requested_reload_list')"
@@ -49,6 +55,12 @@ function show_context_menu(e: PointerEvent): void {
 </script>
 
 <style lang="css" scoped>
+.urlog_title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .urlog_favicon {
     height: 20px;
     min-height: 20px;
@@ -56,6 +68,7 @@ function show_context_menu(e: PointerEvent): void {
     width: 20px;
     min-width: 20px;
     max-width: 20px;
+    object-fit: cover;
 }
 
 .urlog_thumbnail {
@@ -65,11 +78,14 @@ function show_context_menu(e: PointerEvent): void {
     width: 75px;
     min-width: 75px;
     max-width: 75px;
+    object-fit: cover;
 }
 
 .urlog_description {
     height: 75px;
     min-height: 75px;
     max-height: 75px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 </style>

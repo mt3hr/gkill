@@ -1342,6 +1342,34 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// applicationConfigを取得
+	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get applicationConfig user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetApplicationConfigError,
+			ErrorMessage: "ApplicationConfig取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// serverConfigを取得
+	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(r.Context(), device)
+	if err != nil {
+		err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetServerConfigError,
+			ErrorMessage: "ServerConfig取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	request.URLog.FillURLogField(serverConfig, applicationConfig)
+
 	err = repositories.WriteURLogRep.AddURLogInfo(r.Context(), request.URLog)
 	if err != nil {
 		err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
