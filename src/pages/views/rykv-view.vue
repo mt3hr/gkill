@@ -19,7 +19,11 @@
         <RykvQueryEditorSideBar v-if="focused_find_query" :application_config="application_config"
             :gkill_api="gkill_api" :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
             :app_content_width="app_content_width" :find_kyou_query="focused_find_query"
-            @requested_search="search(focused_column_index, querys[focused_column_index], true)" @updated_query="(new_query) => {
+            @requested_search="(update_cache: boolean) => { search(focused_column_index, querys[focused_column_index], true, update_cache) }"
+            @updated_query="(new_query) => {
+                if (!inited) {
+                    return
+                }
                 querys.splice(focused_column_index, 1, new_query.clone());
                 if (application_config.rykv_hot_reload) {
                     if (updated_focused_column_index_in_this_tick) {
@@ -29,12 +33,15 @@
                     search(focused_column_index, new_query, false)
                 };
             }" @updated_query_clear="(new_query) => {
-                    querys.splice(focused_column_index, 1, new_query.clone());
-                    if (application_config.rykv_hot_reload) {
-                        search(focused_column_index, new_query, true)
-                    }
+                if (!inited) {
+                    return
                 }
-                " ref="query_editor_sidebar" />
+                querys.splice(focused_column_index, 1, new_query.clone());
+                if (application_config.rykv_hot_reload) {
+                    search(focused_column_index, new_query, true)
+                }
+            }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
+            ref="query_editor_sidebar" />
     </v-navigation-drawer>
     <v-main class="main">
         <table class="rykv_view_table">
@@ -57,7 +64,7 @@
                             querys.splice(index, 1, query);
                             search(focused_column_index, querys[focused_column_index], true);
                         }"
-                        @requested_close_column="querys.splice(index, 1); match_kyous_list.splice(index, 1); abort_controllers.splice(index, 1); focused_column_kyous.splice(0)" />
+                        @requested_close_column="querys.splice(index, 1); match_kyous_list.splice(index, 1); abort_controllers.splice(index, 1); focused_column_kyous.splice(0); GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys);" />
                 </td>
                 <td valign="top">
                     <v-btn class="rounded-sm mx-auto" :height="app_content_height.valueOf()" :width="30"
@@ -253,18 +260,37 @@ watch(() => focused_time.value, () => {
     kyou_list_view.scroll_to_time(focused_time.value)
 })
 
-nextTick(() => {
-    is_show_kyou_count_calendar.value = props.app_content_width.valueOf() >= 420
-    is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
-})
+const inited = ref(false)
+const received_init_request = ref(false)
+function init(): void {
+    nextTick(async () => {
+        is_show_kyou_count_calendar.value = props.app_content_width.valueOf() >= 420
+        is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
 
-nextTick(() => add_list_view())
+        // 前回開いていた列があれば復元する
+        const saved_querys = GkillAPI.get_instance().get_saved_rykv_find_kyou_querys()
+        if (saved_querys.length.valueOf() === 0) {
+            add_list_view()
+            inited.value = true
+            return
+        }
+        for (let i = 0; i < saved_querys.length; i++) {
+            add_list_view(saved_querys[i])
+            await nextTick(() => { })
+            search(i, querys.value[i], true)
+            await nextTick(() => { })
+        }
+        inited.value = true
+    })
+}
 
-async function add_list_view(): Promise<void> {
+async function add_list_view(query?: FindKyouQuery): Promise<void> {
     // 初期化されていないときはDefaultQueryがない。
     // その場合は初期値のFindKyouQueryをわたして初期化してもらう
     const default_query = query_editor_sidebar.value?.get_default_query()?.clone()
-    if (default_query) {
+    if (query) {
+        querys.value.push(query)
+    } else if (default_query) {
         default_query.query_id = GkillAPI.get_instance().generate_uuid()
         querys.value.push(default_query)
     } else {
@@ -318,8 +344,10 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
 }
 
 const abort_controllers: Ref<Array<AbortController>> = ref([])
-async function search(column_index: number, query: FindKyouQuery, force_search: boolean): Promise<void> {
+async function search(column_index: number, query: FindKyouQuery, force_search: boolean, update_cache?: boolean): Promise<void> {
     querys.value[column_index] = query
+    GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys.value)
+
     // 検索する。Tickでまとめる
     nextTick(async () => {
         if (!force_search) {
@@ -349,7 +377,10 @@ async function search(column_index: number, query: FindKyouQuery, force_search: 
         const req = new GetKyousRequest()
         abort_controllers.value[column_index] = req.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
-        req.query = query
+        req.query = query.clone()
+        if (update_cache) {
+            req.query.update_cache = true
+        }
         try {
             const res = await GkillAPI.get_instance().get_kyous(req)
             if (res.errors && res.errors.length !== 0) {
