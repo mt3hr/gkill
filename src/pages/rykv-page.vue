@@ -149,6 +149,9 @@ body,
     right: 10px;
     display: grid;
     grid-gap: .5em;
-    z-index: 99;
+    z-index: 100000000;
+}
+.v-dialog .v-card {
+    overflow-y: scroll;
 }
 </style>

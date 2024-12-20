@@ -252,6 +252,64 @@ INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
 	return true, nil
 }
 
+func (l *latestDataRepositoryAddressSQLite3Impl) AddLatestDataRepositoryAddresses(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) (bool, error) {
+	l.m.Lock()
+	defer l.m.Unlock()
+
+	tx, err := l.db.Begin()
+	if err != nil {
+		fmt.Errorf("error at begin: %w", err)
+		return false, err
+	}
+
+	sql := `
+INSERT INTO LATEST_DATA_REPOSITORY_ADDRESS (
+  TARGET_ID,
+  LATEST_DATA_REPOSITORY_NAME,
+  DATA_UPDATE_TIME
+) VALUES (
+  ?,
+  ?,
+  ?
+)
+`
+	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		stmt, err := tx.PrepareContext(ctx, sql)
+		if err != nil {
+			err = fmt.Errorf("error at add latest data repoisitory address sql: %w", err)
+			errTx := tx.Rollback()
+			if errTx != nil {
+				err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
+			}
+			return false, err
+		}
+		defer stmt.Close()
+
+		queryArgs := []interface{}{
+			latestDataRepositoryAddress.TargetID,
+			latestDataRepositoryAddress.LatestDataRepositoryName,
+			latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
+		}
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+		if err != nil {
+			err = fmt.Errorf("error at query :%w", err)
+			errTx := tx.Rollback()
+			if errTx != nil {
+				err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
+			}
+			return false, err
+		}
+	}
+	errCommit := tx.Commit()
+	if errCommit != nil {
+		err = fmt.Errorf("error at commit: %w: %w", err, errCommit)
+		return false, err
+	}
+	return true, nil
+}
+
 func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error) {
 	l.m.Lock()
 	defer l.m.Unlock()

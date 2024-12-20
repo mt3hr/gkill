@@ -282,9 +282,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetApplicationConfigAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetApplicationConfig(w, r)
 	}).Methods(g.APIAddress.GetApplicationConfigMethod)
-	router.HandleFunc(g.APIAddress.GetServerConfigAddress, func(w http.ResponseWriter, r *http.Request) {
-		g.HandleGetServerConfig(w, r)
-	}).Methods(g.APIAddress.GetServerConfigMethod)
+	router.HandleFunc(g.APIAddress.GetServerConfigsAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleGetServerConfigs(w, r)
+	}).Methods(g.APIAddress.GetServerConfigsMethod)
 	router.HandleFunc(g.APIAddress.UploadFilesAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUploadFiles(w, r)
 	}).Methods(g.APIAddress.UploadFilesMethod)
@@ -315,9 +315,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.UpdateUserRepsAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateUserReps(w, r)
 	}).Methods(g.APIAddress.UpdateUserRepsMethod)
-	router.HandleFunc(g.APIAddress.UpdateServerConfigAddress, func(w http.ResponseWriter, r *http.Request) {
-		g.HandleUpdateServerConfig(w, r)
-	}).Methods(g.APIAddress.UpdateServerConfigMethod)
+	router.HandleFunc(g.APIAddress.UpdateServerConfigsAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleUpdateServerConfigs(w, r)
+	}).Methods(g.APIAddress.UpdateServerConfigsMethod)
 	router.HandleFunc(g.APIAddress.AddAccountAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddAccount(w, r)
 	}).Methods(g.APIAddress.AddAccountMethod)
@@ -5534,15 +5534,38 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	}
 
 	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
-	if err != nil {
+	if err != nil || applicationConfig == nil {
 		err = fmt.Errorf("error at get applicationConfig user id = %s device = %s: %w", userID, device, err)
+		err = fmt.Errorf("try create application config user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "ApplicationConfig取得に失敗しました",
+
+		newApplicationConfig := &user_config.ApplicationConfig{
+			UserID:                    userID,
+			Device:                    device,
+			EnableBrowserCache:        false,
+			GoogleMapAPIKey:           "",
+			RykvImageListColumnNumber: 3,
+			RykvHotReload:             false,
+			MiDefaultBoard:            "Inbox",
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), newApplicationConfig)
+		if err != nil {
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetApplicationConfigError,
+				ErrorMessage: "ApplicationConfig取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		applicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+		if err != nil {
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetApplicationConfigError,
+				ErrorMessage: "ApplicationConfig取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 
 	kftlTemplates, err := g.GkillDAOManager.ConfigDAOs.KFTLTemplateDAO.GetKFTLTemplates(r.Context(), userID, device)
@@ -5618,10 +5641,10 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	})
 }
 
-func (g *GkillServerAPI) HandleGetServerConfig(w http.ResponseWriter, r *http.Request) {
+func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.GetServerConfigRequest{}
-	response := &req_res.GetServerConfigResponse{}
+	request := &req_res.GetServerConfigsRequest{}
+	response := &req_res.GetServerConfigsResponse{}
 
 	defer r.Body.Close()
 	defer func() {
@@ -5682,7 +5705,7 @@ func (g *GkillServerAPI) HandleGetServerConfig(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(r.Context(), device)
+	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(r.Context())
 	if err != nil {
 		err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Printf(err.Error())
@@ -5694,33 +5717,35 @@ func (g *GkillServerAPI) HandleGetServerConfig(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(r.Context())
-	if err != nil {
-		err = fmt.Errorf("error at get all account config")
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetAllAccountConfigError,
-			ErrorMessage: "アカウント設定情報の取得に失敗しました",
+	for _, serverConfig := range serverConfigs {
+		accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get all account config")
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetAllAccountConfigError,
+				ErrorMessage: "アカウント設定情報の取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	serverConfig.Accounts = accounts
+		serverConfig.Accounts = accounts
 
-	repositories, err := g.GkillDAOManager.ConfigDAOs.RepositoryDAO.GetAllRepositories(r.Context())
-	if err != nil {
-		err = fmt.Errorf("error at get all repositories")
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetAllRepositoriesError,
-			ErrorMessage: "Repository全件取得に失敗しました",
+		repositories, err := g.GkillDAOManager.ConfigDAOs.RepositoryDAO.GetAllRepositories(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get all repositories")
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetAllRepositoriesError,
+				ErrorMessage: "Repository全件取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+		serverConfig.Repositories = repositories
 	}
-	serverConfig.Repositories = repositories
 
-	response.ServerConfig = serverConfig
+	response.ServerConfigs = serverConfigs
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetServerConfigSuccessMessage,
 		Message:     "取得完了",
@@ -7138,10 +7163,10 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	})
 }
 
-func (g *GkillServerAPI) HandleUpdateServerConfig(w http.ResponseWriter, r *http.Request) {
+func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.UpdateServerConfigRequest{}
-	response := &req_res.UpdateServerConfigResponse{}
+	request := &req_res.UpdateServerConfigsRequest{}
+	response := &req_res.UpdateServerConfigsResponse{}
 
 	defer r.Body.Close()
 	defer func() {
@@ -7203,7 +7228,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfig(w http.ResponseWriter, r *http
 	}
 
 	// ServerConfigを更新する
-	ok, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.UpdateServerConfig(r.Context(), &request.ServerConfig)
+	ok, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.DeleteWriteServerConfigs(r.Context(), request.ServerConfigs)
 	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at update server config user user id = %s device = %s id = %s: %w", userID, device, err)
@@ -8711,10 +8736,6 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 }
 
 func (g *GkillServerAPI) GetDevice() (string, error) {
-	if g.device != "" {
-		return g.device, nil
-	}
-
 	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.Background())
 	if err != nil {
 		err = fmt.Errorf("error at get all server configs: %w", err)

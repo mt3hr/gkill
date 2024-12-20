@@ -609,7 +609,7 @@ textsloop:
 		return err
 	}
 
-	_, err = g.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
+	_, err = g.LatestDataRepositoryAddressDAO.AddLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
 	if err != nil {
 		err = fmt.Errorf("error at add latest data repository address cache: %w", err)
 		return err

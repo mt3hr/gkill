@@ -1,6 +1,6 @@
 <template>
     <v-dialog v-model="is_show_dialog">
-        <AddRepView :application_config="application_config" :gkill_api="gkill_api" :server_config="server_config"
+        <AddRepView :application_config="application_config" :gkill_api="gkill_api" :server_configs="server_configs"
             :account="cloned_account" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_add_rep="(rep) => emits('requested_add_rep', rep)" @requested_close_dialog="hide" />

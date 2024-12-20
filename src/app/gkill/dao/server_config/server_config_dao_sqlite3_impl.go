@@ -556,6 +556,172 @@ WHERE DEVICE = ?
 	return true, nil
 }
 
+func (s *serverConfigDAOSQLite3Impl) DeleteWriteServerConfigs(ctx context.Context, serverConfigs []*ServerConfig) (bool, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		fmt.Errorf("error at begin: %w", err)
+		return false, err
+	}
+
+	// 全レコード削除
+	deleteSQL := `
+DELETE FROM SERVER_CONFIG 
+`
+	queryArgs := []interface{}{}
+	gkill_log.TraceSQL.Printf("sql: %s", deleteSQL)
+
+	stmt, err := tx.PrepareContext(ctx, deleteSQL)
+	if err != nil {
+		err = fmt.Errorf("error at delete server config sql: %w", err)
+		return false, err
+	}
+	defer stmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", deleteSQL, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+
+	// 渡された値を登録
+	insertSQL := `
+INSERT INTO SERVER_CONFIG (
+  ENABLE_THIS_DEVICE,
+  DEVICE,
+  IS_LOCAL_ONLY_ACCESS,
+  ADDRESS,
+  ENABLE_TLS,
+  TLS_CERT_FILE,
+  TLS_KEY_FILE,
+  OPEN_DIRECTORY_COMMAND,
+  OPEN_FILE_COMMAND,
+  URLOG_TIMEOUT,
+  URLOG_USERAGENT,
+  UPLOAD_SIZE_LIMIT_MONTH,
+  USER_DATA_DIRECTORY
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)
+`
+
+	for _, serverConfig := range serverConfigs {
+		queryArgs := []interface{}{
+			serverConfig.EnableThisDevice,
+			serverConfig.Device,
+			serverConfig.IsLocalOnlyAccess,
+			serverConfig.Address,
+			serverConfig.EnableTLS,
+			serverConfig.TLSCertFile,
+			serverConfig.TLSKeyFile,
+			serverConfig.OpenDirectoryCommand,
+			serverConfig.OpenFileCommand,
+			serverConfig.URLogTimeout,
+			serverConfig.URLogUserAgent,
+			serverConfig.UploadSizeLimitMonth,
+			serverConfig.UserDataDirectory,
+		}
+		gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
+
+		stmt, err := tx.PrepareContext(ctx, insertSQL)
+		if err != nil {
+			err = fmt.Errorf("error at add server config sql: %w", err)
+			return false, err
+		}
+		defer stmt.Close()
+
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+		if err != nil {
+			err = fmt.Errorf("error at query :%w", err)
+			return false, err
+		}
+	}
+
+	// 有効なDEVICEが存在しなければエラーで戻す
+	checkEnableDeviceCountSQL := `
+SELECT COUNT(*) AS COUNT
+FROM SERVER_CONFIG
+WHERE ENABLE_THIS_DEVICE = ?
+`
+	gkill_log.TraceSQL.Printf("sql: %s", checkEnableDeviceCountSQL)
+	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
+	if err != nil {
+		err = fmt.Errorf("error at check enable device server config sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer checkEnableDeviceStmt.Close()
+
+	queryArgsCheckEnableDevice := []interface{}{
+		true,
+	}
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", checkEnableDeviceCountSQL, queryArgsCheckEnableDevice)
+	rows, err := checkEnableDeviceStmt.QueryContext(ctx, queryArgsCheckEnableDevice...)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer rows.Close()
+
+	enableDeviceCount := 0
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return false, ctx.Err()
+		default:
+			enableCount := 0
+			err = rows.Scan(
+				&enableCount,
+			)
+			enableDeviceCount += enableCount
+		}
+	}
+	if enableDeviceCount != 1 {
+		errAtRollBack := tx.Rollback()
+		err := fmt.Errorf("enable device count is not 1.")
+		if errAtRollBack != nil {
+			err = fmt.Errorf("%w: %w", err, errAtRollBack)
+			fmt.Errorf("error at commit: %w", err)
+		}
+		return false, err
+	}
+	err = tx.Commit()
+	if err != nil {
+		fmt.Errorf("error at commit: %w", err)
+		errAtRollBack := tx.Rollback()
+		if errAtRollBack != nil {
+			err = fmt.Errorf("%w: %w", err, errAtRollBack)
+			fmt.Errorf("error at commit: %w", err)
+			return false, err
+		}
+		return false, err
+	}
+	return true, nil
+}
+
 func (s *serverConfigDAOSQLite3Impl) Close(ctx context.Context) error {
 	return s.db.Close()
 }

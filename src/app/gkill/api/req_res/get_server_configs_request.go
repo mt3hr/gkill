@@ -1,5 +1,5 @@
 package req_res
 
-type GetServerConfigRequest struct {
+type GetServerConfigsRequest struct {
 	SessionID string `json:"session_id"`
 }

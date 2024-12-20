@@ -3,13 +3,13 @@
 import { ServerConfig } from '@/classes/datas/config/server-config'
 import { GkillAPIResponse } from '../gkill-api-response'
 
-export class UpdateServerConfigResponse extends GkillAPIResponse {
+export class UpdateServerConfigsResponse extends GkillAPIResponse {
 
-    server_config: ServerConfig
+    server_configs: Array<ServerConfig>
 
     constructor() {
         super()
-        this.server_config = new ServerConfig()
+        this.server_configs = new Array<ServerConfig>()
     }
 
 }

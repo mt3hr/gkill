@@ -57,8 +57,6 @@ import type { GetPlaingTimeisRequest } from "./req_res/get-plaing-timeis-request
 import type { GetPlaingTimeisResponse } from "./req_res/get-plaing-timeis-response"
 import type { GetReKyouRequest } from "./req_res/get-re-kyou-request"
 import type { GetReKyouResponse } from "./req_res/get-re-kyou-response"
-import type { GetServerConfigRequest } from "./req_res/get-server-config-request"
-import type { GetServerConfigResponse } from "./req_res/get-server-config-response"
 import type { GetShareMiTaskListInfosRequest } from "./req_res/get-share-mi-task-list-infos-request"
 import type { GetShareMiTaskListInfosResponse } from "./req_res/get-share-mi-task-list-infos-response"
 import type { GetSharedMiTasksRequest } from "./req_res/get-shared-mi-tasks-request"
@@ -123,8 +121,6 @@ import type { UploadFilesRequest } from "./req_res/upload-files-request"
 import type { UploadFilesResponse } from "./req_res/upload-files-response"
 import type { UploadGPSLogFilesRequest } from "./req_res/upload-gps-log-files-request"
 import type { UploadGPSLogFilesResponse } from "./req_res/upload-gps-log-files-response"
-import type { UpdateServerConfigRequest } from "./req_res/update-server-config-request"
-import type { UpdateServerConfigResponse } from "./req_res/update-server-config-response"
 import type { GkillAPIResponse } from "./gkill-api-response"
 import router from "@/router"
 import type { GetRepositoriesResponse } from "./req_res/get-repositories-response"
@@ -150,6 +146,10 @@ import { GPSLog } from "../datas/gps-log"
 import { FindKyouQuery } from "./find_query/find-kyou-query"
 import type { UpdateIDFKyouRequest } from "./req_res/update-idf-kyou-request"
 import type { UpdateIDFKyouResponse } from "./req_res/update-idf-kyou-response"
+import type { GetServerConfigsRequest } from "./req_res/get-server-configs-request"
+import type { GetServerConfigsResponse } from "./req_res/get-server-configs-response"
+import type { UpdateServerConfigsRequest } from "./req_res/update-server-configs-request"
+import type { UpdateServerConfigsResponse } from "./req_res/update-server-configs-response"
 
 export class GkillAPI {
 
@@ -201,7 +201,7 @@ export class GkillAPI {
         get_texts_by_target_id_address: string
         get_text_histories_by_text_id_address: string
         get_application_config_address: string
-        get_server_config_address: string
+        get_server_configs_address: string
         update_application_config_address: string
         upload_files_address: string
         upload_gpslog_files_address: string
@@ -212,7 +212,7 @@ export class GkillAPI {
         update_kftl_template_address: string
         update_account_status_address: string
         update_user_reps_address: string
-        update_server_config_address: string
+        update_server_configs_address: string
         add_account_address: string
         generate_tls_file_address: string
         get_gps_log_address: string
@@ -269,7 +269,7 @@ export class GkillAPI {
         get_texts_by_target_id_method: string
         get_text_histories_by_text_id_method: string
         get_application_config_method: string
-        get_server_config_method: string
+        get_server_configs_method: string
         update_application_config_method: string
         upload_files_method: string
         upload_gpslog_files_method: string
@@ -338,7 +338,7 @@ export class GkillAPI {
                 this.get_texts_by_target_id_address = "/api/get_texts_by_id"
                 this.get_text_histories_by_text_id_address = "/api/get_text_histories_by_text_id"
                 this.get_application_config_address = "/api/get_application_config"
-                this.get_server_config_address = "/api/get_server_config"
+                this.get_server_configs_address = "/api/get_server_configs"
                 this.upload_files_address = "/api/upload_files"
                 this.upload_gpslog_files_address = "/api/upload_gpslog_files"
                 this.update_application_config_address = "/api/update_application_config"
@@ -349,7 +349,7 @@ export class GkillAPI {
                 this.update_kftl_template_address = "/api/update_kftl_template"
                 this.update_account_status_address = "/api/update_account_status"
                 this.update_user_reps_address = "/api/update_user_reps"
-                this.update_server_config_address = "/api/update_server_config"
+                this.update_server_configs_address = "/api/update_server_configs"
                 this.add_account_address = "/api/add_user"
                 this.generate_tls_file_address = "/api/generate_tls_file"
                 this.get_gps_log_address = "/api/get_gps_log"
@@ -406,7 +406,7 @@ export class GkillAPI {
                 this.get_texts_by_target_id_method = "POST"
                 this.get_text_histories_by_text_id_method = "POST"
                 this.get_application_config_method = "POST"
-                this.get_server_config_method = "POST"
+                this.get_server_configs_method = "POST"
                 this.upload_files_method = "POST"
                 this.upload_gpslog_files_method = "POST"
                 this.update_application_config_method = "POST"
@@ -1484,9 +1484,9 @@ export class GkillAPI {
                 return response
         }
 
-        async get_server_config(req: GetServerConfigRequest): Promise<GetServerConfigResponse> {
-                const res = await fetch(this.get_server_config_address, {
-                        'method': this.get_server_config_method,
+        async get_server_configs(req: GetServerConfigsRequest): Promise<GetServerConfigsResponse> {
+                const res = await fetch(this.get_server_configs_address, {
+                        'method': this.get_server_configs_method,
                         headers: {
                                 'Content-Type': 'application/json'
                         },
@@ -1494,7 +1494,7 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
-                const response: GetServerConfigResponse = json
+                const response: GetServerConfigsResponse = json
                 this.check_auth(response)
                 return response
         }
@@ -1545,7 +1545,6 @@ export class GkillAPI {
         }
 
         async update_tag_struct(req: UpdateTagStructRequest): Promise<UpdateTagStructResponse> {
-                console.log(req)
                 const res = await fetch(this.update_tag_struct_address, {
                         'method': this.update_tag_struct_method,
                         headers: {
@@ -1650,8 +1649,8 @@ export class GkillAPI {
                 return response
         }
 
-        async update_server_config(req: UpdateServerConfigRequest): Promise<UpdateServerConfigResponse> {
-                const res = await fetch(this.update_server_config_address, {
+        async update_server_config(req: UpdateServerConfigsRequest): Promise<UpdateServerConfigsResponse> {
+                const res = await fetch(this.update_server_configs_address, {
                         'method': this.update_server_config_method,
                         headers: {
                                 'Content-Type': 'application/json'
@@ -1660,7 +1659,7 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
-                const response: UpdateServerConfigResponse = json
+                const response: UpdateServerConfigsResponse = json
                 this.check_auth(response)
                 return response
         }
@@ -1859,7 +1858,7 @@ export class GkillAPI {
                 const cookies = document.cookie.split(';')
                 let session_id = cookies.find(
                         (cookie) => cookie.split('=')[0].trim() === this.gkill_session_id_cookie_key.trim()
-                )?.replace(this.gkill_session_id_cookie_key + "=", "")
+                )?.replace(this.gkill_session_id_cookie_key + "=", "").trim()
 
                 if (!session_id) {
                         this.set_session_id("")
@@ -1869,10 +1868,10 @@ export class GkillAPI {
         }
 
         set_session_id(session_id: string): void {
-                if (session_id == "") {
+                if (session_id === "") {
                         document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + "; max-age=0"
                 } else {
-                        document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + ";" + moment().add(400, 'days').toDate().toUTCString()
+                        document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + "; " + moment().add(400, 'days').toDate().toUTCString()
                 }
         }
 
@@ -1892,7 +1891,7 @@ export class GkillAPI {
         }
 
         set_google_map_api_key(google_map_api_key: string): void {
-                if (google_map_api_key == "") {
+                if (google_map_api_key === "") {
                         document.cookie = this.google_map_api_key_cookie_key + "=" + google_map_api_key + "; max-age=0"
                 } else {
                         document.cookie = this.google_map_api_key_cookie_key + "=" + google_map_api_key + ";" + moment().add(400, 'days').toDate().toUTCString()
