@@ -255,8 +255,11 @@ WHERE
 			fileContentText := ""
 			filename, err := targetRep.GetPath(ctx, idf.ID)
 			if err != nil {
-				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
-				return nil, err
+				// err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
+				// return nil, err
+
+				// 接続されていないRepのIDがあったときは無視する
+				continue
 			}
 			fileContentText += filename
 			switch filepath.Ext(idf.TargetFile) {

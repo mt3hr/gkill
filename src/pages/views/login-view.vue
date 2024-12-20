@@ -101,13 +101,10 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
         emits('received_messages', res.messages)
     }
 
-    // localStorageにセッションをセット
-    GkillAPI.get_instance().set_session_id(res.session_id)
-
-    // ログインに成功したらrykv画面に遷移
-    router.replace('rykv')
+    emits('successed_login', res.session_id)
     return true
 }
+
 </script>
 
 <style lang="css" scoped>

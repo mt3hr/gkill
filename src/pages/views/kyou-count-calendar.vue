@@ -32,6 +32,7 @@ watch(props.kyous, () => {
 update_events()
 
 function update_events(): void {
+    events.value.splice(0)
     const date_event_map: Map<string, Number> = new Map<string, Number>()
     for (let i = 0; i < props.kyous.length; i++) {
         const kyou = props.kyous[i]
@@ -44,15 +45,13 @@ function update_events(): void {
         }
     }
 
-    const event_list = new Array<any>()
     date_event_map.forEach((count: Number, date_str: string): void => {
-        event_list.push({
+        events.value.push({
             title: count.toString(),
             start: moment(date_str).toDate(),
             end: moment(date_str).add(1, 'day').add(-1, 'milliseconds').toDate(),
         })
     })
-    events.value = event_list
 }
 
 function on_wheel(e: any) {

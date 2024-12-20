@@ -89,7 +89,7 @@ export class ApplicationConfig {
             return gkill_info_res.errors
         }
 
-        const not_found = new Array<string>()
+        const not_found = new Set<string>()
         res.rep_names.forEach(rep_name => {
             let exist = false
             this.rep_struct.forEach(rep => {
@@ -98,7 +98,7 @@ export class ApplicationConfig {
                 }
             })
             if (!exist) {
-                not_found.push(rep_name)
+                not_found.add(rep_name)
             }
         })
 
@@ -132,7 +132,7 @@ export class ApplicationConfig {
             return gkill_info_res.errors
         }
 
-        const not_found = new Array<string>()
+        const not_found = new Set<string>()
         res.tag_names.forEach(tag_name => {
             let exist = false
             this.tag_struct.forEach(tag => {
@@ -141,7 +141,7 @@ export class ApplicationConfig {
                 }
             })
             if (!exist) {
-                not_found.push(tag_name)
+                not_found.add(tag_name)
             }
         })
 
@@ -205,7 +205,7 @@ export class ApplicationConfig {
             return gkill_info_res.errors
         }
 
-        const not_found = new Array<string>()
+        const not_found = new Set<string>()
         res.rep_names.forEach(rep_name => {
             let exist = false
             const device_name = this.get_device_from_rep_name(rep_name)
@@ -215,7 +215,7 @@ export class ApplicationConfig {
                 }
             })
             if (!exist && device_name) {
-                not_found.push(device_name)
+                not_found.add(device_name)
             }
         })
 
@@ -248,7 +248,7 @@ export class ApplicationConfig {
             return gkill_info_res.errors
         }
 
-        const not_found = new Array<string>()
+        const not_found = new Set<string>()
         res.rep_names.forEach(rep_name => {
             let exist = false
             const rep_type_name = this.get_rep_type_from_rep_name(rep_name)
@@ -258,7 +258,7 @@ export class ApplicationConfig {
                 }
             })
             if (!exist && rep_type_name) {
-                not_found.push(rep_type_name)
+                not_found.add(rep_type_name)
             }
         })
 
