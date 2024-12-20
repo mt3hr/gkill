@@ -8,6 +8,6 @@ import type { ServerConfig } from "@/classes/datas/config/server-config"
 export interface CreateAccountDialogEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'requested_reload_server_config', server_config: ServerConfig): void
+    (e: 'requested_reload_server_config'): void
     (e: 'added_account', account: Account): void
 }

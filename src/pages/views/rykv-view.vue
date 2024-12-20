@@ -1,189 +1,192 @@
 <template>
-    <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
-        <v-app-bar-nav-icon @click.stop="() => { drawer = !drawer }" />
-        <v-toolbar-title>rykv</v-toolbar-title>
-        <v-spacer />
-        <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
-            <v-icon>mdi-file-document</v-icon>
-        </v-btn>
-        <v-btn icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
-            <v-icon>mdi-calendar</v-icon>
-        </v-btn>
-        <v-btn icon @click="is_show_gps_log_map = !is_show_gps_log_map">
-            <v-icon>mdi-map</v-icon>
-        </v-btn>
-        <v-divider vertical />
-        <v-btn icon="mdi-cog" @click="emits('requested_show_application_config_dialog')" />
-    </v-app-bar>
-    <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height">
-        <RykvQueryEditorSideBar v-if="focused_find_query" :application_config="application_config"
-            :gkill_api="gkill_api" :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
-            :app_content_width="app_content_width" :find_kyou_query="focused_find_query"
-            @requested_search="(update_cache: boolean) => { search(focused_column_index, querys[focused_column_index], true, update_cache) }"
-            @updated_query="(new_query) => {
-                if (!inited) {
-                    return
-                }
-                querys.splice(focused_column_index, 1, new_query.clone());
-                if (application_config.rykv_hot_reload) {
-                    if (updated_focused_column_index_in_this_tick) {
-                        nextTick(() => updated_focused_column_index_in_this_tick = false)
+    <div>
+        <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
+            <v-app-bar-nav-icon @click.stop="() => { drawer = !drawer }" />
+            <v-toolbar-title>rykv</v-toolbar-title>
+            <v-spacer />
+            <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
+                <v-icon>mdi-file-document</v-icon>
+            </v-btn>
+            <v-btn icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
+                <v-icon>mdi-calendar</v-icon>
+            </v-btn>
+            <v-btn icon @click="is_show_gps_log_map = !is_show_gps_log_map">
+                <v-icon>mdi-map</v-icon>
+            </v-btn>
+            <v-divider vertical />
+            <v-btn icon="mdi-cog" @click="emits('requested_show_application_config_dialog')" />
+        </v-app-bar>
+        <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height">
+            <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
+                :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
+                :app_content_width="app_content_width" :find_kyou_query="focused_query"
+                @requested_search="(update_cache: boolean) => { search(focused_column_index, querys[focused_column_index], true, update_cache) }"
+                @updated_query="(new_query) => {
+                    if (!inited) {
                         return
                     }
-                    search(focused_column_index, new_query, false)
-                };
-                if (new_query.calendar_start_date && new_query.calendar_end_date) {
-                    gps_log_map_start_time = new_query.calendar_start_date
-                    gps_log_map_end_time = new_query.calendar_end_date
-                }
-            }" @updated_query_clear="(new_query) => {
-                if (!inited) {
-                    return
-                }
-                querys.splice(focused_column_index, 1, new_query.clone());
-                if (application_config.rykv_hot_reload) {
-                    search(focused_column_index, new_query, true)
-                }
-            }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
-            ref="query_editor_sidebar" />
-    </v-navigation-drawer>
-    <v-main class="main">
-        <table class="rykv_view_table">
-            <tr>
-                <td valign="top" v-for="query, index in querys">
-                    <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
-                        :application_config="application_config" :gkill_api="gkill_api"
-                        :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
-                        :is_focused_list="focused_column_index === index" @click="focused_column_index = index"
-                        @clicked_kyou="(kyou) => { clicked_kyou_in_list_view(index, kyou); gps_log_map_start_time = kyou.related_time; gps_log_map_end_time = kyou.related_time; gps_log_map_marker_time = kyou.related_time; }"
-                        @received_errors="(errors) => emits('received_errors', errors)"
-                        @received_messages="(messages) => emits('received_messages', messages)"
-                        @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="reload_list(index)"
-                        @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-                        @requested_change_focus_kyou="(is_focus_kyou) => query.is_focus_kyou = is_focus_kyou"
-                        @requested_search="search(focused_column_index, querys[focused_column_index], true)"
-                        ref="kyou_list_views" @requested_change_is_image_only_view="(is_image_only_view: boolean) => {
-                            const query = querys[index].clone();
-                            query.is_image_only = is_image_only_view;
-                            querys.splice(index, 1, query);
-                            search(focused_column_index, querys[focused_column_index], true);
-                        }"
-                        @requested_close_column="querys.splice(index, 1); match_kyous_list.splice(index, 1); abort_controllers.splice(index, 1); focused_column_kyous.splice(0); GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys);" />
-                </td>
-                <td valign="top">
-                    <v-btn class="rounded-sm mx-auto" :height="app_content_height.valueOf()" :width="30"
-                        :color="'primary'" @click="add_list_view()" icon="mdi-plus" variant="text" />
-                </td>
-                <td valign="top" v-if="is_show_kyou_detail_view">
-                    <div class="kyou_detail_view dummy">
-                        <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
-                            :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                            :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag"
-                            :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
-                            :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                            :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
-                            :height="app_content_height.valueOf()" :is_readonly_mi_check="false" :width="400"
-                            class="kyou_detail_view" @received_errors="(errors) => emits('received_errors', errors)"
+                    querys.splice(focused_column_index, 1, new_query.clone());
+                    if (application_config.rykv_hot_reload) {
+                        if (updated_focused_column_index_in_this_tick) {
+                            nextTick(() => updated_focused_column_index_in_this_tick = false)
+                            return
+                        }
+                        search(focused_column_index, new_query, false)
+                    };
+                    if (new_query.calendar_start_date && new_query.calendar_end_date) {
+                        gps_log_map_start_time = new_query.calendar_start_date
+                        gps_log_map_end_time = new_query.calendar_end_date
+                    }
+                }" @updated_query_clear="(new_query) => {
+                    if (!inited) {
+                        return
+                    }
+                    querys.splice(focused_column_index, 1, new_query.clone());
+                    if (application_config.rykv_hot_reload) {
+                        search(focused_column_index, new_query, true)
+                    }
+                }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
+                ref="query_editor_sidebar" />
+        </v-navigation-drawer>
+        <v-main class="main">
+            <table class="rykv_view_table">
+                <tr>
+                    <td valign="top" v-for="query, index in querys">
+                        <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
+                            :application_config="application_config" :gkill_api="gkill_api"
+                            :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
+                            :is_focused_list="focused_column_index === index"
+                            @click="() => { focused_column_index = index; focused_kyous_list.splice(0); focused_kyous_list.splice(0); for (let i = 0; i < match_kyous_list[index].length; i++) { focused_kyous_list.push(match_kyous_list[index][i]); } }"
+                            @clicked_kyou="(kyou) => { clicked_kyou_in_list_view(index, kyou); gps_log_map_start_time = kyou.related_time; gps_log_map_end_time = kyou.related_time; gps_log_map_marker_time = kyou.related_time; }"
+                            @received_errors="(errors) => emits('received_errors', errors)"
                             @received_messages="(messages) => emits('received_messages', messages)"
-                            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
-                    </div>
-                </td>
-                <td valign="top">
-                    <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
-                        :gkill_api="gkill_api" :kyous="focused_column_kyous"
-                        @requested_focus_time="(time) => {focused_time = time; gps_log_map_start_time = time; gps_log_map_end_time = time; gps_log_map_marker_time = time}" />
-                </td>
-                <td valign="top">
-                    <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
-                        :gkill_api="gkill_api" :start_date="gps_log_map_start_time" :end_date="gps_log_map_end_time"
-                        :marker_time="gps_log_map_marker_time"
-                        @received_errors="(errors) => emits('received_errors', errors)"
-                        @received_messages="(messages) => emits('received_messages', messages)"
-                        @requested_focus_time="(time) => focused_time = time" />
-                </td>
-            </tr>
-        </table>
-        <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api" :query="querys[focused_column_index]"
-            :last_added_tag="last_added_tag" @received_messages="(messages) => emits('received_messages', messages)"
-            @received_errors="(errors) => emits('received_errors', errors)" />
-        <AggregateView :application_config="application_config" :gkill_api="gkill_api"
-            :checked_kyous="focused_column_checked_kyous"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @received_errors="(errors) => emits('received_errors', errors)" />
+                            @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
+                            @requested_reload_list="reload_list(index)"
+                            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                            @requested_change_focus_kyou="(is_focus_kyou) => query.is_focus_kyou = is_focus_kyou"
+                            @requested_search="search(focused_column_index, querys[focused_column_index], true)"
+                            ref="kyou_list_views" @requested_change_is_image_only_view="(is_image_only_view: boolean) => {
+                                const query = querys[index].clone();
+                                query.is_image_only = is_image_only_view;
+                                querys.splice(index, 1, query);
+                                search(focused_column_index, querys[focused_column_index], true);
+                            }" @requested_close_column="close_list_view(index)" />
+                    </td>
+                    <td valign="top">
+                        <v-btn class="rounded-sm mx-auto" :height="app_content_height.valueOf()" :width="30"
+                            :color="'primary'" @click="add_list_view()" icon="mdi-plus" variant="text" />
+                    </td>
+                    <td valign="top" v-if="is_show_kyou_detail_view">
+                        <div class="kyou_detail_view dummy">
+                            <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
+                                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                                :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag"
+                                :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
+                                :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
+                                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
+                                :height="app_content_height.valueOf()" :is_readonly_mi_check="false" :width="400"
+                                class="kyou_detail_view" @received_errors="(errors) => emits('received_errors', errors)"
+                                @received_messages="(messages) => emits('received_messages', messages)"
+                                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+                        </div>
+                    </td>
+                    <td valign="top">
+                        <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
+                            :gkill_api="gkill_api" :kyous="focused_kyous_list"
+                            @requested_focus_time="(time) => { focused_time = time; gps_log_map_start_time = time; gps_log_map_end_time = time; gps_log_map_marker_time = time }" />
+                    </td>
+                    <td valign="top">
+                        <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
+                            :gkill_api="gkill_api" :start_date="gps_log_map_start_time" :end_date="gps_log_map_end_time"
+                            :marker_time="gps_log_map_marker_time"
+                            @received_errors="(errors) => emits('received_errors', errors)"
+                            @received_messages="(messages) => emits('received_messages', messages)"
+                            @requested_focus_time="(time) => focused_time = time" />
+                    </td>
+                </tr>
+            </table>
+            <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
+                :application_config="application_config" :gkill_api="gkill_api" :query="querys[focused_column_index]"
+                :last_added_tag="last_added_tag" @received_messages="(messages) => emits('received_messages', messages)"
+                @received_errors="(errors) => emits('received_errors', errors)" />
+            <AggregateView :application_config="application_config" :gkill_api="gkill_api"
+                :checked_kyous="focused_column_checked_kyous"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @received_errors="(errors) => emits('received_errors', errors)" />
 
-        <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="last_added_tag" :kyou="new Kyou()"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-            ref="add_timeis_dialog" />
-        <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="last_added_tag" :kyou="new Kyou()"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-            ref="add_lantana_dialog" />
-        <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="last_added_tag" :kyou="new Kyou()"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-            ref="add_urlog_dialog" />
-        <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="last_added_tag" :kyou="new Kyou()"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-            ref="add_mi_dialog" />
-        <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="last_added_tag" :kyou="new Kyou()"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-            ref="add_nlog_dialog" />
-        <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
-            :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-            ref="kftl_dialog" />
+            <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                ref="add_timeis_dialog" />
+            <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                ref="add_lantana_dialog" />
+            <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                ref="add_urlog_dialog" />
+            <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                ref="add_mi_dialog" />
+            <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                ref="add_nlog_dialog" />
+            <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
+                :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                ref="kftl_dialog" />
 
-        <v-avatar :style="floatingActionButtonStyle()" color="indigo" class="position-fixed">
-            <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
-                <template v-slot:activator="{ props }">
-                    <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" />
-                </template>
-                <v-list>
-                    <v-list-item @click="show_kftl_dialog()">
-                        <v-list-item-title>kftl</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item @click="show_urlog_dialog()">
-                        <v-list-item-title>urlog</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item @click="show_timeis_dialog()">
-                        <v-list-item-title>timeis</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item @click="show_mi_dialog()">
-                        <v-list-item-title>mi</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item @click="show_nlog_dialog()">
-                        <v-list-item-title>nlog</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item @click="show_lantana_dialog()">
-                        <v-list-item-title>lantana</v-list-item-title>
-                    </v-list-item>
-                </v-list>
-            </v-menu>
-        </v-avatar>
-    </v-main>
+            <v-avatar :style="floatingActionButtonStyle()" color="indigo" class="position-fixed">
+                <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
+                    <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" />
+                    </template>
+                    <v-list>
+                        <v-list-item @click="show_kftl_dialog()">
+                            <v-list-item-title>kftl</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_urlog_dialog()">
+                            <v-list-item-title>urlog</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_timeis_dialog()">
+                            <v-list-item-title>timeis</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_mi_dialog()">
+                            <v-list-item-title>mi</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_nlog_dialog()">
+                            <v-list-item-title>nlog</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_lantana_dialog()">
+                            <v-list-item-title>lantana</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+            </v-avatar>
+        </v-main>
+    </div>
 </template>
 <script setup lang="ts">
 
@@ -223,12 +226,12 @@ const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
 const kyou_list_views = ref();
 
-const querys: Ref<Array<FindKyouQuery>> = ref(new Array<FindKyouQuery>())
+const querys: Ref<Array<FindKyouQuery>> = ref([new FindKyouQuery()])
 const querys_backup: Ref<Array<FindKyouQuery>> = ref(new Array<FindKyouQuery>()) // 更新検知用バックアップ
-const focused_find_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 const match_kyous_list: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
-const focused_column_index: Ref<number> = ref(-1)
-const focused_column_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
+const focused_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
+const focused_column_index: Ref<number> = ref(0)
+const focused_kyous_list: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_kyou: Ref<Kyou | null> = ref(null)
 const focused_time: Ref<Date> = ref(moment().toDate())
 const focused_column_checked_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
@@ -241,13 +244,9 @@ const is_show_gps_log_map: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
 const drawer: Ref<boolean | null> = ref(null)
 const kyou_list_view_height = computed(() => props.app_content_height)
-const is_show_add_kyou_menu: Ref<boolean> = ref(false)
 
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
-
-const kyou_img_height = computed(() => (props.app_content_height.valueOf() * 0.8).toString().concat("px"))
-const kyou_img_width = computed(() => (props.app_content_width.valueOf() * 0.9).toString().concat("px"))
 
 const props = defineProps<rykvViewProps>()
 const emits = defineEmits<rykvViewEmits>()
@@ -255,9 +254,6 @@ const emits = defineEmits<rykvViewEmits>()
 const updated_focused_column_index_in_this_tick = ref(false)
 watch(() => focused_column_index.value, () => {
     updated_focused_column_index_in_this_tick.value = true
-    focused_column_kyous.value.splice(0, focused_column_kyous.value.length - 1)
-    focused_column_kyous.value.push(...match_kyous_list.value[focused_column_index.value])
-    focused_find_query.value = querys.value[focused_column_index.value]
 })
 
 watch(() => focused_time.value, () => {
@@ -278,18 +274,31 @@ function init(): void {
         // 前回開いていた列があれば復元する
         const saved_querys = GkillAPI.get_instance().get_saved_rykv_find_kyou_querys()
         if (saved_querys.length.valueOf() === 0) {
-            add_list_view()
+            await nextTick(() => { })
+            search(0, query_editor_sidebar.value?.generate_query()!, true)
             inited.value = true
             return
         }
+        close_list_view(0)
+        await nextTick(() => { })
         for (let i = 0; i < saved_querys.length; i++) {
             add_list_view(saved_querys[i])
             await nextTick(() => { })
             search(i, querys.value[i], true)
             await nextTick(() => { })
         }
+        focused_column_index.value = 0
         inited.value = true
     })
+}
+
+function close_list_view(column_index: number): void {
+    focused_column_index.value = 0
+    querys.value.splice(column_index, 1);
+    querys_backup.value.splice(column_index, 1);
+    match_kyous_list.value.splice(column_index, 1);
+    abort_controllers.value.splice(column_index, 1);
+    GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys.value);
 }
 
 async function add_list_view(query?: FindKyouQuery): Promise<void> {
@@ -298,17 +307,20 @@ async function add_list_view(query?: FindKyouQuery): Promise<void> {
     const default_query = query_editor_sidebar.value?.get_default_query()?.clone()
     if (query) {
         querys.value.push(query)
+        focused_query.value = query
     } else if (default_query) {
         default_query.query_id = GkillAPI.get_instance().generate_uuid()
         querys.value.push(default_query)
+        focused_query.value = default_query
     } else {
         const query = new FindKyouQuery()
         query.query_id = GkillAPI.get_instance().generate_uuid()
         querys.value.push(query)
+        focused_query.value = query
     }
     match_kyous_list.value.push([])
     abort_controllers.value.push(new AbortController())
-    focused_column_index.value = match_kyous_list.value.length - 1
+    focused_column_index.value = querys.value.length - 1
 }
 async function update_queries(query_index: Number, by_user: boolean): Promise<void> {
     throw new Error('Not implemented')
@@ -329,7 +341,7 @@ async function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): Prom
     throw new Error('Not implemented')
 }
 
-async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
+function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
     focused_kyou.value = kyou
     focused_column_index.value = column_index
 
@@ -340,12 +352,18 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
         }
     }
 
+    let scrolled = false
     for (let i = 0; i < update_target_column_indexs.length; i++) {
         const target_column_index = update_target_column_indexs[i]
         for (let j = 0; j < match_kyous_list.value[target_column_index].length; j++) {
             const kyou_in_list = match_kyous_list.value[target_column_index][j]
             if (kyou.id = kyou_in_list.id) {
                 kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
+                scrolled = true
+                break
+            }
+            if (scrolled) {
+                break
             }
         }
     }
@@ -353,6 +371,7 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
 
 const abort_controllers: Ref<Array<AbortController>> = ref([])
 async function search(column_index: number, query: FindKyouQuery, force_search: boolean, update_cache?: boolean): Promise<void> {
+    focused_query.value = query
     querys.value[column_index] = query
     GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys.value)
 
@@ -378,9 +397,8 @@ async function search(column_index: number, query: FindKyouQuery, force_search: 
         kyou_list_view.set_loading(true)
 
         if (match_kyous_list.value[column_index]) {
-            match_kyous_list.value[column_index].splice(0)
+            match_kyous_list.value[column_index] = []
         }
-        focused_column_kyous.value.splice(0)
 
         const req = new GetKyousRequest()
         abort_controllers.value[column_index] = req.abort_controller
@@ -399,7 +417,10 @@ async function search(column_index: number, query: FindKyouQuery, force_search: 
                 emits('received_messages', res.messages)
             }
             match_kyous_list.value[column_index] = res.kyous
-            focused_column_kyous.value.push(...res.kyous)
+            focused_kyous_list.value.splice(0)
+            for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
+                focused_kyous_list.value.push(match_kyous_list.value[column_index][i])
+            }
             kyou_list_view.set_loading(false)
         } catch (err: any) {
             // abortは握りつぶす
@@ -421,12 +442,6 @@ function floatingActionButtonStyle() {
 }
 
 const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
-
-async function show_add_kyou_menu(e: PointerEvent): Promise<void> {
-    position_x.value = e.clientX
-    position_y.value = e.clientY
-    is_show_add_kyou_menu.value = true
-}
 
 function show_kftl_dialog(): void {
     kftl_dialog.value?.show()
@@ -463,7 +478,8 @@ function show_urlog_dialog(): void {
     min-width: 400px;
 }
 
-.kyou_dialog img.kyou_image {
+.kyou_dialog img.kyou_image,
+.kyou_detail_view img.kyou_image {
     width: unset !important;
     height: unset !important;
     max-width: -webkit-fill-available !important;

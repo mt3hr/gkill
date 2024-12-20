@@ -51,6 +51,19 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 
+	// フィルタ
+	gkillErr, err = f.selectMatchRepsFromQuery(ctx, findKyouContext)
+	if err != nil {
+		err = fmt.Errorf("error at select match reps: %w", err)
+		return nil, gkillErr, err
+	}
+	gkillErr, err = f.updateCache(ctx, findKyouContext)
+	if err != nil {
+		err = fmt.Errorf("error at update cache: %w", err)
+		return nil, gkillErr, err
+	}
+
+	// キャッシュ更新終わったら、
 	// 最新のKyouがどのRepにあるかを取得
 	latestDatasWg := &sync.WaitGroup{}
 	latestDatasCh := make(chan []*account_state.LatestDataRepositoryAddress, 1)
@@ -69,17 +82,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		errCh <- nil
 	}()
 
-	// フィルタ
-	gkillErr, err = f.selectMatchRepsFromQuery(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at select match reps: %w", err)
-		return nil, gkillErr, err
-	}
-	gkillErr, err = f.updateCache(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at update cache: %w", err)
-		return nil, gkillErr, err
-	}
 	gkillErr, err = f.parseTagFilterModeFromQuery(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at parse tag filter mode: %w", err)
