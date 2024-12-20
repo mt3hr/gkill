@@ -15,12 +15,31 @@
             <table>
                 <tr>
                     <td>
-                        <v-checkbox v-model="is_local_only_access" hide-detail label="ローカルアクセスのみ許可" />
+                        <v-select v-model="device" :items="devices" label="プロファイル" />
+                    </td>
+                    <td>
+                        <table>
+                            <tr>
+                                <td>
+                                    <v-btn color="primary" @click="show_new_device_name_dialog()" icon="mdi-plus" dark
+                                        size="small"></v-btn>
+                                </td>
+                                <td>
+                                    <v-btn color="primary" v-if="cloned_server_configs.length >= 2"
+                                        @click="delete_current_server_config()" dark>削除</v-btn>
+                                </td>
+                            </tr>
+                        </table>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="enable_tls" hide-detail label="TLS有効" />
+                        <v-checkbox v-model="server_config.is_local_only_access" hide-detail label="ローカルアクセスのみ許可" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <v-checkbox v-model="server_config.enable_tls" hide-detail label="TLS有効" />
                     </td>
                     <v-btn color='primary' @click="show_confirm_generate_tls_files_dialog">オレオレTLSファイル生成</v-btn>
                 </tr>
@@ -29,7 +48,7 @@
                         アドレス
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="address"></v-text-field>
+                        <v-text-field width="400" v-model="server_config.address"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -37,7 +56,7 @@
                         TLS CERTファイル
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="tls_cert_file"></v-text-field>
+                        <v-text-field width="400" v-model="server_config.tls_cert_file"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -45,7 +64,7 @@
                         TLS KEYファイル
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="tls_key_file"></v-text-field>
+                        <v-text-field width="400" v-model="server_config.tls_key_file"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -53,7 +72,7 @@
                         ディレクトリを開くコマンド
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="open_directory_command"></v-text-field>
+                        <v-text-field width="400" v-model="server_config.open_directory_command"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -61,7 +80,7 @@
                         ファイルを開くコマンド
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="open_file_command"></v-text-field>
+                        <v-text-field width="400" v-model="server_config.open_file_command"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -69,7 +88,8 @@
                         URLogタイムアウト
                     </td>
                     <td>
-                        <v-text-field width="400" type="number" min="5" v-model="urlog_timeout"></v-text-field>
+                        <v-text-field width="400" type="number" min="5"
+                            v-model="server_config.urlog_timeout"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -77,7 +97,7 @@
                         URLog U/A
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="urlog_useragent"></v-text-field>
+                        <v-text-field width="400" v-model="server_config.urlog_useragent"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -85,7 +105,7 @@
                         アップロード容量月額制限
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="upload_size_limit_month"></v-text-field>
+                        <v-text-field width="400" v-model="server_config.upload_size_limit_month"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -93,7 +113,7 @@
                         ユーザデータディレクトリ
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="user_data_directory"></v-text-field>
+                        <v-text-field width="400" v-model="server_config.user_data_directory"></v-text-field>
                     </td>
                 </tr>
             </table>
@@ -114,13 +134,15 @@
             @received_messages="(messages) => emits('received_messages', messages)"
             ref="confirm_generate_tls_files_dialog" />
         <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
-            @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
+            :server_configs="server_configs" @received_errors="(errors) => emits('received_errors', errors)"
+            @requested_reload_server_config="() => emits('requested_reload_server_config')"
             @received_messages="(messages) => emits('received_messages', messages)" ref="create_account_dialog" />
         <ManageAccountDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
-            @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
+            :server_configs="server_configs" @received_errors="(errors) => emits('received_errors', errors)"
+            @requested_reload_server_config="() => emits('requested_reload_server_config')"
             @received_messages="(messages) => emits('received_messages', messages)" ref="manage_account_dialog" />
+        <NewDeviceNameDialog :gkill_api="gkill_api" :application_config="application_config"
+            @setted_new_device_name="(device_name) => add_device(device_name)" ref="new_device_name_dialog" />
     </v-card>
 </template>
 <script setup lang="ts">
@@ -132,40 +154,97 @@ import ManageAccountDialog from '../dialogs/manage-account-dialog.vue'
 import type { ServerConfigViewEmits } from './server-config-view-emits'
 import type { ServerConfigViewProps } from './server-config-view-props'
 import { GkillAPI } from '@/classes/api/gkill-api'
-import { UpdateServerConfigRequest } from '@/classes/api/req_res/update-server-config-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { GkillError } from '@/classes/api/gkill-error'
+import { UpdateServerConfigsRequest } from '@/classes/api/req_res/update-server-configs-request'
+import NewDeviceNameDialog from '../dialogs/new-device-name-dialog.vue'
 
 const confirm_generate_tls_files_dialog = ref<InstanceType<typeof ConfirmGenerateTLSFilesDialog> | null>(null);
 const manage_account_dialog = ref<InstanceType<typeof ManageAccountDialog> | null>(null);
+const new_device_name_dialog = ref<InstanceType<typeof NewDeviceNameDialog> | null>(null);
 
 const props = defineProps<ServerConfigViewProps>()
 const emits = defineEmits<ServerConfigViewEmits>()
 
-const is_local_only_access: Ref<boolean> = ref(props.server_config.is_local_only_access)
-const address: Ref<string> = ref(props.server_config.address)
-const enable_tls: Ref<boolean> = ref(props.server_config.enable_tls)
-const tls_cert_file: Ref<string> = ref(props.server_config.tls_cert_file)
-const tls_key_file: Ref<string> = ref(props.server_config.tls_key_file)
-const open_directory_command: Ref<string> = ref(props.server_config.open_directory_command)
-const open_file_command: Ref<string> = ref(props.server_config.open_file_command)
-const urlog_timeout: Ref<string> = ref(props.server_config.urlog_timeout)
-const urlog_useragent: Ref<string> = ref(props.server_config.urlog_useragent)
-const upload_size_limit_month: Ref<Number> = ref(props.server_config.upload_size_limit_month)
-const user_data_directory: Ref<string> = ref(props.server_config.user_data_directory)
+const cloned_server_configs: Ref<Array<ServerConfig>> = ref(props.server_configs.concat())
+const server_config: Ref<ServerConfig> = ref(new ServerConfig())
 
-watch(() => props.server_config, () => {
-    is_local_only_access.value = (props.server_config.is_local_only_access)
-    address.value = (props.server_config.address)
-    enable_tls.value = (props.server_config.enable_tls)
-    tls_cert_file.value = (props.server_config.tls_cert_file)
-    tls_key_file.value = (props.server_config.tls_key_file)
-    open_directory_command.value = (props.server_config.open_directory_command)
-    open_file_command.value = (props.server_config.open_file_command)
-    urlog_timeout.value = (props.server_config.urlog_timeout)
-    urlog_useragent.value = (props.server_config.urlog_useragent)
-    upload_size_limit_month.value = (props.server_config.upload_size_limit_month)
-    user_data_directory.value = (props.server_config.user_data_directory)
+const device: Ref<string> = ref("")
+const devices: Ref<Array<string>> = ref(new Array<string>())
+
+load_devices()
+
+watch(() => props.server_configs, () => {
+    cloned_server_configs.value = props.server_configs.concat()
+    device.value = props.server_configs.filter((server_cofnig) => server_cofnig.enable_this_device)[0].device
+    load_devices()
+    load_current_server_config()
 })
+
+watch(() => device.value, () => {
+    update_enable_device()
+    load_current_server_config()
+})
+
+function update_enable_device(): void {
+    for (let i = 0; i < cloned_server_configs.value.length; i++) {
+        const server_config = cloned_server_configs.value[i]
+        server_config.enable_this_device = server_config.device === device.value
+    }
+}
+
+function add_device(device_name: string): void {
+    for (let i = 0; i < cloned_server_configs.value.length; i++) {
+        if (cloned_server_configs.value[i].device === device_name) {
+            const error = new GkillError()
+            error.error_code = "//TODO"
+            error.error_message = "入力されたプロファイル名はすでに存在します"
+            emits('received_errors', [error])
+            return
+        }
+    }
+    const new_server_config = new ServerConfig()
+    new_server_config.is_local_only_access = server_config.value.is_local_only_access
+    new_server_config.address = server_config.value.address
+    new_server_config.enable_tls = server_config.value.enable_tls
+    new_server_config.tls_cert_file = server_config.value.tls_cert_file
+    new_server_config.tls_key_file = server_config.value.tls_key_file
+    new_server_config.open_directory_command = server_config.value.open_directory_command
+    new_server_config.open_file_command = server_config.value.open_file_command
+    new_server_config.urlog_timeout = server_config.value.urlog_timeout
+    new_server_config.urlog_useragent = server_config.value.urlog_useragent
+    new_server_config.upload_size_limit_month = server_config.value.upload_size_limit_month
+    new_server_config.user_data_directory = server_config.value.user_data_directory
+    new_server_config.device = device_name
+    cloned_server_configs.value.push(new_server_config)
+    device.value = device_name
+    load_devices()
+}
+
+function load_devices(): void {
+    devices.value.splice(0)
+    for (let i = 0; i < cloned_server_configs.value.length; i++) {
+        devices.value.push(cloned_server_configs.value[i].device)
+    }
+}
+
+async function load_current_server_config(): Promise<void> {
+    let current_server_config: ServerConfig | null = null
+    for (let i = 0; i < cloned_server_configs.value.length; i++) {
+        if (cloned_server_configs.value[i].enable_this_device) {
+            current_server_config = cloned_server_configs.value[i]
+            break
+        }
+    }
+    if (!current_server_config) {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "有効なプロファイルが見つかりませんでした"
+        emits('received_errors', [error])
+        return
+    }
+    server_config.value = current_server_config
+}
 
 function show_manage_account_dialog(): void {
     manage_account_dialog.value?.show()
@@ -175,7 +254,13 @@ function show_confirm_generate_tls_files_dialog(): void {
     confirm_generate_tls_files_dialog.value?.show()
 }
 
+function show_new_device_name_dialog(): void {
+    new_device_name_dialog.value?.show()
+}
+
 async function update_server_config(): Promise<void> {
+    update_enable_device()
+
     const gkill_info_req = new GetGkillInfoRequest()
     gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
     const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
@@ -187,26 +272,9 @@ async function update_server_config(): Promise<void> {
         emits('received_messages', gkill_info_res.messages)
     }
 
-    const server_config = new ServerConfig()
-    server_config.enable_this_device = props.server_config.enable_this_device
-    server_config.accounts = props.server_config.accounts
-    server_config.repositories = props.server_config.repositories
-    server_config.address = address.value
-    server_config.device = gkill_info_res.device
-    server_config.enable_tls = enable_tls.value
-    server_config.is_local_only_access = is_local_only_access.value
-    server_config.open_directory_command = open_directory_command.value
-    server_config.open_file_command = open_file_command.value
-    server_config.tls_cert_file = tls_cert_file.value
-    server_config.tls_key_file = tls_key_file.value
-    server_config.upload_size_limit_month = upload_size_limit_month.value
-    server_config.urlog_timeout = urlog_timeout.value
-    server_config.urlog_useragent = urlog_useragent.value
-    server_config.user_data_directory = user_data_directory.value
-
-    const req = new UpdateServerConfigRequest()
+    const req = new UpdateServerConfigsRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
-    req.server_config = server_config
+    req.server_configs = cloned_server_configs.value.concat()
 
     const res = await GkillAPI.get_instance().update_server_config(req)
     if (res.errors && res.errors.length !== 0) {
@@ -216,7 +284,28 @@ async function update_server_config(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
-    emits('requested_reload_server_config', res.server_config)
+    emits('requested_reload_server_config')
     emits('requested_close_dialog')
+}
+
+function delete_current_server_config(): void {
+    let delete_target_server_config_index = -1
+    for (let i = 0; i < cloned_server_configs.value.length; i++) {
+        if (cloned_server_configs.value[i].device === device.value) {
+            delete_target_server_config_index = i
+            break
+        }
+    }
+    if (delete_target_server_config_index === -1) {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "削除対象のプロファイルが見つかりませんでした"
+        emits('received_errors', [error])
+        return
+    }
+    cloned_server_configs.value.splice(delete_target_server_config_index, 1)
+    server_config.value = cloned_server_configs.value[0]
+    device.value = server_config.value.device
+    load_devices()
 }
 </script>

@@ -25,6 +25,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import LoginView from './views/login-view.vue'
 import package_json from '../../package.json'
+import router from '@/router'
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -46,8 +47,11 @@ async function resize_content(): Promise<void> {
 }
 
 async function handle_success_login(session_id: string): Promise<void> {
-    await sleep(500)
     GkillAPI.get_instance().set_session_id(session_id)
+    await sleep(1500)
+
+    // ログインに成功したらrykv画面に遷移
+    router.replace('rykv')
 }
 
 const messages: Ref<Array<{ message: string, id: string, show_snackbar: boolean }>> = ref([])

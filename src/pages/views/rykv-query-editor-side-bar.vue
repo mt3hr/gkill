@@ -25,9 +25,12 @@
                 @request_update_and_search_tags="emits_current_query()"
                 @request_update_checked_tags="emits_current_query()" @request_clear_tag_query="emits_cleard_tag_query()"
                 ref="tag_query" @inited="inited_tag_query_for_query_sidebar = true" />
-            <CalendarQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-                @request_update_dates="emits_current_query()" @request_update_use_calendar_query="emits_current_query()"
-                @request_clear_calendar_query="emits_cleard_calendar_query()" ref="calendar_query" />
+            <div>
+                <CalendarQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                    @request_update_dates="emits_current_query()"
+                    @request_update_use_calendar_query="emits_current_query()"
+                    @request_clear_calendar_query="emits_cleard_calendar_query()" ref="calendar_query" />
+            </div>
             <MapQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_area="emits_current_query()" @request_update_use_map_query="emits_current_query()"
                 @request_clear_map_query="emits_cleard_map_query()" ref="map_query" />
@@ -76,7 +79,6 @@ const inited = computed(() => {
     if (!is_mounted.value) {
         return false
     }
-
     return inited_keyword_query_for_query_sidebar.value &&
         inited_timeis_query_for_query_sidebar.value &&
         inited_rep_query_for_query_sidebar.value &&
@@ -101,6 +103,13 @@ const inited_calendar_query_for_query_sidebar = ref(true)
 const inited_map_query_for_query_sidebar = ref(true)
 
 watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
+    if (deepEquals(new_value, old_value)) {
+        return
+    }
+    if (!new_value && !old_value) {
+        query.value = new FindKyouQuery()
+        return
+    }
     query.value = new_value
 })
 
@@ -119,8 +128,8 @@ function generate_query(query_id?: string): FindKyouQuery {
         find_query.query_id = query_id
     }
 
-    find_query.is_focus_kyou = props.find_kyou_query.is_focus_kyou
-    find_query.is_image_only = props.find_kyou_query.is_image_only
+    find_query.is_focus_kyou = props.find_kyou_query ? props.find_kyou_query.is_focus_kyou : false
+    find_query.is_image_only = props.find_kyou_query ? props.find_kyou_query.is_image_only : false
 
     if (keyword_query.value) {
         find_query.use_words = keyword_query.value.get_use_words()

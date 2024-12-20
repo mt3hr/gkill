@@ -441,7 +441,7 @@ SELECT TYPE, DEVICE, COUNT(*) AS COUNT
 FROM REPOSITORY
 WHERE REPOSITORY.USE_TO_WRITE = ?
 AND USER_ID = ?
-GROUP BY TYPE
+GROUP BY TYPE, DEVICE
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)

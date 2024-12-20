@@ -2,7 +2,7 @@
 
 import { GkillAPIRequest } from '../gkill-api-request'
 
-export class GetServerConfigRequest extends GkillAPIRequest {
+export class GetServerConfigsRequest extends GkillAPIRequest {
 
     constructor() {
         super()

@@ -1,10 +1,10 @@
 <template>
     <v-dialog v-model="is_show_dialog">
         <ConfirmResetPasswordView :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config" :account="cloned_account"
+            :server_configs="server_configs" :account="cloned_account"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" @requested_close_dialog="hide"
-            @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
+            @requested_reload_server_config="() => emits('requested_reload_server_config')"
             @requested_show_show_password_reset_dialog="(account) => emits('requested_show_show_password_reset_dialog', account)" />
     </v-dialog>
 </template>

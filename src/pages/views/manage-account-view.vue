@@ -42,23 +42,23 @@
             </v-row>
         </v-card-action>
         <AllocateRepDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config"
-            @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
+            :server_configs="server_configs"
+            @requested_reload_server_config="() => emits('requested_reload_server_config')"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" ref="allocate_rep_dialog" />
         <ConfirmResetPasswordDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            :server_configs="server_configs" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_show_show_password_reset_dialog="(account) => show_show_password_reset_link_dialog(account)"
-            @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
+            @requested_reload_server_config="() => emits('requested_reload_server_config')"
             ref="confirm_reset_password_dialog" />
         <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config" @added_account="(account) => show_show_password_reset_link_dialog(account)"
+            :server_configs="server_configs" @added_account="(account) => show_show_password_reset_link_dialog(account)"
             @received_errors="(errors) => emits('received_errors', errors)"
-            @requested_reload_server_config="(server_config) => emits('requested_reload_server_config', server_config)"
+            @requested_reload_server_config="() => emits('requested_reload_server_config')"
             @received_messages="(messages) => emits('received_messages', messages)" ref="create_account_dialog" />
         <ShowPasswordResetLinkDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
+            :server_configs="server_configs" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             ref="show_password_reset_link_dialog" />
     </v-card>
@@ -74,7 +74,7 @@ import ShowPasswordResetLinkDialog from '../dialogs/show-password-reset-link-dia
 import type { Account } from '@/classes/datas/config/account'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { UpdateAccountStatusRequest } from '@/classes/api/req_res/update-account-status-request'
-import { GetServerConfigRequest } from '@/classes/api/req_res/get-server-config-request'
+import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-configs-request'
 
 const allocate_rep_dialog = ref<InstanceType<typeof AllocateRepDialog> | null>(null);
 const confirm_reset_password_dialog = ref<InstanceType<typeof ConfirmResetPasswordDialog> | null>(null);
@@ -84,10 +84,10 @@ const show_password_reset_link_dialog = ref<InstanceType<typeof ShowPasswordRese
 const props = defineProps<ManageAccountViewProps>()
 const emits = defineEmits<ManageAccountViewEmits>()
 
-const cloned_accounts: Ref<Array<Account>> = ref(props.server_config.accounts)
+const cloned_accounts: Ref<Array<Account>> = ref(props.server_configs[0].accounts)
 
-watch(() => props.server_config, () => {
-    cloned_accounts.value = props.server_config.accounts
+watch(() => props.server_configs, () => {
+    cloned_accounts.value = props.server_configs[0].accounts
 })
 
 function show_create_account_dialog(): void {
@@ -108,18 +108,7 @@ async function update_is_enable_account(account: Account, is_enable: boolean): P
         emits('received_messages', res.messages)
     }
 
-    const server_config_req = new GetServerConfigRequest()
-    server_config_req.session_id = GkillAPI.get_instance().get_session_id()
-    const server_config_res = await GkillAPI.get_instance().get_server_config(server_config_req)
-    if (server_config_res.errors && server_config_res.errors.length !== 0) {
-        emits('received_errors', server_config_res.errors)
-        return
-    }
-    if (server_config_res.messages && server_config_res.messages.length !== 0) {
-        emits('received_messages', server_config_res.messages)
-    }
-
-    emits('requested_reload_server_config', server_config_res.server_config)
+    emits('requested_reload_server_config')
 }
 
 function show_allocate_rep_dialog(account: Account): void {
@@ -131,14 +120,14 @@ function show_confirm_reset_password_dialog(account: Account): void {
 }
 
 async function show_show_password_reset_link_dialog(account: Account): Promise<void> {
-    const req = new GetServerConfigRequest()
+    const req = new GetServerConfigsRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
-    const res = await GkillAPI.get_instance().get_server_config(req)
+    const res = await GkillAPI.get_instance().get_server_configs(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
     }
-    const accounts = res.server_config.accounts
+    const accounts = res.server_configs.filter((server_config) => server_config.enable_this_device)[0].accounts
     for (let i = 0; i < accounts.length; i++) {
         if (account.user_id === accounts[i].user_id) {
             show_password_reset_link_dialog.value?.show(accounts[i])

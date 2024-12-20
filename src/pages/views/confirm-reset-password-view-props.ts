@@ -5,6 +5,6 @@ import type { GkillPropsBase } from "./gkill-props-base"
 import type { Account } from "@/classes/datas/config/account"
 
 export interface ConfirmResetPasswordViewProps extends GkillPropsBase {
-    server_config: ServerConfig
+    server_configs: Array<ServerConfig>
     account: Account
 }
