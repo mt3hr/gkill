@@ -25,7 +25,7 @@
                         <v-checkbox label="ID自動割当" v-model="repository.is_execute_idf_when_reload" />
                     </td>
                     <td>
-                        <v-textfield :label="'デバイス名'" v-model="repository.device" />
+                        <v-select :label="'デバイス名'" v-model="repository.device" :items="devices" />
                     </td>
                     <td>
                         <v-select v-model="repository.type" readonly :items="rep_types" label="RepType" />
@@ -50,12 +50,12 @@
                 </v-col>
             </v-row>
         </v-card-action>
-        <AddRepDialog :application_config="application_config" :gkill_api="gkill_api" :server_config="server_config"
+        <AddRepDialog :application_config="application_config" :gkill_api="gkill_api" :server_configs="server_configs"
             :account="account" @requested_add_rep="add_rep"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" ref="add_rep_dialog" />
         <ConfirmDeleteRepDialog :application_config="application_config" :gkill_api="gkill_api"
-            :rep_id="delete_target_rep ? delete_target_rep.id : ''" :server_config="server_config"
+            :rep_id="delete_target_rep ? delete_target_rep.id : ''" :server_configs="server_configs"
             @requested_delete_rep="(rep) => delete_rep(rep)"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" ref="confirm_delete_rep_dialog" />
@@ -71,7 +71,6 @@ import type { Repository } from '@/classes/datas/config/repository'
 import { Account } from '@/classes/datas/config/account'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { UpdateUserRepsRequest } from '@/classes/api/req_res/update-user-reps-request'
-import { GetServerConfigRequest } from '@/classes/api/req_res/get-server-config-request'
 const add_rep_dialog = ref<InstanceType<typeof AddRepDialog> | null>(null);
 const confirm_delete_rep_dialog = ref<InstanceType<typeof ConfirmDeleteRepDialog> | null>(null);
 
@@ -94,8 +93,22 @@ const rep_types: Ref<Array<string>> = ref([
     "gpslog",
 ])
 
-watch(() => props.server_config, () => {
+const devices: Ref<Array<string>> = ref((() => {
+    const devices = Array<string>()
+    for (let i = 0; i < props.server_configs.length; i++) {
+        devices.push(props.server_configs[i].device)
+    }
+    return devices
+})())
+
+watch(() => props.server_configs, () => {
     update_repositories()
+
+    const new_devices = Array<string>()
+    for (let i = 0; i < props.server_configs.length; i++) {
+        new_devices.push(props.server_configs[i].device)
+    }
+    devices.value = new_devices
 })
 watch(() => props.account, () => {
     update_repositories()
@@ -104,7 +117,7 @@ update_repositories()
 
 function update_repositories(): void {
     const filtered_repository: Array<Repository> = new Array<Repository>()
-    props.server_config.repositories.forEach((repository) => {
+    props.server_configs[0].repositories.forEach((repository) => {
         if (repository.user_id === props.account.user_id) {
             filtered_repository.push(repository)
         }
@@ -147,18 +160,7 @@ async function apply(): Promise<void> {
         emits('received_messages', res.messages)
     }
 
-    const server_config_req = new GetServerConfigRequest()
-    server_config_req.session_id = GkillAPI.get_instance().get_session_id()
-    const server_config_res = await GkillAPI.get_instance().get_server_config(server_config_req)
-    if (server_config_res.errors && server_config_res.errors.length !== 0) {
-        emits('received_errors', server_config_res.errors)
-        return
-    }
-    if (server_config_res.messages && server_config_res.messages.length !== 0) {
-        emits('received_messages', server_config_res.messages)
-    }
-
-    emits('requested_reload_server_config', server_config_res.server_config)
+    emits('requested_reload_server_config')
     emits('requested_close_dialog')
 }
 </script>

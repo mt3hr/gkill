@@ -5,10 +5,10 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 )
 
-type UpdateServerConfigResponse struct {
+type UpdateServerConfigsResponse struct {
 	Messages []*message.GkillMessage `json:"messages"`
 
 	Errors []*message.GkillError `json:"errors"`
 
-	ServerConfig server_config.ServerConfig `json:"errors"`
+	ServerConfigs []*server_config.ServerConfig `json:"server_configs"`
 }

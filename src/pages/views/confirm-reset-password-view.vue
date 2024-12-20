@@ -22,7 +22,6 @@ import { ResetPasswordRequest } from '@/classes/api/req_res/reset-password-reque
 import type { ConfirmResetPasswordViewEmits } from './confirm-reset-password-view-emits'
 import type { ConfirmResetPasswordViewProps } from './confirm-reset-password-view-props'
 import { GkillAPI } from '@/classes/api/gkill-api';
-import { GetServerConfigRequest } from '@/classes/api/req_res/get-server-config-request';
 
 const props = defineProps<ConfirmResetPasswordViewProps>()
 const emits = defineEmits<ConfirmResetPasswordViewEmits>()
@@ -40,18 +39,7 @@ async function reset_password(): Promise<void> {
         emits('received_messages', res.messages)
     }
 
-    const server_config_req = new GetServerConfigRequest()
-    server_config_req.session_id = GkillAPI.get_instance().get_session_id()
-    const server_config_res = await GkillAPI.get_instance().get_server_config(server_config_req)
-    if (server_config_res.errors && server_config_res.errors.length !== 0) {
-        emits('received_errors', server_config_res.errors)
-        return
-    }
-    if (server_config_res.messages && server_config_res.messages.length !== 0) {
-        emits('received_messages', server_config_res.messages)
-    }
-
-    emits('requested_reload_server_config', server_config_res.server_config)
+    emits('requested_reload_server_config') 
     emits('requested_show_show_password_reset_dialog', props.account)
 }
 </script>
