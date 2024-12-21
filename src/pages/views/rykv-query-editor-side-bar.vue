@@ -91,7 +91,7 @@ watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
     if (old_value !== new_value && new_value) {
         default_query.value = generate_query().clone()
         default_query.value.parse_words_and_not_words()
-        emits('inited')
+        nextTick(() => { emits('inited') })
     }
 })
 
@@ -104,10 +104,6 @@ const inited_map_query_for_query_sidebar = ref(true)
 
 watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
     if (deepEquals(new_value, old_value)) {
-        return
-    }
-    if (!new_value && !old_value) {
-        query.value = new FindKyouQuery()
         return
     }
     query.value = new_value
