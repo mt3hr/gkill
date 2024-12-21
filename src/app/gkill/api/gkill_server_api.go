@@ -252,9 +252,6 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetIDFKyouAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetIDFKyou(w, r)
 	}).Methods(g.APIAddress.GetIDFKyouMethod)
-	router.HandleFunc(g.APIAddress.GetGitCommitLogsAddress, func(w http.ResponseWriter, r *http.Request) {
-		g.HandleGetGitCommitLogs(w, r)
-	}).Methods(g.APIAddress.GetGitCommitLogsAddress)
 	router.HandleFunc(g.APIAddress.GetMiBoardListAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetMiBoardList(w, r)
 	}).Methods(g.APIAddress.GetMiBoardListMethod)
@@ -4738,7 +4735,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	response.GitCommitLogs = []*reps.GitCommitLog{gitCommitLog}
+	response.GitCommitLogHistories = []*reps.GitCommitLog{gitCommitLog}
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetGitCommitLogSuccessMessage,
 		Message:     "取得完了",
@@ -4826,33 +4823,6 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 		MessageCode: message.GetIDFKyouSuccessMessage,
 		Message:     "取得完了",
 	})
-}
-
-func (g *GkillServerAPI) HandleGetGitCommitLogs(w http.ResponseWriter, r *http.Request) {
-	response := &req_res.GetGitCommitLogsResponse{}
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse response to json: %w", err)
-			gkill_log.Debug.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.NotImplementsError,
-				ErrorMessage: "機能が実装されていません",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := fmt.Errorf("not implements")
-	gkill_log.Debug.Printf(err.Error())
-	gkillError := &message.GkillError{
-		ErrorCode:    message.NotImplementsError,
-		ErrorMessage: "機能が実装されていません",
-	}
-	response.Errors = append(response.Errors, gkillError)
-	return
 }
 
 func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Request) {

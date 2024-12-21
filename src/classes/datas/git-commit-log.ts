@@ -19,7 +19,7 @@ export class GitCommitLog extends InfoBase {
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
-        this.attached_histories = res.git_commit_logs
+        this.attached_histories = res.git_commit_log_histories
         return new Array<GkillError>()
     }
 

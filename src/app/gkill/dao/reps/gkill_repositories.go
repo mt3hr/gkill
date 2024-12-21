@@ -69,6 +69,10 @@ type GkillRepositories struct {
 	WriteGPSLogRep GPSLogRepository
 
 	LatestDataRepositoryAddressDAO account_state.LatestDataRepositoryAddressDAO
+
+	cancelPreFunc context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
+
+	m sync.Mutex
 }
 
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
@@ -90,6 +94,10 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		Reps:                           Repositories{},
 		userID:                         userID,
 		LatestDataRepositoryAddressDAO: latestDataRepositoryAddressDAO,
+
+		cancelPreFunc: context.CancelFunc(func() {}),
+
+		m: sync.Mutex{},
 	}, nil
 }
 
@@ -392,6 +400,18 @@ loop:
 }
 
 func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
+	func() {
+		g.m.Lock()
+		defer g.m.Unlock()
+
+		var cancelFunc context.CancelFunc
+
+		// 一個前でUpdateCacheしてるやつをキャンセルする
+		g.cancelPreFunc()
+		ctx, cancelFunc = context.WithCancel(ctx)
+		g.cancelPreFunc = cancelFunc
+	}()
+
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

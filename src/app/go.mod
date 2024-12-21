@@ -9,6 +9,7 @@ require (
 	github.com/asticode/go-astikit v0.43.0
 	github.com/asticode/go-astilectron v0.30.0
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1

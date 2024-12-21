@@ -14,13 +14,15 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/mi_share_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/reps/rep_cache_updater"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type GkillDAOManager struct {
-	gkillRepositories map[string]map[string]*reps.GkillRepositories
+	gkillRepositories        map[string]map[string]*reps.GkillRepositories
+	fileRepWatchCacheUpdater rep_cache_updater.FileRepCacheUpdater
 
 	ConfigDAOs *ConfigDAOs
 
@@ -36,6 +38,12 @@ type GkillDAOManager struct {
 }
 
 func NewGkillDAOManager() (*GkillDAOManager, error) {
+	fileRepWatchCacheUpdater, err := rep_cache_updater.NewFileRepCacheUpdater()
+	if err != nil {
+		err = fmt.Errorf("error at new file rep cache updater: %w", err)
+		return nil, err
+	}
+
 	ctx := context.Background()
 	gkillDAOManager := &GkillDAOManager{
 		router: &mux.Router{},
@@ -52,10 +60,11 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 			".DS_Store",
 			".localized",
 		},
+		fileRepWatchCacheUpdater: fileRepWatchCacheUpdater,
 	}
 
 	configDBRootDir := os.ExpandEnv("$HOME/gkill/configs")
-	err := os.MkdirAll(os.ExpandEnv(configDBRootDir), fs.ModePerm)
+	err = os.MkdirAll(os.ExpandEnv(configDBRootDir), fs.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at create directory %s: %w", err)
 		return nil, err
@@ -227,6 +236,27 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteKmemoRep = kmemoRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := kmemoRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "urlog":
 					urlogRep, err := reps.NewURLogRepositorySQLite3Impl(ctx, filename)
 					if err != nil {
@@ -243,6 +273,27 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteURLogRep = urlogRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := urlogRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "timeis":
 					timeisRep, err := reps.NewTimeIsRepositorySQLite3Impl(ctx, filename)
 					if err != nil {
@@ -259,6 +310,27 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteTimeIsRep = timeisRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := timeisRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "mi":
 					miRep, err := reps.NewMiRepositorySQLite3Impl(ctx, filename)
 					if err != nil {
@@ -275,6 +347,27 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteMiRep = miRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := miRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "nlog":
 					nlogRep, err := reps.NewNlogRepositorySQLite3Impl(ctx, filename)
 					if err != nil {
@@ -291,6 +384,27 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteNlogRep = nlogRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := nlogRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "lantana":
 					lantanaRep, err := reps.NewLantanaRepositorySQLite3Impl(ctx, filename)
 					if err != nil {
@@ -307,6 +421,27 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteLantanaRep = lantanaRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := lantanaRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "tag":
 					tagRep, err := reps.NewTagRepositorySQLite3Impl(ctx, filename)
 					if err != nil {
@@ -322,6 +457,27 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteTagRep = tagRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := tagRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "text":
 					textRep, err := reps.NewTextRepositorySQLite3Impl(ctx, filename)
 					if err != nil {
@@ -337,6 +493,27 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteTextRep = textRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := textRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "rekyou":
 					reKyouRep, err := reps.NewReKyouRepositorySQLite3Impl(ctx, filename, repositories)
 					if err != nil {
@@ -353,6 +530,27 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteReKyouRep = reKyouRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := reKyouRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "directory":
 					autoIDF := rep.IsExecuteIDFWhenReload
 					parentDir := filepath.Join(filename, ".gkill")
@@ -378,6 +576,29 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 						repositories.WriteIDFKyouRep = idfKyouRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := idfKyouRep
+					enableUpdateRepsCache := true
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					ignoreFileNamePrefixes = append(ignoreFileNamePrefixes, filepath.ToSlash(filepath.Join(repFilename, ".gkill")))
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "gpslog":
 					err := os.MkdirAll(os.ExpandEnv(filename), os.ModePerm)
 					if err != nil {
@@ -390,6 +611,34 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if rep.UseToWrite {
 						repositories.WriteGPSLogRep = gpslogRep
 					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := gpslogRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
+				case "git_commit_log":
+					gitCommitLogRep, err := reps.NewGitRep(filename)
+					if err != nil {
+						return nil, err
+					}
+					repositories.GitCommitLogReps = append(repositories.GitCommitLogReps, gitCommitLogRep)
+					repositories.Reps = append(repositories.Reps, gitCommitLogRep)
 				}
 			}
 		}
@@ -404,6 +653,11 @@ func (g *GkillDAOManager) Close() error {
 	ctx := context.Background()
 	var allErrors error
 	var err error
+
+	if e := g.fileRepWatchCacheUpdater.Close(); e != nil {
+		err = fmt.Errorf("error at close file rep watch cache updater. : %w : %w", e, err)
+	}
+
 	for userID, repInDevices := range g.gkillRepositories {
 		for repName, repInDevice := range repInDevices {
 			err = repInDevice.Close(ctx)
