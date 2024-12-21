@@ -56,7 +56,7 @@
                             :application_config="application_config" :gkill_api="gkill_api"
                             :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
                             :is_focused_list="focused_column_index === index"
-                            @click="() => { focused_column_index = index; focused_kyous_list.splice(0); focused_kyous_list.splice(0); for (let i = 0; i < match_kyous_list[index].length; i++) { focused_kyous_list.push(match_kyous_list[index][i]); } }"
+                            @click="() => { focused_column_index = index; focused_query = querys[index]; focused_kyous_list.splice(0); for (let i = 0; i < match_kyous_list[index].length; i++) { focused_kyous_list.push(match_kyous_list[index][i]); } }"
                             @clicked_kyou="(kyou) => { clicked_kyou_in_list_view(index, kyou); gps_log_map_start_time = kyou.related_time; gps_log_map_end_time = kyou.related_time; gps_log_map_marker_time = kyou.related_time; }"
                             @received_errors="(errors) => emits('received_errors', errors)"
                             @received_messages="(messages) => emits('received_messages', messages)"
