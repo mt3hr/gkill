@@ -91,6 +91,7 @@ const rep_types: Ref<Array<string>> = ref([
     "rekyou",
     "directory",
     "gpslog",
+    "git_commit_log",
 ])
 
 const devices: Ref<Array<string>> = ref((() => {

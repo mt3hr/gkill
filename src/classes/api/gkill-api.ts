@@ -1124,25 +1124,25 @@ export class GkillAPI {
 
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetGitCommitLogResponse = json
-                if (!response.git_commit_logs) {
-                        response.git_commit_logs = new Array<GitCommitLog>()
+                if (!response.git_commit_log_histories) {
+                        response.git_commit_log_histories = new Array<GitCommitLog>()
                 }
 
                 for (let key in json) {
                         (response as any)[key] = json[key]
                 }
                 // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
-                for (let i = 0; i < response.git_commit_logs.length; i++) {
+                for (let i = 0; i < response.git_commit_log_histories.length; i++) {
                         const git_commit_log = new GitCommitLog()
-                        for (let key in response.git_commit_logs[i]) {
-                                (git_commit_log as any)[key] = (response.git_commit_logs[i] as any)[key]
+                        for (let key in response.git_commit_log_histories[i]) {
+                                (git_commit_log as any)[key] = (response.git_commit_log_histories[i] as any)[key]
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (git_commit_log as any)[key]) {
                                         (git_commit_log as any)[key] = moment((git_commit_log as any)[key]).toDate()
                                 }
                         }
-                        response.git_commit_logs[i] = git_commit_log
+                        response.git_commit_log_histories[i] = git_commit_log
                 }
 
                 this.check_auth(response)

@@ -10,5 +10,5 @@ type GetGitCommitLogResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	GitCommitLogs []*reps.GitCommitLog `json:"git_commit_logs"`
+	GitCommitLogHistories []*reps.GitCommitLog `json:"git_commit_log_histories"`
 }
