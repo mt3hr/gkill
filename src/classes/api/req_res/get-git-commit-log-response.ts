@@ -5,11 +5,11 @@ import { GkillAPIResponse } from '../gkill-api-response'
 
 export class GetGitCommitLogResponse extends GkillAPIResponse {
 
-    git_commit_logs: Array<GitCommitLog>
+    git_commit_log_histories: Array<GitCommitLog>
 
     constructor() {
         super()
-        this.git_commit_logs = new Array<GitCommitLog>()
+        this.git_commit_log_histories = new Array<GitCommitLog>()
     }
 
 }

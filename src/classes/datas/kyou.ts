@@ -450,7 +450,7 @@ export class Kyou extends InfoBase {
             return res.errors
         }
 
-        if (!res.git_commit_logs || res.git_commit_logs.length < 1) {
+        if (!res.git_commit_log_histories || res.git_commit_log_histories.length < 1) {
             const error = new GkillError()
             error.error_code = "//TODO"
             error.error_message = "GitCommitLogが見つかりませんでした"
@@ -458,26 +458,20 @@ export class Kyou extends InfoBase {
         }
 
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
-        for (let i = 0; i < res.git_commit_logs.length; i++) {
+        for (let i = 0; i < res.git_commit_log_histories.length; i++) {
             const git_commit_log = new GitCommitLog()
-            for (let key in res.git_commit_logs[i]) {
-                (git_commit_log as any)[key] = (res.git_commit_logs[i] as any)[key]
+            for (let key in res.git_commit_log_histories[i]) {
+                (git_commit_log as any)[key] = (res.git_commit_log_histories[i] as any)[key]
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (git_commit_log as any)[key]) {
                     (git_commit_log as any)[key] = moment((git_commit_log as any)[key]).toDate()
                 }
             }
-            res.git_commit_logs[i] = git_commit_log
+            res.git_commit_log_histories[i] = git_commit_log
         }
 
-        let match_git_commit_log: GitCommitLog | null = null
-        res.git_commit_logs.forEach(git_commit_log => {
-            if (moment(git_commit_log.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
-                match_git_commit_log = git_commit_log
-            }
-        })
-        this.typed_git_commit_log = match_git_commit_log
+        this.typed_git_commit_log = res.git_commit_log_histories[0]
 
         return new Array<GkillError>()
     }

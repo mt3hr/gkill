@@ -56,6 +56,7 @@ const rep_types: Ref<Array<string>> = ref([
     "rekyou",
     "directory",
     "gpslog",
+    "git_commit_log",
 ])
 
 async function add_rep(): Promise<void> {

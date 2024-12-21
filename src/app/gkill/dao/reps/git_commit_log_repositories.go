@@ -404,7 +404,7 @@ func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string
 	matchGitCommitLog = nil
 	existErr := false
 	var err error
-	wg := &sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	ch := make(chan *GitCommitLog, len(g))
 	errch := make(chan error, len(g))
 	defer close(ch)
@@ -413,7 +413,6 @@ func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string
 	// 並列処理
 	for _, rep := range g {
 		wg.Add(1)
-
 		go func(rep GitCommitLogRepository) {
 			defer wg.Done()
 			matchGitCommitLogInRep, err := rep.GetGitCommitLog(ctx, id, updateTime)
