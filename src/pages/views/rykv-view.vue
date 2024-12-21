@@ -25,25 +25,29 @@
                     if (!inited) {
                         return
                     }
-                    querys.splice(focused_column_index, 1, new_query.clone());
                     if (application_config.rykv_hot_reload) {
                         if (updated_focused_column_index_in_this_tick) {
                             nextTick(() => updated_focused_column_index_in_this_tick = false)
                             return
                         }
-                        search(focused_column_index, new_query, false)
+                        search(focused_column_index, new_query)
                     };
                     if (new_query.calendar_start_date && new_query.calendar_end_date) {
                         gps_log_map_start_time = new_query.calendar_start_date
                         gps_log_map_end_time = new_query.calendar_end_date
                     }
                 }" @updated_query_clear="(new_query) => {
-                    if (!inited) {
-                        return
-                    }
-                    querys.splice(focused_column_index, 1, new_query.clone());
                     if (application_config.rykv_hot_reload) {
+                        if (updated_focused_column_index_in_this_tick) {
+                            nextTick(() => updated_focused_column_index_in_this_tick = false)
+                            return
+                        }
+                        updated_focused_column_index_in_this_tick = true // 使い方違うけど
                         search(focused_column_index, new_query, true)
+                    };
+                    if (new_query.calendar_start_date && new_query.calendar_end_date) {
+                        gps_log_map_start_time = new_query.calendar_start_date
+                        gps_log_map_end_time = new_query.calendar_end_date
                     }
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
                 ref="query_editor_sidebar" />
@@ -370,7 +374,7 @@ function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
 }
 
 const abort_controllers: Ref<Array<AbortController>> = ref([])
-async function search(column_index: number, query: FindKyouQuery, force_search: boolean, update_cache?: boolean): Promise<void> {
+async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
     focused_query.value = query
     querys.value[column_index] = query
     GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys.value)
@@ -404,6 +408,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search: 
         abort_controllers.value[column_index] = req.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()
         req.query = query.clone()
+        req.query.parse_words_and_not_words()
         if (update_cache) {
             req.query.update_cache = true
         }
