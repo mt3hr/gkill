@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-git/go-git/v5"
@@ -16,6 +17,7 @@ import (
 type gitCommitLogRepositoryLocalImpl struct {
 	gitrep   *git.Repository
 	filename string
+	m        sync.Mutex
 }
 
 func NewGitRep(reppath string) (GitCommitLogRepository, error) {
@@ -30,6 +32,9 @@ func NewGitRep(reppath string) (GitCommitLogRepository, error) {
 	}, nil
 }
 func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
+	g.m.Lock()
+	defer g.m.Unlock()
+
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -51,94 +56,102 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	defer logs.Close()
 	logs.ForEach(func(commit *object.Commit) error {
-		// 判定
-		match := true
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			// 判定
+			match := true
 
-		// 削除済みであるかどうかの判定
-		if query.IsDeleted != nil && *query.IsDeleted {
-			match = false
-			if !match {
-				return nil
-			}
-		}
-
-		// id検索である場合のSQL追記
-		if query.UseIDs != nil && *query.UseIDs {
-			ids := []string{}
-			if query.IDs != nil {
-				ids = *query.IDs
-			}
-			for _, id := range ids {
-				match = id == fmt.Sprintf("%s", commit.Hash)
-				if match {
-					break
+			// 削除済みであるかどうかの判定
+			if query.IsDeleted != nil && *query.IsDeleted {
+				match = false
+				if !match {
+					return nil
 				}
 			}
-			if !match {
-				return nil
-			}
-		}
 
-		// ワードand検索である場合の判定
-		if query.WordsAnd != nil && *query.WordsAnd {
-			match = false
-			words := []string{}
-			if query.Words != nil {
-				words = *query.Words
-			}
-			notWords := []string{}
-			if query.NotWords != nil {
-				notWords = *query.NotWords
-			}
-
-			if query.WordsAnd != nil && *query.WordsAnd {
-				for _, word := range words {
-					match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
-					if !match {
-						return nil
-					}
+			// id検索である場合のSQL追記
+			if query.UseIDs != nil && *query.UseIDs {
+				ids := []string{}
+				if query.IDs != nil {
+					ids = *query.IDs
 				}
-			} else {
-				// ワードor検索である場合の判定
-				for _, word := range words {
-					match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
+				for _, id := range ids {
+					match = id == fmt.Sprintf("%s", commit.Hash)
 					if match {
 						break
 					}
 				}
-			}
-
-			// notワードを除外する場合の判定
-			for _, notWord := range notWords {
-				match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)
-				if match {
+				if !match {
 					return nil
 				}
 			}
+
+			// ワードand検索である場合の判定
+			if query.WordsAnd != nil && *query.WordsAnd {
+				match = false
+				words := []string{}
+				if query.Words != nil {
+					words = *query.Words
+				}
+				notWords := []string{}
+				if query.NotWords != nil {
+					notWords = *query.NotWords
+				}
+
+				if query.WordsAnd != nil && *query.WordsAnd {
+					for _, word := range words {
+						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
+						if !match {
+							return nil
+						}
+					}
+				} else {
+					// ワードor検索である場合の判定
+					for _, word := range words {
+						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
+						if match {
+							break
+						}
+					}
+				}
+
+				// notワードを除外する場合の判定
+				for _, notWord := range notWords {
+					match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)
+					if match {
+						return nil
+					}
+				}
+			}
+
+			kyou := &Kyou{}
+			kyou.IsDeleted = false
+			kyou.ID = fmt.Sprintf("%s", commit.Hash)
+			kyou.RepName = repName
+			kyou.RelatedTime = commit.Committer.When
+			kyou.DataType = "git_commit_log"
+			kyou.CreateTime = commit.Committer.When
+			kyou.CreateApp = "git"
+			kyou.CreateDevice = ""
+			kyou.CreateUser = fmt.Sprintf("%s", commit.Author)
+			kyou.UpdateTime = commit.Committer.When
+			kyou.UpdateApp = "git"
+			kyou.UpdateDevice = ""
+			kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
+
+			kyous = append(kyous, kyou)
+			return nil
 		}
-
-		kyou := &Kyou{}
-		kyou.IsDeleted = false
-		kyou.ID = fmt.Sprintf("%s", commit.Hash)
-		kyou.RepName = repName
-		kyou.RelatedTime = commit.Committer.When
-		kyou.DataType = "git_commit_log"
-		kyou.CreateTime = commit.Committer.When
-		kyou.CreateApp = "git"
-		kyou.CreateDevice = ""
-		kyou.CreateUser = fmt.Sprintf("%s", commit.Author)
-		kyou.UpdateTime = commit.Committer.When
-		kyou.UpdateApp = "git"
-		kyou.UpdateDevice = ""
-		kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
-
-		kyous = append(kyous, kyou)
-		return nil
 	})
 	return kyous, nil
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	g.m.Lock()
+	defer g.m.Unlock()
+
 	var err error
 
 	repName, err := g.GetRepName(ctx)
@@ -152,32 +165,37 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	defer logs.Close()
 	logs.ForEach(func(commit *object.Commit) error {
-		// 判定
-		match := true
-		if id == fmt.Sprintf("%s", commit.Hash) {
-			match = true
-		}
-		if !match {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			// 判定
+			match := true
+			if id == fmt.Sprintf("%s", commit.Hash) {
+				match = true
+			}
+			if !match {
+				return nil
+			}
+
+			kyou := &Kyou{}
+			kyou.IsDeleted = false
+			kyou.ID = fmt.Sprintf("%s", commit.Hash)
+			kyou.RepName = repName
+			kyou.RelatedTime = commit.Committer.When
+			kyou.DataType = "git_commit_log"
+			kyou.CreateTime = commit.Committer.When
+			kyou.CreateApp = "git"
+			kyou.CreateDevice = ""
+			kyou.CreateUser = fmt.Sprintf("%s", commit.Author)
+			kyou.UpdateTime = commit.Committer.When
+			kyou.UpdateApp = "git"
+			kyou.UpdateDevice = ""
+			kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
+
+			matchKyou = kyou
 			return nil
 		}
-
-		kyou := &Kyou{}
-		kyou.IsDeleted = false
-		kyou.ID = fmt.Sprintf("%s", commit.Hash)
-		kyou.RepName = repName
-		kyou.RelatedTime = commit.Committer.When
-		kyou.DataType = "git_commit_log"
-		kyou.CreateTime = commit.Committer.When
-		kyou.CreateApp = "git"
-		kyou.CreateDevice = ""
-		kyou.CreateUser = fmt.Sprintf("%s", commit.Author)
-		kyou.UpdateTime = commit.Committer.When
-		kyou.UpdateApp = "git"
-		kyou.UpdateDevice = ""
-		kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
-
-		matchKyou = kyou
-		return nil
 	})
 	return matchKyou, nil
 }
@@ -208,6 +226,9 @@ func (g *gitCommitLogRepositoryLocalImpl) Close(ctx context.Context) error {
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]*GitCommitLog, error) {
+	g.m.Lock()
+	defer g.m.Unlock()
+
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -230,91 +251,99 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	defer logs.Close()
 	logs.ForEach(func(commit *object.Commit) error {
-		// 判定
-		match := true
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			// 判定
+			match := true
 
-		// id検索である場合のSQL追記
-		if query.UseIDs != nil && query.IDs != nil {
-			ids := []string{}
-			if query.IDs != nil {
-				ids = *query.IDs
-			}
-			for _, id := range ids {
-				match = id == fmt.Sprintf("%s", commit.Hash)
-				if match {
-					break
+			// id検索である場合のSQL追記
+			if query.UseIDs != nil && query.IDs != nil {
+				ids := []string{}
+				if query.IDs != nil {
+					ids = *query.IDs
 				}
-			}
-			if !match {
-				return nil
-			}
-		}
-
-		// ワードand検索である場合の判定
-		if query.WordsAnd != nil {
-			match = false
-			// ワードを解析
-			if query.WordsAnd != nil && *query.WordsAnd {
-				words := []string{}
-				if query.Words != nil {
-					words = *query.Words
-				}
-				for _, word := range words {
-					match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
-					if !match {
-						return nil
-					}
-				}
-			} else {
-				words := []string{}
-				if query.Words != nil {
-					words = *query.Words
-				}
-				// ワードor検索である場合の判定
-				for _, word := range words {
-					match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
+				for _, id := range ids {
+					match = id == fmt.Sprintf("%s", commit.Hash)
 					if match {
 						break
 					}
 				}
-			}
-
-			notWords := []string{}
-			if query.NotWords != nil {
-				notWords = *query.NotWords
-			}
-			// notワードを除外する場合の判定
-			for _, notWord := range notWords {
-				match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)
-				if match {
+				if !match {
 					return nil
 				}
 			}
+
+			// ワードand検索である場合の判定
+			if query.WordsAnd != nil {
+				match = false
+				// ワードを解析
+				if query.WordsAnd != nil && *query.WordsAnd {
+					words := []string{}
+					if query.Words != nil {
+						words = *query.Words
+					}
+					for _, word := range words {
+						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
+						if !match {
+							return nil
+						}
+					}
+				} else {
+					words := []string{}
+					if query.Words != nil {
+						words = *query.Words
+					}
+					// ワードor検索である場合の判定
+					for _, word := range words {
+						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
+						if match {
+							break
+						}
+					}
+				}
+
+				notWords := []string{}
+				if query.NotWords != nil {
+					notWords = *query.NotWords
+				}
+				// notワードを除外する場合の判定
+				for _, notWord := range notWords {
+					match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)
+					if match {
+						return nil
+					}
+				}
+			}
+
+			gitCommitLog := &GitCommitLog{}
+			gitCommitLog.IsDeleted = false
+			gitCommitLog.ID = fmt.Sprintf("%s", commit.Hash)
+			gitCommitLog.RepName = repName
+			gitCommitLog.RelatedTime = commit.Committer.When
+			gitCommitLog.DataType = "git_commit_log"
+			gitCommitLog.CreateTime = commit.Committer.When
+			gitCommitLog.CreateApp = "git"
+			gitCommitLog.CreateDevice = ""
+			gitCommitLog.CreateUser = fmt.Sprintf("%s", commit.Author)
+			gitCommitLog.UpdateTime = commit.Committer.When
+			gitCommitLog.UpdateApp = "git"
+			gitCommitLog.UpdateDevice = ""
+			gitCommitLog.UpdateUser = fmt.Sprintf("%s", commit.Author)
+			gitCommitLog.CommitMessage = fmt.Sprintf("%s", commit.Message)
+
+			gitCommitLogs = append(gitCommitLogs, gitCommitLog)
+			return nil
 		}
-
-		gitCommitLog := &GitCommitLog{}
-		gitCommitLog.IsDeleted = false
-		gitCommitLog.ID = fmt.Sprintf("%s", commit.Hash)
-		gitCommitLog.RepName = repName
-		gitCommitLog.RelatedTime = commit.Committer.When
-		gitCommitLog.DataType = "git_commit_log"
-		gitCommitLog.CreateTime = commit.Committer.When
-		gitCommitLog.CreateApp = "git"
-		gitCommitLog.CreateDevice = ""
-		gitCommitLog.CreateUser = fmt.Sprintf("%s", commit.Author)
-		gitCommitLog.UpdateTime = commit.Committer.When
-		gitCommitLog.UpdateApp = "git"
-		gitCommitLog.UpdateDevice = ""
-		gitCommitLog.UpdateUser = fmt.Sprintf("%s", commit.Author)
-		gitCommitLog.CommitMessage = fmt.Sprintf("%s", commit.Message)
-
-		gitCommitLogs = append(gitCommitLogs, gitCommitLog)
-		return nil
 	})
 	return gitCommitLogs, nil
 }
 
 func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error) {
+	g.m.Lock()
+	defer g.m.Unlock()
+
 	var err error
 
 	repName, err := g.GetRepName(ctx)
@@ -328,36 +357,41 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	defer logs.Close()
 	logs.ForEach(func(commit *object.Commit) error {
-		// 判定
-		match := true
-		if id == fmt.Sprintf("%s", commit.Hash) {
-			match = true
-		}
-		if updateTime != nil && updateTime.Format(sqlite3impl.TimeLayout) != commit.Committer.When.Format(sqlite3impl.TimeLayout) {
-			match = false
-		}
-		if !match {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			// 判定
+			match := false
+			if id == fmt.Sprintf("%s", commit.Hash) {
+				match = true
+			}
+			if updateTime != nil && updateTime.Format(sqlite3impl.TimeLayout) != commit.Committer.When.Format(sqlite3impl.TimeLayout) {
+				match = false
+			}
+			if !match {
+				return nil
+			}
+
+			gitCommitLog := &GitCommitLog{}
+			gitCommitLog.IsDeleted = false
+			gitCommitLog.ID = fmt.Sprintf("%s", commit.Hash)
+			gitCommitLog.RepName = repName
+			gitCommitLog.RelatedTime = commit.Committer.When
+			gitCommitLog.DataType = "git_commit_log"
+			gitCommitLog.CreateTime = commit.Committer.When
+			gitCommitLog.CreateApp = "git"
+			gitCommitLog.CreateDevice = ""
+			gitCommitLog.CreateUser = fmt.Sprintf("%s", commit.Author.Name)
+			gitCommitLog.UpdateTime = commit.Committer.When
+			gitCommitLog.UpdateApp = "git"
+			gitCommitLog.UpdateDevice = ""
+			gitCommitLog.UpdateUser = fmt.Sprintf("%s", commit.Author.Name)
+			gitCommitLog.CommitMessage = fmt.Sprintf("%s", commit.Message)
+
+			matchGitCommitLog = gitCommitLog
 			return nil
 		}
-
-		gitCommitLog := &GitCommitLog{}
-		gitCommitLog.IsDeleted = false
-		gitCommitLog.ID = fmt.Sprintf("%s", commit.Hash)
-		gitCommitLog.RepName = repName
-		gitCommitLog.RelatedTime = commit.Committer.When
-		gitCommitLog.DataType = "git_commit_log"
-		gitCommitLog.CreateTime = commit.Committer.When
-		gitCommitLog.CreateApp = "git"
-		gitCommitLog.CreateDevice = ""
-		gitCommitLog.CreateUser = fmt.Sprintf("%s", commit.Author)
-		gitCommitLog.UpdateTime = commit.Committer.When
-		gitCommitLog.UpdateApp = "git"
-		gitCommitLog.UpdateDevice = ""
-		gitCommitLog.UpdateUser = fmt.Sprintf("%s", commit.Author)
-		gitCommitLog.CommitMessage = fmt.Sprintf("%s", commit.Message)
-
-		matchGitCommitLog = gitCommitLog
-		return nil
 	})
 	return matchGitCommitLog, nil
 }
