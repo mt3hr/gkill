@@ -18,7 +18,7 @@
                         @clicked_kyou="(kyou) => emits('clicked_kyou', kyou)"
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
-                        @requested_reload_list="() => { }"
+                        @requested_reload_list="emits('requested_reload_list')"
                         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
                 </template>
             </v-virtual-scroll>
@@ -40,7 +40,7 @@
                                     @clicked_kyou="(kyou) => emits('clicked_kyou', kyou)"
                                     @received_messages="(messages) => emits('received_messages', messages)"
                                     @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
-                                    @requested_reload_list="() => { }"
+                                    @requested_reload_list="emits('requested_reload_list')"
                                     @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
                                     ref="kyou_list_image_view" />
                             </td>

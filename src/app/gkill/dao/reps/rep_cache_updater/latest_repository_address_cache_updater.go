@@ -58,9 +58,9 @@ func (l *latestRepositoryAddressCacheUpdater) UpdateCache(ctx context.Context) e
 			}
 		}
 		if l.enableUpdateLatestDataRepositoryCache {
-			err := l.gkillRepository.UpdateCache(ctx)
+			err := l.gkillRepository.UpdateCache(context.TODO())
 			if err != nil {
-				repName, _ := l.repository.GetRepName(ctx)
+				repName, _ := l.repository.GetRepName(context.TODO())
 				err = fmt.Errorf("error at update latest repositoryh address dao. userID = %s repname = %s: %w", repName, err)
 				gkill_log.Debug.Print(err)
 				return

@@ -64,7 +64,7 @@
                 :is_readonly_mi_check="true" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
-                @requested_reload_list="() => { }"
+                @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
         </v-card>
     </v-card>
@@ -228,6 +228,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits("updated_kyou", res.updated_timeis_kyou)
+    emits('requested_reload_kyou', props.kyou)
     emits('requested_close_dialog')
     return
 }
