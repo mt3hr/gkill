@@ -1,41 +1,42 @@
 <template>
-    <div>
-        <v-card>
-            <v-card-title>
-                <v-row>
-                    <v-col cols="auto">
-                        記録追加
-                    </v-col>
-                    <v-spacer />
-                    <v-col cols="auto">
-                        <v-btn @click="submit">保存</v-btn>
-                    </v-col>
-                </v-row>
-            </v-card-title>
-            <table class="kftl_input">
-                <tr>
-                    <td>
-                        <div class="kftl_line_label line_label_wrap">
-                            <KFTLLineLabel v-for="( line_label_data, index ) in line_label_datas"
-                                :application_config="application_config" :gkill_api="gkill_api"
-                                :line_label_data="line_label_data" :style="line_label_styles[index]" />
-                        </div>
-                    </td>
-                    <td>
-                        <div class="kftl_text_area_wrap">
-                            <textarea id="kftl_text_area" class="kftl_text_area" v-model="text_area_content"
-                                autofocus></textarea>
-                        </div>
-                    </td>
-                </tr>
-            </table>
-        </v-card>
+    <v-card class="kftl_view">
+        <v-card-title>
+            <v-row>
+                <v-col cols="auto">
+                    記録追加
+                </v-col>
+                <v-spacer />
+                <v-col cols="auto">
+                    <v-btn @click="show_kftl_template_dialog">テンプレート</v-btn>
+                </v-col>
+                <v-col cols="auto">
+                    <v-btn @click="submit">保存</v-btn>
+                </v-col>
+            </v-row>
+        </v-card-title>
+        <table class="kftl_input">
+            <tr>
+                <td>
+                    <div class="kftl_line_label line_label_wrap">
+                        <KFTLLineLabel v-for="( line_label_data, index ) in line_label_datas"
+                            :application_config="application_config" :gkill_api="gkill_api"
+                            :line_label_data="line_label_data" :style="line_label_styles[index]" />
+                    </div>
+                </td>
+                <td>
+                    <div class="kftl_text_area_wrap">
+                        <textarea id="kftl_text_area" class="kftl_text_area" v-model="text_area_content"
+                            autofocus></textarea>
+                    </div>
+                </td>
+            </tr>
+        </table>
         <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api"
+            :template="application_config.parsed_kftl_template"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @clicked_template_element_leaf="(kftl_template) => paste_template(kftl_template)"
-            :templates="[application_config.parsed_kftl_template]" ref="kftl_template_dialog" />
-    </div>
+            @clicked_template_element_leaf="paste_template" ref="kftl_template_dialog" />
+    </v-card>
 </template>
 
 <script setup lang="ts">
@@ -217,6 +218,7 @@ async function resize(): Promise<void> {
 
 function paste_template(template: KFTLTemplateElementData): void {
     text_area_content.value = template.template as string
+    kftl_template_dialog.value?.hide()
 }
 
 
@@ -230,7 +232,7 @@ onMounted(() => resize())
 
 <style lang="css" scoped>
 .kftl_text_area_wrap {
-    height: calc(v-bind(text_area_height_px));
+    height: 100%;
     width: calc(v-bind(text_area_width_px));
 }
 
@@ -268,5 +270,9 @@ textarea {
 
 .main {
     margin-top: 50px;
+}
+
+.kftl_view {
+    overflow-y: hidden;
 }
 </style>

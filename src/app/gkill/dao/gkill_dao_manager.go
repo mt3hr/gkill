@@ -737,19 +737,52 @@ func (g *GkillDAOManager) Close() error {
 }
 
 func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (bool, error) {
+	var err error
 	ctx := context.TODO()
+
 	repsInDevices, exist := g.gkillRepositories[userID]
 	if !exist {
 		return false, nil
 	}
+
 	reps, exist := repsInDevices[device]
 	if !exist {
 		return false, nil
 	}
-	err := reps.Close(ctx)
+
+	// Reps, TagReps, TextReps, GPSLogRepsの監視をやめる
+	removeWatchTargetReps := []rep_cache_updater.CacheUpdatable{}
+	for _, rep := range reps.Reps {
+		removeWatchTargetReps = append(removeWatchTargetReps, rep)
+	}
+	for _, tagRep := range reps.TagReps {
+		removeWatchTargetReps = append(removeWatchTargetReps, tagRep)
+	}
+	for _, textRep := range reps.TextReps {
+		removeWatchTargetReps = append(removeWatchTargetReps, textRep)
+	}
+	for _, gpsLogRep := range reps.GPSLogReps {
+		removeWatchTargetReps = append(removeWatchTargetReps, gpsLogRep)
+	}
+
+	for _, rep := range removeWatchTargetReps {
+		filename, err := rep.GetPath(ctx, "")
+		if err != nil {
+			repName, _ := rep.GetRepName(ctx)
+			fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+		}
+		filename = filepath.ToSlash(filename)
+
+		err = g.fileRepWatchCacheUpdater.RemoveWatchFileRep(filename, userID)
+		if err != nil {
+			fmt.Errorf("error at remove watch file rep. filename = %s userID = %s: %w", filename, userID, err)
+		}
+	}
+
+	// 全Repを閉じる
+	err = reps.Close(ctx)
 	if err != nil {
 		fmt.Errorf("error at close repositories: %w", err)
-		return false, err
 	}
 	return true, nil
 }

@@ -169,6 +169,7 @@ body {
 .kyou_detail_view::-webkit-scrollbar,
 .kyou_list_view::-webkit-scrollbar,
 .kyou_list_view_image::-webkit-scrollbar,
+.kftl_text_area::-webkit-scrollbar,
 .v-dialog .v-card::-webkit-scrollbar {
     margin-left: 1px;
     width: 8px;
@@ -177,6 +178,7 @@ body {
 .kyou_detail_view::-webkit-scrollbar-thumb,
 .kyou_list_view::-webkit-scrollbar-thumb,
 .kyou_list_view_image::-webkit-scrollbar-thumb,
+.kftl_text_area::-webkit-scrollbar-thumb,
 .v-dialog .v-card::-webkit-scrollbar-thumb {
     background: rgb(var(--v-theme-primary));
     width: 6px;
