@@ -34,17 +34,25 @@
         ref="edit_idf_kyou_dialog" />
     <AddTagDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
         :kyou="kyou" :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
+        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+        @requested_reload_list="emits('requested_reload_list')"
         @received_messages="(messages) => emits('received_messages', messages)" ref="add_tag_dialog" />
     <AddTextDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+        @requested_reload_list="emits('requested_reload_list')"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" ref="add_text_dialog" />
     <ConfirmDeleteKyouDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+        @requested_reload_list="emits('requested_reload_list')"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(message) => emits('received_messages', message)" ref="confirm_delete_kyou_dialog" />
     <ConfirmReKyouDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+        @requested_reload_list="emits('requested_reload_list')"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" ref="confirm_rekyou_dialog" />
     <KyouHistoriesDialog :application_config="application_config" :gkill_api="gkill_api"
