@@ -126,6 +126,33 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 				}
 			}
 
+			// 日付範囲指定ありの場合
+			useCalendar := false
+			var calendarStartDate *time.Time
+			var calendarEndDate *time.Time
+			if query.UseCalendar != nil {
+				useCalendar = *query.UseCalendar
+			}
+			if query.CalendarStartDate != nil {
+				calendarStartDate = query.CalendarStartDate
+			}
+			if query.CalendarEndDate != nil {
+				calendarEndDate = query.CalendarEndDate
+			}
+			if useCalendar {
+				if calendarStartDate != nil {
+					if !commit.Committer.When.After(*calendarStartDate) {
+						return nil
+					}
+
+				}
+				if calendarEndDate != nil {
+					if commit.Committer.When.Before(*calendarEndDate) {
+						return nil
+					}
+				}
+			}
+
 			kyou := &Kyou{}
 			kyou.IsDeleted = false
 			kyou.ID = fmt.Sprintf("%s", commit.Hash)

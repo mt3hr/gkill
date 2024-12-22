@@ -2,7 +2,8 @@
     <v-dialog v-model="is_show_dialog">
         <ConfirmDeleteKyouView :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="[kyou.generate_info_identifer()]" :kyou="kyou" :last_added_tag="last_added_tag"
-            @requested_close_dialog="hide()"
+            @requested_close_dialog="hide()" @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+            @requested_reload_list="emits('requested_reload_list')"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" />
     </v-dialog>
