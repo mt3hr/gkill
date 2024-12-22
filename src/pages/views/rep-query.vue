@@ -53,7 +53,7 @@
 </template>
 <script setup lang="ts">
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { type Ref, ref, watch } from 'vue'
+import { nextTick, type Ref, ref, watch } from 'vue'
 import FoldableStruct from './foldable-struct.vue'
 import type { RepQueryEmits } from './rep-query-emits'
 import type { RepQueryProps } from './rep-query-props'
@@ -96,11 +96,20 @@ watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
     }
 })
 
+const skip_emits_this_tick = ref(false)
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
     const errors = await cloned_application_config.value.load_all()
     if (errors !== null && errors.length !== 0) {
         emits('received_errors', errors)
+    }
+    if (props.inited) {
+        skip_emits_this_tick.value = true
+        nextTick(() => skip_emits_this_tick.value = false)
+        update_check_devices(cloned_query.value.devices, CheckState.checked, true)
+        update_check_rep_types(cloned_query.value.rep_types, CheckState.checked, true)
+        update_check_reps(cloned_query.value.reps, CheckState.checked, true)
+        return
     }
     const reps = new Array<string>()
     const devices = new Array<string>()

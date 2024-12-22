@@ -12,4 +12,5 @@ export interface KyouListViewProps extends GkillPropsBase {
     list_height: Number
     kyou_height: Number
     width: Number
+    closable: boolean
 }

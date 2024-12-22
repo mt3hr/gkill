@@ -2,7 +2,7 @@
     <v-dialog v-model="is_show_dialog">
         <AddNewKFTLTemplateStructElementView :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" @requested_close_dialog="hide"
+            @received_messages="(messages) => emits('received_messages', messages)" @requested_close_dialog="hide()"
             @requested_add_kftl_template_struct_element="(kftl_template_struct_element) => emits('requested_add_kftl_template_struct_element', kftl_template_struct_element)" />
     </v-dialog>
 </template>

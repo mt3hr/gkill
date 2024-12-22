@@ -3,6 +3,7 @@
         <v-card class="sidebar_header_wrap background-white pa-0 ma-0" :height="header_height">
             <SidebarHeader class="sidebar_header" :application_config="application_config" :gkill_api="gkill_api"
                 :find_kyou_query="query" @requested_search="emits('requested_search', false)"
+                :inited="inited_sidebar_header_for_query_sidebar"
                 @requested_search_with_update_cache="emits('requested_search', true)"
                 @requested_clear_find_query="emits_default_query()" ref="sidebar_header" />
         </v-card>
@@ -11,36 +12,44 @@
                 @request_update_and_search="emits_current_query()" @request_update_keywords="emits_current_query()"
                 @request_update_use_keyword_query="emits_current_query()"
                 @request_clear_keyword_query="emits_cleard_keyword_query()"
-                @inited="inited_keyword_query_for_query_sidebar = true" ref="keyword_query" />
+                :inited="inited_keyword_query_for_query_sidebar" @inited="inited_keyword_query_for_query_sidebar = true"
+                ref="keyword_query" />
             <div> <v-divider /> </div>
             <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_timeis_tags="emits_current_query()"
                 @request_update_and_search_timeis_word="emits_current_query()"
                 @request_update_checked_timeis_tags="emits_current_query()"
-                @inited="inited_timeis_query_for_query_sidebar = true"
+                :inited="inited_timeis_query_for_query_sidebar" @inited="inited_timeis_query_for_query_sidebar = true"
                 @request_update_timeis_keywords="emits_current_query()"
                 @request_update_use_timeis_query="emits_current_query()"
                 @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
             <div> <v-divider /> </div>
             <RepQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_checked_reps="emits_current_query()" @request_clear_rep_query="emits_cleard_rep_query()"
-                ref="rep_query" @inited="inited_rep_query_for_query_sidebar = true" />
+                ref="rep_query" :inited="inited_rep_query_for_query_sidebar"
+                @inited="inited_rep_query_for_query_sidebar = true" />
             <div> <v-divider /> </div>
             <TagQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_tags="emits_current_query()"
                 @request_update_checked_tags="emits_current_query()" @request_clear_tag_query="emits_cleard_tag_query()"
-                ref="tag_query" @inited="inited_tag_query_for_query_sidebar = true" />
+                ref="tag_query" :inited="inited_tag_query_for_query_sidebar"
+                @inited="inited_tag_query_for_query_sidebar = true" />
             <div> <v-divider /> </div>
             <div>
                 <CalendarQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                     @request_update_dates="emits_current_query()"
                     @request_update_use_calendar_query="emits_current_query()"
-                    @request_clear_calendar_query="emits_cleard_calendar_query()" ref="calendar_query" />
+                    @request_clear_calendar_query="emits_cleard_calendar_query()"
+                    :inited="inited_calendar_query_for_query_sidebar"
+                    @inited="inited_calendar_query_for_query_sidebar = true"
+                     ref="calendar_query" />
             </div>
             <div> <v-divider /> </div>
             <MapQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_area="emits_current_query()" @request_update_use_map_query="emits_current_query()"
-                @request_clear_map_query="emits_cleard_map_query()" ref="map_query" />
+                @request_clear_map_query="emits_cleard_map_query()" :inited="inited_map_query_for_query_sidebar"
+                @inited="inited_map_query_for_query_sidebar = true"
+                ref="map_query" />
         </div>
     </div>
 </template>
@@ -103,12 +112,13 @@ watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
     }
 })
 
+const inited_sidebar_header_for_query_sidebar = ref(true)
 const inited_keyword_query_for_query_sidebar = ref(true)
 const inited_timeis_query_for_query_sidebar = ref(false)
 const inited_rep_query_for_query_sidebar = ref(false)
 const inited_tag_query_for_query_sidebar = ref(false)
-const inited_calendar_query_for_query_sidebar = ref(true)
-const inited_map_query_for_query_sidebar = ref(true)
+const inited_calendar_query_for_query_sidebar = ref(false)
+const inited_map_query_for_query_sidebar = ref(false)
 
 watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
     if (deepEquals(new_value, old_value)) {
