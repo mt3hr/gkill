@@ -1,5 +1,5 @@
 <template>
-    <v-row class="py-0 my-0 background-white">
+    <v-row class="py-0 my-0">
         <v-col cols="auto" class="py-0 my-0 background-white">
             <SearchButton @requested_search="emits('requested_search')" @requested_search_with_update_cache="emits('requested_search_with_update_cache')"/>
         </v-col>

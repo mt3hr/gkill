@@ -1,15 +1,18 @@
 <template>
     <div>
-        <SidebarHeader :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-            @requested_search="emits('requested_search', false)"
-            @requested_search_with_update_cache="emits('requested_search', true)"
-            @requested_clear_find_query="emits_default_query()" class="sidebar_header" ref="sidebar_header" />
+        <v-card class="sidebar_header_wrap background-white pa-0 ma-0" :height="header_height">
+            <SidebarHeader class="sidebar_header" :application_config="application_config" :gkill_api="gkill_api"
+                :find_kyou_query="query" @requested_search="emits('requested_search', false)"
+                @requested_search_with_update_cache="emits('requested_search', true)"
+                @requested_clear_find_query="emits_default_query()" ref="sidebar_header" />
+        </v-card>
         <div class="rykv_sidebar">
             <KeywordQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search="emits_current_query()" @request_update_keywords="emits_current_query()"
                 @request_update_use_keyword_query="emits_current_query()"
                 @request_clear_keyword_query="emits_cleard_keyword_query()"
                 @inited="inited_keyword_query_for_query_sidebar = true" ref="keyword_query" />
+            <div> <v-divider /> </div>
             <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_timeis_tags="emits_current_query()"
                 @request_update_and_search_timeis_word="emits_current_query()"
@@ -18,19 +21,23 @@
                 @request_update_timeis_keywords="emits_current_query()"
                 @request_update_use_timeis_query="emits_current_query()"
                 @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
+            <div> <v-divider /> </div>
             <RepQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_checked_reps="emits_current_query()" @request_clear_rep_query="emits_cleard_rep_query()"
                 ref="rep_query" @inited="inited_rep_query_for_query_sidebar = true" />
+            <div> <v-divider /> </div>
             <TagQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_tags="emits_current_query()"
                 @request_update_checked_tags="emits_current_query()" @request_clear_tag_query="emits_cleard_tag_query()"
                 ref="tag_query" @inited="inited_tag_query_for_query_sidebar = true" />
+            <div> <v-divider /> </div>
             <div>
                 <CalendarQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                     @request_update_dates="emits_current_query()"
                     @request_update_use_calendar_query="emits_current_query()"
                     @request_clear_calendar_query="emits_cleard_calendar_query()" ref="calendar_query" />
             </div>
+            <div> <v-divider /> </div>
             <MapQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_area="emits_current_query()" @request_update_use_map_query="emits_current_query()"
                 @request_clear_map_query="emits_cleard_map_query()" ref="map_query" />
@@ -64,7 +71,8 @@ const props = defineProps<rykvQueryEditorSidebarProps>()
 const emits = defineEmits<rykvQueryEditorSidebarEmits>()
 defineExpose({ generate_query, get_default_query })
 
-const header_height: Ref<number> = ref(38)
+const header_margin = ref(8)
+const header_height: Ref<number> = ref(38 + header_margin.value.valueOf())
 const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
@@ -254,10 +262,18 @@ function emits_default_query(): void {
 }
 </script>
 <style lang="css">
-.sidebar_header {
+.sidebar_header_wrap {
     top: v-bind(header_top_px);
     position: sticky;
     border-top: solid 2px #2672ed;
+    z-index: 10000;
+    border-radius: 0;
+}
+
+.sidebar_header {
+    position: relative;
+    top: calc(v-bind("(header_margin / 2).toString().concat('px')"));
+    margin-bottom: calc(v-bind("(header_margin / 2).toString().concat('px')"));
 }
 
 .rykv_sidebar {
