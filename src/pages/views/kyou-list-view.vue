@@ -6,7 +6,7 @@
             </v-overlay>
             <v-virtual-scroll v-if="!query.is_image_only" class="kyou_list_view" :items="matched_kyous"
                 :item-height="kyou_height_px" :height="list_height.valueOf() - footer_height.valueOf()"
-                :width="width.valueOf() + 8" ref="kyou_list_view">
+                :width="width.valueOf() + 8" :key="match_kyous.length" ref="kyou_list_view">
                 <template v-slot:default="{ item }">
                     <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
                         :key="item.id" :highlight_targets="[]" :is_image_view="false" :kyou="item"
@@ -24,7 +24,8 @@
             </v-virtual-scroll>
             <v-virtual-scroll v-if="query.is_image_only" class="kyou_list_view_image" :items="match_kyous_for_image"
                 :item-height="kyou_height_px" :height="list_height.valueOf() - footer_height.valueOf()"
-                :width="(200 * application_config.rykv_image_list_column_number.valueOf()) + 8">
+                :width="(200 * application_config.rykv_image_list_column_number.valueOf()) + 8"
+                :key="match_kyous.length">
                 <template v-slot:default="{ item }">
                     <table>
                         <tr>
@@ -120,6 +121,8 @@ watch(() => props.query, () => {
     } else {
         match_kyous_for_image.value.splice(0)
     }
+    kyou_list_view.value?.scrollToIndex(0)
+    kyou_list_image_view.value?.scrollToIndex(0)
 })
 
 watch(() => props.matched_kyous, () => {
@@ -128,6 +131,8 @@ watch(() => props.matched_kyous, () => {
     } else {
         match_kyous_for_image.value.splice(0)
     }
+    kyou_list_view.value?.scrollToIndex(0)
+    kyou_list_image_view.value?.scrollToIndex(0)
 })
 
 const footer_class = computed(() => {
@@ -151,11 +156,6 @@ async function update_match_kyous_for_image(): Promise<void> {
     match_kyous_for_image.value.push(...match_kyous_for_image_result)
 }
 
-async function reload(): Promise<Array<GkillError>> {
-    kyou_list_view.value?.$forceUpdate()
-    kyou_list_image_view.value?.$forceUpdate()
-    return []
-}
 async function scroll_to_kyou(kyou: Kyou): Promise<boolean> {
     let index = -1;
     for (let i = 0; i < props.matched_kyous.length; i++) {
