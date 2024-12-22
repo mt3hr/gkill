@@ -27,7 +27,7 @@
                 :is_readonly_mi_check="false" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
-                @requested_reload_list="() => { }"
+                @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
         </v-card>
     </v-card>
@@ -85,6 +85,7 @@ async function delete_text(): Promise<void> {
     }
     emits('deleted_text', res.updated_text)
     emits('requested_close_dialog')
+    emits('requested_reload_list')
     return
 }
 </script>

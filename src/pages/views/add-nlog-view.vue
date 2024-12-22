@@ -133,6 +133,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits('registered_kyou', res.added_nlog_kyou)
+    emits('requested_reload_list')
     emits('requested_close_dialog')
     return
 }

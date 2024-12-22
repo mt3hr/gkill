@@ -61,11 +61,10 @@
             <table class="rykv_view_table">
                 <tr>
                     <td valign="top" v-for="query, index in querys">
-                        <KyouListView :kyou_height="180" :width="400"
-                            :list_height="kyou_list_view_height" :application_config="application_config"
-                            :gkill_api="gkill_api" :matched_kyous="match_kyous_list[index]" :query="query"
-                            :last_added_tag="last_added_tag" :is_focused_list="focused_column_index === index"
-                            :closable="querys.length !== 1"
+                        <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
+                            :application_config="application_config" :gkill_api="gkill_api"
+                            :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
+                            :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
                             @click="() => { focused_column_index = index; focused_query = querys[index]; focused_kyous_list.splice(0); if (match_kyous_list.length === 0) { return }; for (let i = 0; i < match_kyous_list[index].length; i++) { focused_kyous_list.push(match_kyous_list[index][i]); } }"
                             @clicked_kyou="(kyou) => { clicked_kyou_in_list_view(index, kyou); gps_log_map_start_time = kyou.related_time; gps_log_map_end_time = kyou.related_time; gps_log_map_marker_time = kyou.related_time; }"
                             @received_errors="(errors) => emits('received_errors', errors)"
@@ -344,19 +343,30 @@ async function add_list_view(query?: FindKyouQuery): Promise<void> {
     abort_controllers.value.push(new AbortController())
     focused_column_index.value = querys.value.length - 1
 }
-async function update_queries(query_index: Number, by_user: boolean): Promise<void> {
-    throw new Error('Not implemented')
-}
-async function update_kyous(column_index: Number, kyous: Array<Kyou>): Promise<void> {
-    throw new Error('Not implemented')
-}
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
-    throw new Error('Not implemented')
+    for (let i = 0; i < match_kyous_list.value.length; i++) {
+        const kyous_list = match_kyous_list.value[i]
+        for (let j = 0; j < kyous_list.length; j++) {
+            const kyou_in_list = kyous_list[j]
+            if (kyou.id === kyou_in_list.id) {
+                const updated_kyou = kyou.clone()
+                await updated_kyou.reload()
+                await updated_kyou.load_all()
+                kyous_list.splice(j, 1, updated_kyou)
+            }
+        }
+    }
+    if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
+        const updated_kyou = kyou.clone()
+        await updated_kyou.reload()
+        await updated_kyou.load_all()
+        focused_kyou.value = updated_kyou
+    }
 }
 
 async function reload_list(column_index: number): Promise<void> {
-    throw new Error('Not implemented')
+    search(column_index, querys.value[column_index], true)
 }
 
 async function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): Promise<void> {
