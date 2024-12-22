@@ -32,8 +32,4 @@ const locale: Ref<string> = ref(window.navigator.language)
   position: absolute;
   overflow-y: hidden;
 }
-
-* {
-  scrollbar-width: none;
-}
 </style>

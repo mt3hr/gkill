@@ -1,5 +1,8 @@
 <template>
-    <div>
+    <div class="rykv_view_wrap">
+        <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
+            <v-progress-circular indeterminate color="primary" />
+        </v-overlay>
         <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
             <v-app-bar-nav-icon @click.stop="() => { drawer = !drawer }" />
             <v-toolbar-title>rykv</v-toolbar-title>
@@ -17,7 +20,8 @@
             <v-btn icon="mdi-cog" @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
         <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height">
-            <RykvQueryEditorSideBar :application_config="application_config" :gkill_api="gkill_api"
+            <RykvQueryEditorSideBar v-show="!is_loading" class="rykv_query_editor_sidebar"
+                :application_config="application_config" :gkill_api="gkill_api"
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :find_kyou_query="focused_query"
                 @requested_search="(update_cache: boolean) => { search(focused_column_index, querys[focused_column_index], true, update_cache) }"
@@ -268,6 +272,9 @@ watch(() => focused_time.value, () => {
     kyou_list_view.scroll_to_time(focused_time.value)
 })
 
+
+const is_loading: Ref<boolean> = ref(true)
+
 const inited = ref(false)
 const received_init_request = ref(false)
 function init(): void {
@@ -293,6 +300,7 @@ function init(): void {
         }
         focused_column_index.value = 0
         inited.value = true
+        is_loading.value = false
     })
 }
 
@@ -478,9 +486,9 @@ function show_urlog_dialog(): void {
 }
 
 .kyou_detail_view {
-    width: 400px;
-    max-width: 400px;
-    min-width: 400px;
+    width: calc(400px - 8px);
+    max-width: calc(400px - 8px);
+    min-width: calc(400px - 8px);
 }
 
 .kyou_dialog img.kyou_image,
@@ -489,5 +497,8 @@ function show_urlog_dialog(): void {
     height: unset !important;
     max-width: -webkit-fill-available !important;
     max-height: 85vh !important;
+}
+.rykv_view_wrap {
+    position: relative;
 }
 </style>

@@ -5,7 +5,7 @@
                 <v-progress-circular indeterminate color="primary" />
             </v-overlay>
             <v-virtual-scroll v-if="!query.is_image_only" class="kyou_list_view" :items="matched_kyous"
-                :item-height="kyou_height_px" :height="list_height.valueOf() - footer_height.valueOf()" :width="width"
+                :item-height="kyou_height_px" :height="list_height.valueOf() - footer_height.valueOf()" :width="width.valueOf() + 8"
                 ref="kyou_list_view">
                 <template v-slot:default="{ item }">
                     <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
@@ -24,7 +24,7 @@
             </v-virtual-scroll>
             <v-virtual-scroll v-if="query.is_image_only" class="kyou_list_view_image" :items="match_kyous_for_image"
                 :item-height="kyou_height_px" :height="list_height.valueOf() - footer_height.valueOf()"
-                :width="200 * application_config.rykv_image_list_column_number.valueOf()">
+                :width="(200 * application_config.rykv_image_list_column_number.valueOf()) + 8">
                 <template v-slot:default="{ item }">
                     <table>
                         <tr>
@@ -51,7 +51,7 @@
         </v-card>
         <v-card :class="footer_class" :ripple="false" :link="false">
             <v-row no-gutters>
-                <v-col v-if="matched_kyous && matched_kyous.length" cols="auto" class="py-2">
+                <v-col v-if="matched_kyous && matched_kyous.length" cols="auto" class="py-3">
                     {{ matched_kyous.length }}件のアイテム
                 </v-col>
                 <v-spacer />
