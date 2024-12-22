@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
@@ -55,10 +54,13 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	kyous := []*Kyou{}
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	defer logs.Close()
-	logs.ForEach(func(commit *object.Commit) error {
+	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
+		if err != nil {
+			return nil, err
+		}
 		select {
 		case <-ctx.Done():
-			return nil
+			return nil, nil
 		default:
 			// 判定
 			match := true
@@ -67,7 +69,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 			if query.IsDeleted != nil && *query.IsDeleted {
 				match = false
 				if !match {
-					return nil
+					continue
 				}
 			}
 
@@ -84,7 +86,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 					}
 				}
 				if !match {
-					return nil
+					continue
 				}
 			}
 
@@ -104,16 +106,22 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 					for _, word := range words {
 						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
 						if !match {
-							return nil
+							break
 						}
+					}
+					if !match {
+						continue
 					}
 				} else {
 					// ワードor検索である場合の判定
 					for _, word := range words {
 						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
-						if match {
+						if !match {
 							break
 						}
+					}
+					if !match {
+						continue
 					}
 				}
 
@@ -121,9 +129,15 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 				for _, notWord := range notWords {
 					match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)
 					if match {
-						return nil
+						break
 					}
 				}
+				if !match {
+					continue
+				}
+			}
+			if !match {
+				continue
 			}
 
 			// 日付範囲指定ありの場合
@@ -142,13 +156,13 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 			if useCalendar {
 				if calendarStartDate != nil {
 					if !commit.Committer.When.After(*calendarStartDate) {
-						return nil
+						continue
 					}
 
 				}
 				if calendarEndDate != nil {
 					if commit.Committer.When.Before(*calendarEndDate) {
-						return nil
+						continue
 					}
 				}
 			}
@@ -169,9 +183,8 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 			kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
 
 			kyous = append(kyous, kyou)
-			return nil
 		}
-	})
+	}
 	return kyous, nil
 }
 
@@ -191,10 +204,13 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 	matchKyou = nil
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	defer logs.Close()
-	logs.ForEach(func(commit *object.Commit) error {
+	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
+		if err != nil {
+			return nil, err
+		}
 		select {
 		case <-ctx.Done():
-			return nil
+			return nil, nil
 		default:
 			// 判定
 			match := true
@@ -202,7 +218,7 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 				match = true
 			}
 			if !match {
-				return nil
+				continue
 			}
 
 			kyou := &Kyou{}
@@ -221,9 +237,8 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 			kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
 
 			matchKyou = kyou
-			return nil
 		}
-	})
+	}
 	return matchKyou, nil
 }
 
@@ -277,10 +292,13 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 	gitCommitLogs := []*GitCommitLog{}
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	defer logs.Close()
-	logs.ForEach(func(commit *object.Commit) error {
+	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
+		if err != nil {
+			return nil, err
+		}
 		select {
 		case <-ctx.Done():
-			return nil
+			return nil, nil
 		default:
 			// 判定
 			match := true
@@ -298,7 +316,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 					}
 				}
 				if !match {
-					return nil
+					continue
 				}
 			}
 
@@ -314,8 +332,11 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 					for _, word := range words {
 						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
 						if !match {
-							return nil
+							break
 						}
+					}
+					if !match {
+						continue
 					}
 				} else {
 					words := []string{}
@@ -329,6 +350,9 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 							break
 						}
 					}
+					if !match {
+						continue
+					}
 				}
 
 				notWords := []string{}
@@ -339,9 +363,15 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 				for _, notWord := range notWords {
 					match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)
 					if match {
-						return nil
+						break
 					}
 				}
+				if !match {
+					continue
+				}
+			}
+			if !match {
+				continue
 			}
 
 			gitCommitLog := &GitCommitLog{}
@@ -361,9 +391,8 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 			gitCommitLog.CommitMessage = fmt.Sprintf("%s", commit.Message)
 
 			gitCommitLogs = append(gitCommitLogs, gitCommitLog)
-			return nil
 		}
-	})
+	}
 	return gitCommitLogs, nil
 }
 
@@ -383,10 +412,13 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 	matchGitCommitLog = nil
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	defer logs.Close()
-	logs.ForEach(func(commit *object.Commit) error {
+	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
+		if err != nil {
+			return nil, err
+		}
 		select {
 		case <-ctx.Done():
-			return nil
+			return nil, nil
 		default:
 			// 判定
 			match := false
@@ -397,7 +429,7 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 				match = false
 			}
 			if !match {
-				return nil
+				continue
 			}
 
 			gitCommitLog := &GitCommitLog{}
@@ -417,8 +449,7 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 			gitCommitLog.CommitMessage = fmt.Sprintf("%s", commit.Message)
 
 			matchGitCommitLog = gitCommitLog
-			return nil
 		}
-	})
+	}
 	return matchGitCommitLog, nil
 }
