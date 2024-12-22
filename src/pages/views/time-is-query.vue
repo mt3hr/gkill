@@ -50,7 +50,7 @@
 import type { TimeIsQueryEmits } from './time-is-query-emits'
 import type { TimeIsQueryProps } from './time-is-query-props'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { type Ref, ref, watch } from 'vue'
+import { nextTick, type Ref, ref, watch } from 'vue'
 
 import FoldableStruct from './foldable-struct.vue'
 import { CheckState } from './check-state'
@@ -66,11 +66,18 @@ const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_
 
 const query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 
+const skip_emits_this_tick = ref(false)
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
     const errors = await cloned_application_config.value.load_all()
     if (errors !== null && errors.length !== 0) {
         emits('received_errors', errors)
+        return
+    }
+    if (props.inited) {
+        skip_emits_this_tick.value = true
+        nextTick(() => skip_emits_this_tick.value = false)
+        update_check(query.value.timeis_tags, CheckState.checked, true)
         return
     }
     const tags = Array<string>()
@@ -179,7 +186,9 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
 
     const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {
-        emits('request_update_checked_timeis_tags', checked_items, true)
+        if (!skip_emits_this_tick.value) {
+            emits('request_update_checked_timeis_tags', checked_items, true)
+        }
     }
 }
 

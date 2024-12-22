@@ -24,7 +24,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue'
+import { nextTick, type Ref, ref, watch } from 'vue'
 import type { TagQueryEmits } from './tag-query-emits'
 import type { TagQueryProps } from './tag-query-props'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
@@ -44,11 +44,18 @@ const is_and_search: Ref<boolean> = ref(false)
 const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
+const skip_emits_this_tick = ref(false)
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
     const errors = await cloned_application_config.value.load_all()
     if (errors !== null && errors.length !== 0) {
         emits('received_errors', errors)
+        return
+    }
+    if (props.inited) {
+        skip_emits_this_tick.value = true
+        nextTick(() => skip_emits_this_tick.value = false)
+        update_check(cloned_query.value.tags, CheckState.checked, true)
         return
     }
     const tags = Array<string>()
@@ -131,7 +138,9 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
 
     const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {
-        emits('request_update_checked_tags', checked_items, true)
+        if (!skip_emits_this_tick.value) {
+            emits('request_update_checked_tags', checked_items, true)
+        }
     }
 }
 

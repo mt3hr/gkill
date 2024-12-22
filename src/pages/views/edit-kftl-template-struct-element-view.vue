@@ -53,5 +53,6 @@ async function apply(): Promise<void> {
     kftl_template_struct.title = title.value
     kftl_template_struct.template = template.value
     emits('requested_update_kftl_template_struct', kftl_template_struct)
+    emits('requested_close_dialog')
 }
 </script>
