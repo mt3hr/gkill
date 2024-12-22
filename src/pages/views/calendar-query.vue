@@ -31,6 +31,10 @@ const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 const dates: Ref<Array<Date>> = ref([])
 defineExpose({ get_use_calendar, get_start_date, get_end_date })
 
+watch(() => props.application_config, async () => {
+    emits('inited')
+})
+
 watch(() => props.find_kyou_query, () => {
     query.value = props.find_kyou_query.clone()
 

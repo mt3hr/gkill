@@ -6,7 +6,7 @@
         </v-sheet>
         <v-sheet>
             <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key"
-                style="width: 300px; height: 425px" class="googlemap">
+                style="width: 300px; height: 425px" class="googlemap" :key="application_config.google_map_api_key">
                 <Polyline :options="polyline_options" :key="polyline_options.timestamp" />
                 <Marker v-if="marker_options" :options="marker_options" :key="marker_options.timestamp" />
             </GoogleMap>
@@ -33,6 +33,14 @@ const emits = defineEmits<GPSLogMapEmits>()
 const center = ref({ lat: 35.6586295, lng: 139.7449018, timestamp: moment().unix() }) // mapの中心点
 const zoom = ref(11) // mapのズーム
 const time_slider_max = ref(86399)
+
+watch(() => gmap.value?.ready, async () => {
+    if (gmap.value && gmap.value.ready) {
+        update_time_slider_max_value()
+        await update_gps_log_lines()
+        update_marker_by_time()
+    }
+})
 
 watch(() => props.marker_time, () => {
     // start_date更新待ち
@@ -173,7 +181,7 @@ async function centering(): Promise<void> {
     gmap.value?.map?.fitBounds(bounds)
 }
 // pathが更新されたとき中央寄せする
-watch(gps_logs, () => centering())
+watch(() => gps_logs.value, () => centering())
 
 update_time_slider_max_value()
 </script>

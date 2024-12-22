@@ -1,8 +1,8 @@
 'use strict'
 
 import type { KFTLTemplateElementData } from "@/classes/datas/kftl-template-element-data"
-import type { GkillPropsBase } from "../views/gkill-props-base"
+import type { GkillPropsBase } from "./gkill-props-base"
 
-export interface KFTLTemplateDialogProps extends GkillPropsBase {
+export interface KFTLTemplateViewProps extends GkillPropsBase {
     template: KFTLTemplateElementData
 }

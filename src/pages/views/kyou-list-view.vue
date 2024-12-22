@@ -5,8 +5,8 @@
                 <v-progress-circular indeterminate color="primary" />
             </v-overlay>
             <v-virtual-scroll v-if="!query.is_image_only" class="kyou_list_view" :items="matched_kyous"
-                :item-height="kyou_height_px" :height="list_height.valueOf() - footer_height.valueOf()" :width="width.valueOf() + 8"
-                ref="kyou_list_view">
+                :item-height="kyou_height_px" :height="list_height.valueOf() - footer_height.valueOf()"
+                :width="width.valueOf() + 8" ref="kyou_list_view">
                 <template v-slot:default="{ item }">
                     <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
                         :key="item.id" :highlight_targets="[]" :is_image_view="false" :kyou="item"
@@ -79,8 +79,10 @@
                 </v-col>
 
                 <v-col cols="auto" class="pa-0">
-                    <v-btn class="rounded-sm mx-auto" icon @click="emits('requested_close_column')" variant="text">
-                        <v-icon>mdi-close</v-icon>
+                    <v-btn class="rounded-sm mx-auto" icon
+                        @click="() => { if (closable) { emits('requested_close_column') } }" :disabled="!closable"
+                        variant="text">
+                        <v-icon v-show="closable">mdi-close</v-icon>
                     </v-btn>
                 </v-col>
             </v-row>
