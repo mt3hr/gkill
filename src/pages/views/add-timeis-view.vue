@@ -208,6 +208,7 @@ async function save(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits("updated_kyou", res.added_timeis_kyou)
+    emits('requested_reload_list')
     emits('requested_close_dialog')
     return
 }
