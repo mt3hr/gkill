@@ -133,16 +133,21 @@ resize_content()
 load_application_config()
 </script>
 <style lang="css">
+/* 不要なスクロールバーを消す */
 body,
 .v-application--wrap,
 .v-navigation-drawer--open {
-    overflow-y: hidden !important;
+    overflow-y: scroll !important;
     overflow-x: auto !important;
     height: calc(actual_height) !important;
     min-height: calc(actual_height) !important;
     max-height: calc(actual_height) !important;
 }
+body {
+    overflow-y: hidden !important;
+}
 
+/* メッセージ、エラーメッセージ */
 .alert_container {
     position: fixed;
     top: 60px;
@@ -151,7 +156,35 @@ body,
     grid-gap: .5em;
     z-index: 100000000;
 }
+
+/* ダイアログ */
+.kyou_detail_view,
+.kyou_list_view,
 .v-dialog .v-card {
     overflow-y: scroll;
+}
+
+/* スクロールバー */
+.v-navigation-drawer__content::-webkit-scrollbar,
+.kyou_detail_view::-webkit-scrollbar,
+.kyou_list_view::-webkit-scrollbar,
+.kyou_list_view_image::-webkit-scrollbar,
+.v-dialog .v-card::-webkit-scrollbar {
+    margin-left: 1px;
+    width: 8px;
+}
+.v-navigation-drawer__content::-webkit-scrollbar-thumb,
+.kyou_detail_view::-webkit-scrollbar-thumb,
+.kyou_list_view::-webkit-scrollbar-thumb,
+.kyou_list_view_image::-webkit-scrollbar-thumb,
+.v-dialog .v-card::-webkit-scrollbar-thumb {
+    background: rgb(var(--v-theme-primary));
+    width: 6px;
+    border-radius: 5px;
+}
+
+/* テーブルの隙間埋め */
+table, tr, td {
+    border-spacing: 0 !important;
 }
 </style>
