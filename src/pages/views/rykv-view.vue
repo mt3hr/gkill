@@ -79,7 +79,7 @@
                                 query.is_image_only = is_image_only_view;
                                 querys.splice(index, 1, query);
                                 search(focused_column_index, querys[focused_column_index], true);
-                            }" @requested_close_column="close_list_view(index)" />
+                            }" @requested_close_column="close_list_view(index)" :key="match_kyous_list.length" />
                     </td>
                     <td valign="top">
                         <v-btn class="rounded-sm mx-auto" :height="app_content_height.valueOf()" :width="30"
@@ -454,6 +454,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
                 focused_kyous_list.value.push(match_kyous_list.value[column_index][i])
             }
+
             kyou_list_view.set_loading(false)
         } catch (err: any) {
             // abortは握りつぶす
