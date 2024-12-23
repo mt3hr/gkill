@@ -35,7 +35,7 @@ import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<MapQueryProps>()
 const emits = defineEmits<MapQueryEmits>()
-defineExpose({ get_use_map, get_latitude, get_longitude, get_radius })
+defineExpose({ get_use_map, get_latitude, get_longitude, get_radius, get_is_enable_circle })
 
 const gmap = ref<InstanceType<typeof GoogleMap> | null>(null);
 
@@ -48,7 +48,7 @@ const longitude: Ref<number> = ref(139.7449018)
 const radius: Ref<number> = ref(500)
 
 const zoom = ref(11) // mapのズーム
-const is_enable_circle = ref(false)
+const is_enable_circle = ref(query.value.is_enable_map_circle)
 
 const center = ref({ lat: 35.6586295, lng: 139.7449018 })
 const circle = computed(() => {
@@ -69,6 +69,7 @@ watch(() => props.find_kyou_query, () => {
     query.value = props.find_kyou_query.clone()
     latitude.value = props.find_kyou_query.map_latitude.valueOf()
     longitude.value = props.find_kyou_query.map_longitude.valueOf()
+    is_enable_circle.value = props.find_kyou_query.is_enable_map_circle
     radius.value = props.find_kyou_query.map_radius.valueOf()
     emits('request_update_area', latitude.value, longitude.value, radius.value)
 })
@@ -96,5 +97,8 @@ function get_longitude(): number {
 }
 function get_radius(): number {
     return radius.value
+}
+function get_is_enable_circle(): boolean {
+    return is_enable_circle.value
 }
 </script>

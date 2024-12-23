@@ -293,9 +293,10 @@ function init(): void {
             return
         }
         close_list_view(0)
+        skip_search_this_tick.value = true
         await nextTick(() => { })
         for (let i = 0; i < saved_querys.length; i++) {
-            add_list_view(saved_querys[i])
+            add_list_view(saved_querys[i].clone()) // calendar_start_time, calendar_end_timeをparseするためにcloneする
             await nextTick(() => { })
             search(i, querys.value[i], true)
             await nextTick(() => { })
@@ -411,7 +412,10 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
     nextTick(async () => {
         if (!force_search) {
             if (querys_backup.value.length > column_index) {
-                if (deepEquals(querys_backup.value[column_index], query)) {
+                if (deepEquals(querys_backup.value[column_index], query) &&
+                    querys_backup.value[column_index].calendar_start_date?.getDate() == query.calendar_start_date?.getDate() &&
+                    querys_backup.value[column_index].calendar_end_date?.getDate() == query.calendar_end_date?.getDate()
+                ) {
                     return
                 }
             } else {

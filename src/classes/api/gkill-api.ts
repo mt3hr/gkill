@@ -1963,6 +1963,9 @@ export class GkillAPI {
                         const query = new FindKyouQuery()
                         for (let key in querys_json[i]) {
                                 (query as any)[key] = querys_json[i][key]
+                                if ((key.endsWith("time") || key.endsWith("date")) && (query as any)[key]) {
+                                        (query as any)[key] = moment((query as any)[key]).toDate()
+                                }
                         }
                         querys.push(query)
                 }

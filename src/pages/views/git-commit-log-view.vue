@@ -7,7 +7,8 @@
             @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
             @requested_reload_list="emits('requested_reload_list')"
-            @requested_update_check_kyous="(kyou: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyou, is_checked)" />
+            @requested_update_check_kyous="(kyou: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyou, is_checked)"
+            ref="context_menu" />
     </v-card>
 </template>
 <script setup lang="ts">
