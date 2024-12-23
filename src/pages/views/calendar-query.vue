@@ -24,8 +24,6 @@ import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 const props = defineProps<CalendarQueryProps>()
 const emits = defineEmits<CalendarQueryEmits>()
 
-const date_picker = ref<InstanceType<typeof VDatePicker> | null>(null)
-
 const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
 const dates: Ref<Array<Date>> = ref([])
@@ -38,23 +36,22 @@ watch(() => props.application_config, async () => {
 watch(() => props.find_kyou_query, () => {
     query.value = props.find_kyou_query.clone()
 
-    dates.value = []
-
     const start_date = moment(props.find_kyou_query.calendar_start_date)
     const end_date = moment(props.find_kyou_query.calendar_end_date)
     const date_list = Array<Date>()
-    if (props.find_kyou_query.calendar_start_date && props.find_kyou_query.calendar_end_date) {
-        for (let date = start_date; date.unix() <= end_date.unix(); date = date.add('days', 1)) {
+    if (query.value.calendar_start_date && query.value.calendar_end_date) {
+        for (let date = start_date; date.unix() <= end_date.unix(); date = date.add(1, 'day')) {
             date_list.push(date.toDate())
         }
     } else {
-        if (props.find_kyou_query.calendar_start_date) {
+        if (query.value.calendar_start_date) {
             date_list.push(start_date.toDate())
         }
-        if (props.find_kyou_query.calendar_end_date) {
+        if (query.value.calendar_end_date) {
             date_list.push(start_date.toDate())
         }
     }
+    dates.value = []
     dates.value = date_list
 })
 
@@ -94,10 +91,10 @@ function get_start_date(): Date | null {
     return null
 }
 function get_end_date(): Date | null {
-    if (dates.value.length >= 2) {
+    if (dates.value.length >= 1) {
         return dates.value[dates.value.length-1]
     }
-    return get_start_date()
+    return null
 }
 </script>
 <style lang="css">

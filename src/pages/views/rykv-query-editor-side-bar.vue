@@ -42,7 +42,7 @@
                     @request_clear_calendar_query="emits_cleard_calendar_query()"
                     :inited="inited_calendar_query_for_query_sidebar"
                     @inited="inited_calendar_query_for_query_sidebar = true"
-                     ref="calendar_query" />
+                    ref="calendar_query" />
             </div>
             <div> <v-divider /> </div>
             <MapQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
@@ -195,6 +195,7 @@ function generate_query(query_id?: string): FindKyouQuery {
         find_query.map_latitude = map_query.value.get_latitude()
         find_query.map_longitude = map_query.value.get_longitude()
         find_query.map_radius = map_query.value.get_radius()
+        find_query.is_enable_map_circle = map_query.value.get_is_enable_circle()
     }
 
     return find_query
@@ -249,6 +250,7 @@ function emits_cleard_map_query(): void {
     find_query.use_map = default_query.value.use_map
     find_query.map_latitude = default_query.value.map_latitude
     find_query.map_longitude = default_query.value.map_longitude
+    find_query.is_enable_map_circle = default_query.value.is_enable_map_circle
     find_query.map_radius = default_query.value.map_radius
     query.value = find_query
     emits('updated_query_clear', find_query)
