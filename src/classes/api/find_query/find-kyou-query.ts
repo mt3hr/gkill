@@ -12,6 +12,8 @@ export class FindKyouQuery extends FindQueryBase {
     rep_types: Array<string>
     is_focus_kyou: boolean
 
+    is_enable_map_circle: boolean
+
     clone(): FindKyouQuery {
         const cloned = new FindKyouQuery()
         cloned.query_id = this.query_id
@@ -46,6 +48,7 @@ export class FindKyouQuery extends FindQueryBase {
         cloned.rep_types = this.rep_types
         cloned.use_update_time = this.use_update_time
         cloned.update_time = this.update_time
+        cloned.is_enable_map_circle = this.is_enable_map_circle
         return cloned
     }
 
@@ -57,5 +60,6 @@ export class FindKyouQuery extends FindQueryBase {
         this.devices = new Array<string>()
         this.rep_types = new Array<string>()
         this.is_focus_kyou = false
+        this.is_enable_map_circle = false
     }
 }
