@@ -4,9 +4,11 @@
             <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
                 <v-progress-circular indeterminate color="primary" />
             </v-overlay>
-            <v-virtual-scroll v-if="!query.is_image_only" class="kyou_list_view" :items="matched_kyous"
-                :item-height="kyou_height_px" :height="list_height.valueOf() - footer_height.valueOf()"
-                :width="width.valueOf() + 8" :key="match_kyous.length" ref="kyou_list_view">
+            <v-virtual-scroll v-if="!query.is_image_only" :id="query.query_id.concat('_kyou_list_view')"
+                class="kyou_list_view" :items="matched_kyous" :item-height="kyou_height_px"
+                :height="list_height.valueOf() - footer_height.valueOf()" :width="width.valueOf() + 8"
+                ref="kyou_list_view"
+                @scroll.prevent="(e: any) => { e.preventDefault(); emits('scroll_list', e.target.scrollTop) }">
                 <template v-slot:default="{ item }">
                     <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
                         :key="item.id" :highlight_targets="[]" :is_image_view="false" :kyou="item"
@@ -22,10 +24,12 @@
                         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
                 </template>
             </v-virtual-scroll>
-            <v-virtual-scroll v-if="query.is_image_only" class="kyou_list_view_image" :items="match_kyous_for_image"
-                :item-height="kyou_height_px" :height="list_height.valueOf() - footer_height.valueOf()"
+            <v-virtual-scroll v-if="query.is_image_only" :id="query.query_id.concat('_kyou_image_list_view')"
+                class="kyou_list_view_image" :items="match_kyous_for_image" :item-height="kyou_height_px"
+                :height="list_height.valueOf() - footer_height.valueOf()"
                 :width="(200 * application_config.rykv_image_list_column_number.valueOf()) + 8"
-                :key="match_kyous.length">
+                @scroll.prevent="(e: any) => { e.preventDefault(); emits('scroll_list', e.target.scrollTop) }"
+                ref="kyou_list_image_view">
                 <template v-slot:default="{ item }">
                     <table>
                         <tr>
@@ -42,8 +46,7 @@
                                     @received_messages="(messages) => emits('received_messages', messages)"
                                     @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                                     @requested_reload_list="emits('requested_reload_list')"
-                                    @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
-                                    ref="kyou_list_image_view" />
+                                    @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
                             </td>
                         </tr>
                     </table>
@@ -81,8 +84,8 @@
 
                 <v-col cols="auto" class="pa-0">
                     <v-btn class="rounded-sm mx-auto" icon
-                        @click="() => { if (closable) { emits('requested_close_column') } }" :disabled="!closable"
-                        variant="text">
+                        @click.prevent="() => { if (closable) { emits('requested_close_column') } }"
+                        :disabled="!closable" variant="text">
                         <v-icon v-show="closable">mdi-close</v-icon>
                     </v-btn>
                 </v-col>
@@ -95,7 +98,7 @@ import type { KyouListViewEmits } from './kyou-list-view-emits'
 import type { KyouListViewProps } from './kyou-list-view-props'
 import { GkillError } from '@/classes/api/gkill-error'
 import { Kyou } from '@/classes/datas/kyou'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import KyouView from './kyou-view.vue'
 import type { VVirtualScroll } from 'vuetify/components'
 const kyou_list_view = ref<InstanceType<typeof VVirtualScroll> | null>(null);
@@ -103,7 +106,7 @@ const kyou_list_image_view = ref<InstanceType<typeof VVirtualScroll> | null>(nul
 
 const props = defineProps<KyouListViewProps>()
 const emits = defineEmits<KyouListViewEmits>()
-defineExpose({ scroll_to_kyou, scroll_to_time, set_loading })
+defineExpose({ scroll_to_kyou, scroll_to_time, set_loading, scroll_to })
 
 const match_kyous: Ref<Array<Kyou>> = ref(props.matched_kyous ? props.matched_kyous.concat() : new Array<Kyou>())
 const match_kyous_for_image: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
@@ -115,25 +118,33 @@ const kyou_height_px = computed(() => props.kyou_height ? props.kyou_height.toSt
 const footer_height: Ref<number> = ref(48)
 const footer_height_px = computed(() => footer_height.value.toString().concat("px"))
 
-watch(() => props.query, () => {
-    if (props.query.is_image_only) {
-        update_match_kyous_for_image()
-    } else {
-        match_kyous_for_image.value.splice(0)
-    }
-    kyou_list_view.value?.scrollToIndex(0)
-    kyou_list_image_view.value?.scrollToIndex(0)
-})
+watch(() => props.query.is_image_only, () => reload())
+watch(() => props.matched_kyous, () => reload())
 
-watch(() => props.matched_kyous, () => {
+async function reload(): Promise<void> {
     if (props.query.is_image_only) {
+        match_kyous_for_image.value.splice(0)
         update_match_kyous_for_image()
     } else {
         match_kyous_for_image.value.splice(0)
     }
-    kyou_list_view.value?.scrollToIndex(0)
-    kyou_list_image_view.value?.scrollToIndex(0)
-})
+}
+
+async function scroll_to(scroll_top: number): Promise<void> {
+    return nextTick(async () => {
+        const target_element_id = props.query.query_id.concat(props.query.is_image_only ? "_kyou_image_list_view" : "_kyou_list_view")
+        const kyou_list_view_element = document.getElementById(target_element_id)
+        const scroll_height = kyou_list_view_element?.querySelector(".v-virtual-scroll__container")?.scrollHeight
+        if (!kyou_list_view_element || !scroll_height || scroll_height < scroll_top) {
+            nextTick(async () => { // nextTickじゃ動かんかったのでsleepで対応
+                await sleep(50)
+                scroll_to(scroll_top)
+            })
+            return
+        }
+        kyou_list_view_element.scrollTop = (scroll_top)
+    })
+}
 
 const footer_class = computed(() => {
     return props.is_focused_list ? 'focused_list' : ''
@@ -142,9 +153,9 @@ const footer_class = computed(() => {
 async function update_match_kyous_for_image(): Promise<void> {
     match_kyous_for_image.value.splice(0)
     const match_kyous_for_image_result = new Array<Array<Kyou>>()
-    for (let i = 0; i < props.matched_kyous.length;) {
+    for (let i = 0; props.matched_kyous && i < props.matched_kyous.length;) {
         const kyou_row_list = new Array<Kyou>()
-        for (let j = 0; j < props.application_config.rykv_image_list_column_number.valueOf(); j++) {
+        for (let j = 0; props.matched_kyous && j < props.application_config.rykv_image_list_column_number.valueOf(); j++) {
             if (i < props.matched_kyous.length) {
                 const kyou = props.matched_kyous[i]
                 kyou_row_list.push(kyou)
@@ -194,6 +205,8 @@ async function scroll_to_time(time: Date): Promise<boolean> {
 function set_loading(loading: boolean): void {
     is_loading.value = loading
 }
+
+const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 </script>
 
 <style lang="css" scoped>
