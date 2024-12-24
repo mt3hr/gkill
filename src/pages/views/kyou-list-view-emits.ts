@@ -29,4 +29,5 @@ export interface KyouListViewEmits {
     (e: 'requested_close_column'): void
     (e: 'requested_change_is_image_only_view', is_image_only_view: boolean): void
     (e: 'requested_change_focus_kyou', is_focus_kyou: boolean): void
+    (e: 'scroll_list', top: number): void
 }
