@@ -1971,6 +1971,24 @@ export class GkillAPI {
                 }
                 return querys
         }
+
+        private rykv_scroll_indexs_localstorage_key = "rykv_scroll_indexs"
+        set_saved_rykv_scroll_indexs(indexs: Array<number>): void {
+                window.localStorage.setItem(this.rykv_scroll_indexs_localstorage_key, JSON.stringify(indexs))
+        }
+        get_saved_rykv_scroll_indexs(): Array<number> {
+                const indexs_json_string = window.localStorage.getItem(this.rykv_scroll_indexs_localstorage_key)
+                if (!indexs_json_string) {
+                        return new Array<number>()
+                }
+                const indexs_json: any = JSON.parse(indexs_json_string)
+                if (!indexs_json) {
+                        return new Array<number>()
+                }
+                const indexs: Array<number> = indexs_json
+                console.log(indexs)
+                return indexs
+        }
 }
 
 
