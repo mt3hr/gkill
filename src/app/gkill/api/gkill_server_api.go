@@ -395,7 +395,18 @@ func (g *GkillServerAPI) Serve() error {
 		return err
 	}
 	port := serverConfig.Address
-	err = http.ListenAndServe(port, router)
+	if serverConfig.EnableTLS {
+		certFileName, pemFileName, err := g.getTLSFileNames(device)
+		if err != nil {
+			gkill_log.Debug.Fatal(err)
+			return err
+		}
+		certFileName, pemFileName = os.ExpandEnv(certFileName), os.ExpandEnv(pemFileName)
+		certFileName, pemFileName = filepath.ToSlash(certFileName), filepath.ToSlash(pemFileName)
+		err = http.ListenAndServeTLS(port, certFileName, pemFileName, router)
+	} else {
+		err = http.ListenAndServe(port, router)
+	}
 	return err
 }
 
@@ -7473,6 +7484,8 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	certFileName, pemFileName = os.ExpandEnv(certFileName), os.ExpandEnv(pemFileName)
+	certFileName, pemFileName = filepath.ToSlash(certFileName), filepath.ToSlash(pemFileName)
 
 	// あったら消す
 	if _, err := os.Stat(certFileName); err == nil {
