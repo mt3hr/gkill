@@ -83,7 +83,7 @@
                             @scroll_list="(scroll_top: number) => {
                                 match_kyous_list_top_list[index] = scroll_top
                                 GkillAPI.get_instance().set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
-                            }" @click="() => {
+                            }" @clicked_list_view="() => {
                                 skip_search_this_tick = true
                                 focused_query = querys[index]
 
@@ -106,7 +106,12 @@
                             @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                             @requested_change_focus_kyou="(is_focus_kyou) => {
                                 skip_search_this_tick = true
-                                querys[index].is_focus_kyou = is_focus_kyou
+                                focused_column_index = index
+
+                                const query = querys[index].clone()
+                                query.is_focus_kyou = is_focus_kyou
+                                querys.splice(index, 1, query)
+                                querys_backup.splice(index, 1, query)
                             }" @requested_search="search(index, querys[index], true).then(() => {
                                 if (kyou_list_views.value && kyou_list_views.value.length - 1 >= querys.length - 1) {
                                     const kyou_list_view = kyou_list_views.value[querys.length - 1] as any
@@ -114,24 +119,19 @@
                                         return
                                     }
                                 }
-                            })
-
-                                " ref="kyou_list_views" @requested_change_is_image_only_view="(is_image_only_view: boolean) => {
-                                    focused_column_index = index
-                                    focused_kyous_list = match_kyous_list[index]
-                                    const query = querys[index].clone()
-                                    query.is_image_only = is_image_only_view
-                                    querys[index] = query
-                                    search(index, query, true).then(() => {
-                                        if (kyou_list_views.value && kyou_list_views.value.length - 1 >= querys.length - 1) {
-                                            const kyou_list_view = kyou_list_views.value[querys.length - 1] as any
-                                            if (!kyou_list_view) {
-                                                return
-                                            }
-                                        }
-                                    })
-
-                                }" @requested_close_column="close_list_view(index)" />
+                            })" ref="kyou_list_views" @requested_change_is_image_only_view="(is_image_only_view: boolean) => {
+                                focused_column_index = index
+                                focused_kyous_list = match_kyous_list[index]
+                                const query = querys[index].clone()
+                                query.is_image_only = is_image_only_view
+                                querys[index] = query
+                                search(index, query, true).then(() => {
+                                    const kyou_list_view = kyou_list_views.value[index] as any
+                                    if (!kyou_list_view) {
+                                        return
+                                    }
+                                })
+                            }" @requested_close_column="close_list_view(index)" />
                     </td>
                     <td valign="top">
                         <v-btn class="rounded-sm mx-auto" :height="app_content_height.valueOf()" :width="30"
@@ -380,8 +380,6 @@ async function init(): Promise<void> {
                 for (let i = 0; i < querys.value.length; i++) {
                     const kyou_list_view = kyou_list_views.value[i] as any
                     const scroll_top = match_kyous_list_top_list.value[i]
-                    console.log(kyou_list_view)
-                    console.log(scroll_top)
                     kyou_list_view.scroll_to(scroll_top)
                 }
 
@@ -416,6 +414,7 @@ async function close_list_view(column_index: number): Promise<void> {
         kyou_list_view.scroll_to(match_kyous_list_top_list.value[i])
     }
     GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys.value)
+    GkillAPI.get_instance().set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
 }
 
 function add_list_view(query?: FindKyouQuery): void {
