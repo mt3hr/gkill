@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/asticode/go-astikit"
 	"github.com/asticode/go-astilectron"
@@ -37,6 +38,23 @@ var (
 				log.Fatal(err)
 			}
 			go common.LaunchGkillServerAPI()
+
+			for ; ; time.Sleep(time.Microsecond * 500) {
+				api := common.GetGkillServerAPI()
+				if api.GkillDAOManager == nil {
+					continue
+				}
+				if api.GkillDAOManager.ConfigDAOs == nil {
+					continue
+				}
+				if api.GkillDAOManager.ConfigDAOs.ServerConfigDAO == nil {
+					continue
+				}
+				if serverConfigs, err := api.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.TODO()); len(serverConfigs) == 0 || err != nil {
+					continue
+				}
+				break
+			}
 
 			device, err := common.GetGkillServerAPI().GetDevice()
 			if err != nil {
