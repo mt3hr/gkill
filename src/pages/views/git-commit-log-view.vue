@@ -1,6 +1,10 @@
 <template>
     <v-card v-if="kyou.typed_git_commit_log" @contextmenu.prevent="show_context_menu" :width="width" :height="height">
-        <div>{{ kyou.typed_git_commit_log.commit_message }}</div>
+        <div>
+            <span class="git_commit_addition"> + {{ kyou.typed_git_commit_log.addition }} </span>
+            <span class="git_commit_deletion"> - {{ kyou.typed_git_commit_log.deletion }} </span>
+        </div>
+        <div class="git_commit_log_message">{{ kyou.typed_git_commit_log.commit_message }}</div>
         <GitCommitLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
             @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
@@ -29,3 +33,14 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     context_menu.value?.show(e)
 }
 </script>
+<style lang="css">
+.git_commit_log_message {
+    white-space: pre-line;
+}
+.git_commit_addition {
+    color: limegreen;
+}
+.git_commit_deletion {
+    color: crimson;
+}
+</style>

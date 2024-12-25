@@ -30,4 +30,8 @@ type GitCommitLog struct {
 	UpdateDevice string `json:"update_device"`
 
 	CommitMessage string `json:"commit_message"`
+
+	Addition int `json:"addition"`
+
+	Deletion int `json:"deletion"`
 }

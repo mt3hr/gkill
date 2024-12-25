@@ -9,6 +9,10 @@ export class GitCommitLog extends InfoBase {
 
     commit_message: string
 
+    addition: number
+
+    deletion: number
+
     attached_histories: Array<GitCommitLog>
 
     async load_attached_histories(): Promise<Array<GkillError>> {
@@ -68,12 +72,16 @@ export class GitCommitLog extends InfoBase {
         git_commit_log.update_user = this.update_user
         git_commit_log.update_device = this.update_device
         git_commit_log.commit_message = this.commit_message
+        git_commit_log.addition = this.addition
+        git_commit_log.deletion = this.deletion
         return git_commit_log
     }
 
     constructor() {
         super()
         this.commit_message = ""
+        this.addition = 0
+        this.deletion = 0
         this.attached_histories = new Array<GitCommitLog>()
     }
 
