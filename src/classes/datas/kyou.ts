@@ -41,6 +41,9 @@ export class Kyou extends InfoBase {
     typed_rekyou: ReKyou | null
 
     async load_attached_histories(): Promise<Array<GkillError>> {
+        if (this.data_type.startsWith("git")) {
+            return []
+        }
         const req = new GetKyouRequest()
         req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_instance().get_session_id()

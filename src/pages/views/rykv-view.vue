@@ -617,7 +617,7 @@ function show_urlog_dialog(): void {
 .kyou_detail_view img.kyou_image {
     width: unset !important;
     height: unset !important;
-    max-width: -webkit-fill-available !important;
+    max-width: 85vw !important;
     max-height: 85vh !important;
 }
 
