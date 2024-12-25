@@ -80,13 +80,17 @@
                             :application_config="application_config" :gkill_api="gkill_api"
                             :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
                             :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                            @scroll_list="(scroll_top: number) => match_kyous_list_top_list[index] = scroll_top" @click="() => {
+                            @scroll_list="(scroll_top: number) => {
+                                match_kyous_list_top_list[index] = scroll_top
+                                GkillAPI.get_instance().set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
+                            }" @click="() => {
                                 skip_search_this_tick = true
                                 focused_query = querys[index]
+
+                                focused_kyous_list.splice(0)
                                 for (let i = 0; i < match_kyous_list[index].length; i++) {
                                     focused_kyous_list.push(match_kyous_list[index][i])
                                 }
-                                GkillAPI.get_instance().set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
                             }" @clicked_kyou="(kyou) => {
                                 skip_search_this_tick = true
                                 focused_query = querys[index]
@@ -100,8 +104,10 @@
                             @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
                             @requested_reload_list="reload_list(index)"
                             @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-                            @requested_change_focus_kyou="(is_focus_kyou) => querys[index].is_focus_kyou = is_focus_kyou"
-                            @requested_search="search(focused_column_index, querys[index], true).then(() => {
+                            @requested_change_focus_kyou="(is_focus_kyou) => {
+                                skip_search_this_tick = true
+                                querys[index].is_focus_kyou = is_focus_kyou
+                            }" @requested_search="search(index, querys[index], true).then(() => {
                                 if (kyou_list_views.value && kyou_list_views.value.length - 1 >= querys.length - 1) {
                                     const kyou_list_view = kyou_list_views.value[querys.length - 1] as any
                                     if (!kyou_list_view) {
@@ -360,8 +366,6 @@ async function init(): Promise<void> {
                 waitPromises.push(search(i, saved_querys[i], true).then(() => {
                     const kyou_list_view = kyou_list_views.value[i] as any
                     const scroll_top = match_kyous_list_top_list.value[i]
-                    console.log(kyou_list_view)
-                    console.log(scroll_top)
                     kyou_list_view.scroll_to(scroll_top)
                 }))
             }
@@ -373,7 +377,6 @@ async function init(): Promise<void> {
                     gps_log_map_end_time.value = querys.value[focused_column_index.value].calendar_end_date!
                 }
 
-                /*  スクロール位置の復元がうまくうごかない
                 for (let i = 0; i < querys.value.length; i++) {
                     const kyou_list_view = kyou_list_views.value[i] as any
                     const scroll_top = match_kyous_list_top_list.value[i]
@@ -381,7 +384,6 @@ async function init(): Promise<void> {
                     console.log(scroll_top)
                     kyou_list_view.scroll_to(scroll_top)
                 }
-                */
 
                 is_loading.value = false
                 inited.value = true
