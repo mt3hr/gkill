@@ -1,6 +1,6 @@
 <template>
-    <v-card :ripple="false" :link="false">
-        <v-card :ripple="false" :link="false">
+    <v-card :ripple="false" :link="false" @click="emits('clicked_list_view')" >
+        <v-card :ripple="false" :link="false" >
             <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
                 <v-progress-circular indeterminate color="primary" />
             </v-overlay>
@@ -8,7 +8,7 @@
                 class="kyou_list_view" :items="matched_kyous" :item-height="kyou_height_px"
                 :height="list_height.valueOf() - footer_height.valueOf()" :width="width.valueOf() + 8"
                 ref="kyou_list_view"
-                @scroll.prevent="(e: any) => { e.preventDefault(); emits('scroll_list', e.target.scrollTop) }">
+                @scrollend.prevent="(e: any) => { e.preventDefault(); emits('scroll_list', e.target.scrollTop) }">
                 <template v-slot:default="{ item }">
                     <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
                         :key="item.id" :highlight_targets="[]" :is_image_view="false" :kyou="item"
@@ -28,7 +28,7 @@
                 class="kyou_list_view_image" :items="match_kyous_for_image" :item-height="kyou_height_px"
                 :height="list_height.valueOf() - footer_height.valueOf()"
                 :width="(200 * application_config.rykv_image_list_column_number.valueOf()) + 8"
-                @scroll.prevent="(e: any) => { e.preventDefault(); emits('scroll_list', e.target.scrollTop) }"
+                @scrollend.prevent="(e: any) => { e.preventDefault(); emits('scroll_list', e.target.scrollTop) }"
                 ref="kyou_list_image_view">
                 <template v-slot:default="{ item }">
                     <table>
