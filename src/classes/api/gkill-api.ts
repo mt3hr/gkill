@@ -1986,7 +1986,6 @@ export class GkillAPI {
                         return new Array<number>()
                 }
                 const indexs: Array<number> = indexs_json
-                console.log(indexs)
                 return indexs
         }
 }
