@@ -109,8 +109,8 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 			IsLocalOnlyAccess:    false,
 			Address:              ":9999",
 			EnableTLS:            false,
-			TLSCertFile:          "",
-			TLSKeyFile:           "",
+			TLSCertFile:          "$HOME/gkill/tls/cert.cer",
+			TLSKeyFile:           "$HOME/gkill/tls/key.pem",
 			OpenDirectoryCommand: "explorer /select,$filename",
 			OpenFileCommand:      "rundll32 url.dll,FileProtocolHandler $filename",
 			URLogTimeout:         1 * time.Minute,
@@ -7657,6 +7657,33 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+
+	parentDirCert, parentDirKey := filepath.Dir(certFileName), filepath.Dir(pemFileName)
+	parentDirCert, parentDirKey = filepath.ToSlash(parentDirCert), filepath.ToSlash((parentDirKey))
+
+	err = os.MkdirAll(parentDirCert, os.ModePerm)
+	if err != nil {
+		gkill_log.Debug.Printf("Failed to open cert.pem for writing: %v", err)
+		err = fmt.Errorf("error at generate tls files")
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GenerateTLSFilesError,
+			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	err = os.MkdirAll(parentDirKey, os.ModePerm)
+	if err != nil {
+		gkill_log.Debug.Printf("Failed to open cert.pem for writing: %v", err)
+		err = fmt.Errorf("error at generate tls files")
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GenerateTLSFilesError,
+			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	certOut, err := os.Create(certFileName)
 	if err != nil {
 		gkill_log.Debug.Printf("Failed to open cert.pem for writing: %v", err)
