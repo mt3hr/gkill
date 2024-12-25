@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
@@ -52,8 +54,19 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 
 	// 判定OKであればKyouを作る
 	kyous := []*Kyou{}
-	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
+
+	var logs object.CommitIter
+	if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
+		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((*query.IDs)[0])})
+	} else {
+		logs, err = g.gitrep.Log(&git.LogOptions{All: true})
+	}
+	if err != nil {
+		return nil, nil
+		// return err
+	}
 	defer logs.Close()
+loop:
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
 		if err != nil {
 			return nil, err
@@ -183,6 +196,10 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 			kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
 
 			kyous = append(kyous, kyou)
+
+			if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
+				break loop
+			}
 		}
 	}
 	return kyous, nil
@@ -202,8 +219,13 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 	// 判定OKであればKyouを作る
 	matchKyou := &Kyou{}
 	matchKyou = nil
-	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
+	logs, err := g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash(id)})
+	if err != nil {
+		return nil, nil
+		// return err
+	}
 	defer logs.Close()
+loop:
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
 		if err != nil {
 			return nil, err
@@ -237,6 +259,7 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 			kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
 
 			matchKyou = kyou
+			break loop
 		}
 	}
 	return matchKyou, nil
@@ -290,8 +313,18 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 
 	// 判定OKであればGitCommitLogを作る
 	gitCommitLogs := []*GitCommitLog{}
-	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
+	var logs object.CommitIter
+	if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
+		logs, err = g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash((*query.IDs)[0])})
+	} else {
+		logs, err = g.gitrep.Log(&git.LogOptions{All: true})
+	}
+	if err != nil {
+		return nil, nil
+		// return err
+	}
 	defer logs.Close()
+loop:
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
 		if err != nil {
 			return nil, err
@@ -374,6 +407,18 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 				continue
 			}
 
+			addition, deletion := 0, 0
+			stats, err := commit.StatsContext(ctx)
+			if err != nil {
+				err = fmt.Errorf("error at get stat from commit: %w", err)
+				return nil, err
+			}
+
+			for _, stat := range stats {
+				addition += stat.Addition
+				deletion += stat.Deletion
+			}
+
 			gitCommitLog := &GitCommitLog{}
 			gitCommitLog.IsDeleted = false
 			gitCommitLog.ID = fmt.Sprintf("%s", commit.Hash)
@@ -389,8 +434,14 @@ func (g *gitCommitLogRepositoryLocalImpl) FindGitCommitLog(ctx context.Context, 
 			gitCommitLog.UpdateDevice = ""
 			gitCommitLog.UpdateUser = fmt.Sprintf("%s", commit.Author)
 			gitCommitLog.CommitMessage = fmt.Sprintf("%s", commit.Message)
+			gitCommitLog.Addition = addition
+			gitCommitLog.Deletion = deletion
 
 			gitCommitLogs = append(gitCommitLogs, gitCommitLog)
+
+			if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
+				break loop
+			}
 		}
 	}
 	return gitCommitLogs, nil
@@ -410,8 +461,14 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 	// 判定OKであればKyouを作る
 	matchGitCommitLog := &GitCommitLog{}
 	matchGitCommitLog = nil
-	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
+	logs, err := g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash(id)})
+	if err != nil {
+		return nil, nil
+		// return err
+	}
 	defer logs.Close()
+
+loop:
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
 		if err != nil {
 			return nil, err
@@ -432,6 +489,18 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 				continue
 			}
 
+			addition, deletion := 0, 0
+			stats, err := commit.StatsContext(ctx)
+			if err != nil {
+				err = fmt.Errorf("error at get stat from commit: %w", err)
+				return nil, err
+			}
+
+			for _, stat := range stats {
+				addition += stat.Addition
+				deletion += stat.Deletion
+			}
+
 			gitCommitLog := &GitCommitLog{}
 			gitCommitLog.IsDeleted = false
 			gitCommitLog.ID = fmt.Sprintf("%s", commit.Hash)
@@ -447,8 +516,11 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 			gitCommitLog.UpdateDevice = ""
 			gitCommitLog.UpdateUser = fmt.Sprintf("%s", commit.Author.Name)
 			gitCommitLog.CommitMessage = fmt.Sprintf("%s", commit.Message)
+			gitCommitLog.Addition = addition
+			gitCommitLog.Deletion = deletion
 
 			matchGitCommitLog = gitCommitLog
+			break loop
 		}
 	}
 	return matchGitCommitLog, nil

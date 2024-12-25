@@ -57,7 +57,7 @@ function show_context_menu(e: PointerEvent): void {
 </script>
 <style lang="css" scoped>
 .nlog_amount_plus {
-    color: springgreen;
+    color: limegreen;
 }
 
 .nlog_amount_minus {
