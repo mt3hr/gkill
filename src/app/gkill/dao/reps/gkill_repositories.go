@@ -697,6 +697,9 @@ loop:
 				continue loop
 			}
 			for _, kyou := range matchKyousInRep {
+				if kyou == nil {
+					continue
+				}
 				if existKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
 					if kyou.UpdateTime.After(existKyou.UpdateTime) {
 						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
