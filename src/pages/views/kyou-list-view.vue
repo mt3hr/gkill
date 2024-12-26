@@ -1,6 +1,6 @@
 <template>
-    <v-card :ripple="false" :link="false" @click="emits('clicked_list_view')" >
-        <v-card :ripple="false" :link="false" >
+    <v-card :ripple="false" :link="false" @click="emits('clicked_list_view')">
+        <v-card :ripple="false" :link="false">
             <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
                 <v-progress-circular indeterminate color="primary" />
             </v-overlay>

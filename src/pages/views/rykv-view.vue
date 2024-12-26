@@ -91,6 +91,7 @@
                                 for (let i = 0; i < match_kyous_list[index].length; i++) {
                                     focused_kyous_list.push(match_kyous_list[index][i])
                                 }
+                                nextTick(() => skip_search_this_tick = false)
                             }" @clicked_kyou="(kyou) => {
                                 skip_search_this_tick = true
                                 focused_query = querys[index]
@@ -522,6 +523,8 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             match_kyous_list.value[column_index] = []
         }
 
+        const kyou_list_view = kyou_list_views.value[column_index] as any
+        kyou_list_view.scroll_to(0)
         await nextTick(async () => {
             const kyou_list_view = kyou_list_views.value[column_index] as any
             if (!kyou_list_view) {
@@ -553,11 +556,12 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             focused_kyous_list.value.push(match_kyous_list.value[column_index][i])
         }
         await nextTick(() => {
-            const kyou_list_view = kyou_list_views.value[column_index] as any
             if (!kyou_list_view) {
                 return
             }
+            kyou_list_view.scroll_to(0)
             kyou_list_view.set_loading(false)
+            skip_search_this_tick.value = false
         })
     } catch (err: any) {
         // abortは握りつぶす
