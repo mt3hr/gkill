@@ -45,11 +45,11 @@ const flower_state_3: Ref<LantanaFlowerState> = ref(mood.value.valueOf() >= 6 ? 
 const flower_state_4: Ref<LantanaFlowerState> = ref(mood.value.valueOf() >= 8 ? LantanaFlowerState.full : (mood.value.valueOf() >= 7 ? LantanaFlowerState.half : LantanaFlowerState.none))
 const flower_state_5: Ref<LantanaFlowerState> = ref(mood.value.valueOf() >= 10 ? LantanaFlowerState.full : (mood.value.valueOf() >= 9 ? LantanaFlowerState.half : LantanaFlowerState.none))
 
-watch(props.mood, () => {
+watch(() => props.mood, () => {
     mood.value = props.mood
 })
 
-watch(mood, () => {
+watch(()=> mood.value, () => {
     flower_state_1.value = (mood.value.valueOf() >= 2 ? LantanaFlowerState.full : (mood.value.valueOf() >= 1 ? LantanaFlowerState.half : LantanaFlowerState.none))
     flower_state_2.value = (mood.value.valueOf() >= 4 ? LantanaFlowerState.full : (mood.value.valueOf() >= 3 ? LantanaFlowerState.half : LantanaFlowerState.none))
     flower_state_3.value = (mood.value.valueOf() >= 6 ? LantanaFlowerState.full : (mood.value.valueOf() >= 5 ? LantanaFlowerState.half : LantanaFlowerState.none))
@@ -80,12 +80,12 @@ async function emit_updated_mood(): Promise<void> {
 }
 
 .lantana_icon_td {
-    width: 50px !important;
-    height: 50px !important;
-    max-width: 50px !important;
-    min-width: 50px !important;
-    max-height: 50px !important;
-    min-height: 50px !important;
+    width: 50px;
+    height: 50px;
+    max-width: 50px ;
+    min-width: 50px ;
+    max-height: 50px ;
+    min-height: 50px ;
     display: inline-block;
 }
 </style>
