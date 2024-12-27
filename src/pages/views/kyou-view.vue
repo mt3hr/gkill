@@ -18,6 +18,10 @@
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)" />
             <v-row class="pa-0 ma-0">
+                <v-col v-if="show_checkbox" class="kyou_check_box pa-0 ma-0" cols="auto">
+                    <input type="checkbox" v-model="cloned_kyou.is_checked" class="pa-0 ma-0"
+                        @change="emits('requested_update_check_kyous', [kyou], !kyou.is_checked)" />
+                </v-col>
                 <v-col class="kyou_related_time pa-0 ma-0" cols="auto">
                     {{ format_time(cloned_kyou.related_time) }}
                 </v-col>

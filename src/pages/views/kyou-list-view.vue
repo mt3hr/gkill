@@ -12,7 +12,7 @@
                 <template v-slot:default="{ item }">
                     <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
                         :key="item.id" :highlight_targets="[]" :is_image_view="false" :kyou="item"
-                        :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
+                        :last_added_tag="last_added_tag" :show_checkbox="show_checkbox" :show_content_only="false"
                         :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                         :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                         :show_timeis_plaing_end_button="true" :width="width.valueOf()" :is_readonly_mi_check="true"
@@ -53,7 +53,7 @@
                 </template>
             </v-virtual-scroll>
         </v-card>
-        <v-card :class="footer_class" :ripple="false" :link="false">
+        <v-card v-if="show_footer" :class="footer_class" :ripple="false" :link="false">
             <v-row no-gutters>
                 <v-col v-if="matched_kyous && matched_kyous.length" cols="auto" class="py-3">
                     {{ matched_kyous.length }}件のアイテム
@@ -115,7 +115,7 @@ const scroll_distance_from_top_px: Ref<Number> = ref(0)
 const checked_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const kyou_height_px = computed(() => props.kyou_height ? props.kyou_height.toString().concat("px") : "0px")
 
-const footer_height: Ref<number> = ref(48)
+const footer_height = computed(() => props.show_footer ? 48 : 0)
 const footer_height_px = computed(() => footer_height.value.toString().concat("px"))
 
 watch(() => props.query.is_image_only, () => reload())

@@ -10,6 +10,10 @@
             <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
                 <v-icon>mdi-file-document</v-icon>
             </v-btn>
+            <v-btn icon
+                @click="() => { is_show_dnote = !is_show_dnote; if (is_show_dnote) { nextTick(() => dnote_view?.recalc()) } }">
+                <v-icon>mdi-file-chart-outline</v-icon>
+            </v-btn>
             <v-btn icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
                 <v-icon>mdi-calendar</v-icon>
             </v-btn>
@@ -80,7 +84,7 @@
                             :application_config="application_config" :gkill_api="gkill_api"
                             :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
                             :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                            @scroll_list="(scroll_top: number) => {
+                            :show_checkbox="true" :show_footer="true" @scroll_list="(scroll_top: number) => {
                                 match_kyous_list_top_list[index] = scroll_top
                                 GkillAPI.get_instance().set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
                             }" @clicked_list_view="() => {
@@ -150,6 +154,7 @@
                                 }
                             }" icon="mdi-plus" variant="text" />
                     </td>
+
                     <td valign="top" v-if="is_show_kyou_detail_view">
                         <div class="kyou_detail_view dummy">
                             <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
@@ -164,6 +169,13 @@
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
                         </div>
+                    </td>
+                    <td valign="top" v-if="is_show_dnote">
+                        <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
+                            :application_config="application_config" :gkill_api="gkill_api" :query="focused_query"
+                            :checked_kyous="focused_column_checked_kyous" :last_added_tag="last_added_tag"
+                            @received_messages="(messages) => emits('received_messages', messages)"
+                            @received_errors="(errors) => emits('received_errors', errors)" ref="dnote_view" />
                     </td>
                     <td valign="top">
                         <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
@@ -180,15 +192,6 @@
                     </td>
                 </tr>
             </table>
-            <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
-                :application_config="application_config" :gkill_api="gkill_api" :query="querys[focused_column_index]"
-                :last_added_tag="last_added_tag" @received_messages="(messages) => emits('received_messages', messages)"
-                @received_errors="(errors) => emits('received_errors', errors)" />
-            <AggregateView :application_config="application_config" :gkill_api="gkill_api"
-                :checked_kyous="focused_column_checked_kyous"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @received_errors="(errors) => emits('received_errors', errors)" />
-
             <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()"
                 @received_errors="(errors) => emits('received_errors', errors)"
@@ -298,6 +301,7 @@ const add_lantana_dialog = ref<InstanceType<typeof AddLantanaDialog> | null>(nul
 const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null);
 const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
+const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
 const kyou_list_views = ref();
 
 const querys: Ref<Array<FindKyouQuery>> = ref([new FindKyouQuery()])
@@ -316,6 +320,7 @@ const gps_log_map_marker_time: Ref<Date> = ref(moment().toDate())
 const is_show_kyou_detail_view: Ref<boolean> = ref(false)
 const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
 const is_show_gps_log_map: Ref<boolean> = ref(false)
+const is_show_dnote: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
 const drawer: Ref<boolean | null> = ref(null)
 const kyou_list_view_height = computed(() => props.app_content_height)
@@ -466,7 +471,31 @@ async function reload_list(column_index: number): Promise<void> {
 }
 
 async function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): Promise<void> {
-    throw new Error('Not implemented')
+    for (let i = 0; i < match_kyous_list.value[focused_column_index.value].length; i++) {
+        const kyou = match_kyous_list.value[focused_column_index.value][i]
+        for (let j = 0; j < kyous.length; j++) {
+            const check_target_kyou = kyous[j]
+            if (kyou.id === check_target_kyou.id) {
+                kyou.is_checked = is_checked
+                if (is_checked) {
+                    focused_column_checked_kyous.value.push(kyou)
+                } else {
+                    let remove_index = -1;
+                    for (let k = 0; k < focused_column_checked_kyous.value.length; k++) {
+                        if (focused_column_checked_kyous.value[k].id === kyou.id) {
+                            remove_index = k
+                            break
+                        }
+                    }
+                    if (remove_index !== -1) {
+                        focused_column_checked_kyous.value.splice(remove_index, 1)
+                    }
+                }
+                break
+            }
+        }
+    }
+    dnote_view.value?.recalc()
 }
 
 function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
@@ -500,19 +529,21 @@ function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
 
 const abort_controllers: Ref<Array<AbortController>> = ref([])
 async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
-    querys.value[column_index] = query
-    focused_query.value = query
-
     // 検索する。Tickでまとめる
     try {
-        GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys.value)
-
+        querys.value[column_index] = query
         if (!force_search) {
             if (deepEquals(querys_backup.value[column_index], query)) {
                 return
             }
         }
         querys_backup.value[column_index] = query
+        focused_query.value = query
+
+        GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys.value)
+
+        focused_column_checked_kyous.value = []
+        dnote_view.value?.recalc()
 
         // 前の検索処理を中断する
         if (abort_controllers.value[column_index]) {

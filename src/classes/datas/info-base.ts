@@ -41,6 +41,7 @@ export abstract class InfoBase {
         if (res.errors && res.errors.length != 0) {
             return res.errors
         }
+        this.attached_tags = res.tags
         return errors
     }
 
