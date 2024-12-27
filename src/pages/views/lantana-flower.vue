@@ -38,22 +38,22 @@ function emit_clicked_right() {
 <style scoped>
 .lantana_icon {
     position: relative;
-    width: 50px !important;
-    height: 50px !important;
-    max-width: 50px !important;
-    min-width: 50px !important;
-    max-height: 50px !important;
-    min-height: 50px !important;
+    width: 50px;
+    height: 50px;
+    max-width: 50px;
+    min-width: 50px;
+    max-height: 50px;
+    min-height: 50px;
     display: inline-block;
 }
 
 .lantana_icon_fill {
-    width: 50px !important;
-    height: 50px !important;
-    max-width: 50px !important;
-    min-width: 50px !important;
-    max-height: 50px !important;
-    min-height: 50px !important;
+    width: 50px;
+    height: 50px;
+    max-width: 50px;
+    min-width: 50px;
+    max-height: 50px;
+    min-height: 50px;
     display: inline-block;
     z-index: 10;
 }
@@ -61,12 +61,12 @@ function emit_clicked_right() {
 .lantana_icon_harf_left {
     position: absolute;
     left: 0px;
-    width: 25px !important;
-    height: 50px !important;
-    max-width: 25px !important;
-    min-width: 25px !important;
-    max-height: 50px !important;
-    min-height: 50px !important;
+    width: 25px;
+    height: 50px;
+    max-width: 25px;
+    min-width: 25px;
+    max-height: 50px;
+    min-height: 50px;
     object-fit: cover;
     object-position: 0 0;
     display: inline-block;
@@ -76,23 +76,23 @@ function emit_clicked_right() {
 .lantana_icon_harf_right {
     position: absolute;
     left: 0px;
-    width: 50px !important;
-    height: 50px !important;
-    max-width: 50px !important;
-    min-width: 50px !important;
-    max-height: 50px !important;
-    min-height: 50px !important;
+    width: 50px;
+    height: 50px;
+    max-width: 50px;
+    min-width: 50px;
+    max-height: 50px;
+    min-height: 50px;
     display: inline-block;
     z-index: 9;
 }
 
 .lantana_icon_none {
-    width: 50px !important;
-    height: 50px !important;
-    max-width: 50px !important;
-    min-width: 50px !important;
-    max-height: 50px !important;
-    min-height: 50px !important;
+    width: 50px;
+    height: 50px;
+    max-width: 50px;
+    min-width: 50px;
+    max-height: 50px;
+    min-height: 50px;
     display: inline-block;
     z-index: 10;
 }
