@@ -11,7 +11,7 @@
                 <v-icon>mdi-file-document</v-icon>
             </v-btn>
             <v-btn icon
-                @click="() => { is_show_dnote = !is_show_dnote; if (is_show_dnote) { nextTick(() => dnote_view?.recalc()) } }">
+                @click="() => { is_show_dnote = !is_show_dnote; if (is_show_dnote) { nextTick(() => dnote_view?.recalc_all()) } }">
                 <v-icon>mdi-file-chart-outline</v-icon>
             </v-btn>
             <v-btn icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
@@ -114,7 +114,7 @@
                                 focused_column_index = index
 
                                 const query = querys[index].clone()
-                                query.is_focus_kyou = is_focus_kyou
+                                query.is_focus_kyou_in_list_view = is_focus_kyou
                                 querys.splice(index, 1, query)
                                 querys_backup.splice(index, 1, query)
                             }" @requested_search="search(index, querys[index], true).then(() => {
@@ -128,7 +128,7 @@
                                 focused_column_index = index
                                 focused_kyous_list = match_kyous_list[index]
                                 const query = querys[index].clone()
-                                query.is_image_only = is_image_only_view
+                                query.is_image_only_in_sidebar = is_image_only_view
                                 querys[index] = query
                                 search(index, query, true).then(() => {
                                     const kyou_list_view = kyou_list_views.value[index] as any
@@ -495,7 +495,7 @@ async function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): Prom
             }
         }
     }
-    dnote_view.value?.recalc()
+    dnote_view.value?.recalc_checked_aggregate()
 }
 
 function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
@@ -504,7 +504,7 @@ function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
 
     const update_target_column_indexs = new Array<number>()
     for (let i = 0; i < querys.value.length; i++) {
-        if (querys.value[i].is_focus_kyou) {
+        if (querys.value[i].is_focus_kyou_in_list_view) {
             update_target_column_indexs.push(i)
         }
     }
@@ -526,7 +526,6 @@ function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
     }
 }
 
-
 const abort_controllers: Ref<Array<AbortController>> = ref([])
 async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
     // 検索する。Tickでまとめる
@@ -543,7 +542,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys.value)
 
         focused_column_checked_kyous.value = []
-        dnote_view.value?.recalc()
+        nextTick(() => dnote_view.value?.recalc_all())
 
         // 前の検索処理を中断する
         if (abort_controllers.value[column_index]) {

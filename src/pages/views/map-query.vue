@@ -48,7 +48,7 @@ const longitude: Ref<number> = ref(139.7449018)
 const radius: Ref<number> = ref(500)
 
 const zoom = ref(11) // mapのズーム
-const is_enable_circle = ref(query.value.is_enable_map_circle)
+const is_enable_circle = ref(query.value.is_enable_map_circle_in_sidebar)
 
 const center = ref({ lat: 35.6586295, lng: 139.7449018 })
 const circle = computed(() => {
@@ -69,7 +69,7 @@ watch(() => props.find_kyou_query, () => {
     query.value = props.find_kyou_query.clone()
     latitude.value = props.find_kyou_query.map_latitude.valueOf()
     longitude.value = props.find_kyou_query.map_longitude.valueOf()
-    is_enable_circle.value = props.find_kyou_query.is_enable_map_circle
+    is_enable_circle.value = props.find_kyou_query.is_enable_map_circle_in_sidebar
     radius.value = props.find_kyou_query.map_radius.valueOf()
     emits('request_update_area', latitude.value, longitude.value, radius.value)
 })
