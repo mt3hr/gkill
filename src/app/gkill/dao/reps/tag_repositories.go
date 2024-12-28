@@ -551,3 +551,81 @@ loop:
 
 	return tagNamesList, nil
 }
+
+func (t TagRepositories) GetAllTags(ctx context.Context) ([]*Tag, error) {
+	allTags := map[string]*Tag{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*Tag, len(t))
+	errch := make(chan error, len(t))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range t {
+		wg.Add(1)
+
+		go func(rep TagRepository) {
+			defer wg.Done()
+			matchTagsInRep, err := rep.GetAllTags(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchTagsInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get tag histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// Tag集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchTagsInRep := <-ch:
+			if matchTagsInRep == nil {
+				continue loop
+			}
+			for _, tag := range matchTagsInRep {
+				if existTag, exist := allTags[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if tag.UpdateTime.After(existTag.UpdateTime) {
+						allTags[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)] = tag
+					}
+				} else {
+					allTags[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)] = tag
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	tagHistoriesList := []*Tag{}
+	for _, tag := range allTags {
+		if tag == nil {
+			continue
+		}
+		tagHistoriesList = append(tagHistoriesList, tag)
+	}
+
+	sort.Slice(tagHistoriesList, func(i, j int) bool {
+		return tagHistoriesList[i].UpdateTime.After(tagHistoriesList[j].UpdateTime)
+	})
+
+	return tagHistoriesList, nil
+}
