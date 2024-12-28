@@ -4,7 +4,7 @@
             <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
                 <v-progress-circular indeterminate color="primary" />
             </v-overlay>
-            <v-virtual-scroll v-if="!query.is_image_only" :id="query.query_id.concat('_kyou_list_view')"
+            <v-virtual-scroll v-if="!query.is_image_only_in_sidebar" :id="query.query_id.concat('_kyou_list_view')"
                 class="kyou_list_view" :items="matched_kyous" :item-height="kyou_height_px"
                 :height="list_height.valueOf() - footer_height.valueOf()" :width="width.valueOf() + 8"
                 ref="kyou_list_view"
@@ -24,7 +24,7 @@
                         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
                 </template>
             </v-virtual-scroll>
-            <v-virtual-scroll v-if="query.is_image_only" :id="query.query_id.concat('_kyou_image_list_view')"
+            <v-virtual-scroll v-if="query.is_image_only_in_sidebar" :id="query.query_id.concat('_kyou_image_list_view')"
                 class="kyou_list_view_image" :items="match_kyous_for_image" :item-height="kyou_height_px"
                 :height="list_height.valueOf() - footer_height.valueOf()"
                 :width="(200 * application_config.rykv_image_list_column_number.valueOf()) + 8"
@@ -68,17 +68,17 @@
 
                 <v-col cols="auto" class="pa-0">
                     <v-btn class="rounded-sm mx-auto" icon
-                        @click="emits('requested_change_is_image_only_view', !query.is_image_only)" variant="text">
-                        <v-icon v-show="!query.is_image_only">mdi-file-document-outline</v-icon>
-                        <v-icon v-show="query.is_image_only">mdi-image</v-icon>
+                        @click="emits('requested_change_is_image_only_view', !query.is_image_only_in_sidebar)" variant="text">
+                        <v-icon v-show="!query.is_image_only_in_sidebar">mdi-file-document-outline</v-icon>
+                        <v-icon v-show="query.is_image_only_in_sidebar">mdi-image</v-icon>
                     </v-btn>
                 </v-col>
 
                 <v-col cols="auto" class="pa-0">
                     <v-btn class="rounded-sm mx-auto" icon variant="text"
-                        @click="emits('requested_change_focus_kyou', !query.is_focus_kyou)">
-                        <v-icon v-show="!query.is_focus_kyou">mdi-arrow-down</v-icon>
-                        <v-icon v-show="query.is_focus_kyou">mdi-arrow-right</v-icon>
+                        @click="emits('requested_change_focus_kyou', !query.is_focus_kyou_in_list_view)">
+                        <v-icon v-show="!query.is_focus_kyou_in_list_view">mdi-arrow-down</v-icon>
+                        <v-icon v-show="query.is_focus_kyou_in_list_view">mdi-arrow-right</v-icon>
                     </v-btn>
                 </v-col>
 
@@ -118,11 +118,11 @@ const kyou_height_px = computed(() => props.kyou_height ? props.kyou_height.toSt
 const footer_height = computed(() => props.show_footer ? 48 : 0)
 const footer_height_px = computed(() => footer_height.value.toString().concat("px"))
 
-watch(() => props.query.is_image_only, () => reload())
+watch(() => props.query.is_image_only_in_sidebar, () => reload())
 watch(() => props.matched_kyous, () => reload())
 
 async function reload(): Promise<void> {
-    if (props.query.is_image_only) {
+    if (props.query.is_image_only_in_sidebar) {
         match_kyous_for_image.value.splice(0)
         update_match_kyous_for_image()
     } else {
@@ -132,7 +132,7 @@ async function reload(): Promise<void> {
 
 async function scroll_to(scroll_top: number): Promise<void> {
     return nextTick(async () => {
-        const target_element_id = props.query.query_id.concat(props.query.is_image_only ? "_kyou_image_list_view" : "_kyou_list_view")
+        const target_element_id = props.query.query_id.concat(props.query.is_image_only_in_sidebar ? "_kyou_image_list_view" : "_kyou_list_view")
         const kyou_list_view_element = document.getElementById(target_element_id)
         const scroll_height = kyou_list_view_element?.querySelector(".v-virtual-scroll__container")?.scrollHeight
         if (!kyou_list_view_element || !scroll_height || scroll_height < scroll_top) {
