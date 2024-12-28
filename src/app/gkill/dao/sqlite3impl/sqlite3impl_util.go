@@ -15,7 +15,7 @@ func EscapeSQLite(str string) string {
 	return strings.ReplaceAll(str, "'", "''")
 }
 
-func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, ignoreFindWord bool, appendGroupBy bool, appendOrderBy bool, queryArgs *[]interface{}) (string, error) {
+func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, findWordUseLike bool, ignoreFindWord bool, appendGroupBy bool, appendOrderBy bool, queryArgs *[]interface{}) (string, error) {
 	sql := ""
 
 	// WHERE
@@ -110,7 +110,11 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 						} else {
 							sql += " AND "
 						}
-						sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+						if findWordUseLike {
+							sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+						} else {
+							sql += fmt.Sprintf("%s = ?", findWordTargetColumnName)
+						}
 						*queryArgs = append(*queryArgs, "%"+word+"%")
 						if i == len(*query.Words)-1 {
 							sql += " ) "
@@ -137,7 +141,11 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 						} else {
 							sql += " OR "
 						}
-						sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+						if findWordUseLike {
+							sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+						} else {
+							sql += fmt.Sprintf("%s = ?", findWordTargetColumnName)
+						}
 						*queryArgs = append(*queryArgs, "%"+word+"%")
 						if i == len(*query.Words)-1 {
 							sql += " ) "
@@ -167,7 +175,11 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 					} else {
 						sql += " AND "
 					}
-					sql += fmt.Sprintf("%s NOT LIKE ?", findWordTargetColumnName)
+					if findWordUseLike {
+						sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+					} else {
+						sql += fmt.Sprintf("%s = ?", findWordTargetColumnName)
+					}
 					*queryArgs = append(*queryArgs, "%"+notWord+"%")
 					if i == len(*query.NotWords)-1 {
 						sql += " ) "
