@@ -600,6 +600,7 @@ textsloop:
 	latestDataRepositoryAddresses := []*account_state.LatestDataRepositoryAddress{}
 	for _, kyou := range latestKyousMap {
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                kyou.IsDeleted,
 			TargetID:                 kyou.ID,
 			LatestDataRepositoryName: kyou.RepName,
 			DataUpdateTime:           kyou.UpdateTime,
@@ -608,6 +609,7 @@ textsloop:
 	}
 	for _, tag := range latestTagsMap {
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                tag.IsDeleted,
 			TargetID:                 tag.ID,
 			LatestDataRepositoryName: tag.RepName,
 			DataUpdateTime:           tag.UpdateTime,
@@ -616,6 +618,7 @@ textsloop:
 	}
 	for _, text := range latestTextsMap {
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                text.IsDeleted,
 			TargetID:                 text.ID,
 			LatestDataRepositoryName: text.RepName,
 			DataUpdateTime:           text.UpdateTime,
@@ -1149,27 +1152,45 @@ func (g *GkillRepositories) AddTagInfo(ctx context.Context, tag *Tag) error {
 }
 
 func (g *GkillRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
+	allTags := map[string]*Tag{}
 	tagNames := map[string]struct{}{}
 	existErr := false
 	var err error
+
+	latestDatasWg := &sync.WaitGroup{}
+	latestDatasCh := make(chan []*account_state.LatestDataRepositoryAddress, 1)
+	errCh := make(chan error, 1)
+	defer close(latestDatasCh)
+	defer close(errCh)
+	latestDatasWg.Add(1)
+	go func() {
+		defer latestDatasWg.Done()
+		latestDatas, err := g.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+		if err != nil {
+			latestDatasCh <- nil
+			errCh <- err
+		}
+		latestDatasCh <- latestDatas
+		errCh <- nil
+	}()
+
 	wg := &sync.WaitGroup{}
-	ch := make(chan []string, len(g.TagReps))
+	ch := make(chan []*Tag, len(g.TagReps))
 	errch := make(chan error, len(g.TagReps))
 	defer close(ch)
 	defer close(errch)
-
 	// 並列処理
 	for _, rep := range g.TagReps {
 		wg.Add(1)
 
 		go func(rep TagRepository) {
 			defer wg.Done()
-			matchTagNamesInRep, err := rep.GetAllTagNames(ctx)
+			tags, err := rep.GetAllTags(ctx)
 			if err != nil {
 				errch <- err
 				return
 			}
-			ch <- matchTagNamesInRep
+			ch <- tags
 		}(rep)
 	}
 	wg.Wait()
@@ -1189,19 +1210,36 @@ errloop:
 		return nil, err
 	}
 
-	// タグ名集約
+	// タグ集約
 loop:
 	for {
 		select {
-		case tagNamesInRep := <-ch:
-			if tagNamesInRep == nil {
+		case tags := <-ch:
+			if tags == nil {
 				continue loop
 			}
-			for _, tagName := range tagNamesInRep {
-				tagNames[tagName] = struct{}{}
+			for _, tag := range tags {
+				allTags[tag.ID] = tag
 			}
 		default:
 			break loop
+		}
+	}
+
+	// 対象が存在するタグ名のみ抽出
+	err = <-errCh
+	if err != nil {
+		return nil, err
+	}
+	latestDatas := <-latestDatasCh
+	for _, tag := range allTags {
+		for _, latestData := range latestDatas {
+			if tag.TargetID == latestData.TargetID {
+				if !latestData.IsDeleted {
+					tagNames[tag.Tag] = struct{}{}
+				}
+				break
+			}
 		}
 	}
 

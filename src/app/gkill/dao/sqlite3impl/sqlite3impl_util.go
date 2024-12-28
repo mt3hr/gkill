@@ -112,10 +112,11 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 						}
 						if findWordUseLike {
 							sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+							*queryArgs = append(*queryArgs, "%"+word+"%")
 						} else {
 							sql += fmt.Sprintf("%s = ?", findWordTargetColumnName)
+							*queryArgs = append(*queryArgs, word)
 						}
-						*queryArgs = append(*queryArgs, "%"+word+"%")
 						if i == len(*query.Words)-1 {
 							sql += " ) "
 						}
@@ -143,10 +144,11 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 						}
 						if findWordUseLike {
 							sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+							*queryArgs = append(*queryArgs, "%"+word+"%")
 						} else {
 							sql += fmt.Sprintf("%s = ?", findWordTargetColumnName)
+							*queryArgs = append(*queryArgs, word)
 						}
-						*queryArgs = append(*queryArgs, "%"+word+"%")
 						if i == len(*query.Words)-1 {
 							sql += " ) "
 						}
@@ -177,10 +179,11 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 					}
 					if findWordUseLike {
 						sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+						*queryArgs = append(*queryArgs, "%"+notWord+"%")
 					} else {
 						sql += fmt.Sprintf("%s = ?", findWordTargetColumnName)
+						*queryArgs = append(*queryArgs, notWord)
 					}
-					*queryArgs = append(*queryArgs, "%"+notWord+"%")
 					if i == len(*query.NotWords)-1 {
 						sql += " ) "
 					}
