@@ -1,5 +1,8 @@
 <template>
     <v-card class="dnote_view">
+        <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
+            <v-progress-circular indeterminate color="primary" />
+        </v-overlay>
         <h1><span>{{ start_date_str }}</span><span
                 v-if="end_date_str !== '' && start_date_str != end_date_str">～</span><span
                 v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span><span
@@ -23,9 +26,9 @@
                             :editable="false" />
                     </div>
                     <div>収入： <span v-if="calclutated_total_nlog_plus_amount !== -1">{{
-                            calclutated_total_nlog_plus_amount }} 円</span></div>
+                        calclutated_total_nlog_plus_amount }} 円</span></div>
                     <div>支出： <span v-if="calclutated_total_nlog_minus_amount !== -1">{{
-                            calclutated_total_nlog_minus_amount }} 円</span></div>
+                        calclutated_total_nlog_minus_amount }} 円</span></div>
                     <div>コード：
                         <span v-if="calclutated_total_git_addition_count !== -1" class="git_commit_addition"> + {{
                             calclutated_total_git_addition_count }} 行</span>
@@ -46,50 +49,18 @@
             <tr>
                 <td>
                     <h2>収支</h2>
-                    <KyouListView :kyou_height="180" :width="200" :list_height="400"
-                        :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="nlog_kyous"
-                        :query="(() => { const query = new FindKyouQuery(); query.is_image_only_in_sidebar = false; query.query_id = GkillAPI.get_instance().generate_uuid(); return query })()"
-                        :last_added_tag="last_added_tag" :is_focused_list="false" :closable="false"
-                        :show_checkbox="false" :show_footer="false" @scroll_list="() => { }"
-                        @clicked_list_view="() => { }" @clicked_kyou="() => { }"
-                        @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
-                        @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-                        @requested_reload_kyou="() => { }" @requested_reload_list="() => { }"
-                        @requested_update_check_kyous="() => { }" @requested_change_focus_kyou="() => { }"
-                        @requested_search="() => { }" ref="nlog_kyou_list_views"
-                        @requested_change_is_image_only_view="() => { }" @requested_close_column="() => { }" />
+                    <AggregateAmountListView :application_config="application_config" :gkill_api="gkill_api"
+                        :last_added_tag="last_added_tag" :aggregate_ammounts="aggregate_amounts" />
                 </td>
                 <td>
                     <h2>場所（ {{ location_timeis_kmemo_kyous.length }} 件 ）</h2>
-                    <KyouListView :kyou_height="180" :width="200" :list_height="400"
-                        :application_config="application_config" :gkill_api="gkill_api"
-                        :matched_kyous="location_timeis_kmemo_kyous"
-                        :query="(() => { const query = new FindKyouQuery(); query.is_image_only_in_sidebar = false; query.query_id = GkillAPI.get_instance().generate_uuid(); return query })()"
-                        :last_added_tag="last_added_tag" :is_focused_list="false" :closable="false"
-                        @scroll_list="() => { }" :show_checkbox="false" :show_footer="false"
-                        @clicked_list_view="() => { }" @clicked_kyou="() => { }"
-                        @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
-                        @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-                        @requested_reload_kyou="() => { }" @requested_reload_list="() => { }"
-                        @requested_update_check_kyous="() => { }" @requested_change_focus_kyou="() => { }"
-                        @requested_search="() => { }" ref="location_kyou_list_views"
-                        @requested_change_is_image_only_view="() => { }" @requested_close_column="() => { }" />
+                    <AggregateLocationListView :application_config="application_config" :gkill_api="gkill_api"
+                        :last_added_tag="last_added_tag" :aggregate_locations="aggregate_locations" />
                 </td>
                 <td>
                     <h2>人（ {{ people_timeis_kmemo_kyous.length }} 件 ）</h2>
-                    <KyouListView :kyou_height="180" :width="200" :list_height="400"
-                        :application_config="application_config" :gkill_api="gkill_api"
-                        :matched_kyous="people_timeis_kmemo_kyous"
-                        :query="(() => { const query = new FindKyouQuery(); query.is_image_only_in_sidebar = false; query.query_id = GkillAPI.get_instance().generate_uuid(); return query })()"
-                        :last_added_tag="last_added_tag" :is_focused_list="false" :closable="false"
-                        @scroll_list="() => { }" :show_checkbox="false" :show_footer="false"
-                        @clicked_list_view="() => { }" @clicked_kyou="() => { }"
-                        @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
-                        @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-                        @requested_reload_kyou="() => { }" @requested_reload_list="() => { }"
-                        @requested_update_check_kyous="() => { }" @requested_change_focus_kyou="() => { }"
-                        @requested_search="() => { }" ref="people_kyou_list_views"
-                        @requested_change_is_image_only_view="() => { }" @requested_close_column="() => { }" />
+                    <AggregatePeopleListView :application_config="application_config" :gkill_api="gkill_api"
+                        :last_added_tag="last_added_tag" :aggregate_peoples="aggregate_peoples" />
                 </td>
             </tr>
         </table>
@@ -119,6 +90,12 @@ import LantanaFlowersView from './lantana-flowers-view.vue'
 import KyouListView from './kyou-list-view.vue'
 import { deepEquals } from '@/classes/deep-equals'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { aggregate_locations_from_kyous, AggregateLocation } from '@/classes/api/dnote/aggregate-location'
+import { aggregate_peoples_from_kyous, AggregatePeople } from '@/classes/api/dnote/aggregate-people'
+import { aggregate_amounts_from_kyous, AggregateAmount } from '@/classes/api/dnote/aggregate-amount'
+import AggregateAmountListView from './aggregate-amount-list-view.vue'
+import AggregateLocationListView from './aggregate-location-list-view.vue'
+import AggregatePeopleListView from './aggregate-people-list-view.vue'
 
 const props = defineProps<DnoteProps>()
 const emits = defineEmits<DnoteEmits>()
@@ -146,6 +123,10 @@ const calclutated_total_git_addition_count: Ref<Number> = ref(-1)
 const calclutated_total_git_deletion_count: Ref<Number> = ref(-1)
 const calclutated_total_nlog_plus_amount: Ref<Number> = ref(-1)
 const calclutated_total_nlog_minus_amount: Ref<Number> = ref(-1)
+
+const aggregate_amounts: Ref<Array<AggregateAmount>> = ref(new Array<AggregateAmount>())
+const aggregate_locations: Ref<Array<AggregateLocation>> = ref(new Array<AggregateLocation>())
+const aggregate_peoples: Ref<Array<AggregatePeople>> = ref(new Array<AggregatePeople>())
 
 const total_checked_time: Ref<string> = ref("")
 const total_checked_nlog_plus_amount: Ref<Number> = ref(-1)
@@ -213,6 +194,10 @@ async function extruct_location_kyous(): Promise<void> {
         emits('received_messages', res.messages)
     }
     location_timeis_kmemo_kyous.value = res.kyous
+
+    const aggregated_locations = await aggregate_locations_from_kyous(location_timeis_kmemo_kyous.value)
+    aggregated_locations.sort((a, b) => b.duration_milli_second - a.duration_milli_second)
+    aggregate_locations.value = aggregated_locations
 }
 
 async function extruct_people_kyous(): Promise<void> {
@@ -242,6 +227,9 @@ async function extruct_people_kyous(): Promise<void> {
         emits('received_messages', res.messages)
     }
     people_timeis_kmemo_kyous.value = res.kyous
+    const aggregated_peoples = await aggregate_peoples_from_kyous(people_timeis_kmemo_kyous.value)
+    aggregated_peoples.sort((a, b) => b.duration_milli_second - a.duration_milli_second)
+    aggregate_peoples.value = aggregated_peoples
 }
 
 async function extruct_nlog_kyous(): Promise<void> {
@@ -289,6 +277,11 @@ async function extruct_nlog_kyous(): Promise<void> {
             }
         }
     }
+
+    const aggregate_nlogs = await aggregate_amounts_from_kyous(nlog_kyous.value)
+    aggregate_nlogs.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
+    aggregate_amounts.value = aggregate_nlogs
+
     calclutated_total_nlog_plus_amount.value = total_plus_nlog
     calclutated_total_nlog_minus_amount.value = total_minus_nlog
 }
