@@ -27,7 +27,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext := &FindKyouContext{}
 
 	// QueryをContextに入れる
-	// jsonからパースする
 	findKyouContext.ParsedFindQuery = findQuery
 	findKyouContext.MatchReps = map[string]reps.Repository{}
 	findKyouContext.AllTags = map[string]*reps.Tag{}
@@ -200,10 +199,52 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	var err error
 	repositories := findCtx.Repositories
 
-	existErr := false
-	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(repositories.Reps))
-	defer close(errch)
+	typeMatchReps := []reps.Repository{}
+	if findCtx.ParsedFindQuery.UseRepTypes != nil && *findCtx.ParsedFindQuery.UseRepTypes {
+		// RepType指定の場合、指定以外は除外する
+		for _, repType := range *findCtx.ParsedFindQuery.RepTypes {
+			switch repType {
+			case "kmemo":
+				for _, rep := range repositories.KmemoReps {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
+			case "urlog":
+				for _, rep := range repositories.URLogReps {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
+			case "timeis":
+				for _, rep := range repositories.TimeIsReps {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
+			case "mi":
+				for _, rep := range repositories.MiReps {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
+			case "nlog":
+				for _, rep := range repositories.NlogReps {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
+			case "lantana":
+				for _, rep := range repositories.LantanaReps {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
+			case "rekyou":
+				for _, rep := range repositories.ReKyouReps.ReKyouRepositories {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
+			case "directory":
+				for _, rep := range repositories.IDFKyouReps {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
+			case "git_commit_log":
+				for _, rep := range repositories.GitCommitLogReps {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
+			}
+		}
+	} else {
+		typeMatchReps = repositories.Reps
+	}
 
 	targetRepNames := []string{}
 	if findCtx.ParsedFindQuery.Reps != nil {
@@ -211,50 +252,27 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	}
 
 	// 並列処理
-	m := &sync.Mutex{}
-	for _, rep := range repositories.Reps {
-		wg.Add(1)
-		go func(rep reps.Repository) {
-			defer wg.Done()
-
-			// PlaingだったらTimeIsRep以外は無視する
-			if findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing {
-				_, isTimeIsRep := rep.(reps.TimeIsRepository)
-				if !isTimeIsRep {
-					errch <- nil
-					return
-				}
+	for _, rep := range typeMatchReps {
+		// PlaingだったらTimeIsRep以外は無視する
+		if findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing {
+			_, isTimeIsRep := rep.(reps.TimeIsRepository)
+			if !isTimeIsRep {
+				return nil, err
 			}
-
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-
-			for _, targetRepName := range targetRepNames {
-				if targetRepName == repName {
-					m.Lock()
-					if _, exist := findCtx.MatchReps[repName]; !exist {
-						findCtx.MatchReps[repName] = rep
-					}
-					m.Unlock()
-				}
-			}
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-	// エラー集約
-	for range len(repositories.Reps) {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at update cache: %w: %w", e, err)
-			existErr = true
 		}
-	}
-	if existErr {
-		return nil, err
+
+		repName, err := rep.GetRepName(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, targetRepName := range targetRepNames {
+			if targetRepName == repName {
+				if _, exist := findCtx.MatchReps[repName]; !exist {
+					findCtx.MatchReps[repName] = rep
+				}
+			}
+		}
 	}
 	return nil, nil
 }
@@ -572,15 +590,20 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 		IDs:    &targetIDs,
 	}
 
+	matchReps := reps.Repositories{}
+	for _, rep := range findCtx.MatchReps {
+		matchReps = append(matchReps, rep)
+	}
+
 	// repで検索
-	kyous, err := findCtx.Repositories.FindKyous(ctx, findCtx.ParsedFindQuery)
+	kyous, err := matchReps.FindKyous(ctx, findCtx.ParsedFindQuery)
 	if err != nil {
 		return nil, err
 	}
 	// textでマッチしたものをID検索
 	textMatchKyous := []*reps.Kyou{}
 	if len(targetIDs) != 0 {
-		textMatchKyous, err = findCtx.Repositories.FindKyous(ctx, matchTextFindByIDQuery)
+		textMatchKyous, err = matchReps.FindKyous(ctx, matchTextFindByIDQuery)
 		if err != nil {
 			return nil, err
 		}
