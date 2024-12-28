@@ -6,13 +6,15 @@ import { FindQueryBase } from './find-query-base'
 export class FindKyouQuery extends FindQueryBase {
     query_id: string
 
-    reps: Array<string>
-    is_image_only: boolean
-    devices: Array<string>
+    use_rep_types: boolean
     rep_types: Array<string>
-    is_focus_kyou: boolean
+    reps: Array<string>
 
-    is_enable_map_circle: boolean
+    devices_in_sidebar: Array<string>
+    rep_types_in_sidebar: Array<string>
+    is_enable_map_circle_in_sidebar: boolean
+    is_image_only_in_sidebar: boolean
+    is_focus_kyou_in_list_view: boolean
 
     clone(): FindKyouQuery {
         const cloned = new FindKyouQuery()
@@ -43,12 +45,14 @@ export class FindKyouQuery extends FindQueryBase {
         cloned.use_plaing = this.use_plaing
         cloned.plaing_time = this.plaing_time
         cloned.reps = this.reps.concat()
-        cloned.is_image_only = this.is_image_only
-        cloned.devices = this.devices.concat()
-        cloned.rep_types = this.rep_types.concat()
+        cloned.is_image_only_in_sidebar = this.is_image_only_in_sidebar
+        cloned.devices_in_sidebar = this.devices_in_sidebar.concat()
+        cloned.rep_types_in_sidebar = this.rep_types_in_sidebar.concat()
         cloned.use_update_time = this.use_update_time
         cloned.update_time = this.update_time
-        cloned.is_enable_map_circle = this.is_enable_map_circle
+        cloned.is_enable_map_circle_in_sidebar = this.is_enable_map_circle_in_sidebar
+        cloned.use_rep_types = this.use_rep_types
+        cloned.rep_types = this.rep_types.concat()
         return cloned
     }
 
@@ -56,10 +60,12 @@ export class FindKyouQuery extends FindQueryBase {
         super()
         this.query_id = ""
         this.reps = new Array<string>()
-        this.is_image_only = false
-        this.devices = new Array<string>()
-        this.rep_types = new Array<string>()
-        this.is_focus_kyou = false
-        this.is_enable_map_circle = false
+        this.is_image_only_in_sidebar = false
+        this.devices_in_sidebar = new Array<string>()
+        this.rep_types_in_sidebar = new Array<string>()
+        this.is_focus_kyou_in_list_view = false
+        this.is_enable_map_circle_in_sidebar = false
+        this.use_rep_types = false
+        this.rep_types =  new Array<string>()
     }
 }

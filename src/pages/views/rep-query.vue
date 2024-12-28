@@ -82,8 +82,8 @@ const loading = ref(false)
 watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
     if (new_value !== old_value && new_value) {
         const reps = cloned_query.value.reps
-        const devices = cloned_query.value.devices
-        const rep_types = cloned_query.value.rep_types
+        const devices = cloned_query.value.devices_in_sidebar
+        const rep_types = cloned_query.value.rep_types_in_sidebar
         if (devices) {
             await update_check_devices(devices, CheckState.checked, true)
         }
@@ -106,8 +106,8 @@ watch(() => props.application_config, async () => {
     if (props.inited) {
         skip_emits_this_tick.value = true
         nextTick(() => skip_emits_this_tick.value = false)
-        update_check_devices(cloned_query.value.devices, CheckState.checked, true)
-        update_check_rep_types(cloned_query.value.rep_types, CheckState.checked, true)
+        update_check_devices(cloned_query.value.devices_in_sidebar, CheckState.checked, true)
+        update_check_rep_types(cloned_query.value.rep_types_in_sidebar, CheckState.checked, true)
         update_check_reps(cloned_query.value.reps, CheckState.checked, true)
         return
     }
@@ -139,8 +139,8 @@ watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: F
     loading.value = true
     cloned_query.value = new_value.clone()
     const reps = cloned_query.value.reps
-    const devices = cloned_query.value.devices
-    const rep_types = cloned_query.value.rep_types
+    const devices = cloned_query.value.devices_in_sidebar
+    const rep_types = cloned_query.value.rep_types_in_sidebar
     if (devices) {
         await update_check_devices(devices, CheckState.checked, true)
     }

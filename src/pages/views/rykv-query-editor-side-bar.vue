@@ -143,8 +143,8 @@ function generate_query(query_id?: string): FindKyouQuery {
         find_query.query_id = query_id
     }
 
-    find_query.is_focus_kyou = props.find_kyou_query ? props.find_kyou_query.is_focus_kyou : false
-    find_query.is_image_only = props.find_kyou_query ? props.find_kyou_query.is_image_only : false
+    find_query.is_focus_kyou_in_list_view = props.find_kyou_query ? props.find_kyou_query.is_focus_kyou_in_list_view : false
+    find_query.is_image_only_in_sidebar = props.find_kyou_query ? props.find_kyou_query.is_image_only_in_sidebar : false
 
     if (keyword_query.value) {
         find_query.use_words = keyword_query.value.get_use_words()
@@ -169,10 +169,10 @@ function generate_query(query_id?: string): FindKyouQuery {
             find_query.reps = reps
         }
         if (devices) {
-            find_query.devices = devices
+            find_query.devices_in_sidebar = devices
         }
         if (rep_types) {
-            find_query.rep_types = rep_types
+            find_query.rep_types_in_sidebar = rep_types
         }
     }
 
@@ -195,7 +195,7 @@ function generate_query(query_id?: string): FindKyouQuery {
         find_query.map_latitude = map_query.value.get_latitude()
         find_query.map_longitude = map_query.value.get_longitude()
         find_query.map_radius = map_query.value.get_radius()
-        find_query.is_enable_map_circle = map_query.value.get_is_enable_circle()
+        find_query.is_enable_map_circle_in_sidebar = map_query.value.get_is_enable_circle()
     }
 
     return find_query
@@ -229,8 +229,8 @@ function emits_cleard_rep_query(): void {
     const find_query = generate_query()
     find_query.query_id = GkillAPI.get_instance().generate_uuid()
     find_query.reps = default_query.value.reps
-    find_query.devices = default_query.value.devices
-    find_query.rep_types = default_query.value.rep_types
+    find_query.devices_in_sidebar = default_query.value.devices_in_sidebar
+    find_query.rep_types_in_sidebar = default_query.value.rep_types_in_sidebar
     query.value = find_query
     emits('updated_query_clear', find_query)
 }
@@ -250,7 +250,7 @@ function emits_cleard_map_query(): void {
     find_query.use_map = default_query.value.use_map
     find_query.map_latitude = default_query.value.map_latitude
     find_query.map_longitude = default_query.value.map_longitude
-    find_query.is_enable_map_circle = default_query.value.is_enable_map_circle
+    find_query.is_enable_map_circle_in_sidebar = default_query.value.is_enable_map_circle_in_sidebar
     find_query.map_radius = default_query.value.map_radius
     query.value = find_query
     emits('updated_query_clear', find_query)

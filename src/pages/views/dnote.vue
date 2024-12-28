@@ -1,39 +1,54 @@
 <template>
     <v-card class="dnote_view">
-        <h1><span>{{ start_date_str }}</span><span v-if="end_date_str !== '' && start_date_str != end_date_str">～</span><span
-                v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span></h1>
+        <h1><span>{{ start_date_str }}</span><span
+                v-if="end_date_str !== '' && start_date_str != end_date_str">～</span><span
+                v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span><span
+                v-if="start_date_str === '' && !(end_date_str !== '' && start_date_str != end_date_str)">全期間</span></h1>
         <table>
             <tr>
                 <td>
-                    <div>覚醒：{{ calclutated_total_awake_time }}</div>
-                    <div>睡眠：{{ calclutated_total_sleep_time }}</div>
-                    <div>仕事：{{ calclutated_total_work_time }}</div>
+                    <div>覚醒：<span v-if="calclutated_total_awake_time !== ''">{{ calclutated_total_awake_time }}</span>
+                    </div>
+                    <div>睡眠：<span v-if="calclutated_total_sleep_time !== ''">{{ calclutated_total_sleep_time }}</span>
+                    </div>
+                    <div>仕事：<span v-if="calclutated_total_work_time !== ''">{{ calclutated_total_work_time }} </span>
+                    </div>
                 </td>
                 <td>
-                    <div>煙草：{{ calclutated_tabaco_record_count }} 本</div>
+                    <div>煙草： <span v-if="calclutated_tabaco_record_count !== -1">{{ calclutated_tabaco_record_count }}
+                            本</span></div>
                     <div style="display: flex;">気分：
-                        <LantanaFlowersView :gkill_api="gkill_api" :application_config="application_config"
-                            :mood="calclated_average_lantana_mood" :editable="false" />
+                        <LantanaFlowersView v-if="calclated_average_lantana_mood !== -1" :gkill_api="gkill_api"
+                            :application_config="application_config" :mood="calclated_average_lantana_mood"
+                            :editable="false" />
                     </div>
-                    <div>収入： {{ calclutated_total_nlog_plus_amount }} 円</div>
-                    <div>支出： {{ calclutated_total_nlog_minus_amount }} 円</div>
+                    <div>収入： <span v-if="calclutated_total_nlog_plus_amount !== -1">{{
+                            calclutated_total_nlog_plus_amount }} 円</span></div>
+                    <div>支出： <span v-if="calclutated_total_nlog_minus_amount !== -1">{{
+                            calclutated_total_nlog_minus_amount }} 円</span></div>
                     <div>コード：
-                        <span class="git_commit_addition"> + {{ calclutated_total_git_addition_count }} 行</span>
-                        <span class="git_commit_deletion"> - {{ calclutated_total_git_deletion_count }} 行</span>
+                        <span v-if="calclutated_total_git_addition_count !== -1" class="git_commit_addition"> + {{
+                            calclutated_total_git_addition_count }} 行</span>
+                    </div>
+                    <div>コード：
+                        <span v-if="calclutated_total_git_deletion_count !== -1" class="git_commit_deletion"> - {{
+                            calclutated_total_git_deletion_count }} 行</span>
                     </div>
                 </td>
                 <td>
-                    <div>合計時間：{{ total_checked_time }}</div>
-                    <div>合計収入：{{ total_checked_nlog_plus_amount }} 円</div>
-                    <div>合計支出：{{ total_checked_nlog_minus_amount }} 円</div>
+                    <div>合計時間：<span v-if="total_checked_time !== ''">{{ total_checked_time }}</span></div>
+                    <div>合計収入：<span v-if="total_checked_nlog_plus_amount !== -1">{{ total_checked_nlog_plus_amount }}
+                            円</span></div>
+                    <div>合計支出：<span v-if="total_checked_nlog_minus_amount !== -1">{{ total_checked_nlog_minus_amount }}
+                            円</span></div>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <h2>支出</h2>
+                    <h2>収支</h2>
                     <KyouListView :kyou_height="180" :width="200" :list_height="400"
                         :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="nlog_kyous"
-                        :query="(() => { const query = new FindKyouQuery(); query.is_image_only = false; query.query_id = GkillAPI.get_instance().generate_uuid(); return query })()"
+                        :query="(() => { const query = new FindKyouQuery(); query.is_image_only_in_sidebar = false; query.query_id = GkillAPI.get_instance().generate_uuid(); return query })()"
                         :last_added_tag="last_added_tag" :is_focused_list="false" :closable="false"
                         :show_checkbox="false" :show_footer="false" @scroll_list="() => { }"
                         @clicked_list_view="() => { }" @clicked_kyou="() => { }"
@@ -49,7 +64,7 @@
                     <KyouListView :kyou_height="180" :width="200" :list_height="400"
                         :application_config="application_config" :gkill_api="gkill_api"
                         :matched_kyous="location_timeis_kmemo_kyous"
-                        :query="(() => { const query = new FindKyouQuery(); query.is_image_only = false; query.query_id = GkillAPI.get_instance().generate_uuid(); return query })()"
+                        :query="(() => { const query = new FindKyouQuery(); query.is_image_only_in_sidebar = false; query.query_id = GkillAPI.get_instance().generate_uuid(); return query })()"
                         :last_added_tag="last_added_tag" :is_focused_list="false" :closable="false"
                         @scroll_list="() => { }" :show_checkbox="false" :show_footer="false"
                         @clicked_list_view="() => { }" @clicked_kyou="() => { }"
@@ -65,7 +80,7 @@
                     <KyouListView :kyou_height="180" :width="200" :list_height="400"
                         :application_config="application_config" :gkill_api="gkill_api"
                         :matched_kyous="people_timeis_kmemo_kyous"
-                        :query="(() => { const query = new FindKyouQuery(); query.is_image_only = false; query.query_id = GkillAPI.get_instance().generate_uuid(); return query })()"
+                        :query="(() => { const query = new FindKyouQuery(); query.is_image_only_in_sidebar = false; query.query_id = GkillAPI.get_instance().generate_uuid(); return query })()"
                         :last_added_tag="last_added_tag" :is_focused_list="false" :closable="false"
                         @scroll_list="() => { }" :show_checkbox="false" :show_footer="false"
                         @clicked_list_view="() => { }" @clicked_kyou="() => { }"
@@ -107,7 +122,7 @@ import { ApplicationConfig } from '@/classes/datas/config/application-config'
 
 const props = defineProps<DnoteProps>()
 const emits = defineEmits<DnoteEmits>()
-defineExpose({ recalc })
+defineExpose({ recalc_all, recalc_checked_aggregate })
 
 const is_loading = ref(false)
 const start_date_str: Ref<string> = computed(() => !cloned_query.value.calendar_start_date ? "" : (moment(cloned_query.value.calendar_start_date ? cloned_query.value.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")))
@@ -125,31 +140,26 @@ const git_commit_log_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const calclutated_total_awake_time: Ref<string> = ref("")
 const calclutated_total_sleep_time: Ref<string> = ref("")
 const calclutated_total_work_time: Ref<string> = ref("")
-const calclutated_tabaco_record_count: Ref<Number> = ref(0)
-const calclated_average_lantana_mood: Ref<Number> = ref(0)
-const calclutated_total_git_addition_count: Ref<Number> = ref(0)
-const calclutated_total_git_deletion_count: Ref<Number> = ref(0)
-const calclutated_total_nlog_plus_amount: Ref<Number> = ref(0)
-const calclutated_total_nlog_minus_amount: Ref<Number> = ref(0)
+const calclutated_tabaco_record_count: Ref<Number> = ref(-1)
+const calclated_average_lantana_mood: Ref<Number> = ref(-1)
+const calclutated_total_git_addition_count: Ref<Number> = ref(-1)
+const calclutated_total_git_deletion_count: Ref<Number> = ref(-1)
+const calclutated_total_nlog_plus_amount: Ref<Number> = ref(-1)
+const calclutated_total_nlog_minus_amount: Ref<Number> = ref(-1)
 
 const total_checked_time: Ref<string> = ref("")
-const total_checked_nlog_plus_amount: Ref<Number> = ref(0)
-const total_checked_nlog_minus_amount: Ref<Number> = ref(0)
+const total_checked_nlog_plus_amount: Ref<Number> = ref(-1)
+const total_checked_nlog_minus_amount: Ref<Number> = ref(-1)
 
 const abort_controller: Ref<AbortController> = ref(new AbortController())
 const cloned_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
-const cloned_application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
 
-watch(() => props.application_config, () => load_application_config())
-
-async function recalc(): Promise<void> {
+async function recalc_all(): Promise<void> {
     is_loading.value = true
     abort_controller.value = new AbortController()
-    await load_application_config()
-    await load_query()
     const wait_promises = new Array<Promise<any>>()
     wait_promises.push(calculate_dnote())
-    wait_promises.push(calclate_checked_aggregate())
+    wait_promises.push(recalc_checked_aggregate())
     Promise.all(wait_promises).then(() => is_loading.value = false)
 }
 
@@ -157,12 +167,8 @@ async function load_query(): Promise<void> {
     cloned_query.value = props.query.clone()
 }
 
-async function load_application_config(): Promise<void> {
-    cloned_application_config.value = props.application_config.clone()
-    await cloned_application_config.value.parse_template_and_struct()
-}
-
 async function calculate_dnote(): Promise<void> {
+    await load_query()
     abort_controller.value.abort()
     abort_controller.value = new AbortController()
     extruct_location_kyous()
@@ -174,44 +180,22 @@ async function calculate_dnote(): Promise<void> {
     calc_total_tabaco_record_count() //条件付き件数
     calc_average_lantana_mood() // 平均
     calc_total_git_addition_deletion_count() //合算
-    calc_total_plus_minus_nlogs()
 }
 
-async function calclate_checked_aggregate(): Promise<void> {
+async function recalc_checked_aggregate(): Promise<void> {
     calc_checked_nlog()
     calc_checked_timeis()
 }
 
 async function extruct_location_kyous(): Promise<void> {
-    const sidebar_query = cloned_query.value.clone()
     location_timeis_kmemo_kyous.value.splice(0)
 
     // timeisとkmemoのRepだけを検索対象とする
     // それ以外はサイドバー条件を継承する
     const query_for_extruct_location_kyous = cloned_query.value.clone()
     query_for_extruct_location_kyous.query_id = GkillAPI.get_instance().generate_uuid()
-    query_for_extruct_location_kyous.reps.splice(0)
-    let walk = (rep_struct: RepStructElementData) => { }
-    walk = (rep_struct: RepStructElementData) => {
-        let exist_in_sidebar_query = false
-        let match_kmemo_rep = false
-        let match_timeis_rep = false
-        for (let i = 0; i < sidebar_query.reps.length; i++) {
-            if (sidebar_query.reps[i] === rep_struct.rep_name) {
-                exist_in_sidebar_query = true
-                match_kmemo_rep = rep_struct.rep_name.toLowerCase().startsWith("kmemo")
-                match_timeis_rep = rep_struct.rep_name.toLowerCase().startsWith("timeis")
-                break
-            }
-        }
-        if (exist_in_sidebar_query && (match_kmemo_rep || match_timeis_rep)) {
-            query_for_extruct_location_kyous.reps.push(rep_struct.rep_name)
-        }
-        if (rep_struct.children && rep_struct.children.length !== 0) {
-            rep_struct.children.forEach(child_rep => walk(child_rep));
-        }
-    }
-    walk(cloned_application_config.value.parsed_rep_struct)
+    query_for_extruct_location_kyous.use_rep_types = true
+    query_for_extruct_location_kyous.rep_types = ["kmemo", "timeis"]
     query_for_extruct_location_kyous.tags = ["ろ"]
 
     const req = new GetKyousRequest()
@@ -232,35 +216,14 @@ async function extruct_location_kyous(): Promise<void> {
 }
 
 async function extruct_people_kyous(): Promise<void> {
-    const sidebar_query = cloned_query.value.clone()
     people_timeis_kmemo_kyous.value.splice(0)
 
     // timeisとkmemoのRepだけを検索対象とする
     // それ以外はサイドバー条件を継承する
     const query_for_extruct_people_kyous = cloned_query.value.clone()
     query_for_extruct_people_kyous.query_id = GkillAPI.get_instance().generate_uuid()
-    query_for_extruct_people_kyous.reps.splice(0)
-    let walk = (rep_struct: RepStructElementData) => { }
-    walk = (rep_struct: RepStructElementData) => {
-        let exist_in_sidebar_query = false
-        let match_kmemo_rep = false
-        let match_timeis_rep = false
-        for (let i = 0; i < sidebar_query.reps.length; i++) {
-            if (sidebar_query.reps[i] === rep_struct.rep_name) {
-                exist_in_sidebar_query = true
-                match_kmemo_rep = rep_struct.rep_name.toLowerCase().startsWith("kmemo")
-                match_timeis_rep = rep_struct.rep_name.toLowerCase().startsWith("timeis")
-                break
-            }
-        }
-        if (exist_in_sidebar_query && (match_kmemo_rep || match_timeis_rep)) {
-            query_for_extruct_people_kyous.reps.push(rep_struct.rep_name)
-        }
-        if (rep_struct.children && rep_struct.children.length !== 0) {
-            rep_struct.children.forEach(child_rep => walk(child_rep));
-        }
-    }
-    walk(cloned_application_config.value.parsed_rep_struct)
+    query_for_extruct_people_kyous.use_rep_types = true
+    query_for_extruct_people_kyous.rep_types = ["timeis", "kmemo"]
     query_for_extruct_people_kyous.tags = ["あ", "通話"]
     query_for_extruct_people_kyous.tags_and = false
 
@@ -282,39 +245,20 @@ async function extruct_people_kyous(): Promise<void> {
 }
 
 async function extruct_nlog_kyous(): Promise<void> {
-    const sidebar_query = cloned_query.value.clone()
     nlog_kyous.value.splice(0)
+    calclutated_total_nlog_plus_amount.value = -1
+    calclutated_total_nlog_minus_amount.value = -1
 
     // nlogのRepだけを検索対象とする
     // それ以外はサイドバー条件を継承する
     const query_for_nlog_kyous = cloned_query.value.clone()
     query_for_nlog_kyous.query_id = GkillAPI.get_instance().generate_uuid()
-    query_for_nlog_kyous.reps.splice(0)
-    let walk = (rep_struct: RepStructElementData) => { }
-    walk = (rep_struct: RepStructElementData) => {
-        let exist_in_sidebar_query = false
-        let match_nlog_rep = false
-        for (let i = 0; i < sidebar_query.reps.length; i++) {
-            if (sidebar_query.reps[i] === rep_struct.rep_name) {
-                exist_in_sidebar_query = true
-                match_nlog_rep = rep_struct.rep_name.toLowerCase().startsWith("nlog")
-                break
-            }
-        }
-        if (exist_in_sidebar_query && (match_nlog_rep)) {
-            query_for_nlog_kyous.reps.push(rep_struct.rep_name)
-        }
-        if (rep_struct.children && rep_struct.children.length !== 0) {
-            rep_struct.children.forEach(child_rep => walk(child_rep));
-        }
-    }
-    walk(cloned_application_config.value.parsed_rep_struct)
-
+    query_for_nlog_kyous.use_rep_types = true
+    query_for_nlog_kyous.rep_types = ["nlog"]
     const req = new GetKyousRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_nlog_kyous
-
     req.query.parse_words_and_not_words()
     const res = await GkillAPI.get_instance().get_kyous(req)
     if (res.errors && res.errors.length !== 0) {
@@ -325,36 +269,40 @@ async function extruct_nlog_kyous(): Promise<void> {
         emits('received_messages', res.messages)
     }
     nlog_kyous.value = res.kyous
+
+    const wait_promises = new Array<Promise<any>>()
+    for (let i = 0; i < nlog_kyous.value.length; i++) {
+        const kyou = nlog_kyous.value[i]
+        wait_promises.push(kyou.load_typed_nlog())
+    }
+    await Promise.all(wait_promises)
+
+    let total_plus_nlog = 0
+    let total_minus_nlog = 0
+    for (let i = 0; i < nlog_kyous.value.length; i++) {
+        const kyou = nlog_kyous.value[i]
+        if (kyou.typed_nlog && kyou.typed_nlog.amount) {
+            if (kyou.typed_nlog.amount.valueOf() > 0) {
+                total_plus_nlog += kyou.typed_nlog.amount.valueOf()
+            } else {
+                total_minus_nlog += kyou.typed_nlog.amount.valueOf()
+            }
+        }
+    }
+    calclutated_total_nlog_plus_amount.value = total_plus_nlog
+    calclutated_total_nlog_minus_amount.value = total_minus_nlog
 }
 
 async function calc_total_awake_time(): Promise<void> {
-    const sidebar_query = cloned_query.value.clone()
     awake_timeis_kyous.value.splice(0)
+    calclutated_total_awake_time.value = ""
 
     // timeisのRepだけを検索対象とする
     // 検索条件は覚醒
     const query_for_extruct_awake_kyous = cloned_query.value.clone()
     query_for_extruct_awake_kyous.query_id = GkillAPI.get_instance().generate_uuid()
-    query_for_extruct_awake_kyous.reps.splice(0)
-    let walk = (rep_struct: RepStructElementData) => { }
-    walk = (rep_struct: RepStructElementData) => {
-        let exist_in_sidebar_query = false
-        let match_timeis_rep = false
-        for (let i = 0; i < sidebar_query.reps.length; i++) {
-            if (sidebar_query.reps[i] === rep_struct.rep_name) {
-                exist_in_sidebar_query = true
-                match_timeis_rep = rep_struct.rep_name.toLowerCase().startsWith("timeis")
-                break
-            }
-        }
-        if (exist_in_sidebar_query && (match_timeis_rep)) {
-            query_for_extruct_awake_kyous.reps.push(rep_struct.rep_name)
-        }
-        if (rep_struct.children && rep_struct.children.length !== 0) {
-            rep_struct.children.forEach(child_rep => walk(child_rep));
-        }
-    }
-    walk(cloned_application_config.value.parsed_rep_struct)
+    query_for_extruct_awake_kyous.use_rep_types = true
+    query_for_extruct_awake_kyous.rep_types = ["timeis"]
     query_for_extruct_awake_kyous.tags = ["ぢ"]
     query_for_extruct_awake_kyous.use_words = true
     query_for_extruct_awake_kyous.keywords = "覚醒"
@@ -396,33 +344,15 @@ async function calc_total_awake_time(): Promise<void> {
 }
 
 async function calc_total_sleep_time(): Promise<void> {
-    const sidebar_query = cloned_query.value.clone()
     sleep_timeis_kyous.value.splice(0)
+    calclutated_total_sleep_time.value = ""
 
     // timeisのRepだけを検索対象とする
     // 検索条件は睡眠
     const query_for_extruct_sleep_kyous = cloned_query.value.clone()
     query_for_extruct_sleep_kyous.query_id = GkillAPI.get_instance().generate_uuid()
-    query_for_extruct_sleep_kyous.reps.splice(0)
-    let walk = (rep_struct: RepStructElementData) => { }
-    walk = (rep_struct: RepStructElementData) => {
-        let exist_in_sidebar_query = false
-        let match_timeis_rep = false
-        for (let i = 0; i < sidebar_query.reps.length; i++) {
-            if (sidebar_query.reps[i] === rep_struct.rep_name) {
-                exist_in_sidebar_query = true
-                match_timeis_rep = rep_struct.rep_name.toLowerCase().startsWith("timeis")
-                break
-            }
-        }
-        if (exist_in_sidebar_query && (match_timeis_rep)) {
-            query_for_extruct_sleep_kyous.reps.push(rep_struct.rep_name)
-        }
-        if (rep_struct.children && rep_struct.children.length !== 0) {
-            rep_struct.children.forEach(child_rep => walk(child_rep));
-        }
-    }
-    walk(cloned_application_config.value.parsed_rep_struct)
+    query_for_extruct_sleep_kyous.use_rep_types = true
+    query_for_extruct_sleep_kyous.rep_types = ["timeis"]
     query_for_extruct_sleep_kyous.tags = ["ぢ"]
     query_for_extruct_sleep_kyous.use_words = true
     query_for_extruct_sleep_kyous.keywords = "睡眠"
@@ -464,33 +394,15 @@ async function calc_total_sleep_time(): Promise<void> {
 }
 
 async function calc_total_work_time(): Promise<void> {
-    const sidebar_query = cloned_query.value.clone()
     work_timeis_kyous.value.splice(0)
+    calclutated_total_work_time.value = ""
 
     // timeisのRepだけを検索対象とする
     // 検索条件は仕事
     const query_for_extruct_work_kyous = cloned_query.value.clone()
     query_for_extruct_work_kyous.query_id = GkillAPI.get_instance().generate_uuid()
-    query_for_extruct_work_kyous.reps.splice(0)
-    let walk = (rep_struct: RepStructElementData) => { }
-    walk = (rep_struct: RepStructElementData) => {
-        let exist_in_sidebar_query = false
-        let match_timeis_rep = false
-        for (let i = 0; i < sidebar_query.reps.length; i++) {
-            if (sidebar_query.reps[i] === rep_struct.rep_name) {
-                exist_in_sidebar_query = true
-                match_timeis_rep = rep_struct.rep_name.toLowerCase().startsWith("timeis")
-                break
-            }
-        }
-        if (exist_in_sidebar_query && (match_timeis_rep)) {
-            query_for_extruct_work_kyous.reps.push(rep_struct.rep_name)
-        }
-        if (rep_struct.children && rep_struct.children.length !== 0) {
-            rep_struct.children.forEach(child_rep => walk(child_rep));
-        }
-    }
-    walk(cloned_application_config.value.parsed_rep_struct)
+    query_for_extruct_work_kyous.use_rep_types = true
+    query_for_extruct_work_kyous.rep_types = ["timeis"]
     query_for_extruct_work_kyous.use_words = true
     query_for_extruct_work_kyous.keywords = "仕事"
     query_for_extruct_work_kyous.words_and = true
@@ -531,33 +443,15 @@ async function calc_total_work_time(): Promise<void> {
 }
 
 async function calc_total_tabaco_record_count(): Promise<void> {
-    const sidebar_query = cloned_query.value.clone()
     tabaco_kmemo_kyous.value.splice(0)
+    calclutated_tabaco_record_count.value = -1
 
     // kmemoのRepだけを検索対象とする
     // 対象タグは煙草
     const query_for_extruct_tabaco_kyous = cloned_query.value.clone()
     query_for_extruct_tabaco_kyous.query_id = GkillAPI.get_instance().generate_uuid()
-    query_for_extruct_tabaco_kyous.reps.splice(0)
-    let walk = (rep_struct: RepStructElementData) => { }
-    walk = (rep_struct: RepStructElementData) => {
-        let exist_in_sidebar_query = false
-        let match_kmemo_rep = false
-        for (let i = 0; i < sidebar_query.reps.length; i++) {
-            if (sidebar_query.reps[i] === rep_struct.rep_name) {
-                exist_in_sidebar_query = true
-                match_kmemo_rep = rep_struct.rep_name.toLowerCase().startsWith("kmemo")
-                break
-            }
-        }
-        if (exist_in_sidebar_query && (match_kmemo_rep)) {
-            query_for_extruct_tabaco_kyous.reps.push(rep_struct.rep_name)
-        }
-        if (rep_struct.children && rep_struct.children.length !== 0) {
-            rep_struct.children.forEach(child_rep => walk(child_rep));
-        }
-    }
-    walk(cloned_application_config.value.parsed_rep_struct)
+    query_for_extruct_tabaco_kyous.use_rep_types = true
+    query_for_extruct_tabaco_kyous.rep_types = ["kmemo"]
     query_for_extruct_tabaco_kyous.tags = ["煙草"]
 
     const req = new GetKyousRequest()
@@ -579,34 +473,15 @@ async function calc_total_tabaco_record_count(): Promise<void> {
 }
 
 async function calc_average_lantana_mood(): Promise<void> {
-    const sidebar_query = cloned_query.value.clone()
     lantana_kyous.value.splice(0)
+    calclated_average_lantana_mood.value = -1
 
     // timeisのRepだけを検索対象とする
     // 検索条件は仕事
     const query_for_extruct_lantana_kyous = cloned_query.value.clone()
     query_for_extruct_lantana_kyous.query_id = GkillAPI.get_instance().generate_uuid()
-    query_for_extruct_lantana_kyous.reps.splice(0)
-    let walk = (rep_struct: RepStructElementData) => { }
-    walk = (rep_struct: RepStructElementData) => {
-        let exist_in_sidebar_query = false
-        let match_lantana_rep = false
-        for (let i = 0; i < sidebar_query.reps.length; i++) {
-            if (sidebar_query.reps[i] === rep_struct.rep_name) {
-                exist_in_sidebar_query = true
-                match_lantana_rep = rep_struct.rep_name.toLowerCase().startsWith("lantana")
-                break
-            }
-        }
-        if (exist_in_sidebar_query && (match_lantana_rep)) {
-            query_for_extruct_lantana_kyous.reps.push(rep_struct.rep_name)
-        }
-        if (rep_struct.children && rep_struct.children.length !== 0) {
-            rep_struct.children.forEach(child_rep => walk(child_rep));
-        }
-    }
-    walk(cloned_application_config.value.parsed_rep_struct)
-
+    query_for_extruct_lantana_kyous.use_rep_types = true
+    query_for_extruct_lantana_kyous.rep_types = ["lantana"]
     const req = new GetKyousRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
     req.abort_controller = abort_controller.value
@@ -646,38 +521,18 @@ async function calc_average_lantana_mood(): Promise<void> {
 }
 
 async function calc_total_git_addition_deletion_count(): Promise<void> {
-    const sidebar_query = cloned_query.value.clone()
     git_commit_log_kyous.value.splice(0)
+    calclutated_total_git_addition_count.value = -1
+    calclutated_total_git_deletion_count.value = -1
 
-    // timeisのRepだけを検索対象とする
-    // 検索条件は仕事
-    const query_for_extruct_work_kyous = cloned_query.value.clone()
-    query_for_extruct_work_kyous.query_id = GkillAPI.get_instance().generate_uuid()
-    query_for_extruct_work_kyous.reps.splice(0)
-    let walk = (rep_struct: RepStructElementData) => { }
-    walk = (rep_struct: RepStructElementData) => {
-        let exist_in_sidebar_query = false
-        let match_git = false
-        for (let i = 0; i < sidebar_query.reps.length; i++) {
-            if (sidebar_query.reps[i] === rep_struct.rep_name) {
-                exist_in_sidebar_query = true
-                match_git = rep_struct.rep_name.toLowerCase().startsWith("git")
-                break
-            }
-        }
-        if (exist_in_sidebar_query && (match_git)) {
-            query_for_extruct_work_kyous.reps.push(rep_struct.rep_name)
-        }
-        if (rep_struct.children && rep_struct.children.length !== 0) {
-            rep_struct.children.forEach(child_rep => walk(child_rep));
-        }
-    }
-    walk(cloned_application_config.value.parsed_rep_struct)
-
+    const query_for_extruct_git_commit_log_kyous = cloned_query.value.clone()
+    query_for_extruct_git_commit_log_kyous.query_id = GkillAPI.get_instance().generate_uuid()
+    query_for_extruct_git_commit_log_kyous.use_rep_types = true
+    query_for_extruct_git_commit_log_kyous.rep_types = ["git_commit_log"]
     const req = new GetKyousRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
     req.abort_controller = abort_controller.value
-    req.query = query_for_extruct_work_kyous
+    req.query = query_for_extruct_git_commit_log_kyous
 
     req.query.parse_words_and_not_words()
     const res = await GkillAPI.get_instance().get_kyous(req)
@@ -708,74 +563,6 @@ async function calc_total_git_addition_deletion_count(): Promise<void> {
     }
     calclutated_total_git_addition_count.value = total_addition
     calclutated_total_git_deletion_count.value = total_deletion
-}
-
-async function calc_total_plus_minus_nlogs(): Promise<void> {
-    const sidebar_query = cloned_query.value.clone()
-    nlog_kyous.value.splice(0)
-
-    // timeisのRepだけを検索対象とする
-    // 検索条件は仕事
-    const query_for_extruct_work_kyous = cloned_query.value.clone()
-    query_for_extruct_work_kyous.query_id = GkillAPI.get_instance().generate_uuid()
-    query_for_extruct_work_kyous.reps.splice(0)
-    let walk = (rep_struct: RepStructElementData) => { }
-    walk = (rep_struct: RepStructElementData) => {
-        let exist_in_sidebar_query = false
-        let match_git = false
-        for (let i = 0; i < sidebar_query.reps.length; i++) {
-            if (sidebar_query.reps[i] === rep_struct.rep_name) {
-                exist_in_sidebar_query = true
-                match_git = rep_struct.rep_name.toLowerCase().startsWith("git")
-                break
-            }
-        }
-        if (exist_in_sidebar_query && (match_git)) {
-            query_for_extruct_work_kyous.reps.push(rep_struct.rep_name)
-        }
-        if (rep_struct.children && rep_struct.children.length !== 0) {
-            rep_struct.children.forEach(child_rep => walk(child_rep));
-        }
-    }
-    walk(cloned_application_config.value.parsed_rep_struct)
-
-    const req = new GetKyousRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
-    req.abort_controller = abort_controller.value
-    req.query = query_for_extruct_work_kyous
-
-    req.query.parse_words_and_not_words()
-    const res = await GkillAPI.get_instance().get_kyous(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    nlog_kyous.value.push(...res.kyous)
-
-    const wait_promises = new Array<Promise<any>>()
-    for (let i = 0; i < nlog_kyous.value.length; i++) {
-        const kyou = nlog_kyous.value[i]
-        wait_promises.push(kyou.load_typed_nlog())
-    }
-    await Promise.all(wait_promises)
-
-    let total_plus_nlog = 0
-    let total_minus_nlog = 0
-    for (let i = 0; i < nlog_kyous.value.length; i++) {
-        const kyou = nlog_kyous.value[i]
-        if (kyou.typed_nlog && kyou.typed_nlog.amount) {
-            if (kyou.typed_nlog.amount.valueOf() > 0) {
-                total_plus_nlog += kyou.typed_nlog.amount.valueOf()
-            } else {
-                total_minus_nlog += kyou.typed_nlog.amount.valueOf()
-            }
-        }
-    }
-    calclutated_total_nlog_plus_amount.value = total_plus_nlog
-    calclutated_total_nlog_minus_amount.value = total_minus_nlog
 }
 
 function format_duration(duration_milli_second: number): string {
@@ -820,6 +607,7 @@ function format_duration(duration_milli_second: number): string {
 }
 
 async function calc_checked_timeis(): Promise<void> {
+    total_checked_time.value = ""
     const checked_timeis_kyous = new Array<Kyou>()
     const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < props.checked_kyous.length; i++) {
@@ -844,6 +632,8 @@ async function calc_checked_timeis(): Promise<void> {
 }
 
 async function calc_checked_nlog(): Promise<void> {
+    total_checked_nlog_plus_amount.value = -1
+    total_checked_nlog_minus_amount.value = -1
     const checked_nlog_kyous = new Array<Kyou>()
     const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < props.checked_kyous.length; i++) {
