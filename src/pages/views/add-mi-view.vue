@@ -111,7 +111,7 @@ const show_kyou: Ref<boolean> = ref(false)
 const mi_board_names: Ref<Array<string>> = ref(new Array())
 
 const mi_title: Ref<string> = ref(mi ? mi.value.title : "")
-const mi_board_name: Ref<string> = ref(mi ? mi.value.board_name : "")
+const mi_board_name: Ref<string> = ref(props.application_config.mi_default_board !== "" ? props.application_config.mi_default_board : "Inbox")
 const mi_estimate_start_date: Ref<string> = ref(mi && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("YYYY-MM-DD") : "")
 const mi_estimate_start_time: Ref<string> = ref(mi && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("HH:mm:ss") : "")
 const mi_estimate_end_date: Ref<string> = ref(mi && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("YYYY-MM-DD") : "")
@@ -178,7 +178,7 @@ function now_to_limit_date_time(): void {
 
 function reset(): void {
     mi_title.value = mi.value.title
-    mi_board_name.value = mi.value.board_name
+    mi_board_name.value = props.application_config.mi_default_board
     mi_estimate_start_date.value = mi && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("YYYY-MM-DD") : ""
     mi_estimate_start_time.value = mi && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("HH:mm:ss") : ""
     mi_estimate_end_date.value = mi && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("YYYY-MM-DD") : ""
@@ -312,9 +312,13 @@ async function save(): Promise<void> {
     return
 }
 
-//TODO 有効化して load_mi_board_names()
+load_mi_board_names()
 </script>
 <style lang="css" scoped>
+.select {
+    border: solid 1px silver;
+}
+
 .input.date,
 .input.time,
 .input.text {

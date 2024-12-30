@@ -83,7 +83,7 @@ const timeis_total_time_milli_second = computed(() => {
             const start_time = moment(kyou.typed_timeis.start_time)
             const end_time = kyou.typed_timeis.end_time ? moment(kyou.typed_timeis.end_time) : moment()
             const diff = start_time.diff(end_time)
-            millisecond = diff //TODO あってる？
+            millisecond = diff
         }
     })
     return millisecond
