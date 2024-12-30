@@ -38,6 +38,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext.MatchTimeIsTexts = map[string]*reps.Text{}
 	findKyouContext.MatchKyousCurrent = map[string]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFindKyou = map[string]*reps.Kyou{}
+	findKyouContext.MatchKyousAtFilterMi = map[string]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFilterTags = map[string]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFilterTimeIs = map[string]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFilterLocation = map[string]*reps.Kyou{}
@@ -131,6 +132,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at find kyous: %w", err)
 		return nil, gkillErr, err
 	}
+	gkillErr, err = f.filterMiForMi(ctx, findKyouContext) //miの場合のみ
+	if err != nil {
+		err = fmt.Errorf("error at filter mi for mi: %w", err)
+		return nil, gkillErr, err
+	}
 	gkillErr, err = f.filterTagsKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter tags kyous: %w", err)
@@ -165,6 +171,12 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 	for _, rep := range findKyouContext.MatchKyousCurrent {
 		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, rep)
+	}
+
+	gkillErr, err = f.overrideKyous(ctx, findKyouContext)
+	if err != nil {
+		err = fmt.Errorf("error at override kyous: %w", err)
+		return nil, gkillErr, err
 	}
 
 	gkillErr, err = f.sortResultKyous(ctx, findKyouContext)
@@ -639,6 +651,75 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 	}
 
 	findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFindKyou
+	return nil, nil
+}
+
+func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	if findCtx.ParsedFindQuery.ForMi == nil || !(*findCtx.ParsedFindQuery.ForMi) {
+		return nil, nil
+	}
+
+	// Miを取得位する
+	// 作成日時以外の条件でmiを取得する。その後、作成日時で取得して追加する。
+	allMis := map[string]*reps.Mi{}
+	falseValue := false
+	withoutCreatedMiFindQuery := *findCtx.ParsedFindQuery
+	withoutCreatedMiFindQuery.IncludeCreateMi = &falseValue
+	withoutCreatedMis, err := findCtx.Repositories.MiReps.FindMi(ctx, &withoutCreatedMiFindQuery)
+	if err != nil {
+		err = fmt.Errorf("error at get without created mis: %w", err)
+		return nil, err
+	}
+	for _, mi := range withoutCreatedMis {
+		if existMi, exist := allMis[mi.ID]; exist {
+			if mi.UpdateTime.After(existMi.UpdateTime) {
+				allMis[mi.ID] = mi
+			}
+		} else {
+			allMis[mi.ID] = mi
+		}
+	}
+
+	withCreatedMis, err := findCtx.Repositories.MiReps.FindMi(ctx, findCtx.ParsedFindQuery)
+	if err != nil {
+		err = fmt.Errorf("error at get all mis: %w", err)
+		return nil, err
+	}
+	for _, mi := range withCreatedMis {
+		if _, exist := allMis[mi.ID]; !exist {
+			allMis[mi.ID] = mi
+		}
+	}
+
+	// チェック状態から対象Miを抽出する
+	targetMis := []*reps.Mi{}
+	for _, mi := range allMis {
+		if findCtx.ParsedFindQuery.MiCheckState != nil {
+			switch string(*findCtx.ParsedFindQuery.MiCheckState) {
+			case string(find.Checked):
+				if mi.IsChecked {
+					targetMis = append(targetMis, mi)
+				}
+			case string(find.UncCheck):
+				if !mi.IsChecked {
+					targetMis = append(targetMis, mi)
+				}
+			case string(find.All):
+				targetMis = append(targetMis, mi)
+			}
+		}
+	}
+
+	// 対象MiのKyouのみを中有出する
+	for _, mi := range targetMis {
+		kyou, exist := findCtx.MatchKyousCurrent[mi.ID]
+		if exist {
+			findCtx.MatchKyousAtFilterMi[kyou.ID] = kyou
+		}
+	}
+
+	findCtx.MatchMisAtFilterMi = allMis
+	findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterMi
 	return nil, nil
 }
 
@@ -1215,10 +1296,127 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	findCtx.MatchKyousCurrent = matchKyous
 	return nil, nil
 }
+func (f *FindFilter) overrideKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	if findCtx.ParsedFindQuery.ForMi == nil || (*findCtx.ParsedFindQuery.ForMi) == false || findCtx.ParsedFindQuery.MiSortType == nil {
+		// kyou検索の場合は何もしない
+		return nil, nil
+	}
+	// miの場合は
+	// 表示したとき、指定日時か作成日時かわかるようにDataTypeを上書きする
+	for _, mi := range findCtx.MatchMisAtFilterMi {
+		kyou, exist := findCtx.MatchKyousCurrent[mi.ID]
+		if exist {
+			kyou.DataType = mi.DataType
+			if string(*findCtx.ParsedFindQuery.MiSortType) == string(find.CreateTime) {
+				kyou.DataType = "mi_create"
+				kyou.RelatedTime = mi.CreateTime
+			} else if string(*findCtx.ParsedFindQuery.MiSortType) == string(find.EstimateStartTime) && mi.EstimateStartTime != nil {
+				kyou.DataType = "mi_start"
+				kyou.RelatedTime = *mi.EstimateStartTime
+			} else if string(*findCtx.ParsedFindQuery.MiSortType) == string(find.EstimateEndTime) && mi.EstimateEndTime != nil {
+				kyou.DataType = "mi_end"
+				kyou.RelatedTime = *mi.EstimateEndTime
+			} else if string(*findCtx.ParsedFindQuery.MiSortType) == string(find.LimitTime) && mi.LimitTime != nil {
+				kyou.DataType = "mi_limit"
+				kyou.RelatedTime = *mi.LimitTime
+			} else {
+				kyou.DataType = "mi_create"
+				kyou.RelatedTime = mi.CreateTime
+			}
+
+		}
+	}
+	return nil, nil
+}
 
 func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	if findCtx.ParsedFindQuery.ForMi == nil || (*findCtx.ParsedFindQuery.ForMi) == false || findCtx.ParsedFindQuery.MiSortType == nil {
+		// kyouとしてソート
+		sort.Slice(findCtx.ResultKyous, func(i, j int) bool {
+			return findCtx.ResultKyous[i].RelatedTime.After(findCtx.ResultKyous[j].RelatedTime)
+		})
+		return nil, nil
+	}
+
+	// miとしてソート。指定日時でソートする。指定日時がないものは、末尾に作成日時でくっつける
+	sortType := *findCtx.ParsedFindQuery.MiSortType
 	sort.Slice(findCtx.ResultKyous, func(i, j int) bool {
-		return findCtx.ResultKyous[i].RelatedTime.After(findCtx.ResultKyous[j].RelatedTime)
+		var iTime *time.Time = nil
+		var jTime *time.Time = nil
+
+		iMi := findCtx.MatchMisAtFilterMi[findCtx.ResultKyous[i].ID]
+		jMi := findCtx.MatchMisAtFilterMi[findCtx.ResultKyous[j].ID]
+
+		switch string(sortType) {
+		case string(find.CreateTime):
+			iTime = &iMi.CreateTime
+			jTime = &jMi.CreateTime
+			return iTime.After(*jTime)
+		case string(find.EstimateStartTime):
+			if iMi.EstimateStartTime != nil {
+				iTime = iMi.EstimateStartTime
+			}
+			if jMi.EstimateStartTime != nil {
+				jTime = jMi.EstimateStartTime
+			}
+
+			if iTime != nil && jTime != nil {
+				return iTime.After(*jTime)
+			}
+			if iTime == nil && jTime != nil {
+				return false
+			}
+			if iTime != nil && jTime == nil {
+				return true
+			}
+
+			iTime = &iMi.CreateTime
+			jTime = &jMi.CreateTime
+			return iTime.After(*jTime)
+		case string(find.EstimateEndTime):
+			if iMi.EstimateEndTime != nil {
+				iTime = iMi.EstimateEndTime
+			}
+			if jMi.EstimateEndTime != nil {
+				jTime = jMi.EstimateEndTime
+			}
+
+			if iTime != nil && jTime != nil {
+				return iTime.After(*jTime)
+			}
+			if iTime == nil && jTime != nil {
+				return false
+			}
+			if iTime != nil && jTime == nil {
+				return true
+			}
+
+			iTime = &iMi.CreateTime
+			jTime = &jMi.CreateTime
+			return iTime.After(*jTime)
+		case string(find.LimitTime):
+			if iMi.LimitTime != nil {
+				iTime = iMi.LimitTime
+			}
+			if jMi.LimitTime != nil {
+				jTime = jMi.LimitTime
+			}
+
+			if iTime != nil && jTime != nil {
+				return iTime.After(*jTime)
+			}
+			if iTime == nil && jTime != nil {
+				return false
+			}
+			if iTime != nil && jTime == nil {
+				return true
+			}
+
+			iTime = &iMi.CreateTime
+			jTime = &jMi.CreateTime
+			return iTime.After(*jTime)
+		}
+		return false
 	})
 	return nil, nil
 }

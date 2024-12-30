@@ -8,7 +8,7 @@ export enum MiSortType {
 
     estimate_end_time = "estimate_end_time",
 
-    limit_time = "limit_time"
+    limit_time = "limit_time",
 
 }
 

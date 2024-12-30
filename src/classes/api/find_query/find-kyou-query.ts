@@ -1,10 +1,38 @@
 'use strict'
 
-import { GkillAPI } from '../gkill-api'
-import { FindQueryBase } from './find-query-base'
+import { MiCheckState } from "./mi-check-state"
+import { MiSortType } from "./mi-sort-type"
 
-export class FindKyouQuery extends FindQueryBase {
+export class FindKyouQuery {
     query_id: string
+
+    update_cache: boolean
+    use_words: boolean
+    keywords: string
+    words_and: boolean
+    words: Array<string>
+    not_words: Array<string>
+    use_timeis: boolean
+    timeis_words_and: boolean
+    timeis_keywords: string
+    timeis_words: Array<string>
+    timeis_not_words: Array<string>
+    use_timeis_tags: boolean
+    timeis_tags: Array<string>
+    timeis_tags_and: boolean
+    tags: Array<string>
+    tags_and: boolean
+    use_map: boolean
+    map_latitude: Number
+    map_longitude: Number
+    map_radius: Number
+    use_calendar: boolean
+    calendar_start_date: Date | null
+    calendar_end_date: Date | null
+    use_plaing: boolean
+    plaing_time: Date | null
+    use_update_time: boolean
+    update_time: Date | null
 
     use_rep_types: boolean
     rep_types: Array<string>
@@ -15,6 +43,20 @@ export class FindKyouQuery extends FindQueryBase {
     is_enable_map_circle_in_sidebar: boolean
     is_image_only_in_sidebar: boolean
     is_focus_kyou_in_list_view: boolean
+
+    use_mi_board_name: boolean
+    mi_board_name: string
+    use_mi_sort_type: boolean
+    mi_sort_type: MiSortType
+
+    for_mi: boolean
+    use_mi_check_state: boolean
+    mi_check_state: MiCheckState
+    include_create_mi: boolean
+    include_check_mi: boolean
+    include_limit_mi: boolean
+    include_start_mi: boolean
+    include_end_mi: boolean
 
     clone(): FindKyouQuery {
         const cloned = new FindKyouQuery()
@@ -53,12 +95,50 @@ export class FindKyouQuery extends FindQueryBase {
         cloned.is_enable_map_circle_in_sidebar = this.is_enable_map_circle_in_sidebar
         cloned.use_rep_types = this.use_rep_types
         cloned.rep_types = this.rep_types.concat()
+        cloned.use_mi_board_name = this.use_mi_board_name
+        cloned.mi_board_name = this.mi_board_name
+        cloned.use_mi_sort_type = this.use_mi_sort_type
+        cloned.mi_sort_type = this.mi_sort_type
+        cloned.use_mi_check_state = this.use_mi_check_state
+        cloned.mi_check_state = this.mi_check_state
+        cloned.for_mi = this.for_mi
+        cloned.include_create_mi = this.include_create_mi
+        cloned.include_check_mi = this.include_check_mi
+        cloned.include_limit_mi = this.include_limit_mi
+        cloned.include_start_mi = this.include_start_mi
+        cloned.include_end_mi = this.include_end_mi
         return cloned
     }
 
     constructor() {
-        super()
         this.query_id = ""
+        this.update_cache = false
+        this.use_words = false
+        this.keywords = ""
+        this.words_and = false
+        this.words = new Array<string>
+        this.not_words = new Array<string>()
+        this.use_timeis = false
+        this.timeis_keywords = ""
+        this.timeis_words_and = false
+        this.timeis_words = new Array<string>()
+        this.timeis_not_words = new Array<string>()
+        this.use_timeis_tags = false
+        this.timeis_tags = new Array<string>()
+        this.timeis_tags_and = false
+        this.tags = new Array<string>()
+        this.tags_and = false
+        this.use_map = false
+        this.map_latitude = 0
+        this.map_longitude = 0
+        this.map_radius = 0
+        this.use_calendar = false
+        this.calendar_start_date = null
+        this.calendar_end_date = null
+        this.use_plaing = false
+        this.plaing_time = null
+        this.use_update_time = false
+        this.update_time = null
         this.reps = new Array<string>()
         this.is_image_only_in_sidebar = false
         this.devices_in_sidebar = new Array<string>()
@@ -66,6 +146,80 @@ export class FindKyouQuery extends FindQueryBase {
         this.is_focus_kyou_in_list_view = false
         this.is_enable_map_circle_in_sidebar = false
         this.use_rep_types = false
-        this.rep_types =  new Array<string>()
+        this.rep_types = new Array<string>()
+        this.use_mi_board_name = false
+        this.mi_board_name = ""
+        this.use_mi_sort_type = false
+        this.mi_sort_type = MiSortType.create_time
+        this.use_mi_check_state = false
+        this.mi_check_state = MiCheckState.uncheck
+        this.for_mi = false
+        this.include_create_mi = true
+        this.include_check_mi = false
+        this.include_limit_mi = false
+        this.include_start_mi = false
+        this.include_end_mi   = false
+    }
+
+    parse_words_and_not_words() {
+        const words = new Array<string>()
+        const not_words = new Array<string>()
+        let nextIsNotWord = false
+        const words_list = this.keywords.split(" ")
+        for (let i = 0; i < words_list.length; i++) {
+            const words_list_ = words_list[i].split("　")
+            for (let j = 0; j < words_list_.length; j++) {
+                let word = words_list_[j]
+                if (word.startsWith("-")) {
+                    nextIsNotWord = true
+                    word = word.replace("-", "")
+                }
+                if (word === "") {
+                    continue
+                } else if (word === "-") {
+                    nextIsNotWord = true
+                    continue
+                } else {
+                    if (nextIsNotWord) {
+                        not_words.push(word)
+                    } else {
+                        words.push(word)
+                    }
+                    nextIsNotWord = false
+                }
+            }
+        }
+        this.words = words
+        this.not_words = not_words
+
+        const timeis_words = new Array<string>()
+        const timeis_not_words = new Array<string>()
+        nextIsNotWord = false
+        const timeis_words_list = this.timeis_keywords.split(" ")
+        for (let i = 0; i < timeis_words_list.length; i++) {
+            const timeis_words_list_ = timeis_words_list[i].split("　")
+            for (let j = 0; j < timeis_words_list_.length; j++) {
+                let word = timeis_words_list_[j]
+                if (word.startsWith("-")) {
+                    nextIsNotWord = true
+                    word = word.replace("-", "")
+                }
+                if (word === "") {
+                    continue
+                } else if (word === "-") {
+                    nextIsNotWord = true
+                    continue
+                } else {
+                    if (nextIsNotWord) {
+                        timeis_not_words.push(word)
+                    } else {
+                        timeis_words.push(word)
+                    }
+                    nextIsNotWord = false
+                }
+            }
+        }
+        this.timeis_words = timeis_words
+        this.timeis_not_words = timeis_not_words
     }
 }

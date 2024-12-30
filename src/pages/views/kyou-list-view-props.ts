@@ -15,4 +15,5 @@ export interface KyouListViewProps extends GkillPropsBase {
     show_footer: boolean
     show_checkbox: boolean
     closable: boolean
+    is_readonly_mi_check: boolean
 }
