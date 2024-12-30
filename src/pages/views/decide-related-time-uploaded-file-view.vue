@@ -7,8 +7,9 @@
     <KyouListView :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="uploaded_kyous"
         :width="180" :list_height="app_content_height" :kyou_height="180" :query="new FindKyouQuery()"
         :is_focused_list="false" :closable="false" @received_errors="(errors) => emits('received_errors', errors)"
-        :last_added_tag="last_added_tag" @received_messages="(messages) => emits('received_messages', messages)"
-        :scroll_top="0 /* //TODO */" :show_checkbox="false" :show_footer="false"
+        :last_added_tag="last_added_tag" :is_readonly_mi_check="true"
+        @received_messages="(messages) => emits('received_messages', messages)" :scroll_top="0 /* //TODO */"
+        :show_checkbox="false" :show_footer="false"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
         @requested_reload_list="emits('requested_reload_list')" />
 </template>

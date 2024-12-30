@@ -41,15 +41,13 @@
                     @request_update_use_calendar_query="emits_current_query()"
                     @request_clear_calendar_query="emits_cleard_calendar_query()"
                     :inited="inited_calendar_query_for_query_sidebar"
-                    @inited="inited_calendar_query_for_query_sidebar = true"
-                    ref="calendar_query" />
+                    @inited="inited_calendar_query_for_query_sidebar = true" ref="calendar_query" />
             </div>
             <div> <v-divider /> </div>
             <MapQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_area="emits_current_query()" @request_update_use_map_query="emits_current_query()"
                 @request_clear_map_query="emits_cleard_map_query()" :inited="inited_map_query_for_query_sidebar"
-                @inited="inited_map_query_for_query_sidebar = true"
-                ref="map_query" />
+                @inited="inited_map_query_for_query_sidebar = true" ref="map_query" />
         </div>
     </div>
 </template>
@@ -273,7 +271,7 @@ function emits_default_query(): void {
     emits('updated_query_clear', find_query)
 }
 </script>
-<style lang="css">
+<style lang="css" scoped>
 .sidebar_header_wrap {
     top: v-bind(header_top_px);
     position: sticky;

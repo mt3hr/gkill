@@ -183,12 +183,13 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	sqlWhereFilterEndMi := ""
 	sqlWhereFilterEndMi += "DATA_TYPE IN ("
 
-	if filterWhereCounter != 0 {
-		sqlWhereFilterEndMi += ", "
+	if query.IncludeCreateMi != nil && *query.IncludeCreateMi {
+		if filterWhereCounter != 0 {
+			sqlWhereFilterEndMi += ", "
+		}
+		filterWhereCounter++
+		sqlWhereFilterEndMi += "'mi_create'"
 	}
-	filterWhereCounter++
-	sqlWhereFilterEndMi += "'mi_create'"
-
 	if query.IncludeCheckMi != nil && *query.IncludeCheckMi {
 		if filterWhereCounter != 0 {
 			sqlWhereFilterEndMi += ", "
@@ -218,8 +219,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		sqlWhereFilterEndMi += "'mi_end'"
 	}
 	sqlWhereFilterEndMi += ")"
-	if filterWhereCounter != 0 {
-		sqlWhereFilterEndMi = ""
+	if filterWhereCounter == 0 {
+		sqlWhereFilterEndMi = " 1 = 0 " // false
 	}
 
 	queryArgsForCreate := []interface{}{
@@ -238,6 +239,11 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		return nil, err
 	}
 	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForCreate += " AND "
+		sqlWhereForCreate += " BOARD_NAME = ? "
+		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
+	}
 
 	queryArgsForCheck := []interface{}{
 		repName,
@@ -254,6 +260,11 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		return nil, err
 	}
 	sqlWhereForCheck = "CHECKED_TIME IS NOT NULL AND " + sqlWhereForCheck
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForCheck += " AND "
+		sqlWhereForCheck += " BOARD_NAME = ? "
+		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
+	}
 
 	queryArgsForLimit := []interface{}{
 		repName,
@@ -270,6 +281,11 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		return nil, err
 	}
 	sqlWhereForLimit = "LIMIT_TIME IS NOT NULL AND " + sqlWhereForLimit
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForLimit += " AND "
+		sqlWhereForLimit += " BOARD_NAME = ? "
+		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
+	}
 
 	queryArgsForStart := []interface{}{
 		repName,
@@ -286,6 +302,11 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		return nil, err
 	}
 	sqlWhereForStart = "ESTIMATE_START_TIME IS NOT NULL AND " + sqlWhereForStart
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForStart += " AND "
+		sqlWhereForStart += " BOARD_NAME = ? "
+		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
+	}
 
 	queryArgsForEnd := []interface{}{
 		repName,
@@ -302,13 +323,18 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		return nil, err
 	}
 	sqlWhereForEnd = "ESTIMATE_END_TIME IS NOT NULL AND " + sqlWhereForEnd
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForEnd += " AND "
+		sqlWhereForEnd += " BOARD_NAME = ? "
+		queryArgsForEnd = append(queryArgsForEnd, *query.MiBoardName)
+	}
 
-	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
+	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -575,6 +601,7 @@ SELECT
   CHECKED_TIME,
   BOARD_NAME,
   LIMIT_TIME,
+  ESTIMATE_START_TIME,
   ESTIMATE_END_TIME,
   CREATE_TIME,
   CREATE_APP,
@@ -589,8 +616,6 @@ SELECT
 FROM MI 
 WHERE 
 `
-	sqlWhereFilterCreateMi := "DATA_TYPE IN ('mi_create')"
-
 	queryArgsForCreate := []interface{}{
 		repName,
 	}
@@ -607,14 +632,12 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
-
-	sql := fmt.Sprintf("%s AND %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlWhereFilterCreateMi)
+	sql := fmt.Sprintf("%s %s", sqlCreateMi, sqlWhereForCreate)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql: %w", err)
+		err = fmt.Errorf("error at get find mi sql: %w", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -783,7 +806,12 @@ WHERE
 	}
 	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
 
-	sql += sqlWhereForCreate
+	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
+		sqlWhereForCreate += " AND BOARD_NAME = ? "
+		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
+	}
+
+	sql = fmt.Sprintf("%s %s", sql, sqlWhereForCreate)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
@@ -793,8 +821,11 @@ WHERE
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
-	rows, err := stmt.QueryContext(ctx, queryArgsForCreate...)
+	queryArgs := []interface{}{}
+	queryArgs = append(queryArgs, queryArgsForCreate...)
+
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from MI %s: %w", err)
 		return nil, err

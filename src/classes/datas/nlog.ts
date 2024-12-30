@@ -3,7 +3,6 @@
 import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
 import { GetNlogRequest } from '../api/req_res/get-nlog-request'
-import { GetNlogsRequest } from '../api/req_res/get-nlogs-request'
 import { InfoBase } from './info-base'
 import { InfoIdentifier } from './info-identifier'
 

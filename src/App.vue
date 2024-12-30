@@ -1,6 +1,4 @@
 <script setup lang="ts">
-//TODO requested_update_last_added_tag
-//TODO requested_update_last_added_tagをトップまでに持ってくる。router超えて使えるようにしたい。Cookie？
 import { type Ref, ref } from 'vue';
 import { RouterView } from 'vue-router'
 import { VLocaleProvider } from 'vuetify/components';

@@ -22,6 +22,8 @@ type FindKyouContext struct {
 
 	MatchTimeIssAtFilterTags map[string]*reps.TimeIs `json:"match_time_iss_at_filter_tags"`
 
+	MatchMisAtFilterMi map[string]*reps.Mi `json:"match_mis_at_filter_mi"`
+
 	MatchTimeIsTags map[string]*reps.Tag `json:"match_time_is_tags"`
 
 	MatchTimeIsTexts map[string]*reps.Text `json:"match_time_is_texts"`
@@ -29,6 +31,8 @@ type FindKyouContext struct {
 	MatchKyousCurrent map[string]*reps.Kyou `json:"match_kyous_current"`
 
 	MatchKyousAtFindKyou map[string]*reps.Kyou `json:"match_kyous_at_find_kyou"`
+
+	MatchKyousAtFilterMi map[string]*reps.Kyou `json:"match_kyous_at_filter_mi"`
 
 	MatchKyousAtFilterTags map[string]*reps.Kyou `json:"match_kyous_at_filter_tags"`
 

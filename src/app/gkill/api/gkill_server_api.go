@@ -737,8 +737,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 		MessageCode: message.PasswordResetSuccessMessage,
 		Message:     "パスワードリセット処理を完了しました",
 	})
-	response.PasswordResetPathWithoutHost = fmt.Sprintf("%s", *updateTargetAccount.PasswordResetToken) //TODO パスワードリセットアドレス
-
+	response.PasswordResetPathWithoutHost = fmt.Sprintf("%s", *updateTargetAccount.PasswordResetToken)
 }
 
 func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Request) {

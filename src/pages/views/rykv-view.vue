@@ -84,7 +84,7 @@
                             :application_config="application_config" :gkill_api="gkill_api"
                             :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
                             :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                            :show_checkbox="true" :show_footer="true" @scroll_list="(scroll_top: number) => {
+                            :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="true" @scroll_list="(scroll_top: number) => {
                                 match_kyous_list_top_list[index] = scroll_top
                                 GkillAPI.get_instance().set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
                             }" @clicked_list_view="() => {
@@ -95,6 +95,7 @@
                                 for (let i = 0; i < match_kyous_list[index].length; i++) {
                                     focused_kyous_list.push(match_kyous_list[index][i])
                                 }
+                                focused_column_index = index
                                 nextTick(() => skip_search_this_tick = false)
                             }" @clicked_kyou="(kyou) => {
                                 skip_search_this_tick = true
@@ -140,8 +141,9 @@
                     </td>
                     <td valign="top">
                         <v-btn class="rounded-sm mx-auto" :height="app_content_height.valueOf()" :width="30"
-                            :color="'primary'" @click="() => {
+                            :color="'primary'" @click="async () => {
                                 add_list_view()
+                                skip_search_this_tick = true
                                 if (application_config.rykv_hot_reload) {
                                     search(querys.length - 1, querys[querys.length - 1], true).then(() => {
                                         if (kyou_list_views.value && kyou_list_views.value.length - 1 >= querys.length - 1) {
@@ -554,7 +556,9 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         }
 
         const kyou_list_view = kyou_list_views.value[column_index] as any
-        kyou_list_view.scroll_to(0)
+        if (kyou_list_view) {
+            kyou_list_view.scroll_to(0)
+        }
         await nextTick(async () => {
             const kyou_list_view = kyou_list_views.value[column_index] as any
             if (!kyou_list_view) {
@@ -586,6 +590,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             focused_kyous_list.value.push(match_kyous_list.value[column_index][i])
         }
         await nextTick(() => {
+            const kyou_list_view = kyou_list_views.value[column_index] as any
             if (!kyou_list_view) {
                 return
             }
