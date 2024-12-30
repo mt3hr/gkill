@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 	"sort"
 	"sync"
 	"time"
@@ -13,7 +14,7 @@ import (
 
 type ReKyouRepositories struct {
 	ReKyouRepositories []ReKyouRepository
-	repositories       *GkillRepositories
+	GkillRepositories  *GkillRepositories
 }
 
 func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
@@ -32,35 +33,29 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 		}
 	}
 
-	// ReKyou対象が検索ヒットすれば返す
-	// 検索用クエリJSONを作成
-	ids := []string{}
-	for _, rekyou := range allReKyous {
-		ids = append(ids, rekyou.TargetID)
-	}
-
-	falseValue := false
-	trueValue := true
-	findQuery := &find.FindQuery{
-		IsDeleted: &falseValue,
-		UseIDs:    &trueValue,
-		IDs:       &ids,
-	}
-
-	reps, err := r.GetRepositories(ctx)
+	repsWithoutRekyou, err := r.GetRepositoriesWithoutReKyouRep(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories: %w", err)
 		return nil, err
 	}
 
+	latestDataRepositoryAddresses, err := repsWithoutRekyou.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
+		return nil, err
+	}
+
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.Reps.FindKyous(ctx, findQuery)
-		if err != nil {
-			err = fmt.Errorf("error at find kyous: %w", err)
-			return nil, err
+		existInRep := false
+		for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
+			if latestDataRepositoryAddress.TargetID == rekyou.TargetID {
+				existInRep = true
+				break
+			}
 		}
+
 		// 存在すれば検索ヒットとする
-		if len(kyous) != 0 {
+		if existInRep {
 			kyou := &Kyou{}
 			kyou.IsDeleted = rekyou.IsDeleted
 			kyou.ID = rekyou.ID
@@ -329,35 +324,29 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQue
 		}
 	}
 
-	// ReKyou対象が検索ヒットすれば返す
-	// 検索用クエリJSONを作成
-	ids := []string{}
-	for _, rekyou := range allReKyous {
-		ids = append(ids, rekyou.TargetID)
-	}
-
-	falseValue := false
-	trueValue := true
-	findQuery := &find.FindQuery{
-		IsDeleted: &falseValue,
-		UseIDs:    &trueValue,
-		IDs:       &ids,
-	}
-
-	reps, err := r.GetRepositories(ctx)
+	repsWithoutRekyou, err := r.GetRepositoriesWithoutReKyouRep(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get repositories: %w", err)
+		err = fmt.Errorf("error at get without rekyou: %w", err)
+		return nil, err
+	}
+
+	latestDataRepositoryAddresses, err := repsWithoutRekyou.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
 		return nil, err
 	}
 
 	for _, rekyou := range notDeletedAllReKyous {
-		kyous, err := reps.Reps.FindKyous(ctx, findQuery)
-		if err != nil {
-			err = fmt.Errorf("error at find kyous: %w", err)
-			return nil, err
+		existInRep := false
+		for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
+			if latestDataRepositoryAddress.TargetID == rekyou.TargetID {
+				existInRep = true
+				break
+			}
 		}
+
 		// 存在すれば検索ヒットとする
-		if len(kyous) != 0 {
+		if existInRep {
 			matchReKyous = append(matchReKyous, rekyou)
 		}
 	}
@@ -533,6 +522,7 @@ func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou
 				errch <- err
 				return
 			}
+			fmt.Printf("matchReKyousInRep = %#v\n", matchReKyousInRep)
 			ch <- matchReKyousInRep
 		}(rep)
 	}
@@ -589,6 +579,38 @@ loop:
 	return matchReKyousList, nil
 }
 
-func (r *ReKyouRepositories) GetRepositories(ctx context.Context) (*GkillRepositories, error) {
-	return r.repositories, nil
+func (r *ReKyouRepositories) GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error) {
+	withoutRekyouReps := Repositories{}
+	for _, rep := range r.GkillRepositories.Reps {
+		repIsRekyouRep := false
+
+		repPath, err := rep.GetPath(ctx, "")
+		if err != nil {
+			err = fmt.Errorf("error at get reps path: %w", err)
+			return nil, err
+		}
+
+		for _, reKyouRep := range r.GkillRepositories.ReKyouReps.ReKyouRepositories {
+			rekyouRepPath, err := reKyouRep.GetPath(ctx, "")
+			if err != nil {
+				err = fmt.Errorf("error at get rekyous reps path: %w", err)
+				return nil, err
+			}
+
+			if filepath.ToSlash(repPath) == filepath.ToSlash(rekyouRepPath) {
+				repIsRekyouRep = true
+				break
+			}
+		}
+		if repIsRekyouRep {
+			continue
+		}
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+
+	withoutRekyouGkillRepsValue := *r.GkillRepositories
+	withoutRekyouGkillRepsValue.Reps = withoutRekyouReps
+	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = &withoutRekyouGkillRepsValue
+	withoutRekyouGkillRepsValue.ReKyouReps.ReKyouRepositories = nil
+	return &withoutRekyouGkillRepsValue, nil
 }

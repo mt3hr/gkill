@@ -418,11 +418,15 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	kyousCh := make(chan []*Kyou, len(g.Reps))
 	tagsCh := make(chan []*Tag, len(g.TagReps))
 	textsCh := make(chan []*Text, len(g.TextReps))
+	rekyousCh := make(chan []*Kyou, len(g.ReKyouReps.ReKyouRepositories))
 	errch := make(chan error, len(g.Reps))
+	rekyouErrch := make(chan error, len(g.ReKyouReps.ReKyouRepositories))
 	defer close(kyousCh)
 	defer close(tagsCh)
 	defer close(textsCh)
 	defer close(errch)
+	defer close(rekyousCh)
+	defer close(rekyouErrch)
 
 	allKyous := []*Kyou{}
 	allTags := []*Tag{}
@@ -430,8 +434,33 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 
 	// UpdateCache並列処理
 	for _, rep := range g.Reps {
-		wg.Add(1)
+		// ReKyouはあとからやる　ここから
+		repIsRekyouRep := false
 
+		repPath, err := rep.GetPath(ctx, "")
+		if err != nil {
+			err = fmt.Errorf("error at get reps path: %w", err)
+			return err
+		}
+
+		for _, reKyouRep := range g.ReKyouReps.ReKyouRepositories {
+			rekyouRepPath, err := reKyouRep.GetPath(ctx, "")
+			if err != nil {
+				err = fmt.Errorf("error at get rekyous reps path: %w", err)
+				return err
+			}
+
+			if filepath.ToSlash(repPath) == filepath.ToSlash(rekyouRepPath) {
+				repIsRekyouRep = true
+				break
+			}
+		}
+		if repIsRekyouRep {
+			continue
+		}
+		// ReKyouはあとからやる　ここまで
+
+		wg.Add(1)
 		go func(rep Repository) {
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
@@ -638,6 +667,47 @@ textsloop:
 		return err
 	}
 
+	// ReKyouは最後に実行する
+	err = g.ReKyouReps.UpdateCache(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at rekyou reps update cache: %w", err)
+		return err
+	}
+
+	// rekyouを集める
+	rekyous, err := g.ReKyouReps.GetReKyousAllLatest(ctx)
+	if err != nil {
+		err = fmt.Errorf("error get rekyou all latests: %w", err)
+		return err
+	}
+
+	latestReKyousMap := map[string]*ReKyou{}
+	for _, kyou := range rekyous {
+		if existKyou, exist := latestReKyousMap[kyou.ID]; exist {
+			if kyou.UpdateTime.After(existKyou.UpdateTime) {
+				latestReKyousMap[kyou.ID] = kyou
+			}
+		} else {
+			latestReKyousMap[kyou.ID] = kyou
+		}
+	}
+
+	latestDataRepositoryAddresses = []*account_state.LatestDataRepositoryAddress{}
+	for _, kyou := range latestReKyousMap {
+		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                kyou.IsDeleted,
+			TargetID:                 kyou.ID,
+			LatestDataRepositoryName: kyou.RepName,
+			DataUpdateTime:           kyou.UpdateTime,
+		}
+		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
+	}
+
+	_, err = g.LatestDataRepositoryAddressDAO.AddLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
+	if err != nil {
+		err = fmt.Errorf("error at add latest data repository address cache: %w", err)
+		return err
+	}
 	return nil
 }
 
@@ -1703,6 +1773,12 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 						m.Unlock()
 					}
 				}
+			} else if query.Reps == nil || len(*query.Reps) == 0 {
+				m.Lock()
+				if _, exist := matchReps[repName]; !exist {
+					matchReps[repName] = rep
+				}
+				m.Unlock()
 			}
 			errch <- nil
 		}(rep)
