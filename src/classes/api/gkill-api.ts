@@ -1471,13 +1471,7 @@ export class GkillAPI {
                 application_config.user_id = response.application_config.user_id
                 response.application_config = application_config
 
-                await response.application_config.append_no_tags()
-                await response.application_config.append_no_devices()
-                await response.application_config.append_not_found_tags()
-                await response.application_config.append_not_found_reps()
-                await response.application_config.append_not_found_rep_types()
-                await response.application_config.append_not_found_devices()
-                await response.application_config.parse_template_and_struct()
+                await response.application_config.load_all()
                 this.check_auth(response)
 
                 this.set_google_map_api_key(response.application_config.google_map_api_key)
@@ -1972,12 +1966,57 @@ export class GkillAPI {
                 return querys
         }
 
+        private mi_find_kyou_querys_localstorage_key = "mi_find_kyou_querys"
+        set_saved_mi_find_kyou_querys(querys: Array<FindKyouQuery>): void {
+                window.localStorage.setItem(this.mi_find_kyou_querys_localstorage_key, JSON.stringify(querys))
+        }
+        get_saved_mi_find_kyou_querys(): Array<FindKyouQuery> {
+                const query_json_string = window.localStorage.getItem(this.mi_find_kyou_querys_localstorage_key)
+                if (!query_json_string) {
+                        return new Array<FindKyouQuery>()
+                }
+                const querys_json: any = JSON.parse(query_json_string)
+                if (!querys_json) {
+                        return new Array<FindKyouQuery>()
+                }
+                // 型に合わせる（そのままキャストするとメソッドが生えないため）
+                const querys = Array<FindKyouQuery>()
+                for (let i = 0; i < querys_json.length; i++) {
+                        const query = new FindKyouQuery()
+                        for (let key in querys_json[i]) {
+                                (query as any)[key] = querys_json[i][key]
+                                if ((key.endsWith("time") || key.endsWith("date")) && (query as any)[key]) {
+                                        (query as any)[key] = moment((query as any)[key]).toDate()
+                                }
+                        }
+                        querys.push(query)
+                }
+                return querys
+        }
+
         private rykv_scroll_indexs_localstorage_key = "rykv_scroll_indexs"
         set_saved_rykv_scroll_indexs(indexs: Array<number>): void {
                 window.localStorage.setItem(this.rykv_scroll_indexs_localstorage_key, JSON.stringify(indexs))
         }
         get_saved_rykv_scroll_indexs(): Array<number> {
                 const indexs_json_string = window.localStorage.getItem(this.rykv_scroll_indexs_localstorage_key)
+                if (!indexs_json_string) {
+                        return new Array<number>()
+                }
+                const indexs_json: any = JSON.parse(indexs_json_string)
+                if (!indexs_json) {
+                        return new Array<number>()
+                }
+                const indexs: Array<number> = indexs_json
+                return indexs
+        }
+
+        private mi_scroll_indexs_localstorage_key = "mi_scroll_indexs"
+        set_saved_mi_scroll_indexs(indexs: Array<number>): void {
+                window.localStorage.setItem(this.mi_scroll_indexs_localstorage_key, JSON.stringify(indexs))
+        }
+        get_saved_mi_scroll_indexs(): Array<number> {
+                const indexs_json_string = window.localStorage.getItem(this.mi_scroll_indexs_localstorage_key)
                 if (!indexs_json_string) {
                         return new Array<number>()
                 }

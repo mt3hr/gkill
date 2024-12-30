@@ -15,6 +15,9 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetAllRepNamesRequest } from '@/classes/api/req_res/get-all-rep-names-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
+import { MiBoardStructElementData } from './mi-board-struct-element-data'
+import { MiBoardStruct } from './mi-board-struct'
+import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
 
 export class ApplicationConfig {
     is_loaded: boolean
@@ -31,11 +34,13 @@ export class ApplicationConfig {
     parsed_rep_struct: RepStructElementData
     parsed_device_struct: DeviceStructElementData
     parsed_rep_type_struct: RepTypeStructElementData
+    parsed_mi_boad_struct: MiBoardStructElementData
     tag_struct: Array<TagStruct>
     rep_struct: Array<RepStruct>
     device_struct: Array<DeviceStruct>
     rep_type_struct: Array<RepTypeStruct>
     kftl_template_struct: Array<KFTLTemplateStruct>
+    mi_board_struct: Array<MiBoardStruct>
     async parse_template_and_struct(): Promise<Array<GkillError>> {
         let errors = Array<GkillError>()
         errors = errors.concat(await this.parse_tag_struct())
@@ -43,6 +48,7 @@ export class ApplicationConfig {
         errors = errors.concat(await this.parse_device_struct())
         errors = errors.concat(await this.parse_rep_type_struct())
         errors = errors.concat(await this.parse_kftl_template_struct())
+        errors = errors.concat(await this.parse_mi_board_struct())
         return errors
     }
     clone(): ApplicationConfig {
@@ -61,17 +67,20 @@ export class ApplicationConfig {
         application_config.rep_type_struct = this.rep_type_struct
         application_config.kftl_template_struct = this.kftl_template_struct
         application_config.account_is_admin = this.account_is_admin
+        application_config.mi_board_struct = this.mi_board_struct
         return application_config
     }
     async load_all(): Promise<Array<GkillError>> {
         let errors = Array<GkillError>()
-        errors.concat(await this.parse_template_and_struct())
         errors.concat(await this.append_not_found_devices())
         errors.concat(await this.append_not_found_rep_types())
         errors.concat(await this.append_not_found_reps())
         errors.concat(await this.append_not_found_tags())
+        errors.concat(await this.append_not_found_mi_boards())
         errors.concat(await this.append_no_devices())
         errors.concat(await this.append_no_tags())
+        errors.concat(await this.append_all_mi_board())
+        errors.concat(await this.parse_template_and_struct())
         return errors
     }
     async append_not_found_reps(): Promise<Array<GkillError>> {
@@ -157,6 +166,49 @@ export class ApplicationConfig {
             tag_struct.seq = 1000 + i++
             tag_struct.user_id = gkill_info_res.user_id
             this.tag_struct.push(tag_struct)
+        })
+        return new Array<GkillError>()
+    }
+
+    async append_not_found_mi_boards(): Promise<Array<GkillError>> {
+        const req = new GetMiBoardRequest()
+        req.session_id = GkillAPI.get_instance().get_session_id()
+        const res = await GkillAPI.get_instance().get_mi_board_list(req)
+        if (res.errors && res.errors.length !== 0) {
+            return res.errors
+        }
+
+        const gkill_info_req = new GetGkillInfoRequest()
+        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            return gkill_info_res.errors
+        }
+
+        const not_found = new Set<string>()
+        res.boards.forEach(board => {
+            let exist = false
+            this.mi_board_struct.forEach(mi_board => {
+                if (mi_board.board_name === board) {
+                    exist = true
+                }
+            })
+            if (!exist) {
+                not_found.add(board)
+            }
+        })
+
+        let i = 0
+        not_found.forEach(board_name => {
+            const board_struct = new MiBoardStruct()
+            board_struct.check_when_inited = true
+            board_struct.device = gkill_info_res.device
+            board_struct.id = GkillAPI.get_instance().generate_uuid()
+            board_struct.parent_folder_id = null
+            board_struct.board_name = board_name
+            board_struct.seq = 1000 + i++
+            board_struct.user_id = gkill_info_res.user_id
+            this.mi_board_struct.push(board_struct)
         })
         return new Array<GkillError>()
     }
@@ -615,7 +667,7 @@ export class ApplicationConfig {
             let item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new RepTypeStructElementData()
-                    struct_element.seq_in_parent = item.seq.valueOf()
+                struct_element.seq_in_parent = item.seq.valueOf()
                 struct_element.check_when_inited = item.check_when_inited
                 struct_element.id = item.id
                 struct_element.indeterminate = false
@@ -689,6 +741,91 @@ export class ApplicationConfig {
         return new Array<GkillError>()
 
     }
+
+    async parse_mi_board_struct(): Promise<Array<GkillError>> {
+        const added_list = new Array<MiBoardStruct>()
+        const not_added_list: Array<MiBoardStruct> = this.mi_board_struct.concat()
+        const struct = new MiBoardStructElementData()
+        struct.children = new Array<MiBoardStructElementData>()
+
+        // 親を持たないものをルートに追加する
+        for (let i = 0; i < not_added_list.length; i++) {
+            let item = not_added_list[i]
+            if (!item.parent_folder_id || item.parent_folder_id === "") {
+                const struct_element = new MiBoardStructElementData()
+                struct_element.seq_in_parent = item.seq.valueOf()
+                struct_element.check_when_inited = item.check_when_inited
+                struct_element.id = item.id
+                struct_element.indeterminate = false
+                struct_element.is_checked = item.check_when_inited
+                struct_element.key = item.board_name
+
+                struct.children.push(struct_element)
+                added_list.push(item)
+                not_added_list.splice(i, 1)
+                i--;
+            }
+        }
+        // 再帰呼び出し用
+        let walk = (struct: MiBoardStructElementData, target_id: string | null): MiBoardStructElementData | null => {
+            throw new Error('Not implemented')
+        }
+        // structを潜ってIDが一致するものを取得する
+        walk = (struct: MiBoardStructElementData, target_id: string | null): MiBoardStructElementData | null => {
+            if (struct.id === target_id) {
+                return struct
+            }
+            if (!struct.children) {
+                return null
+            }
+            let target: MiBoardStructElementData | null = null
+            for (let i = 0; i < struct.children.length; i++) {
+                const child = struct.children[i]
+                target = walk(child, target_id)
+                if (target) {
+                    break
+                }
+            }
+            return target
+        }
+        while (not_added_list.length !== 0) {
+            for (let i = 0; i < not_added_list.length; i++) {
+                let item = not_added_list[i]
+                const parent_struct = walk(struct, item.parent_folder_id)
+                if (parent_struct) {
+                    const struct_element = new MiBoardStructElementData()
+                    struct_element.seq_in_parent = item.seq.valueOf()
+                    struct_element.check_when_inited = item.check_when_inited
+                    struct_element.id = item.id
+                    struct_element.indeterminate = false
+                    struct_element.is_checked = item.check_when_inited
+                    struct_element.key = item.board_name
+                    struct_element.board_name = item.board_name
+
+                    if (!parent_struct.children) {
+                        parent_struct.children = new Array<MiBoardStructElementData>()
+                    }
+                    parent_struct.children.push(struct_element)
+                    added_list.push(item)
+                    not_added_list.splice(i, 1)
+                    i--;
+                }
+            }
+        }
+        let sort = (struct: MiBoardStructElementData): void => { }
+        sort = (struct: MiBoardStructElementData): void => {
+            if (struct.children) {
+                struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
+                for (let i = 0; i < struct.children.length; i++) {
+                    sort(struct.children[i])
+                }
+            }
+        }
+        sort(struct)
+        this.parsed_mi_boad_struct = struct
+        return new Array<GkillError>()
+    }
+
     async append_no_tags(): Promise<Array<GkillError>> {
         const gkill_info_req = new GetGkillInfoRequest()
         gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
@@ -718,6 +855,37 @@ export class ApplicationConfig {
         }
         return new Array<GkillError>()
     }
+
+    async append_all_mi_board(): Promise<Array<GkillError>> {
+        const gkill_info_req = new GetGkillInfoRequest()
+        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
+        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            return gkill_info_res.errors
+        }
+
+        let exist = false
+        this.mi_board_struct.forEach(board => {
+            if (board.board_name=== "すべて") {
+                exist = true
+            }
+        })
+
+        if (!exist) {
+            const board_struct = new MiBoardStruct()
+            board_struct.check_when_inited = true
+            board_struct.device = gkill_info_res.device
+            board_struct.id = GkillAPI.get_instance().generate_uuid()
+            board_struct.parent_folder_id = null
+            board_struct.board_name= "すべて"
+            board_struct.seq = -1000
+            board_struct.user_id = gkill_info_res.user_id
+            this.mi_board_struct.unshift(board_struct)
+        }
+        return new Array<GkillError>()
+    }
+ 
+
     constructor() {
         this.is_loaded = false
         this.user_id = ""
@@ -738,6 +906,8 @@ export class ApplicationConfig {
         this.device_struct = new Array<DeviceStruct>()
         this.rep_type_struct = new Array<RepTypeStruct>()
         this.kftl_template_struct = new Array<KFTLTemplateStruct>()
+        this.parsed_mi_boad_struct = new MiBoardStructElementData()
+        this.mi_board_struct = new Array<MiBoardStruct>()
     }
 
 

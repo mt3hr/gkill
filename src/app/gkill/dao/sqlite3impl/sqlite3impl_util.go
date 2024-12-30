@@ -29,22 +29,20 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 		ids = *query.IDs
 	}
 
-	if useIDs {
-		if len(ids) != 0 {
-			if *whereCounter != 0 {
-				sql += " AND "
-			}
-			sql += " ID IN ("
-			for i, id := range ids {
-				sql += " ? "
-				*queryArgs = append(*queryArgs, id)
-				if i != len(ids)-1 {
-					sql += ", "
-				}
-				*whereCounter++
-			}
-			sql += ")"
+	if useIDs && len(ids) != 0 {
+		if *whereCounter != 0 {
+			sql += " AND "
 		}
+		sql += " ID IN ("
+		for i, id := range ids {
+			sql += " ? "
+			*queryArgs = append(*queryArgs, id)
+			if i != len(ids)-1 {
+				sql += ", "
+			}
+			*whereCounter++
+		}
+		sql += ")"
 	}
 
 	// 日付範囲指定ありの場合
