@@ -196,6 +196,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			err = fmt.Errorf("error at new gkill repositories. user id = %s: %w", userID, err)
 			return nil, err
 		}
+		repositories.ReKyouReps.GkillRepositories = repositories
 
 		repositoriesDefine, err := g.ConfigDAOs.RepositoryDAO.GetRepositories(ctx, userID, device)
 		if err != nil {
