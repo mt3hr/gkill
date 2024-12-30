@@ -15,7 +15,7 @@
                         :last_added_tag="last_added_tag" :show_checkbox="show_checkbox" :show_content_only="false"
                         :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                         :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                        :show_timeis_plaing_end_button="true" :width="width.valueOf()" :is_readonly_mi_check="true"
+                        :show_timeis_plaing_end_button="true" :width="width.valueOf()" :is_readonly_mi_check="is_readonly_mi_check"
                         @received_errors="(errors) => emits('received_errors', errors)" :height="kyou_height.valueOf()"
                         @clicked_kyou="(kyou) => emits('clicked_kyou', kyou)"
                         @received_messages="(messages) => emits('received_messages', messages)"
