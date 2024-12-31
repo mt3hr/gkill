@@ -59,7 +59,7 @@ const password_sha256 = computed(async () => {
 check_logined()
 
 async function check_logined(): Promise<void> {
-    const session_id = GkillAPI.get_instance().get_session_id()
+    const session_id = props.gkill_api.get_session_id()
     if (session_id && session_id !== "") {
         router.replace("/rykv")
     }

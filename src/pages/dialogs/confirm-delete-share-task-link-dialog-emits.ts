@@ -7,5 +7,5 @@ import type { ShareMiTaskListInfo } from "@/classes/datas/share-mi-task-list-inf
 export interface ConfirmDeleteShareTaskLinkDialogEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'deleted_share_mi_task_list_info', share_mi_task_list_info: ShareMiTaskListInfo): void
+    (e: 'requested_delete_share_task_link_info', share_mi_task_list_info: ShareMiTaskListInfo): void
 }

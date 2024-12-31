@@ -67,4 +67,5 @@ const (
 	GetAllRepNamesSuccessMessage             = "MSG000061"
 	GetIDFKyouSuccessMessage                 = "MSG000062"
 	UpdateIDFKyouSuccessMessage              = "MSG000063"
+	UpdateShareMiTaskListInfoSuccessMessage  = "MSG000064"
 )

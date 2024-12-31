@@ -1,9 +1,11 @@
 <template>
     <v-dialog v-model="is_show_dialog">
         <ShareTaskListView :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @regestered_share_mi_task_list_info="(share_mi_task_info) => emits('requested_show_share_task_link_dialog', share_mi_task_info)" />
+            :find_kyou_query="find_kyou_query" @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)" @regestered_share_mi_task_list_info="(share_mi_task_info) => {
+                emits('regestered_share_mi_task_list_info', share_mi_task_info)
+                emits('requested_show_share_task_link_dialog', share_mi_task_info)
+            }" @requested_close_dialog="hide()" />
     </v-dialog>
 </template>
 <script lang="ts" setup>
@@ -24,5 +26,4 @@ async function show(): Promise<void> {
 async function hide(): Promise<void> {
     is_show_dialog.value = false
 }
-const is_share_time_only: Ref<boolean> = ref(true)
 </script>

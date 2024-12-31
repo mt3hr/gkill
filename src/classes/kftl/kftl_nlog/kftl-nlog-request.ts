@@ -26,8 +26,8 @@ export class KFTLNlogRequest extends KFTLRequest {
         let errors = Array<GkillError>()
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
 
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
         if (this.titles.length != this.amounts.length) {
@@ -48,8 +48,8 @@ export class KFTLNlogRequest extends KFTLRequest {
             }
             const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
             const req = new AddNlogRequest()
-            req.session_id = GkillAPI.get_instance().get_session_id()
-            req.nlog.id = GkillAPI.get_instance().generate_uuid()
+            req.session_id = GkillAPI.get_gkill_api().get_session_id()
+            req.nlog.id = GkillAPI.get_gkill_api().generate_uuid()
             req.nlog.shop = this.shop_name
             req.nlog.amount = amount
             req.nlog.title = memo
@@ -64,7 +64,7 @@ export class KFTLNlogRequest extends KFTLRequest {
             req.nlog.update_time = time
             req.nlog.update_user = gkill_info_res.user_id
 
-            await GkillAPI.get_instance().add_nlog(req).then(res => {
+            await GkillAPI.get_gkill_api().add_nlog(req).then(res => {
                 if (res.errors && res.errors.length !== 0) {
                     errors = errors.concat(res.errors)
                 }

@@ -14,9 +14,9 @@ export class Tag extends MetaInfoBase {
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         const req = new GetTagHistoryByTagIDRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.id = this.id
-        const res = await GkillAPI.get_instance().get_tag_histories_by_tag_id(req)
+        const res = await GkillAPI.get_gkill_api().get_tag_histories_by_tag_id(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }

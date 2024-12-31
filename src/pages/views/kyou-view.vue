@@ -4,6 +4,7 @@
             <AttachedTag v-for="attached_tag, index in cloned_kyou.attached_tags" :tag="attached_tag"
                 :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
@@ -12,6 +13,7 @@
             <AttachedTimeIsPlaing v-for="attached_timeis_plaing, index in cloned_kyou.attached_timeis_kyou"
                 :timeis_kyou="attached_timeis_plaing" :application_config="application_config" :gkill_api="gkill_api"
                 :kyou="cloned_kyou" :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
@@ -41,6 +43,7 @@
             <KmemoView v-if="cloned_kyou.typed_kmemo" :kmemo="cloned_kyou.typed_kmemo"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -50,6 +53,7 @@
                 :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
                 :height="height" :width="width" :is_readonly_mi_check="is_readonly_mi_check"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
@@ -57,6 +61,7 @@
             <NlogView v-if="cloned_kyou.typed_nlog" :nlog="cloned_kyou.typed_nlog"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -65,6 +70,7 @@
             <LantanaView v-if="cloned_kyou.typed_lantana" :lantana="cloned_kyou.typed_lantana"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -74,6 +80,7 @@
                 :show_timeis_plaing_end_button="true" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
                 :height="height" :width="width" @received_errors="(errors) => emits('received_errors', errors)"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
@@ -81,6 +88,7 @@
             <URLogView v-if="cloned_kyou.typed_urlog" :urlog="cloned_kyou.typed_urlog"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -89,6 +97,7 @@
             <IDFKyouView v-if="cloned_kyou.typed_idf_kyou" :idf_kyou="cloned_kyou.typed_idf_kyou"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -97,6 +106,7 @@
             <ReKyouView v-if="cloned_kyou.typed_rekyou" :rekyou="cloned_kyou.typed_rekyou"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -105,6 +115,7 @@
             <GitCommitLogView v-if="cloned_kyou.typed_git_commit_log" :git_commit_log="cloned_kyou.typed_git_commit_log"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -115,6 +126,7 @@
             <AttachedText v-for="attached_text, index in cloned_kyou.attached_texts" :text="attached_text"
                 :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', cloned_kyou)"
@@ -123,6 +135,7 @@
         </div>
         <kyouDialog :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
+            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
@@ -240,7 +253,9 @@ async function update_check(is_checked: boolean): Promise<void> {
 }
 
 function show_kyou_dialog(): void {
-    kyou_dialog.value?.show()
+    if (props.enable_dialog) {
+        kyou_dialog.value?.show()
+    }
 }
 
 function format_time(time: Date) {

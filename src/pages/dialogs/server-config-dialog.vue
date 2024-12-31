@@ -33,8 +33,8 @@ async function hide(): Promise<void> {
 }
 async function load_server_configs(): Promise<void> {
     const req = new GetServerConfigsRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
-    const res = await GkillAPI.get_instance().get_server_configs(req)
+    req.session_id = props.gkill_api.get_session_id()
+    const res = await props.gkill_api.get_server_configs(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return

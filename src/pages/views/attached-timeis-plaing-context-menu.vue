@@ -17,6 +17,7 @@
     </v-menu>
     <EditTimeIsDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="cloned_timeis_kyou" :last_added_tag="last_added_tag"
+        :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -25,7 +26,8 @@
         ref="edit_timeis_dialog" />
     <ConfirmDeleteKyouDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="cloned_timeis_kyou" :last_added_tag="last_added_tag"
-         @received_errors="(errors) => emits('received_errors', errors)"
+        :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+        @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
         @requested_reload_list="() => emits('requested_reload_list')"
@@ -33,6 +35,7 @@
         ref="confirm_delete_kyou_dialog" />
     <KyouHistoriesDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="cloned_timeis_kyou" :last_added_tag="last_added_tag"
+        :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"

@@ -37,13 +37,13 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
 
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddTimeisRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.timeis.id = this.get_request_id()
         req.timeis.start_time = time
         req.timeis.title = this.title
@@ -55,7 +55,7 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         req.timeis.update_device = gkill_info_res.device
         req.timeis.update_time = time
         req.timeis.update_user = gkill_info_res.user_id
-        await GkillAPI.get_instance().add_timeis(req).then(res => {
+        await GkillAPI.get_gkill_api().add_timeis(req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
             }

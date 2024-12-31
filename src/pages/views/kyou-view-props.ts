@@ -18,4 +18,6 @@ export interface KyouViewProps extends KyouViewPropsBase {
     highlight_targets: Array<InfoIdentifier>
     height: number | string
     width: number | string
+    enable_context_menu: boolean
+    enable_dialog: boolean
 }

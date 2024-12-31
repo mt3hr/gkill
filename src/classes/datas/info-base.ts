@@ -35,9 +35,9 @@ export abstract class InfoBase {
     async load_attached_tags(): Promise<Array<GkillError>> {
         let errors = new Array<GkillError>()
         const req = new GetTagsByTargetIDRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.target_id = this.id
-        const res = await GkillAPI.get_instance().get_tags_by_target_id(req)
+        const res = await GkillAPI.get_gkill_api().get_tags_by_target_id(req)
         if (res.errors && res.errors.length != 0) {
             return res.errors
         }
@@ -48,9 +48,9 @@ export abstract class InfoBase {
     async load_attached_texts(): Promise<Array<GkillError>> {
         let errors = new Array<GkillError>()
         const req = new GetTextsByTargetIDRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.target_id = this.id
-        const res = await GkillAPI.get_instance().get_texts_by_target_id(req)
+        const res = await GkillAPI.get_gkill_api().get_texts_by_target_id(req)
         if (res.errors && res.errors.length != 0) {
             return res.errors
         }
@@ -61,7 +61,7 @@ export abstract class InfoBase {
     async load_attached_timeis(): Promise<Array<GkillError>> {
         let errors = new Array<GkillError>()
 
-        const application_config = GkillAPI.get_instance().get_saved_application_config()
+        const application_config = GkillAPI.get_gkill_api().get_saved_application_config()
         if(!application_config) {
             const error = new GkillError()
             error.error_code = "//TODO"
@@ -79,13 +79,13 @@ export abstract class InfoBase {
         }
 
         const req = new GetKyousRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.query.use_plaing = true
         req.query.plaing_time = this.related_time
         req.query.reps = reps
         req.query.tags = tags
 
-        const res = await GkillAPI.get_instance().get_kyous(req)
+        const res = await GkillAPI.get_gkill_api().get_kyous(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }

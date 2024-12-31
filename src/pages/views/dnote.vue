@@ -174,18 +174,18 @@ async function extruct_location_kyous(): Promise<void> {
     // timeisとkmemoのRepだけを検索対象とする
     // それ以外はサイドバー条件を継承する
     const query_for_extruct_location_kyous = cloned_query.value.clone()
-    query_for_extruct_location_kyous.query_id = GkillAPI.get_instance().generate_uuid()
+    query_for_extruct_location_kyous.query_id = props.gkill_api.generate_uuid()
     query_for_extruct_location_kyous.use_rep_types = true
     query_for_extruct_location_kyous.rep_types = ["kmemo", "timeis"]
     query_for_extruct_location_kyous.tags = ["ろ"]
 
     const req = new GetKyousRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_location_kyous
 
     req.query.parse_words_and_not_words()
-    const res = await GkillAPI.get_instance().get_kyous(req)
+    const res = await props.gkill_api.get_kyous(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -206,19 +206,19 @@ async function extruct_people_kyous(): Promise<void> {
     // timeisとkmemoのRepだけを検索対象とする
     // それ以外はサイドバー条件を継承する
     const query_for_extruct_people_kyous = cloned_query.value.clone()
-    query_for_extruct_people_kyous.query_id = GkillAPI.get_instance().generate_uuid()
+    query_for_extruct_people_kyous.query_id = props.gkill_api.generate_uuid()
     query_for_extruct_people_kyous.use_rep_types = true
     query_for_extruct_people_kyous.rep_types = ["timeis", "kmemo"]
     query_for_extruct_people_kyous.tags = ["あ", "通話"]
     query_for_extruct_people_kyous.tags_and = false
 
     const req = new GetKyousRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_people_kyous
 
     req.query.parse_words_and_not_words()
-    const res = await GkillAPI.get_instance().get_kyous(req)
+    const res = await props.gkill_api.get_kyous(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -240,15 +240,15 @@ async function extruct_nlog_kyous(): Promise<void> {
     // nlogのRepだけを検索対象とする
     // それ以外はサイドバー条件を継承する
     const query_for_nlog_kyous = cloned_query.value.clone()
-    query_for_nlog_kyous.query_id = GkillAPI.get_instance().generate_uuid()
+    query_for_nlog_kyous.query_id = props.gkill_api.generate_uuid()
     query_for_nlog_kyous.use_rep_types = true
     query_for_nlog_kyous.rep_types = ["nlog"]
     const req = new GetKyousRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_nlog_kyous
     req.query.parse_words_and_not_words()
-    const res = await GkillAPI.get_instance().get_kyous(req)
+    const res = await props.gkill_api.get_kyous(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -293,7 +293,7 @@ async function calc_total_awake_time(): Promise<void> {
     // timeisのRepだけを検索対象とする
     // 検索条件は覚醒
     const query_for_extruct_awake_kyous = cloned_query.value.clone()
-    query_for_extruct_awake_kyous.query_id = GkillAPI.get_instance().generate_uuid()
+    query_for_extruct_awake_kyous.query_id = props.gkill_api.generate_uuid()
     query_for_extruct_awake_kyous.use_rep_types = true
     query_for_extruct_awake_kyous.rep_types = ["timeis"]
     query_for_extruct_awake_kyous.tags = ["ぢ"]
@@ -302,12 +302,12 @@ async function calc_total_awake_time(): Promise<void> {
     query_for_extruct_awake_kyous.words_and = true
 
     const req = new GetKyousRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_awake_kyous
 
     req.query.parse_words_and_not_words()
-    const res = await GkillAPI.get_instance().get_kyous(req)
+    const res = await props.gkill_api.get_kyous(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -343,7 +343,7 @@ async function calc_total_sleep_time(): Promise<void> {
     // timeisのRepだけを検索対象とする
     // 検索条件は睡眠
     const query_for_extruct_sleep_kyous = cloned_query.value.clone()
-    query_for_extruct_sleep_kyous.query_id = GkillAPI.get_instance().generate_uuid()
+    query_for_extruct_sleep_kyous.query_id = props.gkill_api.generate_uuid()
     query_for_extruct_sleep_kyous.use_rep_types = true
     query_for_extruct_sleep_kyous.rep_types = ["timeis"]
     query_for_extruct_sleep_kyous.tags = ["ぢ"]
@@ -352,12 +352,12 @@ async function calc_total_sleep_time(): Promise<void> {
     query_for_extruct_sleep_kyous.words_and = true
 
     const req = new GetKyousRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_sleep_kyous
 
     req.query.parse_words_and_not_words()
-    const res = await GkillAPI.get_instance().get_kyous(req)
+    const res = await props.gkill_api.get_kyous(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -393,7 +393,7 @@ async function calc_total_work_time(): Promise<void> {
     // timeisのRepだけを検索対象とする
     // 検索条件は仕事
     const query_for_extruct_work_kyous = cloned_query.value.clone()
-    query_for_extruct_work_kyous.query_id = GkillAPI.get_instance().generate_uuid()
+    query_for_extruct_work_kyous.query_id = props.gkill_api.generate_uuid()
     query_for_extruct_work_kyous.use_rep_types = true
     query_for_extruct_work_kyous.rep_types = ["timeis"]
     query_for_extruct_work_kyous.use_words = true
@@ -401,12 +401,12 @@ async function calc_total_work_time(): Promise<void> {
     query_for_extruct_work_kyous.words_and = true
 
     const req = new GetKyousRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_work_kyous
 
     req.query.parse_words_and_not_words()
-    const res = await GkillAPI.get_instance().get_kyous(req)
+    const res = await props.gkill_api.get_kyous(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -442,18 +442,18 @@ async function calc_total_tabaco_record_count(): Promise<void> {
     // kmemoのRepだけを検索対象とする
     // 対象タグは煙草
     const query_for_extruct_tabaco_kyous = cloned_query.value.clone()
-    query_for_extruct_tabaco_kyous.query_id = GkillAPI.get_instance().generate_uuid()
+    query_for_extruct_tabaco_kyous.query_id = props.gkill_api.generate_uuid()
     query_for_extruct_tabaco_kyous.use_rep_types = true
     query_for_extruct_tabaco_kyous.rep_types = ["kmemo"]
     query_for_extruct_tabaco_kyous.tags = ["煙草"]
 
     const req = new GetKyousRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_tabaco_kyous
 
     req.query.parse_words_and_not_words()
-    const res = await GkillAPI.get_instance().get_kyous(req)
+    const res = await props.gkill_api.get_kyous(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -472,16 +472,16 @@ async function calc_average_lantana_mood(): Promise<void> {
     // timeisのRepだけを検索対象とする
     // 検索条件は仕事
     const query_for_extruct_lantana_kyous = cloned_query.value.clone()
-    query_for_extruct_lantana_kyous.query_id = GkillAPI.get_instance().generate_uuid()
+    query_for_extruct_lantana_kyous.query_id = props.gkill_api.generate_uuid()
     query_for_extruct_lantana_kyous.use_rep_types = true
     query_for_extruct_lantana_kyous.rep_types = ["lantana"]
     const req = new GetKyousRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_lantana_kyous
 
     req.query.parse_words_and_not_words()
-    const res = await GkillAPI.get_instance().get_kyous(req)
+    const res = await props.gkill_api.get_kyous(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -519,16 +519,16 @@ async function calc_total_git_addition_deletion_count(): Promise<void> {
     calclutated_total_git_deletion_count.value = -1
 
     const query_for_extruct_git_commit_log_kyous = cloned_query.value.clone()
-    query_for_extruct_git_commit_log_kyous.query_id = GkillAPI.get_instance().generate_uuid()
+    query_for_extruct_git_commit_log_kyous.query_id = props.gkill_api.generate_uuid()
     query_for_extruct_git_commit_log_kyous.use_rep_types = true
     query_for_extruct_git_commit_log_kyous.rep_types = ["git_commit_log"]
     const req = new GetKyousRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_git_commit_log_kyous
 
     req.query.parse_words_and_not_words()
-    const res = await GkillAPI.get_instance().get_kyous(req)
+    const res = await props.gkill_api.get_kyous(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return

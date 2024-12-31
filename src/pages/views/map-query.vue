@@ -41,7 +41,7 @@ const gmap = ref<InstanceType<typeof GoogleMap> | null>(null);
 
 const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
-const google_map_api_key: Ref<string> = ref(GkillAPI.get_instance().get_google_map_api_key())
+const google_map_api_key: Ref<string> = ref(props.gkill_api.get_google_map_api_key())
 
 const latitude: Ref<number> = ref(35.6586295)
 const longitude: Ref<number> = ref(139.7449018)

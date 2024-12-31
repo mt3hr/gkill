@@ -69,7 +69,7 @@ const password_sha256 = computed(async () => {
 check_logined()
 
 async function check_logined(): Promise<void> {
-    const session_id = GkillAPI.get_instance().get_session_id()
+    const session_id = props.gkill_api.get_session_id()
     if (session_id && session_id !== "") {
         router.replace("/rykv")
     }
@@ -112,7 +112,7 @@ async function try_set_new_password(): Promise<boolean> {
     req.reset_token = password_reset_token.value
     req.new_password_sha256 = (await password_sha256.value.then((value) => value))
 
-    const res = await GkillAPI.get_instance().set_new_password(req)
+    const res = await props.gkill_api.set_new_password(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return false
