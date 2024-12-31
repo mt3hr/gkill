@@ -13,7 +13,7 @@ type MiShareInfoDAO interface {
 
 	UpdateMiShareInfo(ctx context.Context, miShareInfo *MiShareInfo) (bool, error)
 
-	DeleteMiShareInfo(ctx context.Context, id string) (bool, error)
+	DeleteMiShareInfo(ctx context.Context, shareID string) (bool, error)
 
 	Close(ctx context.Context) error
 }

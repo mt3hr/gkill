@@ -27,9 +27,11 @@
         </div>
         <MiContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" @requested_reload_list="emits('requested_reload_list')"
+            @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+            @requested_reload_list="emits('requested_reload_list')"
             @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => emits('requested_update_check_kyous', kyous, is_checked)"
             ref="context_menu" />
     </v-card>
@@ -62,7 +64,9 @@ function format_time(time: Date): string {
 }
 
 function show_context_menu(e: PointerEvent): void {
-    context_menu.value?.show(e)
+    if (props.enable_context_menu) {
+        context_menu.value?.show(e)
+    }
 }
 
 async function clicked_mi_check(): Promise<void> {
@@ -96,7 +100,7 @@ async function clicked_mi_check(): Promise<void> {
 
     // UserIDやDevice情報を取得する
     const get_gkill_req = new GetGkillInfoRequest()
-    get_gkill_req.session_id = GkillAPI.get_instance().get_session_id()
+    get_gkill_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
@@ -118,7 +122,7 @@ async function clicked_mi_check(): Promise<void> {
 
     // 更新リクエストを飛ばす
     const req = new UpdateMiRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.mi = updated_mi
     const res = await props.gkill_api.update_mi(req)
     if (res.errors && res.errors.length !== 0) {

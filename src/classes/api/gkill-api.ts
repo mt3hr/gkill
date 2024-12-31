@@ -14,7 +14,7 @@ import type { AddNlogResponse } from "./req_res/add-nlog-response"
 import type { AddReKyouRequest } from "./req_res/add-re-kyou-request"
 import type { AddReKyouResponse } from "./req_res/add-re-kyou-response"
 import type { AddShareMiTaskListInfoRequest } from "./req_res/add-share-mi-task-list-info-request"
-import type { AddShareMiTaskListInfoResponse } from "./req_res/add-share-mi-task-list-info-response"
+import { AddShareMiTaskListInfoResponse } from "./req_res/add-share-mi-task-list-info-response"
 import type { AddTagRequest } from "./req_res/add-tag-request"
 import type { AddTagResponse } from "./req_res/add-tag-response"
 import type { AddTextRequest } from "./req_res/add-text-request"
@@ -24,7 +24,7 @@ import type { AddTimeisResponse } from "./req_res/add-timeis-response"
 import type { AddURLogRequest } from "./req_res/add-ur-log-request"
 import type { AddURLogResponse } from "./req_res/add-ur-log-response"
 import type { DeleteShareMiTaskListInfosRequest } from "./req_res/delete-share-mi-task-list-infos-request"
-import type { DeleteShareMiTaskListInfosResponse } from "./req_res/delete-share-mi-task-list-infos-response"
+import { DeleteShareMiTaskListInfosResponse } from "./req_res/delete-share-mi-task-list-infos-response"
 import type { GenerateTLSFileRequest } from "./req_res/generate-tls-file-request"
 import type { GenerateTLSFileResponse } from "./req_res/generate-tls-file-response"
 import type { GetAllTagNamesRequest } from "./req_res/get-all-tag-names-request"
@@ -58,9 +58,9 @@ import type { GetPlaingTimeisResponse } from "./req_res/get-plaing-timeis-respon
 import type { GetReKyouRequest } from "./req_res/get-re-kyou-request"
 import type { GetReKyouResponse } from "./req_res/get-re-kyou-response"
 import type { GetShareMiTaskListInfosRequest } from "./req_res/get-share-mi-task-list-infos-request"
-import type { GetShareMiTaskListInfosResponse } from "./req_res/get-share-mi-task-list-infos-response"
+import { GetShareMiTaskListInfosResponse } from "./req_res/get-share-mi-task-list-infos-response"
 import type { GetSharedMiTasksRequest } from "./req_res/get-shared-mi-tasks-request"
-import type { GetSharedMiTasksResponse } from "./req_res/get-shared-mi-tasks-response"
+import { GetSharedMiTasksResponse } from "./req_res/get-shared-mi-tasks-response"
 import type { GetTagHistoryByTagIDRequest } from "./req_res/get-tag-history-by-tag-id-request"
 import type { GetTagHistoryByTagIDResponse } from "./req_res/get-tag-history-by-tag-id-response"
 import type { GetTagsByTargetIDRequest } from "./req_res/get-tags-by-target-id-request"
@@ -104,7 +104,7 @@ import type { UpdateRepTypeStructResponse } from "./req_res/update-rep-type-stru
 import type { UpdateKFTLTemplateRequest } from "./req_res/update-kftl-template-request.ts"
 import type { UpdateKFTLTemplateResponse } from "./req_res/update-kftl-template-response.ts"
 import type { UpdateShareMiTaskListInfoRequest } from "./req_res/update-share-mi-task-list-info-request"
-import type { UpdateShareMiTaskListInfoResponse } from "./req_res/update-share-mi-task-list-info-response"
+import { UpdateShareMiTaskListInfoResponse } from "./req_res/update-share-mi-task-list-info-response"
 import type { UpdateTagRequest } from "./req_res/update-tag-request"
 import type { UpdateTagResponse } from "./req_res/update-tag-response"
 import type { UpdateTagStructRequest } from "./req_res/update-tag-struct-request"
@@ -150,8 +150,21 @@ import type { GetServerConfigsRequest } from "./req_res/get-server-configs-reque
 import type { GetServerConfigsResponse } from "./req_res/get-server-configs-response"
 import type { UpdateServerConfigsRequest } from "./req_res/update-server-configs-request"
 import type { UpdateServerConfigsResponse } from "./req_res/update-server-configs-response"
+import { ShareMiTaskListInfo } from "../datas/share-mi-task-list-info"
 
 export class GkillAPI {
+        // 画面以外から参照されるやつ
+        private static use_gkill_api: GkillAPI | null
+        static get_gkill_api(): GkillAPI {
+                const api = this.use_gkill_api
+                if (!api) {
+                        return this.get_instance()
+                }
+                return api
+        }
+        static set_gkill_api(gkill_api: GkillAPI): void {
+                GkillAPI.use_gkill_api = gkill_api
+        }
 
         private static gkill_api: GkillAPI = new GkillAPI()
         static get_instance(): GkillAPI {
@@ -293,7 +306,7 @@ export class GkillAPI {
         get_mi_shared_tasks_method: string
         get_repositories_method: string
 
-        private constructor() {
+        protected constructor() {
                 this.saved_application_config = null
                 this.login_address = "/api/login"
                 this.logout_address = "/api/logout"
@@ -1187,40 +1200,6 @@ export class GkillAPI {
                 return response
         }
 
-        /*
-        async get_kmemos(req: GetKmemosRequest): Promise<GetKmemosResponse> {
-                throw new Error('Not implemented')
-        }
-
-        async get_urlogs(req: GetURLogsRequest): Promise<GetURLogsResponse> {
-                throw new Error('Not implemented')
-        }
-
-        async get_nlogs(req: GetNlogsRequest): Promise<GetNlogsResponse> {
-                throw new Error('Not implemented')
-        }
-
-        async get_timeiss(req: GetTimeissRequest): Promise<GetTimeissResponse> {
-                throw new Error('Not implemented')
-        }
-
-        async get_rekyous(req: GetReKyousRequest): Promise<GetReKyousResponse> {
-                throw new Error('Not implemented')
-        }
-
-        async get_mis(req: GetMisRequest): Promise<GetMisResponse> {
-                throw new Error('Not implemented')
-        }
-
-        async get_lantanas(req: GetLantanasRequest): Promise<GetLantanasResponse> {
-                throw new Error('Not implemented')
-        }
-
-        async get_git_commit_logs(req: GetGitCommitLogsRequest): Promise<GetGitCommitLogsResponse> {
-                throw new Error('Not implemented')
-        }
-        */
-
         async get_mi_board_list(req: GetMiBoardRequest): Promise<GetMiBoardResponse> {
                 const res = await fetch(this.get_mi_board_list_address, {
                         'method': this.get_mi_board_list_method,
@@ -1766,7 +1745,18 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
-                const response: GetShareMiTaskListInfosResponse = json
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: GetShareMiTaskListInfosResponse = new GetShareMiTaskListInfosResponse()
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                for (let i = 0; i < response.share_mi_task_list_infos.length; i++) {
+                        const share_mi_task_list_info = new ShareMiTaskListInfo()
+                        for (let key in json.share_mi_task_list_infos[i]) {
+                                (share_mi_task_list_info as any)[key] = json.share_mi_task_list_infos[i][key]
+                        }
+                        response.share_mi_task_list_infos[i] = share_mi_task_list_info
+                }
                 this.check_auth(response)
                 return response
         }
@@ -1781,7 +1771,16 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
-                const response: AddShareMiTaskListInfoResponse = json
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: AddShareMiTaskListInfoResponse = new AddShareMiTaskListInfoResponse()
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                const share_mi_task_list_info = new ShareMiTaskListInfo()
+                for (let key in json.share_mi_task_list_info) {
+                        (share_mi_task_list_info as any)[key] = json.share_mi_task_list_info[key]
+                }
+                response.share_mi_task_list_info = share_mi_task_list_info
                 this.check_auth(response)
                 return response
         }
@@ -1796,7 +1795,16 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
-                const response: UpdateShareMiTaskListInfoResponse = json
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: UpdateShareMiTaskListInfoResponse = new UpdateShareMiTaskListInfoResponse()
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                const share_mi_task_list_info = new ShareMiTaskListInfo()
+                for (let key in json.share_mi_task_list_info) {
+                        (share_mi_task_list_info as any)[key] = json.share_mi_task_list_info[key]
+                }
+                response.share_mi_task_list_info = share_mi_task_list_info
                 this.check_auth(response)
                 return response
         }
@@ -1811,7 +1819,11 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
-                const response: DeleteShareMiTaskListInfosResponse = json
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: DeleteShareMiTaskListInfosResponse = new DeleteShareMiTaskListInfosResponse()
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
                 this.check_auth(response)
                 return response
         }
@@ -1826,8 +1838,70 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
-                const response: GetSharedMiTasksResponse = json
-                this.check_auth(response)
+                const response: GetSharedMiTasksResponse = new GetSharedMiTasksResponse()
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                for (let i = 0; i < json.mi_kyous.length; i++) {
+                        const kyou = new Kyou()
+                        for (let key in json.mi_kyous[i]) {
+                                (kyou as any)[key] = (json.mi_kyous[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (kyou as any)[key]) {
+                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                }
+                        }
+                        response.mi_kyous[i] = kyou
+                }
+                for (let i = 0; i < json.mis.length; i++) {
+                        const mi = new Mi()
+                        for (let key in json.mis[i]) {
+                                (mi as any)[key] = (json.mis[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (mi as any)[key]) {
+                                        (mi as any)[key] = moment((mi as any)[key]).toDate()
+                                }
+                        }
+                        response.mis[i] = mi
+                }
+                for (let i = 0; i < json.tags.length; i++) {
+                        const tag = new Tag()
+                        for (let key in json.tags[i]) {
+                                (tag as any)[key] = (json.tags[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (tag as any)[key]) {
+                                        (tag as any)[key] = moment((tag as any)[key]).toDate()
+                                }
+                        }
+                        response.tags[i] = tag
+                }
+                for (let i = 0; i < json.texts.length; i++) {
+                        const text = new Text()
+                        for (let key in json.texts[i]) {
+                                (text as any)[key] = (json.texts[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (text as any)[key]) {
+                                        (text as any)[key] = moment((text as any)[key]).toDate()
+                                }
+                        }
+                        response.texts[i] = text
+                }
+                for (let i = 0; i < json.timeiss.length; i++) {
+                        const timeis = new TimeIs()
+                        for (let key in json.timeiss[i]) {
+                                (timeis as any)[key] = (json.timeiss[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (timeis as any)[key]) {
+                                        (timeis as any)[key] = moment((timeis as any)[key]).toDate()
+                                }
+                        }
+                        response.timeiss[i] = timeis
+                }
                 return response
         }
 
@@ -2028,5 +2102,4 @@ export class GkillAPI {
                 return indexs
         }
 }
-
 

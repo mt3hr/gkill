@@ -156,9 +156,9 @@ async function apply(): Promise<void> {
 
     // 更新する
     const req = new UpdateRepStructRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.rep_struct = cloned_application_config.value.rep_struct
-    const res = await GkillAPI.get_instance().update_rep_struct(req)
+    const res = await props.gkill_api.update_rep_struct(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -173,8 +173,8 @@ function show_add_new_rep_struct_element_dialog(): void {
 }
 async function add_rep_struct_element(rep_struct_element: RepStructElementData): Promise<void> {
     const req = new GetGkillInfoRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
-    const res = await GkillAPI.get_instance().get_gkill_info(req)
+    req.session_id = props.gkill_api.get_session_id()
+    const res = await props.gkill_api.get_gkill_info(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return

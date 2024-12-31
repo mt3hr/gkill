@@ -1,6 +1,11 @@
 <template>
     <div>
         <v-card class="sidebar_header_wrap background-white pa-0 ma-0" :height="header_height">
+            <miShareFooter class="sidebar_footer" :application_config="application_config" :gkill_api="gkill_api"
+                :find_kyou_query="query" @request_open_manage_share_mi_dialog="show_manage_share_mi_dialog()"
+                @request_open_share_mi_dialog="show_share_mi_dialog()"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @received_errors="(errors) => emits('received_errors', errors)" />
             <SidebarHeader class="sidebar_header" :application_config="application_config" :gkill_api="gkill_api"
                 :find_kyou_query="query" @requested_search="emits('requested_search', false)"
                 :inited="inited_sidebar_header_for_query_sidebar"
@@ -59,9 +64,6 @@
                 @request_clear_map_query="emits_cleard_map_query()" :inited="inited_map_query_for_query_sidebar"
                 @inited="inited_map_query_for_query_sidebar = true" ref="map_query" />
         </div>
-        <miShareFooter :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-            @request_open_manage_share_mi_dialog="show_manage_share_mi_dialog()"
-            @request_open_share_mi_dialog="show_share_mi_dialog()" />
     </div>
 </template>
 <script setup lang="ts">
@@ -103,7 +105,7 @@ const emits = defineEmits<miQueryEditorSidebarEmits>()
 defineExpose({ generate_query, get_default_query })
 
 const header_margin = ref(8)
-const header_height: Ref<number> = ref(38 + header_margin.value.valueOf())
+const header_height: Ref<number> = ref(38 + header_margin.value.valueOf() + 38 + header_margin.value.valueOf())
 const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
@@ -131,7 +133,7 @@ const inited = computed(() => {
 watch(() => inited.value, async (new_value: boolean, old_value: boolean) => {
     if (old_value !== new_value && new_value) {
         default_query.value = generate_query().clone()
-        default_query.value.query_id = GkillAPI.get_instance().generate_uuid()
+        default_query.value.query_id = props.gkill_api.generate_uuid()
         default_query.value.use_mi_board_name = false
         default_query.value.mi_board_name = "すべて"
         default_query.value.mi_board_name = ""
@@ -259,21 +261,21 @@ function generate_query(query_id?: string): FindKyouQuery {
 
 function emits_cleard_sort_type_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.mi_sort_type = default_query.value.mi_sort_type
     emits('updated_query_clear', find_query)
 }
 
 function emits_cleard_check_state(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.mi_check_state = default_query.value.mi_check_state
     emits('updated_query_clear', find_query)
 }
 
 function emits_cleard_keyword_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_words = default_query.value.use_words
     find_query.keywords = default_query.value.keywords
     find_query.words_and = default_query.value.words_and
@@ -283,7 +285,7 @@ function emits_cleard_keyword_query(): void {
 
 function emits_cleard_timeis_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_timeis = default_query.value.use_timeis
     find_query.use_timeis_tags = default_query.value.use_timeis_tags
     find_query.timeis_keywords = default_query.value.timeis_keywords
@@ -297,7 +299,7 @@ function emits_cleard_timeis_query(): void {
 
 function emits_cleard_tag_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.tags = default_query.value.tags
     find_query.tags_and = default_query.value.tags_and
     query.value = find_query
@@ -306,7 +308,7 @@ function emits_cleard_tag_query(): void {
 
 function emits_cleard_map_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_map = default_query.value.use_map
     find_query.map_latitude = default_query.value.map_latitude
     find_query.map_longitude = default_query.value.map_longitude
@@ -318,7 +320,7 @@ function emits_cleard_map_query(): void {
 
 function emits_cleard_calendar_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_calendar = default_query.value.use_calendar
     find_query.calendar_start_date = default_query.value.calendar_start_date
     find_query.calendar_end_date = default_query.value.calendar_end_date
@@ -328,7 +330,7 @@ function emits_cleard_calendar_query(): void {
 
 function emits_default_query(): void {
     const find_query = default_query.value.clone()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_mi_board_name = false
     query.value = find_query
     emits('updated_query_clear', find_query)
@@ -354,6 +356,12 @@ async function show_share_mi_dialog(): Promise<void> {
 .sidebar_header {
     position: relative;
     top: calc(v-bind("(header_margin / 2).toString().concat('px')"));
+    margin-bottom: calc(v-bind("(header_margin / 2).toString().concat('px')"));
+}
+
+.sidebar_footer {
+    position: relative;
+    top: calc(v-bind("(header_margin * 2 / 3).toString().concat('px')"));
     margin-bottom: calc(v-bind("(header_margin / 2).toString().concat('px')"));
 }
 

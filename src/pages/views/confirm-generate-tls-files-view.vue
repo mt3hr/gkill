@@ -54,8 +54,8 @@ const emits = defineEmits<ConfirmGenerateTLSFilesViewEmits>()
 
 async function generate_tls_files(): Promise<void> {
     const req = new GenerateTLSFileRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
-    const res: GenerateTLSFileResponse = await GkillAPI.get_instance().generate_tls_file(req)
+    req.session_id = props.gkill_api.get_session_id()
+    const res: GenerateTLSFileResponse = await props.gkill_api.generate_tls_file(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return

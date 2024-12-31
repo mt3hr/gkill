@@ -21,12 +21,12 @@ export class KFTLLantanaRequest extends KFTLRequest {
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
 
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddLantanaRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.lantana.id = this.get_request_id()
         req.lantana.mood = this.mood
         req.lantana.related_time = time
@@ -40,7 +40,7 @@ export class KFTLLantanaRequest extends KFTLRequest {
         req.lantana.update_time = time
         req.lantana.update_user = gkill_info_res.user_id
 
-        await GkillAPI.get_instance().add_lantana(req).then(res => {
+        await GkillAPI.get_gkill_api().add_lantana(req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
             }

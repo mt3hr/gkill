@@ -24,7 +24,8 @@
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
-                :is_readonly_mi_check="true" @received_errors="(errors) => emits('received_errors', errors)"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="false"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
@@ -66,7 +67,7 @@ async function save(): Promise<void> {
 
     // UserIDやDevice情報を取得する
     const get_gkill_req = new GetGkillInfoRequest()
-    get_gkill_req.session_id = GkillAPI.get_instance().get_session_id()
+    get_gkill_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
@@ -92,7 +93,7 @@ async function save(): Promise<void> {
 
     // 追加リクエストを飛ばす
     const req = new AddTextRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.text = new_text
     const res = await props.gkill_api.add_text(req)
     if (res.errors && res.errors.length !== 0) {
