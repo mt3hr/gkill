@@ -2,6 +2,7 @@
     <v-dialog v-model="is_show_dialog">
         <AddTextView :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"

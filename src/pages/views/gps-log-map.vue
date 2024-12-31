@@ -64,7 +64,7 @@ const start_date_str = computed(() => moment(props.start_date).format("YYYY-MM-D
 const end_date_str = computed(() => moment(props.end_date).format("YYYY-MM-DD"))
 const marker_options: Ref<{ position: { lat: number, lng: number }, timestamp: number } | null> = ref(null)
 
-const google_map_api_key: Ref<string> = ref(GkillAPI.get_instance().get_google_map_api_key())
+const google_map_api_key: Ref<string> = ref(props.gkill_api.get_google_map_api_key())
 
 watch(() => start_date_str.value, async () => {
     update_time_slider_max_value()
@@ -93,8 +93,8 @@ async function update_gps_log_lines(): Promise<void> {
     const req = new GetGPSLogRequest()
     req.start_date = moment(start_date_str.value.replace("-", "/") + " 00:00:00").toDate()
     req.end_date = moment(end_date_str.value.replace("-", "/") + " 23:59:59").toDate()
-    req.session_id = GkillAPI.get_instance().get_session_id()
-    const res = await GkillAPI.get_instance().get_gps_log(req)
+    req.session_id = props.gkill_api.get_session_id()
+    const res = await props.gkill_api.get_gps_log(req)
     // エラーチェック
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)

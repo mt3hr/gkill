@@ -14,9 +14,9 @@ export class Lantana extends InfoBase {
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         const req = new GetLantanaRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.id = this.id
-        const res = await GkillAPI.get_instance().get_lantana(req)
+        const res = await GkillAPI.get_gkill_api().get_lantana(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }

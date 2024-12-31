@@ -1,6 +1,14 @@
 <template>
     <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
-        <v-toolbar-title>kftl</v-toolbar-title>
+        <v-toolbar-title>kftl
+            <v-menu activator="parent">
+                <v-list>
+                    <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'saihate']" :key="index" :value="index">
+                        <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
+                    </v-list-item>
+                </v-list>
+            </v-menu>
+        </v-toolbar-title>
         <v-spacer />
     </v-app-bar>
     <v-main class="main">
@@ -16,6 +24,7 @@
 
 <script lang="ts" setup>
 'use strict'
+import router from '@/router'
 import { computed, ref, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'

@@ -149,10 +149,10 @@ function show_add_rep_dialog(account: Account): void {
 
 async function apply(): Promise<void> {
     const req = new UpdateUserRepsRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.target_user_id = props.account.user_id
     req.updated_reps = repositories.value
-    const res = await GkillAPI.get_instance().update_user_reps(req)
+    const res = await props.gkill_api.update_user_reps(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return

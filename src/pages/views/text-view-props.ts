@@ -10,4 +10,6 @@ export interface TextViewProps extends GkillPropsBase {
     last_added_tag: string
     kyou: Kyou
     highlight_targets: Array<InfoIdentifier>
+    enable_context_menu: boolean
+    enable_dialog: boolean
 }

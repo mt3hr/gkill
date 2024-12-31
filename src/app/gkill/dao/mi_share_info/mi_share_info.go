@@ -13,5 +13,16 @@ type MiShareInfo struct {
 
 	ShareID string `json:"share_id"`
 
-	FindQueryJSON string `json:"find_query_json"`
+	FindQueryJSON JSONString `json:"find_query_json"`
+}
+
+type JSONString string
+
+func (j *JSONString) UnmarshalJSON(b []byte) error {
+	*j = JSONString(b)
+	return nil
+}
+
+func (j *JSONString) MarshalJSON() ([]byte, error) {
+	return []byte(*j), nil
 }

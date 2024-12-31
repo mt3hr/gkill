@@ -10,4 +10,6 @@ export interface AttachedTagProps extends GkillPropsBase {
     kyou: Kyou
     tag: Tag
     highlight_targets: Array<InfoIdentifier>
+    enable_context_menu: boolean
+    enable_dialog: boolean
 }
