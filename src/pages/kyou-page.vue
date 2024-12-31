@@ -9,7 +9,9 @@
             :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
             :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
             :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
-            :width="app_content_width.valueOf()" :is_readonly_mi_check="false" @received_errors="write_errors" @received_messages="write_messages" />
+            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            :width="app_content_width.valueOf()" :is_readonly_mi_check="false" @received_errors="write_errors"
+            @received_messages="write_messages" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
             :is_show="is_show_application_config_dialog" @received_errors="write_errors"
@@ -27,6 +29,9 @@ import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import KyouView from './views/kyou-view.vue'
 import { InfoIdentifier } from '@/classes/datas/info-identifier'
 import { Kyou } from '@/classes/datas/kyou'
+
+const enable_context_menu = ref(true)
+const enable_dialog = ref(false)
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)

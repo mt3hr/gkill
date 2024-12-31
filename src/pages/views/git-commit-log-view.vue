@@ -7,6 +7,7 @@
         <div class="git_commit_log_message">{{ kyou.typed_git_commit_log.commit_message }}</div>
         <GitCommitLogContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
             @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
@@ -30,16 +31,20 @@ const props = defineProps<GitCommitLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 async function show_context_menu(e: PointerEvent): Promise<void> {
-    context_menu.value?.show(e)
+    if (props.enable_context_menu) {
+        context_menu.value?.show(e)
+    }
 }
 </script>
 <style lang="css">
 .git_commit_log_message {
     white-space: pre-line;
 }
+
 .git_commit_addition {
     color: limegreen;
 }
+
 .git_commit_deletion {
     color: crimson;
 }

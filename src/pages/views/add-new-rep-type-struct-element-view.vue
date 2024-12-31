@@ -35,7 +35,7 @@ const check_when_inited: Ref<boolean> = ref(true)
 
 function emits_rep_type_name(): void {
     const rep_type_struct_element = new RepTypeStructElementData()
-    rep_type_struct_element.id = GkillAPI.get_instance().generate_uuid()
+    rep_type_struct_element.id = props.gkill_api.generate_uuid()
     rep_type_struct_element.check_when_inited = check_when_inited.value
     rep_type_struct_element.children = null
     rep_type_struct_element.indeterminate = false

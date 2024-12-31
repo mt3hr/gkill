@@ -8,4 +8,5 @@ export interface ShareTaskListLinkViewEmits {
     (e: 'updated_share_mi_task_list_info', share_mi_task_list_info: ShareMiTaskListInfo): void
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
+    (e: 'requested_close_dialog'): void
 }

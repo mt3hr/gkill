@@ -647,7 +647,6 @@ WHERE
 			reKyous = append(reKyous, reKyou)
 		}
 	}
-	fmt.Printf("reKyous = %+v\n", reKyous)
 	return reKyous, nil
 }
 
@@ -671,8 +670,6 @@ func (r *reKyouRepositorySQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx contex
 
 			if filepath.ToSlash(repPath) == filepath.ToSlash(rekyouRepPath) {
 				repIsRekyouRep = true
-				fmt.Printf("repPath = %+v\n", repPath)
-				fmt.Printf("rekyouRepPath = %+v\n", rekyouRepPath)
 				break
 			}
 		}

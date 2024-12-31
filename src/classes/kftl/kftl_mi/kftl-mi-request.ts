@@ -39,13 +39,13 @@ export class KFTLMiRequest extends KFTLRequest {
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
 
         if (this.board_name == "") {
             const req = new GetApplicationConfigRequest()
-            req.session_id = GkillAPI.get_instance().get_session_id()
-            const res = await GkillAPI.get_instance().get_application_config(req)
+            req.session_id = GkillAPI.get_gkill_api().get_session_id()
+            const res = await GkillAPI.get_gkill_api().get_application_config(req)
             this.board_name = res.application_config.mi_default_board
         }
         if (errors.length !== 0) {
@@ -53,8 +53,8 @@ export class KFTLMiRequest extends KFTLRequest {
         }
 
         const req = new GetApplicationConfigRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
-        const res = await GkillAPI.get_instance().get_application_config(req)
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const res = await GkillAPI.get_gkill_api().get_application_config(req)
         if (res.errors && res.errors.length !== 0) {
             errors = errors.concat(res.errors)
             return errors
@@ -68,7 +68,7 @@ export class KFTLMiRequest extends KFTLRequest {
 
         const mi_req = new AddMiRequest()
 
-        mi_req.session_id = GkillAPI.get_instance().get_session_id()
+        mi_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         mi_req.mi.id = id
         mi_req.mi.title = this.title
         mi_req.mi.board_name = board_name
@@ -86,7 +86,7 @@ export class KFTLMiRequest extends KFTLRequest {
         mi_req.mi.update_time = time
         mi_req.mi.update_user = gkill_info_res.user_id
 
-        await GkillAPI.get_instance().add_mi(mi_req).then(res => {
+        await GkillAPI.get_gkill_api().add_mi(mi_req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
             }

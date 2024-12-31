@@ -19,9 +19,9 @@ export class IDFKyou extends InfoBase {
         throw new Error('Not implemented')
         /*
         const req = new GetIDFKyouRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.id = this.id
-        const res = await GkillAPI.get_instance().get_idf_kyou(req)
+        const res = await GkillAPI.get_gkill_api().get_idf_kyou(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }

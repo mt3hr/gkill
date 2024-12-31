@@ -105,7 +105,7 @@ const inited = computed(() => {
 watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
     if (old_value !== new_value && new_value) {
         default_query.value = generate_query().clone()
-        default_query.value.query_id = GkillAPI.get_instance().generate_uuid()
+        default_query.value.query_id = props.gkill_api.generate_uuid()
         nextTick(() => { emits('inited') })
     }
 })
@@ -201,7 +201,7 @@ function generate_query(query_id?: string): FindKyouQuery {
 
 function emits_cleard_keyword_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_words = default_query.value.use_words
     find_query.keywords = default_query.value.keywords
     find_query.words_and = default_query.value.words_and
@@ -211,7 +211,7 @@ function emits_cleard_keyword_query(): void {
 
 function emits_cleard_timeis_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_timeis = default_query.value.use_timeis
     find_query.use_timeis_tags = default_query.value.use_timeis_tags
     find_query.timeis_keywords = default_query.value.timeis_keywords
@@ -225,7 +225,7 @@ function emits_cleard_timeis_query(): void {
 
 function emits_cleard_rep_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.reps = default_query.value.reps
     find_query.devices_in_sidebar = default_query.value.devices_in_sidebar
     find_query.rep_types_in_sidebar = default_query.value.rep_types_in_sidebar
@@ -235,7 +235,7 @@ function emits_cleard_rep_query(): void {
 
 function emits_cleard_tag_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.tags = default_query.value.tags
     find_query.tags_and = default_query.value.tags_and
     query.value = find_query
@@ -244,7 +244,7 @@ function emits_cleard_tag_query(): void {
 
 function emits_cleard_map_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_map = default_query.value.use_map
     find_query.map_latitude = default_query.value.map_latitude
     find_query.map_longitude = default_query.value.map_longitude
@@ -256,7 +256,7 @@ function emits_cleard_map_query(): void {
 
 function emits_cleard_calendar_query(): void {
     const find_query = generate_query()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_calendar = default_query.value.use_calendar
     find_query.calendar_start_date = default_query.value.calendar_start_date
     find_query.calendar_end_date = default_query.value.calendar_end_date
@@ -266,7 +266,7 @@ function emits_cleard_calendar_query(): void {
 
 function emits_default_query(): void {
     const find_query = default_query.value.clone()
-    find_query.query_id = GkillAPI.get_instance().generate_uuid()
+    find_query.query_id = props.gkill_api.generate_uuid()
     query.value = find_query
     emits('updated_query_clear', find_query)
 }

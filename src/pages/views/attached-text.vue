@@ -5,6 +5,7 @@
         </div>
         <AttachedTextContextMenu :application_config="application_config" :gkill_api="gkill_api" :text="text"
             :kyou="kyou" :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -42,7 +43,9 @@ const text_class = computed(() => {
 
 
 async function show_context_menu(e: PointerEvent): Promise<void> {
-    context_menu.value?.show(e)
+    if (props.enable_context_menu) {
+        context_menu.value?.show(e)
+    }
 }
 </script>
 <style lang="css" scoped>
@@ -53,7 +56,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     padding: 8px;
 }
 
-.highlighted_text > * {
+.highlighted_text>* {
     background-color: lightgreen;
     border: dashed 1px;
     margin: 8px;

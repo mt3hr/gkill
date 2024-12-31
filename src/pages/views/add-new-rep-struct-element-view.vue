@@ -37,7 +37,7 @@ const ignore_check_rep_rykv: Ref<boolean> = ref(false)
 
 function emits_rep_name(): void {
     const rep_struct_element = new RepStructElementData()
-    rep_struct_element.id = GkillAPI.get_instance().generate_uuid()
+    rep_struct_element.id = props.gkill_api.generate_uuid()
     rep_struct_element.check_when_inited = check_when_inited.value
     rep_struct_element.ignore_check_rep_rykv = ignore_check_rep_rykv.value
     rep_struct_element.children = null

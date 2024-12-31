@@ -522,7 +522,6 @@ func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou
 				errch <- err
 				return
 			}
-			fmt.Printf("matchReKyousInRep = %#v\n", matchReKyousInRep)
 			ch <- matchReKyousInRep
 		}(rep)
 	}

@@ -61,7 +61,7 @@ const rep_types: Ref<Array<string>> = ref([
 
 async function add_rep(): Promise<void> {
     const repository = new Repository()
-    repository.id = GkillAPI.get_instance().generate_uuid()
+    repository.id = props.gkill_api.generate_uuid()
     repository.device = device.value
     repository.user_id = props.account.user_id
     repository.type = type.value

@@ -37,7 +37,6 @@ const use_mi_check_state = ref(true)
 const check_state: Ref<MiCheckState> = ref(MiCheckState.uncheck)
 
 watch(() => check_state.value, () => {
-    console.log(check_state)
     emits('request_update_extruct_check_state', check_state.value)
 })
 

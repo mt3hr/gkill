@@ -85,15 +85,15 @@ export class ApplicationConfig {
     }
     async append_not_found_reps(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
-        const res = await GkillAPI.get_instance().get_all_rep_names(req)
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
         }
@@ -116,7 +116,7 @@ export class ApplicationConfig {
             const rep_struct = new RepStruct()
             rep_struct.check_when_inited = true
             rep_struct.device = gkill_info_res.device
-            rep_struct.id = GkillAPI.get_instance().generate_uuid()
+            rep_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             rep_struct.ignore_check_rep_rykv = false
             rep_struct.parent_folder_id = null
             rep_struct.rep_name = rep_name
@@ -128,15 +128,15 @@ export class ApplicationConfig {
     }
     async append_not_found_tags(): Promise<Array<GkillError>> {
         const req = new GetAllTagNamesRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
-        const res = await GkillAPI.get_instance().get_all_tag_names(req)
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const res = await GkillAPI.get_gkill_api().get_all_tag_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
         }
@@ -159,7 +159,7 @@ export class ApplicationConfig {
             const tag_struct = new TagStruct()
             tag_struct.check_when_inited = true
             tag_struct.device = gkill_info_res.device
-            tag_struct.id = GkillAPI.get_instance().generate_uuid()
+            tag_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             tag_struct.is_force_hide = false
             tag_struct.parent_folder_id = null
             tag_struct.tag_name = tag_name
@@ -172,15 +172,15 @@ export class ApplicationConfig {
 
     async append_not_found_mi_boards(): Promise<Array<GkillError>> {
         const req = new GetMiBoardRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
-        const res = await GkillAPI.get_instance().get_mi_board_list(req)
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const res = await GkillAPI.get_gkill_api().get_mi_board_list(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
         }
@@ -203,7 +203,7 @@ export class ApplicationConfig {
             const board_struct = new MiBoardStruct()
             board_struct.check_when_inited = true
             board_struct.device = gkill_info_res.device
-            board_struct.id = GkillAPI.get_instance().generate_uuid()
+            board_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             board_struct.parent_folder_id = null
             board_struct.board_name = board_name
             board_struct.seq = 1000 + i++
@@ -215,8 +215,8 @@ export class ApplicationConfig {
 
     async append_no_devices(): Promise<Array<GkillError>> {
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
         }
@@ -232,7 +232,7 @@ export class ApplicationConfig {
             const device_struct = new DeviceStruct()
             device_struct.check_when_inited = true
             device_struct.device = gkill_info_res.device
-            device_struct.id = GkillAPI.get_instance().generate_uuid()
+            device_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             device_struct.device_name = "なし"
             device_struct.parent_folder_id = null
             device_struct.seq = -1000
@@ -244,15 +244,15 @@ export class ApplicationConfig {
 
     async append_not_found_devices(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
-        const res = await GkillAPI.get_instance().get_all_rep_names(req)
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
         }
@@ -276,7 +276,7 @@ export class ApplicationConfig {
             const device_struct = new DeviceStruct()
             device_struct.check_when_inited = true
             device_struct.device = gkill_info_res.device
-            device_struct.id = GkillAPI.get_instance().generate_uuid()
+            device_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             device_struct.device_name = device_name
             device_struct.parent_folder_id = null
             device_struct.seq = 1000 + i++
@@ -287,15 +287,15 @@ export class ApplicationConfig {
     }
     async append_not_found_rep_types(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
-        const res = await GkillAPI.get_instance().get_all_rep_names(req)
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (res.errors && res.errors.length !== 0) {
             return gkill_info_res.errors
         }
@@ -319,7 +319,7 @@ export class ApplicationConfig {
             const rep_type_struct = new RepTypeStruct()
             rep_type_struct.check_when_inited = true
             rep_type_struct.device = gkill_info_res.device
-            rep_type_struct.id = GkillAPI.get_instance().generate_uuid()
+            rep_type_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             rep_type_struct.rep_type_name = rep_type
             rep_type_struct.parent_folder_id = null
             rep_type_struct.seq = 1000 + i++
@@ -828,8 +828,8 @@ export class ApplicationConfig {
 
     async append_no_tags(): Promise<Array<GkillError>> {
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
         }
@@ -845,7 +845,7 @@ export class ApplicationConfig {
             const tag_struct = new TagStruct()
             tag_struct.check_when_inited = true
             tag_struct.device = gkill_info_res.device
-            tag_struct.id = GkillAPI.get_instance().generate_uuid()
+            tag_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             tag_struct.is_force_hide = false
             tag_struct.parent_folder_id = null
             tag_struct.tag_name = "no tags"
@@ -858,8 +858,8 @@ export class ApplicationConfig {
 
     async append_all_mi_board(): Promise<Array<GkillError>> {
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-        const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
         }
@@ -875,7 +875,7 @@ export class ApplicationConfig {
             const board_struct = new MiBoardStruct()
             board_struct.check_when_inited = true
             board_struct.device = gkill_info_res.device
-            board_struct.id = GkillAPI.get_instance().generate_uuid()
+            board_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             board_struct.parent_folder_id = null
             board_struct.board_name= "すべて"
             board_struct.seq = -1000

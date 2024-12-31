@@ -97,7 +97,7 @@ async function save(): Promise<void> {
 
     // UserIDやDevice情報を取得する
     const get_gkill_req = new GetGkillInfoRequest()
-    get_gkill_req.session_id = GkillAPI.get_instance().get_session_id()
+    get_gkill_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
@@ -106,7 +106,7 @@ async function save(): Promise<void> {
 
     // 更新後Nlog情報を用意する
     const new_nlog = await nlog.value.clone()
-    new_nlog.id = GkillAPI.get_instance().generate_uuid()
+    new_nlog.id = props.gkill_api.generate_uuid()
     new_nlog.amount = nlog_amount_value.value
     new_nlog.shop = nlog_shop_value.value
     new_nlog.title = nlog_title_value.value
@@ -122,7 +122,7 @@ async function save(): Promise<void> {
 
     // 追加リクエストを飛ばす
     const req = new AddNlogRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
+    req.session_id = props.gkill_api.get_session_id()
     req.nlog = new_nlog
     const res = await props.gkill_api.add_nlog(req)
     if (res.errors && res.errors.length !== 0) {

@@ -35,8 +35,8 @@ const is_force_hide: Ref<boolean> = ref(props.struct_obj.is_force_hide)
 
 async function apply(): Promise<void> {
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = GkillAPI.get_instance().get_session_id()
-    const gkill_info_res = await GkillAPI.get_instance().get_gkill_info(gkill_info_req)
+    gkill_info_req.session_id = props.gkill_api.get_session_id()
+    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
         return

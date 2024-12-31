@@ -12,7 +12,7 @@ export class KFTLKmemoStatementLine extends KFTLStatementLine {
         super(line_text, context)
         const target_id = (this.get_prev_line() && this.get_prev_line()?.get_context() && this.get_prev_line()?.get_context().is_this_prototype() || this.prev_line_is_kmemo_statement())
             ? this.get_prev_line()!!.get_context().get_this_statement_line_target_id() 
-            : GkillAPI.get_instance().generate_uuid()
+            : GkillAPI.get_gkill_api().generate_uuid()
         context.set_this_statement_line_target_id(target_id)
     }
 
