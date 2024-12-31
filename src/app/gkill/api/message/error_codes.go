@@ -258,4 +258,13 @@ const (
 	InvalidUpdateIDFKyouRequestDataError               = "ERR000252"
 	AddIDFKyouError                                    = "ERR000253"
 	NotFoundIDFKyouError                               = "ERR000254"
+	FailedMarshalJSONFindQuery                         = "ERR000255"
+	InvalidUpdateShareMiTaskListInfoResponseDataError  = "ERR000256"
+	InvalidUpdateShareMiTaskListInfoRequestDataError   = "ERR000257"
+	UpdateShareMiTaskListInfoError                     = "ERR000258"
+	NotExistShareMiTaskListInfoError                   = "ERR000259"
+	FindKyousShareMiError                              = "ERR000260"
+	FindMisShareMiError                                = "ERR000261"
+	FindTagsShareMiError                               = "ERR000262"
+	FindTextsShareMiError                              = "ERR000263"
 )

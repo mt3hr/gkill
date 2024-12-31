@@ -5,7 +5,16 @@
         </v-overlay>
         <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
             <v-app-bar-nav-icon @click.stop="() => { drawer = !drawer }" />
-            <v-toolbar-title>rykv</v-toolbar-title>
+            <v-toolbar-title>rykv
+                <v-menu activator="parent">
+                    <v-list>
+                        <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'saihate']" :key="index"
+                            :value="index">
+                            <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+            </v-toolbar-title>
             <v-spacer />
             <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
                 <v-icon>mdi-file-document</v-icon>
@@ -84,9 +93,10 @@
                             :application_config="application_config" :gkill_api="gkill_api"
                             :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
                             :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
+                            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                             :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="true" @scroll_list="(scroll_top: number) => {
                                 match_kyous_list_top_list[index] = scroll_top
-                                GkillAPI.get_instance().set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
+                                props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
                             }" @clicked_list_view="() => {
                                 skip_search_this_tick = true
                                 focused_query = querys[index]
@@ -166,6 +176,7 @@
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
                                 :height="app_content_height.valueOf()" :is_readonly_mi_check="false" :width="400"
+                                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                                 class="kyou_detail_view" @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
@@ -195,42 +206,43 @@
                 </tr>
             </table>
             <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="add_lantana_dialog" />
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="add_urlog_dialog" />
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="add_mi_dialog" />
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="add_nlog_dialog" />
             <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
@@ -268,7 +280,7 @@
     </div>
 </template>
 <script setup lang="ts">
-
+import router from '@/router'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { Kyou } from '@/classes/datas/kyou'
@@ -295,6 +307,9 @@ import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import moment from 'moment'
 import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
 import { deepEquals } from '@/classes/deep-equals'
+
+const enable_context_menu = ref(true)
+const enable_dialog = ref(true)
 
 const query_editor_sidebar = ref<InstanceType<typeof RykvQueryEditorSideBar> | null>(null);
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
@@ -359,14 +374,14 @@ async function init(): Promise<void> {
             is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
 
             // スクロール位置の復元
-            match_kyous_list_top_list.value = GkillAPI.get_instance().get_saved_rykv_scroll_indexs()
+            match_kyous_list_top_list.value = props.gkill_api.get_saved_rykv_scroll_indexs()
 
             // 前回開いていた列があれば復元する
             skip_search_this_tick.value = true
-            const saved_querys = GkillAPI.get_instance().get_saved_rykv_find_kyou_querys()
+            const saved_querys = props.gkill_api.get_saved_rykv_find_kyou_querys()
             if (saved_querys.length.valueOf() === 0) {
                 const default_query = query_editor_sidebar.value!.get_default_query()!.clone()
-                default_query.query_id = GkillAPI.get_instance().generate_uuid()
+                default_query.query_id = props.gkill_api.generate_uuid()
                 saved_querys.push(default_query)
             }
 
@@ -421,8 +436,8 @@ async function close_list_view(column_index: number): Promise<void> {
         }
         kyou_list_view.scroll_to(match_kyous_list_top_list.value[i])
     }
-    GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys.value)
-    GkillAPI.get_instance().set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
+    props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
+    props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
 }
 
 function add_list_view(query?: FindKyouQuery): void {
@@ -435,12 +450,12 @@ function add_list_view(query?: FindKyouQuery): void {
         querys.value.push(query)
         focused_query.value = query
     } else if (default_query) {
-        default_query.query_id = GkillAPI.get_instance().generate_uuid()
+        default_query.query_id = props.gkill_api.generate_uuid()
         querys.value.push(default_query)
         focused_query.value = default_query
     } else {
         const query = new FindKyouQuery()
-        query.query_id = GkillAPI.get_instance().generate_uuid()
+        query.query_id = props.gkill_api.generate_uuid()
         querys.value.push(query)
         focused_query.value = query
     }
@@ -541,7 +556,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         querys_backup.value[column_index] = query
         focused_query.value = query
 
-        GkillAPI.get_instance().set_saved_rykv_find_kyou_querys(querys.value)
+        props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
 
         focused_column_checked_kyous.value = []
         nextTick(() => dnote_view.value?.recalc_all())
@@ -570,13 +585,13 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
 
         const req = new GetKyousRequest()
         abort_controllers.value[column_index] = req.abort_controller
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = props.gkill_api.get_session_id()
         req.query = query.clone()
         req.query.parse_words_and_not_words()
         if (update_cache) {
             req.query.update_cache = true
         }
-        const res = await GkillAPI.get_instance().get_kyous(req)
+        const res = await props.gkill_api.get_kyous(req)
         if (res.errors && res.errors.length !== 0) {
             emits('received_errors', res.errors)
             return

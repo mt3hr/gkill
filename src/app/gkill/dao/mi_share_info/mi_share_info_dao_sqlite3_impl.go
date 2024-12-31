@@ -171,7 +171,7 @@ SELECT
   SHARE_ID,
   FIND_QUERY_JSON
 FROM MI_SHARE_INFO
-WHERE SHARED_ID = ?
+WHERE SHARE_ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
@@ -273,7 +273,7 @@ UPDATE MI_SHARE_INFO SET
   IS_SHARE_DETAIL = ?,
   SHARE_ID = ?,
   FIND_QUERY_JSON = ?
-WHERE ID = ?
+WHERE SHARE_ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
@@ -291,7 +291,7 @@ WHERE ID = ?
 		miShareInfo.IsShareDetail,
 		miShareInfo.ShareID,
 		miShareInfo.FindQueryJSON,
-		miShareInfo.ID,
+		miShareInfo.ShareID,
 	}
 	gkill_log.TraceSQL.Printf("%#v", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -303,10 +303,10 @@ WHERE ID = ?
 	return true, nil
 }
 
-func (m *miShareInfoDAOSQLite3Impl) DeleteMiShareInfo(ctx context.Context, id string) (bool, error) {
+func (m *miShareInfoDAOSQLite3Impl) DeleteMiShareInfo(ctx context.Context, shareID string) (bool, error) {
 	sql := `
 DELETE FROM MI_SHARE_INFO
-WHERE ID = ?
+WHERE SHARE_ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
@@ -317,7 +317,7 @@ WHERE ID = ?
 	defer stmt.Close()
 
 	queryArgs := []interface{}{
-		id,
+		shareID,
 	}
 	gkill_log.TraceSQL.Printf("%#v", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)

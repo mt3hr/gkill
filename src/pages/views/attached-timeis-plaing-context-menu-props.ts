@@ -10,4 +10,6 @@ export interface AttachedTimeisPlaingContextMenuProps extends GkillPropsBase {
     target_kyou: Kyou
     last_added_tag: string
     highlight_targets: Array<InfoIdentifier>
+    enable_context_menu: boolean
+    enable_dialog: boolean
 }

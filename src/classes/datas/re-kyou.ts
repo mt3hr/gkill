@@ -18,9 +18,9 @@ export class ReKyou extends InfoBase {
 
     async load_attached_kyou(): Promise<Array<GkillError>> {
         const req = new GetKyouRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.id = this.target_id
-        const res = await GkillAPI.get_instance().get_kyou(req)
+        const res = await GkillAPI.get_gkill_api().get_kyou(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
@@ -37,9 +37,9 @@ export class ReKyou extends InfoBase {
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         const req = new GetReKyouRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.id = this.id
-        const res = await GkillAPI.get_instance().get_rekyou(req)
+        const res = await GkillAPI.get_gkill_api().get_rekyou(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }

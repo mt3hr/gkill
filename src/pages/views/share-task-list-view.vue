@@ -1,9 +1,62 @@
 <template>
-
+    <v-card>
+        <v-card-title>
+            タスク一覧共有
+        </v-card-title>
+        <div>現在の検索条件でタスク一覧を共有します。</div>
+        <v-text-field v-model="share_title" label="タイトル" />
+        <v-checkbox v-model="share_time_only" label="タスク有無と時刻のみ共有" />
+        <v-row>
+            <v-spacer />
+            <v-col>
+                <v-btn @click="share()">OK</v-btn>
+            </v-col>
+        </v-row>
+    </v-card>
 </template>
 <script lang="ts" setup>
+import { type Ref, ref } from 'vue';
 import type { ShareTaskListViewEmits } from './share-task-list-view-emits'
 import type { ShareTaskListViewProps } from './share-task-list-view-props'
+import { AddShareMiTaskListInfoRequest } from '@/classes/api/req_res/add-share-mi-task-list-info-request';
+import { GkillAPI } from '@/classes/api/gkill-api';
+import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info';
+import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 const props = defineProps<ShareTaskListViewProps>()
 const emits = defineEmits<ShareTaskListViewEmits>()
+
+const share_title: Ref<string> = ref("")
+const share_time_only: Ref<boolean> = ref(false)
+
+async function share(): Promise<void> {
+    const gkill_req = new GetGkillInfoRequest()
+    gkill_req.session_id = props.gkill_api.get_session_id()
+    const gkill_res = await props.gkill_api.get_gkill_info(gkill_req)
+    if (gkill_res.errors && gkill_res.errors.length !== 0) {
+        emits('received_errors', gkill_res.errors)
+        return
+    }
+
+    const share_mi_task_list_info = new ShareMiTaskListInfo()
+    share_mi_task_list_info.share_id = props.gkill_api.generate_uuid()
+    share_mi_task_list_info.user_id = gkill_res.user_id
+    share_mi_task_list_info.device = gkill_res.device
+    share_mi_task_list_info.find_query_json = props.find_kyou_query.clone()!
+    share_mi_task_list_info.is_share_detail = !share_time_only.value
+    share_mi_task_list_info.share_title = share_title.value
+
+    const req = new AddShareMiTaskListInfoRequest()
+    req.session_id = props.gkill_api.get_session_id()
+    req.share_mi_task_list_info = share_mi_task_list_info
+    const res = await props.gkill_api.add_share_mi_task_list_info(req)
+    if (res.errors && res.errors.length !== 0) {
+        emits('received_errors', res.errors)
+        return
+    }
+    if (res.messages && res.messages.length !== 0) {
+        emits('received_messages', res.messages)
+    }
+    emits('regestered_share_mi_task_list_info', res.share_mi_task_list_info)
+    emits('requested_close_dialog')
+}
 </script>

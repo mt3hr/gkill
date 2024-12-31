@@ -18,9 +18,9 @@ export class TimeIs extends InfoBase {
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         const req = new GetTimeisRequest()
-        req.session_id = GkillAPI.get_instance().get_session_id()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.id = this.id
-        const res = await GkillAPI.get_instance().get_timeis(req)
+        const res = await GkillAPI.get_gkill_api().get_timeis(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }

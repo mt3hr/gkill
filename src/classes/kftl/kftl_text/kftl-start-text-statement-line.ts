@@ -24,7 +24,7 @@ export class KFTLStartTextStatementLine extends KFTLStatementLine {
             request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
             request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
         }
-        request.set_current_text_id(GkillAPI.get_instance().generate_uuid())
+        request.set_current_text_id(GkillAPI.get_gkill_api().generate_uuid())
         return new Promise<void>((resolve) => resolve())
     }
 
