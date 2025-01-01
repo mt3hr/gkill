@@ -49,11 +49,21 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
             errors = errors.concat(get_plaing_timeis_res.errors)
             return errors
         }
-        for (let i = 0; i < get_plaing_timeis_res.plaing_timeiss.length; i++) {
-            const timeis = get_plaing_timeis_res.plaing_timeiss[i]
-            if (timeis.title === this.title) {
-                target_timeis = timeis
-                break
+
+        const awaitPromisses = Array<Promise<any>>()
+        for (let i = 0; i < get_plaing_timeis_res.plaing_timeis_kyous.length; i++) {
+            const timeis = get_plaing_timeis_res.plaing_timeis_kyous[i]
+            awaitPromisses.push(timeis.load_typed_timeis())
+        }
+        await Promise.all(awaitPromisses)
+
+        for (let i = 0; i < get_plaing_timeis_res.plaing_timeis_kyous.length; i++) {
+            const timeis_kyou = get_plaing_timeis_res.plaing_timeis_kyous[i]
+            if (timeis_kyou.typed_timeis) {
+                if (timeis_kyou.typed_timeis.title === this.title) {
+                    target_timeis = timeis_kyou.typed_timeis
+                    break
+                }
             }
         }
 
@@ -64,14 +74,13 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
             const error = new GkillError()
             error.error_code = "//TODO"
             error.error_message = "終了対象のTimeIsが存在しませんでした"
-            return errors
+            throw new Error(error.error_message)
         }
 
         // end_timeをいれてUPDATEする
         const update_timeis_req = new UpdateTimeisRequest()
         update_timeis_req.session_id = GkillAPI.get_gkill_api().get_session_id()
-        update_timeis_req.session_id = GkillAPI.get_gkill_api().get_session_id()
-        update_timeis_req.timeis = target_timeis
+        update_timeis_req.timeis = target_timeis.clone()
         update_timeis_req.timeis.end_time = time
         update_timeis_req.timeis.update_app = "gkill_kftl"
         update_timeis_req.timeis.update_device = gkill_info_res.device

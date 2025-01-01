@@ -54,15 +54,23 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
             errors = errors.concat(get_plaing_timeis_res.errors)
             return errors
         }
-        for (let i = 0; i < get_plaing_timeis_res.plaing_timeiss.length; i++) {
-            const timeis = get_plaing_timeis_res.plaing_timeiss[i]
-            await timeis.load_attached_tags()
+
+        const awaitPromisses = Array<Promise<any>>()
+        for (let i = 0; i < get_plaing_timeis_res.plaing_timeis_kyous.length; i++) {
+            const timeis = get_plaing_timeis_res.plaing_timeis_kyous[i]
+            awaitPromisses.push(timeis.load_typed_timeis())
+            awaitPromisses.push(timeis.load_attached_tags())
+        }
+        await Promise.all(awaitPromisses)
+
+        for (let i = 0; i < get_plaing_timeis_res.plaing_timeis_kyous.length; i++) {
+            const timeis_kyou = get_plaing_timeis_res.plaing_timeis_kyous[i]
             const attached_tag_names = Array<string>()
-            for (let j = 0; j < timeis.attached_tags.length; j++) {
-                attached_tag_names.push(timeis.attached_tags[j].tag)
+            for (let j = 0; j < timeis_kyou.attached_tags.length; j++) {
+                attached_tag_names.push(timeis_kyou.attached_tags[j].tag)
             }
 
-            let is_match_tags = timeis.attached_tags.length !== 0
+            let is_match_tags = timeis_kyou.attached_tags.length !== 0
             for (let j = 0; j < this.target_tag_names.length; j++) {
                 const target_tag_name = this.target_tag_names[j]
                 if (!attached_tag_names.includes(target_tag_name)) {
@@ -71,7 +79,7 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
                 }
             }
             if (is_match_tags) {
-                target_timeis = timeis
+                target_timeis = timeis_kyou.typed_timeis
                 break
             }
         }
@@ -83,7 +91,7 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
             const error = new GkillError()
             error.error_code = "//TODO"
             error.error_message = "終了対象のTimeIsが存在しませんでした"
-            return errors
+            throw new Error(error.error_message)
         }
 
         // end_timeをいれてUPDATEする
