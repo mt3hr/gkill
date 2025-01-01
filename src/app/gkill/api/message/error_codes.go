@@ -267,4 +267,7 @@ const (
 	FindMisShareMiError                                = "ERR000261"
 	FindTagsShareMiError                               = "ERR000262"
 	FindTextsShareMiError                              = "ERR000263"
+	InvalidGetPlaingKyousResponseDataError             = "ERR000264"
+	InvalidGetPlaingTimeIsRequestDataError             = "ERR000265"
+	FindKyousPlaingTimeIsError                         = "ERR000266"
 )
