@@ -104,8 +104,8 @@ const props = defineProps<miQueryEditorSidebarProps>()
 const emits = defineEmits<miQueryEditorSidebarEmits>()
 defineExpose({ generate_query, get_default_query })
 
-const header_margin = ref(8)
-const header_height: Ref<number> = ref(38 + header_margin.value.valueOf() + 38 + header_margin.value.valueOf())
+const header_margin = ref(12)
+const header_height: Ref<number> = ref(36 * 2 + header_margin.value.valueOf())
 const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
@@ -355,14 +355,14 @@ async function show_share_mi_dialog(): Promise<void> {
 
 .sidebar_header {
     position: relative;
-    top: calc(v-bind("(header_margin / 2).toString().concat('px')"));
-    margin-bottom: calc(v-bind("(header_margin / 2).toString().concat('px')"));
+    margin-top: calc(v-bind("(header_margin * 1 / 3).toString().concat('px')")) !important;
+    margin-bottom: calc(v-bind("(header_margin * 1 / 3).toString().concat('px')")) !important;
 }
 
 .sidebar_footer {
     position: relative;
-    top: calc(v-bind("(header_margin * 2 / 3).toString().concat('px')"));
-    margin-bottom: calc(v-bind("(header_margin / 2).toString().concat('px')"));
+    margin-top: calc(v-bind("(header_margin * 1 / 3).toString().concat('px')")) !important;
+    margin-bottom: calc(v-bind("(header_margin * 1 / 3).toString().concat('px')")) !important;
 }
 
 .mi_sidebar {

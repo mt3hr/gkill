@@ -11,10 +11,10 @@ import (
 
 	_ "time/tzdata"
 
-	"net/http"
 	_ "net/http/pprof"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 var (
@@ -26,10 +26,21 @@ func init() {
 		os.Setenv("HOME", os.Getenv("HOMEPATH"))
 	}
 	fixTimezone()
+	/*
+		go func() {
+			http.ListenAndServe("localhost:6060", nil) // pprof用
+		}()
+	*/
+}
 
-	go func() {
-		http.ListenAndServe("localhost:6060", nil) // pprof用
-	}()
+func InitGkillOptions() {
+	gkill_options.LibDir = fmt.Sprintf("%s/lib/base_directory", gkill_options.GkillHomeDir)
+	gkill_options.CacheDir = fmt.Sprintf("%s/caches", gkill_options.GkillHomeDir)
+	gkill_options.LogDir = fmt.Sprintf("%s/logs", gkill_options.GkillHomeDir)
+	gkill_options.ConfigDir = fmt.Sprintf("%s/configs", gkill_options.GkillHomeDir)
+	gkill_options.TLSCertFileDefault = fmt.Sprintf("%s/tls/cert.cer", gkill_options.GkillHomeDir)
+	gkill_options.TLSKeyFileDefault = fmt.Sprintf("%s/tls/key.pem", gkill_options.GkillHomeDir)
+	gkill_options.DataDirectoryDefault = fmt.Sprintf("%s/datas", gkill_options.GkillHomeDir)
 }
 
 func fixTimezone() {
