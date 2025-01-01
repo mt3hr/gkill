@@ -7,6 +7,7 @@ import type { KFTLStatementLineContext } from '../../kftl-statement-line-context
 import { KFTLPrototypeRequest } from '../../kftl_prototype/kftl-prototype-request'
 import type { KFTLTimeIsRequest } from '../kftl-time-is-request'
 import { GkillAPI } from '@/classes/api/gkill-api'
+import { KFTLTimeIsEndTitleStatementLine } from './kftl-time-is-end-title-statement-line'
 
 export class KFTLStartTimeIsEndStatementLine extends KFTLStatementLine {
 
@@ -15,7 +16,7 @@ export class KFTLStartTimeIsEndStatementLine extends KFTLStatementLine {
         const target_id = this.get_prev_line() && this.get_prev_line()?.get_context() && this.get_prev_line()?.get_context().is_this_prototype() ? this.get_prev_line()!!.get_context().get_this_statement_line_target_id() : GkillAPI.get_gkill_api().generate_uuid()
         context.set_this_statement_line_target_id(target_id)
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
-        context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLStartTimeIsEndStatementLine(line_text, context))
+        context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLTimeIsEndTitleStatementLine(line_text, context))
     }
 
     async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
@@ -24,15 +25,10 @@ export class KFTLStartTimeIsEndStatementLine extends KFTLStatementLine {
             request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
             request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsRequest
         }
-        const time = moment(this.get_context().get_this_statement_line_text().replace("？", "")).toDate()
-        if (Number.isNaN(time.getTime())) {
-            throw new Error("日時の解釈に失敗しました")
-        }
-        request.set_end_time(time)
     }
 
     get_label_name(context: KFTLStatementLineContext): string {
-        return "終了日時"
+        return "timeis"
     }
 
     static is_this_type(line_text: string): boolean {

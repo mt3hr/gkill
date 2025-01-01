@@ -68,4 +68,5 @@ const (
 	GetIDFKyouSuccessMessage                 = "MSG000062"
 	UpdateIDFKyouSuccessMessage              = "MSG000063"
 	UpdateShareMiTaskListInfoSuccessMessage  = "MSG000064"
+	GetPlaingTimeIsSuccessMessage            = "MSG000065"
 )

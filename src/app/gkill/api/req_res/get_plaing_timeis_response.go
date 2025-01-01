@@ -10,5 +10,5 @@ type GetPlaingTimeisResponse struct {
 
 	Errors []*message.GkillError `json:"errors"`
 
-	PlaingTimeIss []*reps.TimeIs `json:"plaing_timeiss"`
+	PlaingTimeIsKyous []*reps.Kyou `json:"plaing_timeis_kyous"`
 }
