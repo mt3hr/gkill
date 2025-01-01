@@ -14,6 +14,7 @@ import { KFTLSplitStatementLine } from "./kftl_split/kftl-split-statement-line"
 import { KFTLTagStatementLine } from "./kftl_tag/kftl-tag-statement-line"
 import { KFTLStartTextStatementLine } from "./kftl_text/kftl-start-text-statement-line"
 import { KFTLStartTimeIsStatementLine } from "./kftl_timeis/kftl-start-time-is-statement-line"
+import { KFTLStartTimeIsEndStatementLine } from "./kftl_timeis/kftl_timeis_end/kftl-start-time-is-end-statement-line"
 import { KFTLTimeIsEndTitleStatementLine } from "./kftl_timeis/kftl_timeis_end/kftl-time-is-end-title-statement-line"
 import { KFTLStartTimeIsEndIfExistStatementLine } from "./kftl_timeis/kftl_timeis_end/kftl_timeis_end_exist/kftl-start-time-is-end-if-exist-statement-line"
 import { KFTLStartTimeIsEndByTagStatementLine } from "./kftl_timeis/kftl_timeis_end/kftl_timeis_end_tag/kftl-start-time-is-end-by-tag-statement-line"
@@ -106,10 +107,10 @@ export class KFTLStatementLineConstructorFactory {
                 return new KFTLStartTimeIsStartStatementLine(line_text, context)
             }
         }
-        if (KFTLTimeIsEndTitleStatementLine.is_this_type(line_text)) {
+        if (KFTLStartTimeIsEndStatementLine.is_this_type(line_text)) {
             return (line_text: string, context: KFTLStatementLineContext) => {
                 this.prev_line_is_meta_info = false
-                return new KFTLTimeIsEndTitleStatementLine(line_text, context)
+                return new KFTLStartTimeIsEndStatementLine(line_text, context)
             }
         }
         if (KFTLStartTimeIsStatementLine.is_this_type(line_text)) {

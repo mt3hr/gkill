@@ -59,6 +59,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 			"steam_autocloud.vdf",
 			".DS_Store",
 			".localized",
+			"id.db",
 		},
 		fileRepWatchCacheUpdater: fileRepWatchCacheUpdater,
 	}

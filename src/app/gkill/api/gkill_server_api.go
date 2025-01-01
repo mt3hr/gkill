@@ -3930,195 +3930,6 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (g *GkillServerAPI) HandleGetKmemos(w http.ResponseWriter, r *http.Request) {
-	response := &req_res.GetKmemosResponse{}
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse response to json: %w", err)
-			gkill_log.Debug.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.NotImplementsError,
-				ErrorMessage: "機能が実装されていません",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := fmt.Errorf("not implements")
-	gkill_log.Debug.Printf(err.Error())
-	gkillError := &message.GkillError{
-		ErrorCode:    message.NotImplementsError,
-		ErrorMessage: "機能が実装されていません",
-	}
-	response.Errors = append(response.Errors, gkillError)
-	return
-}
-
-func (g *GkillServerAPI) HandleGetURLogs(w http.ResponseWriter, r *http.Request) {
-	response := &req_res.GetURLogsResponse{}
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse response to json: %w", err)
-			gkill_log.Debug.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.NotImplementsError,
-				ErrorMessage: "機能が実装されていません",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := fmt.Errorf("not implements")
-	gkill_log.Debug.Printf(err.Error())
-	gkillError := &message.GkillError{
-		ErrorCode:    message.NotImplementsError,
-		ErrorMessage: "機能が実装されていません",
-	}
-	response.Errors = append(response.Errors, gkillError)
-	return
-}
-
-func (g *GkillServerAPI) HandleGetNlogs(w http.ResponseWriter, r *http.Request) {
-	response := &req_res.GetNlogsResponse{}
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse response to json: %w", err)
-			gkill_log.Debug.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.NotImplementsError,
-				ErrorMessage: "機能が実装されていません",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := fmt.Errorf("not implements")
-	gkill_log.Debug.Printf(err.Error())
-	gkillError := &message.GkillError{
-		ErrorCode:    message.NotImplementsError,
-		ErrorMessage: "機能が実装されていません",
-	}
-	response.Errors = append(response.Errors, gkillError)
-	return
-}
-
-func (g *GkillServerAPI) HandleGetTimeiss(w http.ResponseWriter, r *http.Request) {
-	response := &req_res.GetTimeissResponse{}
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse response to json: %w", err)
-			gkill_log.Debug.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.NotImplementsError,
-				ErrorMessage: "機能が実装されていません",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := fmt.Errorf("not implements")
-	gkill_log.Debug.Printf(err.Error())
-	gkillError := &message.GkillError{
-		ErrorCode:    message.NotImplementsError,
-		ErrorMessage: "機能が実装されていません",
-	}
-	response.Errors = append(response.Errors, gkillError)
-	return
-}
-
-func (g *GkillServerAPI) HandleGetRekyous(w http.ResponseWriter, r *http.Request) {
-	response := &req_res.GetReKyousResponse{}
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse response to json: %w", err)
-			gkill_log.Debug.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.NotImplementsError,
-				ErrorMessage: "機能が実装されていません",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := fmt.Errorf("not implements")
-	gkill_log.Debug.Printf(err.Error())
-	gkillError := &message.GkillError{
-		ErrorCode:    message.NotImplementsError,
-		ErrorMessage: "機能が実装されていません",
-	}
-	response.Errors = append(response.Errors, gkillError)
-	return
-}
-
-func (g *GkillServerAPI) HandleGetMis(w http.ResponseWriter, r *http.Request) {
-	response := &req_res.GetMisResponse{}
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse response to json: %w", err)
-			gkill_log.Debug.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.NotImplementsError,
-				ErrorMessage: "機能が実装されていません",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := fmt.Errorf("not implements")
-	gkill_log.Debug.Printf(err.Error())
-	gkillError := &message.GkillError{
-		ErrorCode:    message.NotImplementsError,
-		ErrorMessage: "機能が実装されていません",
-	}
-	response.Errors = append(response.Errors, gkillError)
-	return
-}
-
-func (g *GkillServerAPI) HandleGetLantanas(w http.ResponseWriter, r *http.Request) {
-	response := &req_res.GetLantanasResponse{}
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse response to json: %w", err)
-			gkill_log.Debug.Printf(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.NotImplementsError,
-				ErrorMessage: "機能が実装されていません",
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := fmt.Errorf("not implements")
-	gkill_log.Debug.Printf(err.Error())
-	gkillError := &message.GkillError{
-		ErrorCode:    message.NotImplementsError,
-		ErrorMessage: "機能が実装されていません",
-	}
-	response.Errors = append(response.Errors, gkillError)
-	return
-}
-
 func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetKmemoRequest{}
@@ -4950,30 +4761,116 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 }
 
 func (g *GkillServerAPI) HandleGetPlaingTimeis(w http.ResponseWriter, r *http.Request) {
+	request := &req_res.GetPlaingTimeisRequest{}
 	response := &req_res.GetPlaingTimeisResponse{}
 	defer r.Body.Close()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
-			err = fmt.Errorf("error at parse response to json: %w", err)
+			err = fmt.Errorf("error at parse get plaing timeis response to json: %w", err)
 			gkill_log.Debug.Printf(err.Error())
 			gkillError := &message.GkillError{
-				ErrorCode:    message.NotImplementsError,
-				ErrorMessage: "機能が実装されていません",
+				ErrorCode:    message.InvalidGetPlaingKyousResponseDataError,
+				ErrorMessage: "実行中TimeIs取得に失敗しました",
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}()
 
-	err := fmt.Errorf("not implements")
-	gkill_log.Debug.Printf(err.Error())
-	gkillError := &message.GkillError{
-		ErrorCode:    message.NotImplementsError,
-		ErrorMessage: "機能が実装されていません",
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse get plaing timeis request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetPlaingTimeIsRequestDataError,
+			ErrorMessage: "実行中TimeIs取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
 	}
-	response.Errors = append(response.Errors, gkillError)
-	return
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "タグ名全件取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	trueValue := true
+	now := time.Now()
+
+	findQuery := &find.FindQuery{}
+	findQuery.UsePlaing = &trueValue
+	findQuery.PlaingTime = &now
+	findQuery.Reps = &[]string{}
+	findQuery.Tags = &[]string{}
+	for _, timeisRep := range repositories.TimeIsReps {
+		repName, err := timeisRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get timeis rep name: %w", err)
+			err = fmt.Errorf("error add logout session id = %s: %w", request.SessionID, err)
+			gkill_log.Debug.Printf(err.Error())
+			return
+		}
+		*findQuery.Reps = append(*findQuery.Reps, repName)
+	}
+
+	allTagNames, err := repositories.GetAllTagNames(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get all tag names user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetAllTagNamesError,
+			ErrorMessage: "タグ名全件取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	*findQuery.Tags = append(*findQuery.Tags, allTagNames...)
+
+	kyous, err := repositories.TimeIsReps.FindKyous(r.Context(), findQuery)
+	if err != nil {
+		err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.FindKyousPlaingTimeIsError,
+			ErrorMessage: "Kyou取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.PlaingTimeIsKyous = kyous
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.GetPlaingTimeIsSuccessMessage,
+		Message:     "取得完了",
+	})
 }
 
 func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Request) {

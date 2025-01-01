@@ -1227,6 +1227,28 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: GetPlaingTimeisResponse = json
                 this.check_auth(response)
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                this.check_auth(response)
+                if (!response.plaing_timeis_kyous) {
+                        response.plaing_timeis_kyous= new Array<Kyou>()
+                }
+
+                for (let key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.plaing_timeis_kyous.length; i++) {
+                        const kyou = new Kyou()
+                        for (let key in response.plaing_timeis_kyous[i]) {
+                                (kyou as any)[key] = (response.plaing_timeis_kyous[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (kyou as any)[key]) {
+                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                }
+                        }
+                        response.plaing_timeis_kyous[i] = kyou
+                }
                 return response
         }
 
