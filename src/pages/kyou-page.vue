@@ -3,17 +3,25 @@
         <v-progress-circular indeterminate color="primary" />
     </v-overlay>
     <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
-        <v-toolbar-title>Kyou
-            <v-menu activator="parent">
-                <v-list>
-                    <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']" :key="index"
-                        :value="index">
-                        <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
-                    </v-list-item>
-                </v-list>
-            </v-menu>
+        <v-btn icon="mdi-menu" ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
+        <v-toolbar-title>
+            <div>
+                <span>
+                    Kyou
+                </span>
+                <v-menu activator="parent">
+                    <v-list>
+                        <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
+                            :key="index" :value="index">
+                            <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+            </div>
         </v-toolbar-title>
         <v-spacer />
+        <v-divider vertical />
+        <v-btn icon="mdi-cog" @click="is_show_application_config_dialog = true" />
     </v-app-bar>
     <v-main class="main">
         <KyouView :application_config="application_config" :gkill_api="gkill_api"
