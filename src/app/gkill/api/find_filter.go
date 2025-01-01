@@ -208,7 +208,6 @@ func (f *FindFilter) getRepositories(ctx context.Context, userID string, device 
 }
 
 func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	var err error
 	repositories := findCtx.Repositories
 
 	typeMatchReps := []reps.Repository{}
@@ -263,25 +262,34 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 		targetRepNames = *findCtx.ParsedFindQuery.Reps
 	}
 
-	// 並列処理
-	for _, rep := range typeMatchReps {
-		// PlaingだったらTimeIsRep以外は無視する
-		if findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing {
-			_, isTimeIsRep := rep.(reps.TimeIsRepository)
-			if !isTimeIsRep {
+	// PlaingだったらTimeIsRep以外は無視する
+	if findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing {
+		for _, rep := range findCtx.Repositories.TimeIsReps {
+			repName, err := rep.GetRepName(ctx)
+			if err != nil {
 				return nil, err
 			}
-		}
 
-		repName, err := rep.GetRepName(ctx)
-		if err != nil {
-			return nil, err
+			for _, targetRepName := range targetRepNames {
+				if targetRepName == repName {
+					if _, exist := findCtx.MatchReps[repName]; !exist {
+						findCtx.MatchReps[repName] = rep
+					}
+				}
+			}
 		}
+	} else {
+		for _, rep := range typeMatchReps {
+			repName, err := rep.GetRepName(ctx)
+			if err != nil {
+				return nil, err
+			}
 
-		for _, targetRepName := range targetRepNames {
-			if targetRepName == repName {
-				if _, exist := findCtx.MatchReps[repName]; !exist {
-					findCtx.MatchReps[repName] = rep
+			for _, targetRepName := range targetRepNames {
+				if targetRepName == repName {
+					if _, exist := findCtx.MatchReps[repName]; !exist {
+						findCtx.MatchReps[repName] = rep
+					}
 				}
 			}
 		}

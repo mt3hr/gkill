@@ -1,6 +1,6 @@
 <template>
     <v-card class="kftl_view">
-        <v-card-title>
+        <v-card-title :height="title_height">
             <v-row>
                 <v-col cols="auto">
                     記録追加
@@ -65,8 +65,7 @@ const line_label_width_px = computed(() => line_label_width.value.toString().con
 const line_label_height: Ref<Number> = ref(0)
 const line_label_height_px = computed(() => line_label_height.value.toString().concat("px"))
 
-const app_bar_height = 50
-const title_height = 55
+const title_height = 52
 const action_height = 10
 const kftl_input_height: Ref<number> = ref(0)
 const kftl_input_height_px = computed(() => kftl_input_height.value.toString().concat("px"))
@@ -194,6 +193,7 @@ async function submit(): Promise<void> {
         message.message_code = "//TODO"
         message.message = "保存しました"
         emits('received_messages', [message])
+        emits('saved_kyou_by_kftl')
     } finally {
         is_requested_submit.value = false
     }
@@ -209,11 +209,11 @@ async function show_kftl_template_dialog(): Promise<void> {
 
 async function resize(): Promise<void> {
     line_label_width.value = 100
-    line_label_height.value = props.app_content_height.valueOf() - app_bar_height - title_height - action_height
+    line_label_height.value = props.app_content_height.valueOf() - title_height - action_height
     text_area_width.value = props.app_content_width.valueOf() - line_label_width.value.valueOf() - 5 // 5はマジックナンバー
-    text_area_height.value = props.app_content_height.valueOf() - app_bar_height - title_height - action_height
+    text_area_height.value = props.app_content_height.valueOf() - title_height - action_height
     kftl_input_width.value = line_label_width.value.valueOf() + text_area_width.value.valueOf()
-    kftl_input_height.value = props.app_content_height.valueOf() - app_bar_height - title_height - action_height
+    kftl_input_height.value = props.app_content_height.valueOf() - title_height - action_height
 }
 
 function paste_template(template: KFTLTemplateElementData): void {
@@ -266,10 +266,6 @@ textarea {
 
 .kftl_line_label::-webkit-scrollbar {
     display: none;
-}
-
-.main {
-    margin-top: 50px;
 }
 
 .kftl_view {

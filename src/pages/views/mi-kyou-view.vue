@@ -52,6 +52,7 @@ const context_menu = ref<InstanceType<typeof MiContextMenu> | null>(null);
 
 const props = defineProps<miKyouViewProps>()
 const emits = defineEmits<miKyouViewEmits>()
+defineExpose({ show_context_menu })
 
 const is_checked_mi: Ref<boolean> = ref(props.kyou.typed_mi ? props.kyou.typed_mi.is_checked : false)
 

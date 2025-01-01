@@ -7,9 +7,24 @@
         <div v-if="kyou.typed_timeis && kyou.typed_timeis.end_time">終了日時：<span>{{
             format_time(kyou.typed_timeis?.end_time) }}</span></div>
         <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time">実行中</div>
+        <v-row v-if="show_timeis_plaing_end_button && kyou.typed_timeis && !kyou.typed_timeis.end_time"
+            class="pa-0 ma-0">
+            <v-spacer cols="auto" />
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-btn color="primary" @click="show_end_timeis_dialog()">終了</v-btn>
+            </v-col>
+        </v-row>
         <TimeIsContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag" ref="context_menu"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+            @requested_reload_list="emits('requested_reload_list')"
+            @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
+        <EndTimeIsPlaingDialog :application_config="application_config" :gkill_api="gkill_api"
+            :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+            ref="end_timeis_plaing_dialog" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -23,11 +38,14 @@ import type { TimeIsViewProps } from './time-is-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import TimeIsContextMenu from './time-is-context-menu.vue'
 import moment from 'moment';
+import EndTimeIsPlaingDialog from '../dialogs/end-time-is-plaing-dialog.vue';
 
 const context_menu = ref<InstanceType<typeof TimeIsContextMenu> | null>(null);
+const end_timeis_plaing_dialog = ref<InstanceType<typeof EndTimeIsPlaingDialog> | null>(null);
 
 const props = defineProps<TimeIsViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+defineExpose({ show_context_menu })
 
 const duration = computed(() => {
     let time1 = props.timeis.start_time
@@ -82,5 +100,9 @@ function show_context_menu(e: PointerEvent): void {
     if (props.enable_context_menu) {
         context_menu.value?.show(e)
     }
+}
+
+function show_end_timeis_dialog(): void {
+    end_timeis_plaing_dialog.value?.show()
 }
 </script>

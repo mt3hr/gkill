@@ -29,6 +29,7 @@ const context_menu = ref<InstanceType<typeof GitCommitLogContextMenu> | null>(nu
 
 const props = defineProps<GitCommitLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+defineExpose({ show_context_menu })
 
 async function show_context_menu(e: PointerEvent): Promise<void> {
     if (props.enable_context_menu) {

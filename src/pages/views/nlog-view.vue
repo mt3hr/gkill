@@ -52,6 +52,7 @@ const context_menu = ref<InstanceType<typeof NlogContextMenu> | null>(null);
 
 const props = defineProps<NlogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+defineExpose({ show_context_menu })
 
 function show_context_menu(e: PointerEvent): void {
     if (props.enable_context_menu) {

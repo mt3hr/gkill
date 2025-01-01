@@ -11,4 +11,5 @@ export interface KFTLViewEmits {
     (e: 'updated_kyou', kyou: Kyou): void
     (e: 'deleted_kyou', kyou: Kyou): void
     (e: 'requested_close_dialog'): void
+    (e: 'saved_kyou_by_kftl'): void
 }

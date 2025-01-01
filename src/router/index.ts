@@ -8,6 +8,8 @@ import kyou_page from '../pages/kyou-page.vue'
 import saihate_page from '../pages/saihate-page.vue'
 import set_new_password_page from '../pages/set-new-password-page.vue'
 import shared_mi_page from '../pages/shared-mi-page.vue'
+import plaing_timeis_page from '@/pages/plaing-timeis-page.vue'
+import mkfl_page from '@/pages/mkfl-page.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -36,6 +38,16 @@ const router = createRouter({
       path: '/kyou',
       name: 'kyou',
       component: kyou_page,
+    },
+    {
+      path: '/mkfl',
+      name: 'mkfl',
+      component: mkfl_page,
+    },
+    {
+      path: '/plaing',
+      name: 'plaing',
+      component: plaing_timeis_page,
     },
     {
       path: '/saihate',
