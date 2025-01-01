@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-2">
+    <v-card v-if="cloned_kyou.typed_kmemo" class="pa-2">
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">

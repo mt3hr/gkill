@@ -49,6 +49,7 @@ const context_menu = ref<InstanceType<typeof URLogContextMenu> | null>(null);
 
 const props = defineProps<URLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+defineExpose({ show_context_menu })
 
 function show_context_menu(e: PointerEvent): void {
     if (props.enable_context_menu) {

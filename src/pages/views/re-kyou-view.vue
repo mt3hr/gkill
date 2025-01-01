@@ -36,6 +36,7 @@ const context_menu = ref<InstanceType<typeof ReKyouContextMenu> | null>(null);
 
 const props = defineProps<ReKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+defineExpose({ show_context_menu })
 
 const target_kyou: Ref<Kyou> = ref(new Kyou())
 

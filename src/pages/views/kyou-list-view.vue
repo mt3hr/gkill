@@ -12,9 +12,9 @@
                 <template v-slot:default="{ item }">
                     <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
                         :key="item.id" :highlight_targets="[]" :is_image_view="false" :kyou="item"
-                        :last_added_tag="last_added_tag" :show_checkbox="show_checkbox" :show_content_only="false"
-                        :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-                        :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                        :last_added_tag="last_added_tag" :show_checkbox="show_checkbox"
+                        :show_content_only="show_content_only" :show_mi_create_time="true"
+                        :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                         :show_timeis_plaing_end_button="true" :width="width.valueOf()"
                         :is_readonly_mi_check="is_readonly_mi_check" :enable_context_menu="enable_context_menu"
                         :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"

@@ -22,6 +22,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 
 const props = defineProps<KmemoViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+defineExpose({ show_context_menu })
 
 const context_menu = ref<InstanceType<typeof KmemoContextMenu> | null>(null);
 
