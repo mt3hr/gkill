@@ -15,6 +15,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type GkillRepositories struct {
@@ -77,7 +78,7 @@ type GkillRepositories struct {
 
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
 func NewGkillRepositories(userID string) (*GkillRepositories, error) {
-	configDBRootDir := os.ExpandEnv("$HOME/gkill/caches")
+	configDBRootDir := os.ExpandEnv(gkill_options.CacheDir)
 	err := os.MkdirAll(configDBRootDir, fs.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at create directory %s: %w", err)
@@ -1679,6 +1680,12 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 	if query.UsePlaing != nil && *query.UsePlaing {
 		targetReps = []Repository{}
 		for _, rep := range g.TimeIsReps {
+			targetReps = append(targetReps, rep)
+		}
+	}
+	if query.IsImageOnly != nil && *query.IsImageOnly {
+		targetReps = []Repository{}
+		for _, rep := range g.IDFKyouReps {
 			targetReps = append(targetReps, rep)
 		}
 	}

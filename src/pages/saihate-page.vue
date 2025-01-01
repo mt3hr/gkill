@@ -3,6 +3,7 @@
         <v-progress-circular indeterminate color="primary" />
     </v-overlay>
     <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
+        <v-btn icon="mdi-menu" ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
         <v-toolbar-title>さいはて</v-toolbar-title>
     </v-app-bar>
     <v-main class="main">

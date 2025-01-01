@@ -5,15 +5,20 @@
         </v-overlay>
         <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
             <v-app-bar-nav-icon @click.stop="() => { drawer = !drawer }" />
-            <v-toolbar-title>rykv
-                <v-menu activator="parent">
-                    <v-list>
-                        <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
-                            :key="index" :value="index">
-                            <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
-                        </v-list-item>
-                    </v-list>
-                </v-menu>
+            <v-toolbar-title>
+                <div>
+                    <span>
+                        rykv
+                    </span>
+                    <v-menu activator="parent">
+                        <v-list>
+                            <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
+                                :key="index" :value="index">
+                                <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
+                            </v-list-item>
+                        </v-list>
+                    </v-menu>
+                </div>
             </v-toolbar-title>
             <v-spacer />
             <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
