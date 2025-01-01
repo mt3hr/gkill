@@ -86,13 +86,13 @@ function get_use_calendar(): boolean {
 }
 function get_start_date(): Date | null {
     if (dates.value.length >= 1) {
-        return dates.value[0]
+        return moment(dates.value[0]).toDate()
     }
     return null
 }
 function get_end_date(): Date | null {
     if (dates.value.length >= 1) {
-        return dates.value[dates.value.length-1]
+        return moment(dates.value[dates.value.length-1]).toDate()
     }
     return null
 }
