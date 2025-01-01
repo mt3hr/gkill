@@ -42,6 +42,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/twpayne/go-gpx"
 )
 
@@ -109,14 +110,14 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 			IsLocalOnlyAccess:    false,
 			Address:              ":9999",
 			EnableTLS:            false,
-			TLSCertFile:          "$HOME/gkill/tls/cert.cer",
-			TLSKeyFile:           "$HOME/gkill/tls/key.pem",
+			TLSCertFile:          gkill_options.TLSCertFileDefault,
+			TLSKeyFile:           gkill_options.TLSKeyFileDefault,
 			OpenDirectoryCommand: "explorer /select,$filename",
 			OpenFileCommand:      "rundll32 url.dll,FileProtocolHandler $filename",
 			URLogTimeout:         1 * time.Minute,
 			URLogUserAgent:       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36",
 			UploadSizeLimitMonth: -1,
-			UserDataDirectory:    "$HOME/gkill/datas",
+			UserDataDirectory:    gkill_options.DataDirectoryDefault,
 		}
 		_, err = gkillDAOManager.ConfigDAOs.ServerConfigDAO.AddServerConfig(context.TODO(), serverConfig)
 		if err != nil {
@@ -407,7 +408,7 @@ func (g *GkillServerAPI) Serve() error {
 		return err
 	}
 	port := serverConfig.Address
-	if serverConfig.EnableTLS {
+	if serverConfig.EnableTLS && !gkill_options.DisableTLSForce {
 		certFileName, pemFileName, err := g.getTLSFileNames(device)
 		if err != nil {
 			gkill_log.Debug.Fatal(err)

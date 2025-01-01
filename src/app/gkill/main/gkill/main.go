@@ -14,22 +14,29 @@ import (
 	"github.com/asticode/go-astilectron"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/spf13/cobra"
 )
 
 func main() {
-	if err := appCmd.Execute(); err != nil {
+	if err := serverCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func init() {
 	cobra.MousetrapHelpText = "" // Windowsでマウスから起動しても怒られないようにする
+	serverCmd.PersistentFlags().StringVar(&gkill_options.GkillHomeDir, "gkill_home_dir", gkill_options.GkillHomeDir, "")
+	serverCmd.PersistentFlags().BoolVar(&gkill_options.IsOutputLog, "log", gkill_options.IsOutputLog, "")
+	serverCmd.PersistentFlags().BoolVar(&gkill_options.DisableTLSForce, "disable_tls", gkill_options.DisableTLSForce, "")
 }
 
 var (
-	appCmd = &cobra.Command{
+	serverCmd = &cobra.Command{
 		Use: "gkill",
+		PersistentPreRun: func(_ *cobra.Command, _ []string) {
+			common.InitGkillOptions()
+		},
 		Run: func(_ *cobra.Command, _ []string) {
 			var err error
 
@@ -74,8 +81,8 @@ var (
 			address += serverConfig.Address
 
 			// Initialize astilectron
-			baseDirectoryPath := filepath.Clean(os.ExpandEnv("$HOME/gkill/lib/base_directory"))
-			dataDirectoryPath := filepath.Clean(os.ExpandEnv("$HOME/gkill/lib/data_directory"))
+			baseDirectoryPath := filepath.Clean(os.ExpandEnv(gkill_options.LibDir))
+			dataDirectoryPath := filepath.Clean(os.ExpandEnv(gkill_options.LibDir))
 			directories := []string{
 				baseDirectoryPath,
 				dataDirectoryPath,
