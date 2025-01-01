@@ -25,6 +25,7 @@ const context_menu = ref<InstanceType<typeof LantanaContextMenu> | null>(null);
 
 const props = defineProps<LantanaViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+defineExpose({ show_context_menu })
 
 function show_context_menu(e: PointerEvent): void {
     if (props.enable_context_menu) {

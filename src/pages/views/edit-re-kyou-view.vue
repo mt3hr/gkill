@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-2">
+    <v-card v-if="cloned_kyou.typed_rekyou" class="pa-2">
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -23,7 +23,7 @@
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
-            <KyouView v-if="kyou.typed_rekyou" :application_config="application_config" :gkill_api="gkill_api"
+            <KyouView v-if="cloned_kyou.typed_rekyou" :application_config="application_config" :gkill_api="gkill_api"
                 :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
@@ -38,7 +38,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { EditReKyouViewProps } from './edit-re-kyou-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
@@ -54,13 +54,24 @@ import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-reques
 const props = defineProps<EditReKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
+const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const related_date: Ref<string> = ref(moment(props.kyou.related_time).format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment(props.kyou.related_time).format("HH:mm:ss"))
 const show_kyou: Ref<boolean> = ref(true)
 
+watch(() => props.kyou, () => load())
+load()
+
+async function load(): Promise<void> {
+    cloned_kyou.value = props.kyou.clone()
+    await cloned_kyou.value.load_all()
+    related_date.value = moment(cloned_kyou.value.related_time).format("YYYY-MM-DD")
+    related_time.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+}
+
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const rekyou = props.kyou.typed_rekyou
+    const rekyou = cloned_kyou.value.typed_rekyou?.clone()
     if (!rekyou) {
         const error = new GkillError()
         error.error_code = "//TODO"
@@ -117,3 +128,65 @@ async function save(): Promise<void> {
     return
 }
 </script>
+<style lang="css">
+/* 不要なスクロールバーを消す */
+body,
+.v-application--wrap,
+.v-navigation-drawer--open {
+    overflow-y: scroll !important;
+    overflow-x: auto !important;
+    height: calc(actual_height) !important;
+    min-height: calc(actual_height) !important;
+    max-height: calc(actual_height) !important;
+}
+
+body {
+    overflow-y: hidden !important;
+}
+
+/* メッセージ、エラーメッセージ */
+.alert_container {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    display: grid;
+    grid-gap: .5em;
+    z-index: 100000000;
+}
+
+/* ダイアログ */
+.kyou_detail_view,
+.kyou_list_view,
+.v-dialog .v-card {
+    overflow-y: scroll;
+}
+
+/* スクロールバー */
+.v-navigation-drawer__content::-webkit-scrollbar,
+.kyou_detail_view::-webkit-scrollbar,
+.kyou_list_view::-webkit-scrollbar,
+.kyou_list_view_image::-webkit-scrollbar,
+.kftl_text_area::-webkit-scrollbar,
+.v-dialog .v-card::-webkit-scrollbar {
+    margin-left: 1px;
+    width: 8px;
+}
+
+.v-navigation-drawer__content::-webkit-scrollbar-thumb,
+.kyou_detail_view::-webkit-scrollbar-thumb,
+.kyou_list_view::-webkit-scrollbar-thumb,
+.kyou_list_view_image::-webkit-scrollbar-thumb,
+.kftl_text_area::-webkit-scrollbar-thumb,
+.v-dialog .v-card::-webkit-scrollbar-thumb {
+    background: rgb(var(--v-theme-primary));
+    width: 6px;
+    border-radius: 5px;
+}
+
+/* テーブルの隙間埋め */
+table,
+tr,
+td {
+    border-spacing: 0 !important;
+}
+</style>
