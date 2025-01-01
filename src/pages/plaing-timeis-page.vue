@@ -1,40 +1,51 @@
 <template>
-    <div>
-        <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
-            @requested_show_application_config_dialog="show_application_config_dialog()" @received_errors="write_errors"
-            @received_messages="write_messages" />
+    <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
+        <v-progress-circular indeterminate color="primary" />
+    </v-overlay>
+    <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
+        <v-toolbar-title>Plaing TimeIs
+            <v-menu activator="parent">
+                <v-list>
+                    <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']" :key="index"
+                        :value="index">
+                        <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
+                    </v-list-item>
+                </v-list>
+            </v-menu>
+        </v-toolbar-title>
+    </v-app-bar>
+    <v-main class="main">
+        <PlaingTimeisView :application_config="application_config" :gkill_api="gkill_api"
+            :app_content_height="app_content_height.valueOf()" :app_content_width="app_content_width"
+            @received_errors="write_errors" @received_messages="write_messages" ref="plaing_timeis_view" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
             :is_show="is_show_application_config_dialog" @received_errors="write_errors"
-            @received_messages="write_messages" @requested_reload_application_config="load_application_config"
-            ref="application_config_dialog" />
-        <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="last_added_tag" />
-        <div class="alert_container">
-            <v-slide-y-transition group>
-                <v-alert v-for="message in messages" theme="dark">
-                    {{ message.message }}
-                </v-alert>
-            </v-slide-y-transition>
-        </div>
+            @received_messages="write_messages" @requested_reload_application_config="load_application_config" />
+    </v-main>
+    <div class="alert_container">
+        <v-slide-y-transition group>
+            <v-alert v-for="message in messages" theme="dark">
+                {{ message.message }}
+            </v-alert>
+        </v-slide-y-transition>
     </div>
 </template>
-
 <script lang="ts" setup>
-'use strict'
-import { computed, ref, type Ref } from 'vue'
-import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import router from '@/router'
 import { GkillAPI } from '@/classes/api/gkill-api'
-import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-
+import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
+import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { type Ref, ref, computed, watch } from 'vue'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
-import UploadFileDialog from './dialogs/upload-file-dialog.vue'
-import rykvView from './views/rykv-view.vue'
+import PlaingTimeisView from './views/plaing-timeis-view.vue'
+import { InfoIdentifier } from '@/classes/datas/info-identifier'
+import { Kyou } from '@/classes/datas/kyou'
 
-const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);
+const enable_context_menu = ref(true)
+const enable_dialog = ref(false)
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -47,15 +58,17 @@ const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 
 const is_show_application_config_dialog: Ref<boolean> = ref(false)
-const last_added_tag: Ref<string> = ref("")
+const hightlight_targets: Ref<Array<InfoIdentifier>> = ref(new Array<InfoIdentifier>())
+const is_image_view: Ref<boolean> = ref(false)
+const kyou: Ref<Kyou> = ref(new Kyou())
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
     req.session_id = GkillAPI.get_instance().get_session_id()
 
     return gkill_api.value.get_application_config(req)
-        .then(async res => {
-            if (res.errors && res.errors.length !== 0) {
+        .then(res => {
+            if (res.errors && res.errors.length != 0) {
                 write_errors(res.errors)
                 return
             }
@@ -63,7 +76,7 @@ async function load_application_config(): Promise<void> {
             application_config.value = res.application_config
             GkillAPI.get_instance().set_saved_application_config(res.application_config)
 
-            if (res.messages && res.messages.length !== 0) {
+            if (res.messages && res.messages.length != 0) {
                 write_messages(res.messages)
                 return
             }
@@ -119,11 +132,12 @@ async function write_messages(messages_: Array<GkillMessage>) {
     })
 }
 
-function show_application_config_dialog(): void {
-    application_config_dialog.value?.show()
-}
-
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
+
+const is_loading = ref(true)
+watch(() => application_config.value, () => {
+    is_loading.value = false
+})
 
 window.addEventListener('resize', () => {
     resize_content()

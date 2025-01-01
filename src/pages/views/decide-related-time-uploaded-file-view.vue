@@ -9,7 +9,7 @@
         :is_focused_list="false" :closable="false" @received_errors="(errors) => emits('received_errors', errors)"
         :last_added_tag="last_added_tag" :is_readonly_mi_check="true" :enable_context_menu="enable_context_menu"
         :enable_dialog="enable_dialog" @received_messages="(messages) => emits('received_messages', messages)"
-        :scroll_top="0 /* //TODO */" :show_checkbox="false" :show_footer="false"
+        :scroll_top="0 /* //TODO */" :show_checkbox="false" :show_footer="false" :show_content_only="false"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
         @requested_reload_list="emits('requested_reload_list')" />
 </template>

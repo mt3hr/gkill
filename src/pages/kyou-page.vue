@@ -1,6 +1,18 @@
 <template>
+    <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
+        <v-progress-circular indeterminate color="primary" />
+    </v-overlay>
     <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
-        <v-toolbar-title>Kyou</v-toolbar-title>
+        <v-toolbar-title>Kyou
+            <v-menu activator="parent">
+                <v-list>
+                    <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']" :key="index"
+                        :value="index">
+                        <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
+                    </v-list-item>
+                </v-list>
+            </v-menu>
+        </v-toolbar-title>
         <v-spacer />
     </v-app-bar>
     <v-main class="main">
@@ -17,14 +29,22 @@
             :is_show="is_show_application_config_dialog" @received_errors="write_errors"
             @received_messages="write_messages" @requested_reload_application_config="load_application_config" />
     </v-main>
+    <div class="alert_container">
+        <v-slide-y-transition group>
+            <v-alert v-for="message in messages" theme="dark">
+                {{ message.message }}
+            </v-alert>
+        </v-slide-y-transition>
+    </div>
 </template>
 <script lang="ts" setup>
+import router from '@/router'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
-import { type Ref, ref, computed } from 'vue'
+import { type Ref, ref, computed, watch } from 'vue'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import KyouView from './views/kyou-view.vue'
 import { InfoIdentifier } from '@/classes/datas/info-identifier'
@@ -78,19 +98,52 @@ async function resize_content(): Promise<void> {
     app_content_width.value = window.innerWidth
 }
 
+const messages: Ref<Array<{ message: string, id: string, show_snackbar: boolean }>> = ref([])
+
 async function write_errors(errors: Array<GkillError>) {
-    //TODO エラーメッセージを画面に出力するように
-    errors.forEach(error => {
-        console.log(error)
+    const received_messages = new Array<{ message: string, id: string, show_snackbar: boolean }>()
+    for (let i = 0; i < errors.length; i++) {
+        if (errors[i] && errors[i].error_message) {
+            received_messages.push({
+                message: errors[i].error_message,
+                id: GkillAPI.get_instance().generate_uuid(),
+                show_snackbar: true,
+            })
+        }
+    }
+    messages.value.push(...received_messages)
+    sleep(2500).then(() => {
+        for (let i = 0; i < received_messages.length; i++) {
+            messages.value.splice(0, 1)
+        }
     })
 }
 
-async function write_messages(messages: Array<GkillMessage>) {
-    //TODO メッセージを画面に出力するように
-    messages.forEach(message => {
-        console.log(message)
+async function write_messages(messages_: Array<GkillMessage>) {
+    const received_messages = new Array<{ message: string, id: string, show_snackbar: boolean }>()
+    for (let i = 0; i < messages_.length; i++) {
+        if (messages_[i] && messages_[i].message) {
+            received_messages.push({
+                message: messages_[i].message,
+                id: GkillAPI.get_instance().generate_uuid(),
+                show_snackbar: true,
+            })
+        }
+    }
+    messages.value.push(...received_messages)
+    sleep(2500).then(() => {
+        for (let i = 0; i < received_messages.length; i++) {
+            messages.value.splice(0, 1)
+        }
     })
 }
+
+const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
+
+const is_loading = ref(true)
+watch(() => application_config.value, () => {
+    is_loading.value = false
+})
 
 window.addEventListener('resize', () => {
     resize_content()
@@ -99,3 +152,65 @@ window.addEventListener('resize', () => {
 resize_content()
 load_application_config()
 </script>
+<style lang="css">
+/* 不要なスクロールバーを消す */
+body,
+.v-application--wrap,
+.v-navigation-drawer--open {
+    overflow-y: scroll !important;
+    overflow-x: auto !important;
+    height: calc(actual_height) !important;
+    min-height: calc(actual_height) !important;
+    max-height: calc(actual_height) !important;
+}
+
+body {
+    overflow-y: hidden !important;
+}
+
+/* メッセージ、エラーメッセージ */
+.alert_container {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    display: grid;
+    grid-gap: .5em;
+    z-index: 100000000;
+}
+
+/* ダイアログ */
+.kyou_detail_view,
+.kyou_list_view,
+.v-dialog .v-card {
+    overflow-y: scroll;
+}
+
+/* スクロールバー */
+.v-navigation-drawer__content::-webkit-scrollbar,
+.kyou_detail_view::-webkit-scrollbar,
+.kyou_list_view::-webkit-scrollbar,
+.kyou_list_view_image::-webkit-scrollbar,
+.kftl_text_area::-webkit-scrollbar,
+.v-dialog .v-card::-webkit-scrollbar {
+    margin-left: 1px;
+    width: 8px;
+}
+
+.v-navigation-drawer__content::-webkit-scrollbar-thumb,
+.kyou_detail_view::-webkit-scrollbar-thumb,
+.kyou_list_view::-webkit-scrollbar-thumb,
+.kyou_list_view_image::-webkit-scrollbar-thumb,
+.kftl_text_area::-webkit-scrollbar-thumb,
+.v-dialog .v-card::-webkit-scrollbar-thumb {
+    background: rgb(var(--v-theme-primary));
+    width: 6px;
+    border-radius: 5px;
+}
+
+/* テーブルの隙間埋め */
+table,
+tr,
+td {
+    border-spacing: 0 !important;
+}
+</style>

@@ -27,6 +27,7 @@ const context_menu = ref<InstanceType<typeof IDFKyouContextMenu> | null>(null);
 
 const props = defineProps<IDFKyouProps>()
 const emits = defineEmits<KyouViewEmits>()
+defineExpose({ show_context_menu })
 
 function show_context_menu(e: PointerEvent): void {
     if (props.enable_context_menu) {
