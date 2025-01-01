@@ -434,32 +434,6 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 
 	// UpdateCache並列処理
 	for _, rep := range g.Reps {
-		// ReKyouはあとからやる　ここから
-		repIsRekyouRep := false
-
-		repPath, err := rep.GetPath(ctx, "")
-		if err != nil {
-			err = fmt.Errorf("error at get reps path: %w", err)
-			return err
-		}
-
-		for _, reKyouRep := range g.ReKyouReps.ReKyouRepositories {
-			rekyouRepPath, err := reKyouRep.GetPath(ctx, "")
-			if err != nil {
-				err = fmt.Errorf("error at get rekyous reps path: %w", err)
-				return err
-			}
-
-			if filepath.ToSlash(repPath) == filepath.ToSlash(rekyouRepPath) {
-				repIsRekyouRep = true
-				break
-			}
-		}
-		if repIsRekyouRep {
-			continue
-		}
-		// ReKyouはあとからやる　ここまで
-
 		wg.Add(1)
 		go func(rep Repository) {
 			defer wg.Done()
@@ -659,48 +633,6 @@ textsloop:
 	if err != nil {
 		err = fmt.Errorf("error at delete all latest data repository address cache: %w", err)
 		return err
-	}
-
-	_, err = g.LatestDataRepositoryAddressDAO.AddLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
-	if err != nil {
-		err = fmt.Errorf("error at add latest data repository address cache: %w", err)
-		return err
-	}
-
-	// ReKyouは最後に実行する
-	err = g.ReKyouReps.UpdateCache(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at rekyou reps update cache: %w", err)
-		return err
-	}
-
-	// rekyouを集める
-	rekyous, err := g.ReKyouReps.GetReKyousAllLatest(ctx)
-	if err != nil {
-		err = fmt.Errorf("error get rekyou all latests: %w", err)
-		return err
-	}
-
-	latestReKyousMap := map[string]*ReKyou{}
-	for _, kyou := range rekyous {
-		if existKyou, exist := latestReKyousMap[kyou.ID]; exist {
-			if kyou.UpdateTime.After(existKyou.UpdateTime) {
-				latestReKyousMap[kyou.ID] = kyou
-			}
-		} else {
-			latestReKyousMap[kyou.ID] = kyou
-		}
-	}
-
-	latestDataRepositoryAddresses = []*account_state.LatestDataRepositoryAddress{}
-	for _, kyou := range latestReKyousMap {
-		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
-			IsDeleted:                kyou.IsDeleted,
-			TargetID:                 kyou.ID,
-			LatestDataRepositoryName: kyou.RepName,
-			DataUpdateTime:           kyou.UpdateTime,
-		}
-		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 
 	_, err = g.LatestDataRepositoryAddressDAO.AddLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
@@ -1743,19 +1675,17 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 
 	// 並列処理
 	m := &sync.Mutex{}
-	for _, rep := range g.Reps {
+	targetReps := g.Reps
+	if query.UsePlaing != nil && *query.UsePlaing {
+		targetReps = []Repository{}
+		for _, rep := range g.TimeIsReps {
+			targetReps = append(targetReps, rep)
+		}
+	}
+	for _, rep := range targetReps {
 		wg.Add(1)
 		go func(rep Repository) {
 			defer wg.Done()
-
-			// PlaingだったらTimeIsRep以外は無視する
-			if query.UsePlaing != nil && *query.UsePlaing {
-				_, isTimeIsRep := rep.(TimeIsRepository)
-				if !isTimeIsRep {
-					errch <- nil
-					return
-				}
-			}
 
 			repName, err := rep.GetRepName(ctx)
 			if err != nil {

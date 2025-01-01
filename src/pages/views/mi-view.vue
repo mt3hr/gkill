@@ -8,8 +8,8 @@
             <v-toolbar-title>mi
                 <v-menu activator="parent">
                     <v-list>
-                        <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'saihate']" :key="index"
-                            :value="index">
+                        <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
+                            :key="index" :value="index">
                             <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
                         </v-list-item>
                     </v-list>
@@ -88,7 +88,8 @@
                                 :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
                                 :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
                                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                                :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true" @scroll_list="(scroll_top: number) => {
+                                :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true"
+                                :show_content_only="false" @scroll_list="(scroll_top: number) => {
                                     match_kyous_list_top_list[index] = scroll_top
                                     props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list)
                                 }" @clicked_list_view="() => {
@@ -560,7 +561,7 @@ function add_list_view(query?: FindKyouQuery): void {
 
 function floatingActionButtonStyle() {
     return {
-        'bottom': '10px',
+        'bottom': '60px',
         'right': '10px',
         'height': '50px',
         'width': '50px'

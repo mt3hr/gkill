@@ -18,7 +18,8 @@
                                 :matched_kyous="match_kyous" :query="new FindKyouQuery()" :last_added_tag="''"
                                 :is_focused_list="true" :closable="false" :is_readonly_mi_check="true"
                                 :show_checkbox="false" :show_footer="false" :enable_context_menu="false"
-                                :enable_dialog="false" @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
+                                :enable_dialog="false" :show_content_only="false"
+                                @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
                                 @clicked_kyou="(kyou) => { focused_kyou = kyou }"
                                 @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
@@ -90,9 +91,6 @@ async function load_content(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
-
-    console.log(res)
-    console.log(req)
 
     inited.value = true
     is_loading.value = false

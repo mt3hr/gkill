@@ -374,6 +374,14 @@ func (g *GkillServerAPI) Serve() error {
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
+	router.PathPrefix("/plaing").Handler(http.StripPrefix("/plaing",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
+	router.PathPrefix("/mkfl").Handler(http.StripPrefix("/mkfl",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
 	router.PathPrefix("/shared_mi").Handler(http.StripPrefix("/shared_mi",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)

@@ -143,6 +143,7 @@ body,
     min-height: calc(actual_height) !important;
     max-height: calc(actual_height) !important;
 }
+
 body {
     overflow-y: hidden !important;
 }
@@ -174,6 +175,7 @@ body {
     margin-left: 1px;
     width: 8px;
 }
+
 .v-navigation-drawer__content::-webkit-scrollbar-thumb,
 .kyou_detail_view::-webkit-scrollbar-thumb,
 .kyou_list_view::-webkit-scrollbar-thumb,
@@ -186,7 +188,9 @@ body {
 }
 
 /* テーブルの隙間埋め */
-table, tr, td {
+table,
+tr,
+td {
     border-spacing: 0 !important;
 }
 </style>
