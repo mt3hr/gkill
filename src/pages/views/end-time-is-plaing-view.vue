@@ -215,3 +215,10 @@ async function save(): Promise<void> {
     return
 }
 </script>
+<style lang="css" scoped>
+.input.date,
+.input.time,
+.input.text {
+    border: solid 1px silver;
+}
+</style>

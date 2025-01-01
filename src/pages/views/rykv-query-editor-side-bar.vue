@@ -15,15 +15,6 @@
                 :inited="inited_keyword_query_for_query_sidebar" @inited="inited_keyword_query_for_query_sidebar = true"
                 ref="keyword_query" />
             <div> <v-divider /> </div>
-            <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-                @request_update_and_search_timeis_tags="emits_current_query()"
-                @request_update_and_search_timeis_word="emits_current_query()"
-                @request_update_checked_timeis_tags="emits_current_query()"
-                :inited="inited_timeis_query_for_query_sidebar" @inited="inited_timeis_query_for_query_sidebar = true"
-                @request_update_timeis_keywords="emits_current_query()"
-                @request_update_use_timeis_query="emits_current_query()"
-                @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
-            <div> <v-divider /> </div>
             <RepQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_checked_reps="emits_current_query()" @request_clear_rep_query="emits_cleard_rep_query()"
                 ref="rep_query" :inited="inited_rep_query_for_query_sidebar"
@@ -34,6 +25,15 @@
                 @request_update_checked_tags="emits_current_query()" @request_clear_tag_query="emits_cleard_tag_query()"
                 ref="tag_query" :inited="inited_tag_query_for_query_sidebar"
                 @inited="inited_tag_query_for_query_sidebar = true" />
+            <div> <v-divider /> </div>
+            <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                @request_update_and_search_timeis_tags="emits_current_query()"
+                @request_update_and_search_timeis_word="emits_current_query()"
+                @request_update_checked_timeis_tags="emits_current_query()"
+                :inited="inited_timeis_query_for_query_sidebar" @inited="inited_timeis_query_for_query_sidebar = true"
+                @request_update_timeis_keywords="emits_current_query()"
+                @request_update_use_timeis_query="emits_current_query()"
+                @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
             <div> <v-divider /> </div>
             <div>
                 <CalendarQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
@@ -79,7 +79,7 @@ const emits = defineEmits<rykvQueryEditorSidebarEmits>()
 defineExpose({ generate_query, get_default_query })
 
 const header_margin = ref(8)
-const header_height: Ref<number> = ref(38 + header_margin.value.valueOf())
+const header_height: Ref<number> = ref(36 + header_margin.value.valueOf())
 const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))

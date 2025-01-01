@@ -18,6 +18,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type GkillDAOManager struct {
@@ -64,7 +65,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		fileRepWatchCacheUpdater: fileRepWatchCacheUpdater,
 	}
 
-	configDBRootDir := os.ExpandEnv("$HOME/gkill/configs")
+	configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)
 	err = os.MkdirAll(os.ExpandEnv(configDBRootDir), fs.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at create directory %s: %w", err)
@@ -122,9 +123,9 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	}
 
 	// ログ出力先設定
-	gkillDAOManager.enableOutputLogs = false
+	gkillDAOManager.enableOutputLogs = gkill_options.IsOutputLog
 	if gkillDAOManager.enableOutputLogs {
-		logRootDir := os.ExpandEnv("$HOME/gkill/logs")
+		logRootDir := os.ExpandEnv(gkill_options.LogDir)
 		err := os.MkdirAll(logRootDir, os.ModePerm)
 		if err != nil {
 			err = fmt.Errorf("error at mkdir %s: %w", logRootDir, err)

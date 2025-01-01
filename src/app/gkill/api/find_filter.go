@@ -211,7 +211,18 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 	repositories := findCtx.Repositories
 
 	typeMatchReps := []reps.Repository{}
-	if findCtx.ParsedFindQuery.UseRepTypes != nil && *findCtx.ParsedFindQuery.UseRepTypes {
+
+	if findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing {
+		// ImageOnlyだったらIDFRep以外は無視する
+		for _, rep := range repositories.IDFKyouReps {
+			typeMatchReps = append(typeMatchReps, rep)
+		}
+	} else if findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing {
+		// PlaingだったらTimeIsRep以外は無視する
+		for _, rep := range repositories.TimeIsReps {
+			typeMatchReps = append(typeMatchReps, rep)
+		}
+	} else if findCtx.ParsedFindQuery.UseRepTypes != nil && *findCtx.ParsedFindQuery.UseRepTypes {
 		// RepType指定の場合、指定以外は除外する
 		for _, repType := range *findCtx.ParsedFindQuery.RepTypes {
 			switch repType {
@@ -262,34 +273,16 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 		targetRepNames = *findCtx.ParsedFindQuery.Reps
 	}
 
-	// PlaingだったらTimeIsRep以外は無視する
-	if findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing {
-		for _, rep := range findCtx.Repositories.TimeIsReps {
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				return nil, err
-			}
-
-			for _, targetRepName := range targetRepNames {
-				if targetRepName == repName {
-					if _, exist := findCtx.MatchReps[repName]; !exist {
-						findCtx.MatchReps[repName] = rep
-					}
-				}
-			}
+	for _, rep := range typeMatchReps {
+		repName, err := rep.GetRepName(ctx)
+		if err != nil {
+			return nil, err
 		}
-	} else {
-		for _, rep := range typeMatchReps {
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				return nil, err
-			}
 
-			for _, targetRepName := range targetRepNames {
-				if targetRepName == repName {
-					if _, exist := findCtx.MatchReps[repName]; !exist {
-						findCtx.MatchReps[repName] = rep
-					}
+		for _, targetRepName := range targetRepNames {
+			if targetRepName == repName {
+				if _, exist := findCtx.MatchReps[repName]; !exist {
+					findCtx.MatchReps[repName] = rep
 				}
 			}
 		}
