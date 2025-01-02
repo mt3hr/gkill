@@ -42,14 +42,20 @@ export class ApplicationConfig {
     kftl_template_struct: Array<KFTLTemplateStruct>
     mi_board_struct: Array<MiBoardStruct>
     async parse_template_and_struct(): Promise<Array<GkillError>> {
-        let errors = Array<GkillError>()
-        errors = errors.concat(await this.parse_tag_struct())
-        errors = errors.concat(await this.parse_rep_struct())
-        errors = errors.concat(await this.parse_device_struct())
-        errors = errors.concat(await this.parse_rep_type_struct())
-        errors = errors.concat(await this.parse_kftl_template_struct())
-        errors = errors.concat(await this.parse_mi_board_struct())
-        return errors
+        const awaitPromises = new Array<Promise<any>>()
+        awaitPromises.push(this.parse_tag_struct())
+        awaitPromises.push(this.parse_rep_struct())
+        awaitPromises.push(this.parse_device_struct())
+        awaitPromises.push(this.parse_rep_type_struct())
+        awaitPromises.push(this.parse_kftl_template_struct())
+        awaitPromises.push(this.parse_mi_board_struct())
+        return Promise.all(awaitPromises).then((errors_list) => {
+            const errors = new Array<GkillError>()
+            errors_list.forEach(e => {
+                errors.push(...e)
+            })
+            return errors
+        })
     }
     clone(): ApplicationConfig {
         const application_config = new ApplicationConfig()
@@ -866,7 +872,7 @@ export class ApplicationConfig {
 
         let exist = false
         this.mi_board_struct.forEach(board => {
-            if (board.board_name=== "すべて") {
+            if (board.board_name === "すべて") {
                 exist = true
             }
         })
@@ -877,14 +883,14 @@ export class ApplicationConfig {
             board_struct.device = gkill_info_res.device
             board_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             board_struct.parent_folder_id = null
-            board_struct.board_name= "すべて"
+            board_struct.board_name = "すべて"
             board_struct.seq = -1000
             board_struct.user_id = gkill_info_res.user_id
             this.mi_board_struct.unshift(board_struct)
         }
         return new Array<GkillError>()
     }
- 
+
 
     constructor() {
         this.is_loaded = false

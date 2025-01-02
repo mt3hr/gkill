@@ -16,15 +16,20 @@ export class AggregateAmount {
     }
 }
 
-export async function aggregate_amounts_from_kyous (kyous: Array<Kyou>): Promise<Array<AggregateAmount>> {
+export async function aggregate_amounts_from_kyous(kyous: Array<Kyou>): Promise<Array<AggregateAmount>> {
     const aggregate_amounts = new Array<AggregateAmount>()
+    const awaitPromises = new Array<Promise<any>>()
+    for (let i = 0; i < kyous.length; i++) {
+        const kyou = kyous[i]
+        if (!kyou.typed_nlog) {
+            awaitPromises.push(kyou.load_typed_nlog())
+        }
+    }
+    await Promise.all(awaitPromises)
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
         const aggregate_amount = new AggregateAmount()
-        if (!kyou.typed_nlog) {
-            await kyou.load_typed_nlog()
-        }
-        if (kyou.typed_nlog){
+        if (kyou.typed_nlog) {
             aggregate_amount.amount = kyou.typed_nlog.amount.valueOf()
             aggregate_amount.title = kyou.typed_nlog.title
             aggregate_amount.related_time = kyou.related_time

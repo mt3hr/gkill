@@ -12,6 +12,7 @@ import (
 	"github.com/mattn/go-zglob"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/mi_share_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps/rep_cache_updater"
@@ -118,6 +119,10 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		return nil, err
 	}
 	gkillDAOManager.ConfigDAOs.RepTypeStructDAO, err = user_config.NewRepTypeStructDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
+	if err != nil {
+		return nil, err
+	}
+	gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO, err = gkill_notification.NewGkillNotificateTargetDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "gkill_notification_target.db"))
 	if err != nil {
 		return nil, err
 	}

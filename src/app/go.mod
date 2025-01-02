@@ -6,6 +6,7 @@ toolchain go1.23.2
 
 require (
 	github.com/PuerkitoBio/goquery v1.10.0
+	github.com/SherClockHolmes/webpush-go v1.3.0
 	github.com/asticode/go-astikit v0.43.0
 	github.com/asticode/go-astilectron v0.30.0
 	github.com/axgle/mahonia v0.0.0-20180208002826-3358181d7394
@@ -31,6 +32,7 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect

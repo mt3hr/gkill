@@ -199,9 +199,9 @@ const focused_text: Ref<Text> = ref(new Text())
 const delete_target_tag: Ref<Tag> = ref(new Tag())
 const delete_target_text: Ref<Text> = ref(new Text())
 
-watch(() => props.kyou, async () => {
+watch(() => props.kyou, () => {
     cloned_kyou.value = props.kyou.clone()
-    return load_attached_infos()
+    load_attached_infos()
 })
 
 onMounted(() => {
@@ -238,7 +238,6 @@ async function load_attached_infos(): Promise<void> {
 
     try {
         const errors = await cloned_kyou.value.load_all()
-
         if (errors && errors.length !== 0) {
             emits('received_errors', errors)
         }

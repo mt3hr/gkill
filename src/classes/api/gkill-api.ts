@@ -151,6 +151,10 @@ import type { GetServerConfigsResponse } from "./req_res/get-server-configs-resp
 import type { UpdateServerConfigsRequest } from "./req_res/update-server-configs-request"
 import type { UpdateServerConfigsResponse } from "./req_res/update-server-configs-response"
 import { ShareMiTaskListInfo } from "../datas/share-mi-task-list-info"
+import type { GetGkillNotificationPublicKeyRequest } from "./req_res/get-gkill-notification-public-key-request"
+import type { GetGkillNotificationPublicKeyResponse } from "./req_res/get-gkill-notification-public-key-response"
+import type { RegisterGkillNotificationRequest } from "./req_res/register-gkill-notification-request"
+import type { RegisterGkillNotificationResponse } from "./req_res/register-gkill-notification-response"
 
 export class GkillAPI {
         // 画面以外から参照されるやつ
@@ -237,6 +241,9 @@ export class GkillAPI {
         delete_share_mi_task_list_infos_address: string
         get_mi_shared_tasks_address: string
         get_repositories_address: string
+        get_gkill_notification_public_key_address: string
+        register_gkill_notification_address: string
+
         login_method: string
         logout_method: string
         reset_password_method: string
@@ -305,6 +312,8 @@ export class GkillAPI {
         delete_share_mi_task_list_infos_method: string
         get_mi_shared_tasks_method: string
         get_repositories_method: string
+        get_gkill_notification_public_key_method: string
+        register_gkill_notification_method: string
 
         protected constructor() {
                 this.saved_application_config = null
@@ -374,6 +383,8 @@ export class GkillAPI {
                 this.delete_share_mi_task_list_infos_address = "/api/delete_share_mi_task_list_infos"
                 this.get_mi_shared_tasks_address = "/api/get_mi_shared_tasks"
                 this.get_repositories_address = "/api/get_repositories"
+                this.get_gkill_notification_public_key_address = "get_gkill_notification_public_key"
+                this.register_gkill_notification_address = "/api/register_gkill_notification"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
@@ -442,6 +453,8 @@ export class GkillAPI {
                 this.delete_share_mi_task_list_infos_method = "POST"
                 this.get_mi_shared_tasks_method = "POST"
                 this.get_repositories_method = "POST"
+                this.get_gkill_notification_public_key_method = "POST"
+                this.register_gkill_notification_method = "POST"
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
@@ -1230,7 +1243,7 @@ export class GkillAPI {
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 this.check_auth(response)
                 if (!response.plaing_timeis_kyous) {
-                        response.plaing_timeis_kyous= new Array<Kyou>()
+                        response.plaing_timeis_kyous = new Array<Kyou>()
                 }
 
                 for (let key in json) {
@@ -1938,6 +1951,36 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetRepositoriesResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async get_gkill_notification_public_key(req: GetGkillNotificationPublicKeyRequest): Promise<GetGkillNotificationPublicKeyResponse> {
+                const res = await fetch(this.get_gkill_notification_public_key_address, {
+                        'method': this.get_gkill_notification_public_key_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: GetGkillNotificationPublicKeyResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async register_gkill_notification(req: RegisterGkillNotificationRequest): Promise<RegisterGkillNotificationResponse> {
+                const res = await fetch(this.register_gkill_notification_address, {
+                        'method': this.register_gkill_notification_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: RegisterGkillNotificationResponse = json
                 this.check_auth(response)
                 return response
         }
