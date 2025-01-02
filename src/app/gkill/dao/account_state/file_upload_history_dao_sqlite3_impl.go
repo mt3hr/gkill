@@ -130,7 +130,7 @@ SELECT
   SOURCE_ADDRESS,
   UPLOAD_TIME
 FROM FILE_UPLOAD_HISTORY
-WHERE USER_ID = ?
+WHERE USER_ID = ? AND DEVICE = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := f.db.PrepareContext(ctx, sql)
@@ -142,6 +142,7 @@ WHERE USER_ID = ?
 
 	queryArgs := []interface{}{
 		userID,
+		device,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)

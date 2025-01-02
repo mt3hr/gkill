@@ -35,9 +35,13 @@ export class ServerConfig {
 
     accounts: Array<Account>
 
+    mi_notification_public_key: string
+
+    mi_notification_private_key: string
+
     async clone(): Promise<ServerConfig> {
         const server_config = new ServerConfig()
-        server_config.enable_this_device = this.enable_this_device 
+        server_config.enable_this_device = this.enable_this_device
         server_config.device = this.device
         server_config.is_local_only_access = this.is_local_only_access
         server_config.address = this.address
@@ -52,6 +56,8 @@ export class ServerConfig {
         server_config.user_data_directory = this.user_data_directory
         server_config.repositories = this.repositories
         server_config.accounts = this.accounts
+        server_config.mi_notification_public_key = this.mi_notification_public_key
+        server_config.mi_notification_private_key = this.mi_notification_private_key
         return server_config
     }
 
@@ -69,6 +75,8 @@ export class ServerConfig {
         this.urlog_useragent = ""
         this.upload_size_limit_month = 0
         this.user_data_directory = ""
+        this.mi_notification_public_key = ""
+        this.mi_notification_private_key = ""
         this.repositories = new Array<Repository>()
         this.accounts = new Array<Account>()
     }

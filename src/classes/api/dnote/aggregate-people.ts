@@ -18,29 +18,39 @@ export class AggregatePeople {
 export async function aggregate_peoples_from_kyous(kyous: Array<Kyou>): Promise<Array<AggregatePeople>> {
     const aggregate_peoples = new Array<AggregatePeople>()
     const aggregate_peoples_map = new Map<string, AggregatePeople>()// map[title]aggregate_people
+    const awaitPromises = new Array<Promise<any>>()
+    for (let i = 0; i < kyous.length; i++) {
+        const kyou = kyous[i]
+        if (kyou.data_type.startsWith("timeis")) {
+            if (!kyou.typed_timeis) {
+                awaitPromises.push(kyou.load_typed_timeis())
+            }
+        } else if (kyou.data_type.startsWith("kmemo")) {
+            if (!kyou.typed_kmemo) {
+                awaitPromises.push(kyou.load_typed_kmemo())
+            }
+        }
+        awaitPromises.push(kyou.load_attached_tags())
+    }
+
+    await Promise.all(awaitPromises)
+
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
         let title = ""
         let duration_milli_second = 0
         let type: '通話' | '対面' = '対面'
         if (kyou.data_type.startsWith("timeis")) {
-            if (!kyou.typed_timeis) {
-                await kyou.load_typed_timeis()
-            }
             if (kyou.typed_timeis) {
                 title = kyou.typed_timeis.title
                 duration_milli_second = Math.abs(moment.duration(moment(kyou.typed_timeis.start_time).diff(kyou.typed_timeis.end_time)).asMilliseconds())
             }
         } else if (kyou.data_type.startsWith("kmemo")) {
-            if (!kyou.typed_kmemo) {
-                await kyou.load_typed_kmemo()
-            }
             if (kyou.typed_kmemo) {
                 title = kyou.typed_kmemo.content
                 duration_milli_second = 0
             }
         }
-        await kyou.load_attached_tags()
         for (let j = 0; j < kyou.attached_tags.length; j++) {
             const tag = kyou.attached_tags[i]
             if (tag.tag === "あ") {

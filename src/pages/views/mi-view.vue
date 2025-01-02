@@ -137,7 +137,7 @@
                                     focused_column_index = index
                                     focused_kyous_list = match_kyous_list[index]
                                     const query = querys[index].clone()
-                                    query.is_image_only_in_sidebar = is_image_only_view
+                                    query.is_image_only = is_image_only_view
                                     querys[index] = query
                                     search(index, query, true).then(() => {
                                         const kyou_list_view = kyou_list_views.value[index] as any
@@ -637,6 +637,7 @@ function show_lantana_dialog(): void {
 function show_urlog_dialog(): void {
     add_urlog_dialog.value?.show()
 }
+
 </script>
 <style lang="css">
 .mi_view_table {

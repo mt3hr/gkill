@@ -142,7 +142,7 @@ function generate_query(query_id?: string): FindKyouQuery {
     }
 
     find_query.is_focus_kyou_in_list_view = props.find_kyou_query ? props.find_kyou_query.is_focus_kyou_in_list_view : false
-    find_query.is_image_only_in_sidebar = props.find_kyou_query ? props.find_kyou_query.is_image_only_in_sidebar : false
+    find_query.is_image_only = props.find_kyou_query ? props.find_kyou_query.is_image_only : false
 
     if (keyword_query.value) {
         find_query.use_words = keyword_query.value.get_use_words()
