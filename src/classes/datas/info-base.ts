@@ -3,9 +3,11 @@
 import { GkillAPI } from "../api/gkill-api"
 import { GkillError } from "../api/gkill-error"
 import { GetKyousRequest } from "../api/req_res/get-kyous-request"
+import { GetNotificationsByTargetIDRequest } from "../api/req_res/get-notifications-by-target-id-request"
 import { GetTagsByTargetIDRequest } from "../api/req_res/get-tags-by-target-id-request"
 import { GetTextsByTargetIDRequest } from "../api/req_res/get-texts-by-target-id-request"
 import type { Kyou } from "./kyou"
+import type { Notification } from "./notification"
 import type { Tag } from "./tag"
 import type { Text } from "./text"
 
@@ -25,6 +27,7 @@ export abstract class InfoBase {
     update_device: string
     attached_tags: Array<Tag>
     attached_texts: Array<Text>
+    attached_notifications: Array<Notification>
     attached_timeis_kyou: Array<Kyou>
     is_checked: boolean
 
@@ -33,7 +36,7 @@ export abstract class InfoBase {
     }
 
     async load_attached_tags(): Promise<Array<GkillError>> {
-        let errors = new Array<GkillError>()
+        const errors = new Array<GkillError>()
         const req = new GetTagsByTargetIDRequest()
         req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.target_id = this.id
@@ -46,7 +49,7 @@ export abstract class InfoBase {
     }
 
     async load_attached_texts(): Promise<Array<GkillError>> {
-        let errors = new Array<GkillError>()
+        const errors = new Array<GkillError>()
         const req = new GetTextsByTargetIDRequest()
         req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.target_id = this.id
@@ -58,8 +61,21 @@ export abstract class InfoBase {
         return errors
     }
 
+    async load_attached_notifications(): Promise<Array<GkillError>> {
+        const errors = new Array<GkillError>()
+        const req = new GetNotificationsByTargetIDRequest()
+        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        req.target_id = this.id
+        const res = await GkillAPI.get_gkill_api().get_notifications_by_target_id(req)
+        if (res.errors && res.errors.length != 0) {
+            return res.errors
+        }
+        this.attached_notifications = res.notifications
+        return errors
+    }
+
     async load_attached_timeis(): Promise<Array<GkillError>> {
-        let errors = new Array<GkillError>()
+        const errors = new Array<GkillError>()
 
         const application_config = GkillAPI.get_gkill_api().get_saved_application_config()
         if (!application_config) {
@@ -69,8 +85,8 @@ export abstract class InfoBase {
             return errors
         }
 
-        let reps = new Array<string>()
-        let tags = new Array<string>()
+        const reps = new Array<string>()
+        const tags = new Array<string>()
         for (let i = 0; i < application_config.rep_struct.length; i++) {
             reps.push(application_config.rep_struct[i].rep_name)
         }
@@ -100,6 +116,7 @@ export abstract class InfoBase {
         const awaitPromises = new Array<Promise<any>>()
         awaitPromises.push(this.load_attached_tags())
         awaitPromises.push(this.load_attached_texts())
+        awaitPromises.push(this.load_attached_notifications())
         awaitPromises.push(this.load_attached_timeis())
         return Promise.all(awaitPromises).then((errors_list) => {
             const errors = new Array<GkillError>()
@@ -120,6 +137,11 @@ export abstract class InfoBase {
         return new Array<GkillError>()
     }
 
+    async clear_attached_notifications(): Promise<Array<GkillError>> {
+        this.attached_notifications = []
+        return new Array<GkillError>()
+    }
+
     async clear_attached_timeis(): Promise<Array<GkillError>> {
         this.attached_timeis_kyou = []
         return new Array<GkillError>()
@@ -128,6 +150,7 @@ export abstract class InfoBase {
     async clear_attached_datas(): Promise<Array<GkillError>> {
         this.attached_tags = []
         this.attached_texts = []
+        this.attached_notifications = []
         this.attached_timeis_kyou = []
         return new Array<GkillError>()
     }
@@ -150,6 +173,7 @@ export abstract class InfoBase {
         this.update_device = ""
         this.attached_tags = new Array<Tag>()
         this.attached_texts = new Array<Text>()
+        this.attached_notifications = new Array<Notification>()
         this.attached_timeis_kyou = new Array<Kyou>()
         this.is_checked = false
     }

@@ -46,7 +46,6 @@
 import { GenerateTLSFileRequest } from '@/classes/api/req_res/generate-tls-file-request';
 import type { ConfirmGenerateTLSFilesViewEmits } from './confirm-generate-tls-files-view-emits'
 import type { ConfirmGenerateTLSFilesViewProps } from './confirm-generate-tls-files-view-props'
-import { GkillAPI } from '@/classes/api/gkill-api';
 import type { GenerateTLSFileResponse } from '@/classes/api/req_res/generate-tls-file-response';
 
 const props = defineProps<ConfirmGenerateTLSFilesViewProps>()

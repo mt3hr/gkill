@@ -17,7 +17,7 @@
 import moment from 'moment';
 import type { CalendarQueryEmits } from './calendar-query-emits'
 import type { CalendarQueryProps } from './calendar-query-props'
-import { computed, ref, type Ref, defineEmits, defineProps, watch } from 'vue'
+import { ref, type Ref, defineEmits, defineProps, watch } from 'vue'
 import { VDatePicker } from 'vuetify/components';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 
@@ -67,9 +67,9 @@ function clicked_date(recved_dates: any): void {
 // カレンダーでホイールが転がされた時、下ならカレンダーを次の年月へ、上ならカレンダーを前の年月へ
 function on_wheel(e: any) {
     if (0 < e.deltaY) {
-        document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(2)").forEach((el, key, parent) => { (el as any).click() })
+        document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(2)").forEach((el) => { (el as any).click() })
     } else {
-        document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(1)").forEach((el, key, parent) => { (el as any).click() })
+        document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(1)").forEach((el) => { (el as any).click() })
     }
 }
 

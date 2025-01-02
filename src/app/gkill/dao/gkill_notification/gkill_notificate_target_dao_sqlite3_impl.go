@@ -25,16 +25,16 @@ func NewGkillNotificateTargetDAOSQLite3Impl(ctx context.Context, filename string
 	}
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "MI_NOTIFICATE_TARGET" (
+CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
   ID NOT NULL,
   USER_ID NOT NULL,
   PUBLIC_KEY NOT NULL,
   SUBSCRIPTION NOT NULL
-);`
+)`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create MI_NOTIFICATE_TARGET table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create NOTIFICATION table statement %s: %w", filename, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS "MI_NOTIFICATE_TARGET" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create MI_NOTIFICATE_TARGET table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create NOTIFICATION table to %s: %w", filename, err)
 		return nil, err
 	}
 
@@ -60,7 +60,7 @@ SELECT
   USER_ID,
   PUBLIC_KEY,
   SUBSCRIPTION
-FROM MI_NOTIFICATE_TARGET
+FROM NOTIFICATION
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
@@ -105,7 +105,7 @@ SELECT
   USER_ID,
   PUBLIC_KEY,
   SUBSCRIPTION
-FROM MI_NOTIFICATE_TARGET
+FROM NOTIFICATION
 WHERE USER_ID = ? AND PUBLIC_KEY = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -149,7 +149,7 @@ WHERE USER_ID = ? AND PUBLIC_KEY = ?
 
 func (m *gkillNotificateTargetDAOSQLite3Impl) AddGkillNotificationTarget(ctx context.Context, gkillNotificateTarget *GkillNotificateTarget) (bool, error) {
 	sql := `
-INSERT INTO MI_NOTIFICATE_TARGET(
+INSERT INTO NOTIFICATION(
   ID,
   USER_ID,
   PUBLIC_KEY,
@@ -187,7 +187,7 @@ VALUES (
 
 func (m *gkillNotificateTargetDAOSQLite3Impl) UpdateGkillNotificationTarget(ctx context.Context, gkillNotificateTarget *GkillNotificateTarget) (bool, error) {
 	sql := `
-UPDATE MI_NOTIFICATE_TARGET
+UPDATE NOTIFICATION
   ID = ?,
   USER_ID = ?,
   PUBLIC_KEY = ?,
@@ -220,7 +220,7 @@ WHERE ID = ?
 
 func (m *gkillNotificateTargetDAOSQLite3Impl) DeleteGkillNotificationTarget(ctx context.Context, id string) (bool, error) {
 	sql := `
-DELETE FROM MI_NOTIFICATE_TARGET
+DELETE FROM NOTIFICATION
 WHERE ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)

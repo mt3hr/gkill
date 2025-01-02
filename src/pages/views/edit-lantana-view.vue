@@ -54,10 +54,8 @@ import KyouView from './kyou-view.vue'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateLantanaRequest } from '@/classes/api/req_res/update-lantana-request'
-import router from '@/router'
 import moment from 'moment'
 import LantanaFlowersView from './lantana-flowers-view.vue'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import type { Kyou } from '@/classes/datas/kyou'
 
 const edit_lantana_flowers = ref<InstanceType<typeof LantanaFlowersView> | null>(null);

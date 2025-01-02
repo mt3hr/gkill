@@ -43,7 +43,7 @@ import { type Ref, ref } from 'vue'
 import KyouView from '../views/kyou-view.vue'
 import KyouHistoriesView from '../views/kyou-histories-view.vue'
 
-const props = defineProps<KyouHistoriesDialogProps>()
+defineProps<KyouHistoriesDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 

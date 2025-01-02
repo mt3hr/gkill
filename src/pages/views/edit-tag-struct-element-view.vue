@@ -25,7 +25,6 @@ import type { EditTagStructElementViewEmits } from './edit-tag-struct-element-vi
 import type { EditTagStructElementViewProps } from './edit-tag-struct-element-view-props'
 import { TagStruct } from '@/classes/datas/config/tag-struct';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
-import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<EditTagStructElementViewProps>()
 const emits = defineEmits<EditTagStructElementViewEmits>()

@@ -23,7 +23,6 @@ import type { ShareTaskListLinkViewEmits } from './share-task-list-link-view-emi
 import type { ShareTaskListLinkViewProps } from './share-task-list-link-view-props'
 import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info';
 import { GkillMessage } from '@/classes/api/gkill-message';
-import { GkillAPI } from '@/classes/api/gkill-api';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import { UpdateShareMiTaskListInfoRequest } from '@/classes/api/req_res/update-share-mi-task-list-info-request';
 

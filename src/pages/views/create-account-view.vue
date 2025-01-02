@@ -27,7 +27,6 @@ import { type Ref, ref } from 'vue'
 import type { CreateAccountViewEmits } from './create-account-view-emits'
 import type { CreateAccountViewProps } from './create-account-view-props'
 import { AddAccountRequest } from '@/classes/api/req_res/add-account-request';
-import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<CreateAccountViewProps>()
 const emits = defineEmits<CreateAccountViewEmits>()

@@ -40,8 +40,6 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import { type Ref, ref } from 'vue'
 import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request';
 import KyouView from './kyou-view.vue'
-import router from '@/router';
-import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<ConfirmDeleteTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()

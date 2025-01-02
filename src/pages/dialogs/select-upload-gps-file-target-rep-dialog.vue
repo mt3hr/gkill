@@ -12,7 +12,7 @@ import type { SelectUploadGPSFileTargetRepDialogEmits } from './select-upload-gp
 import type { SelectUploadGPSFileTargetRepDialogProps } from './select-upload-gps-file-target-rep-dialog-props'
 import SelectUploadGPSFileTargetRepView from '../views/select-upload-gps-file-target-rep-view.vue'
 
-const props = defineProps<SelectUploadGPSFileTargetRepDialogProps>()
+defineProps<SelectUploadGPSFileTargetRepDialogProps>()
 const emits = defineEmits<SelectUploadGPSFileTargetRepDialogEmits>()
 defineExpose({ show, hide })
 

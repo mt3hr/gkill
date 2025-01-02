@@ -2,8 +2,8 @@
     <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
         <v-progress-circular indeterminate color="primary" />
     </v-overlay>
-    <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
-        <v-btn icon="mdi-menu" ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
+    <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
+        <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
         <v-toolbar-title>さいはて</v-toolbar-title>
     </v-app-bar>
     <v-main class="main">
@@ -62,7 +62,7 @@
     </v-main>
     <div class="alert_container">
         <v-slide-y-transition group>
-            <v-alert v-for="message in messages" theme="dark">
+            <v-alert v-for="message in messages" theme="dark" :key="message.id">
                 {{ message.message }}
             </v-alert>
         </v-slide-y-transition>
@@ -100,7 +100,6 @@ const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
 const browser_url_bar_height: Ref<Number> = ref(0)
 const app_title_bar_height: Ref<Number> = ref(50)
-const app_title_bar_height_px = computed(() => app_title_bar_height.value.toString().concat("px"))
 const gkill_api = computed(() => GkillAPI.get_instance())
 const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
 const app_content_height: Ref<Number> = ref(0)

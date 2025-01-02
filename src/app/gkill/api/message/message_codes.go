@@ -1,6 +1,5 @@
 package message
 
-// TODO モデル反映
 const (
 	LoginSuccessMessage                      = "MSG000001"
 	LogoutSuccessMessage                     = "MSG000002"
@@ -69,4 +68,5 @@ const (
 	UpdateIDFKyouSuccessMessage              = "MSG000063"
 	UpdateShareMiTaskListInfoSuccessMessage  = "MSG000064"
 	GetPlaingTimeIsSuccessMessage            = "MSG000065"
+	AddNotificationSuccessMessage            = "MSG000066"
 )

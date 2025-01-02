@@ -1,7 +1,8 @@
 <template>
-    <DnotePeopleView v-for="kyou, index in etxructed_sorted_people_kyous" :application_config="application_config"
-        :gkill_api="gkill_api" :highlight_targets="new Array<Kyou>()" :last_added_tag="last_added_tag"
-        :timeis_or_kmemo_kyou="kyou" @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
+    <DnotePeopleView v-for="kyou in etxructed_sorted_people_kyous" :key="kyou.id"
+        :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="new Array<Kyou>()"
+        :last_added_tag="last_added_tag" :timeis_or_kmemo_kyou="kyou"
+        @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
         @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou: Kyou) => emits('requested_reload_kyou', kyou)"
         @requested_reload_list="emits('requested_reload_list')"

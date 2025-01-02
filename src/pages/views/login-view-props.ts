@@ -1,7 +1,5 @@
 'use strict'
 
-import type { ApplicationConfig } from "@/classes/datas/config/application-config"
-import type { GkillPropsBase } from "./gkill-props-base"
 import type { GkillAPI } from "@/classes/api/gkill-api"
 
 export interface LoginViewProps {

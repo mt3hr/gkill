@@ -246,11 +246,11 @@ WHERE
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at tag: %w", err)
+		err = fmt.Errorf("error at get rep name at text: %w", err)
 		return nil, err
 	}
 
-	dataType := "tag"
+	dataType := "text"
 
 	trueValue := true
 	targetIDs := []string{target_id}
@@ -389,7 +389,7 @@ WHERE
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at tag: %w", err)
+		err = fmt.Errorf("error at get rep name at text: %w", err)
 		return nil, err
 	}
 	dataType := "text"

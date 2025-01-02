@@ -20,7 +20,6 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { GkillAPI } from '@/classes/api/gkill-api';
 import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data';
 import { type Ref, ref } from 'vue';
 import type { AddNewTagStructElementViewEmits } from './add-new-tag-struct-element-view-emits'

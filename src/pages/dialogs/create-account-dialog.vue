@@ -13,7 +13,7 @@ import type { CreateAccountDialogEmits } from './create-account-dialog-emits'
 import type { CreateAccountDialogProps } from './create-account-dialog-props'
 import CreateAccountView from '../views/create-account-view.vue'
 
-const props = defineProps<CreateAccountDialogProps>()
+defineProps<CreateAccountDialogProps>()
 const emits = defineEmits<CreateAccountDialogEmits>()
 defineExpose({ show, hide })
 

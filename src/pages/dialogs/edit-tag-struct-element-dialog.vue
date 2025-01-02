@@ -15,7 +15,7 @@ import type { EditTagStructElementDialogProps } from './edit-tag-struct-element-
 import EditTagStructElementView from '../views/edit-tag-struct-element-view.vue'
 import { TagStruct } from '@/classes/datas/config/tag-struct';
 
-const props = defineProps<EditTagStructElementDialogProps>()
+defineProps<EditTagStructElementDialogProps>()
 const emits = defineEmits<EditTagStructElementDialogEmits>()
 defineExpose({ show, hide })
 

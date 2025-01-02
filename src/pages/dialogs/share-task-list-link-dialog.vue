@@ -8,13 +8,13 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { computed, nextTick, type Ref, ref } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { ShareTaskListLinkDialogEmits } from './share-task-list-link-dialog-emits'
 import type { ShareTaskListLinkDialogProps } from './share-task-list-link-dialog-props'
 import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info'
 import ShareTaskListLinkView from '../views/share-task-list-link-view.vue'
 
-const props = defineProps<ShareTaskListLinkDialogProps>()
+defineProps<ShareTaskListLinkDialogProps>()
 const emits = defineEmits<ShareTaskListLinkDialogEmits>()
 defineExpose({ show, hide })
 

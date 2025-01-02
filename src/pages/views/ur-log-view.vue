@@ -40,7 +40,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
+import { ref } from 'vue'
 import type { URLogViewProps } from './ur-log-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import URLogContextMenu from './ur-log-context-menu.vue'

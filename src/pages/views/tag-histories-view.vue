@@ -1,5 +1,5 @@
 <template>
-    <TagView v-for="tag, index in cloned_tag.attached_histories" :application_config="application_config"
+    <TagView v-for="tag in cloned_tag.attached_histories" :key="tag.update_time.getTime()" :application_config="application_config"
         :highlight_targets="highlight_targets" :gkill_api="gkill_api" :tag="tag" :kyou="kyou"
         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :last_added_tag="last_added_tag"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -8,7 +8,7 @@
         @received_messages="(messages) => emits('received_messages', messages)" />
 </template>
 <script lang="ts" setup>
-import { type Ref, computed, nextTick, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { TagHistoriesViewProps } from './tag-histories-view-props'
 import { Tag } from '@/classes/datas/tag'

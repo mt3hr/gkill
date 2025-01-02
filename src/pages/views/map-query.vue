@@ -29,9 +29,8 @@
 import { Circle, GoogleMap } from 'vue3-google-map';
 import type { MapQueryEmits } from './map-query-emits'
 import type { MapQueryProps } from './map-query-props'
-import { computed, ref, watch, nextTick, type Ref } from 'vue';
+import { computed, ref, watch, type Ref } from 'vue';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
-import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<MapQueryProps>()
 const emits = defineEmits<MapQueryEmits>()

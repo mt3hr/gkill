@@ -34,4 +34,5 @@ func (g *GkillNotificator) SendNotification(subscriptions []string, content stri
 		}
 		defer resp.Body.Close()
 	}
+	return nil
 }

@@ -15,10 +15,8 @@
 <script setup lang="ts">
 import type { LantanaViewProps } from './lantana-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import type { Lantana } from '@/classes/datas/lantana'
-import { type Ref, ref } from 'vue'
+import { ref } from 'vue'
 import LantanaContextMenu from './lantana-context-menu.vue'
-import type { Kyou } from '@/classes/datas/kyou'
 import LantanaFlowersView from './lantana-flowers-view.vue'
 
 const context_menu = ref<InstanceType<typeof LantanaContextMenu> | null>(null);

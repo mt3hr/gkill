@@ -3,7 +3,7 @@
         <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
             <v-progress-circular indeterminate color="primary" />
         </v-overlay>
-        <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
+        <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-app-bar-nav-icon @click.stop="() => { drawer = !drawer }" />
             <v-toolbar-title>
                 <div>
@@ -93,7 +93,7 @@
         <v-main class="main" v-show="inited">
             <table class="rykv_view_table">
                 <tr>
-                    <td valign="top" v-for="query, index in querys">
+                    <td valign="top" v-for="query, index in querys" :key="query.query_id">
                         <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
                             :application_config="application_config" :gkill_api="gkill_api"
                             :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
@@ -292,26 +292,21 @@ import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { Kyou } from '@/classes/datas/kyou'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
-import AggregateView from './aggregate-view.vue'
 import Dnote from './dnote.vue'
-import EndTimeIsPlaingDialog from '../dialogs/end-time-is-plaing-dialog.vue'
 import GPSLogMap from './gps-log-map.vue'
 import KyouCountCalendar from './kyou-count-calendar.vue'
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
-import StartTimeIsDialog from '../dialogs/start-time-is-dialog.vue'
 import RykvQueryEditorSideBar from './rykv-query-editor-side-bar.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
 import type { rykvViewEmits } from './rykv-view-emits'
 import type { rykvViewProps } from './rykv-view-props'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import type KftlDialog from '../dialogs/kftl-dialog.vue'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import moment from 'moment'
-import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
 import { deepEquals } from '@/classes/deep-equals'
 
 const enable_context_menu = ref(true)
@@ -357,7 +352,7 @@ const emits = defineEmits<rykvViewEmits>()
 const skip_search_this_tick = ref(false)
 
 watch(() => focused_time.value, () => {
-    if (!kyou_list_views) {
+    if (!kyou_list_views.value) {
         return
     }
     const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any
@@ -537,7 +532,7 @@ function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
         const target_column_index = update_target_column_indexs[i]
         for (let j = 0; j < match_kyous_list.value[target_column_index].length; j++) {
             const kyou_in_list = match_kyous_list.value[target_column_index][j]
-            if (kyou.id = kyou_in_list.id) {
+            if (kyou.id === kyou_in_list.id) {
                 kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
                 scrolled = true
                 break

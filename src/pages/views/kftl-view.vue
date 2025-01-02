@@ -19,8 +19,9 @@
                 <td>
                     <div class="kftl_line_label line_label_wrap">
                         <KFTLLineLabel v-for="( line_label_data, index ) in line_label_datas"
-                            :application_config="application_config" :gkill_api="gkill_api"
-                            :line_label_data="line_label_data" :style="line_label_styles[index]" />
+                            :key="line_label_data.target_request_id" :application_config="application_config"
+                            :gkill_api="gkill_api" :line_label_data="line_label_data"
+                            :style="line_label_styles[index]" />
                     </div>
                 </td>
                 <td>
@@ -76,8 +77,6 @@ const line_label_datas: Ref<Array<LineLabelData>> = ref(new Array<LineLabelData>
 const line_label_styles: Ref<Array<any>> = ref(new Array<any>())
 const invalid_line_numbers: Ref<Array<Number>> = ref(new Array<Number>())
 const is_requested_submit: Ref<boolean> = ref(false)
-
-const last_added_tag: Ref<string> = ref("")
 
 const props = defineProps<KFTLProps>()
 const emits = defineEmits<KFTLViewEmits>()

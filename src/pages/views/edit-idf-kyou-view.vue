@@ -42,13 +42,10 @@ import { type Ref, ref, watch } from 'vue'
 import type { EditIDFKyouViewProps } from './edit-idf-kyou-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
-import { IDFKyou } from '@/classes/datas/idf-kyou'
 import { Kyou } from '@/classes/datas/kyou'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import router from '@/router'
 import moment from 'moment'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { UpdateIDFKyouRequest } from '@/classes/api/req_res/update-idf-kyou-request'
 
 const props = defineProps<EditIDFKyouViewProps>()

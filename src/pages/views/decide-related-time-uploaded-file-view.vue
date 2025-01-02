@@ -25,7 +25,7 @@ import { type Ref, ref } from 'vue'
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
 
-const props = defineProps<DecideRelatedTimeUploadedFileViewProps>()
+defineProps<DecideRelatedTimeUploadedFileViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 const focused_kyou: Ref<Kyou> = ref(new Kyou())
 </script>

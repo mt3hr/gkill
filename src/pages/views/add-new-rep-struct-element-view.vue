@@ -20,7 +20,6 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { GkillAPI } from '@/classes/api/gkill-api';
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data';
 import { type Ref, ref } from 'vue';
 import type { AddNewRepStructElementViewEmits } from './add-new-rep-struct-element-view-emits'
