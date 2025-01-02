@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar :height="app_title_bar_height" class="app_bar" app color="primary" flat>
+    <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" app color="primary" flat>
         <v-toolbar-title>gkill ログイン</v-toolbar-title>
         <v-spacer />
         <span class="gkill_version">version: {{ gkill_version }}</span>
@@ -10,7 +10,7 @@
             @successed_login="handle_success_login" />
         <div class="alert_container">
             <v-slide-y-transition group>
-                <v-alert v-for="message in messages" theme="dark">
+                <v-alert v-for="message in messages" theme="dark" :key="message.id">
                     {{ message.message }}
                 </v-alert>
             </v-slide-y-transition>
@@ -117,12 +117,11 @@ html {
 }
 
 .alert_container {
-  position: fixed;
-  top: 60px;
-  right: 10px;
-  display: grid;
-  grid-gap: .5em;
-  z-index: 99;
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    display: grid;
+    grid-gap: .5em;
+    z-index: 99;
 }
-
 </style>

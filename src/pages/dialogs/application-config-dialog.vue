@@ -18,7 +18,7 @@ import ApplicationConfigView from '../views/application-config-view.vue'
 
 const application_config_view = ref<InstanceType<typeof ApplicationConfigView> | null>(null);
 
-const props = defineProps<ApplicationConfigDialogProps>()
+defineProps<ApplicationConfigDialogProps>()
 const emits = defineEmits<ApplicationConfigDialogEmits>()
 defineExpose({ show, hide })
 

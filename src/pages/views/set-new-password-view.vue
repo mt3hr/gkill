@@ -34,14 +34,11 @@
 </template>
 <script lang="ts" setup>
 import { computed, ref, type Ref } from 'vue'
-import { LoginRequest } from '@/classes/api/req_res/login-request';
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
-import { GkillAPI } from '@/classes/api/gkill-api';
 import type { SetNewPasswordViewEmits } from './set-new-password-view-emits'
 import type { SetNewPasswordViewProps } from './set-new-password-view-props'
 import { useRoute } from 'vue-router';
-import { ResetPasswordRequest } from '@/classes/api/req_res/reset-password-request';
 import { SetNewPasswordRequest } from '@/classes/api/req_res/set-new-password-request';
 
 const password_reset_token: Ref<string> = ref(useRoute().query.reset_token ? useRoute().query.reset_token!.toString() : "")
@@ -65,15 +62,6 @@ const password_sha256 = computed(async () => {
         .join('');
     return hashHex;
 })
-
-check_logined()
-
-async function check_logined(): Promise<void> {
-    const session_id = props.gkill_api.get_session_id()
-    if (session_id && session_id !== "") {
-        router.replace("/rykv")
-    }
-}
 
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 

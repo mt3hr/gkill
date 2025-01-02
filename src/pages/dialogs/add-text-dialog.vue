@@ -12,12 +12,12 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { AddTextDialogProps } from './add-text-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import AddTextView from '../views/add-text-view.vue'
 
-const props = defineProps<AddTextDialogProps>()
+defineProps<AddTextDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 

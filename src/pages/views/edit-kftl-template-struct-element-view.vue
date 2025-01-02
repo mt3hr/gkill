@@ -24,7 +24,6 @@ import type { EditKFTLTemplateStructElementViewEmits } from './edit-kftl-templat
 import type { EditKFTLTemplateStructElementViewProps } from './edit-kftl-template-struct-element-view-props'
 import { KFTLTemplateStruct } from '@/classes/datas/config/kftl-template-struct';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
-import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<EditKFTLTemplateStructElementViewProps>()
 const emits = defineEmits<EditKFTLTemplateStructElementViewEmits>()

@@ -16,6 +16,6 @@
 import type { ConfirmDeleteDeviceStructViewProps } from './confirm-delete-device-struct-view-props.ts';
 import type { ConfirmDeleteDeviceStructViewEmits } from './confirm-delete-device-struct-view-emits.ts';
 
-const props = defineProps<ConfirmDeleteDeviceStructViewProps>()
+defineProps<ConfirmDeleteDeviceStructViewProps>()
 const emits = defineEmits<ConfirmDeleteDeviceStructViewEmits>()
 </script>

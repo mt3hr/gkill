@@ -10,6 +10,9 @@
             <v-list-item @click="show_confirm_rekyou_dialog()">
                 <v-list-item-title>リポスト</v-list-item-title>
             </v-list-item>
+            <v-list-item @click="show_add_notification_dialog()">
+                <v-list-item-title>通知追加</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="copy_id()">
                 <v-list-item-title>IDをコピー</v-list-item-title>
             </v-list-item>
@@ -38,19 +41,27 @@
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" @requested_reload_list="() => { }"
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
+    <AddNotificationDialog :application_config="application_config" :gkill_api="gkill_api"
+        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+        :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+        @requested_reload_list="emits('requested_reload_list')"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" ref="add_notification_dialog" />
 </template>
 <script lang="ts" setup>
 import type { GitCommitLogContextMenuProps } from './git-commit-log-context-menu-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import AddTagDialog from '../dialogs/add-tag-dialog.vue'
 import AddTextDialog from '../dialogs/add-text-dialog.vue'
+import AddNotificationDialog from '../dialogs/add-notification-dialog.vue'
 import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue'
-import type { Kyou } from '@/classes/datas/kyou'
 import { computed, type Ref, ref } from 'vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 
 const add_tag_dialog = ref<InstanceType<typeof AddTagDialog> | null>(null);
 const add_text_dialog = ref<InstanceType<typeof AddTextDialog> | null>(null);
+const add_notification_dialog = ref<InstanceType<typeof AddNotificationDialog> | null>(null);
 const confirm_rekyou_dialog = ref<InstanceType<typeof ConfirmReKyouDialog> | null>(null);
 
 const is_show: Ref<boolean> = ref(false)
@@ -84,6 +95,10 @@ async function show_add_tag_dialog(): Promise<void> {
 
 async function show_add_text_dialog(): Promise<void> {
     add_text_dialog.value?.show()
+}
+
+async function show_add_notification_dialog(): Promise<void> {
+    add_notification_dialog.value?.show()
 }
 
 async function show_confirm_rekyou_dialog(): Promise<void> {

@@ -3,6 +3,7 @@
 import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
 import type { Kyou } from "@/classes/datas/kyou"
+import type { Notification } from "@/classes/datas/notification"
 import type { Tag } from "@/classes/datas/tag"
 import type { Text } from "@/classes/datas/text"
 
@@ -18,6 +19,9 @@ export interface KyouViewEmits {
     (e: 'registered_text', text: Text): void
     (e: 'updated_text', text: Text): void
     (e: 'deleted_text', text: Text): void
+    (e: 'registered_notification', notification: Notification): void
+    (e: 'updated_notification', notification: Notification): void
+    (e: 'deleted_notification', notification: Notification): void
     (e: 'requested_update_check_kyous', kyou: Array<Kyou>, is_checked: boolean): void
     (e: 'requested_reload_kyou', kyou: Kyou): void
     (e: 'requested_reload_list'): void

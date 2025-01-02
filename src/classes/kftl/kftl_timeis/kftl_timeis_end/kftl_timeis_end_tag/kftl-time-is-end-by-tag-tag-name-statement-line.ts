@@ -18,7 +18,7 @@ export class KFTLTimeIsEndByTagTagNameStatementLine extends KFTLStatementLine {
         const req = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsEndByTagRequest
         for (let i = 0; i < this.get_context().get_this_statement_line_text().split("、").length; i++) {
             const tag = this.get_context().get_this_statement_line_text().split("、")[i].trim()
-            if (tag != "") { }
+            if (tag == "") { continue }
             req.add_target_tag_name(tag)
         }
         req.set_error_when_target_does_not_exist(true)

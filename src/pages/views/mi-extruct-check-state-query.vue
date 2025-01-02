@@ -18,7 +18,6 @@ import { nextTick, type Ref, ref, watch } from 'vue'
 import { MiCheckState } from '@/classes/api/find_query/mi-check-state'
 import type { miExtructCheckStateQueryEmits } from './mi-extruct-check-state-query-emits'
 import type { miExtructCheckStateQueryProps } from './mi-extruct-check-state-query-props'
-import type { CheckState } from './check-state';
 const props = defineProps<miExtructCheckStateQueryProps>()
 const emits = defineEmits<miExtructCheckStateQueryEmits>()
 const query = ref(props.find_kyou_query.clone())

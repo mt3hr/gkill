@@ -1,5 +1,5 @@
 <template>
-
+    <div></div>
 </template>
 <script lang="ts" setup>
 import type { EditFolderViewEmits } from './edit-folder-view-emits'

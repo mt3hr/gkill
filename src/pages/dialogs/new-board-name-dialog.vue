@@ -21,7 +21,7 @@ import { type Ref, ref } from 'vue'
 import type { NewBoardNameDialogEmits } from './new-board-name-dialog-emits'
 import type { NewBoardNameDialogProps } from './new-board-name-dialog-props'
 
-const props = defineProps<NewBoardNameDialogProps>()
+defineProps<NewBoardNameDialogProps>()
 const emits = defineEmits<NewBoardNameDialogEmits>()
 defineExpose({ show, hide })
 

@@ -14,7 +14,7 @@ import type { ShowPasswordResetLinkDialogProps } from './show-password-reset-lin
 import ShowPasswordResetLinkView from '../views/show-password-reset-link-view.vue'
 import { Account } from '@/classes/datas/config/account';
 
-const props = defineProps<ShowPasswordResetLinkDialogProps>()
+defineProps<ShowPasswordResetLinkDialogProps>()
 const emits = defineEmits<ShowPasswordResetLinkDialogEmits>()
 defineExpose({ show, hide })
 

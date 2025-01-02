@@ -12,14 +12,10 @@
 <script setup lang="ts">
 import type { DnotePeopleViewEmits } from './dnote-people-view-emits'
 import type { DnotePeopleViewProps } from './dnote-people-view-props'
-import KyouDialog from '../dialogs/kyou-dialog.vue'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { Kyou } from '@/classes/datas/kyou'
-import type { Kmemo } from '@/classes/datas/kmemo'
-import type { TimeIs } from '@/classes/datas/time-is'
-import { type Ref, ref, computed } from 'vue'
 
-const props = defineProps<DnotePeopleViewProps>()
+defineProps<DnotePeopleViewProps>()
 const emits = defineEmits<DnotePeopleViewEmits>()
 </script>

@@ -15,7 +15,7 @@ import { computed, ref, type Ref } from 'vue';
 import type { DeviceStructContextMenuEmits } from './device-struct-context-menu-emits';
 import type { DeviceStructContextMenuProps } from './device-struct-context-menu-props';
 
-const props = defineProps<DeviceStructContextMenuProps>()
+defineProps<DeviceStructContextMenuProps>()
 const emits = defineEmits<DeviceStructContextMenuEmits>()
 defineExpose({ show, hide })
 

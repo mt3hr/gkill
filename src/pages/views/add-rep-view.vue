@@ -32,8 +32,6 @@ import { type Ref, ref } from 'vue'
 import type { AddRepViewEmits } from './add-rep-view-emits'
 import type { AddRepViewProps } from './add-rep-view-props'
 import { Repository } from '@/classes/datas/config/repository';
-import { GkillAPI } from '@/classes/api/gkill-api';
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 
 const props = defineProps<AddRepViewProps>()
 const emits = defineEmits<AddRepViewEmits>()
@@ -57,6 +55,7 @@ const rep_types: Ref<Array<string>> = ref([
     "directory",
     "gpslog",
     "git_commit_log",
+    "notification",
 ])
 
 async function add_rep(): Promise<void> {

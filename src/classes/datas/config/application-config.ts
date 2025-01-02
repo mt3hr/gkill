@@ -77,7 +77,7 @@ export class ApplicationConfig {
         return application_config
     }
     async load_all(): Promise<Array<GkillError>> {
-        let errors = Array<GkillError>()
+        const errors = Array<GkillError>()
         errors.concat(await this.append_not_found_devices())
         errors.concat(await this.append_not_found_rep_types())
         errors.concat(await this.append_not_found_reps())
@@ -342,7 +342,7 @@ export class ApplicationConfig {
 
         // 親を持たないものをルートに追加する
         for (let i = 0; i < not_added_list.length; i++) {
-            let item = not_added_list[i]
+            const item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new KFTLTemplateElementData()
                 struct_element.id = item.id
@@ -382,7 +382,7 @@ export class ApplicationConfig {
         }
         while (not_added_list.length !== 0) {
             for (let i = 0; i < not_added_list.length; i++) {
-                let item = not_added_list[i]
+                const item = not_added_list[i]
                 const parent_struct = walk(struct, item.parent_folder_id)
                 if (parent_struct) {
                     const struct_element = new KFTLTemplateElementData()
@@ -414,7 +414,7 @@ export class ApplicationConfig {
 
         // 親を持たないものをルートに追加する
         for (let i = 0; i < not_added_list.length; i++) {
-            let item = not_added_list[i]
+            const item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new TagStructElementData()
                 struct_element.seq_in_parent = item.seq.valueOf()
@@ -456,7 +456,7 @@ export class ApplicationConfig {
         }
         while (not_added_list.length !== 0) {
             for (let i = 0; i < not_added_list.length; i++) {
-                let item = not_added_list[i]
+                const item = not_added_list[i]
                 const parent_struct = walk(struct, item.parent_folder_id)
                 if (parent_struct) {
                     const struct_element = new TagStructElementData()
@@ -500,7 +500,7 @@ export class ApplicationConfig {
 
         // 親を持たないものをルートに追加する
         for (let i = 0; i < not_added_list.length; i++) {
-            let item = not_added_list[i]
+            const item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new RepStructElementData()
                 struct_element.seq_in_parent = item.seq.valueOf()
@@ -542,7 +542,7 @@ export class ApplicationConfig {
         }
         while (not_added_list.length !== 0) {
             for (let i = 0; i < not_added_list.length; i++) {
-                let item = not_added_list[i]
+                const item = not_added_list[i]
                 const parent_struct = walk(struct, item.parent_folder_id)
                 if (parent_struct) {
                     const struct_element = new RepStructElementData()
@@ -586,7 +586,7 @@ export class ApplicationConfig {
 
         // 親を持たないものをルートに追加する
         for (let i = 0; i < not_added_list.length; i++) {
-            let item = not_added_list[i]
+            const item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new DeviceStructElementData()
                 struct_element.seq_in_parent = item.seq.valueOf()
@@ -627,7 +627,7 @@ export class ApplicationConfig {
         }
         while (not_added_list.length !== 0) {
             for (let i = 0; i < not_added_list.length; i++) {
-                let item = not_added_list[i]
+                const item = not_added_list[i]
                 const parent_struct = walk(struct, item.parent_folder_id)
                 if (parent_struct) {
                     const struct_element = new DeviceStructElementData()
@@ -670,7 +670,7 @@ export class ApplicationConfig {
 
         // 親を持たないものをルートに追加する
         for (let i = 0; i < not_added_list.length; i++) {
-            let item = not_added_list[i]
+            const item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new RepTypeStructElementData()
                 struct_element.seq_in_parent = item.seq.valueOf()
@@ -711,7 +711,7 @@ export class ApplicationConfig {
         }
         while (not_added_list.length !== 0) {
             for (let i = 0; i < not_added_list.length; i++) {
-                let item = not_added_list[i]
+                const item = not_added_list[i]
                 const parent_struct = walk(struct, item.parent_folder_id)
                 if (parent_struct) {
                     const struct_element = new RepTypeStructElementData()
@@ -756,7 +756,7 @@ export class ApplicationConfig {
 
         // 親を持たないものをルートに追加する
         for (let i = 0; i < not_added_list.length; i++) {
-            let item = not_added_list[i]
+            const item = not_added_list[i]
             if (!item.parent_folder_id || item.parent_folder_id === "") {
                 const struct_element = new MiBoardStructElementData()
                 struct_element.seq_in_parent = item.seq.valueOf()
@@ -796,7 +796,7 @@ export class ApplicationConfig {
         }
         while (not_added_list.length !== 0) {
             for (let i = 0; i < not_added_list.length; i++) {
-                let item = not_added_list[i]
+                const item = not_added_list[i]
                 const parent_struct = walk(struct, item.parent_folder_id)
                 if (parent_struct) {
                     const struct_element = new MiBoardStructElementData()

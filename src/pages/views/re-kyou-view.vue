@@ -25,12 +25,10 @@
 import type { ReKyouViewProps } from './re-kyou-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import ReKyouContextMenu from './re-kyou-context-menu.vue'
-import { computed, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
-import { ReKyou } from '@/classes/datas/re-kyou'
 import { Kyou } from '@/classes/datas/kyou'
 import KyouView from './kyou-view.vue'
-import { GkillAPI } from '@/classes/api/gkill-api'
 
 const context_menu = ref<InstanceType<typeof ReKyouContextMenu> | null>(null);
 

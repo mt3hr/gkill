@@ -15,7 +15,7 @@ import { computed, ref, type Ref } from 'vue';
 import type { RepStructContextMenuProps } from './rep-struct-context-menu-emits';
 import type { RepStructContextMenuEmits } from './rep-struct-context-menu-props';
 
-const props = defineProps<RepStructContextMenuProps>()
+defineProps<RepStructContextMenuProps>()
 const emits = defineEmits<RepStructContextMenuEmits>()
 defineExpose({ show, hide })
 

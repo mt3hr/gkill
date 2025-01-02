@@ -15,7 +15,7 @@ import AddNewFoloderView from '../views/add-new-foloder-view.vue'
 
 const add_new_folder_view = ref<InstanceType<typeof AddNewFoloderView> | null>(null);
 
-const props = defineProps<AddNewFoloderDialogProps>()
+defineProps<AddNewFoloderDialogProps>()
 const emits = defineEmits<AddNewFoloderDialogEmits>()
 defineExpose({ show, hide })
 

@@ -1,18 +1,19 @@
 <template>
     <div @dblclick="show_kyou_dialog()" @click="emits('clicked_kyou', cloned_kyou)" :key="kyou.id">
         <div v-if="!show_content_only">
-            <AttachedTag v-for="attached_tag, index in cloned_kyou.attached_tags" :tag="attached_tag"
-                :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
-                :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+            <AttachedTag v-for="attached_tag in cloned_kyou.attached_tags" :tag="attached_tag"
+                :key="attached_tag.id" :application_config="application_config" :gkill_api="gkill_api"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)" />
-            <AttachedTimeIsPlaing v-for="attached_timeis_plaing, index in cloned_kyou.attached_timeis_kyou"
-                :timeis_kyou="attached_timeis_plaing" :application_config="application_config" :gkill_api="gkill_api"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+            <AttachedTimeIsPlaing v-for="attached_timeis_plaing in cloned_kyou.attached_timeis_kyou"
+                :key="attached_timeis_plaing.id" :timeis_kyou="attached_timeis_plaing"
+                :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
+                :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
@@ -132,7 +133,19 @@
                 ref="git_commit_log_view" />
         </div>
         <div v-if="!show_content_only">
-            <AttachedText v-for="attached_text, index in cloned_kyou.attached_texts" :text="attached_text"
+            <AttachedText v-for="attached_text in cloned_kyou.attached_texts" :text="attached_text"
+                :key="attached_text.id" :application_config="application_config" :gkill_api="gkill_api"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', cloned_kyou)"
+                @requested_reload_list="emits('requested_reload_list')"
+                @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
+        </div>
+        <div v-if="!show_content_only">
+            <AttachedNotification v-for="attached_notification in cloned_kyou.attached_notifications"
+                :key="attached_notification.id" :notification="attached_notification"
                 :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -159,6 +172,7 @@ import { computed, watch, type Ref, ref, onMounted, onUnmounted } from 'vue'
 import AttachedTag from './attached-tag.vue'
 import AttachedText from './attached-text.vue'
 import AttachedTimeIsPlaing from './attached-time-is-plaing.vue'
+import AttachedNotification from './attached-notification.vue'
 import GitCommitLogView from './git-commit-log-view.vue'
 import IDFKyouView from './idf-kyou-view.vue'
 import KmemoView from './kmemo-view.vue'
@@ -173,8 +187,6 @@ import kyouDialog from '../dialogs/kyou-dialog.vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { KyouViewProps } from './kyou-view-props'
 import { Kyou } from '@/classes/datas/kyou'
-import { Tag } from '@/classes/datas/tag'
-import { Text } from '@/classes/datas/text'
 import type MiKyouView from './mi-kyou-view.vue'
 import type UrLogView from './ur-log-view.vue'
 import type IdfKyouView from './idf-kyou-view.vue'
@@ -194,10 +206,6 @@ const props = defineProps<KyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
-const focused_tag: Ref<Tag> = ref(new Tag())
-const focused_text: Ref<Text> = ref(new Text())
-const delete_target_tag: Ref<Tag> = ref(new Tag())
-const delete_target_text: Ref<Text> = ref(new Text())
 
 watch(() => props.kyou, () => {
     cloned_kyou.value = props.kyou.clone()

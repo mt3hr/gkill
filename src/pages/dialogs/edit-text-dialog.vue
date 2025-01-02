@@ -11,7 +11,7 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import type { EditTextDialogProps } from './edit-text-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import EditTextView from '../views/edit-text-view.vue'

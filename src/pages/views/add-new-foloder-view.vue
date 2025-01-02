@@ -22,7 +22,6 @@ import { ref, type Ref } from 'vue';
 import type { AddNewFoloderViewEmits } from './add-new-foloder-view-emits'
 import type { AddNewFoloderViewProps } from './add-new-foloder-view-props'
 import { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data';
-import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<AddNewFoloderViewProps>()
 const emits = defineEmits<AddNewFoloderViewEmits>()

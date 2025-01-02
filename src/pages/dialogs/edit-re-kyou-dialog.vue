@@ -11,13 +11,12 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { EditRekyouDialogProps } from './edit-rekyou-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import EditReKyouView from '../views/edit-re-kyou-view.vue'
-import type { Kyou } from '@/classes/datas/kyou'
 
-const props = defineProps<EditRekyouDialogProps>()
+defineProps<EditRekyouDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 

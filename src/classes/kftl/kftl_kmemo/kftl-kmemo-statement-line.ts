@@ -17,7 +17,7 @@ export class KFTLKmemoStatementLine extends KFTLStatementLine {
     }
 
     async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        let target_id = this.get_context().get_this_statement_line_target_id()
+        const target_id = this.get_context().get_this_statement_line_target_id()
         let kmemo_request: KFTLKmemoRequest
         try {
             kmemo_request = request_map.get(target_id) as KFTLKmemoRequest

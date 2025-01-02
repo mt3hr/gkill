@@ -40,7 +40,7 @@ const share_task_list_dialog = ref<InstanceType<typeof ShareTaskListDialog> | nu
 const share_task_list_link_dialog = ref<InstanceType<typeof ShareTaskListLinkDialog> | null>(null);
 const manage_share_task_list_dialog = ref<InstanceType<typeof ManageShareTaskListDialog> | null>(null);
 
-const props = defineProps<miShareFooterProps>()
+defineProps<miShareFooterProps>()
 const emits = defineEmits<miShareFooterEmits>()
 
 function show_share_task_list_dialog() {

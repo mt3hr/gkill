@@ -3,7 +3,8 @@
         <v-card-title>
             タスク共有リンク一覧
         </v-card-title>
-        <v-row v-for="share_mi_task_list_info, index in share_mi_task_list_infos">
+        <v-row v-for="share_mi_task_list_info in share_mi_task_list_infos"
+            :key="share_mi_task_list_info.share_id">
             <v-col cols="auto">
                 {{ share_mi_task_list_info.share_title }}
             </v-col>
@@ -25,6 +26,6 @@
 import type { ManageShareTaskListViewEmits } from './manage-share-task-list-view-emits'
 import type { ManageShareTaskListViewProps } from './manage-share-task-list-view-props'
 
-const props = defineProps<ManageShareTaskListViewProps>()
+defineProps<ManageShareTaskListViewProps>()
 const emits = defineEmits<ManageShareTaskListViewEmits>()
 </script>

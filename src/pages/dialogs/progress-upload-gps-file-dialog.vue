@@ -10,7 +10,7 @@ import { type Ref, ref } from 'vue'
 import type { ProgressUploadGPSFileDialogEmits } from './progress-upload-gps-file-dialog-emits'
 import type { ProgressUploadGPSFileDialogProps } from './progress-upload-gps-file-dialog-props'
 import ProgressUploadGPSFileView from '../views/progress-upload-gps-file-view.vue'
-const props = defineProps<ProgressUploadGPSFileDialogProps>()
+defineProps<ProgressUploadGPSFileDialogProps>()
 const emits = defineEmits<ProgressUploadGPSFileDialogEmits>()
 defineExpose({ show, hide })
 

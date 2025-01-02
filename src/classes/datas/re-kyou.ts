@@ -64,6 +64,7 @@ export class ReKyou extends InfoBase {
     async clear_attached_datas(): Promise<Array<GkillError>> {
         this.attached_tags = []
         this.attached_texts = []
+        this.attached_notifications = []
         this.attached_timeis_kyou = []
         this.attached_histories = []
         return new Array<GkillError>()

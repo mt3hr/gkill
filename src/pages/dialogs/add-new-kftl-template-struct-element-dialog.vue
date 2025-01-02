@@ -14,7 +14,7 @@ import AddNewKFTLTemplateStructElementView from '../views/add-new-kftl_template-
 
 const add_new_kftl_template_struct_element_view = ref<InstanceType<typeof AddNewKFTLTemplateStructElementView> | null>(null);
 
-const props = defineProps<AddNewKFTLTemplateStructElementDialogProps>()
+defineProps<AddNewKFTLTemplateStructElementDialogProps>()
 const emits = defineEmits<AddNewKFTLTemplateStructElementDialogEmits>()
 defineExpose({ show, hide })
 

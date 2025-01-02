@@ -18,7 +18,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info'
 
-const props = defineProps<ConfirmDeleteShareTaskLinkDialogProps>()
+defineProps<ConfirmDeleteShareTaskLinkDialogProps>()
 const emits = defineEmits<ConfirmDeleteShareTaskLinkDialogEmits>()
 defineExpose({ show, hide })
 

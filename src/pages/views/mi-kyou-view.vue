@@ -46,7 +46,6 @@ import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
-import { GkillAPI } from '@/classes/api/gkill-api'
 
 const context_menu = ref<InstanceType<typeof MiContextMenu> | null>(null);
 

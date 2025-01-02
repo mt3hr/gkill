@@ -14,7 +14,7 @@ import type { ConfirmDeleteRepTypeStructDialogEmits } from './confirm-delete-rep
 import type { ConfirmDeleteRepTypeStructDialogProps } from './confirm-delete-rep-type-struct-dialog-props';
 import { RepTypeStruct } from '@/classes/datas/config/rep-type-struct';
 
-const props = defineProps<ConfirmDeleteRepTypeStructDialogProps>()
+defineProps<ConfirmDeleteRepTypeStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteRepTypeStructDialogEmits>()
 defineExpose({ show, hide })
 

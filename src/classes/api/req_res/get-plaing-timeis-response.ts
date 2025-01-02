@@ -1,6 +1,5 @@
 'use strict'
 
-import { TimeIs } from '@/classes/datas/time-is'
 import { GkillAPIResponse } from '../gkill-api-response'
 import type { Kyou } from '@/classes/datas/kyou'
 

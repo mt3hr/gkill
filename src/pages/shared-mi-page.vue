@@ -6,7 +6,7 @@
             @received_messages="write_messages" />
         <div class="alert_container">
             <v-slide-y-transition group>
-                <v-alert v-for="message in messages" theme="dark">
+                <v-alert v-for="message in messages" theme="dark" :key="message.id">
                     {{ message.message }}
                 </v-alert>
             </v-slide-y-transition>
@@ -17,21 +17,19 @@
 <script lang="ts" setup>
 'use strict'
 import { computed, ref, type Ref } from 'vue'
-import { GkillAPI } from '@/classes/api/gkill-api'
+import { GkillAPI, GkillAPIForSharedMi } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
 import miSharedTaskView from './views/mi-shared-task-view.vue'
 import { useRoute } from 'vue-router'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
-import { GkillAPIForSharedMi } from '@/classes/api/gkill-api-for-shared-mi'
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
 const browser_url_bar_height: Ref<Number> = ref(0)
 const app_title_bar_height: Ref<Number> = ref(50)
-const app_title_bar_height_px = computed(() => app_title_bar_height.value.toString().concat("px"))
-const gkill_api = computed(() => GkillAPIForSharedMi.get_instance())
+const gkill_api: Ref<GkillAPI> = computed(() => GkillAPIForSharedMi.get_instance_for_share_mi())
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 const share_mi_id = computed(() => useRoute().query.share_id!.toString())
@@ -55,7 +53,7 @@ async function write_errors(errors: Array<GkillError>) {
         if (errors[i] && errors[i].error_message) {
             received_messages.push({
                 message: errors[i].error_message,
-                id: GkillAPI.get_instance().generate_uuid(),
+                id: gkill_api.value.generate_uuid(),
                 show_snackbar: true,
             })
         }
@@ -74,7 +72,7 @@ async function write_messages(messages_: Array<GkillMessage>) {
         if (messages_[i] && messages_[i].message) {
             received_messages.push({
                 message: messages_[i].message,
-                id: GkillAPI.get_instance().generate_uuid(),
+                id: gkill_api.value.generate_uuid(),
                 show_snackbar: true,
             })
         }

@@ -13,7 +13,7 @@ import type { ConfirmDeleteTagStructDialogEmits } from './confirm-delete-tag-str
 import type { ConfirmDeleteTagStructDialogProps } from './confirm-delete-tag-struct-dialog-props';
 import { TagStruct } from '@/classes/datas/config/tag-struct';
 
-const props = defineProps<ConfirmDeleteTagStructDialogProps>()
+defineProps<ConfirmDeleteTagStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteTagStructDialogEmits>()
 defineExpose({ show, hide })
 

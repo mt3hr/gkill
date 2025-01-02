@@ -34,7 +34,6 @@ import type LoginViewEmits from './login-view-emits'
 import { LoginRequest } from '@/classes/api/req_res/login-request';
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
-import { GkillAPI } from '@/classes/api/gkill-api';
 
 const user_id: Ref<string> = ref("")
 const password: Ref<string> = ref("")

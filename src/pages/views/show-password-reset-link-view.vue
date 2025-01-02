@@ -30,7 +30,6 @@ import { type Ref, ref, watch } from 'vue';
 import type { ShowPasswordResetLinkViewEmits } from './show-password-reset-link-view-emits'
 import type { ShowPasswordResetLinkViewProps } from './show-password-reset-link-view-props'
 import { GkillMessage } from '@/classes/api/gkill-message';
-import type { ServerConfig } from '@/classes/datas/config/server-config';
 
 const props = defineProps<ShowPasswordResetLinkViewProps>()
 const emits = defineEmits<ShowPasswordResetLinkViewEmits>()

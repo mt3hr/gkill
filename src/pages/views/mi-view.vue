@@ -3,7 +3,7 @@
         <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
             <v-progress-circular indeterminate color="primary" />
         </v-overlay>
-        <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
+        <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-app-bar-nav-icon @click.stop="() => { drawer = !drawer }" />
             <v-toolbar-title>
                 <div>
@@ -84,7 +84,7 @@
         <v-main class="main" v-show="inited">
             <table class="mi_view_table">
                 <tr>
-                    <td valign="top" v-for="query, index in querys">
+                    <td valign="top" v-for="query, index in querys" :key="query.query_id">
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">すべて</v-card-title>
@@ -249,29 +249,23 @@ import router from '@/router'
 import MiQueryEditorSidebar from './mi-query-editor-sidebar.vue'
 import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, type Ref, ref } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
-import AggregateView from './aggregate-view.vue'
 import Dnote from './dnote.vue'
-import EndTimeIsPlaingDialog from '../dialogs/end-time-is-plaing-dialog.vue'
-import GPSLogMap from './gps-log-map.vue'
 import KyouCountCalendar from './kyou-count-calendar.vue'
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
-import StartTimeIsDialog from '../dialogs/start-time-is-dialog.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
 import type { miViewEmits } from './mi-view-emits'
 import type { miViewProps } from './mi-view-props'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import type KftlDialog from '../dialogs/kftl-dialog.vue'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import moment from 'moment'
-import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
 import { deepEquals } from '@/classes/deep-equals'
 
 const enable_context_menu = ref(true)
@@ -300,7 +294,6 @@ const focused_column_checked_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const is_show_kyou_detail_view: Ref<boolean> = ref(true)
 const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
 const is_show_gps_log_map: Ref<boolean> = ref(false)
-const is_show_dnote: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
 const drawer: Ref<boolean | null> = ref(null)
 const kyou_list_view_height = computed(() => props.app_content_height)
@@ -310,13 +303,6 @@ const position_y: Ref<Number> = ref(0)
 
 const props = defineProps<miViewProps>()
 const emits = defineEmits<miViewEmits>()
-
-const share_mi_task_list_info: Ref<ShareMiTaskListInfo> = ref(new ShareMiTaskListInfo())
-const share_mi_task_list_infos: Ref<Array<ShareMiTaskListInfo>> = ref(new Array<ShareMiTaskListInfo>())
-const board_names: Ref<Array<string>> = ref(new Array<string>())
-const focused_board_index: Ref<number> = ref(0)
-const focused_mi_kyou: Ref<Kyou> = ref(new Kyou())
-const focused_board_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
     for (let i = 0; i < match_kyous_list.value.length; i++) {
@@ -343,14 +329,6 @@ async function update_check_kyous(kyou: Array<Kyou>, is_checked: boolean): Promi
     throw new Error('Not implemented')
 }
 
-async function show_confirm_delete_share_task_list_dialog(share_mi_task_list_info: ShareMiTaskListInfo): Promise<void> {
-    throw new Error('Not implemented')
-}
-
-async function show_share_task_link_dialog(share_mi_task_list_info: ShareMiTaskListInfo): Promise<void> {
-    throw new Error('Not implemented')
-}
-
 async function reload_list(column_index: number): Promise<void> {
     search(column_index, querys.value[column_index], true)
 }
@@ -371,7 +349,7 @@ function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
         const target_column_index = update_target_column_indexs[i]
         for (let j = 0; j < match_kyous_list.value[target_column_index].length; j++) {
             const kyou_in_list = match_kyous_list.value[target_column_index][j]
-            if (kyou.id = kyou_in_list.id) {
+            if (kyou.id === kyou_in_list.id) {
                 kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
                 scrolled = true
                 break

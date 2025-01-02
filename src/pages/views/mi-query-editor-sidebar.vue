@@ -72,7 +72,6 @@ import miExtructCheckStateQuery from './mi-extruct-check-state-query.vue'
 import KeywordQuery from './keyword-query.vue'
 import CalendarQuery from './calendar-query.vue'
 import MapQuery from './map-query.vue'
-import RepQuery from './rep-query.vue'
 import SidebarHeader from './sidebar-header.vue'
 import TimeIsQuery from './time-is-query.vue'
 import TagQuery from './tag-query.vue'
@@ -82,11 +81,7 @@ import type { miQueryEditorSidebarEmits } from './mi-query-editor-sidebar-emits'
 import type { miQueryEditorSidebarProps } from './mi-query-editor-sidebar-props'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { deepEquals } from '@/classes/deep-equals'
-import type { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
-import { ApplicationConfig } from '@/classes/datas/config/application-config'
-import { MiCheckState } from '@/classes/api/find_query/mi-check-state'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 import type MiBoardQuery from './mi-board-query.vue'
 
@@ -202,15 +197,13 @@ function generate_query(query_id?: string): FindKyouQuery {
         }
     }
 
-    if (true/*rep_query.value*/) {
-        const reps = new Array<string>()
-        for (let i = 0; i < props.application_config.rep_struct.length; i++) {
-            reps.push(props.application_config.rep_struct[i].rep_name)
-        }
-        find_query.reps = reps
-        find_query.use_rep_types = true
-        find_query.rep_types = ["mi"]
+    const reps = new Array<string>()
+    for (let i = 0; i < props.application_config.rep_struct.length; i++) {
+        reps.push(props.application_config.rep_struct[i].rep_name)
     }
+    find_query.reps = reps
+    find_query.use_rep_types = true
+    find_query.rep_types = ["mi"]
 
     if (check_state_query.value) {
         find_query.mi_check_state = check_state_query.value.get_update_extruct_check_state()

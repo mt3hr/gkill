@@ -15,7 +15,7 @@ import SearchButton from './search-button.vue'
 import type { SidebarHeaderEmits } from './sidebar-header-emits'
 import type { SidebarHeaderProps } from './sidebar-header-props'
 
-const props = defineProps<SidebarHeaderProps>()
+defineProps<SidebarHeaderProps>()
 const emits = defineEmits<SidebarHeaderEmits>()
 </script>
 <style lang="css" scoped>

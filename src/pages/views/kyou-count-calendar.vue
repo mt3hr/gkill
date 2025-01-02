@@ -62,10 +62,10 @@ function on_wheel(e: any) {
     }
 }
 function prev() {
-    document.querySelectorAll("div.v-calendar.v-calendar-monthly > div:nth-child(1) > div > button:nth-child(2)").forEach((element, key, parent) => { (element as any).click() })
+    document.querySelectorAll("div.v-calendar.v-calendar-monthly > div:nth-child(1) > div > button:nth-child(2)").forEach((element) => { (element as any).click() })
 }
 function next() {
-    document.querySelectorAll("div.v-calendar.v-calendar-monthly > div:nth-child(1) > div > button:nth-child(3)").forEach((element, key, parent) => { (element as any).click() })
+    document.querySelectorAll("div.v-calendar.v-calendar-monthly > div:nth-child(1) > div > button:nth-child(3)").forEach((element) => { (element as any).click() })
 }
 function clicked_date(date: Date): void {
     emits('requested_focus_time', moment(moment(date).format("yyyy-MM-DD") + " " + time.value).toDate())
@@ -88,7 +88,7 @@ nextTick(() => {
     const calendar_date_text_selector = "div.v-calendar-weekly__day-label > button > span.v-btn__content"
     document.querySelectorAll(calendar_year_month_selector).forEach(year_month_element => {
         calendar_date_cell_selectors.forEach(date_cell_selector => {
-            document.querySelectorAll(date_cell_selector).forEach((element, key, parent) => {
+            document.querySelectorAll(date_cell_selector).forEach((element) => {
                 element.addEventListener('click', (() => {
                     if (!element.textContent || element.textContent.trim() === "") {
                         return

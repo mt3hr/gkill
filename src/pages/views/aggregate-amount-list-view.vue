@@ -15,7 +15,7 @@ import type { AggregateAmountListViewProps } from './aggregate-amount-list-view-
 import type { KyouViewEmits } from './kyou-view-emits';
 import AggregateAmountView from './aggregate-amount-view.vue';
 
-const props = defineProps<AggregateAmountListViewProps>()
-const emits = defineEmits<KyouViewEmits>()
+defineProps<AggregateAmountListViewProps>()
+defineEmits<KyouViewEmits>()
 </script>
 <style lang="css"></style>
