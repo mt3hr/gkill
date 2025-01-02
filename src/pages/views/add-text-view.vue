@@ -37,14 +37,11 @@
 import { type Ref, ref } from 'vue'
 import type { AddTextViewProps } from './add-text-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import type { Kyou } from '@/classes/datas/kyou'
 import { Text } from '@/classes/datas/text'
 import KyouView from './kyou-view.vue'
 import { AddTextRequest } from '@/classes/api/req_res/add-text-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import router from '@/router'
-import { GkillAPI } from '@/classes/api/gkill-api'
 
 const props = defineProps<AddTextViewProps>()
 const emits = defineEmits<KyouViewEmits>()

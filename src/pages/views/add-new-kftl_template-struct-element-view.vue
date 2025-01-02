@@ -19,7 +19,6 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { GkillAPI } from '@/classes/api/gkill-api';
 import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data';
 import { type Ref, ref } from 'vue';
 import type { AddNewKFTLTemplateStructElementViewEmits } from './add-new-kftl-template-struct-element-view-emits'

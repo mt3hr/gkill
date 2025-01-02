@@ -12,12 +12,12 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { ConfirmReKyouDialogProps } from './confirm-re-kyou-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import ConfirmReKyouView from '../views/confirm-re-kyou-view.vue'
 
-const props = defineProps<ConfirmReKyouDialogProps>()
+defineProps<ConfirmReKyouDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 

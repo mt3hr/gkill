@@ -64,7 +64,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { nextTick, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { ManageAccountViewEmits } from './manage-account-view-emits'
 import type { ManageAccountViewProps } from './manage-account-view-props'
 import AllocateRepDialog from '../dialogs/allocate-rep-dialog.vue'
@@ -72,7 +72,6 @@ import ConfirmResetPasswordDialog from '../dialogs/confirm-reset-password-dialog
 import CreateAccountDialog from '../dialogs/create-account-dialog.vue'
 import ShowPasswordResetLinkDialog from '../dialogs/show-password-reset-link-dialog.vue'
 import type { Account } from '@/classes/datas/config/account'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { UpdateAccountStatusRequest } from '@/classes/api/req_res/update-account-status-request'
 import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-configs-request'
 

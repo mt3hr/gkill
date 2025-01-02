@@ -14,7 +14,7 @@ import type { KFTLDialogEmits } from './kftl-dialog-emits'
 import type { KFTLDialogProps } from './kftl-dialog-props'
 import KFTLView from '../views/kftl-view.vue'
 
-const props = defineProps<KFTLDialogProps>()
+defineProps<KFTLDialogProps>()
 const emits = defineEmits<KFTLDialogEmits>()
 defineExpose({ show, hide })
 

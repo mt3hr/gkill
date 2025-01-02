@@ -13,6 +13,8 @@ type GkillServerAPIAddress struct {
 
 	AddTextAddress string
 
+	AddNotificationAddress string
+
 	AddKmemoAddress string
 
 	AddURLogAddress string
@@ -30,6 +32,8 @@ type GkillServerAPIAddress struct {
 	UpdateTagAddress string
 
 	UpdateTextAddress string
+
+	UpdateNotificationAddress string
 
 	UpdateKmemoAddress string
 
@@ -83,7 +87,11 @@ type GkillServerAPIAddress struct {
 
 	GetTextsByTargetIDAddress string
 
+	GetNotificationsByTargetIDAddress string
+
 	GetTextHistoriesByTextIDAddress string
+
+	GetNotificationHistoriesByNotificationIDAddress string
 
 	GetApplicationConfigAddress string
 
@@ -137,6 +145,8 @@ type GkillServerAPIAddress struct {
 
 	RegisterGkillNotificationAddress string
 
+	GkillWebpushServiceWorkerJsAddress string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -148,6 +158,8 @@ type GkillServerAPIAddress struct {
 	AddTagMethod string
 
 	AddTextMethod string
+
+	AddNotificationMethod string
 
 	AddKmemoMethod string
 
@@ -166,6 +178,8 @@ type GkillServerAPIAddress struct {
 	UpdateTagMethod string
 
 	UpdateTextMethod string
+
+	UpdateNotificationMethod string
 
 	UpdateKmemoMethod string
 
@@ -219,7 +233,11 @@ type GkillServerAPIAddress struct {
 
 	GetTextsByTargetIDMethod string
 
+	GetNotificationsByTargetIDMethod string
+
 	GetTextHistoriesByTagIDMethod string
+
+	GetNotificationHistoriesByTagIDMethod string
 
 	GetApplicationConfigMethod string
 
@@ -283,6 +301,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.SetNewPasswordAddress = "/api/set_new_password"
 	gkillAPIAddress.AddTagAddress = "/api/add_tag"
 	gkillAPIAddress.AddTextAddress = "/api/add_text"
+	gkillAPIAddress.AddNotificationAddress = "/api/add_gkill_notification"
 	gkillAPIAddress.AddKmemoAddress = "/api/add_kmemo"
 	gkillAPIAddress.AddURLogAddress = "/api/add_urlog"
 	gkillAPIAddress.AddNlogAddress = "/api/add_nlog"
@@ -292,6 +311,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.AddRekyouAddress = "/api/add_rekyou"
 	gkillAPIAddress.UpdateTagAddress = "/api/update_tag"
 	gkillAPIAddress.UpdateTextAddress = "/api/update_text"
+	gkillAPIAddress.UpdateNotificationAddress = "/api/update_gkill_notification"
 	gkillAPIAddress.UpdateKmemoAddress = "/api/update_kmemo"
 	gkillAPIAddress.UpdateURLogAddress = "/api/update_urlog"
 	gkillAPIAddress.UpdateNlogAddress = "/api/update_nlog"
@@ -318,7 +338,9 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetTagsByTargetIDAddress = "/api/get_tags_by_id"
 	gkillAPIAddress.GetTagHistoriesByTagIDAddress = "/api/get_tag_histories_by_tag_id"
 	gkillAPIAddress.GetTextsByTargetIDAddress = "/api/get_texts_by_id"
+	gkillAPIAddress.GetNotificationsByTargetIDAddress = "/api/get_gkill_notifications_by_id"
 	gkillAPIAddress.GetTextHistoriesByTextIDAddress = "/api/get_text_histories_by_text_id"
+	gkillAPIAddress.GetNotificationHistoriesByNotificationIDAddress = "/api/get_gkill_notification_histories_by_notification_id"
 	gkillAPIAddress.GetApplicationConfigAddress = "/api/get_application_config"
 	gkillAPIAddress.GetServerConfigsAddress = "/api/get_server_configs"
 	gkillAPIAddress.UploadFilesAddress = "/api/upload_files"
@@ -345,12 +367,14 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetRepositoriesAddress = "/api/get_repositories"
 	gkillAPIAddress.GetGkillNotificationPublicKeyAddress = "/api/get_gkill_notification_public_key"
 	gkillAPIAddress.RegisterGkillNotificationAddress = "/api/register_gkill_notification"
+	gkillAPIAddress.GkillWebpushServiceWorkerJsAddress = "/gkill-webpush-service-worker.js"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
 	gkillAPIAddress.SetNewPasswordMethod = "POST"
 	gkillAPIAddress.AddTagMethod = "POST"
 	gkillAPIAddress.AddTextMethod = "POST"
+	gkillAPIAddress.AddNotificationMethod = "POST"
 	gkillAPIAddress.AddKmemoMethod = "POST"
 	gkillAPIAddress.AddURLogMethod = "POST"
 	gkillAPIAddress.AddNlogMethod = "POST"
@@ -360,6 +384,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.AddRekyouMethod = "POST"
 	gkillAPIAddress.UpdateTagMethod = "POST"
 	gkillAPIAddress.UpdateTextMethod = "POST"
+	gkillAPIAddress.UpdateNotificationMethod = "POST"
 	gkillAPIAddress.UpdateKmemoMethod = "POST"
 	gkillAPIAddress.UpdateNlogMethod = "POST"
 	gkillAPIAddress.UpdateURLogMethod = "POST"
@@ -386,7 +411,9 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetTagsByTargetIDMethod = "POST"
 	gkillAPIAddress.GetTagHistoriesByTagIDMethod = "POST"
 	gkillAPIAddress.GetTextsByTargetIDMethod = "POST"
+	gkillAPIAddress.GetNotificationsByTargetIDMethod = "POST"
 	gkillAPIAddress.GetTextHistoriesByTagIDMethod = "POST"
+	gkillAPIAddress.GetNotificationHistoriesByTagIDMethod = "POST"
 	gkillAPIAddress.GetApplicationConfigMethod = "POST"
 	gkillAPIAddress.GetServerConfigsMethod = "POST"
 	gkillAPIAddress.UploadFilesMethod = "POST"
@@ -411,7 +438,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.DeleteShareMiTaskListInfosMethod = "POST"
 	gkillAPIAddress.GetMiSharedTasksMethod = "POST"
 	gkillAPIAddress.GetRepositoriesMethod = "POST"
-	gkillAPIAddress.GetGkillNotificationPublicKeyAddress = "POST"
-	gkillAPIAddress.RegisterGkillNotificationAddress = "POST"
+	gkillAPIAddress.GetGkillNotificationPublicKeyMethod = "POST"
+	gkillAPIAddress.RegisterGkillNotificationMethod = "POST"
 	return gkillAPIAddress
 }

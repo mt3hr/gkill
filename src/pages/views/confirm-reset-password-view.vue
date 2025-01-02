@@ -21,7 +21,6 @@
 import { ResetPasswordRequest } from '@/classes/api/req_res/reset-password-request';
 import type { ConfirmResetPasswordViewEmits } from './confirm-reset-password-view-emits'
 import type { ConfirmResetPasswordViewProps } from './confirm-reset-password-view-props'
-import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<ConfirmResetPasswordViewProps>()
 const emits = defineEmits<ConfirmResetPasswordViewEmits>()

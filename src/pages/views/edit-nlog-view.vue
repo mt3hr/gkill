@@ -54,11 +54,9 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import router from '@/router'
 import moment from 'moment'
 import { UpdateNlogRequest } from '@/classes/api/req_res/update-nlog-request'
 import type { EditNlogViewProps } from './edit-nlog-view-props'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import type { Kyou } from '@/classes/datas/kyou'
 
 const props = defineProps<EditNlogViewProps>()

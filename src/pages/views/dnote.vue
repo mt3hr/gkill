@@ -1,95 +1,91 @@
 <template>
-    <v-card class="dnote_view">
-        <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
-            <v-progress-circular indeterminate color="primary" />
-        </v-overlay>
-        <h1><span>{{ start_date_str }}</span><span
-                v-if="end_date_str !== '' && start_date_str != end_date_str">～</span><span
-                v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span><span
-                v-if="start_date_str === '' && !(end_date_str !== '' && start_date_str != end_date_str)">全期間</span></h1>
-        <table>
-            <tr>
-                <td>
-                    <div>覚醒：<span v-if="calclutated_total_awake_time !== ''">{{ calclutated_total_awake_time }}</span>
-                    </div>
-                    <div>睡眠：<span v-if="calclutated_total_sleep_time !== ''">{{ calclutated_total_sleep_time }}</span>
-                    </div>
-                    <div>仕事：<span v-if="calclutated_total_work_time !== ''">{{ calclutated_total_work_time }} </span>
-                    </div>
-                </td>
-                <td>
-                    <div>煙草： <span v-if="calclutated_tabaco_record_count !== -1">{{ calclutated_tabaco_record_count }}
-                            本</span></div>
-                    <div style="display: flex;">気分：
-                        <LantanaFlowersView v-if="calclated_average_lantana_mood !== -1" :gkill_api="gkill_api"
-                            :application_config="application_config" :mood="calclated_average_lantana_mood"
-                            :editable="false" />
-                    </div>
-                    <div>収入： <span v-if="calclutated_total_nlog_plus_amount !== -1">{{
-                        calclutated_total_nlog_plus_amount }} 円</span></div>
-                    <div>支出： <span v-if="calclutated_total_nlog_minus_amount !== -1">{{
-                        calclutated_total_nlog_minus_amount }} 円</span></div>
-                    <div>コード：
-                        <span v-if="calclutated_total_git_addition_count !== -1" class="git_commit_addition"> + {{
-                            calclutated_total_git_addition_count }} 行</span>
-                    </div>
-                    <div>コード：
-                        <span v-if="calclutated_total_git_deletion_count !== -1" class="git_commit_deletion"> - {{
-                            calclutated_total_git_deletion_count }} 行</span>
-                    </div>
-                </td>
-                <td>
-                    <div>合計時間：<span v-if="total_checked_time !== ''">{{ total_checked_time }}</span></div>
-                    <div>合計収入：<span v-if="total_checked_nlog_plus_amount !== -1">{{ total_checked_nlog_plus_amount }}
-                            円</span></div>
-                    <div>合計支出：<span v-if="total_checked_nlog_minus_amount !== -1">{{ total_checked_nlog_minus_amount }}
-                            円</span></div>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <h2>収支</h2>
-                    <AggregateAmountListView :application_config="application_config" :gkill_api="gkill_api"
-                        :last_added_tag="last_added_tag" :aggregate_ammounts="aggregate_amounts" />
-                </td>
-                <td>
-                    <h2>場所（ {{ location_timeis_kmemo_kyous.length }} 件 ）</h2>
-                    <AggregateLocationListView :application_config="application_config" :gkill_api="gkill_api"
-                        :last_added_tag="last_added_tag" :aggregate_locations="aggregate_locations" />
-                </td>
-                <td>
-                    <h2>人（ {{ people_timeis_kmemo_kyous.length }} 件 ）</h2>
-                    <AggregatePeopleListView :application_config="application_config" :gkill_api="gkill_api"
-                        :last_added_tag="last_added_tag" :aggregate_peoples="aggregate_peoples" />
-                </td>
-            </tr>
-        </table>
-    </v-card>
+    <div>
+        <v-card class="dnote_view">
+            <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
+                <v-progress-circular indeterminate color="primary" />
+            </v-overlay>
+            <h1><span>{{ start_date_str }}</span><span
+                    v-if="end_date_str !== '' && start_date_str != end_date_str">～</span><span
+                    v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span><span
+                    v-if="start_date_str === '' && !(end_date_str !== '' && start_date_str != end_date_str)">全期間</span>
+            </h1>
+            <table>
+                <tr>
+                    <td>
+                        <div>覚醒：<span v-if="calclutated_total_awake_time !== ''">{{ calclutated_total_awake_time
+                                }}</span>
+                        </div>
+                        <div>睡眠：<span v-if="calclutated_total_sleep_time !== ''">{{ calclutated_total_sleep_time
+                                }}</span>
+                        </div>
+                        <div>仕事：<span v-if="calclutated_total_work_time !== ''">{{ calclutated_total_work_time }}
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div>煙草： <span v-if="calclutated_tabaco_record_count !== -1">{{ calclutated_tabaco_record_count
+                                }}
+                                本</span></div>
+                        <div style="display: flex;">気分：
+                            <LantanaFlowersView v-if="calclated_average_lantana_mood !== -1" :gkill_api="gkill_api"
+                                :application_config="application_config" :mood="calclated_average_lantana_mood"
+                                :editable="false" />
+                        </div>
+                        <div>収入： <span v-if="calclutated_total_nlog_plus_amount !== -1">{{
+                            calclutated_total_nlog_plus_amount }} 円</span></div>
+                        <div>支出： <span v-if="calclutated_total_nlog_minus_amount !== -1">{{
+                            calclutated_total_nlog_minus_amount }} 円</span></div>
+                        <div>コード：
+                            <span v-if="calclutated_total_git_addition_count !== -1" class="git_commit_addition"> + {{
+                                calclutated_total_git_addition_count }} 行</span>
+                        </div>
+                        <div>コード：
+                            <span v-if="calclutated_total_git_deletion_count !== -1" class="git_commit_deletion"> - {{
+                                calclutated_total_git_deletion_count }} 行</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div>合計時間：<span v-if="total_checked_time !== ''">{{ total_checked_time }}</span></div>
+                        <div>合計収入：<span v-if="total_checked_nlog_plus_amount !== -1">{{ total_checked_nlog_plus_amount
+                                }}
+                                円</span></div>
+                        <div>合計支出：<span v-if="total_checked_nlog_minus_amount !== -1">{{ total_checked_nlog_minus_amount
+                                }}
+                                円</span></div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h2>収支</h2>
+                        <AggregateAmountListView :application_config="application_config" :gkill_api="gkill_api"
+                            :last_added_tag="last_added_tag" :aggregate_ammounts="aggregate_amounts" />
+                    </td>
+                    <td>
+                        <h2>場所（ {{ location_timeis_kmemo_kyous.length }} 件 ）</h2>
+                        <AggregateLocationListView :application_config="application_config" :gkill_api="gkill_api"
+                            :last_added_tag="last_added_tag" :aggregate_locations="aggregate_locations" />
+                    </td>
+                    <td>
+                        <h2>人（ {{ people_timeis_kmemo_kyous.length }} 件 ）</h2>
+                        <AggregatePeopleListView :application_config="application_config" :gkill_api="gkill_api"
+                            :last_added_tag="last_added_tag" :aggregate_peoples="aggregate_peoples" />
+                    </td>
+                </tr>
+            </table>
+        </v-card>
+    </div>
 </template>
 <script setup lang="ts">
 import type { DnoteEmits } from './dnote-emits'
 import type { DnoteProps } from './dnote-props'
 
-import type { Kmemo } from '@/classes/datas/kmemo'
-import type { Lantana } from '@/classes/datas/lantana'
-import { TimeIs } from '@/classes/datas/time-is'
-import { computed, nextTick, ref, watch, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 
-import DnoteLocationListView from './dnote-location-list-view.vue'
-import DnoteNlogsListView from './dnote-nlogs-list-view.vue'
-import DnotePeoplesListView from './dnote-peoples-list-view.vue'
 import moment from 'moment'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import type { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
-import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { GkillError } from '@/classes/api/gkill-error'
 import LantanaFlowersView from './lantana-flowers-view.vue'
-import KyouListView from './kyou-list-view.vue'
-import { deepEquals } from '@/classes/deep-equals'
-import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { aggregate_locations_from_kyous, AggregateLocation } from '@/classes/api/dnote/aggregate-location'
 import { aggregate_peoples_from_kyous, AggregatePeople } from '@/classes/api/dnote/aggregate-people'
 import { aggregate_amounts_from_kyous, AggregateAmount } from '@/classes/api/dnote/aggregate-amount'
@@ -104,7 +100,7 @@ defineExpose({ recalc_all, recalc_checked_aggregate })
 const is_loading = ref(false)
 const start_date_str: Ref<string> = computed(() => !cloned_query.value.calendar_start_date ? "" : (moment(cloned_query.value.calendar_start_date ? cloned_query.value.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")))
 const end_date_str: Ref<string> = computed(() => !cloned_query.value.calendar_end_date ? "" : (moment(cloned_query.value.calendar_end_date ? cloned_query.value.calendar_end_date : moment().toDate()).format("YYYY-MM-DD")))
-const date_kmemo0000_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
+// const date_kmemo0000_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const awake_timeis_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const sleep_timeis_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const work_timeis_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())

@@ -12,7 +12,7 @@
             </v-row>
         </v-card-title>
         <div class="button_list">
-            <v-btn class="pa-3 ma-3" v-for="template, index in template.children"
+            <v-btn class="pa-3 ma-3" v-for="template, index in template.children" :key="template.id"
                 @click="clicked_template_button(template, index)">
                 {{ template.title }}
                 <KFTLTemplateDialog :application_config="application_config"
@@ -34,7 +34,7 @@ import type { KFTLTemplateViewEmits } from './kftl-template-view-emits';
 
 const child_template_dialogs: Ref<Array<any>> = ref(new Array<any>())
 
-const props = defineProps<KFTLTemplateViewProps>()
+defineProps<KFTLTemplateViewProps>()
 const emits = defineEmits<KFTLTemplateViewEmits>()
 defineExpose({ show, hide })
 

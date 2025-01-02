@@ -15,7 +15,7 @@ import type { UploadFileDialogProps } from './upload-file-dialog-props'
 import UploadFileView from '../views/upload-file-view.vue'
 import { type Ref, ref } from 'vue'
 
-const props = defineProps<UploadFileDialogProps>()
+defineProps<UploadFileDialogProps>()
 const emits = defineEmits<UploadFileDialogEmits>()
 defineExpose({ show, hide })
 

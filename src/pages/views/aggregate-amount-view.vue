@@ -20,8 +20,8 @@
 import type { AggregateAmountViewProps } from './aggregate-amount-view-props';
 import type { KyouViewEmits } from './kyou-view-emits';
 
-const props = defineProps<AggregateAmountViewProps>()
-const emits = defineEmits<KyouViewEmits>()
+defineProps<AggregateAmountViewProps>()
+defineEmits<KyouViewEmits>()
 
 function format_time(time: Date) {
     let year: string | number = time.getFullYear()

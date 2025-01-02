@@ -11,7 +11,7 @@ import type { ProgressUploadFileDialogEmits } from './progress-upload-file-dialo
 import type { ProgressUploadFileDialogProps } from './progress-upload-file-dialog-props'
 import ProgressUploadFileView from '../views/progress-upload-file-view.vue'
 
-const props = defineProps<ProgressUploadFileDialogProps>()
+defineProps<ProgressUploadFileDialogProps>()
 const emits = defineEmits<ProgressUploadFileDialogEmits>()
 defineExpose({ show, hide })
 

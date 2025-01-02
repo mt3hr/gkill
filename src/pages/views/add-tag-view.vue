@@ -36,15 +36,12 @@
 <script lang="ts" setup>
 import type { AddTagViewProps } from './add-tag-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import type { Kyou } from '@/classes/datas/kyou'
 import { Tag } from '@/classes/datas/tag'
 import { type Ref, ref } from 'vue'
 import KyouView from './kyou-view.vue'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import router from '@/router'
-import { GkillAPI } from '@/classes/api/gkill-api'
 
 const props = defineProps<AddTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()

@@ -20,7 +20,6 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { GkillAPI } from '@/classes/api/gkill-api';
 import { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data';
 import { type Ref, ref } from 'vue';
 import type { AddNewDeviceStructElementViewEmits } from './add-new-device-struct-element-view-emits'

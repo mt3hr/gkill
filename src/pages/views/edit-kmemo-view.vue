@@ -55,7 +55,6 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateKmemoRequest } from '@/classes/api/req_res/update-kmemo-request'
 import moment from 'moment'
-import { GkillAPI } from '@/classes/api/gkill-api'
 
 const props = defineProps<EditKmemoViewProps>()
 const emits = defineEmits<KyouViewEmits>()

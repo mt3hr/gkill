@@ -69,7 +69,6 @@ import AddRepDialog from '../dialogs/add-rep-dialog.vue'
 import ConfirmDeleteRepDialog from '../dialogs/confirm-delete-rep-dialog.vue'
 import type { Repository } from '@/classes/datas/config/repository'
 import { Account } from '@/classes/datas/config/account'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { UpdateUserRepsRequest } from '@/classes/api/req_res/update-user-reps-request'
 const add_rep_dialog = ref<InstanceType<typeof AddRepDialog> | null>(null);
 const confirm_delete_rep_dialog = ref<InstanceType<typeof ConfirmDeleteRepDialog> | null>(null);
@@ -92,6 +91,7 @@ const rep_types: Ref<Array<string>> = ref([
     "directory",
     "gpslog",
     "git_commit_log",
+    "notification",
 ])
 
 const devices: Ref<Array<string>> = ref((() => {

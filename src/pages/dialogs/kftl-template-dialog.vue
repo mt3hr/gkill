@@ -13,7 +13,7 @@ import type { KFTLTemplateDialogEmits } from './kftl-template-dialog-emits'
 import type { KFTLTemplateDialogProps } from './kftl-template-dialog-props'
 import KFTLTemplateView from '../views/kftl-template-view.vue'
 
-const props = defineProps<KFTLTemplateDialogProps>()
+defineProps<KFTLTemplateDialogProps>()
 const emits = defineEmits<KFTLTemplateDialogEmits>()
 defineExpose({ show, hide })
 

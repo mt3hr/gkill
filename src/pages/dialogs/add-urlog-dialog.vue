@@ -12,12 +12,12 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { EditLantanaDialogProps } from './edit-lantana-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import AddUrlogView from '../views/add-urlog-view.vue';
 
-const props = defineProps<EditLantanaDialogProps>()
+defineProps<EditLantanaDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 

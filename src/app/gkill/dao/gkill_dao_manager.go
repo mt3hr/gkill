@@ -520,6 +520,42 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 
+				case "notification":
+					notificationRep, err := reps.NewNotificationRepositorySQLite3Impl(ctx, filename)
+					if err != nil {
+						return nil, err
+					}
+					repositories.NotificationReps = append(repositories.NotificationReps, notificationRep)
+					if rep.UseToWrite {
+						newPath, _ := notificationRep.GetPath(ctx, "")
+						if repositories.WriteNotificationRep != nil {
+							existPath, _ := repositories.WriteNotificationRep.GetPath(ctx, "")
+							err := fmt.Errorf("error conflict write notification rep %s %s: %w", existPath, newPath)
+							return nil, err
+						}
+						repositories.WriteNotificationRep = notificationRep
+					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					rep := notificationRep
+					enableUpdateRepsCache := false
+					enableUpdateLatestDataRepositoryCache := true
+					cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+					ignoreFileNamePrefixes := []string{}
+					repFilename, err := rep.GetPath(ctx, "")
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+						return nil, err
+					}
+					repFilename = filepath.ToSlash(repFilename)
+
+					err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+					if err != nil {
+						fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+						return nil, err
+					}
+
 				case "rekyou":
 					reKyouRep, err := reps.NewReKyouRepositorySQLite3Impl(ctx, filename, repositories)
 					if err != nil {
@@ -766,6 +802,9 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 	}
 	for _, textRep := range reps.TextReps {
 		removeWatchTargetReps = append(removeWatchTargetReps, textRep)
+	}
+	for _, notificationRep := range reps.NotificationReps {
+		removeWatchTargetReps = append(removeWatchTargetReps, notificationRep)
 	}
 	for _, gpsLogRep := range reps.GPSLogReps {
 		removeWatchTargetReps = append(removeWatchTargetReps, gpsLogRep)

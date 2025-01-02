@@ -14,7 +14,7 @@ import type { ConfirmDeleteKFTLTemplateStructDialogEmits } from './confirm-delet
 import type { ConfirmDeleteKFTLTemplateStructDialogProps } from './confirm-delete-kftl-template-struct-dialog-props.ts';
 import { KFTLTemplateStruct } from '@/classes/datas/config/kftl-template-struct';
 
-const props = defineProps<ConfirmDeleteKFTLTemplateStructDialogProps>()
+defineProps<ConfirmDeleteKFTLTemplateStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteKFTLTemplateStructDialogEmits>()
 defineExpose({ show, hide })
 

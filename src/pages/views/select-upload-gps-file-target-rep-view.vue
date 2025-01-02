@@ -1,4 +1,5 @@
 <template>
+    <div></div>
 </template>
 <script lang="ts" setup>
 import type { SelectUploadGPSFileTargetRepViewEmits } from './select-upload-gps-file-target-rep-view-emits'

@@ -16,7 +16,7 @@ import type { ConfirmDeleteRepDialogProps } from './confirm-delete-rep-dialog-pr
 import ConfirmDeleteRepView from '../views/confirm-delete-rep-view.vue'
 import { Repository } from '@/classes/datas/config/repository';
 
-const props = defineProps<ConfirmDeleteRepDialogProps>()
+defineProps<ConfirmDeleteRepDialogProps>()
 const emits = defineEmits<ConfirmDeleteRepDialogEmits>()
 defineExpose({ show, hide })
 

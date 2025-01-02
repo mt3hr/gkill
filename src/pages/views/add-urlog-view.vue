@@ -44,19 +44,13 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { computed, type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { EditURLogViewProps } from './edit-ur-log-view-props'
 import { URLog } from '@/classes/datas/ur-log'
 import moment from 'moment'
-import { useDisplay } from 'vuetify'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import { UpdateURLogRequest } from '@/classes/api/req_res/update-ur-log-request'
-import router from '@/router'
 import type { KyouViewEmits } from './kyou-view-emits'
-import KyouView from './kyou-view.vue'
-import { GkillAPI } from '@/classes/api/gkill-api'
-import type { Kyou } from '@/classes/datas/kyou'
 import { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
 
 const props = defineProps<EditURLogViewProps>()
@@ -72,8 +66,6 @@ const url: Ref<string> = ref(urlog.value.url)
 const related_date: Ref<string> = ref(moment(urlog.value.related_time).format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment(urlog.value.related_time).format("HH:mm:ss"))
 
-const show_kyou: Ref<boolean> = ref(false)
-
 function reset(): void {
     title.value = urlog.value.title
     url.value = urlog.value.url
@@ -83,7 +75,7 @@ function reset(): void {
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    if (!urlog) {
+    if (!urlog.value) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "クライアントのデータが変です"

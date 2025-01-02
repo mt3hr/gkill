@@ -15,7 +15,7 @@ import type { KyouViewEmits } from './kyou-view-emits';
 import AggregateLocationView from './aggregate-location-view.vue';
 import type { AggregateLocationListViewProps } from './aggregate-location-list-view-props';
 
-const props = defineProps<AggregateLocationListViewProps>()
-const emits = defineEmits<KyouViewEmits>()
+defineProps<AggregateLocationListViewProps>()
+defineEmits<KyouViewEmits>()
 </script>
 <style lang="css"></style>

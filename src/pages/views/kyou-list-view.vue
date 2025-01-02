@@ -34,7 +34,7 @@
                 <template v-slot:default="{ item }">
                     <table>
                         <tr>
-                            <td v-for="kyou in item">
+                            <td v-for="kyou in item" :key="kyou.id">
                                 <KyouView class="kyou_image_in_list" :application_config="application_config"
                                     :key="kyou.id" :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="false"
                                     :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
@@ -70,8 +70,7 @@
 
                 <v-col cols="auto" class="pa-0">
                     <v-btn class="rounded-sm mx-auto" icon
-                        @click="emits('requested_change_is_image_only_view', !query.is_image_only)"
-                        variant="text">
+                        @click="emits('requested_change_is_image_only_view', !query.is_image_only)" variant="text">
                         <v-icon v-show="!query.is_image_only">mdi-file-document-outline</v-icon>
                         <v-icon v-show="query.is_image_only">mdi-image</v-icon>
                     </v-btn>
@@ -99,7 +98,6 @@
 <script setup lang="ts">
 import type { KyouListViewEmits } from './kyou-list-view-emits'
 import type { KyouListViewProps } from './kyou-list-view-props'
-import { GkillError } from '@/classes/api/gkill-error'
 import { Kyou } from '@/classes/datas/kyou'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import KyouView from './kyou-view.vue'
@@ -111,15 +109,11 @@ const props = defineProps<KyouListViewProps>()
 const emits = defineEmits<KyouListViewEmits>()
 defineExpose({ scroll_to_kyou, scroll_to_time, set_loading, scroll_to })
 
-const match_kyous: Ref<Array<Kyou>> = ref(props.matched_kyous ? props.matched_kyous.concat() : new Array<Kyou>())
 const match_kyous_for_image: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
 const is_loading: Ref<boolean> = ref(false)
-const scroll_distance_from_top_px: Ref<Number> = ref(0)
-const checked_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const kyou_height_px = computed(() => props.kyou_height ? props.kyou_height.toString().concat("px") : "0px")
 
 const footer_height = computed(() => props.show_footer ? 48 : 0)
-const footer_height_px = computed(() => footer_height.value.toString().concat("px"))
 
 watch(() => props.query.is_image_only, () => reload())
 watch(() => props.matched_kyous, () => reload())

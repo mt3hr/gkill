@@ -36,12 +36,9 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import { type Ref, ref } from 'vue'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import router from '@/router'
 import moment from 'moment'
-import { UpdateNlogRequest } from '@/classes/api/req_res/update-nlog-request'
 import { Nlog } from '@/classes/datas/nlog'
 import { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
-import { GkillAPI } from '@/classes/api/gkill-api'
 
 const props = defineProps<AddNlogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -51,17 +48,16 @@ const nlog: Ref<Nlog> = ref((() => {
     nlog.related_time = new Date(Date.now())
     return nlog
 })())
-const nlog_title_value: Ref<string> = ref(nlog ? nlog.value.title : "")
-const nlog_amount_value: Ref<Number> = ref(nlog ? nlog.value.amount : 0)
-const nlog_shop_value: Ref<string> = ref(nlog ? nlog.value.shop : "")
+const nlog_title_value: Ref<string> = ref(nlog.value ? nlog.value.title : "")
+const nlog_amount_value: Ref<Number> = ref(nlog.value ? nlog.value.amount : 0)
+const nlog_shop_value: Ref<string> = ref(nlog.value ? nlog.value.shop : "")
 
 const related_date: Ref<string> = ref(moment().format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment().format("HH:mm:ss"))
-const show_kyou: Ref<boolean> = ref(false)
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    if (!nlog) {
+    if (!nlog.value) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "クライアントのデータが変です"
@@ -149,9 +145,9 @@ function now_to_related_time(): void {
 }
 
 function reset(): void {
-    nlog_title_value.value = (nlog ? nlog.value.title : "")
-    nlog_amount_value.value = (nlog ? nlog.value.amount : 0)
-    nlog_shop_value.value = (nlog ? nlog.value.shop : "")
+    nlog_title_value.value = (nlog.value ? nlog.value.title : "")
+    nlog_amount_value.value = (nlog.value ? nlog.value.amount : 0)
+    nlog_shop_value.value = (nlog.value ? nlog.value.shop : "")
     related_date.value = (moment().format("YYYY-MM-DD"))
     related_time.value = (moment().format("HH:mm:ss"))
 }

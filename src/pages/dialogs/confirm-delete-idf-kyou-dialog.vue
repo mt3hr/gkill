@@ -10,12 +10,12 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import ConfirmDeleteKyouView from '../views/confirm-delete-kyou-view.vue';
 import type { ConfirmDeleteIDFKyouDialogEmits } from './confirm-delete-idf-kyou-dialog-emits';
 import type { ConfirmDeleteIDFKyouDialogProps } from './confirm-delete-idf-kyou-dialog-props';
 
-const props = defineProps<ConfirmDeleteIDFKyouDialogProps>()
+defineProps<ConfirmDeleteIDFKyouDialogProps>()
 const emits = defineEmits<ConfirmDeleteIDFKyouDialogEmits>()
 defineExpose({ show, hide })
 

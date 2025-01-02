@@ -23,14 +23,12 @@
             </td>
         </tr>
     </table>
-    <LantanaTextView />
 </template>
 <script setup lang="ts">
 import { type Ref, ref, watch } from 'vue'
 import type { LantanaFlowersViewEmits } from './lantana-flowers-view-emits'
 import type { LantanaFlowersViewProps } from './lantana-flowers-view-props'
 import LantanaFlower from './lantana-flower.vue'
-import LantanaTextView from './lantana-text-view.vue'
 import { LantanaFlowerState } from '@/classes/lantana/lantana-flower-state'
 
 const props = defineProps<LantanaFlowersViewProps>()
@@ -49,7 +47,7 @@ watch(() => props.mood, () => {
     mood.value = props.mood
 })
 
-watch(()=> mood.value, () => {
+watch(() => mood.value, () => {
     flower_state_1.value = (mood.value.valueOf() >= 2 ? LantanaFlowerState.full : (mood.value.valueOf() >= 1 ? LantanaFlowerState.half : LantanaFlowerState.none))
     flower_state_2.value = (mood.value.valueOf() >= 4 ? LantanaFlowerState.full : (mood.value.valueOf() >= 3 ? LantanaFlowerState.half : LantanaFlowerState.none))
     flower_state_3.value = (mood.value.valueOf() >= 6 ? LantanaFlowerState.full : (mood.value.valueOf() >= 5 ? LantanaFlowerState.half : LantanaFlowerState.none))
@@ -82,10 +80,10 @@ async function emit_updated_mood(): Promise<void> {
 .lantana_icon_td {
     width: 50px;
     height: 50px;
-    max-width: 50px ;
-    min-width: 50px ;
-    max-height: 50px ;
-    min-height: 50px ;
+    max-width: 50px;
+    min-width: 50px;
+    max-height: 50px;
+    min-height: 50px;
     display: inline-block;
 }
 </style>

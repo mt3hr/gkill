@@ -24,7 +24,6 @@ import type { EditDeviceStructElementViewEmits } from './edit-device-struct-elem
 import type { EditDeviceStructElementViewProps } from './edit-device-struct-element-view-props'
 import { DeviceStruct } from '@/classes/datas/config/device-struct';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
-import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<EditDeviceStructElementViewProps>()
 const emits = defineEmits<EditDeviceStructElementViewEmits>()

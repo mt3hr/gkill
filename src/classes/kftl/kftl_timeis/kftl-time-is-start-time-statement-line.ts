@@ -7,7 +7,6 @@ import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLPrototypeRequest } from '../kftl_prototype/kftl-prototype-request'
 import type { KFTLTimeIsRequest } from './kftl-time-is-request'
 import { KFTLTimeIsEndTimeStatementLine } from './kftl-time-is-end-time-statement-line'
-import { GkillAPI } from '@/classes/api/gkill-api'
 
 export class KFTLTimeIsStartTimeStatementLine extends KFTLStatementLine {
 

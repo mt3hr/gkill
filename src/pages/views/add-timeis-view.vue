@@ -55,19 +55,13 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { computed, type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { EditTimeIsViewProps } from './edit-time-is-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { Kyou } from '@/classes/datas/kyou'
 import { TimeIs } from '@/classes/datas/time-is'
-import KyouView from './kyou-view.vue'
 import moment from 'moment'
-import { useDisplay } from 'vuetify'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request'
-import router from '@/router'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
 
 const props = defineProps<EditTimeIsViewProps>()
@@ -120,7 +114,7 @@ function now_to_end_date_time(): void {
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    if (!timeis) {
+    if (!timeis.value) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "クライアントのデータが変です"
@@ -140,7 +134,7 @@ async function save(): Promise<void> {
         emits('received_errors', errors)
         return
     }
-    // 終了日時　片方だけ入力されていたらエラーチェック
+    // 終了日時 片方だけ入力されていたらエラーチェック
     if (timeis_end_date.value === "" || timeis_end_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
         if ((timeis_end_date.value === "" && timeis_end_time.value !== "") ||
             (timeis_end_date.value !== "" && timeis_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
@@ -185,7 +179,7 @@ async function save(): Promise<void> {
     new_timeis.id = props.gkill_api.generate_uuid()
     new_timeis.title = timeis_title.value
     new_timeis.start_time = moment(timeis_start_date.value + " " + timeis_start_time.value).toDate()
-    new_timeis.end_time = moment(timeis_end_date.value + " " + timeis_end_time.value).toDate()
+    new_timeis.end_time = end_time
     new_timeis.create_app = "gkill"
     new_timeis.create_device = gkill_info_res.device
     new_timeis.create_time = new Date(Date.now())

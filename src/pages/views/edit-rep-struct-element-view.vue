@@ -25,7 +25,6 @@ import type { EditRepStructElementViewEmits } from './edit-rep-struct-element-vi
 import type { EditRepStructElementViewProps } from './edit-rep-struct-element-view-props'
 import { RepStruct } from '@/classes/datas/config/rep-struct';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
-import { GkillAPI } from '@/classes/api/gkill-api';
 
 const props = defineProps<EditRepStructElementViewProps>()
 const emits = defineEmits<EditRepStructElementViewEmits>()

@@ -16,12 +16,12 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { computed, type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { KyouDialogProps } from './kyou-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import KyouView from '../views/kyou-view.vue'
 
-const props = defineProps<KyouDialogProps>()
+defineProps<KyouDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 
 defineExpose({ show, hide })

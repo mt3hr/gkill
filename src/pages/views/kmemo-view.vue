@@ -13,12 +13,10 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { type Ref, ref } from 'vue'
+import { ref } from 'vue'
 import KmemoContextMenu from './kmemo-context-menu.vue'
-import type { Kmemo } from '@/classes/datas/kmemo'
 import type { KmemoViewProps } from './kmemo-view-props.ts'
 import type { KyouViewEmits } from './kyou-view-emits'
-import type { Kyou } from '@/classes/datas/kyou'
 
 const props = defineProps<KmemoViewProps>()
 const emits = defineEmits<KyouViewEmits>()

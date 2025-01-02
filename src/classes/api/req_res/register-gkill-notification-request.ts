@@ -1,6 +1,5 @@
 'use strict'
 
-import { Account } from '@/classes/datas/config/account'
 import { GkillAPIRequest } from '../gkill-api-request'
 
 export class RegisterGkillNotificationRequest extends GkillAPIRequest {

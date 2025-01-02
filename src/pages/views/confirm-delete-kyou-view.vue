@@ -37,8 +37,6 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import type { KyouViewEmits } from './kyou-view-emits'
 import { type Ref, ref, watch } from 'vue'
 import KyouView from './kyou-view.vue'
-import router from '@/router';
-import { GkillAPI } from '@/classes/api/gkill-api';
 import type { Kyou } from '@/classes/datas/kyou';
 import type { GkillError } from '@/classes/api/gkill-error';
 import { UpdateKmemoRequest } from '@/classes/api/req_res/update-kmemo-request';

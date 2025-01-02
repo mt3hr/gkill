@@ -147,13 +147,12 @@
 </template>
 <script setup lang="ts">
 import { ServerConfig } from '@/classes/datas/config/server-config'
-import { computed, ref, watch, type Ref } from 'vue'
+import { ref, watch, type Ref } from 'vue'
 import ConfirmGenerateTLSFilesDialog from '../dialogs/confirm-generate-tls-files-dialog.vue'
 import CreateAccountDialog from '../dialogs/create-account-dialog.vue'
 import ManageAccountDialog from '../dialogs/manage-account-dialog.vue'
 import type { ServerConfigViewEmits } from './server-config-view-emits'
 import type { ServerConfigViewProps } from './server-config-view-props'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { UpdateServerConfigsRequest } from '@/classes/api/req_res/update-server-configs-request'

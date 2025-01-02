@@ -1,6 +1,5 @@
 'use strict'
 
-import moment from 'moment'
 import type { KFTLRequestMap } from '../../kftl-request-map'
 import { KFTLStatementLine } from '../../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../../kftl-statement-line-context'

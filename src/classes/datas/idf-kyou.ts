@@ -1,6 +1,5 @@
 'use strict'
 
-import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
 import { InfoBase } from './info-base'
 import { InfoIdentifier } from './info-identifier'
@@ -52,6 +51,7 @@ export class IDFKyou extends InfoBase {
         let errors = new Array<GkillError>()
         errors = errors.concat(await this.clear_attached_tags())
         errors = errors.concat(await this.clear_attached_texts())
+        errors = errors.concat(await this.clear_attached_notifications())
         errors = errors.concat(await this.clear_attached_timeis())
         errors = errors.concat(await this.clear_attached_histories())
         return errors

@@ -33,7 +33,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { computed, type Ref, ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { TimeIsViewProps } from './time-is-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import TimeIsContextMenu from './time-is-context-menu.vue'
