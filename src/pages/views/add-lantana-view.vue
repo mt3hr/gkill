@@ -31,21 +31,16 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { LantanaTextData } from '@/classes/lantana/lantana-text-data'
 import { ref, type Ref } from 'vue'
 
 import type { KyouViewEmits } from './kyou-view-emits'
-import KyouView from './kyou-view.vue'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import { UpdateLantanaRequest } from '@/classes/api/req_res/update-lantana-request'
-import router from '@/router'
 import moment from 'moment'
 import LantanaFlowersView from './lantana-flowers-view.vue'
 import { Lantana } from '@/classes/datas/lantana'
 import type { AddLantanaViewProps } from './add-lantana-view-props'
 import { AddLantanaRequest } from '@/classes/api/req_res/add-lantana-request'
-import { GkillAPI } from '@/classes/api/gkill-api'
 
 const edit_lantana_flowers = ref<InstanceType<typeof LantanaFlowersView> | null>(null);
 
@@ -60,11 +55,10 @@ const lantana: Ref<Lantana> = ref((() => {
 const mood: Ref<Number> = ref(lantana.value.mood)
 const related_date: Ref<string> = ref(moment().format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment().format("HH:mm:ss"))
-const show_kyou: Ref<boolean> = ref(false)
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    if (!lantana) {
+    if (!lantana.value) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "クライアントのデータが変です"

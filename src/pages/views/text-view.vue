@@ -25,14 +25,12 @@
     </v-row>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { TextViewProps } from './text-view-props'
-import { Text } from '@/classes/datas/text'
 import AttachedText from './attached-text.vue';
 import moment from 'moment';
 
-const props = defineProps<TextViewProps>()
+defineProps<TextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 function format_time(time: Date): string {

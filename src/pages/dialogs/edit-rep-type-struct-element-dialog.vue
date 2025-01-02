@@ -14,7 +14,7 @@ import type { EditRepTypeStructElementDialogProps } from './edit-rep-type-struct
 import EditRepTypeStructElementView from '../views/edit-rep-type-struct-element-view.vue'
 import { RepTypeStruct } from '@/classes/datas/config/rep-type-struct';
 
-const props = defineProps<EditRepTypeStructElementDialogProps>()
+defineProps<EditRepTypeStructElementDialogProps>()
 const emits = defineEmits<EditRepTypeStructElementDialogEmits>()
 defineExpose({ show, hide })
 

@@ -16,7 +16,7 @@
 <script setup lang="ts">
 import type { AttachedTimeIsPlaingProps } from './attached-time-is-plaing-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { computed, type Ref, ref } from 'vue'
+import { computed, ref } from 'vue'
 import AttachedTimeIsPlaingContextMenu from './attached-timeis-plaing-context-menu.vue'
 
 const context_menu = ref<InstanceType<typeof AttachedTimeIsPlaingContextMenu> | null>(null);

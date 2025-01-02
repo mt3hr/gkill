@@ -14,7 +14,7 @@ import AddNewRepStructElementView from '../views/add-new-rep-struct-element-view
 
 const add_new_rep_struct_element_view = ref<InstanceType<typeof AddNewRepStructElementView> | null>(null);
 
-const props = defineProps<AddNewRepStructElementDialogProps>()
+defineProps<AddNewRepStructElementDialogProps>()
 const emits = defineEmits<AddNewRepStructElementDialogEmits>()
 defineExpose({ show, hide })
 

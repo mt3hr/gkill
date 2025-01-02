@@ -14,7 +14,7 @@ import type { EditKFTLTemplateStructElementDialogProps } from './edit-kftl-templ
 import EditKFTLTemplateStructElementView from '../views/edit-kftl-template-struct-element-view.vue'
 import { KFTLTemplateStruct } from '@/classes/datas/config/kftl-template-struct';
 
-const props = defineProps<EditKFTLTemplateStructElementDialogProps>()
+defineProps<EditKFTLTemplateStructElementDialogProps>()
 const emits = defineEmits<EditKFTLTemplateStructElementDialogEmits>()
 defineExpose({ show, hide })
 

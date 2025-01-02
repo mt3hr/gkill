@@ -14,7 +14,7 @@ import AddNewDeviceStructElementView from '../views/add-new-device-struct-elemen
 
 const add_new_device_struct_element_view = ref<InstanceType<typeof AddNewDeviceStructElementView> | null>(null);
 
-const props = defineProps<AddNewDeviceStructElementDialogProps>()
+defineProps<AddNewDeviceStructElementDialogProps>()
 const emits = defineEmits<AddNewDeviceStructElementDialogEmits>()
 defineExpose({ show, hide })
 

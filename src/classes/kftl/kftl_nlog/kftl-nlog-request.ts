@@ -38,8 +38,8 @@ export class KFTLNlogRequest extends KFTLRequest {
             return errors
         }
         for (let i = 0; i < this.titles.length; i++) {
-            let memo = this.titles[i]
-            let amount = this.amounts[i]
+            const memo = this.titles[i]
+            const amount = this.amounts[i]
             if (memo == "" && amount == 0 && this.shop_name == "") {
                 const error = new GkillError()
                 error.error_code = "//TODO"

@@ -14,7 +14,7 @@ import type { EditDeviceStructElementDialogProps } from './edit-device-struct-el
 import EditDeviceStructElementView from '../views/edit-device-struct-element-view.vue'
 import { DeviceStruct } from '@/classes/datas/config/device-struct';
 
-const props = defineProps<EditDeviceStructElementDialogProps>()
+defineProps<EditDeviceStructElementDialogProps>()
 const emits = defineEmits<EditDeviceStructElementDialogEmits>()
 defineExpose({ show, hide })
 

@@ -15,7 +15,7 @@ import { computed, ref, type Ref } from 'vue';
 import type { TagStructContextMenuEmits } from './tag-struct-context-menu-emits';
 import type { TagStructContextMenuProps } from './tag-struct-context-menu-props';
 
-const props = defineProps<TagStructContextMenuProps>()
+defineProps<TagStructContextMenuProps>()
 const emits = defineEmits<TagStructContextMenuEmits>()
 defineExpose({ show, hide })
 

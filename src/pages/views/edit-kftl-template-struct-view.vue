@@ -65,7 +65,6 @@ import type { ApplicationConfig } from '@/classes/datas/config/application-confi
 import FoldableStruct from './foldable-struct.vue'
 import { KFTLTemplateStruct } from '@/classes/datas/config/kftl-template-struct'
 import type { FoldableStructModel } from './foldable-struct-model'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
 import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'

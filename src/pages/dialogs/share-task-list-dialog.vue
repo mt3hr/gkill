@@ -14,7 +14,7 @@ import type { ShareTaskListDialogProps } from './share-task-list-dialog-props'
 import ShareTaskListView from '../views/share-task-list-view.vue'
 import { ref, type Ref } from 'vue'
 
-const props = defineProps<ShareTaskListDialogProps>()
+defineProps<ShareTaskListDialogProps>()
 const emits = defineEmits<ShareTaskListDialogEmits>()
 defineExpose({ show, hide })
 

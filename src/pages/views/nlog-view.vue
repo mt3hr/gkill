@@ -44,10 +44,8 @@
 <script setup lang="ts">
 import type { NlogViewProps } from './nlog-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import type { Nlog } from '@/classes/datas/nlog'
-import { type Ref, ref } from 'vue'
+import { ref } from 'vue'
 import NlogContextMenu from './nlog-context-menu.vue'
-import type { Kyou } from '@/classes/datas/kyou'
 const context_menu = ref<InstanceType<typeof NlogContextMenu> | null>(null);
 
 const props = defineProps<NlogViewProps>()

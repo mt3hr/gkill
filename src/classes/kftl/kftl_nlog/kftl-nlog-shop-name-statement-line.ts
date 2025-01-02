@@ -3,7 +3,6 @@
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
-import { KFTLNlogAmountStatementLine } from './kftl-nlog-amount-statement-line'
 import type { KFTLNlogRequest } from './kftl-nlog-request'
 import { KFTLNlogTitleStatementLine } from './kftl-nlog-title-statement-line'
 

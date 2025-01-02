@@ -14,7 +14,7 @@ import type { ConfirmDeleteDeviceStructDialogEmits } from './confirm-delete-devi
 import type { ConfirmDeleteDeviceStructDialogProps } from './confirm-delete-device-struct-dialog-props.ts';
 import { DeviceStruct } from '@/classes/datas/config/device-struct';
 
-const props = defineProps<ConfirmDeleteDeviceStructDialogProps>()
+defineProps<ConfirmDeleteDeviceStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteDeviceStructDialogEmits>()
 defineExpose({ show, hide })
 

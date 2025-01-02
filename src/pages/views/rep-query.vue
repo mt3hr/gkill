@@ -14,7 +14,7 @@
             <v-tab key="detail">Detail</v-tab>
         </v-tabs>
         <v-window v-model="tab">
-            <v-window-item key="summary" eager="true">
+            <v-window-item key="summary" :eager="true">
                 <h2>Devices</h2>
                 <table class="devicelist">
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
@@ -36,7 +36,7 @@
                         @clicked_items="clicked_rep_types" ref="foldable_struct_rep_types" />
                 </table>
             </v-window-item>
-            <v-window-item key="detail" eager="true">
+            <v-window-item key="detail" :eager="true">
                 <h2>Reps</h2>
                 <table>
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
@@ -61,7 +61,6 @@ import type { ApplicationConfig } from '@/classes/datas/config/application-confi
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
-import type { RepStruct } from '@/classes/datas/config/rep-struct'
 
 const foldable_struct_reps = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const foldable_struct_devices = ref<InstanceType<typeof FoldableStruct> | null>(null)
@@ -135,7 +134,7 @@ watch(() => props.application_config, async () => {
     emits('inited')
 })
 
-watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
+watch(() => props.find_kyou_query, async (new_value: FindKyouQuery) => {
     loading.value = true
     cloned_query.value = new_value.clone()
     const reps = cloned_query.value.reps

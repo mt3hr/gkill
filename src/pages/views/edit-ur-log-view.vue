@@ -61,18 +61,14 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { computed, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { EditURLogViewProps } from './edit-ur-log-view-props'
-import { URLog } from '@/classes/datas/ur-log'
 import moment from 'moment'
-import { useDisplay } from 'vuetify'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateURLogRequest } from '@/classes/api/req_res/update-ur-log-request'
-import router from '@/router'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import type { Kyou } from '@/classes/datas/kyou'
 
 const props = defineProps<EditURLogViewProps>()

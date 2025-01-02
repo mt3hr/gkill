@@ -1,6 +1,5 @@
 'use strict'
 
-import { GkillAPI } from '@/classes/api/gkill-api'
 import type { KFTLRequestMap } from '../../kftl-request-map'
 import { KFTLStatementLine } from '../../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../../kftl-statement-line-context'

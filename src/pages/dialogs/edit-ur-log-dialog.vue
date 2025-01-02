@@ -11,13 +11,12 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { EditURLogDialogProps } from './edit-ur-log-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import EditURLogView from '../views/edit-ur-log-view.vue'
-import KyouView from '../views/kyou-view.vue'
 
-const props = defineProps<EditURLogDialogProps>()
+defineProps<EditURLogDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 

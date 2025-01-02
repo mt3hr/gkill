@@ -85,23 +85,13 @@
     </div>
 </template>
 <script setup lang="ts">
-import router from '@/router'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { Kyou } from '@/classes/datas/kyou'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
-import AggregateView from './aggregate-view.vue'
-import Dnote from './dnote.vue'
-import EndTimeIsPlaingDialog from '../dialogs/end-time-is-plaing-dialog.vue'
-import GPSLogMap from './gps-log-map.vue'
-import KyouCountCalendar from './kyou-count-calendar.vue'
 import KyouListView from './kyou-list-view.vue'
-import KyouView from './kyou-view.vue'
-import StartTimeIsDialog from '../dialogs/start-time-is-dialog.vue'
-import plaing_timeisQueryEditorSideBar from './rykv-query-editor-side-bar.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import type KftlDialog from '../dialogs/kftl-dialog.vue'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
@@ -160,7 +150,7 @@ watch(() => props.application_config, () => {
 })
 
 watch(() => focused_time.value, () => {
-    if (!kyou_list_views) {
+    if (!kyou_list_views.value) {
         return
     }
     const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any

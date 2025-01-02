@@ -1,6 +1,5 @@
 'use strict'
 
-import type { GkillAPIResponse } from '@/classes/api/gkill-api-response'
 import { KFTLRequest } from '../kftl-request'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { GkillError } from '@/classes/api/gkill-error'

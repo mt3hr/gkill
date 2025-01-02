@@ -12,11 +12,10 @@
 <script setup lang="ts">
 import type { DnoteNlogViewEmits } from './dnote-nlog-view-emits'
 import type { DnoteNlogViewProps } from './dnote-nlog-view-props'
-import { type Ref, ref, computed } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
-const props = defineProps<DnoteNlogViewProps>()
+defineProps<DnoteNlogViewProps>()
 const emits = defineEmits<DnoteNlogViewEmits>()
 </script>

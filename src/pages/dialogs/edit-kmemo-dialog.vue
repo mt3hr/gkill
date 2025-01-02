@@ -11,12 +11,12 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { EditKmemoDialogProps } from './edit-kmemo-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import EditKmemoView from '../views/edit-kmemo-view.vue'
 
-const props = defineProps<EditKmemoDialogProps>()
+defineProps<EditKmemoDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 

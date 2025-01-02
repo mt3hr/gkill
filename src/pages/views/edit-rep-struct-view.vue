@@ -54,17 +54,14 @@ import FoldableStruct from './foldable-struct.vue'
 import { RepStruct } from '@/classes/datas/config/rep-struct'
 import type { FoldableStructModel } from './foldable-struct-model'
 import { UpdateRepStructRequest } from '@/classes/api/req_res/update-rep-struct-request'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import type { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data'
 import RepStructContextMenu from './rep-struct-context-menu.vue'
 import ConfirmDeleteRepStructDialog from '../dialogs/confirm-delete-rep-struct-dialog.vue'
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null);
 const edit_rep_struct_element_dialog = ref<InstanceType<typeof EditRepStructElementDialog> | null>(null);
-const add_new_folder_dialog = ref<InstanceType<typeof AddNewFoloderDialog> | null>(null);
 const add_new_rep_struct_element_dialog = ref<InstanceType<typeof AddNewRepStructElementDialog> | null>(null);
 const rep_struct_context_menu = ref<InstanceType<typeof RepStructContextMenu> | null>(null);
 const confirm_delete_rep_struct_dialog = ref<InstanceType<typeof ConfirmDeleteRepStructDialog> | null>(null);

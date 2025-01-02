@@ -9,7 +9,7 @@
             </v-col>
         </v-row>
         <div>
-            <span v-for="type in aggregate_people.type">
+            <span v-for="type in aggregate_people.type" :key="type">
                 {{ type }}
             </span>
         </div>
@@ -20,8 +20,8 @@ import moment from 'moment';
 import type { AggregatePeopleViewProps } from './aggregate-people-view-props';
 import type { KyouViewEmits } from './kyou-view-emits';
 
-const props = defineProps<AggregatePeopleViewProps>()
-const emits = defineEmits<KyouViewEmits>()
+defineProps<AggregatePeopleViewProps>()
+defineEmits<KyouViewEmits>()
 
 function format_duration(duration_milli_second: number): string {
     let diff_str = ""

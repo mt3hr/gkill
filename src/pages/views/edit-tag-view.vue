@@ -39,10 +39,8 @@ import type { EditTagViewProps } from './edit-tag-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request';
-import router from '@/router';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import { GkillError } from '@/classes/api/gkill-error';
-import { GkillAPI } from '@/classes/api/gkill-api';
 import type { Tag } from '@/classes/datas/tag';
 
 const props = defineProps<EditTagViewProps>()

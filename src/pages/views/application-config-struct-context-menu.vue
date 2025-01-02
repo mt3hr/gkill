@@ -1,5 +1,5 @@
 <template>
-
+    <div></div>
 </template>
 <script lang="ts" setup>
 import type { ApplicationConfigStructContextMenuEmits } from './application-config-struct-context-menu-emits'

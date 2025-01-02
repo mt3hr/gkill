@@ -5,10 +5,10 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 )
 
-type GetTextHistoryByTextIDResponse struct {
+type GetNotificationHistoryByNotificationIDResponse struct {
 	Messages []*message.GkillMessage `json:"messages"`
 
 	Errors []*message.GkillError `json:"errors"`
 
-	TextHistories []*reps.Text `json:"text_histories"`
+	NotificationHistories []*reps.Notification `json:"notification_histories"`
 }
