@@ -145,7 +145,7 @@
                                 focused_column_index = index
                                 focused_kyous_list = match_kyous_list[index]
                                 const query = querys[index].clone()
-                                query.is_image_only_in_sidebar = is_image_only_view
+                                query.is_image_only = is_image_only_view
                                 querys[index] = query
                                 search(index, query, true).then(() => {
                                     const kyou_list_view = kyou_list_views.value[index] as any

@@ -1683,12 +1683,6 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 			targetReps = append(targetReps, rep)
 		}
 	}
-	if query.IsImageOnly != nil && *query.IsImageOnly {
-		targetReps = []Repository{}
-		for _, rep := range g.IDFKyouReps {
-			targetReps = append(targetReps, rep)
-		}
-	}
 	for _, rep := range targetReps {
 		wg.Add(1)
 		go func(rep Repository) {
