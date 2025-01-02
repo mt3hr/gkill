@@ -46,12 +46,10 @@
 <script lang="ts" setup>
 import type { AttachedTextContextMenuProps } from './attached-text-context-menu-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import type { Text } from '@/classes/datas/text'
 import { computed, type Ref, ref } from 'vue'
 import EditTextDialog from '../dialogs/edit-text-dialog.vue'
 import ConfirmDeleteTextDialog from '../dialogs/confirm-delete-text-dialog.vue'
 import TextHistoriesDialog from '../dialogs/text-histories-dialog.vue'
-import { InfoIdentifier } from '@/classes/datas/info-identifier'
 import { GkillMessage } from '@/classes/api/gkill-message'
 
 const edit_text_dialog = ref<InstanceType<typeof EditTextDialog> | null>(null);

@@ -133,6 +133,7 @@ export class Kyou extends InfoBase {
         try {
             awaitPromises.push(this.load_attached_tags())
             awaitPromises.push(this.load_attached_texts())
+            awaitPromises.push(this.load_attached_notifications())
             awaitPromises.push(this.load_attached_timeis())
             awaitPromises.push(this.load_attached_histories())
             return Promise.all(awaitPromises).then((errors_list) => {
@@ -181,7 +182,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.kmemo_histories.length; i++) {
             const kmemo = new Kmemo()
-            for (let key in res.kmemo_histories[i]) {
+            for (const key in res.kmemo_histories[i]) {
                 (kmemo as any)[key] = (res.kmemo_histories[i] as any)[key]
 
                 // 時刻はDate型に変換
@@ -223,7 +224,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.urlog_histories.length; i++) {
             const urlog = new URLog()
-            for (let key in res.urlog_histories[i]) {
+            for (const key in res.urlog_histories[i]) {
                 (urlog as any)[key] = (res.urlog_histories[i] as any)[key]
 
                 // 時刻はDate型に変換
@@ -265,7 +266,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.nlog_histories.length; i++) {
             const nlog = new Nlog()
-            for (let key in res.nlog_histories[i]) {
+            for (const key in res.nlog_histories[i]) {
                 (nlog as any)[key] = (res.nlog_histories[i] as any)[key]
 
                 // 時刻はDate型に変換
@@ -307,7 +308,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.timeis_histories.length; i++) {
             const timeis = new TimeIs()
-            for (let key in res.timeis_histories[i]) {
+            for (const key in res.timeis_histories[i]) {
                 (timeis as any)[key] = (res.timeis_histories[i] as any)[key]
 
                 // 時刻はDate型に変換
@@ -349,7 +350,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.mi_histories.length; i++) {
             const mi = new Mi()
-            for (let key in res.mi_histories[i]) {
+            for (const key in res.mi_histories[i]) {
                 (mi as any)[key] = (res.mi_histories[i] as any)[key]
 
                 // 時刻はDate型に変換
@@ -391,7 +392,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.lantana_histories.length; i++) {
             const lantana = new Lantana()
-            for (let key in res.lantana_histories[i]) {
+            for (const key in res.lantana_histories[i]) {
                 (lantana as any)[key] = (res.lantana_histories[i] as any)[key]
 
                 // 時刻はDate型に変換
@@ -433,7 +434,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.idf_kyou_histories.length; i++) {
             const idf_kyou = new IDFKyou()
-            for (let key in res.idf_kyou_histories[i]) {
+            for (const key in res.idf_kyou_histories[i]) {
                 (idf_kyou as any)[key] = (res.idf_kyou_histories[i] as any)[key]
 
                 // 時刻はDate型に変換
@@ -475,7 +476,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.git_commit_log_histories.length; i++) {
             const git_commit_log = new GitCommitLog()
-            for (let key in res.git_commit_log_histories[i]) {
+            for (const key in res.git_commit_log_histories[i]) {
                 (git_commit_log as any)[key] = (res.git_commit_log_histories[i] as any)[key]
 
                 // 時刻はDate型に変換
@@ -511,7 +512,7 @@ export class Kyou extends InfoBase {
         // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
         for (let i = 0; i < res.rekyou_histories.length; i++) {
             const rekyou = new ReKyou()
-            for (let key in res.rekyou_histories[i]) {
+            for (const key in res.rekyou_histories[i]) {
                 (rekyou as any)[key] = (res.rekyou_histories[i] as any)[key]
 
                 // 時刻はDate型に変換

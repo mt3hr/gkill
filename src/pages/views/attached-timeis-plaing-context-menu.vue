@@ -46,12 +46,10 @@
 <script lang="ts" setup>
 import type { AttachedTimeisPlaingContextMenuProps } from './attached-timeis-plaing-context-menu-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import type { TimeIs } from '@/classes/datas/time-is'
 import { computed, type Ref, ref, watch } from 'vue'
 import EditTimeIsDialog from '../dialogs/edit-time-is-dialog.vue'
 import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-idf-kyou-dialog.vue'
 import KyouHistoriesDialog from '../dialogs/kyou-histories-dialog.vue'
-import { InfoIdentifier } from '@/classes/datas/info-identifier'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'
 

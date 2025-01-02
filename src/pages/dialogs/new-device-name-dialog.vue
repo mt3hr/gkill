@@ -21,7 +21,7 @@ import { type Ref, ref } from 'vue'
 import type { NewDeviceNameDialogEmits } from './new-device-name-dialog-emits';
 import type { NewDeviceNameDialogProps } from './new-device-name-dialog-props';
 
-const props = defineProps<NewDeviceNameDialogProps>()
+defineProps<NewDeviceNameDialogProps>()
 const emits = defineEmits<NewDeviceNameDialogEmits>()
 defineExpose({ show, hide })
 

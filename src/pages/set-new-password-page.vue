@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar :height="app_title_bar_height" class="app_bar" app color="primary" flat>
+    <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" app color="primary" flat>
         <v-toolbar-title>gkill パスワード再設定</v-toolbar-title>
         <v-spacer />
         <span class="gkill_version">version: {{ gkill_version }}</span>
@@ -10,7 +10,7 @@
             @received_messages="write_messages" />
         <div class="alert_container">
             <v-slide-y-transition group>
-                <v-alert v-for="message in messages" theme="dark">
+                <v-alert v-for="message in messages" theme="dark" :key="message.id">
                     {{ message.message }}
                 </v-alert>
             </v-slide-y-transition>
@@ -44,10 +44,6 @@ async function resize_content(): Promise<void> {
     browser_url_bar_height.value = Number(element_height.value) - Number(actual_height.value)
     app_content_height.value = Number(element_height.value) - (Number(browser_url_bar_height.value) + Number(app_title_bar_height.value))
     app_content_width.value = window.innerWidth
-}
-
-async function handle_success_login(session_id: string): Promise<void> {
-    GkillAPI.get_instance().set_session_id(session_id)
 }
 
 const messages: Ref<Array<{ message: string, id: string, show_snackbar: boolean }>> = ref([])

@@ -30,7 +30,7 @@ import type { TagViewProps } from './tag-view-props'
 import moment from 'moment';
 import AttachedTag from './attached-tag.vue';
 
-const props = defineProps<TagViewProps>()
+defineProps<TagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 function format_time(time: Date): string {

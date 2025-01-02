@@ -12,7 +12,7 @@ import type { ConfirmGenerateTLSFilesDialogEmits } from './confirm-generate-tls-
 import type { ConfirmGenerateTLSFilesDialogProps } from './confirm-generate-tls-files-dialog-props'
 import ConfirmGenerateTLSFilesView from '../views/confirm-generate-tls-files-view.vue'
 
-const props = defineProps<ConfirmGenerateTLSFilesDialogProps>()
+defineProps<ConfirmGenerateTLSFilesDialogProps>()
 const emits = defineEmits<ConfirmGenerateTLSFilesDialogEmits>()
 defineExpose({ show, hide })
 

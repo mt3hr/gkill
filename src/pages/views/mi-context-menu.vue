@@ -10,6 +10,9 @@
             <v-list-item @click="show_confirm_rekyou_dialog()">
                 <v-list-item-title>リポスト</v-list-item-title>
             </v-list-item>
+            <v-list-item @click="show_add_notification_dialog()">
+                <v-list-item-title>通知追加</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="show_edit_mi_dialog()">
                 <v-list-item-title>編集</v-list-item-title>
             </v-list-item>
@@ -45,6 +48,13 @@
         @requested_reload_list="emits('requested_reload_list')"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)" ref="add_text_dialog" />
+    <AddNotificationDialog :application_config="application_config" :gkill_api="gkill_api"
+        :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
+        :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+        @requested_reload_list="emits('requested_reload_list')"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)" ref="add_notification_dialog" />
     <ConfirmDeleteKyouDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -74,15 +84,17 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import EditMiDialog from '../dialogs/edit-mi-dialog.vue'
 import AddTagDialog from '../dialogs/add-tag-dialog.vue'
 import AddTextDialog from '../dialogs/add-text-dialog.vue'
+import AddNotificationDialog from '../dialogs/add-notification-dialog.vue'
 import ConfirmReKyouDialog from '../dialogs/confirm-re-kyou-dialog.vue'
 import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-idf-kyou-dialog.vue'
-import { type ComputedRef, type Ref, computed, ref } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import KyouHistoriesDialog from '../dialogs/kyou-histories-dialog.vue'
 
 const edit_mi_dialog = ref<InstanceType<typeof EditMiDialog> | null>(null);
 const add_tag_dialog = ref<InstanceType<typeof AddTagDialog> | null>(null);
 const add_text_dialog = ref<InstanceType<typeof AddTextDialog> | null>(null);
+const add_notification_dialog = ref<InstanceType<typeof AddNotificationDialog> | null>(null);
 const confirm_delete_kyou_dialog = ref<InstanceType<typeof ConfirmDeleteKyouDialog> | null>(null);
 const confirm_rekyou_dialog = ref<InstanceType<typeof ConfirmReKyouDialog> | null>(null);
 const kyou_histories_dialog = ref<InstanceType<typeof KyouHistoriesDialog> | null>(null);
@@ -122,6 +134,10 @@ async function show_add_tag_dialog(): Promise<void> {
 
 async function show_add_text_dialog(): Promise<void> {
     add_text_dialog.value?.show()
+}
+
+async function show_add_notification_dialog(): Promise<void> {
+    add_notification_dialog.value?.show()
 }
 
 async function show_confirm_delete_kyou_dialog(): Promise<void> {

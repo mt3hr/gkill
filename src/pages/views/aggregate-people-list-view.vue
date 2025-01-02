@@ -15,7 +15,7 @@ import type { KyouViewEmits } from './kyou-view-emits';
 import type { AggregatePeopleListViewProps } from './aggregate-people-list-view-props';
 import AggregatePeopleView from './aggregate-people-view.vue';
 
-const props = defineProps<AggregatePeopleListViewProps>()
-const emits = defineEmits<KyouViewEmits>()
+defineProps<AggregatePeopleListViewProps>()
+defineEmits<KyouViewEmits>()
 </script>
 <style lang="css"></style>

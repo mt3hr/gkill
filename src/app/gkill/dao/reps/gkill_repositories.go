@@ -27,6 +27,8 @@ type GkillRepositories struct {
 
 	TextReps TextRepositories
 
+	NotificationReps NotificationRepositories
+
 	KmemoReps KmemoRepositories
 
 	URLogReps URLogRepositories
@@ -50,6 +52,8 @@ type GkillRepositories struct {
 	WriteTagRep TagRepository
 
 	WriteTextRep TextRepository
+
+	WriteNotificationRep NotificationRepository
 
 	WriteKmemoRep KmemoRepository
 
@@ -114,6 +118,12 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 		}
 	}
 	for _, rep := range g.TextReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.NotificationReps {
 		err := rep.Close(ctx)
 		if err != nil {
 			return err
@@ -419,12 +429,14 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	kyousCh := make(chan []*Kyou, len(g.Reps))
 	tagsCh := make(chan []*Tag, len(g.TagReps))
 	textsCh := make(chan []*Text, len(g.TextReps))
+	notificationsCh := make(chan []*Notification, len(g.NotificationReps))
 	rekyousCh := make(chan []*Kyou, len(g.ReKyouReps.ReKyouRepositories))
-	errch := make(chan error, len(g.Reps))
+	errch := make(chan error, len(g.Reps)+len(g.TagReps)+len(g.TextReps)+len(g.NotificationReps))
 	rekyouErrch := make(chan error, len(g.ReKyouReps.ReKyouRepositories))
 	defer close(kyousCh)
 	defer close(tagsCh)
 	defer close(textsCh)
+	defer close(notificationsCh)
 	defer close(errch)
 	defer close(rekyousCh)
 	defer close(rekyouErrch)
@@ -432,6 +444,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	allKyous := []*Kyou{}
 	allTags := []*Tag{}
 	allTexts := []*Text{}
+	allNotifications := []*Notification{}
 
 	// UpdateCache並列処理
 	for _, rep := range g.Reps {
@@ -520,6 +533,31 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 
 	wg.Wait()
 
+	// notificationを集める
+	for _, rep := range g.NotificationReps {
+		wg.Add(1)
+
+		go func(rep NotificationRepository) {
+			defer wg.Done()
+			repName, err := rep.GetRepName(ctx)
+			if err != nil {
+				err = fmt.Errorf("error at get rep name: %w", err)
+				errch <- err
+				return
+			}
+
+			reps := []string{repName}
+			notifications, err := rep.FindNotifications(ctx, &find.FindQuery{Reps: &reps})
+			if err != nil {
+				errch <- err
+				return
+			}
+			notificationsCh <- notifications
+		}(rep)
+	}
+
+	wg.Wait()
+
 	// エラー集約
 errloop:
 	for {
@@ -568,6 +606,17 @@ textsloop:
 		}
 	}
 
+	// notification集約
+notificationsloop:
+	for {
+		select {
+		case notifications := <-notificationsCh:
+			allNotifications = append(allNotifications, notifications...)
+		default:
+			break notificationsloop
+		}
+	}
+
 	// 最新のKyou, tag, textのみにする
 	latestKyousMap := map[string]*Kyou{}
 	for _, kyou := range allKyous {
@@ -599,8 +648,18 @@ textsloop:
 			latestTextsMap[text.ID] = text
 		}
 	}
+	latestNotificationsMap := map[string]*Notification{}
+	for _, notification := range allNotifications {
+		if existNotification, exist := latestNotificationsMap[notification.ID]; exist {
+			if notification.UpdateTime.After(existNotification.UpdateTime) {
+				latestNotificationsMap[notification.ID] = notification
+			}
+		} else {
+			latestNotificationsMap[notification.ID] = notification
+		}
+	}
 
-	// 最新のKyou, Tag, Textの状態をLatestDataRepositoryAddressにいれる
+	// 最新のKyou, Tag, Text, Notificationの状態をLatestDataRepositoryAddressにいれる
 	latestDataRepositoryAddresses := []*account_state.LatestDataRepositoryAddress{}
 	for _, kyou := range latestKyousMap {
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
@@ -626,6 +685,15 @@ textsloop:
 			TargetID:                 text.ID,
 			LatestDataRepositoryName: text.RepName,
 			DataUpdateTime:           text.UpdateTime,
+		}
+		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
+	}
+	for _, notification := range latestNotificationsMap {
+		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                notification.IsDeleted,
+			TargetID:                 notification.ID,
+			LatestDataRepositoryName: notification.RepName,
+			DataUpdateTime:           notification.UpdateTime,
 		}
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
@@ -1504,6 +1572,71 @@ loop:
 	return matchText, nil
 }
 
+func (g *GkillRepositories) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
+	matchNotification := &Notification{}
+	matchNotification = nil
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan *Notification, len(g.NotificationReps))
+	errch := make(chan error, len(g.NotificationReps))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range g.NotificationReps {
+		wg.Add(1)
+
+		go func(rep NotificationRepository) {
+			defer wg.Done()
+			matchNotificationInRep, err := rep.GetNotification(ctx, id, updateTime)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchNotificationInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at get notification: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// Notification集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchNotificationInRep := <-ch:
+			if matchNotificationInRep == nil {
+				continue loop
+			}
+			if matchNotification != nil {
+				if matchNotificationInRep.UpdateTime.Before(matchNotification.UpdateTime) {
+					matchNotification = matchNotificationInRep
+				}
+			} else {
+				matchNotification = matchNotificationInRep
+			}
+		default:
+			break loop
+		}
+	}
+
+	return matchNotification, nil
+}
+
 func (g *GkillRepositories) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
 	matchTexts := map[string]*Text{}
 	existErr := false
@@ -1582,6 +1715,84 @@ loop:
 	return textHistoriesList, nil
 }
 
+func (g *GkillRepositories) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
+	matchNotifications := map[string]*Notification{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*Notification, len(g.NotificationReps))
+	errch := make(chan error, len(g.NotificationReps))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range g.NotificationReps {
+		wg.Add(1)
+
+		go func(rep NotificationRepository) {
+			defer wg.Done()
+			matchNotificationsInRep, err := rep.GetNotificationsByTargetID(ctx, target_id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchNotificationsInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get text histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// Notification集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchNotificationsInRep := <-ch:
+			if matchNotificationsInRep == nil {
+				continue loop
+			}
+			for _, text := range matchNotificationsInRep {
+				if existNotification, exist := matchNotifications[text.ID]; exist {
+					if text.UpdateTime.After(existNotification.UpdateTime) {
+						matchNotifications[text.ID] = text
+					}
+				} else {
+					matchNotifications[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	textHistoriesList := []*Notification{}
+	for _, text := range matchNotifications {
+		if text == nil {
+			continue
+		}
+		textHistoriesList = append(textHistoriesList, text)
+	}
+
+	sort.Slice(textHistoriesList, func(i, j int) bool {
+		return textHistoriesList[i].UpdateTime.After(textHistoriesList[j].UpdateTime)
+	})
+
+	return textHistoriesList, nil
+}
+
 func (g *GkillRepositories) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
 	textHistories := map[string]*Text{}
 	existErr := false
@@ -1646,6 +1857,84 @@ loop:
 	}
 
 	textHistoriesList := []*Text{}
+	for _, text := range textHistories {
+		if text == nil {
+			continue
+		}
+		textHistoriesList = append(textHistoriesList, text)
+	}
+
+	sort.Slice(textHistoriesList, func(i, j int) bool {
+		return textHistoriesList[i].UpdateTime.After(textHistoriesList[j].UpdateTime)
+	})
+
+	return textHistoriesList, nil
+}
+
+func (g *GkillRepositories) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
+	textHistories := map[string]*Notification{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*Notification, len(g.NotificationReps))
+	errch := make(chan error, len(g.NotificationReps))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range g.NotificationReps {
+		wg.Add(1)
+
+		go func(rep NotificationRepository) {
+			defer wg.Done()
+			matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchNotificationsInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get text histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// Notification集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchNotificationsInRep := <-ch:
+			if matchNotificationsInRep == nil {
+				continue loop
+			}
+			for _, text := range matchNotificationsInRep {
+				if existNotification, exist := textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if text.UpdateTime.After(existNotification.UpdateTime) {
+						textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
+					}
+				} else {
+					textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	textHistoriesList := []*Notification{}
 	for _, text := range textHistories {
 		if text == nil {
 			continue

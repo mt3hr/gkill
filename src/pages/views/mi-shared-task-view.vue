@@ -3,7 +3,7 @@
         <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
             <v-progress-circular indeterminate color="primary" />
         </v-overlay>
-        <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
+        <v-app-bar :height="app_title_bar_height.toString().concat('px')" class="app_bar" color="primary" app flat>
             <v-toolbar-title> {{ share_title }} </v-toolbar-title>
         </v-app-bar>
         <v-main class="main" v-show="inited">
@@ -54,15 +54,14 @@
 import type { miSharedTaskViewEmits } from './mi-shared-task-view-emits'
 import type { miSharedTaskViewProps } from './mi-shared-task-view-props'
 
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, type Ref, ref } from 'vue'
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
-import { GkillAPI } from '@/classes/api/gkill-api'
+import { GkillAPI, GkillAPIForSharedMi } from '@/classes/api/gkill-api'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import KyouCountCalendar from './kyou-count-calendar.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GetSharedMiTasksRequest } from '@/classes/api/req_res/get-shared-mi-tasks-request'
-import { GkillAPIForSharedMi } from '@/classes/api/gkill-api-for-shared-mi'
 
 const props = defineProps<miSharedTaskViewProps>()
 const emits = defineEmits<miSharedTaskViewEmits>()
@@ -96,7 +95,7 @@ async function load_content(): Promise<void> {
     is_loading.value = false
 
     // GkillAPIForSharedMiを設定ここから
-    const gkill_api_for_shared_mi = GkillAPIForSharedMi.get_instance()
+    const gkill_api_for_shared_mi = GkillAPIForSharedMi.get_instance_for_share_mi()
     gkill_api_for_shared_mi.kyous = res.mi_kyous
     gkill_api_for_shared_mi.mis = res.mis
     gkill_api_for_shared_mi.tags = res.tags
@@ -131,7 +130,7 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
     }
 }
 
-load_content()
+nextTick(() => load_content())
 </script>
 <style lang="css">
 .mi_view_table {

@@ -15,9 +15,8 @@ import moment from 'moment';
 import type { KyouViewEmits } from './kyou-view-emits';
 import type { AggregateLocationViewProps } from './aggregate-location-view-props';
 
-
-const props = defineProps<AggregateLocationViewProps>()
-const emits = defineEmits<KyouViewEmits>()
+defineProps<AggregateLocationViewProps>()
+defineEmits<KyouViewEmits>()
 
 function format_duration(duration_milli_second: number): string {
     let diff_str = ""

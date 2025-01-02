@@ -25,7 +25,6 @@ import ShareTaskListLinkDialog from './share-task-list-link-dialog.vue'
 import ConfirmDeleteShareTaskListDialog from './confirm-delete-share-task-list-dialog.vue'
 import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info'
 import { DeleteShareMiTaskListInfosRequest } from '@/classes/api/req_res/delete-share-mi-task-list-infos-request'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetShareMiTaskListInfosRequest } from '@/classes/api/req_res/get-share-mi-task-list-infos-request'
 
 const share_task_list_link_dialog = ref<InstanceType<typeof ShareTaskListLinkDialog> | null>(null)

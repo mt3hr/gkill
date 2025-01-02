@@ -16,7 +16,7 @@ export class KFTLMiEstimateEndTimeStatementLine extends KFTLStatementLine {
     }
 
     async apply_this_line_to_request_map(request_map: KFTLRequestMap): Promise<void> {
-        let request = request_map.get(this.get_context().get_this_statement_line_target_id()) as unknown as KFTLMiRequest
+        const request = request_map.get(this.get_context().get_this_statement_line_target_id()) as unknown as KFTLMiRequest
         const time = moment(this.get_context().get_this_statement_line_text().replace("？", "")).toDate()
         if (!Number.isNaN(time.getTime())) {
             request.set_estimate_end_time(time)

@@ -11,12 +11,12 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { EditMiDialogProps } from './edit-mi-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import EditMiView from '../views/edit-mi-view.vue'
 
-const props = defineProps<EditMiDialogProps>()
+defineProps<EditMiDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 

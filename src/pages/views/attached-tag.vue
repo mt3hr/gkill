@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import type { AttachedTagProps } from './attached-tag-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { computed, type Ref, ref } from 'vue'
+import { computed, ref } from 'vue'
 import AttachedTagContextMenu from './attached-tag-context-menu.vue'
 
 const context_menu = ref<InstanceType<typeof AttachedTagContextMenu> | null>(null);

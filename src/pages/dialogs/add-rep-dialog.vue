@@ -13,7 +13,7 @@ import type { AddRepDialogProps } from './add-rep-dialog-props'
 import AddRepView from '../views/add-rep-view.vue'
 import { Account } from '@/classes/datas/config/account';
 
-const props = defineProps<AddRepDialogProps>()
+defineProps<AddRepDialogProps>()
 const emits = defineEmits<AddRepDialogEmits>()
 defineExpose({ show, hide })
 

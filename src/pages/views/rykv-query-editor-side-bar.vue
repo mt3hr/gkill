@@ -63,7 +63,6 @@ import TimeIsQuery from './time-is-query.vue'
 import type { rykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-emits'
 import type { rykvQueryEditorSidebarProps } from './rykv-query-editor-sidebar-props'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
-import { GkillAPI } from '@/classes/api/gkill-api'
 import { deepEquals } from '@/classes/deep-equals'
 
 const sidebar_header = ref<InstanceType<typeof SidebarHeader> | null>(null);

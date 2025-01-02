@@ -38,7 +38,7 @@ type ServerConfig struct {
 
 	Accounts []*account.Account `json:"accounts"`
 
-	GkillNotificationPublicKey string `json:"mi_notification_public_key"`
+	GkillNotificationPublicKey string `json:"gkill_notification_public_key"`
 
-	MiNotificationPrivateKey string `json:"mi_notification_private_key"`
+	GkillNotificationPrivateKey string `json:"gkill_notification_private_key"`
 }

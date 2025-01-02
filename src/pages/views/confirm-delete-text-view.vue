@@ -40,8 +40,6 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import { computed, type Ref, ref } from 'vue'
 import { UpdateTextRequest } from '@/classes/api/req_res/update-text-request';
 import KyouView from './kyou-view.vue'
-import router from '@/router';
-import { GkillAPI } from '@/classes/api/gkill-api';
 import type { InfoIdentifier } from '@/classes/datas/info-identifier';
 
 const props = defineProps<ConfirmDeleteTextViewProps>()

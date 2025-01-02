@@ -22,7 +22,6 @@ import { computed, nextTick, ref, watch, type Ref } from 'vue';
 import { GoogleMap, Polyline, Marker } from 'vue3-google-map';
 import type { GPSLogMapEmits } from './gps-log-map-emits'
 import type { GPSLogMapProps } from './gps-log-map-props'
-import { GkillAPI } from '@/classes/api/gkill-api';
 import { GetGPSLogRequest } from '@/classes/api/req_res/get-gps-log-request';
 import type { GPSLog } from '@/classes/datas/gps-log';
 const gmap = ref<InstanceType<typeof GoogleMap> | null>(null);
@@ -82,7 +81,7 @@ watch(() => slider_model.value, () => update_marker_by_time())
 // datetimeが更新されたとき、sliderの値を更新し、マーカーの位置を更新する。
 function update_time_slider_max_value(): void {
     let seconds = 0
-    for (let date_str = start_date_str.value; !end_date_str || date_str !== end_date_str.value; date_str = moment(date_str).add(1, 'days').format("YYYY-MM-DD")) {
+    for (let date_str = start_date_str.value; !end_date_str.value || date_str !== end_date_str.value; date_str = moment(date_str).add(1, 'days').format("YYYY-MM-DD")) {
         seconds += 86400
     }
     seconds += 86400

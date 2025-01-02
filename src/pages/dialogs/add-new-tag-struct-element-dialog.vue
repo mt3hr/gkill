@@ -14,7 +14,7 @@ import AddNewTagStructElementView from '../views/add-new-tag-struct-element-view
 
 const add_new_tag_struct_element_view = ref<InstanceType<typeof AddNewTagStructElementView> | null>(null);
 
-const props = defineProps<AddNewTagStructElementDialogProps>()
+defineProps<AddNewTagStructElementDialogProps>()
 const emits = defineEmits<AddNewTagStructElementDialogEmits>()
 defineExpose({ show, hide })
 

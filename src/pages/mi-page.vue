@@ -11,7 +11,7 @@
             ref="application_config_dialog" />
         <div class="alert_container">
             <v-slide-y-transition group>
-                <v-alert v-for="message in messages" theme="dark">
+                <v-alert v-for="message in messages" theme="dark" :key="message.id">
                     {{ message.message }}
                 </v-alert>
             </v-slide-y-transition>
@@ -21,7 +21,7 @@
 
 <script lang="ts" setup>
 'use strict'
-import { computed, ref, type Ref } from 'vue'
+import { computed, nextTick, ref, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
@@ -30,6 +30,8 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import MiView from './views/mi-view.vue'
+import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
+import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);
 
@@ -37,14 +39,12 @@ const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
 const browser_url_bar_height: Ref<Number> = ref(0)
 const app_title_bar_height: Ref<Number> = ref(50)
-const app_title_bar_height_px = computed(() => app_title_bar_height.value.toString().concat("px"))
 const gkill_api = computed(() => GkillAPI.get_instance())
 const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 
 const is_show_application_config_dialog: Ref<boolean> = ref(false)
-const last_added_tag: Ref<string> = ref("")
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
@@ -128,6 +128,79 @@ window.addEventListener('resize', () => {
 
 resize_content()
 load_application_config()
+
+// プッシュ通知登録用
+async function subscribe(vapidPublicKey: string) {
+    if (!vapidPublicKey || vapidPublicKey === "") {
+        return
+    }
+    await navigator.serviceWorker.ready
+        .then(function (registration) {
+            return registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+            });
+        })
+        .then(async function (subscription) {
+            const req = new RegisterGkillNotificationRequest()
+            req.session_id = GkillAPI.get_gkill_api().get_session_id()
+            req.subscription = JSON.stringify(subscription)
+            req.public_key = vapidPublicKey
+            const res = await GkillAPI.get_gkill_api().register_gkill_notification(req)
+            if (res.errors && res.errors.length !== 0) {
+                write_errors(res.errors)
+                return
+            }
+            if (res.messages && res.messages.length !== 0) {
+                write_messages(res.messages)
+            }
+        })
+        .catch(err => console.error(err));
+}
+// プッシュ通知登録用
+function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+nextTick(() => register_mi_task_notification())
+
+// プッシュ通知登録用
+async function register_mi_task_notification(): Promise<void> {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register(GkillAPI.get_gkill_api().gkill_webpush_service_worker_js_address);
+        await navigator.serviceWorker.ready
+            .then(function (registration) {
+                return registration.pushManager.getSubscription();
+            })
+            .then(async function (subscription) {
+                if (!subscription) {
+                    const req = new GetGkillNotificationPublicKeyRequest()
+                    req.session_id = GkillAPI.get_gkill_api().get_session_id()
+                    const res = await GkillAPI.get_gkill_api().get_gkill_notification_public_key(req)
+                    if (res.errors && res.errors.length !== 0) {
+                        write_errors(res.errors)
+                        return
+                    }
+                    if (res.messages && res.messages.length !== 0) {
+                        write_messages(res.messages)
+                    }
+                    subscribe(res.gkill_notification_public_key)
+                } else {
+                    console.log(
+                        JSON.stringify({
+                            subscription: subscription,
+                        })
+                    )
+                }
+            })
+    }
+}
+
 </script>
 <style lang="css">
 /* 不要なスクロールバーを消す */

@@ -13,7 +13,6 @@ import type { ServerConfigDialogEmits } from './server-config-dialog-emits'
 import type { ServerConfigDialogProps } from './server-config-dialog-props'
 import ServerConfigView from '../views/server-config-view.vue'
 import { ServerConfig } from '@/classes/datas/config/server-config';
-import { GkillAPI } from '@/classes/api/gkill-api';
 import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-configs-request';
 
 const props = defineProps<ServerConfigDialogProps>()

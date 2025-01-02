@@ -22,7 +22,7 @@
             <v-col cols="auto">
                 <span>
                     <select class="select" v-model="mi_board_name">
-                        <option v-for="board_name, index in mi_board_names">{{ board_name }}</option>
+                        <option v-for="board_name, index in mi_board_names" :key="index">{{ board_name }}</option>
                     </select>
                 </span>
             </v-col>
@@ -90,16 +90,12 @@ import type { AddMiViewProps } from './add-mi-view-props'
 import { type Ref, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { Mi } from '@/classes/datas/mi'
-import KyouView from './kyou-view.vue'
 import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 import moment from 'moment'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
-import router from '@/router'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
-import { GkillAPI } from '@/classes/api/gkill-api'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 
@@ -107,17 +103,16 @@ const props = defineProps<AddMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const mi: Ref<Mi> = ref(new Mi())
-const show_kyou: Ref<boolean> = ref(false)
 const mi_board_names: Ref<Array<string>> = ref(new Array())
 
-const mi_title: Ref<string> = ref(mi ? mi.value.title : "")
+const mi_title: Ref<string> = ref(mi.value ? mi.value.title : "")
 const mi_board_name: Ref<string> = ref(props.application_config.mi_default_board !== "" ? props.application_config.mi_default_board : "Inbox")
-const mi_estimate_start_date: Ref<string> = ref(mi && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("YYYY-MM-DD") : "")
-const mi_estimate_start_time: Ref<string> = ref(mi && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("HH:mm:ss") : "")
-const mi_estimate_end_date: Ref<string> = ref(mi && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("YYYY-MM-DD") : "")
-const mi_estimate_end_time: Ref<string> = ref(mi && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("HH:mm:ss") : "")
-const mi_limit_date: Ref<string> = ref(mi && mi.value.limit_time ? moment(mi.value.limit_time).format("YYYY-MM-DD") : "")
-const mi_limit_time: Ref<string> = ref(mi && mi.value.limit_time ? moment(mi.value.limit_time).format("HH:mm:ss") : "")
+const mi_estimate_start_date: Ref<string> = ref(mi.value && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("YYYY-MM-DD") : "")
+const mi_estimate_start_time: Ref<string> = ref(mi.value && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("HH:mm:ss") : "")
+const mi_estimate_end_date: Ref<string> = ref(mi.value && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("YYYY-MM-DD") : "")
+const mi_estimate_end_time: Ref<string> = ref(mi.value && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("HH:mm:ss") : "")
+const mi_limit_date: Ref<string> = ref(mi.value && mi.value.limit_time ? moment(mi.value.limit_time).format("YYYY-MM-DD") : "")
+const mi_limit_time: Ref<string> = ref(mi.value && mi.value.limit_time ? moment(mi.value.limit_time).format("HH:mm:ss") : "")
 
 watch(() => props.application_config, () => load_mi_board_names)
 load_mi_board_names()
@@ -179,17 +174,17 @@ function now_to_limit_date_time(): void {
 function reset(): void {
     mi_title.value = mi.value.title
     mi_board_name.value = props.application_config.mi_default_board
-    mi_estimate_start_date.value = mi && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("YYYY-MM-DD") : ""
-    mi_estimate_start_time.value = mi && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("HH:mm:ss") : ""
-    mi_estimate_end_date.value = mi && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("YYYY-MM-DD") : ""
-    mi_estimate_end_time.value = mi && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("HH:mm:ss") : ""
-    mi_limit_date.value = mi && mi.value.limit_time ? moment(mi.value.limit_time).format("YYYY-MM-DD") : ""
-    mi_limit_time.value = mi && mi.value.limit_time ? moment(mi.value.limit_time).format("HH:mm:ss") : ""
+    mi_estimate_start_date.value = mi.value && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("YYYY-MM-DD") : ""
+    mi_estimate_start_time.value = mi.value && mi.value.estimate_start_time ? moment(mi.value.estimate_start_time).format("HH:mm:ss") : ""
+    mi_estimate_end_date.value = mi.value && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("YYYY-MM-DD") : ""
+    mi_estimate_end_time.value = mi.value && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("HH:mm:ss") : ""
+    mi_limit_date.value = mi.value && mi.value.limit_time ? moment(mi.value.limit_time).format("YYYY-MM-DD") : ""
+    mi_limit_time.value = mi.value && mi.value.limit_time ? moment(mi.value.limit_time).format("HH:mm:ss") : ""
 }
 
 async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    if (!mi) {
+    if (!mi.value) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "クライアントのデータが変です"
@@ -199,7 +194,7 @@ async function save(): Promise<void> {
         return
     }
 
-    // 開始日時　片方だけ入力されていたらエラーチェック
+    // 開始日時 片方だけ入力されていたらエラーチェック
     if (mi_estimate_start_date.value === "" || mi_estimate_start_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
         if ((mi_estimate_start_date.value === "" && mi_estimate_start_time.value !== "") ||
             (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
@@ -213,7 +208,7 @@ async function save(): Promise<void> {
         }
     }
 
-    // 終了日時　片方だけ入力されていたらエラーチェック
+    // 終了日時 片方だけ入力されていたらエラーチェック
     if (mi_estimate_end_date.value === "" || mi_estimate_end_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
         if ((mi_estimate_end_date.value === "" && mi_estimate_end_time.value !== "") ||
             (mi_estimate_end_date.value !== "" && mi_estimate_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
@@ -227,7 +222,7 @@ async function save(): Promise<void> {
         }
     }
 
-    // 期限日時　片方だけ入力されていたらエラーチェック
+    // 期限日時 片方だけ入力されていたらエラーチェック
     if (mi_limit_date.value === "" || mi_limit_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
         if ((mi_limit_date.value === "" && mi_limit_time.value !== "") ||
             (mi_limit_date.value !== "" && mi_limit_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力

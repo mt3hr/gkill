@@ -17,6 +17,6 @@
 import type { ConfirmDeleteKFTLTemplateStructViewProps } from './confirm-delete-kftl_template-struct-view-props.ts';
 import type { ConfirmDeleteKFTLTemplateStructViewEmits } from './confirm-delete-kftl_template-struct-view-emits.ts';
 
-const props = defineProps<ConfirmDeleteKFTLTemplateStructViewProps>()
+defineProps<ConfirmDeleteKFTLTemplateStructViewProps>()
 const emits = defineEmits<ConfirmDeleteKFTLTemplateStructViewEmits>()
 </script>

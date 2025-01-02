@@ -17,9 +17,8 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { ref, type Ref } from 'vue'
+import { ref } from 'vue'
 import GitCommitLogContextMenu from './git-commit-log-context-menu.vue'
-import type { GitCommitLog } from '@/classes/datas/git-commit-log'
 import type { GitCommitLogViewProps } from './git-commit-log-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { Kyou } from '@/classes/datas/kyou'

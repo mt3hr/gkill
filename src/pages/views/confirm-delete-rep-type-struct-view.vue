@@ -16,6 +16,6 @@
 import type { ConfirmDeleteRepTypeStructViewProps } from './confirm-delete-rep-type-struct-view-props';
 import type { ConfirmDeleteRepTypeStructViewEmits } from './confirm-delete-rep-type-struct-view-emits';
 
-const props = defineProps<ConfirmDeleteRepTypeStructViewProps>()
+defineProps<ConfirmDeleteRepTypeStructViewProps>()
 const emits = defineEmits<ConfirmDeleteRepTypeStructViewEmits>()
 </script>

@@ -122,7 +122,7 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 			UploadSizeLimitMonth: -1,
 			UserDataDirectory:    gkill_options.DataDirectoryDefault,
 		}
-		serverConfig.MiNotificationPrivateKey, serverConfig.GkillNotificationPublicKey, err = webpush.GenerateVAPIDKeys()
+		serverConfig.GkillNotificationPrivateKey, serverConfig.GkillNotificationPublicKey, err = webpush.GenerateVAPIDKeys()
 		if err != nil {
 			err = fmt.Errorf("error at generate vapid keys: %w", err)
 			return nil, err
@@ -178,6 +178,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.AddTextAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddText(w, r)
 	}).Methods(g.APIAddress.AddTextMethod)
+	router.HandleFunc(g.APIAddress.AddNotificationAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleAddNotification(w, r)
+	}).Methods(g.APIAddress.AddNotificationMethod)
 	router.HandleFunc(g.APIAddress.AddKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddKmemo(w, r)
 	}).Methods(g.APIAddress.AddKmemoMethod)
@@ -205,6 +208,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.UpdateTextAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateText(w, r)
 	}).Methods(g.APIAddress.UpdateTextMethod)
+	router.HandleFunc(g.APIAddress.UpdateNotificationAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleUpdateNotification(w, r)
+	}).Methods(g.APIAddress.UpdateNotificationMethod)
 	router.HandleFunc(g.APIAddress.UpdateKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateKmemo(w, r)
 	}).Methods(g.APIAddress.UpdateKmemoMethod)
@@ -283,9 +289,15 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetTextsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetTextsByTargetID(w, r)
 	}).Methods(g.APIAddress.GetTextsByTargetIDMethod)
+	router.HandleFunc(g.APIAddress.GetNotificationsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleGetNotificationsByTargetID(w, r)
+	}).Methods(g.APIAddress.GetNotificationsByTargetIDMethod)
 	router.HandleFunc(g.APIAddress.GetTextHistoriesByTextIDAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetTextHistoriesByTextID(w, r)
 	}).Methods(g.APIAddress.GetTextHistoriesByTagIDMethod)
+	router.HandleFunc(g.APIAddress.GetNotificationHistoriesByNotificationIDAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleGetNotificationHistoriesByNotificationID(w, r)
+	}).Methods(g.APIAddress.GetNotificationHistoriesByTagIDMethod)
 	router.HandleFunc(g.APIAddress.GetApplicationConfigAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetApplicationConfig(w, r)
 	}).Methods(g.APIAddress.GetApplicationConfigMethod)
@@ -370,6 +382,14 @@ func (g *GkillServerAPI) Serve() error {
 	if err != nil {
 		return err
 	}
+	webpushServiceWorkerJS, err := fs.Sub(htmlFS, "embed/html/gkill-webpush-service-worker.js")
+	if err != nil {
+		return err
+	}
+	router.PathPrefix(g.APIAddress.GkillWebpushServiceWorkerJsAddress).Handler(http.StripPrefix(g.APIAddress.GkillWebpushServiceWorkerJsAddress,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.FileServer(http.FS(webpushServiceWorkerJS)).ServeHTTP(w, r)
+		})))
 	router.PathPrefix("/rykv").Handler(http.StripPrefix("/rykv",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
@@ -1141,6 +1161,152 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddTextSuccessMessage,
 		Message:     "テキストを追加しました",
+	})
+}
+
+func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.AddNotificationRequest{}
+	response := &req_res.AddNotificationResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse add notification response to json: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidAddNotificationResponseDataError,
+				ErrorMessage: "通知追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse add notification request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidAddNotificationRequestDataError,
+			ErrorMessage: "通知追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "通知追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// 対象が存在する場合はエラー
+	existNotification, err := repositories.GetNotification(r.Context(), request.Notification.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if existNotification != nil {
+		err = fmt.Errorf("exist notification id = %s", request.Notification.ID)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AleadyExistNotificationError,
+			ErrorMessage: "通知追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	err = repositories.WriteNotificationRep.AddNotificationInfo(r.Context(), request.Notification)
+	if err != nil {
+		err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddNotificationError,
+			ErrorMessage: "通知追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		IsDeleted:                request.Notification.IsDeleted,
+		TargetID:                 request.Notification.ID,
+		DataUpdateTime:           request.Notification.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	notification, err := repositories.GetNotification(r.Context(), request.Notification.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.AddedNotification = notification
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.AddNotificationSuccessMessage,
+		Message:     "通知を追加しました",
 	})
 }
 
@@ -2510,6 +2676,165 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateTextSuccessMessage,
 		Message:     "テキストを更新しました",
+	})
+}
+
+func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.UpdateNotificationRequest{}
+	response := &req_res.UpdateNotificationResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse update notification response to json: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidUpdateNotificationResponseDataError,
+				ErrorMessage: "通知更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse update notification request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateNotificationRequestDataError,
+			ErrorMessage: "通知更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "通知更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// すでに存在する場合はエラー
+	_, err = repositories.GetNotification(r.Context(), request.Notification.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	err = repositories.WriteNotificationRep.AddNotificationInfo(r.Context(), request.Notification)
+	if err != nil {
+		err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddNotificationError,
+			ErrorMessage: "通知更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		IsDeleted:                request.Notification.IsDeleted,
+		TargetID:                 request.Notification.ID,
+		DataUpdateTime:           request.Notification.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	notification, err := repositories.GetNotification(r.Context(), request.Notification.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// 対象が存在しない場合はエラー
+	existNotification, err := repositories.GetNotification(r.Context(), request.Notification.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if existNotification == nil {
+		err = fmt.Errorf("not exist notification id = %s", request.Notification.ID)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.NotFoundNotificationError,
+			ErrorMessage: "通知更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.UpdatedNotification = notification
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.UpdateNotificationSuccessMessage,
+		Message:     "通知を更新しました",
 	})
 }
 
@@ -5313,6 +5638,89 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 	})
 }
 
+func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.GetNotificationsByTargetIDRequest{}
+	response := &req_res.GetNotificationsByTargetIDResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse get notifications by target id response to json: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidGetNotificationsByTargetIDResponseDataError,
+				ErrorMessage: "通知取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse get notifications by target id request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetNotificationsByTargetIDRequestDataError,
+			ErrorMessage: "通知取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "通知取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	notifications, err := repositories.GetNotificationsByTargetID(r.Context(), request.TargetID)
+	if err != nil {
+		err = fmt.Errorf("error at get notifications by target id user id = %s device = %s target id = %s: %w", userID, device, request.TargetID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationsByTargetIDError,
+			ErrorMessage: "通知取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.Notifications = notifications
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.GetNotificationsByTargetIDSuccessMessage,
+		Message:     "通知取得完了",
+	})
+}
+
 func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTextHistoryByTextIDRequest{}
@@ -5402,6 +5810,98 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetTextHistoriesByTextIDSuccessMessage,
 		Message:     "テキスト取得完了",
+	})
+}
+
+func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.GetNotificationHistoryByNotificationIDRequest{}
+	response := &req_res.GetNotificationHistoryByNotificationIDResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse get notification histories by notification id response to json: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidGetNotificationHistoriesByNotificationIDResponseDataError,
+				ErrorMessage: "通知取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse get notification histories by notification id request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetNotificationHistoriesByNotificationIDRequestDataError,
+			ErrorMessage: "通知取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "通知取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// UpdateTimeが指定されていれば一致するものを、そうでなければIDが一致する履歴全部を取得する
+	notifications := []*reps.Notification{}
+	if request.UpdateTime != nil {
+		notification := &reps.Notification{}
+		notification, err = repositories.GetNotification(r.Context(), request.ID, request.UpdateTime)
+		notifications = []*reps.Notification{notification}
+	} else {
+		notifications, err = repositories.GetNotificationHistories(r.Context(), request.ID)
+	}
+
+	if err != nil {
+		err = fmt.Errorf("error at get notification histories by notification id user id = %s device = %s target id = %s: %w", userID, device, request.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationHistoriesByNotificationIDError,
+			ErrorMessage: "通知取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.NotificationHistories = notifications
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.GetNotificationHistoriesByNotificationIDSuccessMessage,
+		Message:     "通知取得完了",
 	})
 }
 
@@ -7154,8 +7654,8 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 
 	// mi通知用キーが空のものは登録する
 	for _, serverConfig := range request.ServerConfigs {
-		if serverConfig.MiNotificationPrivateKey == "" {
-			serverConfig.MiNotificationPrivateKey, serverConfig.GkillNotificationPublicKey, err = webpush.GenerateVAPIDKeys()
+		if serverConfig.GkillNotificationPrivateKey == "" {
+			serverConfig.GkillNotificationPrivateKey, serverConfig.GkillNotificationPublicKey, err = webpush.GenerateVAPIDKeys()
 			if err != nil {
 				err = fmt.Errorf("error at generate vapid keys: %w", err)
 
@@ -8693,6 +9193,7 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 	repTypeFileNameMap["lantana"] = "Lantana.db"
 	repTypeFileNameMap["tag"] = "Tag.db"
 	repTypeFileNameMap["text"] = "Text.db"
+	repTypeFileNameMap["notification"] = "Notification.db"
 	repTypeFileNameMap["rekyou"] = "ReKyou.db"
 
 	for repType, repFileName := range repTypeFileNameMap {

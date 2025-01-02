@@ -11,12 +11,12 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { type Ref, ref, watch } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { EditNlogDialogProps } from './edit-nlog-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import EditNlogView from '../views/edit-nlog-view.vue'
 
-const props = defineProps<EditNlogDialogProps>()
+defineProps<EditNlogDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 

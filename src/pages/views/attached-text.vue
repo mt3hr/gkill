@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import type { AttachedTextProps } from './attached-text-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { computed, type Ref, ref } from 'vue'
+import { computed, ref } from 'vue'
 import AttachedTextContextMenu from './attached-text-context-menu.vue'
 
 const context_menu = ref<InstanceType<typeof AttachedTextContextMenu> | null>(null);
@@ -56,7 +56,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     padding: 8px;
 }
 
-.highlighted_text>* {
+.highlighted_text {
     background-color: lightgreen;
     border: dashed 1px;
     margin: 8px;
