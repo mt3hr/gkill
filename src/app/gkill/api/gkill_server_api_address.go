@@ -133,6 +133,10 @@ type GkillServerAPIAddress struct {
 
 	GetRepositoriesAddress string
 
+	GetGkillNotificationPublicKeyAddress string
+
+	RegisterGkillNotificationAddress string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -264,6 +268,10 @@ type GkillServerAPIAddress struct {
 	GetMiSharedTasksMethod string
 
 	GetRepositoriesMethod string
+
+	GetGkillNotificationPublicKeyMethod string
+
+	RegisterGkillNotificationMethod string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -335,6 +343,8 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.DeleteShareMiTaskListInfosAddress = "/api/delete_share_mi_task_list_infos"
 	gkillAPIAddress.GetMiSharedTasksAddress = "/api/get_mi_shared_tasks"
 	gkillAPIAddress.GetRepositoriesAddress = "/api/get_repositories"
+	gkillAPIAddress.GetGkillNotificationPublicKeyAddress = "/api/get_gkill_notification_public_key"
+	gkillAPIAddress.RegisterGkillNotificationAddress = "/api/register_gkill_notification"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
@@ -401,6 +411,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.DeleteShareMiTaskListInfosMethod = "POST"
 	gkillAPIAddress.GetMiSharedTasksMethod = "POST"
 	gkillAPIAddress.GetRepositoriesMethod = "POST"
-
+	gkillAPIAddress.GetGkillNotificationPublicKeyAddress = "POST"
+	gkillAPIAddress.RegisterGkillNotificationAddress = "POST"
 	return gkillAPIAddress
 }
