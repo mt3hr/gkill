@@ -62,7 +62,7 @@ export abstract class InfoBase {
         let errors = new Array<GkillError>()
 
         const application_config = GkillAPI.get_gkill_api().get_saved_application_config()
-        if(!application_config) {
+        if (!application_config) {
             const error = new GkillError()
             error.error_code = "//TODO"
             error.error_message = "設定読込が完了していません"
@@ -89,7 +89,7 @@ export abstract class InfoBase {
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
-        for(let i = 0; i < res.kyous.length; i++) {
+        for (let i = 0; i < res.kyous.length; i++) {
             await res.kyous[i].load_typed_timeis()
         }
         this.attached_timeis_kyou = res.kyous
@@ -97,11 +97,17 @@ export abstract class InfoBase {
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
-        let errors = new Array<GkillError>()
-        errors = errors.concat(await this.load_attached_tags())
-        errors = errors.concat(await this.load_attached_texts())
-        errors = errors.concat(await this.load_attached_timeis())
-        return errors
+        const awaitPromises = new Array<Promise<any>>()
+        awaitPromises.push(this.load_attached_tags())
+        awaitPromises.push(this.load_attached_texts())
+        awaitPromises.push(this.load_attached_timeis())
+        return Promise.all(awaitPromises).then((errors_list) => {
+            const errors = new Array<GkillError>()
+            errors_list.forEach(e => {
+                errors.push(...e)
+            })
+            return errors
+        })
     }
 
     async clear_attached_tags(): Promise<Array<GkillError>> {

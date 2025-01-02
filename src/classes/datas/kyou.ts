@@ -57,12 +57,18 @@ export class Kyou extends InfoBase {
     }
 
     async load_all(): Promise<Array<GkillError>> {
+        const awaitPromises = new Array<Promise<any>>()
         try {
-            let errors = new Array<GkillError>()
-            errors = errors.concat(await this.load_typed_datas())
-            errors = errors.concat(await this.load_attached_datas())
-            errors = errors.concat(await this.load_attached_histories())
-            return errors
+            awaitPromises.push(this.load_typed_datas())
+            awaitPromises.push(this.load_attached_datas())
+            awaitPromises.push(this.load_attached_histories())
+            return Promise.all(awaitPromises).then((errors_list) => {
+                const errors = new Array<GkillError>()
+                errors_list.forEach(e => {
+                    errors.push(...e)
+                })
+                return errors
+            })
         } catch (err: any) {
             // abortは握りつぶす
             if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
@@ -123,13 +129,19 @@ export class Kyou extends InfoBase {
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
+        const awaitPromises = new Array<Promise<any>>()
         try {
-            let errors = new Array<GkillError>()
-            errors = errors.concat(await this.load_attached_tags())
-            errors = errors.concat(await this.load_attached_texts())
-            errors = errors.concat(await this.load_attached_timeis())
-            errors = errors.concat(await this.load_attached_histories())
-            return errors
+            awaitPromises.push(this.load_attached_tags())
+            awaitPromises.push(this.load_attached_texts())
+            awaitPromises.push(this.load_attached_timeis())
+            awaitPromises.push(this.load_attached_histories())
+            return Promise.all(awaitPromises).then((errors_list) => {
+                const errors = new Array<GkillError>()
+                errors_list.forEach(e => {
+                    errors.push(...e)
+                })
+                return errors
+            })
         } catch (err: any) {
             // abortは握りつぶす
             if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {

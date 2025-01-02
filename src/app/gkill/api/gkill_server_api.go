@@ -29,6 +29,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/SherClockHolmes/webpush-go"
 	"github.com/google/uuid"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/api/gpslogs"
@@ -37,9 +38,11 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/mi_share_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -119,6 +122,12 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 			UploadSizeLimitMonth: -1,
 			UserDataDirectory:    gkill_options.DataDirectoryDefault,
 		}
+		serverConfig.MiNotificationPrivateKey, serverConfig.GkillNotificationPublicKey, err = webpush.GenerateVAPIDKeys()
+		if err != nil {
+			err = fmt.Errorf("error at generate vapid keys: %w", err)
+			return nil, err
+		}
+
 		_, err = gkillDAOManager.ConfigDAOs.ServerConfigDAO.AddServerConfig(context.TODO(), serverConfig)
 		if err != nil {
 			err = fmt.Errorf("error at add init data to server config db: %w", err)
@@ -350,6 +359,12 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.GetRepositoriesAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleGetRepositories(w, r)
 	}).Methods(g.APIAddress.GetRepositoriesMethod)
+	router.HandleFunc(g.APIAddress.GetGkillNotificationPublicKeyAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleGetGkillNotificationPublicKey(w, r)
+	}).Methods(g.APIAddress.GetGkillNotificationPublicKeyMethod)
+	router.HandleFunc(g.APIAddress.RegisterGkillNotificationAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleRegisterGkillNotification(w, r)
+	}).Methods(g.APIAddress.RegisterGkillNotificationMethod)
 
 	gkillPage, err := fs.Sub(htmlFS, "embed/html")
 	if err != nil {
@@ -7137,6 +7152,24 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 		return
 	}
 
+	// mi通知用キーが空のものは登録する
+	for _, serverConfig := range request.ServerConfigs {
+		if serverConfig.MiNotificationPrivateKey == "" {
+			serverConfig.MiNotificationPrivateKey, serverConfig.GkillNotificationPublicKey, err = webpush.GenerateVAPIDKeys()
+			if err != nil {
+				err = fmt.Errorf("error at generate vapid keys: %w", err)
+
+				gkill_log.Debug.Printf(err.Error())
+				gkillError := &message.GkillError{
+					ErrorCode:    message.GenerateVAPIDKeysError,
+					ErrorMessage: "鍵生成エラー",
+				}
+				response.Errors = append(response.Errors, gkillError)
+				return
+			}
+		}
+	}
+
 	// ServerConfigを更新する
 	ok, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.DeleteWriteServerConfigs(r.Context(), request.ServerConfigs)
 	if !ok || err != nil {
@@ -8847,6 +8880,155 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	// StripPrefixしてIDFサーバのハンドラにわたす
 	rootAddress := "/files/" + targetRepName
 	http.StripPrefix(rootAddress, http.HandlerFunc(targetIDFRep.HandleFileServe)).ServeHTTP(w, r)
+}
+
+func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.GetGkillNotificationPublicKeyRequest{}
+	response := &req_res.GetGkillNotificationPublicKeyResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse get mi task notification public key response to json: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidGetMiTaskNotificationPublicKeyResponseDataError,
+				ErrorMessage: "Miタスク通知登録に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse get get mi task notification public key request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetMiTaskNotificationPublicKeyRequestDataError,
+			ErrorMessage: "Miタスク通知登録に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	var currentServerConfig *server_config.ServerConfig
+	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetServerConfigError,
+			ErrorMessage: "Miタスク通知登録に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	for _, serverConfig := range serverConfigs {
+		if serverConfig.Device == device {
+			currentServerConfig = serverConfig
+			break
+		}
+	}
+	if currentServerConfig == nil {
+		err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetServerConfigError,
+			ErrorMessage: "ServerConfig取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.GkillNotificationPublicKey = currentServerConfig.GkillNotificationPublicKey
+}
+func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.RegisterGkillNotificationRequest{}
+	response := &req_res.RegisterGkillNotificationResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse register mi task notification response to json: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidRegisterMiTaskNotificationResponse,
+				ErrorMessage: "Miタスク通知登録に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse get register mi task notification request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidRegisterMiTaskNotificationRequest,
+			ErrorMessage: "Miタスク通知登録に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+
+	gkillNotificationTarget := &gkill_notification.GkillNotificateTarget{
+		ID:           sqlite3impl.GenerateNewID(),
+		UserID:       userID,
+		PublicKey:    request.PublicKey,
+		Subscription: gkill_notification.JSONString(request.Subscription),
+	}
+
+	_, err = g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.AddGkillNotificationTarget(r.Context(), gkillNotificationTarget)
+	if err != nil {
+		err = fmt.Errorf("error at add mi notification target : %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddGkillNotificationTargetError,
+			ErrorMessage: "Miタスク通知登録に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.UpdateTagSuccessMessage,
+		Message:     "通知登録が完了しました",
+	})
 }
 
 func (g *GkillServerAPI) GetDevice() (string, error) {

@@ -38,7 +38,9 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
   URLOG_TIMEOUT NOT NULL,
   URLOG_USERAGENT NOT NULL,
   UPLOAD_SIZE_LIMIT_MONTH,
-  USER_DATA_DIRECTORY NOT NULL
+  USER_DATA_DIRECTORY NOT NULL,
+  MI_NOTIFICATION_PUBLIC_KEY NOT NULL,
+  MI_NOTIFICATION_PRIVATE_KEY NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
@@ -77,7 +79,9 @@ SELECT
   URLOG_TIMEOUT,
   URLOG_USERAGENT,
   UPLOAD_SIZE_LIMIT_MONTH,
-  USER_DATA_DIRECTORY
+  USER_DATA_DIRECTORY,
+  MI_NOTIFICATION_PUBLIC_KEY,
+  MI_NOTIFICATION_PRIVATE_KEY
 FROM SERVER_CONFIG
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -117,6 +121,8 @@ FROM SERVER_CONFIG
 				&serverConfig.URLogUserAgent,
 				&serverConfig.UploadSizeLimitMonth,
 				&serverConfig.UserDataDirectory,
+				&serverConfig.GkillNotificationPublicKey,
+				&serverConfig.MiNotificationPrivateKey,
 			)
 			serverConfigs = append(serverConfigs, serverConfig)
 		}
@@ -139,7 +145,9 @@ SELECT
   URLOG_TIMEOUT,
   URLOG_USERAGENT,
   UPLOAD_SIZE_LIMIT_MONTH,
-  USER_DATA_DIRECTORY
+  USER_DATA_DIRECTORY,
+  MI_NOTIFICATION_PUBLIC_KEY,
+  MI_NOTIFICATION_PRIVATE_KEY
 FROM SERVER_CONFIG
 WHERE DEVICE = ?
 `
@@ -184,6 +192,8 @@ WHERE DEVICE = ?
 				&serverConfig.URLogUserAgent,
 				&serverConfig.UploadSizeLimitMonth,
 				&serverConfig.UserDataDirectory,
+				&serverConfig.GkillNotificationPublicKey,
+				&serverConfig.MiNotificationPrivateKey,
 			)
 			serverConfigs = append(serverConfigs, serverConfig)
 		}
@@ -211,8 +221,12 @@ INSERT INTO SERVER_CONFIG (
   URLOG_TIMEOUT,
   URLOG_USERAGENT,
   UPLOAD_SIZE_LIMIT_MONTH,
-  USER_DATA_DIRECTORY
+  USER_DATA_DIRECTORY,
+  MI_NOTIFICATION_PUBLIC_KEY,
+  MI_NOTIFICATION_PRIVATE_KEY
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -250,6 +264,8 @@ INSERT INTO SERVER_CONFIG (
 		serverConfig.URLogUserAgent,
 		serverConfig.UploadSizeLimitMonth,
 		serverConfig.UserDataDirectory,
+		serverConfig.GkillNotificationPublicKey,
+		serverConfig.MiNotificationPrivateKey,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -282,7 +298,9 @@ UPDATE SERVER_CONFIG SET
   URLOG_TIMEOUT = ?,
   URLOG_USERAGENT = ?,
   UPLOAD_SIZE_LIMIT_MONTH = ?,
-  USER_DATA_DIRECTORY = ?
+  USER_DATA_DIRECTORY = ?,
+  MI_NOTIFICATION_PUBLIC_KEY = ?,
+  MI_NOTIFICATION_PRIVATE_KEY = ?
 WHERE DEVICE = ?
 `
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -311,6 +329,8 @@ WHERE DEVICE = ?
 			serverConfig.URLogUserAgent,
 			serverConfig.UploadSizeLimitMonth,
 			serverConfig.UserDataDirectory,
+			serverConfig.GkillNotificationPublicKey,
+			serverConfig.MiNotificationPrivateKey,
 			serverConfig.Device,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
@@ -416,7 +436,9 @@ UPDATE SERVER_CONFIG SET
   URLOG_TIMEOUT = ?,
   URLOG_USERAGENT = ?,
   UPLOAD_SIZE_LIMIT_MONTH = ?,
-  USER_DATA_DIRECTORY = ?
+  USER_DATA_DIRECTORY = ?,
+  MI_NOTIFICATION_PUBLIC_KEY = ?,
+  MI_NOTIFICATION_PRIVATE_KEY = ?
 WHERE DEVICE = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -445,6 +467,8 @@ WHERE DEVICE = ?
 		serverConfig.URLogUserAgent,
 		serverConfig.UploadSizeLimitMonth,
 		serverConfig.UserDataDirectory,
+		serverConfig.GkillNotificationPublicKey,
+		serverConfig.MiNotificationPrivateKey,
 		serverConfig.Device,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
@@ -458,6 +482,7 @@ WHERE DEVICE = ?
 		}
 		return false, err
 	}
+	defer rows.Close()
 
 	// 有効なDEVICEが存在しなければエラーで戻す
 	checkEnableDeviceCountSQL := `
@@ -602,8 +627,12 @@ INSERT INTO SERVER_CONFIG (
   URLOG_TIMEOUT,
   URLOG_USERAGENT,
   UPLOAD_SIZE_LIMIT_MONTH,
-  USER_DATA_DIRECTORY
+  USER_DATA_DIRECTORY,
+  MI_NOTIFICATION_PUBLIC_KEY,
+  MI_NOTIFICATION_PRIVATE_KEY
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -635,6 +664,8 @@ INSERT INTO SERVER_CONFIG (
 			serverConfig.URLogUserAgent,
 			serverConfig.UploadSizeLimitMonth,
 			serverConfig.UserDataDirectory,
+			serverConfig.GkillNotificationPublicKey,
+			serverConfig.MiNotificationPrivateKey,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
 

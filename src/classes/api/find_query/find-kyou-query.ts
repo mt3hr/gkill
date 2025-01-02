@@ -41,7 +41,7 @@ export class FindKyouQuery {
     devices_in_sidebar: Array<string>
     rep_types_in_sidebar: Array<string>
     is_enable_map_circle_in_sidebar: boolean
-    is_image_only_in_sidebar: boolean
+    is_image_only: boolean
     is_focus_kyou_in_list_view: boolean
 
     use_mi_board_name: boolean
@@ -87,7 +87,7 @@ export class FindKyouQuery {
         cloned.use_plaing = this.use_plaing
         cloned.plaing_time = this.plaing_time
         cloned.reps = this.reps.concat()
-        cloned.is_image_only_in_sidebar = this.is_image_only_in_sidebar
+        cloned.is_image_only = this.is_image_only
         cloned.devices_in_sidebar = this.devices_in_sidebar.concat()
         cloned.rep_types_in_sidebar = this.rep_types_in_sidebar.concat()
         cloned.use_update_time = this.use_update_time
@@ -140,7 +140,7 @@ export class FindKyouQuery {
         this.use_update_time = false
         this.update_time = null
         this.reps = new Array<string>()
-        this.is_image_only_in_sidebar = false
+        this.is_image_only = false
         this.devices_in_sidebar = new Array<string>()
         this.rep_types_in_sidebar = new Array<string>()
         this.is_focus_kyou_in_list_view = false
