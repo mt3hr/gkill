@@ -19,7 +19,7 @@ export class KFTLTimeIsStartTitleStatementLine extends KFTLStatementLine {
         req.set_title(this.get_context().get_this_statement_line_text())
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "開始"
     }
 

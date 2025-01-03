@@ -2318,99 +2318,99 @@ export class GkillAPIForSharedMi extends GkillAPI {
                 super()
         }
 
-        async login(req: LoginRequest): Promise<LoginResponse> {
+        async login(_req: LoginRequest): Promise<LoginResponse> {
                 throw new Error("not implements")
         }
 
-        async logout(req: LogoutRequest): Promise<LogoutResponse> {
+        async logout(_req: LogoutRequest): Promise<LogoutResponse> {
                 throw new Error("not implements")
         }
 
-        async reset_password(req: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+        async reset_password(_req: ResetPasswordRequest): Promise<ResetPasswordResponse> {
                 throw new Error("not implements")
         }
 
-        async set_new_password(req: SetNewPasswordRequest): Promise<SetNewPasswordResponse> {
+        async set_new_password(_req: SetNewPasswordRequest): Promise<SetNewPasswordResponse> {
                 throw new Error("not implements")
         }
 
-        async add_tag(req: AddTagRequest): Promise<AddTagResponse> {
+        async add_tag(_req: AddTagRequest): Promise<AddTagResponse> {
                 throw new Error("not implements")
         }
 
-        async add_text(req: AddTextRequest): Promise<AddTextResponse> {
+        async add_text(_req: AddTextRequest): Promise<AddTextResponse> {
                 throw new Error("not implements")
         }
 
-        async add_kmemo(req: AddKmemoRequest): Promise<AddKmemoResponse> {
+        async add_kmemo(_req: AddKmemoRequest): Promise<AddKmemoResponse> {
                 throw new Error("not implements")
         }
 
-        async add_urlog(req: AddURLogRequest): Promise<AddURLogResponse> {
+        async add_urlog(_req: AddURLogRequest): Promise<AddURLogResponse> {
                 throw new Error("not implements")
         }
 
-        async add_nlog(req: AddNlogRequest): Promise<AddNlogResponse> {
+        async add_nlog(_req: AddNlogRequest): Promise<AddNlogResponse> {
                 throw new Error("not implements")
         }
 
-        async add_timeis(req: AddTimeisRequest): Promise<AddTimeisResponse> {
+        async add_timeis(_req: AddTimeisRequest): Promise<AddTimeisResponse> {
                 throw new Error("not implements")
         }
 
-        async add_mi(req: AddMiRequest): Promise<AddMiResponse> {
+        async add_mi(_req: AddMiRequest): Promise<AddMiResponse> {
                 throw new Error("not implements")
         }
 
-        async add_lantana(req: AddLantanaRequest): Promise<AddLantanaResponse> {
+        async add_lantana(_req: AddLantanaRequest): Promise<AddLantanaResponse> {
                 throw new Error("not implements")
         }
 
-        async add_rekyou(req: AddReKyouRequest): Promise<AddReKyouResponse> {
+        async add_rekyou(_req: AddReKyouRequest): Promise<AddReKyouResponse> {
                 throw new Error("not implements")
         }
 
-        async update_tag(req: UpdateTagRequest): Promise<UpdateTagResponse> {
+        async update_tag(_req: UpdateTagRequest): Promise<UpdateTagResponse> {
                 throw new Error("not implements")
         }
 
-        async update_text(req: UpdateTextRequest): Promise<UpdateTextResponse> {
+        async update_text(_req: UpdateTextRequest): Promise<UpdateTextResponse> {
                 throw new Error("not implements")
         }
 
-        async update_kmemo(req: UpdateKmemoRequest): Promise<UpdateKmemoResponse> {
+        async update_kmemo(_req: UpdateKmemoRequest): Promise<UpdateKmemoResponse> {
                 throw new Error("not implements")
         }
 
-        async update_urlog(req: UpdateURLogRequest): Promise<UpdateURLogResponse> {
+        async update_urlog(_req: UpdateURLogRequest): Promise<UpdateURLogResponse> {
                 throw new Error("not implements")
         }
 
-        async update_nlog(req: UpdateNlogRequest): Promise<UpdateNlogResponse> {
+        async update_nlog(_req: UpdateNlogRequest): Promise<UpdateNlogResponse> {
                 throw new Error("not implements")
         }
 
-        async update_timeis(req: UpdateTimeisRequest): Promise<UpdateTimeisResponse> {
+        async update_timeis(_req: UpdateTimeisRequest): Promise<UpdateTimeisResponse> {
                 throw new Error("not implements")
         }
 
-        async update_mi(req: UpdateMiRequest): Promise<UpdateMiResponse> {
+        async update_mi(_req: UpdateMiRequest): Promise<UpdateMiResponse> {
                 throw new Error("not implements")
         }
 
-        async update_lantana(req: UpdateLantanaRequest): Promise<UpdateLantanaResponse> {
+        async update_lantana(_req: UpdateLantanaRequest): Promise<UpdateLantanaResponse> {
                 throw new Error("not implements")
         }
 
-        async update_idf_kyou(req: UpdateIDFKyouRequest): Promise<UpdateIDFKyouResponse> {
+        async update_idf_kyou(_req: UpdateIDFKyouRequest): Promise<UpdateIDFKyouResponse> {
                 throw new Error("not implements")
         }
 
-        async update_rekyou(req: UpdateReKyouRequest): Promise<UpdateReKyouResponse> {
+        async update_rekyou(_req: UpdateReKyouRequest): Promise<UpdateReKyouResponse> {
                 throw new Error("not implements")
         }
 
-        async get_kyous(req: GetKyousRequest): Promise<GetKyousResponse> {
+        async get_kyous(_req: GetKyousRequest): Promise<GetKyousResponse> {
                 throw new Error("not implements")
         }
 
@@ -2425,15 +2425,15 @@ export class GkillAPIForSharedMi extends GkillAPI {
                 return res
         }
 
-        async get_kmemo(req: GetKmemoRequest): Promise<GetKmemoResponse> {
+        async get_kmemo(_req: GetKmemoRequest): Promise<GetKmemoResponse> {
                 throw new Error("not implements")
         }
 
-        async get_urlog(req: GetURLogRequest): Promise<GetURLogResponse> {
+        async get_urlog(_req: GetURLogRequest): Promise<GetURLogResponse> {
                 throw new Error("not implements")
         }
 
-        async get_nlog(req: GetNlogRequest): Promise<GetNlogResponse> {
+        async get_nlog(_req: GetNlogRequest): Promise<GetNlogResponse> {
                 throw new Error("not implements")
         }
 
@@ -2459,37 +2459,37 @@ export class GkillAPIForSharedMi extends GkillAPI {
                 return res
         }
 
-        async get_lantana(req: GetLantanaRequest): Promise<GetLantanaResponse> {
+        async get_lantana(_req: GetLantanaRequest): Promise<GetLantanaResponse> {
                 throw new Error("not implements")
         }
 
-        async get_rekyou(req: GetReKyouRequest): Promise<GetReKyouResponse> {
+        async get_rekyou(_req: GetReKyouRequest): Promise<GetReKyouResponse> {
                 throw new Error("not implements")
         }
 
-        async get_git_commit_log(req: GetGitCommitLogRequest): Promise<GetGitCommitLogResponse> {
+        async get_git_commit_log(_req: GetGitCommitLogRequest): Promise<GetGitCommitLogResponse> {
                 throw new Error("not implements")
         }
 
-        async get_idf_kyou(req: GetIDFKyouRequest): Promise<GetIDFKyouResponse> {
+        async get_idf_kyou(_req: GetIDFKyouRequest): Promise<GetIDFKyouResponse> {
                 throw new Error("not implements")
         }
 
-        async get_mi_board_list(req: GetMiBoardRequest): Promise<GetMiBoardResponse> {
+        async get_mi_board_list(_req: GetMiBoardRequest): Promise<GetMiBoardResponse> {
                 throw new Error("not implements")
         }
 
-        async get_plaing_timeis(req: GetPlaingTimeisRequest): Promise<GetPlaingTimeisResponse> {
+        async get_plaing_timeis(_req: GetPlaingTimeisRequest): Promise<GetPlaingTimeisResponse> {
                 // not implements
                 const res = new GetPlaingTimeisResponse()
                 return res
         }
 
-        async get_all_tag_names(req: GetAllTagNamesRequest): Promise<GetAllTagNamesResponse> {
+        async get_all_tag_names(_req: GetAllTagNamesRequest): Promise<GetAllTagNamesResponse> {
                 throw new Error("not implements")
         }
 
-        async get_all_rep_names(req: GetAllRepNamesRequest): Promise<GetAllRepNamesResponse> {
+        async get_all_rep_names(_req: GetAllRepNamesRequest): Promise<GetAllRepNamesResponse> {
                 throw new Error("not implements")
         }
 
@@ -2537,75 +2537,75 @@ export class GkillAPIForSharedMi extends GkillAPI {
                 return res
         }
 
-        async get_application_config(req: GetApplicationConfigRequest): Promise<GetApplicationConfigResponse> {
+        async get_application_config(_req: GetApplicationConfigRequest): Promise<GetApplicationConfigResponse> {
                 throw new Error("not implements")
         }
 
-        async get_server_configs(req: GetServerConfigsRequest): Promise<GetServerConfigsResponse> {
+        async get_server_configs(_req: GetServerConfigsRequest): Promise<GetServerConfigsResponse> {
                 throw new Error("not implements")
         }
 
-        async upload_files(req: UploadFilesRequest): Promise<UploadFilesResponse> {
+        async upload_files(_req: UploadFilesRequest): Promise<UploadFilesResponse> {
                 throw new Error("not implements")
         }
 
-        async upload_gpslog_files(req: UploadGPSLogFilesRequest): Promise<UploadGPSLogFilesResponse> {
+        async upload_gpslog_files(_req: UploadGPSLogFilesRequest): Promise<UploadGPSLogFilesResponse> {
                 throw new Error("not implements")
         }
 
-        async update_application_config(req: UpdateApplicationConfigRequest): Promise<UpdateApplicationConfigResponse> {
+        async update_application_config(_req: UpdateApplicationConfigRequest): Promise<UpdateApplicationConfigResponse> {
                 throw new Error("not implements")
         }
 
-        async update_tag_struct(req: UpdateTagStructRequest): Promise<UpdateTagStructResponse> {
+        async update_tag_struct(_req: UpdateTagStructRequest): Promise<UpdateTagStructResponse> {
                 throw new Error("not implements")
         }
 
-        async update_rep_struct(req: UpdateRepStructRequest): Promise<UpdateRepStructResponse> {
+        async update_rep_struct(_req: UpdateRepStructRequest): Promise<UpdateRepStructResponse> {
                 throw new Error("not implements")
         }
 
-        async update_device_struct(req: UpdateDeviceStructRequest): Promise<UpdateDeviceStructResponse> {
+        async update_device_struct(_req: UpdateDeviceStructRequest): Promise<UpdateDeviceStructResponse> {
                 throw new Error("not implements")
         }
 
-        async update_rep_type_struct(req: UpdateRepTypeStructRequest): Promise<UpdateRepTypeStructResponse> {
+        async update_rep_type_struct(_req: UpdateRepTypeStructRequest): Promise<UpdateRepTypeStructResponse> {
                 throw new Error("not implements")
         }
 
-        async update_kftl_template(req: UpdateKFTLTemplateRequest): Promise<UpdateKFTLTemplateResponse> {
+        async update_kftl_template(_req: UpdateKFTLTemplateRequest): Promise<UpdateKFTLTemplateResponse> {
                 throw new Error("not implements")
         }
 
-        async update_account_status(req: UpdateAccountStatusRequest): Promise<UpdateAccountStatusResponse> {
+        async update_account_status(_req: UpdateAccountStatusRequest): Promise<UpdateAccountStatusResponse> {
                 throw new Error("not implements")
         }
 
-        async update_user_reps(req: UpdateUserRepsRequest): Promise<UpdateUserRepsResponse> {
+        async update_user_reps(_req: UpdateUserRepsRequest): Promise<UpdateUserRepsResponse> {
                 throw new Error("not implements")
         }
 
-        async update_server_config(req: UpdateServerConfigsRequest): Promise<UpdateServerConfigsResponse> {
+        async update_server_config(_req: UpdateServerConfigsRequest): Promise<UpdateServerConfigsResponse> {
                 throw new Error("not implements")
         }
 
-        async add_account(req: AddAccountRequest): Promise<AddAccountResponse> {
+        async add_account(_req: AddAccountRequest): Promise<AddAccountResponse> {
                 throw new Error("not implements")
         }
 
-        async generate_tls_file(req: GenerateTLSFileRequest): Promise<GenerateTLSFileResponse> {
+        async generate_tls_file(_req: GenerateTLSFileRequest): Promise<GenerateTLSFileResponse> {
                 throw new Error("not implements")
         }
 
-        async get_gps_log(req: GetGPSLogRequest): Promise<GetGPSLogResponse> {
+        async get_gps_log(_req: GetGPSLogRequest): Promise<GetGPSLogResponse> {
                 throw new Error("not implements")
         }
 
-        async get_kftl_templates(req: GetKFTLTemplatesRequest): Promise<GetKFTLTemplatesResponse> {
+        async get_kftl_templates(_req: GetKFTLTemplatesRequest): Promise<GetKFTLTemplatesResponse> {
                 throw new Error("not implements")
         }
 
-        async get_gkill_info(req: GetGkillInfoRequest): Promise<GetGkillInfoResponse> {
+        async get_gkill_info(_req: GetGkillInfoRequest): Promise<GetGkillInfoResponse> {
                 const res = new GetGkillInfoResponse()
                 res.device = "readonly"
                 res.user_id = "guest"
@@ -2613,19 +2613,19 @@ export class GkillAPIForSharedMi extends GkillAPI {
                 return res
         }
 
-        async get_share_mi_task_list_infos(req: GetShareMiTaskListInfosRequest): Promise<GetShareMiTaskListInfosResponse> {
+        async get_share_mi_task_list_infos(_req: GetShareMiTaskListInfosRequest): Promise<GetShareMiTaskListInfosResponse> {
                 throw new Error("not implements")
         }
 
-        async add_share_mi_task_list_info(req: AddShareMiTaskListInfoRequest): Promise<AddShareMiTaskListInfoResponse> {
+        async add_share_mi_task_list_info(_req: AddShareMiTaskListInfoRequest): Promise<AddShareMiTaskListInfoResponse> {
                 throw new Error("not implements")
         }
 
-        async update_share_mi_task_list_info(req: UpdateShareMiTaskListInfoRequest): Promise<UpdateShareMiTaskListInfoResponse> {
+        async update_share_mi_task_list_info(_req: UpdateShareMiTaskListInfoRequest): Promise<UpdateShareMiTaskListInfoResponse> {
                 throw new Error("not implements")
         }
 
-        async delete_share_mi_task_list_infos(req: DeleteShareMiTaskListInfosRequest): Promise<DeleteShareMiTaskListInfosResponse> {
+        async delete_share_mi_task_list_infos(_req: DeleteShareMiTaskListInfosRequest): Promise<DeleteShareMiTaskListInfosResponse> {
                 throw new Error("not implements")
         }
 
@@ -2633,7 +2633,7 @@ export class GkillAPIForSharedMi extends GkillAPI {
                 return super.get_mi_shared_tasks(req)
         }
 
-        async get_repositories(req: GetRepositoriesRequest): Promise<GetRepositoriesResponse> {
+        async get_repositories(_req: GetRepositoriesRequest): Promise<GetRepositoriesResponse> {
                 throw new Error("not implements")
         }
 
@@ -2641,7 +2641,7 @@ export class GkillAPIForSharedMi extends GkillAPI {
                 return ""
         }
 
-        set_session_id(session_id: string): void {
+        set_session_id(_session_id: string): void {
                 throw new Error("not implements")
         }
 
@@ -2649,7 +2649,7 @@ export class GkillAPIForSharedMi extends GkillAPI {
                 throw new Error("not implements")
         }
 
-        set_google_map_api_key(google_map_api_key: string): void {
+        set_google_map_api_key(_google_map_api_key: string): void {
                 throw new Error("not implements")
         }
 
@@ -2658,39 +2658,39 @@ export class GkillAPIForSharedMi extends GkillAPI {
         }
 
         // 認証が通っていなかったらログイン画面に遷移する
-        check_auth(res: GkillAPIResponse): void {
+        check_auth(_res: GkillAPIResponse): void {
                 throw new Error("not implements")
         }
 
-        set_saved_application_config(application_config: ApplicationConfig): void {
+        set_saved_application_config(_application_config: ApplicationConfig): void {
                 throw new Error("not implements")
         }
         get_saved_application_config(): ApplicationConfig | null {
                 return super.get_saved_application_config()
         }
 
-        set_saved_rykv_find_kyou_querys(querys: Array<FindKyouQuery>): void {
+        set_saved_rykv_find_kyou_querys(_querys: Array<FindKyouQuery>): void {
                 throw new Error("not implements")
         }
         get_saved_rykv_find_kyou_querys(): Array<FindKyouQuery> {
                 throw new Error("not implements")
         }
 
-        set_saved_mi_find_kyou_querys(querys: Array<FindKyouQuery>): void {
+        set_saved_mi_find_kyou_querys(_querys: Array<FindKyouQuery>): void {
                 throw new Error("not implements")
         }
         get_saved_mi_find_kyou_querys(): Array<FindKyouQuery> {
                 throw new Error("not implements")
         }
 
-        set_saved_rykv_scroll_indexs(indexs: Array<number>): void {
+        set_saved_rykv_scroll_indexs(_indexs: Array<number>): void {
                 throw new Error("not implements")
         }
         get_saved_rykv_scroll_indexs(): Array<number> {
                 throw new Error("not implements")
         }
 
-        set_saved_mi_scroll_indexs(indexs: Array<number>): void {
+        set_saved_mi_scroll_indexs(_indexs: Array<number>): void {
                 throw new Error("not implements")
         }
         get_saved_mi_scroll_indexs(): Array<number> {

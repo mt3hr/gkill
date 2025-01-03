@@ -101,7 +101,7 @@ function update_check() {
         let exist_checked = false
         let all_checked = true
 
-        let f = (struct: FoldableStructModel) => { }
+        let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
             if (struct.is_checked) {
                 exist_checked = true
@@ -162,7 +162,7 @@ function get_group_name(index: number) {
 // すべての子アイテムのcheckの状態を、グループのチェック状態と同じにします。
 function change_group_by_user() {
     let items = new Array()
-    let f = (struct: FoldableStructModel) => { }
+    let f = (_struct: FoldableStructModel) => { }
     let func = (struct: FoldableStructModel) => {
         items.push(struct.key)
         if (struct.children) {
@@ -203,7 +203,7 @@ function dblclick_item_by_user(e: MouseEvent) {
 // このアイテム内のアイテムのみにチェックが入るように上にemitします。
 function click_group_by_user(e: MouseEvent) {
     let items = new Array<string>()
-    let f = (struct: FoldableStructModel) => { }
+    let f = (_struct: FoldableStructModel) => { }
     let func = (struct: FoldableStructModel) => {
         items.push(struct.key)
         if (struct.children) {
@@ -219,7 +219,7 @@ function click_group_by_user(e: MouseEvent) {
 // 現在チェックの入っているアイテム名を配列で取得します。
 function get_selected_items(): Array<string> {
     let items = new Array<string>()
-    let f = (struct: FoldableStructModel) => { }
+    let f = (_struct: FoldableStructModel) => { }
     let func = (struct: FoldableStructModel) => {
         if (struct.is_checked) {
             items.push(struct.key)
@@ -297,7 +297,7 @@ function handle_move_struct_obj(struct_obj: FoldableStructModel, target_struct_o
     }
 
     // parentのなかにchildがあったらtrueを返す
-    let has_child = (parent: FoldableStructModel, child: FoldableStructModel): boolean => false
+    let has_child = (_parent: FoldableStructModel, _child: FoldableStructModel): boolean => false
     let has_child_impl = (parent: FoldableStructModel, child: FoldableStructModel): boolean => {
         let is_has_child = false
         if (parent.children) {
@@ -327,7 +327,7 @@ function handle_move_struct_obj(struct_obj: FoldableStructModel, target_struct_o
     }
     delete_struct(struct_obj.id)
     let pasted = false
-    let f = (walk_struct_obj: FoldableStructModel, parent_struct_obj: FoldableStructModel) => { }
+    let f = (_walk_struct_obj: FoldableStructModel, _parent_struct_obj: FoldableStructModel) => { }
     let func = (walk_struct_obj: FoldableStructModel, parent_struct_obj: FoldableStructModel) => {
         if (pasted) {
             return
@@ -410,7 +410,7 @@ function update_struct_obj(struct_obj: FoldableStructModel): void {
         emits('requested_update_struct_obj', struct_obj)
         return
     }
-    let f = (struct: FoldableStructModel) => { }
+    let f = (_struct: FoldableStructModel) => { }
     let func = (struct: FoldableStructModel) => {
         if (!struct.children) {
             return
@@ -433,7 +433,7 @@ function delete_struct(id: string): boolean {
         return false
     }
     let deleted = false
-    let f = (struct: FoldableStructModel, parent: FoldableStructModel) => { }
+    let f = (_struct: FoldableStructModel, _parent: FoldableStructModel) => { }
     let func = (struct: FoldableStructModel, parent: FoldableStructModel) => {
         if (deleted) {
             return

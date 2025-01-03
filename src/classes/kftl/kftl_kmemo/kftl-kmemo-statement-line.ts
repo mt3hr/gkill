@@ -29,7 +29,7 @@ export class KFTLKmemoStatementLine extends KFTLStatementLine {
         }
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         if (this.prev_line_is_kmemo_statement()) {
             return ""
         }
@@ -50,7 +50,7 @@ export class KFTLKmemoStatementLine extends KFTLStatementLine {
         return false
     }
 
-    static is_this_type(line_text: string): boolean {
+    static is_this_type(_line_text: string): boolean {
         return true
     }
 

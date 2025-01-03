@@ -65,7 +65,7 @@ async function save(): Promise<void> {
     if (content_value.value === "") {
         const error = new GkillError()
         error.error_code = "//TODO"
-        error.error_message = "テキストが未入力です"
+        error.error_message = "通知内容が未入力です"
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -81,7 +81,7 @@ async function save(): Promise<void> {
         return
     }
 
-    // テキスト情報を用意する
+    // 通知内容情報を用意する
     const new_notification = new Notification()
     new_notification.notification_time = moment(notification_date.value + " " + notification_time.value).toDate()
     new_notification.content = content_value.value

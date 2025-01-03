@@ -24,7 +24,7 @@ export class KFTLMiEstimateEndTimeStatementLine extends KFTLStatementLine {
 
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         const line_text = this.get_context().get_this_statement_line_text()
         if (line_text == "" || line_text == "\n") {
             return "終了なし"

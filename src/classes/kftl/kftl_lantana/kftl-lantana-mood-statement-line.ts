@@ -20,7 +20,7 @@ export class KFTLLantanaMoodStatementLine extends KFTLStatementLine {
         lantana_request.set_mood(mood)
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         try {
             this.parse_mood()
             return "気分値"

@@ -5,6 +5,10 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <span>Mi追加</span>
                 </v-col>
+                <v-spacer />
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <v-btn @click="add_notification()">通知追加</v-btn>
+                </v-col>
             </v-row>
         </v-card-title>
         <v-row class="pa-0 ma-0">
@@ -69,6 +73,30 @@
                 <v-btn color="primary" @click="now_to_limit_date_time()">現在日時</v-btn>
             </v-col>
         </v-row>
+        <v-row v-for="notification, index in notifications" :key="notification.id" class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-row class="pa-0 ma-0">
+                    <v-col cols="auto" class="pa-0 ma-0">
+                        <div>通知</div>
+                    </v-col>
+                    <v-spacer />
+                    <v-col cols="auto" class="pa-0 ma-0">
+                        <v-btn class="rounded-sm mx-auto" icon @click.prevent="delete_notification(index)">
+                            <v-icon>mdi-close</v-icon>
+                        </v-btn>
+                    </v-col>
+                </v-row>
+                <v-row class="pa-0 ma-0">
+                    <v-col cols="auto" class="pa-0 ma-0">
+                        <AddNotificationForAddMiView :application_config="application_config" :gkill_api="gkill_api"
+                            :enable_context_menu="false" :enable_dialog="true" :highlight_targets="[]" :kyou="kyou"
+                            :last_added_tag="''" :default_notification="notification" ref="add_notification_views"
+                            @received_errors="(errors) => emits('received_errors', errors)"
+                            @received_messages="(messages) => emits('received_messages', messages)" />
+                    </v-col>
+                </v-row>
+            </v-col>
+        </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn color="primary" @click="reset()">リセット</v-btn>
@@ -86,8 +114,9 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import AddNotificationForAddMiView from './add-notification-for-add-mi-view.vue'
 import type { AddMiViewProps } from './add-mi-view-props'
-import { type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { Mi } from '@/classes/datas/mi'
 import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
@@ -96,13 +125,27 @@ import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
+import { Kyou } from '@/classes/datas/kyou'
+import { Notification } from '@/classes/datas/notification'
+import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-request'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
+const add_notification_views = ref<any>(null);
 
 const props = defineProps<AddMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
-const mi: Ref<Mi> = ref(new Mi())
+const id: Ref<string> = ref(props.gkill_api.generate_uuid())
+const kyou: Ref<Kyou> = computed(() => {
+    const kyou = new Kyou()
+    kyou.id = id.value
+    return kyou
+})
+const mi: Ref<Mi> = ref((() => {
+    const mi = new Mi()
+    mi.id = id.value
+    return mi
+})())
 const mi_board_names: Ref<Array<string>> = ref(new Array())
 
 const mi_title: Ref<string> = ref(mi.value ? mi.value.title : "")
@@ -113,6 +156,8 @@ const mi_estimate_end_date: Ref<string> = ref(mi.value && mi.value.estimate_end_
 const mi_estimate_end_time: Ref<string> = ref(mi.value && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("HH:mm:ss") : "")
 const mi_limit_date: Ref<string> = ref(mi.value && mi.value.limit_time ? moment(mi.value.limit_time).format("YYYY-MM-DD") : "")
 const mi_limit_time: Ref<string> = ref(mi.value && mi.value.limit_time ? moment(mi.value.limit_time).format("HH:mm:ss") : "")
+
+const notifications: Ref<Array<Notification>> = ref(new Array<Notification>())
 
 watch(() => props.application_config, () => load_mi_board_names)
 load_mi_board_names()
@@ -180,9 +225,24 @@ function reset(): void {
     mi_estimate_end_time.value = mi.value && mi.value.estimate_end_time ? moment(mi.value.estimate_end_time).format("HH:mm:ss") : ""
     mi_limit_date.value = mi.value && mi.value.limit_time ? moment(mi.value.limit_time).format("YYYY-MM-DD") : ""
     mi_limit_time.value = mi.value && mi.value.limit_time ? moment(mi.value.limit_time).format("HH:mm:ss") : ""
+    notifications.value.splice(0)
 }
 
 async function save(): Promise<void> {
+    // Notification チェック
+    // おかしかったらnullが戻ってくるので中断する
+    const notifications = new Array<Notification>()
+    if (add_notification_views.value) {
+        for (let i = 0; i < add_notification_views.value.length; i++) {
+            const notification = await add_notification_views.value[i].get_notification()
+            if (!notification) {
+                return
+            }
+            notifications.push(notification)
+        }
+    }
+
+    // Mi チェック
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
     if (!mi.value) {
         const error = new GkillError()
@@ -251,6 +311,8 @@ async function save(): Promise<void> {
         return
     }
 
+    // Mi 追加
+
     // UserIDやDevice情報を取得する
     const get_gkill_req = new GetGkillInfoRequest()
     get_gkill_req.session_id = props.gkill_api.get_session_id()
@@ -274,7 +336,7 @@ async function save(): Promise<void> {
         limit_time = moment(mi_limit_date.value + " " + mi_limit_time.value).toDate()
     }
     const new_mi = await mi.value.clone()
-    new_mi.id = props.gkill_api.generate_uuid()
+    new_mi.id = mi.value.id
     new_mi.title = mi_title.value
     new_mi.board_name = mi_board_name.value
     new_mi.estimate_start_time = estimate_start_time
@@ -301,10 +363,45 @@ async function save(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
+
+    // Notification 追加
+    for (let i = 0; i < notifications.length; i++) {
+        // 追加リクエストを飛ばす
+        const req = new AddNotificationRequest()
+        req.session_id = props.gkill_api.get_session_id()
+        req.notification = notifications[i]
+        const res = await props.gkill_api.add_notification(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+    }
+
+
+
     emits("registered_kyou", res.added_mi_kyou)
     emits('requested_reload_list')
     emits('requested_close_dialog')
     return
+}
+
+function add_notification(): void {
+    const notification = new Notification()
+    notification.id = props.gkill_api.generate_uuid()
+    notification.target_id = id.value
+    notification.content = mi_title.value
+    notification.notification_time = new Date(0)
+    if (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value !== "") {
+        notification.notification_time = moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value).toDate()
+    }
+    notifications.value.push(notification)
+}
+
+function delete_notification(index: number): void {
+    notifications.value.splice(index, 1)
 }
 
 load_mi_board_names()

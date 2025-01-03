@@ -16,7 +16,7 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         this.title = ""
     }
 
-    async get_label_name(context: KFTLStatementLineContext): Promise<string> {
+    async get_label_name(_context: KFTLStatementLineContext): Promise<string> {
         return "開始"
     }
 

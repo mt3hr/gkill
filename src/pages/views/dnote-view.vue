@@ -77,7 +77,7 @@
 </template>
 <script setup lang="ts">
 import type { DnoteEmits } from './dnote-emits'
-import type { DnoteProps } from './dnote-props'
+import type { DnoteViewProps } from './dnote-view-props'
 
 import { computed, ref, type Ref } from 'vue'
 
@@ -93,7 +93,7 @@ import AggregateAmountListView from './aggregate-amount-list-view.vue'
 import AggregateLocationListView from './aggregate-location-list-view.vue'
 import AggregatePeopleListView from './aggregate-people-list-view.vue'
 
-const props = defineProps<DnoteProps>()
+const props = defineProps<DnoteViewProps>()
 const emits = defineEmits<DnoteEmits>()
 defineExpose({ recalc_all, recalc_checked_aggregate })
 

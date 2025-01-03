@@ -24,7 +24,7 @@ export class KFTLTimeIsEndByTagIfExistTagNameStatementLine extends KFTLStatement
         req.set_error_when_target_does_not_exist(false)
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "終了"
     }
 }

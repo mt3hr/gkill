@@ -54,7 +54,6 @@ import FoldableStruct from './foldable-struct.vue'
 import { RepStruct } from '@/classes/datas/config/rep-struct'
 import type { FoldableStructModel } from './foldable-struct-model'
 import { UpdateRepStructRequest } from '@/classes/api/req_res/update-rep-struct-request'
-import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import RepStructContextMenu from './rep-struct-context-menu.vue'
@@ -120,9 +119,9 @@ function update_rep_struct(rep_struct_obj: RepStruct): void {
     }
 }
 
-function update_seq(rep_struct: Array<FoldableStructModel>): void {
+function update_seq(_rep_struct: Array<FoldableStructModel>): void {
     // 並び順再決定
-    let f = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => { }
+    let f = (_struct: FoldableStructModel, _parent: FoldableStructModel, _seq: number) => { }
     let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
         for (let i = 0; i < cloned_application_config.value.rep_struct.length; i++) {
             if (struct.id === cloned_application_config.value.rep_struct[i].id) {
