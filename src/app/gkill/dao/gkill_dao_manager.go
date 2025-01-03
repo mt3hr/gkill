@@ -24,6 +24,7 @@ import (
 
 type GkillDAOManager struct {
 	gkillRepositories        map[string]map[string]*reps.GkillRepositories
+	gkillNotificators        map[string]map[string]*GkillNotificator
 	fileRepWatchCacheUpdater rep_cache_updater.FileRepCacheUpdater
 
 	ConfigDAOs *ConfigDAOs
@@ -188,15 +189,15 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		g.gkillRepositories = map[string]map[string]*reps.GkillRepositories{}
 	}
 
-	// すでに存在していればそれを、存在していなければ作っていれる
-	repositoriesInDevice, existInUsers := g.gkillRepositories[userID]
-	if !existInUsers {
+	// すでに存在していればそれを、存在していなければ作っていれる。Rep
+	repositoriesInDevice, existRepsInUsers := g.gkillRepositories[userID]
+	if !existRepsInUsers {
 		g.gkillRepositories[userID] = map[string]*reps.GkillRepositories{}
 		repositoriesInDevice = g.gkillRepositories[userID]
 	}
 
-	repositories, existInDevice := repositoriesInDevice[device]
-	if !existInDevice {
+	repositories, existRepsInDevice := repositoriesInDevice[device]
+	if !existRepsInDevice {
 		// なかったら作っていれる
 		repositories, err = reps.NewGkillRepositories(userID)
 		if err != nil {
@@ -684,11 +685,46 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				}
 			}
 		}
-
 		g.gkillRepositories[userID][device] = repositories
 		repositories, _ = repositoriesInDevice[device]
+
+		_, _ = g.GetNotificator(userID, device)
 	}
+
 	return repositories, nil
+}
+
+func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNotificator, error) {
+	// nilだったら初期化する
+	if g.gkillNotificators == nil {
+		g.gkillNotificators = map[string]map[string]*GkillNotificator{}
+	}
+
+	// すでに存在していればそれを、存在していなければ作る。Notificator
+	notificatorInDevice, existNotificatorsInUsers := g.gkillNotificators[userID]
+	if !existNotificatorsInUsers {
+		g.gkillNotificators[userID] = map[string]*GkillNotificator{}
+		notificatorInDevice = g.gkillNotificators[userID]
+	}
+
+	notificator, existNotificatorsInDevice := notificatorInDevice[device]
+	if !existNotificatorsInDevice {
+		// Notificatorの初期化
+		gkillRepositories, err := g.GetRepositories(userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at get repositories in get notificator: %w", err)
+			return nil, err
+		}
+
+		gkillNotificator, err := NewGkillNotificator(g, gkillRepositories)
+		if err != nil {
+			err = fmt.Errorf("error at new gkill notificator: %w", err)
+			return nil, err
+		}
+		g.gkillNotificators[userID][device] = gkillNotificator
+		notificator = g.gkillNotificators[userID][device]
+	}
+	return notificator, nil
 }
 
 func (g *GkillDAOManager) Close() error {
@@ -711,6 +747,20 @@ func (g *GkillDAOManager) Close() error {
 				}
 			}
 
+		}
+	}
+	g.gkillRepositories = nil
+
+	for userID, notificatorInDevices := range g.gkillNotificators {
+		for _, notificator := range notificatorInDevices {
+			err = notificator.Close(ctx)
+			if err != nil {
+				if allErrors != nil {
+					allErrors = fmt.Errorf("error at close gkill notificator user id = %s: %w", userID, err)
+				} else {
+					allErrors = fmt.Errorf("error at close gkill notificator user id = %s", userID)
+				}
+			}
 		}
 	}
 	g.gkillRepositories = nil
