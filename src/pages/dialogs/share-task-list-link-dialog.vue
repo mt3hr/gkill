@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ShareTaskListLinkView v-if="share_mi_task_list_info" :application_config="application_config"
             :gkill_api="gkill_api" :share_mi_task_list_info="share_mi_task_list_info"
             @updated_share_mi_task_list_info="(share_mi_task_list_info: ShareMiTaskListInfo) => emits('updated_share_mi_task_list_info', share_mi_task_list_info)"

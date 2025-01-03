@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <EditKFTLTemplateStructView :application_config="application_config" :gkill_api="gkill_api"
             :kftl_template_struct="application_config.kftl_template_struct"
             @received_errors="(errors) => emits('received_errors', errors)"

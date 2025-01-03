@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ConfirmResetPasswordView :application_config="application_config" :gkill_api="gkill_api"
             :server_configs="server_configs" :account="cloned_account"
             @received_errors="(errors) => emits('received_errors', errors)"

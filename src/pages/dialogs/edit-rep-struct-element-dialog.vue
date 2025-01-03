@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <EditRepStructElementView :application_config="application_config" :gkill_api="gkill_api"
             :folder_name="'記録保管場所'" :struct_obj="rep_struct"
             @received_errors="(errors) => emits('received_errors', errors)"
