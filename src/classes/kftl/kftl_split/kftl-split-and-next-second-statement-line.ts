@@ -16,11 +16,11 @@ export class KFTLSplitAndNextSecondStatementLine extends KFTLStatementLine {
         context.set_next_statement_line_target_id(null)
     }
 
-    async apply_this_line_to_request_map(requet_map: KFTLRequestMap): Promise<void> {
+    async apply_this_line_to_request_map(_requet_map: KFTLRequestMap): Promise<void> {
         return
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "======"
     }
 

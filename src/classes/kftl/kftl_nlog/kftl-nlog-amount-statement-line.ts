@@ -20,7 +20,7 @@ export class KFTLNlogAmountStatementLine extends KFTLStatementLine {
         nlog_request.add_amount(amount)
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         try {
             const line_text = this.get_context().get_this_statement_line_text()
             if (line_text == "" || line_text == "\n") {

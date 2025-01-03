@@ -11,7 +11,7 @@ import type { TagStructElementProps } from './tag-struct-element-props'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config';
 
 const props = defineProps<TagStructElementProps>()
-const emits = defineEmits<TagStructElementEmits>()
+defineEmits<TagStructElementEmits>()
 defineExpose({ reload_cloned_application_config })
 
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())

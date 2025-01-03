@@ -8,7 +8,11 @@ import { MetaInfoBase } from './meta-info-base'
 
 export class Notification extends MetaInfoBase {
 
+    // related_time は使わない
+
     content: string
+
+    is_notificated: boolean
 
     notification_time: Date
 
@@ -52,6 +56,7 @@ export class Notification extends MetaInfoBase {
         const notification = new Notification()
         notification.is_deleted = this.is_deleted
         notification.id = this.id
+        notification.is_notificated = this.is_notificated
         notification.target_id = this.target_id
         notification.related_time = this.related_time
         notification.create_time = this.create_time
@@ -80,6 +85,7 @@ export class Notification extends MetaInfoBase {
         this.notification_time = new Date(0)
         this.content = ""
         this.attached_histories = new Array<Notification>()
+        this.is_notificated = false
     }
 
 }

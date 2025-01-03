@@ -359,7 +359,7 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: KFTLTemplateElementData, target_id: string | null): KFTLTemplateElementData | null => {
+        let walk = (_struct: KFTLTemplateElementData, _target_id: string | null): KFTLTemplateElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
@@ -433,7 +433,7 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: TagStructElementData, target_id: string | null): TagStructElementData | null => {
+        let walk = (_struct: TagStructElementData, _target_id: string | null): TagStructElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
@@ -479,7 +479,7 @@ export class ApplicationConfig {
                 }
             }
         }
-        let sort = (struct: TagStructElementData): void => { }
+        let sort = (_struct: TagStructElementData): void => { }
         sort = (struct: TagStructElementData): void => {
             if (struct.children) {
                 struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
@@ -519,7 +519,7 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: RepStructElementData, target_id: string | null): RepStructElementData | null => {
+        let walk = (_struct: RepStructElementData, _target_id: string | null): RepStructElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
@@ -565,7 +565,7 @@ export class ApplicationConfig {
                 }
             }
         }
-        let sort = (struct: RepStructElementData): void => { }
+        let sort = (_struct: RepStructElementData): void => { }
         sort = (struct: RepStructElementData): void => {
             if (struct.children) {
                 struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
@@ -604,7 +604,7 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: DeviceStructElementData, target_id: string | null): DeviceStructElementData | null => {
+        let walk = (_struct: DeviceStructElementData, _target_id: string | null): DeviceStructElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
@@ -649,7 +649,7 @@ export class ApplicationConfig {
                 }
             }
         }
-        let sort = (struct: DeviceStructElementData): void => { }
+        let sort = (_struct: DeviceStructElementData): void => { }
         sort = (struct: DeviceStructElementData): void => {
             if (struct.children) {
                 struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
@@ -688,7 +688,7 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: RepTypeStructElementData, target_id: string | null): RepTypeStructElementData | null => {
+        let walk = (_struct: RepTypeStructElementData, _target_id: string | null): RepTypeStructElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
@@ -733,7 +733,7 @@ export class ApplicationConfig {
                 }
             }
         }
-        let sort = (struct: RepTypeStructElementData): void => { }
+        let sort = (_struct: RepTypeStructElementData): void => { }
         sort = (struct: RepTypeStructElementData): void => {
             if (struct.children) {
                 struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
@@ -773,7 +773,7 @@ export class ApplicationConfig {
             }
         }
         // 再帰呼び出し用
-        let walk = (struct: MiBoardStructElementData, target_id: string | null): MiBoardStructElementData | null => {
+        let walk = (_struct: MiBoardStructElementData, _target_id: string | null): MiBoardStructElementData | null => {
             throw new Error('Not implemented')
         }
         // structを潜ってIDが一致するものを取得する
@@ -818,7 +818,7 @@ export class ApplicationConfig {
                 }
             }
         }
-        let sort = (struct: MiBoardStructElementData): void => { }
+        let sort = (_struct: MiBoardStructElementData): void => { }
         sort = (struct: MiBoardStructElementData): void => {
             if (struct.children) {
                 struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
