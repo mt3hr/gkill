@@ -29,7 +29,7 @@ export class KFTLTimeIsEndTimeStatementLine extends KFTLStatementLine {
         request.set_end_time(time)
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "終了日時"
     }
 

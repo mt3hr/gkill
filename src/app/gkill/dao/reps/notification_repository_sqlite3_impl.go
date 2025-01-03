@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
   TARGET_ID NOT NULL,
   NOTIFICATION_TIME NOT NULL,
   CONTENT NOT NULL,
-  RELATED_TIME NOT NULL,
+  IS_NOTIFICATED NOT NULL,
   CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
   CREATE_USER NOT NULL,
@@ -87,7 +87,7 @@ SELECT
   TARGET_ID,
   NOTIFICATION_TIME,
   CONTENT,
-  RELATED_TIME,
+  IS_NOTIFICATED,
   CREATE_TIME,
   CREATE_APP,
   CREATE_USER,
@@ -115,7 +115,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "NOTIFICATION_TIME"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -151,7 +151,7 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			notification := &Notification{}
-			relatedTimeStr, createTimeStr, updateTimeStr, notificationTimeStr := "", "", "", ""
+			createTimeStr, updateTimeStr, notificationTimeStr := "", "", ""
 			dataType := ""
 
 			err = rows.Scan(
@@ -160,7 +160,7 @@ WHERE
 				&notification.TargetID,
 				&notificationTimeStr,
 				&notification.Content,
-				&relatedTimeStr,
+				&notification.IsNotificated,
 				&createTimeStr,
 				&notification.CreateApp,
 				&notification.CreateDevice,
@@ -176,11 +176,6 @@ WHERE
 			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse notification time %s in NOTIFICATION: %w", notificationTimeStr, err)
-				return nil, err
-			}
-			notification.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in NOTIFICATION: %w", relatedTimeStr, err)
 				return nil, err
 			}
 			notification.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
@@ -239,7 +234,7 @@ SELECT
   TARGET_ID,
   NOTIFICATION_TIME,
   CONTENT,
-  RELATED_TIME,
+  IS_NOTIFICATED,
   CREATE_TIME,
   CREATE_APP,
   CREATE_USER,
@@ -275,7 +270,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "NOTIFICATION_TIME"
 	findWordTargetColumns := []string{"TARGET_ID"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -312,7 +307,7 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			notification := &Notification{}
-			relatedTimeStr, createTimeStr, updateTimeStr, notificationTimeStr := "", "", "", ""
+			createTimeStr, updateTimeStr, notificationTimeStr := "", "", ""
 			dataType := ""
 
 			err = rows.Scan(
@@ -321,7 +316,7 @@ WHERE
 				&notification.TargetID,
 				&notificationTimeStr,
 				&notification.Content,
-				&relatedTimeStr,
+				&notification.IsNotificated,
 				&createTimeStr,
 				&notification.CreateApp,
 				&notification.CreateDevice,
@@ -337,11 +332,6 @@ WHERE
 			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse notification time %s in NOTIFICATION: %w", notificationTimeStr, err)
-				return nil, err
-			}
-			notification.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in NOTIFICATION : %w", relatedTimeStr, err)
 				return nil, err
 			}
 			notification.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
@@ -370,7 +360,7 @@ SELECT
   TARGET_ID,
   NOTIFICATION_TIME,
   CONTENT,
-  RELATED_TIME,
+  IS_NOTIFICATED,
   CREATE_TIME,
   CREATE_APP,
   CREATE_USER,
@@ -441,7 +431,7 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			notification := &Notification{}
-			relatedTimeStr, createTimeStr, updateTimeStr, notificationTimeStr := "", "", "", ""
+			createTimeStr, updateTimeStr, notificationTimeStr := "", "", ""
 			dataType := ""
 
 			err = rows.Scan(
@@ -450,7 +440,7 @@ WHERE
 				&notification.TargetID,
 				&notificationTimeStr,
 				&notification.Content,
-				&relatedTimeStr,
+				&notification.IsNotificated,
 				&createTimeStr,
 				&notification.CreateApp,
 				&notification.CreateDevice,
@@ -466,11 +456,6 @@ WHERE
 			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse notification time %s in NOTIFICATION: %w", notificationTimeStr, err)
-				return nil, err
-			}
-			notification.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in NOTIFICATION : %w", relatedTimeStr, err)
 				return nil, err
 			}
 			notification.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
@@ -519,7 +504,7 @@ SELECT
   TARGET_ID,
   NOTIFICATION_TIME,
   CONTENT,
-  RELATED_TIME,
+  IS_NOTIFICATED,
   CREATE_TIME,
   CREATE_APP,
   CREATE_USER,
@@ -554,7 +539,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "NOTIFICATION_TIME"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -591,7 +576,7 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			notification := &Notification{}
-			relatedTimeStr, createTimeStr, updateTimeStr, notificationTimeStr := "", "", "", ""
+			createTimeStr, updateTimeStr, notificationTimeStr := "", "", ""
 			dataType := ""
 
 			err = rows.Scan(
@@ -600,7 +585,7 @@ WHERE
 				&notification.TargetID,
 				&notificationTimeStr,
 				&notification.Content,
-				&relatedTimeStr,
+				&notification.IsNotificated,
 				&createTimeStr,
 				&notification.CreateApp,
 				&notification.CreateDevice,
@@ -616,11 +601,6 @@ WHERE
 			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse notification time %s in NOTIFICATION: %w", notificationTimeStr, err)
-				return nil, err
-			}
-			notification.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in NOTIFICATION: %w", relatedTimeStr, err)
 				return nil, err
 			}
 			notification.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
@@ -646,7 +626,7 @@ INSERT INTO NOTIFICATION (
   NOTIFICATION_TIME,
   CONTENT,
   TARGET_ID,
-  RELATED_TIME,
+  IS_NOTIFICATED,
   CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
@@ -685,7 +665,7 @@ INSERT INTO NOTIFICATION (
 		notification.NotificationTime.Format(sqlite3impl.TimeLayout),
 		notification.Content,
 		notification.TargetID,
-		notification.RelatedTime.Format(sqlite3impl.TimeLayout),
+		notification.IsNotificated,
 		notification.CreateTime.Format(sqlite3impl.TimeLayout),
 		notification.CreateApp,
 		notification.CreateDevice,

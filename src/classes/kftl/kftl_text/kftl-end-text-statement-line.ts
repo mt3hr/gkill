@@ -24,7 +24,7 @@ export class KFTLEndTextStatementLine extends KFTLStatementLine {
         request.set_current_text_id(null)
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "テキスト↑"
     }
 
