@@ -87,10 +87,10 @@ FROM NOTIFICATION
 		default:
 			gkillNotificateTarget := &GkillNotificateTarget{}
 			err = rows.Scan(
-				gkillNotificateTarget.ID,
-				gkillNotificateTarget.UserID,
-				gkillNotificateTarget.PublicKey,
-				gkillNotificateTarget.Subscription,
+				&gkillNotificateTarget.ID,
+				&gkillNotificateTarget.UserID,
+				&gkillNotificateTarget.PublicKey,
+				&gkillNotificateTarget.Subscription,
 			)
 			gkillNotificateTargets = append(gkillNotificateTargets, gkillNotificateTarget)
 		}
@@ -136,10 +136,10 @@ WHERE USER_ID = ? AND PUBLIC_KEY = ?
 		default:
 			gkillNotificateTarget := &GkillNotificateTarget{}
 			err = rows.Scan(
-				gkillNotificateTarget.ID,
-				gkillNotificateTarget.UserID,
-				gkillNotificateTarget.PublicKey,
-				gkillNotificateTarget.Subscription,
+				&gkillNotificateTarget.ID,
+				&gkillNotificateTarget.UserID,
+				&gkillNotificateTarget.PublicKey,
+				&gkillNotificateTarget.Subscription,
 			)
 			gkillNotificateTargets = append(gkillNotificateTargets, gkillNotificateTarget)
 		}

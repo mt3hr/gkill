@@ -1299,6 +1299,30 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	// 通知情報を更新する
+	notificator, err := g.GkillDAOManager.GetNotificator(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get notificator: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificatorError,
+			ErrorMessage: "通知更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	err = notificator.UpdateNotificationTargets(context.Background())
+	if err != nil {
+		err = fmt.Errorf("error at update notification targetrs: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificatorError,
+			ErrorMessage: "通知更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	response.AddedNotification = notification
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddNotificationSuccessMessage,
@@ -2821,6 +2845,30 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundNotificationError,
+			ErrorMessage: "通知更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// 通知情報を更新する
+	notificator, err := g.GkillDAOManager.GetNotificator(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get notificator: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificatorError,
+			ErrorMessage: "通知更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	err = notificator.UpdateNotificationTargets(context.Background())
+	if err != nil {
+		err = fmt.Errorf("error at update notification targetrs: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificatorError,
 			ErrorMessage: "通知更新に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -7979,7 +8027,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	rsaBitsInt := 2048
 	validFromStr := ""
 	validForDuration := 365 * 24 * time.Hour
-	isCABool := false
+	isCABool := true
 	host := &hostStr
 	ecdsaCurve := &ecdsaCurveStr
 	ed25519Key := &ed25519KeyBool

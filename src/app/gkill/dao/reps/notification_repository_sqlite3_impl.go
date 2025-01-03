@@ -374,7 +374,7 @@ SELECT
 FROM NOTIFICATION
 WHERE 
 `
-	sql += " (datatime(NOTIFICATION_TIME, 'localtime') BETWEEN ? AND ?) "
+	sql += " (datetime(NOTIFICATION_TIME, 'localtime') BETWEEN datetime(?, 'localtime') AND datetime(?, 'localtime')) "
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
