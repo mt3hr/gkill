@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ConfirmDeleteShareTaskListView v-if="share_mi_task_list_info" :application_config="application_config"
             :gkill_api="gkill_api" :share_mi_task_list_info="share_mi_task_list_info"
             @requested_delete_share_task_link_info="(share_task_link_info) => emits('requested_delete_share_task_link_info', share_task_link_info)"

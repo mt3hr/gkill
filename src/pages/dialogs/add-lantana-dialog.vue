@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <AddLantanaView :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
             @received_errors="(errors) => emits('received_errors', errors)"

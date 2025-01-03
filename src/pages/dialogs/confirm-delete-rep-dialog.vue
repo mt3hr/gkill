@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ConfirmDeleteRepView :application_config="application_config" :gkill_api="gkill_api"
             :repository="cloned_repository" :server_configs="server_configs"
             @requested_delete_rep="(rep) => emits('requested_delete_rep', rep)"

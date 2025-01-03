@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ConfirmDeleteRepTypeStructView :application_config="application_config" :gkill_api="gkill_api"
             :rep_type_struct="rep_type_struct" @received_errors="(errors) => emits('received_errors', errors)"
             @requested_close_dialog="hide"

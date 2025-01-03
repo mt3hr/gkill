@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <DecideRelatedTimeUploadedFileView :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
             :uploaded_kyous="uploaded_kyous" @received_errors="(errors) => emits('received_errors', errors)"
