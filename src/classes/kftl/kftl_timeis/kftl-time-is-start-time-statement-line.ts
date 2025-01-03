@@ -29,7 +29,7 @@ export class KFTLTimeIsStartTimeStatementLine extends KFTLStatementLine {
         request.set_related_time(time)
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "開始日時"
     }
 }

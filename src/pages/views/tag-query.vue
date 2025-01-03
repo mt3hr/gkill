@@ -92,7 +92,7 @@ async function update_check_state(items: Array<string>, is_checked: CheckState):
 
 async function update_check(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
     if (pre_uncheck_all) {
-        let f = (struct: FoldableStructModel) => { }
+        let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
             struct.is_checked = false
             struct.indeterminate = false
@@ -108,7 +108,7 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
 
     for (let i = 0; i < items.length; i++) {
         const key_name = items[i]
-        let f = (struct: FoldableStructModel) => { }
+        let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
             if (struct.key === key_name) {
                 switch (is_checked) {

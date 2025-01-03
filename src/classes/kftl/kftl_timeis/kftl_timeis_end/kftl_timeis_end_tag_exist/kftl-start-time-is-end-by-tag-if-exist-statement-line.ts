@@ -16,11 +16,11 @@ export class KFTLStartTimeIsEndByTagIfExistStatementLine extends KFTLStatementLi
         context.set_next_statement_line_constructor((line_text: string, context: KFTLStatementLineContext) => new KFTLTimeIsEndByTagIfExistTagNameStatementLine(line_text, context))
     }
 
-    async apply_this_line_to_request_map(requet_map: KFTLRequestMap): Promise<void> {
+    async apply_this_line_to_request_map(_requet_map: KFTLRequestMap): Promise<void> {
         throw new Error('Not implemented')
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "timeis"
     }
 

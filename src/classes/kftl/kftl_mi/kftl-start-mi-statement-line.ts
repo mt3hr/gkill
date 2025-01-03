@@ -23,7 +23,7 @@ export class KFTLStartMiStatementLine extends KFTLStatementLine {
 
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "mi"
 
     }

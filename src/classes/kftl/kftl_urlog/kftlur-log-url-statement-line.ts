@@ -19,7 +19,7 @@ export class KFTLURLogURLStatementLine extends KFTLStatementLine {
         req.set_url(this.get_statement_line_text())
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "URL"
     }
 

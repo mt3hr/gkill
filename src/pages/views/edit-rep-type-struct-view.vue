@@ -131,9 +131,9 @@ function update_rep_type_struct(rep_type_struct_obj: RepTypeStruct): void {
     }
 }
 
-function update_seq(rep_type_struct: Array<FoldableStructModel>): void {
+function update_seq(_rep_type_struct: Array<FoldableStructModel>): void {
     // 並び順再決定
-    let f = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => { }
+    let f = (_struct: FoldableStructModel, _parent: FoldableStructModel, _seq: number) => { }
     let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
         for (let i = 0; i < cloned_application_config.value.rep_type_struct.length; i++) {
             if (struct.id === cloned_application_config.value.rep_type_struct[i].id) {

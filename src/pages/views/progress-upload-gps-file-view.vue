@@ -1,4 +1,5 @@
 <template>
+    <div></div>
 </template>
 <script lang="ts" setup>
 import type { ProgressUploadGPSFileViewEmits } from './progress-upload-gps-file-view-emits'

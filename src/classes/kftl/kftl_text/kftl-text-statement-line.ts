@@ -22,7 +22,7 @@ export class KFTLTextStatementLine extends KFTLStatementLine {
         return new Promise<void>((resolve) => resolve())
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return ""
     }
 

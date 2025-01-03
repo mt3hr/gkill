@@ -104,7 +104,7 @@ watch(() => props.find_kyou_query, async () => {
 })
 
 
-async function clicked_items(e: MouseEvent, items: Array<string>, check_state: CheckState, is_user: boolean): Promise<void> {
+async function clicked_items(_e: MouseEvent, _items: Array<string>, _check_state: CheckState, _is_user: boolean): Promise<void> {
     const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {
         emits('request_update_checked_timeis_tags', checked_items, true)
@@ -140,7 +140,7 @@ async function update_check_state(items: Array<string>, is_checked: CheckState):
 
 async function update_check(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
     if (pre_uncheck_all) {
-        let f = (struct: FoldableStructModel) => { }
+        let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
             struct.is_checked = false
             struct.indeterminate = false
@@ -156,7 +156,7 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
 
     for (let i = 0; i < items.length; i++) {
         const key_name = items[i]
-        let f = (struct: FoldableStructModel) => { }
+        let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
             if (struct.key === key_name) {
                 switch (is_checked) {
