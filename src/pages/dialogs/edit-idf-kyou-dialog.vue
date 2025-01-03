@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <EditIDFKyouView :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="[kyou.generate_info_identifer()]" :idf_kyou="kyou.typed_idf_kyou" :kyou="kyou"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :last_added_tag="last_added_tag"
