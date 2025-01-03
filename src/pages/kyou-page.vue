@@ -28,9 +28,9 @@
             :highlight_targets="hightlight_targets" :is_image_view="is_image_view" :kyou="kyou" :last_added_tag="''"
             :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
             :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-            :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
+            :show_timeis_plaing_end_button="true" :height="'fit-content'"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            :width="app_content_width.valueOf()" :is_readonly_mi_check="false" @received_errors="write_errors"
+            :width="'fit-content'" :is_readonly_mi_check="false" @received_errors="write_errors"
             @received_messages="write_messages" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
@@ -59,9 +59,10 @@ import { InfoIdentifier } from '@/classes/datas/info-identifier'
 import { Kyou } from '@/classes/datas/kyou'
 import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
+import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 
 const enable_context_menu = ref(true)
-const enable_dialog = ref(false)
+const enable_dialog = ref(true)
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -76,6 +77,27 @@ const is_show_application_config_dialog: Ref<boolean> = ref(false)
 const hightlight_targets: Ref<Array<InfoIdentifier>> = ref(new Array<InfoIdentifier>())
 const is_image_view: Ref<boolean> = ref(false)
 const kyou: Ref<Kyou> = ref(new Kyou())
+
+
+async function load_kyou(): Promise<void> {
+    let kyou_id = new URL(location.href).searchParams.get('kyou_id')
+    if (!kyou_id || kyou_id === "") {
+        return
+    }
+    const req = new GetKyouRequest()
+    req.session_id = gkill_api.value.get_session_id()
+    req.id = kyou_id
+    const res = await gkill_api.value.get_kyou(req)
+    if (res.errors && res.errors.length !== 0) {
+        write_errors(res.errors)
+        return
+    }
+    if (res.messages && res.messages.length !== 0) {
+        write_messages(res.messages)
+    }
+    kyou.value = res.kyou_histories[0]
+    kyou.value.load_all()
+}
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
@@ -159,7 +181,9 @@ window.addEventListener('resize', () => {
 })
 
 resize_content()
-load_application_config()
+load_application_config().then(() => {
+    load_kyou()
+})
 
 // プッシュ通知登録用
 async function subscribe(vapidPublicKey: string) {
@@ -176,7 +200,7 @@ async function subscribe(vapidPublicKey: string) {
         .then(async function (subscription) {
             const req = new RegisterGkillNotificationRequest()
             req.session_id = GkillAPI.get_gkill_api().get_session_id()
-            req.subscription = JSON.stringify(subscription)
+            req.subscription = subscription
             req.public_key = vapidPublicKey
             const res = await GkillAPI.get_gkill_api().register_gkill_notification(req)
             if (res.errors && res.errors.length !== 0) {
@@ -221,12 +245,6 @@ async function register_mi_task_notification(): Promise<void> {
                         write_messages(res.messages)
                     }
                     subscribe(res.gkill_notification_public_key)
-                } else {
-                    console.log(
-                        JSON.stringify({
-                            subscription: subscription,
-                        })
-                    )
                 }
             })
     }
