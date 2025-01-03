@@ -292,4 +292,5 @@ const (
 	InvalidGetNotificationHistoriesByNotificationIDRequestDataError  = "ERR000287"
 	GetNotificationHistoriesByNotificationIDError                    = "ERR000288"
 	GetNotificationHistoriesByNotificationIDSuccessMessage           = "ERR000289"
+	GetNotificatorError                                              = "ERR000290"
 )

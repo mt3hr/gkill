@@ -163,7 +163,7 @@ async function subscribe(vapidPublicKey: string) {
         .then(async function (subscription) {
             const req = new RegisterGkillNotificationRequest()
             req.session_id = GkillAPI.get_gkill_api().get_session_id()
-            req.subscription = JSON.stringify(subscription)
+            req.subscription = subscription
             req.public_key = vapidPublicKey
             const res = await GkillAPI.get_gkill_api().register_gkill_notification(req)
             if (res.errors && res.errors.length !== 0) {
@@ -207,12 +207,6 @@ async function register_mi_task_notification(): Promise<void> {
                         write_messages(res.messages)
                     }
                     subscribe(res.gkill_notification_public_key)
-                } else {
-                    console.log(
-                        JSON.stringify({
-                            subscription: subscription,
-                        })
-                    )
                 }
             })
     }
