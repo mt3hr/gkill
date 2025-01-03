@@ -14,11 +14,11 @@ export class KFTLNoneStatementLine extends KFTLStatementLine {
         context.set_next_statement_line_target_id(context.get_this_statement_line_target_id())
     }
 
-    async apply_this_line_to_request_map(requet_map: KFTLRequestMap): Promise<void> {
+    async apply_this_line_to_request_map(_requet_map: KFTLRequestMap): Promise<void> {
         return
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "**********"
     }
 }

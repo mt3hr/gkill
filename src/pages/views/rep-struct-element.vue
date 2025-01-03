@@ -9,5 +9,5 @@ import type { RepStructElementProps } from './rep-struct-element-props'
 import ApplicationConfigStructContextMenu from './application-config-struct-context-menu.vue'
 
 defineProps<RepStructElementProps>()
-const emits = defineEmits<RepStructElementEmits>()
+defineEmits<RepStructElementEmits>()
 </script>

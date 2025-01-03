@@ -382,13 +382,9 @@ func (g *GkillServerAPI) Serve() error {
 	if err != nil {
 		return err
 	}
-	webpushServiceWorkerJS, err := fs.Sub(htmlFS, "embed/html/gkill-webpush-service-worker.js")
-	if err != nil {
-		return err
-	}
-	router.PathPrefix(g.APIAddress.GkillWebpushServiceWorkerJsAddress).Handler(http.StripPrefix(g.APIAddress.GkillWebpushServiceWorkerJsAddress,
+	router.PathPrefix(g.APIAddress.GkillWebpushServiceWorkerJsAddress).Handler(http.StripPrefix("",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.FileServer(http.FS(webpushServiceWorkerJS)).ServeHTTP(w, r)
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/rykv").Handler(http.StripPrefix("/rykv",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

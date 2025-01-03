@@ -20,7 +20,7 @@ export class KFTLTimeIsEndTitleStatementLine extends KFTLStatementLine {
         request_map.set(this.get_context().get_this_statement_line_target_id(), req)
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         return "終了"
     }
 }

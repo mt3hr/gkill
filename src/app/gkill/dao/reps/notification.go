@@ -9,7 +9,7 @@ type Notification struct {
 
 	TargetID string `json:"target_id"`
 
-	RelatedTime time.Time `json:"related_time"`
+	IsNotificated bool `json:"is_notificated"`
 
 	CreateTime time.Time `json:"create_time"`
 

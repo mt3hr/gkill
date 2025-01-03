@@ -247,13 +247,12 @@
 <script setup lang="ts">
 import router from '@/router'
 import MiQueryEditorSidebar from './mi-query-editor-sidebar.vue'
-import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { computed, nextTick, type Ref, ref } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
-import Dnote from './dnote.vue'
+import Dnote from './dnote-view.vue'
 import KyouCountCalendar from './kyou-count-calendar.vue'
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
@@ -325,7 +324,7 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
     }
 }
 
-async function update_check_kyous(kyou: Array<Kyou>, is_checked: boolean): Promise<void> {
+async function update_check_kyous(_kyou: Array<Kyou>, _is_checked: boolean): Promise<void> {
     throw new Error('Not implemented')
 }
 

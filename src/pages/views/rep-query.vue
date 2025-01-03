@@ -163,14 +163,14 @@ function calc_reps_by_types_and_devices(): Array<string> | null {
     }
 
     const check_target_rep_names = new Array<string>()
-    let walk_rep = (rep: RepStructElementData): void => { }
+    let walk_rep = (_rep: RepStructElementData): void => { }
     walk_rep = (rep: RepStructElementData): void => {
         rep.is_checked = false
         const rep_struct = rep_to_struct(rep)
 
         let type_is_match = false
         let device_is_match = false
-        let walk = (struct: FoldableStructModel): void => { }
+        let walk = (_struct: FoldableStructModel): void => { }
 
         walk = (struct: FoldableStructModel): void => {
             struct.indeterminate = false
@@ -249,7 +249,7 @@ async function update_rep_types(items: Array<string>, is_checked: CheckState): P
 
 async function update_check_reps(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
     if (pre_uncheck_all) {
-        let f = (struct: FoldableStructModel) => { }
+        let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
             struct.is_checked = false
             struct.indeterminate = false
@@ -263,7 +263,7 @@ async function update_check_reps(items: Array<string>, is_checked: CheckState, p
 
     for (let i = 0; i < items.length; i++) {
         const key_name = items[i]
-        let f = (struct: RepStructElementData) => { }
+        let f = (_struct: RepStructElementData) => { }
         let func = (struct: RepStructElementData) => {
             if (struct.key === key_name) {
                 switch (is_checked) {
@@ -296,7 +296,7 @@ async function update_check_reps(items: Array<string>, is_checked: CheckState, p
 
 async function update_check_devices(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
     if (pre_uncheck_all) {
-        let f = (struct: FoldableStructModel) => { }
+        let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
             struct.is_checked = false
             struct.indeterminate = false
@@ -310,7 +310,7 @@ async function update_check_devices(items: Array<string>, is_checked: CheckState
 
     for (let i = 0; i < items.length; i++) {
         const key_name = items[i]
-        let f = (struct: FoldableStructModel) => { }
+        let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
             if (struct.key === key_name) {
                 switch (is_checked) {
@@ -350,7 +350,7 @@ async function update_check_devices(items: Array<string>, is_checked: CheckState
 
 async function update_check_rep_types(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
     if (pre_uncheck_all) {
-        let f = (struct: FoldableStructModel) => { }
+        let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
             struct.is_checked = false
             struct.indeterminate = false
@@ -364,7 +364,7 @@ async function update_check_rep_types(items: Array<string>, is_checked: CheckSta
 
     for (let i = 0; i < items.length; i++) {
         const key_name = items[i]
-        let f = (struct: FoldableStructModel) => { }
+        let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
             if (struct.key === key_name) {
                 switch (is_checked) {

@@ -35,7 +35,7 @@ export class KFTLRelatedTimeStatementLine extends KFTLStatementLine {
         return new Promise<void>((resolve) => resolve())
     }
 
-    get_label_name(context: KFTLStatementLineContext): string {
+    get_label_name(_context: KFTLStatementLineContext): string {
         const time = moment(this.get_context().get_this_statement_line_text().replace("？", "")).toDate()
         if (Number.isNaN(time.getTime())) {
             return "変な日時"

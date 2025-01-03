@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import { nextTick, type Ref, ref } from 'vue';
+import { type Ref, ref } from 'vue';
 import { RouterView } from 'vue-router'
 import { VLocaleProvider } from 'vuetify/components';
-import { GkillAPI } from './classes/api/gkill-api';
-import type { GkillError } from './classes/api/gkill-error';
-import type { GkillMessage } from './classes/api/gkill-message';
-import { GetGkillNotificationPublicKeyRequest } from './classes/api/req_res/get-gkill-notification-public-key-request';
-import { RegisterGkillNotificationRequest } from './classes/api/req_res/register-gkill-notification-request';
 const locale: Ref<string> = ref(window.navigator.language)
 </script>
 

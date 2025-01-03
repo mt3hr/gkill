@@ -85,7 +85,7 @@ loop:
 	}
 
 	sort.Slice(matchNotificationsList, func(i, j int) bool {
-		return matchNotificationsList[i].RelatedTime.After(matchNotificationsList[j].RelatedTime)
+		return matchNotificationsList[i].NotificationTime.After(matchNotificationsList[j].NotificationTime)
 	})
 	return matchNotificationsList, nil
 }

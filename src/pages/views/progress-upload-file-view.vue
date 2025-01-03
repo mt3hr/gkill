@@ -1,4 +1,5 @@
 <template>
+    <div></div>
 </template>
 <script lang="ts" setup>
 import type { ProgressUploadFileViewEmits } from './progress-upload-file-view-emits'

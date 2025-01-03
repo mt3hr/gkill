@@ -131,9 +131,9 @@ function update_device_struct(device_struct_obj: DeviceStruct): void {
     }
 }
 
-function update_seq(device_struct: Array<FoldableStructModel>): void {
+function update_seq(_device_struct: Array<FoldableStructModel>): void {
     // 並び順再決定
-    let f = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => { }
+    let f = (_struct: FoldableStructModel, _parent: FoldableStructModel, _seq: number) => { }
     let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
         for (let i = 0; i < cloned_application_config.value.device_struct.length; i++) {
             if (struct.id === cloned_application_config.value.device_struct[i].id) {
