@@ -4,13 +4,13 @@ import { GkillAPIRequest } from '../gkill-api-request'
 
 export class RegisterGkillNotificationRequest extends GkillAPIRequest {
 
-    subscription: string
+    subscription: any
 
     public_key: string
 
     constructor() {
         super()
-        this.subscription = ""
+        this.subscription = null
         this.public_key = ""
     }
 
