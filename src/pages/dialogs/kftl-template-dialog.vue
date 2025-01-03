@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog" :width="'fit-content'">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <KFTLTemplateView :application_config="application_config" :gkill_api="gkill_api" :template="template"
             @clicked_template_element_leaf="(template: KFTLTemplateElementData) => emits('clicked_template_element_leaf', template)"
             @received_errors="(errors) => emits('received_errors', errors)"

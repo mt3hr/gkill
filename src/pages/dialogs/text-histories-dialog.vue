@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <v-card class="pa-2">
             <v-card-title>
                 <v-row class="pa-0 ma-0">

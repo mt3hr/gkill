@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ShareTaskListView :application_config="application_config" :gkill_api="gkill_api"
             :find_kyou_query="find_kyou_query" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" @regestered_share_mi_task_list_info="(share_mi_task_info) => {

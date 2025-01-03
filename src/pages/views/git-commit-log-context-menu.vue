@@ -25,7 +25,8 @@
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
         @requested_reload_list="emits('requested_reload_list')"
         @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
+        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
+        ref="add_tag_dialog" />
     <AddTextDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -33,14 +34,16 @@
         @requested_reload_list="emits('requested_reload_list')"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
-        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
+        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
+        ref="add_text_dialog" />
     <ConfirmReKyouDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
         @received_errors="(errors) => emits('received_errors', errors)"
         @received_messages="(messages) => emits('received_messages', messages)"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" @requested_reload_list="() => { }"
-        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
+        @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
+        ref="confirm_rekyou_dialog" />
     <AddNotificationDialog :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"

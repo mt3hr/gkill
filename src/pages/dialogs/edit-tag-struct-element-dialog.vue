@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <EditTagStructElementView :application_config="application_config" :gkill_api="gkill_api"
             :struct_obj="tag_struct"
              @received_errors="(errors) => emits('received_errors', errors)"
