@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <CreateAccountView :application_config="application_config" :gkill_api="gkill_api"
             :server_configs="server_configs" @received_errors="(errors) => emits('received_errors', errors)"
             @requested_close_dialog="hide" @created_account="(account) => emits('added_account', account)"

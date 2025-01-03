@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ManageShareTaskListView :application_config="application_config" :gkill_api="gkill_api"
             :share_mi_task_list_infos="share_mi_task_list_infos"
             @requested_show_confirm_delete_share_task_list_dialog="show_confirm_delete_share_task_list_dialog"

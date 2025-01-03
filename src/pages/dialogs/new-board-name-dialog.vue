@@ -1,5 +1,5 @@
 <template>
-    <v-dialog v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <v-card>
             <v-card-title>板名追加</v-card-title>
             <v-row class="ma-0 pa-0">
