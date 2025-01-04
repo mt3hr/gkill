@@ -716,7 +716,7 @@ func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNo
 			return nil, err
 		}
 
-		gkillNotificator, err := NewGkillNotificator(g, gkillRepositories)
+		gkillNotificator, err := NewGkillNotificator(context.Background(), g, gkillRepositories)
 		if err != nil {
 			err = fmt.Errorf("error at new gkill notificator: %w", err)
 			return nil, err
