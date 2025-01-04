@@ -621,14 +621,24 @@ function show_urlog_dialog(): void {
     padding-top: 0px;
 }
 
-.kyou_detail_view {
-    width: calc(400px - 8px);
-    max-width: calc(400px - 8px);
-    min-width: calc(400px - 8px);
+.kyou_detail_view.dummy {
+    overflow-x: hidden;
 }
 
-.kyou_dialog img.kyou_image,
+.kyou_detail_view {
+    width: calc(400px + 8px);
+    max-width: calc(400px + 8px);
+    min-width: calc(400px + 8px);
+}
+
 .kyou_detail_view img.kyou_image {
+    width: unset !important;
+    height: unset !important;
+    max-width: calc(400px - 2px) !important;
+    max-height: 85vh !important;
+}
+
+.kyou_dialog img.kyou_image {
     width: unset !important;
     height: unset !important;
     max-width: 85vw !important;
