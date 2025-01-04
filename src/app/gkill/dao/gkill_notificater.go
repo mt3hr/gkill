@@ -14,33 +14,33 @@ import (
 )
 
 type notificator struct {
+	doing           bool
 	gkillDAOManager *GkillDAOManager
 	gkillReps       *reps.GkillRepositories
 	ctx             context.Context
-	cancelFunc      context.CancelFunc
 	notification    *reps.Notification
 	timer           *time.Timer
-	done            bool
 }
 
 // 作って通知にそなえて構えます。
-// Cancelメソッドからキャセルしてください
-func newNotificator(gkillDAOManager *GkillDAOManager, gkillReps *reps.GkillRepositories, notification *reps.Notification) *notificator {
-	ctx, cancelFunc := context.WithCancel(context.Background())
+// キャンセルはctxからやってください
+func newNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, gkillReps *reps.GkillRepositories, notification *reps.Notification) *notificator {
 	newNotificator := &notificator{
+		doing:           false,
+		ctx:             ctx,
 		gkillDAOManager: gkillDAOManager,
 		gkillReps:       gkillReps,
-		ctx:             ctx,
-		cancelFunc:      cancelFunc,
 		notification:    notification,
-		done:            false,
 	}
 	go newNotificator.waitAndNotify()
 	return newNotificator
 }
 
 func (n *notificator) waitAndNotify() {
-	ctx := context.Background()
+	if n.doing {
+		return
+	}
+	n.doing = true
 	if n.timer != nil {
 		n.timer.Stop()
 	}
@@ -50,23 +50,25 @@ func (n *notificator) waitAndNotify() {
 	if time.Now().Before(n.notification.NotificationTime) {
 		// まだだったら時刻まで待機する
 		diff := n.notification.NotificationTime.Sub(time.Now())
-		<-time.NewTimer(diff).C
-	} else {
-		return
+		n.timer = time.NewTimer(diff)
+
+		select {
+		case <-n.ctx.Done():
+			n.timer.Stop()
+			return
+		case <-n.timer.C:
+			n.timer.Stop()
+		}
 	}
 
-	// キャンセルされていたら何もせずに返す
-	select {
-	case <-n.ctx.Done():
-		return
-	default:
-		break
-	}
+	notificationCtx := context.Background()
 
 	// Notificationデータを更新する
 	updatedNotification := *n.notification
 	updatedNotification.IsNotificated = true
-	err := n.gkillReps.WriteNotificationRep.AddNotificationInfo(ctx, &updatedNotification)
+	updatedNotification.UpdateTime = time.Now()
+	updatedNotification.UpdateUser = "gkill_notificator"
+	err := n.gkillReps.WriteNotificationRep.AddNotificationInfo(notificationCtx, &updatedNotification)
 	if err != nil {
 		gkill_log.Debug.Print(err)
 		return
@@ -76,7 +78,7 @@ func (n *notificator) waitAndNotify() {
 
 	// 現在のServerConfigを取得する
 	var currentServerConfig *server_config.ServerConfig
-	serverConfigs, err := n.gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
+	serverConfigs, err := n.gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(notificationCtx)
 	if err != nil {
 		gkill_log.Debug.Print(err)
 		return
@@ -93,13 +95,13 @@ func (n *notificator) waitAndNotify() {
 	}
 
 	// 送信対象を取得する
-	userID, err := n.gkillReps.GetUserID(ctx)
+	userID, err := n.gkillReps.GetUserID(notificationCtx)
 	if err != nil {
 		err = fmt.Errorf("get user id from gkill reps. in gkill notificator.")
 		gkill_log.Debug.Print(err)
 		return
 	}
-	notificationTargets, err := n.gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.GetGkillNotificationTargets(ctx, userID, currentServerConfig.GkillNotificationPublicKey)
+	notificationTargets, err := n.gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.GetGkillNotificationTargets(notificationCtx, userID, currentServerConfig.GkillNotificationPublicKey)
 	if err != nil {
 		err = fmt.Errorf("get notification target. in gkill notificator.: %w", err)
 		gkill_log.Debug.Print(err)
@@ -133,19 +135,10 @@ func (n *notificator) waitAndNotify() {
 		if err != nil {
 			err = fmt.Errorf("error at send gkill notification: %w", err)
 		}
+		if resp.Body == nil {
+			return
+		}
 		defer resp.Body.Close()
-	}
-	n.done = true
-}
-
-func (n *notificator) GetNotificationID() string {
-	return n.notification.ID
-}
-
-func (n *notificator) Cancel() {
-	n.cancelFunc()
-	if n.timer != nil {
-		n.timer.Stop()
 	}
 }
 
@@ -153,23 +146,20 @@ type GkillNotificator struct {
 	gkillDAOManager *GkillDAOManager
 	gkillReps       *reps.GkillRepositories
 	notificators    map[string]*notificator
-	closed          bool
 	m               sync.Mutex
 	ticker          *time.Ticker
-	ctx             context.Context
+	notificationServiceCtx context.Context
+	notificationCtx             context.Context
 	cancelFunc      context.CancelFunc
 }
 
-func NewGkillNotificator(gkillDAOManager *GkillDAOManager, gkillReps *reps.GkillRepositories) (*GkillNotificator, error) {
-	ctx, cancelFunc := context.WithCancel(context.Background())
+func NewGkillNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, gkillReps *reps.GkillRepositories) (*GkillNotificator, error) {
 	gkillNotificator := &GkillNotificator{
 		gkillDAOManager: gkillDAOManager,
 		gkillReps:       gkillReps,
 		notificators:    map[string]*notificator{},
-		closed:          false,
 		ticker:          time.NewTicker(time.Hour * 1), // 1時間に1回自動で更新する
-		ctx:             ctx,
-		cancelFunc:      cancelFunc,
+		notificationServiceCtx: ctx,
 	}
 	go gkillNotificator.updateLoopWhenTick()
 	return gkillNotificator, nil
@@ -178,15 +168,17 @@ func NewGkillNotificator(gkillDAOManager *GkillDAOManager, gkillReps *reps.Gkill
 func (g *GkillNotificator) updateLoopWhenTick() {
 loop:
 	for {
-		err := g.UpdateNotificationTargets(g.ctx)
+		err := g.UpdateNotificationTargets(context.Background())
 		if err != nil {
 			gkill_log.Debug.Print(err)
 		}
 
 		select {
-		case <-g.ctx.Done():
+		case <-g.notificationServiceCtx.Done():
+			g.cancelFunc()
 			break loop
 		case <-g.ticker.C:
+			continue loop
 		}
 	}
 }
@@ -204,15 +196,17 @@ func (g *GkillNotificator) UpdateNotificationTargets(ctx context.Context) error 
 	}
 
 	// 今あるnotificatorを全部キャンセルして新しく作る
-	for _, notificator := range g.notificators {
-		notificator.Cancel()
+	if g.cancelFunc != nil {
+		g.cancelFunc()
 	}
+	g.notificationCtx, g.cancelFunc = context.WithCancel(g.notificationServiceCtx)
+
 	g.notificators = map[string]*notificator{}
 	for _, notification := range notifications {
 		if notification.IsDeleted || notification.IsNotificated {
 			continue
 		}
-		notificator := newNotificator(g.gkillDAOManager, g.gkillReps, notification)
+		notificator := newNotificator(g.notificationCtx, g.gkillDAOManager, g.gkillReps, notification)
 		if err != nil {
 			err = fmt.Errorf("error at new notificator: %w", err)
 			return err
@@ -225,6 +219,5 @@ func (g *GkillNotificator) UpdateNotificationTargets(ctx context.Context) error 
 func (g *GkillNotificator) Close(ctx context.Context) error {
 	g.cancelFunc()
 	g.ticker.Stop()
-	g.closed = true
 	return nil
 }
