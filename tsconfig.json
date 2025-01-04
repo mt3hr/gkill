@@ -9,11 +9,17 @@
     }
   ],
   "compilerOptions": {
+    "lib": [
+      "WebWorker"
+    ],
     "types": [
-      "google.maps"
+      "google.maps",
+      "vite-pluginb-pwa/client",
     ],
   },
   "exclude": [
-    "src/app/**/*"
+    "src/app/**/*",
+    "dist",
+    "node_modules",
   ]
 }
