@@ -181,7 +181,7 @@
                                 :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
-                                :height="app_content_height.valueOf()" :is_readonly_mi_check="false" :width="400"
+                                :height="app_content_height.valueOf()" :is_readonly_mi_check="false" :width="400 + 8"
                                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                                 class="kyou_detail_view" @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
@@ -662,14 +662,24 @@ function show_urlog_dialog(): void {
     padding-top: 0px;
 }
 
-.kyou_detail_view {
-    width: calc(400px - 8px);
-    max-width: calc(400px - 8px);
-    min-width: calc(400px - 8px);
+.kyou_detail_view.dummy {
+    overflow-x: hidden;
 }
 
-.kyou_dialog img.kyou_image,
+.kyou_detail_view {
+    width: calc(400px + 8px);
+    max-width: calc(400px + 8px);
+    min-width: calc(400px + 8px);
+}
+
 .kyou_detail_view img.kyou_image {
+    width: unset !important;
+    height: unset !important;
+    max-width: calc(400px - 2px) !important;
+    max-height: 85vh !important;
+}
+
+.kyou_dialog img.kyou_image {
     width: unset !important;
     height: unset !important;
     max-width: 85vw !important;
