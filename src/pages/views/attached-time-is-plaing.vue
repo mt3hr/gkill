@@ -31,8 +31,8 @@ const plaing_class = computed(() => {
     let highlighted = false;
     for (let i = 0; i < props.highlight_targets.length; i++) {
         if (props.highlight_targets[i].id === props.kyou.id
-            && props.highlight_targets[i].create_time.getTime() === props.kyou.create_time.getTime()
-            && props.highlight_targets[i].update_time.getTime() === props.kyou.update_time.getTime()) {
+            && props.highlight_targets[i].create_time.getTime() === props.timeis_kyou.create_time.getTime()
+            && props.highlight_targets[i].update_time.getTime() === props.timeis_kyou.update_time.getTime()) {
             highlighted = true
             break
         }

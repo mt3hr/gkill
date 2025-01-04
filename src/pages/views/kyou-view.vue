@@ -20,7 +20,7 @@
                 @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)" />
-            <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: any) => show_context_menu(e as PointerEvent)">
+            <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: any) => show_context_menu(e as PointerEvent)" :class="kyou_class">
                 <v-col v-if="show_checkbox" class="kyou_check_box pa-0 ma-0" cols="auto">
                     <input type="checkbox" v-model="cloned_kyou.is_checked" class="pa-0 ma-0"
                         @change="emits('requested_update_check_kyous', [kyou], !kyou.is_checked)" />
