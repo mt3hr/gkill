@@ -515,6 +515,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+
 	if account == nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", request.UserID, err)
 		gkill_log.Debug.Printf(err.Error())
@@ -730,6 +731,15 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if requesterAccount == nil {
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountNotFoundError,
+			ErrorMessage: "パスワードリセット処理に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	// 管理者権限がなければ弾く
 	if !requesterAccount.IsAdmin {
 		err = fmt.Errorf("account not has admin user id = %s: %w", requesterSession.UserID, err)
@@ -747,6 +757,14 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", request.TargetUserID, err)
 		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountNotFoundError,
+			ErrorMessage: "パスワードリセット処理に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if targetAccount == nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: "パスワードリセット処理に失敗しました",
@@ -824,6 +842,14 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: "パスワード設定に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if targetAccount == nil {
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountNotFoundError,
+			ErrorMessage: "パスワードリセット処理に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7491,6 +7517,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+
 	targetAccountUpdated := &account.Account{
 		UserID:             targetAccount.UserID,
 		PasswordSha256:     targetAccount.PasswordSha256,
@@ -7595,6 +7622,16 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+
+	if targetAccount == nil {
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountNotFoundError,
+			ErrorMessage: "Rep更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	userID = targetAccount.UserID
 	device = ""
 
@@ -7856,6 +7893,15 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	if requesterAccount == nil {
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetAccountError,
+			ErrorMessage: "account追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	applicationConfig := &user_config.ApplicationConfig{
 		UserID:                    request.AccountInfo.UserID,
 		Device:                    device,
@@ -7947,6 +7993,14 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", requesterSession.UserID, err)
 		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountNotFoundError,
+			ErrorMessage: "TLSファイル作成処理に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if requesterAccount == nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: "TLSファイル作成処理に失敗しました",
@@ -9101,6 +9155,14 @@ func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID 
 	if err != nil {
 		err = fmt.Errorf("error at get account user id = %s: %w", loginSession.UserID, err)
 		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountNotFoundError,
+			ErrorMessage: "アカウント認証に失敗しました",
+		}
+		return nil, gkillError, err
+	}
+
+	if account == nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: "アカウント認証に失敗しました",
