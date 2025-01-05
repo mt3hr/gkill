@@ -143,22 +143,22 @@ func (n *notificator) waitAndNotify() {
 }
 
 type GkillNotificator struct {
-	gkillDAOManager *GkillDAOManager
-	gkillReps       *reps.GkillRepositories
-	notificators    map[string]*notificator
-	m               sync.Mutex
-	ticker          *time.Ticker
+	gkillDAOManager        *GkillDAOManager
+	gkillReps              *reps.GkillRepositories
+	notificators           map[string]*notificator
+	m                      sync.Mutex
+	ticker                 *time.Ticker
 	notificationServiceCtx context.Context
-	notificationCtx             context.Context
-	cancelFunc      context.CancelFunc
+	notificationCtx        context.Context
+	cancelFunc             context.CancelFunc
 }
 
 func NewGkillNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, gkillReps *reps.GkillRepositories) (*GkillNotificator, error) {
 	gkillNotificator := &GkillNotificator{
-		gkillDAOManager: gkillDAOManager,
-		gkillReps:       gkillReps,
-		notificators:    map[string]*notificator{},
-		ticker:          time.NewTicker(time.Hour * 1), // 1時間に1回自動で更新する
+		gkillDAOManager:        gkillDAOManager,
+		gkillReps:              gkillReps,
+		notificators:           map[string]*notificator{},
+		ticker:                 time.NewTicker(time.Hour * 1), // 1時間に1回自動で更新する
 		notificationServiceCtx: ctx,
 	}
 	go gkillNotificator.updateLoopWhenTick()
