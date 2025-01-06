@@ -184,12 +184,11 @@ function urlBase64ToUint8Array(base64String: string) {
     return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
 
-nextTick(() => register_mi_task_notification())
+nextTick(() => register_gkill_task_notification())
 
 // プッシュ通知登録用
-async function register_mi_task_notification(): Promise<void> {
+async function register_gkill_task_notification(): Promise<void> {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register(GkillAPI.get_gkill_api().gkill_webpush_service_worker_js_address);
         await navigator.serviceWorker.ready
             .then(function (registration) {
                 return registration.pushManager.getSubscription();

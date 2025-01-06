@@ -367,7 +367,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetRepositoriesAddress = "/api/get_repositories"
 	gkillAPIAddress.GetGkillNotificationPublicKeyAddress = "/api/get_gkill_notification_public_key"
 	gkillAPIAddress.RegisterGkillNotificationAddress = "/api/register_gkill_notification"
-	gkillAPIAddress.GkillWebpushServiceWorkerJsAddress = "/gkill-webpush-service-worker.js"
+	gkillAPIAddress.GkillWebpushServiceWorkerJsAddress = "/serviceWorker.js"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
