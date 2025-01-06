@@ -1,4 +1,12 @@
-self.addEventListener('push', event => {
+/// <reference lib="webworker" />
+import { precacheAndRoute } from 'workbox-precaching'
+export default null
+declare let self: ServiceWorkerGlobalScope
+declare var clients: Clients;
+
+precacheAndRoute(self.__WB_MANIFEST)
+
+self.addEventListener('push', function (event: any) {
   const title = 'gkill'
   const data = event.data.json()
   const options = {
