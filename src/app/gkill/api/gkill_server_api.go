@@ -9163,6 +9163,7 @@ func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID 
 	}
 
 	if account == nil {
+		err = fmt.Errorf("error at get account user id = %s: %w", loginSession.UserID, err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: "アカウント認証に失敗しました",
