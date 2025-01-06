@@ -407,7 +407,7 @@ export class GkillAPI {
                 this.get_repositories_address = "/api/get_repositories"
                 this.get_gkill_notification_public_key_address = "/api/get_gkill_notification_public_key"
                 this.register_gkill_notification_address = "/api/register_gkill_notification"
-                this.gkill_webpush_service_worker_js_address = "gkill-webpush-service-worker.js"
+                this.gkill_webpush_service_worker_js_address = "/serviceWorker.js"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
