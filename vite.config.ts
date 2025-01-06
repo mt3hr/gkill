@@ -18,7 +18,11 @@ export default defineConfig({
     }),
     vueDevTools(),
     VitePWA({
+      registerType: 'autoUpdate',
       injectRegister: 'auto',
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'serviceWorker.ts',
       manifest: {
         icons: [{
           src: "favicon.png",
@@ -27,8 +31,11 @@ export default defineConfig({
           purpose: "any"
         }]
       },
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
+      },
       workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 ** 2, // 5 MB or set to something else
+        maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
       },
     }),
   ],
