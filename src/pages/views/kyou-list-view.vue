@@ -1,5 +1,5 @@
 <template>
-    <v-card :ripple="false" :link="false" @click="emits('clicked_list_view')">
+    <v-card :ripple="false" :link="false" @click.prevent="emits('clicked_list_view')">
         <v-card :ripple="false" :link="false">
             <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
                 <v-progress-circular indeterminate color="primary" />
@@ -15,7 +15,7 @@
                         :last_added_tag="last_added_tag" :show_checkbox="show_checkbox"
                         :show_content_only="show_content_only" :show_mi_create_time="true"
                         :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                        :show_timeis_plaing_end_button="true" :width="width.valueOf()"
+                        :show_timeis_plaing_end_button="true" :width="width.valueOf()" :show_attached_timeis="false"
                         :is_readonly_mi_check="is_readonly_mi_check" :enable_context_menu="enable_context_menu"
                         :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
                         :height="kyou_height.valueOf()" @clicked_kyou="(kyou) => emits('clicked_kyou', kyou)"
@@ -43,6 +43,7 @@
                                     :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'"
                                     :width="'100%'" :is_readonly_mi_check="true"
                                     :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                                    :show_attached_timeis="false"
                                     @received_errors="(errors) => emits('received_errors', errors)"
                                     @clicked_kyou="(kyou) => emits('clicked_kyou', kyou)"
                                     @received_messages="(messages) => emits('received_messages', messages)"
@@ -63,14 +64,15 @@
                 <v-spacer />
 
                 <v-col cols="auto" class="pa-0">
-                    <v-btn class="rounded-sm mx-auto" icon @click="emits('requested_search')" variant="text">
+                    <v-btn class="rounded-sm mx-auto" icon @click.prevent="emits('requested_search')" variant="text">
                         <v-icon>mdi-reload</v-icon>
                     </v-btn>
                 </v-col>
 
                 <v-col cols="auto" class="pa-0">
                     <v-btn class="rounded-sm mx-auto" icon
-                        @click="emits('requested_change_is_image_only_view', !query.is_image_only)" variant="text">
+                        @click.prevent="emits('requested_change_is_image_only_view', !query.is_image_only)"
+                        variant="text">
                         <v-icon v-show="!query.is_image_only">mdi-file-document-outline</v-icon>
                         <v-icon v-show="query.is_image_only">mdi-image</v-icon>
                     </v-btn>
@@ -78,7 +80,7 @@
 
                 <v-col cols="auto" class="pa-0">
                     <v-btn class="rounded-sm mx-auto" icon variant="text"
-                        @click="emits('requested_change_focus_kyou', !query.is_focus_kyou_in_list_view)">
+                        @click.prevent="emits('requested_change_focus_kyou', !query.is_focus_kyou_in_list_view)">
                         <v-icon v-show="!query.is_focus_kyou_in_list_view">mdi-arrow-down</v-icon>
                         <v-icon v-show="query.is_focus_kyou_in_list_view">mdi-arrow-right</v-icon>
                     </v-btn>
