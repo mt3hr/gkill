@@ -37,7 +37,8 @@
             <v-divider vertical />
             <v-btn icon="mdi-cog" @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
-        <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height">
+        <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height"
+            :mobile="drawer_mode_is_mobile">
             <RykvQueryEditorSideBar v-show="inited" class="rykv_query_editor_sidebar"
                 :application_config="application_config" :gkill_api="gkill_api"
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
@@ -107,9 +108,8 @@
                                 skip_search_this_tick = true
                                 focused_query = querys[index]
 
-                                focused_kyous_list.splice(0)
-                                for (let i = 0; i < match_kyous_list[index].length; i++) {
-                                    focused_kyous_list.push(match_kyous_list[index][i])
+                                if (is_show_kyou_count_calendar) {
+                                    update_focused_kyous_list(index)
                                 }
                                 focused_column_index = index
                                 nextTick(() => skip_search_this_tick = false)
@@ -183,7 +183,8 @@
                                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
                                 :height="app_content_height.valueOf()" :is_readonly_mi_check="false" :width="400 + 8"
                                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                                class="kyou_detail_view" @received_errors="(errors) => emits('received_errors', errors)"
+                                :show_attached_timeis="true" class="kyou_detail_view"
+                                @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
@@ -340,7 +341,8 @@ const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
 const is_show_gps_log_map: Ref<boolean> = ref(false)
 const is_show_dnote: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
-const drawer: Ref<boolean | null> = ref(null)
+const drawer: Ref<boolean | null> = ref(false)
+const drawer_mode_is_mobile: Ref<boolean | null> = ref(false)
 const kyou_list_view_height = computed(() => props.app_content_height)
 
 const position_x: Ref<Number> = ref(0)
@@ -362,6 +364,12 @@ watch(() => focused_time.value, () => {
     kyou_list_view.scroll_to_time(focused_time.value)
 })
 
+watch(() => is_show_kyou_count_calendar.value, () => {
+    focused_kyous_list.value.splice(0)
+    if (is_show_kyou_count_calendar.value) {
+        update_focused_kyous_list(focused_column_index.value)
+    }
+})
 
 const is_loading: Ref<boolean> = ref(true)
 
@@ -371,8 +379,8 @@ async function init(): Promise<void> {
     return nextTick(async () => {
         const waitPromises = new Array<Promise<void>>()
         try {
-            is_show_kyou_count_calendar.value = props.app_content_width.valueOf() >= 420
-            is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
+            // is_show_kyou_count_calendar.value = props.app_content_width.valueOf() >= 420
+            // is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
 
             // スクロール位置の復元
             match_kyous_list_top_list.value = props.gkill_api.get_saved_rykv_scroll_indexs()
@@ -409,9 +417,18 @@ async function init(): Promise<void> {
 
                 is_loading.value = false
                 inited.value = true
+                drawer.value = null
+                drawer_mode_is_mobile.value = null
             })
         }
     })
+}
+
+function update_focused_kyous_list(column_index: number): void {
+    focused_kyous_list.value.splice(0)
+    for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
+        focused_kyous_list.value.push(match_kyous_list.value[column_index][i])
+    }
 }
 
 async function close_list_view(column_index: number): Promise<void> {
@@ -516,7 +533,7 @@ async function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): Prom
     dnote_view.value?.recalc_checked_aggregate()
 }
 
-function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
+async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Promise<void> {
     focused_kyou.value = kyou
     focused_column_index.value = column_index
 
@@ -527,20 +544,9 @@ function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
         }
     }
 
-    let scrolled = false
     for (let i = 0; i < update_target_column_indexs.length; i++) {
         const target_column_index = update_target_column_indexs[i]
-        for (let j = 0; j < match_kyous_list.value[target_column_index].length; j++) {
-            const kyou_in_list = match_kyous_list.value[target_column_index][j]
-            if (kyou.id === kyou_in_list.id) {
-                kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
-                scrolled = true
-                break
-            }
-            if (scrolled) {
-                break
-            }
-        }
+        kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
     }
 }
 
@@ -674,7 +680,7 @@ function show_urlog_dialog(): void {
 
 .kyou_detail_view img.kyou_image {
     width: unset !important;
-    height: unset !important;
+    height: fit-content !important;
     max-width: calc(400px - 2px) !important;
     max-height: 85vh !important;
 }

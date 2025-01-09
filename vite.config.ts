@@ -14,7 +14,7 @@ export default defineConfig({
     vue({
       script: {
         propsDestructure: true,
-      }
+      },
     }),
     vueDevTools(),
     VitePWA({
@@ -36,6 +36,24 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
+        runtimeCaching: [
+          {
+            urlPattern: "^.*\/api\/get_gkill_info$",
+            handler: 'StaleWhileRevalidate',
+          },
+          {
+            urlPattern: "^.*\/api\/get_all_rep_names$",
+            handler: 'StaleWhileRevalidate',
+          },
+          {
+            urlPattern: "^.*\/api\/get_all_tag_names$",
+            handler: 'StaleWhileRevalidate',
+          },
+          {
+            urlPattern: "^.*\/api\/get_mi_board_list$",
+            handler: 'StaleWhileRevalidate',
+          }
+        ]
       },
     }),
   ],
@@ -43,5 +61,8 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
-  }
+  },
+  define: {
+    __VUE_PROD_DEVTOOLS__: true,
+  },
 })

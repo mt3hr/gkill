@@ -14,6 +14,8 @@ type FindKyouContext struct {
 
 	AllTags map[string]*reps.Tag `json:"all_tags"`
 
+	RelatedTagIDs map[string]interface{}
+
 	MatchTags map[string]*reps.Tag `json:"match_tags"`
 
 	MatchTexts map[string]*reps.Text `json:"match_texts"`
