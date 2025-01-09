@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path/filepath"
 	"sort"
 	"sync"
 	"time"
@@ -89,7 +88,9 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		return nil, err
 	}
 
-	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(context.Background(), filepath.Join(configDBRootDir, fmt.Sprintf("latest_data_repository_address_%s.db", userID)))
+	// latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(context.Background(), filepath.Join(configDBRootDir, fmt.Sprintf("latest_data_repository_address_%s.db", userID)))
+	// メモリ上でやる
+	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(context.Background(), userID)
 	if err != nil {
 		err = fmt.Errorf("error at get latest data repository address dao. user id = %s: %w", userID, err)
 		return nil, err
@@ -222,8 +223,6 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 	for _, rep := range matchReps {
 		wg.Add(1)
 
-		// Rep名が一致していなければスキップする
-
 		go func(rep Repository) {
 			defer wg.Done()
 			// jsonからパースする
@@ -332,9 +331,8 @@ loop:
 func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	matchKyou := &Kyou{}
 	matchKyou = nil
-	existErr := false
+	matchKyousInRep := []*Kyou{}
 	var err error
-	wg := &sync.WaitGroup{}
 	ch := make(chan *Kyou, len(g.Reps))
 	errch := make(chan error, len(g.Reps))
 	defer close(ch)
@@ -346,67 +344,33 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 		return nil, err
 	}
 
-	// 並列処理
 	for _, rep := range g.Reps {
-		wg.Add(1)
-		go func(rep Repository) {
-			defer wg.Done()
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-
-			if repName != latestDataRepositoryAddress.LatestDataRepositoryName {
-				ch <- nil
-				return
-			}
-
-			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyouInRep
-		}(rep)
-	}
-	wg.Wait()
-
-	// エラー集約
-errloop:
-	for {
-		select {
-		case e := <-errch:
-			err = fmt.Errorf("error at get kyou: %w", e)
-			existErr = true
-		default:
-			break errloop
+		repName, err := rep.GetRepName(ctx)
+		if err != nil {
+			return nil, err
 		}
-	}
-	if existErr {
-		return nil, err
+
+		if repName != latestDataRepositoryAddress.LatestDataRepositoryName {
+			continue
+		}
+
+		matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+		if err != nil {
+			continue
+		}
+		matchKyousInRep = append(matchKyousInRep, matchKyouInRep)
 	}
 
 	// Kyou集約。UpdateTimeが最新のものを収める
-loop:
-	for {
-		select {
-		case matchKyouInRep := <-ch:
-			if matchKyouInRep == nil {
-				continue loop
-			}
-			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
-					matchKyou = matchKyouInRep
-				}
-			} else {
+	for _, matchKyouInRep := range matchKyousInRep {
+		if matchKyou != nil {
+			if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
 				matchKyou = matchKyouInRep
 			}
-		default:
-			break loop
+		} else {
+			matchKyou = matchKyouInRep
 		}
 	}
-
 	return matchKyou, nil
 }
 
@@ -1062,66 +1026,10 @@ loop:
 }
 
 func (g *GkillRepositories) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
-	matchTags := map[string]*Tag{}
-	existErr := false
-	var err error
-	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(g.TagReps))
-	errch := make(chan error, len(g.TagReps))
-	defer close(ch)
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range g.TagReps {
-		wg.Add(1)
-
-		go func(rep TagRepository) {
-			defer wg.Done()
-			matchTagsInRep, err := rep.GetTagsByTargetID(ctx, target_id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagsInRep
-		}(rep)
-	}
-	wg.Wait()
-
-	// エラー集約
-errloop:
-	for {
-		select {
-		case e := <-errch:
-			err = fmt.Errorf("error at find get tag histories: %w", e)
-			existErr = true
-		default:
-			break errloop
-		}
-	}
-	if existErr {
+	matchTags, err := g.TagReps.GetTagsByTargetID(ctx, target_id)
+	if err != nil {
+		err = fmt.Errorf("error at get tags by target id: %w", err)
 		return nil, err
-	}
-
-	// Tag集約。UpdateTimeが最新のものを収める
-loop:
-	for {
-		select {
-		case matchTagsInRep := <-ch:
-			if matchTagsInRep == nil {
-				continue loop
-			}
-			for _, tag := range matchTagsInRep {
-				if existTag, exist := matchTags[tag.ID]; exist {
-					if tag.UpdateTime.After(existTag.UpdateTime) {
-						matchTags[tag.ID] = tag
-					}
-				} else {
-					matchTags[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)] = tag
-				}
-			}
-		default:
-			break loop
-		}
 	}
 
 	tagHistoriesList := []*Tag{}
@@ -1229,7 +1137,7 @@ func (g *GkillRepositories) GetAllTagNames(ctx context.Context) ([]string, error
 	var err error
 
 	latestDatasWg := &sync.WaitGroup{}
-	latestDatasCh := make(chan []*account_state.LatestDataRepositoryAddress, 1)
+	latestDatasCh := make(chan map[string]*account_state.LatestDataRepositoryAddress, 1)
 	errCh := make(chan error, 1)
 	defer close(latestDatasCh)
 	defer close(errCh)
@@ -1237,9 +1145,15 @@ func (g *GkillRepositories) GetAllTagNames(ctx context.Context) ([]string, error
 	go func() {
 		defer latestDatasWg.Done()
 		latestDatas, err := g.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 		if err != nil {
-			latestDatasCh <- nil
 			errCh <- err
+			latestDatasCh <- nil
+			return
 		}
 		latestDatasCh <- latestDatas
 		errCh <- nil
@@ -1304,13 +1218,9 @@ loop:
 	}
 	latestDatas := <-latestDatasCh
 	for _, tag := range allTags {
-		for _, latestData := range latestDatas {
-			if tag.TargetID == latestData.TargetID {
-				if !latestData.IsDeleted {
-					tagNames[tag.Tag] = struct{}{}
-				}
-				break
-			}
+		latestData, exist := latestDatas[tag.TargetID]
+		if exist && !latestData.IsDeleted {
+			tagNames[tag.Tag] = struct{}{}
 		}
 	}
 
@@ -1967,10 +1877,8 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 	m := &sync.Mutex{}
 	targetReps := g.Reps
 	if query.UsePlaing != nil && *query.UsePlaing {
-		targetReps = []Repository{}
-		for _, rep := range g.TimeIsReps {
-			targetReps = append(targetReps, rep)
-		}
+		matchReps["timeis"] = g.TimeIsReps
+		return matchReps, nil
 	}
 	for _, rep := range targetReps {
 		wg.Add(1)

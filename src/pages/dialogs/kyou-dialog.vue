@@ -7,7 +7,7 @@
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
                 :is_readonly_mi_check="false" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                @received_errors="(errors) => emits('received_errors', errors)"
+                :show_attached_timeis="true" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="emits('requested_reload_list')"

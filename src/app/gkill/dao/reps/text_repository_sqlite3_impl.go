@@ -68,6 +68,12 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
 	var err error
 
+	if query.UseWords != nil && *query.UseWords {
+		if query.Words != nil && len(*query.Words) == 0 {
+			return []*Text{}, nil
+		}
+	}
+
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
 		err = t.UpdateCache(ctx)
@@ -76,7 +82,6 @@ func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.F
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
-
 	}
 
 	sql := `
