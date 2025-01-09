@@ -1,17 +1,8 @@
 <template>
-    <div @dblclick="show_kyou_dialog()" @click="emits('clicked_kyou', cloned_kyou)" :key="kyou.id">
+    <div @dblclick="show_kyou_dialog()" @click.prevent="nextTick(() => emits('clicked_kyou', cloned_kyou))"
+        :key="kyou.id">
         <div v-if="!show_content_only">
-            <AttachedTag v-for="attached_tag in cloned_kyou.attached_tags" :tag="attached_tag"
-                :key="attached_tag.id" :application_config="application_config" :gkill_api="gkill_api"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                @received_errors="(errors) => emits('received_errors', errors)"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
-                @requested_reload_list="emits('requested_reload_list')"
-                @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)" />
-            <AttachedTimeIsPlaing v-for="attached_timeis_plaing in cloned_kyou.attached_timeis_kyou"
-                :key="attached_timeis_plaing.id" :timeis_kyou="attached_timeis_plaing"
+            <AttachedTag v-for="attached_tag in cloned_kyou.attached_tags" :tag="attached_tag" :key="attached_tag.id"
                 :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
                 :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
@@ -20,7 +11,20 @@
                 @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)" />
-            <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: any) => show_context_menu(e as PointerEvent)" :class="kyou_class">
+            <div v-if="show_attached_timeis">
+                <AttachedTimeIsPlaing v-for="attached_timeis_plaing in cloned_kyou.attached_timeis_kyou"
+                    :key="attached_timeis_plaing.id" :timeis_kyou="attached_timeis_plaing"
+                    :application_config="application_config" :gkill_api="gkill_api" :kyou="cloned_kyou"
+                    :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
+                    :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                    @received_errors="(errors) => emits('received_errors', errors)"
+                    @received_messages="(messages) => emits('received_messages', messages)"
+                    @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
+                    @requested_reload_list="emits('requested_reload_list')"
+                    @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)" />
+            </div>
+            <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: any) => show_context_menu(e as PointerEvent)"
+                :class="kyou_class">
                 <v-col v-if="show_checkbox" class="kyou_check_box pa-0 ma-0" cols="auto">
                     <input type="checkbox" v-model="cloned_kyou.is_checked" class="pa-0 ma-0"
                         @change="emits('requested_update_check_kyous', [kyou], !kyou.is_checked)" />
@@ -29,14 +33,8 @@
                     {{ format_time(cloned_kyou.related_time) }}
                 </v-col>
                 <v-spacer />
-                <v-col class="kyou_data_type pa-0 ma-0" cols="auto">
-                    {{ cloned_kyou.data_type }}
-                </v-col>
                 <v-col class="kyou_rep_name pa-0 ma-0" cols="auto">
-                    _{{ cloned_kyou.rep_name }}_
-                </v-col>
-                <v-col class="kyou_device pa-0 ma-0" cols="auto">
-                    {{ cloned_kyou.update_device }}
+                    {{ cloned_kyou.rep_name }}
                 </v-col>
             </v-row>
         </div>
@@ -167,7 +165,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, watch, type Ref, ref, onMounted, onUnmounted } from 'vue'
+import { computed, watch, type Ref, ref, nextTick, onMounted, onUnmounted, onUpdated } from 'vue'
 
 import AttachedTag from './attached-tag.vue'
 import AttachedText from './attached-text.vue'
@@ -208,19 +206,11 @@ const emits = defineEmits<KyouViewEmits>()
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 
 watch(() => props.kyou, () => {
-    cloned_kyou.value = props.kyou.clone()
-    load_attached_infos()
-})
+    cloned_kyou.value = props.kyou.clone();
+    (() => load_attached_infos())(); //非同期で実行してほしい
+});
 
-onMounted(() => {
-    load_attached_infos()
-})
-
-onUnmounted(() => {
-    clear_attached_infos()
-})
-
-load_attached_infos()
+(() => load_attached_infos())(); //非同期で実行してほしい
 
 const kyou_class = computed(() => {
     let highlighted = false;
@@ -239,16 +229,33 @@ const kyou_class = computed(() => {
 })
 
 async function load_attached_infos(): Promise<void> {
+    await nextTick(() => { })
     if (cloned_kyou.value.abort_controller) {
         cloned_kyou.value.abort_controller.abort()
     }
     cloned_kyou.value.abort_controller = new AbortController()
 
     try {
-        const errors = await cloned_kyou.value.load_all()
-        if (errors && errors.length !== 0) {
-            emits('received_errors', errors)
+        const awaitPromises = new Array<Promise<any>>()
+        try {
+            awaitPromises.push(cloned_kyou.value.load_typed_datas())
+            awaitPromises.push(cloned_kyou.value.load_attached_tags())
+            awaitPromises.push(cloned_kyou.value.load_attached_texts())
+            awaitPromises.push(cloned_kyou.value.load_attached_notifications())
+            awaitPromises.push(cloned_kyou.value.load_attached_histories())
+            awaitPromises.push(cloned_kyou.value.load_attached_histories())
+            if (props.show_attached_timeis) {
+                awaitPromises.push(cloned_kyou.value.load_attached_timeis())
+            }
+            await Promise.all(awaitPromises)
+        } catch (err: any) {
+            // abortは握りつぶす
+            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+                // abort以外はエラー出力する
+                console.error(err)
+            }
         }
+
     } catch (err: any) {
         // abortは握りつぶす
         if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {

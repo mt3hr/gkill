@@ -12,8 +12,9 @@
                     </v-col>
                 </v-row>
             </v-card-title>
-            <NotificationHistoriesView :application_config="application_config" :gkill_api="gkill_api" :notification="notification" :kyou="kyou"
-                :last_added_tag="last_added_tag" @received_errors="(errors) => emits('received_errors', errors)"
+            <NotificationHistoriesView :application_config="application_config" :gkill_api="gkill_api"
+                :notification="notification" :kyou="kyou" :last_added_tag="last_added_tag"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 :highlight_targets="notification_highlight_targets" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -26,7 +27,8 @@
                     :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                     :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
                     :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                    :is_readonly_mi_check="true" @received_errors="(errors) => emits('received_errors', errors)"
+                    :show_attached_timeis="true" :is_readonly_mi_check="true"
+                    @received_errors="(errors) => emits('received_errors', errors)"
                     @received_messages="(messages) => emits('received_messages', messages)"
                     @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                     @requested_reload_list="emits('requested_reload_list')"

@@ -63,11 +63,13 @@ defineExpose({ show, hide })
 
 const cloned_timeis_kyou: Ref<Kyou> = ref(props.timeis_kyou.clone())
 
+/*
 watch(() => props.timeis_kyou, () => {
     reload_cloned_timeis_kyou()
 })
 
 reload_cloned_timeis_kyou()
+*/
 
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)

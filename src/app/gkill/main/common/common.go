@@ -11,6 +11,7 @@ import (
 
 	_ "time/tzdata"
 
+	"net/http"
 	_ "net/http/pprof"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api"
@@ -26,11 +27,9 @@ func init() {
 		os.Setenv("HOME", os.Getenv("HOMEPATH"))
 	}
 	fixTimezone()
-	/*
-		go func() {
-			http.ListenAndServe("localhost:6060", nil) // pprof用
-		}()
-	*/
+	go func() {
+		http.ListenAndServe("localhost:6060", nil) // pprof用
+	}()
 }
 
 func InitGkillOptions() {

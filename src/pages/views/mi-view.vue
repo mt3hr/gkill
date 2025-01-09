@@ -32,7 +32,8 @@
             <v-divider vertical />
             <v-btn icon="mdi-cog" @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
-        <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height">
+        <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height"
+            :mobile="drawer_mode_is_mobile">
             <MiQueryEditorSidebar v-show="inited" class="mi_query_editor_sidebar"
                 :application_config="application_config" :gkill_api="gkill_api"
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
@@ -102,9 +103,8 @@
                                     skip_search_this_tick = true
                                     focused_query = querys[index]
 
-                                    focused_kyous_list.splice(0)
-                                    for (let i = 0; i < match_kyous_list[index].length; i++) {
-                                        focused_kyous_list.push(match_kyous_list[index][i])
+                                    if (is_show_kyou_count_calendar) {
+                                        update_focused_kyous_list(index)
                                     }
                                     focused_column_index = index
                                     nextTick(() => skip_search_this_tick = false)
@@ -158,7 +158,8 @@
                                 :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
                                 :height="app_content_height.valueOf()" :is_readonly_mi_check="false" :width="400"
                                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                                class="kyou_detail_view" @received_errors="(errors) => emits('received_errors', errors)"
+                                :show_attached_timeis="true" class="kyou_detail_view"
+                                @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
@@ -248,7 +249,7 @@
 import router from '@/router'
 import MiQueryEditorSidebar from './mi-query-editor-sidebar.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { computed, nextTick, type Ref, ref } from 'vue'
+import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
@@ -294,7 +295,8 @@ const is_show_kyou_detail_view: Ref<boolean> = ref(true)
 const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
 const is_show_gps_log_map: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
-const drawer: Ref<boolean | null> = ref(null)
+const drawer: Ref<boolean | null> = ref(false)
+const drawer_mode_is_mobile: Ref<boolean | null> = ref(false)
 const kyou_list_view_height = computed(() => props.app_content_height)
 
 const position_x: Ref<Number> = ref(0)
@@ -302,6 +304,20 @@ const position_y: Ref<Number> = ref(0)
 
 const props = defineProps<miViewProps>()
 const emits = defineEmits<miViewEmits>()
+
+watch(() => is_show_kyou_count_calendar.value, () => {
+    focused_kyous_list.value.splice(0)
+    if (is_show_kyou_count_calendar.value) {
+        update_focused_kyous_list(focused_column_index.value)
+    }
+})
+
+function update_focused_kyous_list(column_index: number): void {
+    focused_kyous_list.value.splice(0)
+    for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
+        focused_kyous_list.value.push(match_kyous_list.value[column_index][i])
+    }
+}
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
     for (let i = 0; i < match_kyous_list.value.length; i++) {
@@ -369,8 +385,8 @@ async function init(): Promise<void> {
     return nextTick(async () => {
         const waitPromises = new Array<Promise<void>>()
         try {
-            is_show_kyou_count_calendar.value = props.app_content_width.valueOf() >= 420
-            is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
+            // is_show_kyou_count_calendar.value = props.app_content_width.valueOf() >= 420
+            // is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
 
             // スクロール位置の復元
             match_kyous_list_top_list.value = props.gkill_api.get_saved_mi_scroll_indexs()
@@ -411,6 +427,8 @@ async function init(): Promise<void> {
 
                 is_loading.value = false
                 inited.value = true
+                drawer.value = null
+                drawer_mode_is_mobile.value = null
             })
         }
     })

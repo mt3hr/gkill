@@ -161,7 +161,7 @@ FROM TIMEIS
 
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "START_TIME" // 使わないけど仮置き
+	relatedTimeColumnName = "RELATED_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
