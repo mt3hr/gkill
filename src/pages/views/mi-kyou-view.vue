@@ -7,12 +7,13 @@
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-card-title>
-                    {{ kyou.typed_mi.title }}
+                    <div class="py-1">{{ kyou.typed_mi.title }}</div>
                 </v-card-title>
             </v-col>
+            <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-card-title>
-                    {{ kyou.typed_mi.board_name }}
+                    <div class="py-1">{{ kyou.typed_mi.board_name }}</div>
                 </v-card-title>
             </v-col>
         </v-row>

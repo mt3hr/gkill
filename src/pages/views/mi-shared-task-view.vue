@@ -3,7 +3,7 @@
         <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
             <v-progress-circular indeterminate color="primary" />
         </v-overlay>
-        <v-app-bar :height="app_title_bar_height.toString().concat('px')" class="app_bar" color="primary" app flat>
+        <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
             <v-toolbar-title> {{ share_title }} </v-toolbar-title>
         </v-app-bar>
         <v-main class="main" v-show="inited">
@@ -33,9 +33,9 @@
                                 :is_image_view="false" :kyou="focused_kyou" :last_added_tag="''" :show_checkbox="false"
                                 :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                                 :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                                :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
-                                :is_readonly_mi_check="true" :width="400" :enable_context_menu="false"
-                                :enable_dialog="false" class="kyou_detail_view"
+                                :show_attached_timeis="true" :show_timeis_plaing_end_button="true"
+                                :height="app_content_height.valueOf()" :is_readonly_mi_check="true" :width="400"
+                                :enable_context_menu="false" :enable_dialog="false" class="kyou_detail_view"
                                 @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)" />
                         </div>
