@@ -186,6 +186,11 @@ func (g *GkillDAOManager) GetRouter() *mux.Router {
 }
 
 func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.GkillRepositories, error) {
+	if userID == "" || device == "" {
+		err := fmt.Errorf("userID or device is blank. userID=%s device=%s", userID, device)
+		return nil, err
+	}
+
 	ctx := context.TODO()
 	var err error
 
