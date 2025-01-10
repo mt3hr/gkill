@@ -40,7 +40,7 @@ async function share(): Promise<void> {
     share_mi_task_list_info.share_id = props.gkill_api.generate_uuid()
     share_mi_task_list_info.user_id = gkill_res.user_id
     share_mi_task_list_info.device = gkill_res.device
-    share_mi_task_list_info.find_query_json = props.find_kyou_query.clone()!
+    share_mi_task_list_info.find_query_json = props.find_kyou_query
     share_mi_task_list_info.is_share_detail = !share_time_only.value
     share_mi_task_list_info.share_title = share_title.value
 

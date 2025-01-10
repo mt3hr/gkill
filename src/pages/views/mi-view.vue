@@ -167,7 +167,7 @@
                     </td>
                     <td valign="top">
                         <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
-                            :gkill_api="gkill_api" :kyous="focused_kyous_list"
+                            :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="true"
                             @requested_focus_time="(time) => { focused_time = time }" />
                     </td>
                 </tr>
@@ -312,6 +312,27 @@ watch(() => is_show_kyou_count_calendar.value, () => {
     }
 })
 
+watch(() => focused_time.value, () => {
+    if (!kyou_list_views.value) {
+        return
+    }
+    const kyou_list_view = kyou_list_views.value[focused_column_index.value]
+    if (!kyou_list_view) {
+        return
+    }
+    let target_kyou: Kyou | null = null
+    for (let i = 0; i < focused_kyous_list.value.length; i++) {
+        const kyou = focused_kyous_list.value[i]
+        if (kyou.related_time.getTime() >= focused_time.value.getTime()) {
+            target_kyou = kyou
+            break
+        }
+    }
+    kyou_list_view.scroll_to_kyou(target_kyou)
+})
+
+
+
 function update_focused_kyous_list(column_index: number): void {
     focused_kyous_list.value.splice(0)
     for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
@@ -427,8 +448,8 @@ async function init(): Promise<void> {
 
                 is_loading.value = false
                 inited.value = true
-                drawer.value = null
                 drawer_mode_is_mobile.value = null
+                drawer.value = props.app_content_width.valueOf() >= 420
             })
         }
     })

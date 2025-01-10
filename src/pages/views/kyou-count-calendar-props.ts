@@ -5,4 +5,5 @@ import type { GkillPropsBase } from "./gkill-props-base"
 
 export interface KyouCountCalendarProps extends GkillPropsBase {
     kyous: Array<Kyou>
+    for_mi: boolean
 }
