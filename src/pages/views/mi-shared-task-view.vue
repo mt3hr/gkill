@@ -23,27 +23,38 @@
                                 @clicked_kyou="(kyou) => { focused_kyou = kyou }"
                                 @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
-                                ref="kyou_list_views" />
+                                ref="kyou_list_view" />
                         </v-card>
                     </td>
                     <td valign="top" v-if="is_show_kyou_detail_view">
-                        <div class="kyou_detail_view dummy">
-                            <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
-                                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                                :is_image_view="false" :kyou="focused_kyou" :last_added_tag="''" :show_checkbox="false"
-                                :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
-                                :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                                :show_attached_timeis="true" :show_timeis_plaing_end_button="true"
-                                :height="app_content_height.valueOf()" :is_readonly_mi_check="true" :width="400"
-                                :enable_context_menu="false" :enable_dialog="false" class="kyou_detail_view"
-                                @received_errors="(errors) => emits('received_errors', errors)"
-                                @received_messages="(messages) => emits('received_messages', messages)" />
-                        </div>
-                    </td>
-                    <td valign="top">
-                        <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
-                            :gkill_api="gkill_api" :kyous="match_kyous"
-                            @requested_focus_time="(time) => { focused_time = time }" />
+                        <table>
+                            <tr>
+                                <td valign="top">
+                                    <KyouCountCalendar v-show="is_show_kyou_count_calendar"
+                                        :application_config="application_config" :gkill_api="gkill_api"
+                                        :kyous="match_kyous" :for_mi="true"
+                                        @requested_focus_time="(time) => { focused_time = time }" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td valign="top" v-if="is_show_kyou_detail_view">
+                                    <div class="kyou_detail_view dummy">
+                                        <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
+                                            :application_config="application_config" :gkill_api="gkill_api"
+                                            :highlight_targets="[]" :is_image_view="false" :kyou="focused_kyou"
+                                            :last_added_tag="''" :show_checkbox="false" :show_content_only="false"
+                                            :show_mi_create_time="true" :show_mi_estimate_end_time="true"
+                                            :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                                            :show_attached_timeis="true" :show_timeis_plaing_end_button="true"
+                                            :height="app_content_height.valueOf()" :is_readonly_mi_check="true"
+                                            :width="400" :enable_context_menu="false" :enable_dialog="false"
+                                            class="kyou_detail_view"
+                                            @received_errors="(errors) => emits('received_errors', errors)"
+                                            @received_messages="(messages) => emits('received_messages', messages)" />
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
                     </td>
                 </tr>
             </table>
@@ -54,7 +65,7 @@
 import type { miSharedTaskViewEmits } from './mi-shared-task-view-emits'
 import type { miSharedTaskViewProps } from './mi-shared-task-view-props'
 
-import { computed, nextTick, type Ref, ref } from 'vue'
+import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
 import { GkillAPI, GkillAPIForSharedMi } from '@/classes/api/gkill-api'
@@ -62,6 +73,7 @@ import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import KyouCountCalendar from './kyou-count-calendar.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GetSharedMiTasksRequest } from '@/classes/api/req_res/get-shared-mi-tasks-request'
+const kyou_list_view = ref();
 
 const props = defineProps<miSharedTaskViewProps>()
 const emits = defineEmits<miSharedTaskViewEmits>()
@@ -129,6 +141,22 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
         focused_kyou.value = updated_kyou
     }
 }
+
+watch(() => focused_time.value, () => {
+    if (!kyou_list_view || !kyou_list_view.value) {
+        return
+    }
+    let target_kyou: Kyou | null = null
+    for (let i = 0; i < match_kyous.value.length; i++) {
+        const kyou = match_kyous.value[i]
+        if (kyou.related_time.getTime() >= focused_time.value.getTime()) {
+            target_kyou = kyou
+            break
+        }
+    }
+    (kyou_list_view as any).value.scroll_to_kyou(target_kyou)
+})
+
 
 nextTick(() => load_content())
 </script>

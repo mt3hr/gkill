@@ -199,7 +199,7 @@
                     </td>
                     <td valign="top">
                         <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
-                            :gkill_api="gkill_api" :kyous="focused_kyous_list"
+                            :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="false"
                             @requested_focus_time="(time) => { focused_time = time; gps_log_map_start_time = time; gps_log_map_end_time = time; gps_log_map_marker_time = time }" />
                     </td>
                     <td valign="top">
@@ -417,8 +417,8 @@ async function init(): Promise<void> {
 
                 is_loading.value = false
                 inited.value = true
-                drawer.value = null
                 drawer_mode_is_mobile.value = null
+                drawer.value = props.app_content_width.valueOf() >= 420
             })
         }
     })
