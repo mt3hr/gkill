@@ -8,7 +8,7 @@
                 </div>
             </template>
         </v-calendar>
-        <v-slider min="0" max="86399" v-model="slider_model" :label="time" />
+        <v-slider v-show="!props.for_mi" min="0" max="86399" v-model="slider_model" :label="time" />
     </v-sheet>
 </template>
 <script lang="ts" setup>
@@ -22,7 +22,7 @@ const kyou_counter_calendar = ref<InstanceType<typeof VCalendar> | null>(null)
 const props = defineProps<KyouCountCalendarProps>()
 const emits = defineEmits<KyouCountCalendarEmits>()
 
-const slider_model: Ref<number> = ref(86399)
+const slider_model: Ref<number> = ref(props.for_mi ? 0 : 86399)
 const events: Ref<Array<any>> = ref(new Array<any>())
 
 watch(props.kyous, () => {
