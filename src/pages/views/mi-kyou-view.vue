@@ -17,7 +17,7 @@
                 </v-card-title>
             </v-col>
         </v-row>
-        <div v-if="kyou.typed_mi && kyou.typed_mi.estimate_start_time">
+        <div v-if="kyou.typed_mi && kyou.typed_mi.estimate_start_time" :style="{ 'padding-top': '30px' }">
             開始日時： <span>{{ format_time(kyou.typed_mi.estimate_start_time) }}</span>
         </div>
         <div v-if="kyou.typed_mi && kyou.typed_mi.estimate_end_time">
