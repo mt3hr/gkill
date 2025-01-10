@@ -5348,7 +5348,8 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	allTagNames, err := repositories.GetAllTagNames(r.Context())
+	// allTagNames, err := repositories.GetAllTagNames(r.Context())
+	allTagNames, err := repositories.GetAllTagNames(context.Background())
 	if err != nil {
 		err = fmt.Errorf("error at get all tag names user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Printf(err.Error())

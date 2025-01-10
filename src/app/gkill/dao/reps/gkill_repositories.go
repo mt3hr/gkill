@@ -81,6 +81,11 @@ type GkillRepositories struct {
 
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
 func NewGkillRepositories(userID string) (*GkillRepositories, error) {
+	if userID == "" {
+		err := fmt.Errorf("error at new gkill repositories. userID is blank.")
+		return nil, err
+	}
+
 	configDBRootDir := os.ExpandEnv(gkill_options.CacheDir)
 	err := os.MkdirAll(configDBRootDir, fs.ModePerm)
 	if err != nil {
@@ -90,7 +95,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 
 	// latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(context.Background(), filepath.Join(configDBRootDir, fmt.Sprintf("latest_data_repository_address_%s.db", userID)))
 	// メモリ上でやる
-	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(context.Background(), userID)
+	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(userID)
 	if err != nil {
 		err = fmt.Errorf("error at get latest data repository address dao. user id = %s: %w", userID, err)
 		return nil, err
@@ -1149,14 +1154,9 @@ func (g *GkillRepositories) GetAllTagNames(ctx context.Context) ([]string, error
 		case <-ctx.Done():
 			return
 		default:
+		case errCh <- err:
+			latestDatasCh <- latestDatas
 		}
-		if err != nil {
-			errCh <- err
-			latestDatasCh <- nil
-			return
-		}
-		latestDatasCh <- latestDatas
-		errCh <- nil
 	}()
 
 	wg := &sync.WaitGroup{}
