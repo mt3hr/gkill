@@ -78,14 +78,9 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		select {
 		case <-ctx.Done():
 			return
-		default:
-		}
-		if err != nil {
-			errCh <- err
+		case errCh <- err:
 			latestDatasCh <- latestDatas
 		}
-		errCh <- err
-		latestDatasCh <- latestDatas
 	}()
 
 	gkillErr, err = f.parseTagFilterModeFromQuery(ctx, findKyouContext)
@@ -1288,7 +1283,7 @@ func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouConte
 		case string(find.CreateTime):
 			iTime = &iMi.CreateTime
 			jTime = &jMi.CreateTime
-			return iTime.After(*jTime)
+			return iTime.Before(*jTime)
 		case string(find.EstimateStartTime):
 			if iMi.EstimateStartTime != nil {
 				iTime = iMi.EstimateStartTime
@@ -1298,7 +1293,7 @@ func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouConte
 			}
 
 			if iTime != nil && jTime != nil {
-				return iTime.After(*jTime)
+				return iTime.Before(*jTime)
 			}
 			if iTime == nil && jTime != nil {
 				return false
@@ -1309,7 +1304,7 @@ func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouConte
 
 			iTime = &iMi.CreateTime
 			jTime = &jMi.CreateTime
-			return iTime.After(*jTime)
+			return iTime.Before(*jTime)
 		case string(find.EstimateEndTime):
 			if iMi.EstimateEndTime != nil {
 				iTime = iMi.EstimateEndTime
@@ -1319,7 +1314,7 @@ func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouConte
 			}
 
 			if iTime != nil && jTime != nil {
-				return iTime.After(*jTime)
+				return iTime.Before(*jTime)
 			}
 			if iTime == nil && jTime != nil {
 				return false
@@ -1330,7 +1325,7 @@ func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouConte
 
 			iTime = &iMi.CreateTime
 			jTime = &jMi.CreateTime
-			return iTime.After(*jTime)
+			return iTime.Before(*jTime)
 		case string(find.LimitTime):
 			if iMi.LimitTime != nil {
 				iTime = iMi.LimitTime
@@ -1340,7 +1335,7 @@ func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouConte
 			}
 
 			if iTime != nil && jTime != nil {
-				return iTime.After(*jTime)
+				return iTime.Before(*jTime)
 			}
 			if iTime == nil && jTime != nil {
 				return false
@@ -1351,7 +1346,7 @@ func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouConte
 
 			iTime = &iMi.CreateTime
 			jTime = &jMi.CreateTime
-			return iTime.After(*jTime)
+			return iTime.Before(*jTime)
 		}
 		return false
 	})

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 
 	"github.com/gorilla/mux"
 	"github.com/mattn/go-zglob"
@@ -23,6 +24,7 @@ import (
 )
 
 type GkillDAOManager struct {
+	initializingMutex        map[string]map[string]*sync.Mutex
 	gkillRepositories        map[string]map[string]*reps.GkillRepositories
 	gkillNotificators        map[string]map[string]*GkillNotificator
 	fileRepWatchCacheUpdater rep_cache_updater.FileRepCacheUpdater
@@ -188,19 +190,42 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 	var err error
 
 	// nilだったら初期化する
+	if g.initializingMutex == nil {
+		g.initializingMutex = map[string]map[string]*sync.Mutex{}
+	}
 	if g.gkillRepositories == nil {
 		g.gkillRepositories = map[string]map[string]*reps.GkillRepositories{}
 	}
 
-	// すでに存在していればそれを、存在していなければ作っていれる。Rep
-	repositoriesInDevice, existRepsInUsers := g.gkillRepositories[userID]
+	// 初期化中だったらちょっとまつ
+	initializeMutexInUser, existRepsInUsers := g.initializingMutex[userID]
 	if !existRepsInUsers {
-		g.gkillRepositories[userID] = map[string]*reps.GkillRepositories{}
-		repositoriesInDevice = g.gkillRepositories[userID]
+		g.initializingMutex[userID] = map[string]*sync.Mutex{}
+		initializeMutexInUser = g.initializingMutex[userID]
+	}
+	_, existMutexsInDevice := initializeMutexInUser[device]
+	if !existMutexsInDevice {
+		g.initializingMutex[userID][device] = &sync.Mutex{}
 	}
 
-	repositories, existRepsInDevice := repositoriesInDevice[device]
+	// すでに存在していればそれを、存在していなければ作っていれる。Rep
+	repositoriesInUser, existRepsInUsers := g.gkillRepositories[userID]
+	if !existRepsInUsers {
+		g.gkillRepositories[userID] = map[string]*reps.GkillRepositories{}
+		repositoriesInUser = g.gkillRepositories[userID]
+	}
+
+	repositories, existRepsInDevice := repositoriesInUser[device]
 	if !existRepsInDevice {
+		// 初期化中だったら終わるまで待つ
+		g.initializingMutex[userID][device].Lock()
+		defer g.initializingMutex[userID][device].Unlock()
+
+		// 初期化がおわり、値が入っていればそれを使う
+		if repositories, exist := g.gkillRepositories[userID][device]; exist {
+			return repositories, nil
+		}
+
 		// なかったら作っていれる
 		repositories, err = reps.NewGkillRepositories(userID)
 		if err != nil {
@@ -714,7 +739,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		}
 		repositories.UpdateCache(ctx)
 		g.gkillRepositories[userID][device] = repositories
-		repositories, _ = repositoriesInDevice[device]
+		repositories, _ = repositoriesInUser[device]
 
 		_, _ = g.GetNotificator(userID, device)
 	}
@@ -729,13 +754,13 @@ func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNo
 	}
 
 	// すでに存在していればそれを、存在していなければ作る。Notificator
-	notificatorInDevice, existNotificatorsInUsers := g.gkillNotificators[userID]
+	notificatorInUser, existNotificatorsInUsers := g.gkillNotificators[userID]
 	if !existNotificatorsInUsers {
 		g.gkillNotificators[userID] = map[string]*GkillNotificator{}
-		notificatorInDevice = g.gkillNotificators[userID]
+		notificatorInUser = g.gkillNotificators[userID]
 	}
 
-	notificator, existNotificatorsInDevice := notificatorInDevice[device]
+	notificator, existNotificatorsInDevice := notificatorInUser[device]
 	if !existNotificatorsInDevice {
 		// Notificatorの初期化
 		gkillRepositories, err := g.GetRepositories(userID, device)
