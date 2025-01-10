@@ -89,7 +89,7 @@
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">すべて</v-card-title>
-                            <KyouListView :kyou_height="56 + 25" :width="400"
+                            <KyouListView :kyou_height="56 + 35" :width="400"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
                                 :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
