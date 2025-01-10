@@ -8989,7 +8989,8 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 	}
 
 	// Kyou
-	kyous, err := repositories.MiReps.FindKyous(r.Context(), findQuery)
+	findFilter := &FindFilter{}
+	kyous, _, err := findFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, findQuery)
 	if err != nil {
 		err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Printf(err.Error())
