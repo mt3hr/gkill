@@ -52,7 +52,6 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 
 	// OldのDBから全データをテンポラリDBにいれる
 	// 主に（TimeIsとMiのため）
-	//TODO
 	oldKmemos := []*Kmemo{}
 	oldURLogs := []*URLog{}
 	oldLantanas := []*Lantana{}
@@ -2588,80 +2587,78 @@ func (a *allDataDB) getGkillMis() ([]*reps.Mi, error) {
 	mis := []*reps.Mi{}
 	statement := `
 SELECT
-Task.TaskID,
-Task.CreatedTime,
-TaskTitleInfo.Title,
-BoardInfo.BoardName,
-CheckStateInfo.IsChecked,
-LimitInfo.LimitTime,
-MiStartInfo.StartTime,
-MiEndInfo.EndTime,
-(SELECT UpdatedTimeRaw FROM (
-	SELECT '1' AS 'i', datetime(Task.CreatedTime, 'localtime') AS UpdatedTime,  Task.CreatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
-	UNION
-	SELECT '2' AS 'i', datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime,  TaskTitleInfo.UpdatedTime AS UpdatedTimeRaw,TaskTitleInfo.RepName AS RepName
-	WHERE Task.CreatedTime < TaskTitleInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL	
-	UNION
-	SELECT '3' AS 'i',datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.UpdatedTime AS UpdatedTimeRaw, BoardInfo.RepName AS RepName
-	WHERE Task.CreatedTime < BoardInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '4' AS 'i',datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.UpdatedTime AS UpdatedTimeRaw, LimitInfo.RepName AS RepName
-	WHERE Task.CreatedTime < LimitInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '5' AS 'i',datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.UpdatedTime AS UpdatedTimeRaw, MiStartInfo.RepName AS RepName
-	WHERE Task.CreatedTime < MiStartInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '6' AS 'i', datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.UpdatedTime AS UpdatedTimeRaw, MiEndInfo.RepName AS RepName
-	WHERE Task.CreatedTime < MiEndInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '7' AS 'i', datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.UpdatedTime AS UpdatedTimeRaw,CheckStateInfo.RepName AS RepName
-	WHERE Task.CreatedTime < CheckStateInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	ORDER BY UpdatedTime DESC
-	LIMIT 1
-)) AS UpdateTime,
-(SELECT RepName FROM (
-	SELECT '1' AS 'i', datetime(Task.CreatedTime, 'localtime') AS UpdatedTime,  Task.CreatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
-	UNION
-	SELECT '2' AS 'i', datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime,  TaskTitleInfo.UpdatedTime AS UpdatedTimeRaw,TaskTitleInfo.RepName AS RepName
-	WHERE Task.CreatedTime < TaskTitleInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL	
-	UNION
-	SELECT '3' AS 'i',datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.UpdatedTime AS UpdatedTimeRaw, BoardInfo.RepName AS RepName
-	WHERE Task.CreatedTime < BoardInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '4' AS 'i',datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.UpdatedTime AS UpdatedTimeRaw, LimitInfo.RepName AS RepName
-	WHERE Task.CreatedTime < LimitInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '5' AS 'i',datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.UpdatedTime AS UpdatedTimeRaw, MiStartInfo.RepName AS RepName
-	WHERE Task.CreatedTime < MiStartInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '6' AS 'i', datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.UpdatedTime AS UpdatedTimeRaw, MiEndInfo.RepName AS RepName
-	WHERE Task.CreatedTime < MiEndInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '7' AS 'i', datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.UpdatedTime AS UpdatedTimeRaw,CheckStateInfo.RepName AS RepName
-	WHERE Task.CreatedTime < CheckStateInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	ORDER BY UpdatedTime DESC
-	LIMIT 1
-)) 
- AS RepName
+    Task.TaskID,
+    Task.CreatedTime,
+    TaskTitleInfo.Title,
+    BoardInfo.BoardName,
+    CheckStateInfo.IsChecked,
+    LimitInfo.LimitTime,
+    MiStartInfo.StartTime,
+    MiEndInfo.EndTime,
+	(SELECT UpdatedTimeRaw
+    FROM (
+            SELECT datetime(Task.CreatedTime, 'localtime') AS UpdatedTime, Task.CreatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
+        UNION
+            SELECT datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime, TaskTitleInfo.UpdatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
+        UNION
+            SELECT datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.UpdatedTime AS UpdatedTimeRaw, BoardInfo.RepName AS RepName
+        UNION
+            SELECT datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.UpdatedTime AS UpdatedTimeRaw, LimitInfo.RepName AS RepName
+        UNION
+            SELECT datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.UpdatedTime AS UpdatedTimeRaw, MiStartInfo.RepName AS RepName
+        UNION
+            SELECT datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.UpdatedTime AS UpdatedTimeRaw, MiEndInfo.RepName AS RepName
+        UNION
+            SELECT datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.UpdatedTime AS UpdatedTimeRaw, CheckStateInfo.RepName AS RepName
+			WHERE UpdatedTime IS NOT NULL
+            GROUP BY UpdatedTime, RepName
+        ) AS ForUpdateTimeRaw
+    ) AS UpdatedTimeRaw,
+    (SELECT UpdatedTime
+    FROM (
+            SELECT datetime(Task.CreatedTime, 'localtime') AS UpdatedTime, Task.CreatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
+        UNION
+            SELECT datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime, TaskTitleInfo.UpdatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
+        UNION
+            SELECT datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.UpdatedTime AS UpdatedTimeRaw, BoardInfo.RepName AS RepName
+        UNION
+            SELECT datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.UpdatedTime AS UpdatedTimeRaw, LimitInfo.RepName AS RepName
+        UNION
+            SELECT datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.UpdatedTime AS UpdatedTimeRaw, MiStartInfo.RepName AS RepName
+        UNION
+            SELECT datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.UpdatedTime AS UpdatedTimeRaw, MiEndInfo.RepName AS RepName
+        UNION
+            SELECT datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.UpdatedTime AS UpdatedTimeRaw, CheckStateInfo.RepName AS RepName
+			WHERE UpdatedTime IS NOT NULL
+            GROUP BY UpdatedTime, RepName
+        ) AS ForUpdateTime
+    ) AS UpdateTime,
+    (SELECT RepName
+    FROM (
+        	SELECT datetime(Task.CreatedTime, 'localtime') AS UpdatedTime, Task.CreatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
+        UNION
+            SELECT datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime, TaskTitleInfo.UpdatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
+        UNION
+            SELECT datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.UpdatedTime AS UpdatedTimeRaw, BoardInfo.RepName AS RepName
+        UNION
+            SELECT datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.UpdatedTime AS UpdatedTimeRaw, LimitInfo.RepName AS RepName
+        UNION
+            SELECT datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.UpdatedTime AS UpdatedTimeRaw, MiStartInfo.RepName AS RepName
+        UNION
+            SELECT datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.UpdatedTime AS UpdatedTimeRaw, MiEndInfo.RepName AS RepName
+        UNION
+            SELECT datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.UpdatedTime AS UpdatedTimeRaw, CheckStateInfo.RepName AS RepName
+			WHERE UpdatedTime IS NOT NULL
+            GROUP BY UpdatedTime, RepName
+        ) AS ForRepName
+	) AS RepName
 FROM Task
-LEFT OUTER JOIN TaskTitleInfo ON Task.TaskID = TaskTitleInfo.TaskID
-LEFT OUTER JOIN BoardInfo ON Task.TaskID = BoardInfo.TaskID
-LEFT OUTER JOIN CheckStateInfo ON Task.TaskID = CheckStateInfo.TaskID
-LEFT OUTER JOIN LimitInfo ON Task.TaskID = LimitInfo.TaskID
-LEFT OUTER JOIN MiStartInfo ON Task.TaskID = MiStartInfo.TaskID
-LEFT OUTER JOIN MiEndInfo ON Task.TaskID = MiEndInfo.TaskID
+    LEFT OUTER JOIN TaskTitleInfo ON Task.TaskID = TaskTitleInfo.TaskID
+    LEFT OUTER JOIN BoardInfo ON Task.TaskID = BoardInfo.TaskID
+    LEFT OUTER JOIN CheckStateInfo ON Task.TaskID = CheckStateInfo.TaskID
+    LEFT OUTER JOIN LimitInfo ON Task.TaskID = LimitInfo.TaskID
+    LEFT OUTER JOIN MiStartInfo ON Task.TaskID = MiStartInfo.TaskID
+    LEFT OUTER JOIN MiEndInfo ON Task.TaskID = MiEndInfo.TaskID
 GROUP BY
 Task.TaskID,
 Task.CreatedTime,
@@ -2672,94 +2669,6 @@ LimitInfo.LimitTime,
 MiStartInfo.StartTime,
 MiEndInfo.EndTime,
 UpdateTime
-HAVING Task.CreatedTime = UpdateTime
-UNION
-SELECT
-Task.TaskID,
-Task.CreatedTime,
-TaskTitleInfo.Title,
-BoardInfo.BoardName,
-CheckStateInfo.IsChecked,
-LimitInfo.LimitTime,
-MiStartInfo.StartTime,
-MiEndInfo.EndTime,
-(SELECT UpdatedTimeRaw FROM (
-	SELECT '1' AS 'i', datetime(Task.CreatedTime, 'localtime') AS UpdatedTime,  Task.CreatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
-	UNION
-	SELECT '2' AS 'i', datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime,  TaskTitleInfo.UpdatedTime AS UpdatedTimeRaw,TaskTitleInfo.RepName AS RepName
-	WHERE Task.CreatedTime < TaskTitleInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL	
-	UNION
-	SELECT '3' AS 'i',datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.UpdatedTime AS UpdatedTimeRaw, BoardInfo.RepName AS RepName
-	WHERE Task.CreatedTime < BoardInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '4' AS 'i',datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.UpdatedTime AS UpdatedTimeRaw, LimitInfo.RepName AS RepName
-	WHERE Task.CreatedTime < LimitInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '5' AS 'i',datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.UpdatedTime AS UpdatedTimeRaw, MiStartInfo.RepName AS RepName
-	WHERE Task.CreatedTime < MiStartInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '6' AS 'i', datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.UpdatedTime AS UpdatedTimeRaw, MiEndInfo.RepName AS RepName
-	WHERE Task.CreatedTime < MiEndInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '7' AS 'i', datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.UpdatedTime AS UpdatedTimeRaw,CheckStateInfo.RepName AS RepName
-	WHERE Task.CreatedTime < CheckStateInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	ORDER BY UpdatedTime DESC
-	LIMIT 1
-)) AS UpdateTime,
-(SELECT RepName FROM (
-	SELECT '1' AS 'i', datetime(Task.CreatedTime, 'localtime') AS UpdatedTime,  Task.CreatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
-	UNION
-	SELECT '2' AS 'i', datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime,  TaskTitleInfo.UpdatedTime AS UpdatedTimeRaw,TaskTitleInfo.RepName AS RepName
-	WHERE Task.CreatedTime < TaskTitleInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL	
-	UNION
-	SELECT '3' AS 'i',datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.UpdatedTime AS UpdatedTimeRaw, BoardInfo.RepName AS RepName
-	WHERE Task.CreatedTime < BoardInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '4' AS 'i',datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.UpdatedTime AS UpdatedTimeRaw, LimitInfo.RepName AS RepName
-	WHERE Task.CreatedTime < LimitInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '5' AS 'i',datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.UpdatedTime AS UpdatedTimeRaw, MiStartInfo.RepName AS RepName
-	WHERE Task.CreatedTime < MiStartInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '6' AS 'i', datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.UpdatedTime AS UpdatedTimeRaw, MiEndInfo.RepName AS RepName
-	WHERE Task.CreatedTime < MiEndInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	UNION
-	SELECT '7' AS 'i', datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.UpdatedTime AS UpdatedTimeRaw,CheckStateInfo.RepName AS RepName
-	WHERE Task.CreatedTime < CheckStateInfo.UpdatedTime
-	AND UpdatedTime IS NOT NULL
-	ORDER BY UpdatedTime DESC
-	LIMIT 1
-)) 
- AS RepName
-FROM Task
-LEFT OUTER JOIN TaskTitleInfo ON Task.TaskID = TaskTitleInfo.TaskID
-LEFT OUTER JOIN BoardInfo ON Task.TaskID = BoardInfo.TaskID
-LEFT OUTER JOIN CheckStateInfo ON Task.TaskID = CheckStateInfo.TaskID
-LEFT OUTER JOIN LimitInfo ON Task.TaskID = LimitInfo.TaskID
-LEFT OUTER JOIN MiStartInfo ON Task.TaskID = MiStartInfo.TaskID
-LEFT OUTER JOIN MiEndInfo ON Task.TaskID = MiEndInfo.TaskID
-GROUP BY
-Task.TaskID,
-Task.CreatedTime,
-TaskTitleInfo.Title,
-BoardInfo.BoardName,
-CheckStateInfo.IsChecked,
-LimitInfo.LimitTime,
-MiStartInfo.StartTime,
-MiEndInfo.EndTime,
-UpdateTime
-HAVING CheckStateInfo.UpdatedTime = UpdateTime
 `
 	rows, err := a.db.Query(statement)
 	if err != nil {
@@ -2772,6 +2681,7 @@ HAVING CheckStateInfo.UpdatedTime = UpdateTime
 		mi := &reps.Mi{}
 		createdTimeStr, updatedTimeStr := "", ""
 		limitTimeStr, startTimeStr, endTimeStr := sql.NullString{}, sql.NullString{}, sql.NullString{}
+		updateTimeTypedStr := ""
 		err := rows.Scan(
 			&mi.ID,
 			&createdTimeStr,
@@ -2782,6 +2692,7 @@ HAVING CheckStateInfo.UpdatedTime = UpdateTime
 			&startTimeStr,
 			&endTimeStr,
 			&updatedTimeStr,
+			&updateTimeTypedStr,
 			&mi.RepName,
 		)
 		if err != nil {
@@ -2790,19 +2701,19 @@ HAVING CheckStateInfo.UpdatedTime = UpdateTime
 
 		mi.CreateTime, err = time.Parse(TimeLayout, createdTimeStr)
 		if err != nil {
-			err = fmt.Errorf("error at parse time: %w", err)
+			err = fmt.Errorf("error at parse create time: %w", err)
 			return nil, err
 		}
 		mi.UpdateTime, err = time.Parse(TimeLayout, strings.ReplaceAll(updatedTimeStr, " ", "T"))
 		if err != nil {
-			err = fmt.Errorf("error at parse time: %w", err)
+			err = fmt.Errorf("error at parse update time: %w", err)
 			return nil, err
 		}
 		if limitTimeStr.Valid {
 			mi.LimitTime = &time.Time{}
 			*mi.LimitTime, err = time.Parse(TimeLayout, limitTimeStr.String)
 			if err != nil {
-				err = fmt.Errorf("error at parse time: %w", err)
+				err = fmt.Errorf("error at parse limit time: %w", err)
 				return nil, err
 			}
 		}
@@ -2810,7 +2721,7 @@ HAVING CheckStateInfo.UpdatedTime = UpdateTime
 			mi.EstimateStartTime = &time.Time{}
 			*mi.EstimateStartTime, err = time.Parse(TimeLayout, startTimeStr.String)
 			if err != nil {
-				err = fmt.Errorf("error at parse time: %w", err)
+				err = fmt.Errorf("error at parse estimate start time: %w", err)
 				return nil, err
 			}
 		}
@@ -2818,7 +2729,7 @@ HAVING CheckStateInfo.UpdatedTime = UpdateTime
 			mi.EstimateEndTime = &time.Time{}
 			*mi.EstimateEndTime, err = time.Parse(TimeLayout, endTimeStr.String)
 			if err != nil {
-				err = fmt.Errorf("error at parse time: %w", err)
+				err = fmt.Errorf("error at parse estimate end time: %w", err)
 				return nil, err
 			}
 		}
