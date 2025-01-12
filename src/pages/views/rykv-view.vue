@@ -24,8 +24,7 @@
             <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
                 <v-icon>mdi-file-document</v-icon>
             </v-btn>
-            <v-btn icon
-                @click="() => { is_show_dnote = !is_show_dnote; if (is_show_dnote) { nextTick(() => dnote_view?.recalc_all()) } }">
+            <v-btn icon @click="() => { is_show_dnote = !is_show_dnote }">
                 <v-icon>mdi-file-chart-outline</v-icon>
             </v-btn>
             <v-btn icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
@@ -370,6 +369,19 @@ watch(() => is_show_kyou_count_calendar.value, () => {
         update_focused_kyous_list(focused_column_index.value)
     }
 })
+
+watch(() => is_show_dnote.value, () => {
+    focused_kyous_list.value.splice(0)
+    if (is_show_dnote.value) {
+        update_focused_kyous_list(focused_column_index.value)
+        nextTick(() => {
+            dnote_view.value?.recalc_all()
+        })
+    } else {
+        dnote_view.value?.abort()
+    }
+})
+
 
 const is_loading: Ref<boolean> = ref(true)
 
