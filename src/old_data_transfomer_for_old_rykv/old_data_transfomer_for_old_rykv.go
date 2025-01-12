@@ -619,7 +619,7 @@ func getNlogsFromOldDB(filename string) ([]*Nlog, error) {
 	}
 	defer db.Close()
 
-	statement := `SELECT ID, Time, Amount, ShopName FROM "nlog";`
+	statement := `SELECT ID, Time, Amount, ShopName, Memo FROM "nlog";`
 	rows, err := db.Query(statement)
 	if err != nil {
 		err = fmt.Errorf("error at Get from database: %w", err)
@@ -632,7 +632,7 @@ func getNlogsFromOldDB(filename string) ([]*Nlog, error) {
 	for rows.Next() {
 		nlog := &Nlog{RepName: repName}
 		timestr := ""
-		err = rows.Scan(&nlog.ID, &timestr, &nlog.Amount, &nlog.ShopName)
+		err = rows.Scan(&nlog.ID, &timestr, &nlog.Amount, &nlog.ShopName, &nlog.Memo)
 		if err != nil {
 			err = fmt.Errorf("error at scan rows from database: %w", err)
 			return nil, err
@@ -2228,6 +2228,7 @@ SELECT
   Time,
   Amount,
   ShopName,
+  Memo,
   RepName
 FROM "nlog";`
 	rows, err := a.db.Query(statement)
@@ -2240,7 +2241,7 @@ FROM "nlog";`
 	for rows.Next() {
 		nlog := &reps.Nlog{}
 		timestr := ""
-		err = rows.Scan(&nlog.ID, &timestr, &nlog.Amount, &nlog.Shop, &nlog.RepName)
+		err = rows.Scan(&nlog.ID, &timestr, &nlog.Amount, &nlog.Shop, &nlog.Title, &nlog.RepName)
 		if err != nil {
 			err = fmt.Errorf("error at scan rows: %w", err)
 			return nil, err
