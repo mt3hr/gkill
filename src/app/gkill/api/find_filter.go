@@ -27,9 +27,13 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext := &FindKyouContext{}
 
 	// QueryをContextに入れる
+	findKyouContext.GkillDAOManager = gkillDAOManager
 	findKyouContext.ParsedFindQuery = findQuery
 	findKyouContext.MatchReps = map[string]reps.Repository{}
 	findKyouContext.AllTags = map[string]*reps.Tag{}
+	findKyouContext.AllHideTagsWhenUnchecked = map[string]*reps.Tag{}
+	findKyouContext.MatchHideTagsWhenUncheckedKyou = map[string]*reps.Tag{}
+	findKyouContext.MatchHideTagsWhenUncheckedTimeIs = map[string]*reps.Tag{}
 	findKyouContext.RelatedTagIDs = map[string]interface{}{}
 	findKyouContext.MatchTags = map[string]*reps.Tag{}
 	findKyouContext.MatchTexts = map[string]*reps.Text{}
@@ -98,6 +102,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at get all tags: %w", err)
 		return nil, gkillErr, err
 	}
+	gkillErr, err = f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get hide tags when unchecked tags: %w", err)
+		return nil, gkillErr, err
+	}
 	gkillErr, err = f.findTags(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find tags: %w", err)
@@ -123,6 +132,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at find timeis tags: %w", err)
 		return nil, gkillErr, err
 	}
+	gkillErr, err = f.getMatchHideTagsWhenUnckedTimeIs(ctx, findKyouContext)
+	if err != nil {
+		err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
+		return nil, gkillErr, err
+	}
 	gkillErr, err = f.filterTagsTimeIs(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter tags timeis: %w", err)
@@ -136,6 +150,11 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	gkillErr, err = f.filterMiForMi(ctx, findKyouContext) //miの場合のみ
 	if err != nil {
 		err = fmt.Errorf("error at filter mi for mi: %w", err)
+		return nil, gkillErr, err
+	}
+	gkillErr, err = f.getMatchHideTagsWhenUnckedKyou(ctx, findKyouContext)
+	if err != nil {
+		err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
 		return nil, gkillErr, err
 	}
 	gkillErr, err = f.filterTagsKyous(ctx, findKyouContext)
@@ -390,6 +409,117 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 		findCtx.RelatedTagIDs[tag.TargetID] = struct{}{}
 	}
 
+	return nil, nil
+}
+
+func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *FindKyouContext, userID string, device string) ([]*message.GkillError, error) {
+	tagStructs, err := findCtx.GkillDAOManager.ConfigDAOs.TagStructDAO.GetTagStructs(ctx, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get tag tag structs: %w", err)
+		return nil, err
+	}
+	hideTagNames := []string{}
+	for _, tagStruct := range tagStructs {
+		if tagStruct.IsForceHide {
+			hideTagNames = append(hideTagNames, tagStruct.TagName)
+		}
+	}
+
+	lenOfTagReps := len(findCtx.Repositories.TagReps)
+
+	// 非表示タグ取得用検索クエリ
+	falseValue := false
+	trueValue := true
+	findTagsQuery := &find.FindQuery{
+		IsDeleted: &falseValue,
+		UseWords:  &trueValue,
+		Words:     &hideTagNames,
+	}
+
+	existErr := false
+	wg := &sync.WaitGroup{}
+	tagsCh := make(chan []*reps.Tag, lenOfTagReps)
+	errch := make(chan error, lenOfTagReps)
+	defer close(tagsCh)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range findCtx.Repositories.TagReps {
+		wg.Add(1)
+		go func(tagRep reps.TagRepository) {
+			defer wg.Done()
+			tags, err := tagRep.FindTags(ctx, findTagsQuery)
+			if err != nil {
+				errch <- err
+				return
+			}
+			tagsCh <- tags
+			errch <- nil
+		}(rep)
+	}
+	wg.Wait()
+	// エラー集約
+	for range lenOfTagReps {
+		e := <-errch
+		if e != nil {
+			err = fmt.Errorf("error at get all tags: %w: %w:", e, err)
+			existErr = true
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+	// Tag集約
+	for range lenOfTagReps {
+		matchTags := <-tagsCh
+		for _, tag := range matchTags {
+			if existTag, exist := findCtx.AllHideTagsWhenUnchecked[tag.ID]; exist {
+				if tag.UpdateTime.After(existTag.UpdateTime) {
+					findCtx.AllHideTagsWhenUnchecked[tag.ID] = tag
+				}
+			} else {
+				findCtx.AllHideTagsWhenUnchecked[tag.ID] = tag
+			}
+		}
+	}
+	return nil, nil
+}
+
+func (f *FindFilter) getMatchHideTagsWhenUnckedKyou(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	if findCtx.ParsedFindQuery.Tags == nil {
+		return nil, nil
+	}
+	for _, hideTag := range findCtx.AllHideTagsWhenUnchecked {
+		isCheckedByUser := false
+		for _, tagname := range *findCtx.ParsedFindQuery.Tags {
+			if hideTag.Tag == tagname {
+				isCheckedByUser = true
+				break
+			}
+		}
+		if !isCheckedByUser {
+			findCtx.MatchHideTagsWhenUncheckedKyou[hideTag.ID] = hideTag
+		}
+	}
+	return nil, nil
+}
+
+func (f *FindFilter) getMatchHideTagsWhenUnckedTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	if findCtx.ParsedFindQuery.UseTimeIsTags == nil || !(*findCtx.ParsedFindQuery.UseTimeIsTags) || findCtx.ParsedFindQuery.TimeIsTags == nil {
+		return nil, nil
+	}
+	for _, hideTag := range findCtx.AllHideTagsWhenUnchecked {
+		isCheckedByUser := false
+		for _, tagname := range *findCtx.ParsedFindQuery.TimeIsTags {
+			if hideTag.Tag == tagname {
+				isCheckedByUser = true
+				break
+			}
+		}
+		if !isCheckedByUser {
+			findCtx.MatchHideTagsWhenUncheckedTimeIs[hideTag.ID] = hideTag
+		}
+	}
 	return nil, nil
 }
 
@@ -776,6 +906,12 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 				findCtx.MatchKyousAtFilterTags[kyou.ID] = kyou
 			}
 		}
+
+		// 非表示タグの対象を消す
+		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedKyou {
+			delete(findCtx.MatchKyousAtFilterTags, hideTag.TargetID)
+		}
+
 		findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterTags
 	} else if findCtx.TagFilterMode != nil && *findCtx.TagFilterMode == find.And {
 		// ANDの場合のフィルタリング処理
@@ -863,6 +999,12 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			index++
 		}
 		findCtx.MatchKyousAtFilterTags = hasAllMatchTagsKyousMap
+
+		// 非表示タグの対象を消す
+		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedKyou {
+			delete(findCtx.MatchKyousAtFilterTags, hideTag.TargetID)
+		}
+
 		findCtx.MatchKyousCurrent = hasAllMatchTagsKyousMap
 	}
 
@@ -919,6 +1061,12 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 				findCtx.MatchTimeIssAtFilterTags[timeis.ID] = timeis
 			}
 		}
+
+		// 非表示タグの対象を消す
+		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedTimeIs {
+			delete(findCtx.MatchTimeIssAtFilterTags, hideTag.TargetID)
+		}
+
 	} else if findCtx.TimeIsTagFilterMode != nil && *findCtx.TimeIsTagFilterMode == find.And {
 		// ANDの場合のフィルタリング処理
 
@@ -984,7 +1132,13 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 			}
 			index++
 		}
+
 		findCtx.MatchTimeIssAtFilterTags = hasAllMatchTagsTimeIssMap
+
+		// 非表示タグの対象を消す
+		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedTimeIs {
+			delete(findCtx.MatchTimeIssAtFilterTags, hideTag.TargetID)
+		}
 	}
 	return nil, nil
 }
