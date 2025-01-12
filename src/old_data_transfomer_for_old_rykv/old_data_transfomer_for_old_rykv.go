@@ -1026,10 +1026,10 @@ func getMiCheckStatesFromOldDB(filename string) ([]*MiCheckStateInfo, error) {
 
 	statement := `
 SELECT
-    CheckStateID,
-    TaskID,
-    UpdatedTime,
-    IsChecked
+    CheckStateInfo.CheckStateID,
+    CheckStateInfo.TaskID,
+    CheckStateInfo.UpdatedTime AS UpdatedTime,
+	CheckStateInfo.IsChecked
 FROM
     CheckStateInfo
 `
@@ -1049,7 +1049,8 @@ FROM
 		err := rows.Scan(&checkStateInfo.CheckStateID,
 			&checkStateInfo.TaskID,
 			&updatedTimeStr,
-			&checkStateInfo.IsChecked)
+			&checkStateInfo.IsChecked,
+		)
 		if err != nil {
 			err = fmt.Errorf("error at get check state info: %w", err)
 			return nil, err
@@ -1059,6 +1060,10 @@ FROM
 		if err != nil {
 			err = fmt.Errorf("error at parse time: %w", err)
 			return nil, err
+		}
+		// 現行のCheckState初期値が0（バグなのでここで対応）
+		if checkStateInfo.IsChecked {
+			checkStateInfo.UpdatedTime = checkStateInfo.UpdatedTime.Add(time.Second * 1)
 		}
 		checkStateInfos = append(checkStateInfos, checkStateInfo)
 	}
@@ -1257,11 +1262,11 @@ FROM
 	for rows.Next() {
 		miEndInfo := &MiEndInfo{RepName: RepName(filename)}
 		updatedTimeStr := ""
-		limitTimeStr := sql.NullString{}
+		endTimeStr := sql.NullString{}
 		err := rows.Scan(&miEndInfo.EndID,
 			&miEndInfo.TaskID,
 			&updatedTimeStr,
-			&limitTimeStr)
+			&endTimeStr)
 		if err != nil {
 			err = fmt.Errorf("error at get limit info: %w", err)
 			return nil, err
@@ -1273,9 +1278,9 @@ FROM
 			return nil, err
 		}
 
-		if limitTimeStr.Valid {
+		if endTimeStr.Valid {
 			miEndInfo.End = &time.Time{}
-			*miEndInfo.End, err = time.Parse(TimeLayout, limitTimeStr.String)
+			*miEndInfo.End, err = time.Parse(TimeLayout, endTimeStr.String)
 			if err != nil {
 				err = fmt.Errorf("error at parse limit time: %w", err)
 				return nil, err
@@ -1345,20 +1350,20 @@ func newAllDataDB(db *sql.DB, userName string) (*allDataDB, error) {
 		UserName: userName,
 	}
 	var err error
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "kmemo" (ID, Content, Time, RepName);`)
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "kmemo" (ID NOT NULL, Content NOT NULL, Time NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create kmemo db")
 		err = fmt.Errorf("error at create table: %w", err)
 		return nil, err
 	}
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "urlog" (ID, URL, Title, Description, Favicon, Image, Time, RepName);`)
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "urlog" (ID NOT NULL, URL NOT NULL, Title NOT NULL, Description NOT NULL, Favicon NOT NULL, Image NOT NULL, Time NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create urlog db")
 		err = fmt.Errorf("error at create table to database: %w", err)
 		return nil, err
 	}
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "nlog" (ID, Time, Amount, Memo, ShopName, RepName);`)
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "nlog" (ID NOT NULL, Time NOT NULL, Amount NOT NULL, Memo NOT NULL, ShopName NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create nlog db")
 		err = fmt.Errorf("error at create table to database: %w", err)
@@ -1366,36 +1371,36 @@ func newAllDataDB(db *sql.DB, userName string) (*allDataDB, error) {
 	}
 
 	_, err = db.Exec(`
-CREATE TABLE IF NOT EXISTS lantana (LantanaID TEXT, Time TEXT NOT NULL, Mood INTEGER NOT NULL, RepName NOT NULL);
+CREATE TABLE IF NOT EXISTS lantana (LantanaID TEXT NOT NULL, Time TEXT NOT NULL, Mood INTEGER NOT NULL, RepName NOT NULL);
 	`)
 	if err != nil {
 		err = fmt.Errorf("error at create lantana db")
 		err = fmt.Errorf("error at create table to database: %w", err)
 		return nil, err
 	}
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "id" (Target, ID, Time, LastMod, RepName);`)
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "id" (Target NOT NULL, ID NOT NULL, Time NOT NULL, LastMod NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create id db")
 		err = fmt.Errorf("error at create table to database: %w", err)
 		return nil, err
 	}
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "tag" (ID, Target, Tag, Time, RepName);`)
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "tag" (ID NOT NULL, Target NOT NULL, Tag NOT NULL, Time NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create tag db")
 		err = fmt.Errorf("error at create table to database: %w", err)
 		return nil, err
 	}
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "text" (ID, Text, Target, Time, RepName);`)
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "text" (ID NOT NULL, Text NOT NULL, Target NOT NULL, Time NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create text db")
 		err = fmt.Errorf("error at create table to database: %w", err)
 		return nil, err
 	}
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "timeis_start" (
-		ID        TEXT,
-		Title     TEXT,
-		StartTime TEXT,
-		RepName TEXT
+		ID        TEXT NOT NULL,
+		Title     TEXT NOT NULL,
+		StartTime TEXT NOT NULL,
+		RepName TEXT NOT NULL
 	);`)
 	if err != nil {
 		err = fmt.Errorf("error at timeis start db")
@@ -1403,10 +1408,10 @@ CREATE TABLE IF NOT EXISTS lantana (LantanaID TEXT, Time TEXT NOT NULL, Mood INT
 		return nil, err
 	}
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "timeis_end" (
-		ID      TEXT,
-		StartID,
+		ID      TEXT NOT NULL,
+		StartID NOT NULL,
 		EndTime TEXT,
-		RepName TEXT
+		RepName TEXT NOT NULL
 	);`)
 	if err != nil {
 		err = fmt.Errorf("error at timeis end db")
@@ -1415,7 +1420,7 @@ CREATE TABLE IF NOT EXISTS lantana (LantanaID TEXT, Time TEXT NOT NULL, Mood INT
 	}
 	_, err = db.Exec(`
 CREATE TABLE IF NOT EXISTS Task (
-    TaskID TEXT,
+    TaskID TEXT NOT NULL,
     CreatedTime TEXT NOT NULL,
 	RepName TEXT NOT NULL
 );`)
@@ -1427,7 +1432,7 @@ CREATE TABLE IF NOT EXISTS Task (
 	_, err = db.Exec(`
 
 CREATE TABLE IF NOT EXISTS TaskTitleInfo (
-    TaskTitleID TEXT,
+    TaskTitleID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
     UpdatedTime TEXT NOT NULL,
     Title TEXT NOT NULL,
@@ -1441,7 +1446,7 @@ CREATE TABLE IF NOT EXISTS TaskTitleInfo (
 	_, err = db.Exec(`
 
 CREATE TABLE IF NOT EXISTS CheckStateInfo (
-    CheckStateID TEXT,
+    CheckStateID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
     UpdatedTime TEXT NOT NULL,
     IsChecked TEXT NOT NULL,
@@ -1455,7 +1460,7 @@ CREATE TABLE IF NOT EXISTS CheckStateInfo (
 	_, err = db.Exec(`
 
 CREATE TABLE IF NOT EXISTS LimitInfo (
-    LimitID TEXT,
+    LimitID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
     UpdatedTime TEXT NOT NULL,
     LimitTime Text,
@@ -1469,7 +1474,7 @@ CREATE TABLE IF NOT EXISTS LimitInfo (
 	_, err = db.Exec(`
 
 CREATE TABLE IF NOT EXISTS MiStartInfo (
-    StartID TEXT,
+    StartID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
     UpdatedTime TEXT NOT NULL,
     StartTime Text,
@@ -1483,7 +1488,7 @@ CREATE TABLE IF NOT EXISTS MiStartInfo (
 	_, err = db.Exec(`
 
 CREATE TABLE IF NOT EXISTS MiEndInfo (
-    EndID TEXT,
+    EndID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
     UpdatedTime TEXT NOT NULL,
     EndTime Text,
@@ -1497,7 +1502,7 @@ CREATE TABLE IF NOT EXISTS MiEndInfo (
 	_, err = db.Exec(`
 
 CREATE TABLE IF NOT EXISTS BoardInfo (
-    BoardInfoID TEXT,
+    BoardInfoID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
     UpdatedTime TEXT NOT NULL,
 	RepName TEXT NOT NULL,
@@ -2586,89 +2591,89 @@ LEFT OUTER JOIN timeis_end ON timeis_start.ID = timeis_end.StartID
 func (a *allDataDB) getGkillMis() ([]*reps.Mi, error) {
 	mis := []*reps.Mi{}
 	statement := `
-SELECT
+SELECT 
     Task.TaskID,
     Task.CreatedTime,
     TaskTitleInfo.Title,
     BoardInfo.BoardName,
-    CheckStateInfo.IsChecked,
+	CheckStateInfo.IsChecked,
     LimitInfo.LimitTime,
     MiStartInfo.StartTime,
     MiEndInfo.EndTime,
-	(SELECT UpdatedTimeRaw
+
+	(SELECT UpdatedTime
     FROM (
-            SELECT datetime(Task.CreatedTime, 'localtime') AS UpdatedTime, Task.CreatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
+        	SELECT datetime(Task.CreatedTime, 'localtime') AS UpdatedTime, Task.RepName AS RepName
+			WHERE Task.CreatedTime IS NOT NULL
         UNION
-            SELECT datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime, TaskTitleInfo.UpdatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
+            SELECT datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime, TaskTitleInfo.RepName AS RepName
+			WHERE TaskTitleInfo.UpdatedTime IS NOT NULL
         UNION
-            SELECT datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.UpdatedTime AS UpdatedTimeRaw, BoardInfo.RepName AS RepName
+            SELECT datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.RepName AS RepName
+			WHERE BoardInfo.UpdatedTime IS NOT NULL
         UNION
-            SELECT datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.UpdatedTime AS UpdatedTimeRaw, LimitInfo.RepName AS RepName
+            SELECT datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.RepName AS RepName
+			WHERE LimitInfo.UpdatedTime IS NOT NULL
         UNION
-            SELECT datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.UpdatedTime AS UpdatedTimeRaw, MiStartInfo.RepName AS RepName
+            SELECT datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.RepName AS RepName
+			WHERE MiStartInfo.UpdatedTime IS NOT NULL
         UNION
-            SELECT datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.UpdatedTime AS UpdatedTimeRaw, MiEndInfo.RepName AS RepName
+            SELECT datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.RepName AS RepName
+			WHERE MiEndInfo.UpdatedTime IS NOT NULL
         UNION
-            SELECT datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.UpdatedTime AS UpdatedTimeRaw, CheckStateInfo.RepName AS RepName
-			WHERE UpdatedTime IS NOT NULL
-            GROUP BY UpdatedTime, RepName
-        ) AS ForUpdateTimeRaw
-    ) AS UpdatedTimeRaw,
-    (SELECT UpdatedTime
-    FROM (
-            SELECT datetime(Task.CreatedTime, 'localtime') AS UpdatedTime, Task.CreatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
-        UNION
-            SELECT datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime, TaskTitleInfo.UpdatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
-        UNION
-            SELECT datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.UpdatedTime AS UpdatedTimeRaw, BoardInfo.RepName AS RepName
-        UNION
-            SELECT datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.UpdatedTime AS UpdatedTimeRaw, LimitInfo.RepName AS RepName
-        UNION
-            SELECT datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.UpdatedTime AS UpdatedTimeRaw, MiStartInfo.RepName AS RepName
-        UNION
-            SELECT datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.UpdatedTime AS UpdatedTimeRaw, MiEndInfo.RepName AS RepName
-        UNION
-            SELECT datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.UpdatedTime AS UpdatedTimeRaw, CheckStateInfo.RepName AS RepName
-			WHERE UpdatedTime IS NOT NULL
-            GROUP BY UpdatedTime, RepName
+            SELECT datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.RepName AS RepName
+			WHERE CheckStateInfo.UpdatedTime IS NOT NULL
         ) AS ForUpdateTime
+		WHERE ForUpdateTime.UpdatedTime IS NOT NULL
+        GROUP BY ForUpdateTime.UpdatedTime, ForUpdateTime.RepName
+		ORDER BY ForUpdateTime.UpdatedTime DESC
+		LIMIT 1
     ) AS UpdateTime,
     (SELECT RepName
     FROM (
-        	SELECT datetime(Task.CreatedTime, 'localtime') AS UpdatedTime, Task.CreatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
+        	SELECT datetime(Task.CreatedTime, 'localtime') AS UpdatedTime, Task.RepName AS RepName
+			WHERE Task.CreatedTime IS NOT NULL
         UNION
-            SELECT datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime, TaskTitleInfo.UpdatedTime AS UpdatedTimeRaw, TaskTitleInfo.RepName AS RepName
+            SELECT datetime(TaskTitleInfo.UpdatedTime, 'localtime') AS UpdatedTime, TaskTitleInfo.RepName AS RepName
+			WHERE TaskTitleInfo.UpdatedTime IS NOT NULL
         UNION
-            SELECT datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.UpdatedTime AS UpdatedTimeRaw, BoardInfo.RepName AS RepName
+            SELECT datetime(BoardInfo.UpdatedTime, 'localtime') AS UpdatedTime, BoardInfo.RepName AS RepName
+			WHERE BoardInfo.UpdatedTime IS NOT NULL
         UNION
-            SELECT datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.UpdatedTime AS UpdatedTimeRaw, LimitInfo.RepName AS RepName
+            SELECT datetime(LimitInfo.UpdatedTime, 'localtime') AS UpdatedTime, LimitInfo.RepName AS RepName
+			WHERE LimitInfo.UpdatedTime IS NOT NULL
         UNION
-            SELECT datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.UpdatedTime AS UpdatedTimeRaw, MiStartInfo.RepName AS RepName
+            SELECT datetime(MiStartInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiStartInfo.RepName AS RepName
+			WHERE MiStartInfo.UpdatedTime IS NOT NULL
         UNION
-            SELECT datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.UpdatedTime AS UpdatedTimeRaw, MiEndInfo.RepName AS RepName
+            SELECT datetime(MiEndInfo.UpdatedTime, 'localtime') AS UpdatedTime, MiEndInfo.RepName AS RepName
+			WHERE MiEndInfo.UpdatedTime IS NOT NULL
         UNION
-            SELECT datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.UpdatedTime AS UpdatedTimeRaw, CheckStateInfo.RepName AS RepName
-			WHERE UpdatedTime IS NOT NULL
-            GROUP BY UpdatedTime, RepName
+            SELECT datetime(CheckStateInfo.UpdatedTime, 'localtime') AS UpdatedTime, CheckStateInfo.RepName AS RepName
+			WHERE CheckStateInfo.UpdatedTime IS NOT NULL
         ) AS ForRepName
+		WHERE ForRepName.UpdatedTime IS NOT NULL
+        GROUP BY ForRepName.UpdatedTime, ForRepName.RepName
+		ORDER BY ForRepName.UpdatedTime DESC
+		LIMIT 1
 	) AS RepName
 FROM Task
-    LEFT OUTER JOIN TaskTitleInfo ON Task.TaskID = TaskTitleInfo.TaskID
-    LEFT OUTER JOIN BoardInfo ON Task.TaskID = BoardInfo.TaskID
-    LEFT OUTER JOIN CheckStateInfo ON Task.TaskID = CheckStateInfo.TaskID
-    LEFT OUTER JOIN LimitInfo ON Task.TaskID = LimitInfo.TaskID
-    LEFT OUTER JOIN MiStartInfo ON Task.TaskID = MiStartInfo.TaskID
-    LEFT OUTER JOIN MiEndInfo ON Task.TaskID = MiEndInfo.TaskID
+    LEFT OUTER JOIN TaskTitleInfo ON Task.TaskID = TaskTitleInfo.TaskID 
+    LEFT OUTER JOIN BoardInfo ON Task.TaskID = BoardInfo.TaskID 
+    LEFT OUTER JOIN CheckStateInfo ON Task.TaskID = CheckStateInfo.TaskID 
+    LEFT OUTER JOIN LimitInfo ON Task.TaskID = LimitInfo.TaskID 
+    LEFT OUTER JOIN MiStartInfo ON Task.TaskID = MiStartInfo.TaskID 
+    LEFT OUTER JOIN MiEndInfo ON Task.TaskID = MiEndInfo.TaskID 
 GROUP BY
 Task.TaskID,
-Task.CreatedTime,
-TaskTitleInfo.Title,
-BoardInfo.BoardName,
-CheckStateInfo.IsChecked,
-LimitInfo.LimitTime,
-MiStartInfo.StartTime,
-MiEndInfo.EndTime,
 UpdateTime
+HAVING UpdateTime = MAX(datetime(Task.CreatedTime, 'localtime'))
+OR UpdateTime = MAX(datetime(TaskTitleInfo.UpdatedTime, 'localtime'))
+OR UpdateTime = MAX(datetime(BoardInfo.UpdatedTime, 'localtime'))
+OR UpdateTime = MAX(datetime(LimitInfo.UpdatedTime, 'localtime'))
+OR UpdateTime = MAX(datetime(MiStartInfo.UpdatedTime, 'localtime'))
+OR UpdateTime = MAX(datetime(MiEndInfo.UpdatedTime, 'localtime'))
+OR UpdateTime = MAX(datetime(CheckStateInfo.UpdatedTime, 'localtime'))
 `
 	rows, err := a.db.Query(statement)
 	if err != nil {
@@ -2681,34 +2686,38 @@ UpdateTime
 		mi := &reps.Mi{}
 		createdTimeStr, updatedTimeStr := "", ""
 		limitTimeStr, startTimeStr, endTimeStr := sql.NullString{}, sql.NullString{}, sql.NullString{}
-		updateTimeTypedStr := ""
+		isChecked := sql.NullBool{}
 		err := rows.Scan(
 			&mi.ID,
 			&createdTimeStr,
 			&mi.Title,
 			&mi.BoardName,
-			&mi.IsChecked,
+			&isChecked,
 			&limitTimeStr,
 			&startTimeStr,
 			&endTimeStr,
 			&updatedTimeStr,
-			&updateTimeTypedStr,
 			&mi.RepName,
 		)
 		if err != nil {
 			return nil, err
 		}
 
+		if isChecked.Valid {
+			mi.IsChecked = isChecked.Bool
+		}
 		mi.CreateTime, err = time.Parse(TimeLayout, createdTimeStr)
 		if err != nil {
 			err = fmt.Errorf("error at parse create time: %w", err)
 			return nil, err
 		}
-		mi.UpdateTime, err = time.Parse(TimeLayout, strings.ReplaceAll(updatedTimeStr, " ", "T"))
+		// 現行バグCheckState初期値0対応のためTimeLayoutをLocalにする
+		mi.UpdateTime, err = time.Parse("2006-01-02T15:04:05", strings.ReplaceAll(updatedTimeStr, " ", "T"))
 		if err != nil {
 			err = fmt.Errorf("error at parse update time: %w", err)
 			return nil, err
 		}
+
 		if limitTimeStr.Valid {
 			mi.LimitTime = &time.Time{}
 			*mi.LimitTime, err = time.Parse(TimeLayout, limitTimeStr.String)
