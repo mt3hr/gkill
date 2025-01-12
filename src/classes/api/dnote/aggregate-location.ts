@@ -15,21 +15,18 @@ export class AggregateLocation {
 export async function aggregate_locations_from_kyous(kyous: Array<Kyou>): Promise<Array<AggregateLocation>> {
     const aggregate_locations = new Array<AggregateLocation>()
     const aggregate_locations_map = new Map<string, AggregateLocation>()// map[title]aggregate_location
-    const awaitPromises = new Array<Promise<any>>()
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
         if (kyou.data_type.startsWith("timeis")) {
             if (!kyou.typed_timeis) {
-                awaitPromises.push(kyou.load_typed_timeis())
+                await kyou.load_typed_timeis()
             }
         } else if (kyou.data_type.startsWith("kmemo")) {
             if (!kyou.typed_kmemo) {
-                awaitPromises.push(kyou.load_typed_kmemo())
+                await kyou.load_typed_kmemo()
             }
         }
     }
-
-    await Promise.all(awaitPromises)
 
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
@@ -46,6 +43,11 @@ export async function aggregate_locations_from_kyous(kyous: Array<Kyou>): Promis
                 title = kyou.typed_kmemo.content
                 duration_milli_second = 0
             }
+        }
+
+        if (isNaN(duration_milli_second)) {
+            // NaNはスキップ
+            continue
         }
 
         // すでにあればそこに加算する。なければ追加する

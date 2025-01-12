@@ -12,46 +12,145 @@
             <table>
                 <tr>
                     <td>
-                        <div>覚醒：<span v-if="calclutated_total_awake_time !== ''">{{ calclutated_total_awake_time
-                                }}</span>
+                        <div>
+                            <span>
+                                覚醒：
+                            </span>
+                            <span v-if="calclutated_total_awake_time !== ''">
+                                {{ calclutated_total_awake_time }}
+                            </span>
                         </div>
-                        <div>睡眠：<span v-if="calclutated_total_sleep_time !== ''">{{ calclutated_total_sleep_time
-                                }}</span>
+                        <div>
+                            <span>
+                                睡眠：
+                            </span>
+                            <span v-if="calclutated_total_sleep_time !== ''">
+                                {{ calclutated_total_sleep_time }}
+                            </span>
                         </div>
-                        <div>仕事：<span v-if="calclutated_total_work_time !== ''">{{ calclutated_total_work_time }}
+                        <div>
+                            <span>
+                                仕事：
+                            </span>
+                            <span v-if="calclutated_total_work_time !== ''">
+                                {{ calclutated_total_work_time }}
                             </span>
                         </div>
                     </td>
                     <td>
-                        <div>煙草： <span v-if="calclutated_tabaco_record_count !== -1">{{ calclutated_tabaco_record_count
-                                }}
-                                本</span></div>
-                        <div style="display: flex;">気分：
+                        <div>
+                            <span>
+                                煙草：
+                            </span>
+                            <span v-if="calclutated_tabaco_record_count !== -1">
+                                <span>
+                                    {{ calclutated_tabaco_record_count }}
+                                </span>
+                                <span>
+                                    本
+                                </span>
+                            </span>
+                        </div>
+                        <div style="display: flex;">
+                            <span>
+                                気分：
+                            </span>
                             <LantanaFlowersView v-if="calclated_average_lantana_mood !== -1" :gkill_api="gkill_api"
                                 :application_config="application_config" :mood="calclated_average_lantana_mood"
                                 :editable="false" />
                         </div>
-                        <div>収入： <span v-if="calclutated_total_nlog_plus_amount !== -1">{{
-                            calclutated_total_nlog_plus_amount }} 円</span></div>
-                        <div>支出： <span v-if="calclutated_total_nlog_minus_amount !== -1">{{
-                            calclutated_total_nlog_minus_amount }} 円</span></div>
-                        <div>コード：
-                            <span v-if="calclutated_total_git_addition_count !== -1" class="git_commit_addition"> + {{
-                                calclutated_total_git_addition_count }} 行</span>
+                        <div>
+                            <span>
+                                収入：
+                            </span>
+                            <span v-if="calclutated_total_nlog_plus_amount !== -1">
+                                <span class="amount_plus">
+                                    {{ calclutated_total_nlog_plus_amount }}
+                                </span>
+                                <span>
+                                    円
+                                </span>
+                            </span>
                         </div>
-                        <div>コード：
-                            <span v-if="calclutated_total_git_deletion_count !== -1" class="git_commit_deletion"> - {{
-                                calclutated_total_git_deletion_count }} 行</span>
+                        <div>
+                            <span>
+                                支出：
+                            </span>
+                            <span v-if="calclutated_total_nlog_minus_amount !== -1">
+                                <span class="amount_minus">
+                                    {{ calclutated_total_nlog_minus_amount }}
+                                </span>
+                                <span>
+                                    円
+                                </span>
+                            </span>
+                        </div>
+                        <div>
+                            <span>
+                                コード：
+                            </span>
+                            <span v-if="calclutated_total_git_addition_count !== -1">
+                                <span class="git_commit_addition">
+                                    <span>
+                                        + {{ calclutated_total_git_addition_count }}
+                                    </span>
+                                </span>
+                                <span>
+                                    行
+                                </span>
+                            </span>
+                        </div>
+                        <div>
+                            <span>
+                                コード：
+                            </span>
+                            <span v-if="calclutated_total_git_deletion_count !== -1">
+                                <span class="git_commit_deletion">
+                                    <span>
+                                        - {{ calclutated_total_git_deletion_count }}
+                                    </span>
+                                </span>
+                                <span>
+                                    行
+                                </span>
+                            </span>
                         </div>
                     </td>
                     <td>
-                        <div>合計時間：<span v-if="total_checked_time !== ''">{{ total_checked_time }}</span></div>
-                        <div>合計収入：<span v-if="total_checked_nlog_plus_amount !== -1">{{ total_checked_nlog_plus_amount
-                                }}
-                                円</span></div>
-                        <div>合計支出：<span v-if="total_checked_nlog_minus_amount !== -1">{{ total_checked_nlog_minus_amount
-                                }}
-                                円</span></div>
+                        <div>
+                            <span>
+                                合計時間：
+                            </span>
+                            <span v-if="total_checked_time !== ''">
+                                {{ total_checked_time }}
+                            </span>
+                        </div>
+                        <div>
+                            <span>
+                                合計収入：
+                            </span>
+                            <span v-if="total_checked_nlog_plus_amount !== -1">
+                                <span class="amount_plus">
+                                    {{ total_checked_nlog_plus_amount }}
+                                </span>
+                                <span>
+                                    円
+                                </span>
+                            </span>
+                        </div>
+                        <div>
+                            <span>
+                                合計支出：
+                            </span>
+                            <span v-if="total_checked_nlog_minus_amount !== -1">
+                                <span class="amount_minus">
+                                    {{ total_checked_nlog_minus_amount }}
+                                </span>
+                                <span>
+                                    円
+                                </span>
+                            </span>
+                        </div>
                     </td>
                 </tr>
                 <tr>
@@ -61,12 +160,12 @@
                             :last_added_tag="last_added_tag" :aggregate_ammounts="aggregate_amounts" />
                     </td>
                     <td>
-                        <h2>場所（ {{ location_timeis_kmemo_kyous.length }} 件 ）</h2>
+                        <h2>場所（{{ aggregate_locations.length }}件）</h2>
                         <AggregateLocationListView :application_config="application_config" :gkill_api="gkill_api"
                             :last_added_tag="last_added_tag" :aggregate_locations="aggregate_locations" />
                     </td>
                     <td>
-                        <h2>人（ {{ people_timeis_kmemo_kyous.length }} 件 ）</h2>
+                        <h2>人（{{ aggregate_peoples.length }}件）</h2>
                         <AggregatePeopleListView :application_config="application_config" :gkill_api="gkill_api"
                             :last_added_tag="last_added_tag" :aggregate_peoples="aggregate_peoples" />
                     </td>
@@ -79,7 +178,7 @@
 import type { DnoteEmits } from './dnote-emits'
 import type { DnoteViewProps } from './dnote-view-props'
 
-import { computed, ref, type Ref } from 'vue'
+import { computed, nextTick, ref, type Ref } from 'vue'
 
 import moment from 'moment'
 import type { Kyou } from '@/classes/datas/kyou'
@@ -95,7 +194,7 @@ import AggregatePeopleListView from './aggregate-people-list-view.vue'
 
 const props = defineProps<DnoteViewProps>()
 const emits = defineEmits<DnoteEmits>()
-defineExpose({ recalc_all, recalc_checked_aggregate })
+defineExpose({ recalc_all, recalc_checked_aggregate, abort })
 
 const is_loading = ref(false)
 const start_date_str: Ref<string> = computed(() => !cloned_query.value.calendar_start_date ? "" : (moment(cloned_query.value.calendar_start_date ? cloned_query.value.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")))
@@ -132,7 +231,7 @@ const abort_controller: Ref<AbortController> = ref(new AbortController())
 const cloned_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
 async function recalc_all(): Promise<void> {
-    is_loading.value = true
+    nextTick(() => { ((async () => is_loading.value = true)()); })
     abort_controller.value = new AbortController()
     const wait_promises = new Array<Promise<any>>()
     wait_promises.push(calculate_dnote())
@@ -140,11 +239,24 @@ async function recalc_all(): Promise<void> {
     Promise.all(wait_promises).then(() => is_loading.value = false)
 }
 
+async function abort(): Promise<void> {
+    abort_controller.value.abort()
+}
+
 async function load_query(): Promise<void> {
     cloned_query.value = props.query.clone()
 }
 
 async function calculate_dnote(): Promise<void> {
+    location_timeis_kmemo_kyous.value.splice(0)
+    people_timeis_kmemo_kyous.value.splice(0)
+    awake_timeis_kyous.value.splice(0)
+    sleep_timeis_kyous.value.splice(0)
+    work_timeis_kyous.value.splice(0)
+    tabaco_kmemo_kyous.value.splice(0)
+    lantana_kyous.value.splice(0)
+    git_commit_log_kyous.value.splice(0)
+    nlog_kyous.value.splice(0)
     await load_query()
     abort_controller.value.abort()
     abort_controller.value = new AbortController()
@@ -165,8 +277,6 @@ async function recalc_checked_aggregate(): Promise<void> {
 }
 
 async function extruct_location_kyous(): Promise<void> {
-    location_timeis_kmemo_kyous.value.splice(0)
-
     // timeisとkmemoのRepだけを検索対象とする
     // それ以外はサイドバー条件を継承する
     const query_for_extruct_location_kyous = cloned_query.value.clone()
@@ -197,8 +307,6 @@ async function extruct_location_kyous(): Promise<void> {
 }
 
 async function extruct_people_kyous(): Promise<void> {
-    people_timeis_kmemo_kyous.value.splice(0)
-
     // timeisとkmemoのRepだけを検索対象とする
     // それ以外はサイドバー条件を継承する
     const query_for_extruct_people_kyous = cloned_query.value.clone()
@@ -229,7 +337,6 @@ async function extruct_people_kyous(): Promise<void> {
 }
 
 async function extruct_nlog_kyous(): Promise<void> {
-    nlog_kyous.value.splice(0)
     calclutated_total_nlog_plus_amount.value = -1
     calclutated_total_nlog_minus_amount.value = -1
 
@@ -254,12 +361,10 @@ async function extruct_nlog_kyous(): Promise<void> {
     }
     nlog_kyous.value = res.kyous
 
-    const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < nlog_kyous.value.length; i++) {
         const kyou = nlog_kyous.value[i]
-        wait_promises.push(kyou.load_typed_nlog())
+        await kyou.load_typed_nlog()
     }
-    await Promise.all(wait_promises)
 
     let total_plus_nlog = 0
     let total_minus_nlog = 0
@@ -283,7 +388,6 @@ async function extruct_nlog_kyous(): Promise<void> {
 }
 
 async function calc_total_awake_time(): Promise<void> {
-    awake_timeis_kyous.value.splice(0)
     calclutated_total_awake_time.value = ""
 
     // timeisのRepだけを検索対象とする
@@ -313,12 +417,10 @@ async function calc_total_awake_time(): Promise<void> {
     }
     awake_timeis_kyous.value.push(...res.kyous)
 
-    const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < awake_timeis_kyous.value.length; i++) {
         const kyou = awake_timeis_kyous.value[i]
-        wait_promises.push(kyou.load_typed_datas())
+        await kyou.load_typed_datas()
     }
-    await Promise.all(wait_promises)
 
     let total_diff_milli_second = 0
     for (let i = 0; i < awake_timeis_kyous.value.length; i++) {
@@ -333,7 +435,6 @@ async function calc_total_awake_time(): Promise<void> {
 }
 
 async function calc_total_sleep_time(): Promise<void> {
-    sleep_timeis_kyous.value.splice(0)
     calclutated_total_sleep_time.value = ""
 
     // timeisのRepだけを検索対象とする
@@ -363,12 +464,10 @@ async function calc_total_sleep_time(): Promise<void> {
     }
     sleep_timeis_kyous.value.push(...res.kyous)
 
-    const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < sleep_timeis_kyous.value.length; i++) {
         const kyou = sleep_timeis_kyous.value[i]
-        wait_promises.push(kyou.load_typed_datas())
+        await kyou.load_typed_datas()
     }
-    await Promise.all(wait_promises)
 
     let total_diff_milli_second = 0
     for (let i = 0; i < sleep_timeis_kyous.value.length; i++) {
@@ -383,7 +482,6 @@ async function calc_total_sleep_time(): Promise<void> {
 }
 
 async function calc_total_work_time(): Promise<void> {
-    work_timeis_kyous.value.splice(0)
     calclutated_total_work_time.value = ""
 
     // timeisのRepだけを検索対象とする
@@ -412,12 +510,10 @@ async function calc_total_work_time(): Promise<void> {
     }
     work_timeis_kyous.value.push(...res.kyous)
 
-    const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < work_timeis_kyous.value.length; i++) {
         const kyou = work_timeis_kyous.value[i]
-        wait_promises.push(kyou.load_typed_datas())
+        await kyou.load_typed_datas()
     }
-    await Promise.all(wait_promises)
 
     let total_diff_milli_second = 0
     for (let i = 0; i < work_timeis_kyous.value.length; i++) {
@@ -432,7 +528,6 @@ async function calc_total_work_time(): Promise<void> {
 }
 
 async function calc_total_tabaco_record_count(): Promise<void> {
-    tabaco_kmemo_kyous.value.splice(0)
     calclutated_tabaco_record_count.value = -1
 
     // kmemoのRepだけを検索対象とする
@@ -462,7 +557,6 @@ async function calc_total_tabaco_record_count(): Promise<void> {
 }
 
 async function calc_average_lantana_mood(): Promise<void> {
-    lantana_kyous.value.splice(0)
     calclated_average_lantana_mood.value = -1
 
     // timeisのRepだけを検索対象とする
@@ -487,12 +581,10 @@ async function calc_average_lantana_mood(): Promise<void> {
     }
     lantana_kyous.value.push(...res.kyous)
 
-    const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < lantana_kyous.value.length; i++) {
         const kyou = lantana_kyous.value[i]
-        wait_promises.push(kyou.load_typed_lantana())
+        await kyou.load_typed_lantana()
     }
-    await Promise.all(wait_promises)
 
     let total_mood = 0
     let total_count = 0
@@ -510,7 +602,6 @@ async function calc_average_lantana_mood(): Promise<void> {
 }
 
 async function calc_total_git_addition_deletion_count(): Promise<void> {
-    git_commit_log_kyous.value.splice(0)
     calclutated_total_git_addition_count.value = -1
     calclutated_total_git_deletion_count.value = -1
 
@@ -534,12 +625,10 @@ async function calc_total_git_addition_deletion_count(): Promise<void> {
     }
     git_commit_log_kyous.value.push(...res.kyous)
 
-    const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < git_commit_log_kyous.value.length; i++) {
         const kyou = git_commit_log_kyous.value[i]
-        wait_promises.push(kyou.load_typed_git_commit_log())
+        await kyou.load_typed_git_commit_log()
     }
-    await Promise.all(wait_promises)
 
     let total_addition = 0
     let total_deletion = 0
@@ -598,15 +687,13 @@ function format_duration(duration_milli_second: number): string {
 async function calc_checked_timeis(): Promise<void> {
     total_checked_time.value = ""
     const checked_timeis_kyous = new Array<Kyou>()
-    const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < props.checked_kyous.length; i++) {
         const kyou = props.checked_kyous[i]
         if (kyou.data_type.toLowerCase().startsWith("timeis")) {
             checked_timeis_kyous.push(kyou)
-            wait_promises.push(kyou.load_typed_timeis())
+            await kyou.load_typed_timeis()
         }
     }
-    await Promise.all(wait_promises)
 
     let total_diff_milli_second = 0
     for (let i = 0; i < checked_timeis_kyous.length; i++) {
@@ -624,15 +711,13 @@ async function calc_checked_nlog(): Promise<void> {
     total_checked_nlog_plus_amount.value = -1
     total_checked_nlog_minus_amount.value = -1
     const checked_nlog_kyous = new Array<Kyou>()
-    const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < props.checked_kyous.length; i++) {
         const kyou = props.checked_kyous[i]
         if (kyou.data_type.toLowerCase().startsWith("nlog")) {
             checked_nlog_kyous.push(kyou)
-            wait_promises.push(kyou.load_typed_nlog())
+            await kyou.load_typed_nlog()
         }
     }
-    await Promise.all(wait_promises)
 
     let total_plus_nlog = 0
     let total_minus_nlog = 0
@@ -664,7 +749,16 @@ async function calc_checked_nlog(): Promise<void> {
     color: crimson;
 }
 
+.amount_plus {
+    color: limegreen;
+}
+
+.amount_minus {
+    color: crimson;
+}
+
 .dnote_view {
+    position: relative;
     width: 625px;
     max-width: 625px;
     min-width: 625px;

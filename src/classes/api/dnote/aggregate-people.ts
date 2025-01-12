@@ -18,22 +18,19 @@ export class AggregatePeople {
 export async function aggregate_peoples_from_kyous(kyous: Array<Kyou>): Promise<Array<AggregatePeople>> {
     const aggregate_peoples = new Array<AggregatePeople>()
     const aggregate_peoples_map = new Map<string, AggregatePeople>()// map[title]aggregate_people
-    const awaitPromises = new Array<Promise<any>>()
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
         if (kyou.data_type.startsWith("timeis")) {
             if (!kyou.typed_timeis) {
-                awaitPromises.push(kyou.load_typed_timeis())
+                await kyou.load_typed_timeis()
             }
         } else if (kyou.data_type.startsWith("kmemo")) {
             if (!kyou.typed_kmemo) {
-                awaitPromises.push(kyou.load_typed_kmemo())
+                await kyou.load_typed_kmemo()
             }
         }
-        awaitPromises.push(kyou.load_attached_tags())
+        await kyou.load_attached_tags()
     }
-
-    await Promise.all(awaitPromises)
 
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
@@ -51,8 +48,14 @@ export async function aggregate_peoples_from_kyous(kyous: Array<Kyou>): Promise<
                 duration_milli_second = 0
             }
         }
+
+        if (isNaN(duration_milli_second)) {
+            // NaNはスキップ
+            continue
+        }
+
         for (let j = 0; j < kyou.attached_tags.length; j++) {
-            const tag = kyou.attached_tags[i]
+            const tag = kyou.attached_tags[j]
             if (tag.tag === "あ") {
                 type = "対面"
             } else if (tag.tag === "通話") {

@@ -19,6 +19,10 @@ defineProps<AggregateLocationViewProps>()
 defineEmits<KyouViewEmits>()
 
 function format_duration(duration_milli_second: number): string {
+    if (duration_milli_second === 0) {
+        return ""
+    }
+
     let diff_str = ""
     const offset_in_locale_milli_second = new Date().getTimezoneOffset().valueOf() * 60000
     const diff = duration_milli_second

@@ -3,23 +3,25 @@
         <v-card-title>
             タスク共有リンク一覧
         </v-card-title>
-        <v-row v-for="share_mi_task_list_info in share_mi_task_list_infos"
-            :key="share_mi_task_list_info.share_id">
-            <v-col cols="auto">
-                {{ share_mi_task_list_info.share_title }}
-            </v-col>
-            <v-col cols="auto">
-                <v-btn color="primary" @click="emits('requested_show_share_task_link_dialog', share_mi_task_list_info)">
-                    リンク
-                </v-btn>
-            </v-col>
-            <v-col cols="auto">
-                <v-btn color="primary"
-                    @click="emits('requested_show_confirm_delete_share_task_list_dialog', share_mi_task_list_info)">
-                    削除
-                </v-btn>
-            </v-col>
-        </v-row>
+        <table>
+            <tr v-for="share_mi_task_list_info in share_mi_task_list_infos" :key="share_mi_task_list_info.share_id">
+                <td>
+                    {{ share_mi_task_list_info.share_title }}
+                </td>
+                <td>
+                    <v-btn color="primary"
+                        @click="emits('requested_show_share_task_link_dialog', share_mi_task_list_info)">
+                        リンク
+                    </v-btn>
+                </td>
+                <td>
+                    <v-btn color="primary"
+                        @click="emits('requested_show_confirm_delete_share_task_list_dialog', share_mi_task_list_info)">
+                        削除
+                    </v-btn>
+                </td>
+            </tr>
+        </table>
     </v-card>
 </template>
 <script lang="ts" setup>
