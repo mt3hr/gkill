@@ -231,12 +231,9 @@ const abort_controller: Ref<AbortController> = ref(new AbortController())
 const cloned_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
 async function recalc_all(): Promise<void> {
-    nextTick(() => { ((async () => is_loading.value = true)()); })
     abort_controller.value = new AbortController()
-    const wait_promises = new Array<Promise<any>>()
-    wait_promises.push(calculate_dnote())
-    wait_promises.push(recalc_checked_aggregate())
-    Promise.all(wait_promises).then(() => is_loading.value = false)
+    calculate_dnote()
+    recalc_checked_aggregate()
 }
 
 async function abort(): Promise<void> {
@@ -248,27 +245,38 @@ async function load_query(): Promise<void> {
 }
 
 async function calculate_dnote(): Promise<void> {
-    location_timeis_kmemo_kyous.value.splice(0)
-    people_timeis_kmemo_kyous.value.splice(0)
-    awake_timeis_kyous.value.splice(0)
-    sleep_timeis_kyous.value.splice(0)
-    work_timeis_kyous.value.splice(0)
-    tabaco_kmemo_kyous.value.splice(0)
-    lantana_kyous.value.splice(0)
-    git_commit_log_kyous.value.splice(0)
-    nlog_kyous.value.splice(0)
-    await load_query()
-    abort_controller.value.abort()
-    abort_controller.value = new AbortController()
-    extruct_location_kyous()
-    extruct_people_kyous()
-    extruct_nlog_kyous()
-    calc_total_awake_time() // 時間合算
-    calc_total_sleep_time() //時間合算
-    calc_total_work_time() //時間合算
-    calc_total_tabaco_record_count() //条件付き件数
-    calc_average_lantana_mood() // 平均
-    calc_total_git_addition_deletion_count() //合算
+    try {
+        is_loading.value = true
+        aggregate_amounts.value.splice(0)
+        aggregate_locations.value.splice(0)
+        aggregate_peoples.value.splice(0)
+        location_timeis_kmemo_kyous.value.splice(0)
+        people_timeis_kmemo_kyous.value.splice(0)
+        awake_timeis_kyous.value.splice(0)
+        sleep_timeis_kyous.value.splice(0)
+        work_timeis_kyous.value.splice(0)
+        tabaco_kmemo_kyous.value.splice(0)
+        lantana_kyous.value.splice(0)
+        git_commit_log_kyous.value.splice(0)
+        nlog_kyous.value.splice(0)
+        await load_query()
+        abort_controller.value.abort()
+        abort_controller.value = new AbortController()
+
+        const wait_promises = new Array<Promise<any>>()
+        wait_promises.push(extruct_location_kyous())
+        wait_promises.push(extruct_people_kyous())
+        wait_promises.push(extruct_nlog_kyous())
+        wait_promises.push(calc_total_awake_time()) // 時間合算
+        wait_promises.push(calc_total_sleep_time()) //時間合算
+        wait_promises.push(calc_total_work_time()) //時間合算
+        wait_promises.push(calc_total_tabaco_record_count()) //条件付き件数
+        wait_promises.push(calc_average_lantana_mood()) // 平均
+        wait_promises.push(calc_total_git_addition_deletion_count()) //合算
+        await Promise.all(wait_promises)
+    } finally {
+        is_loading.value = false
+    }
 }
 
 async function recalc_checked_aggregate(): Promise<void> {
