@@ -150,7 +150,7 @@ export class FindKyouQuery {
         this.use_mi_board_name = false
         this.mi_board_name = ""
         this.use_mi_sort_type = false
-        this.mi_sort_type = MiSortType.create_time
+        this.mi_sort_type = MiSortType.estimate_start_time
         this.use_mi_check_state = false
         this.mi_check_state = MiCheckState.uncheck
         this.for_mi = false
