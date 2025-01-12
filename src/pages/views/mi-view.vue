@@ -466,6 +466,8 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         querys_backup.value[column_index] = query
         focused_query.value = query
 
+        const target_board_name = focused_query.value.mi_board_name
+
         props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
 
         focused_column_checked_kyous.value = []
@@ -509,6 +511,17 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
+
+        // 検索後の板位置を取得する
+        column_index = -1
+        for(let i = 0; i < querys.value.length; i++)  {
+            const query = querys.value[i]
+            if (query.mi_board_name == target_board_name) {
+                column_index = i
+                break
+            }
+        }
+
         match_kyous_list.value[column_index] = res.kyous
         focused_kyous_list.value.splice(0)
         for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
