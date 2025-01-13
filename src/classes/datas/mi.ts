@@ -10,8 +10,6 @@ export class Mi extends InfoBase {
 
     is_checked: boolean
 
-    checked_time: Date | null
-
     board_name: string
 
     limit_time: Date | null
@@ -84,8 +82,6 @@ export class Mi extends InfoBase {
         this.estimate_start_time = null
 
         this.estimate_end_time = null
-
-        this.checked_time = null
 
         this.attached_histories = new Array<Mi>()
     }
