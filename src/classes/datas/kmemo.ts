@@ -14,6 +14,7 @@ export class Kmemo extends InfoBase {
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         const req = new GetKmemoRequest()
+        req.abort_controller = this.abort_controller
         req.session_id = GkillAPI.get_gkill_api().get_session_id()
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_kmemo(req)
