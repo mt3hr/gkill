@@ -716,11 +716,11 @@ func (f *FindFilter) parseTimeIsTagFilterModeFromQuery(ctx context.Context, find
 	if timeisTagFilterModeIsAnd {
 		var timeisTagFilterMode find.TagFilterMode
 		timeisTagFilterMode = find.And
-		findCtx.TagFilterMode = &timeisTagFilterMode
+		findCtx.TimeIsTagFilterMode = &timeisTagFilterMode
 	} else {
 		var timeisTagFilterMode find.TagFilterMode
 		timeisTagFilterMode = find.Or
-		findCtx.TagFilterMode = &timeisTagFilterMode
+		findCtx.TimeIsTagFilterMode = &timeisTagFilterMode
 	}
 	return nil, nil
 }
@@ -918,18 +918,16 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		tagNameMap := map[string]map[string]*reps.Kyou{} // map[タグ名][kyou.ID（tagTargetID）] = reps.kyou
 
 		for _, tag := range findCtx.MatchTags {
+			if _, exist := tagNameMap[tag.Tag]; !exist {
+				tagNameMap[tag.Tag] = map[string]*reps.Kyou{}
+			}
+
 			kyou, exist := findCtx.MatchKyousCurrent[tag.TargetID]
 			if !exist {
 				continue
 			}
-			if kyou.ID == tag.TargetID {
-				if kyou.UpdateTime.After(kyou.UpdateTime) {
-					tagNameMap[tag.Tag][kyou.ID] = kyou
-				}
-			} else {
-				tagNameMap[tag.Tag] = map[string]*reps.Kyou{}
-				tagNameMap[tag.Tag][kyou.ID] = kyou
-			}
+
+			tagNameMap[tag.Tag][kyou.ID] = kyou
 		}
 
 		// タグ無しの情報もtagNameMapにいれる
@@ -984,14 +982,8 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 					// 初回ループ以外は、
 					// 以前のタグにマッチしたもの（hasAllMatchTagsKyous）にあり、かつ
 					// 今回のタグにマッチしたもの　をいれる。
-					if existKyou, exist := hasAllMatchTagsKyousMap[kyou.ID]; exist {
-						if _, exist := matchThisLoopKyousMap[kyou.ID]; exist {
-							if kyou.UpdateTime.After(existKyou.UpdateTime) {
-								matchThisLoopKyousMap[kyou.ID] = kyou
-							}
-						} else {
-							matchThisLoopKyousMap[kyou.ID] = kyou
-						}
+					if _, exist := hasAllMatchTagsKyousMap[kyou.ID]; exist {
+						matchThisLoopKyousMap[kyou.ID] = kyou
 					}
 				}
 				hasAllMatchTagsKyousMap = matchThisLoopKyousMap
@@ -1072,18 +1064,17 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 
 		tagNameMap := map[string]map[string]*reps.TimeIs{} // map[タグ名][kyou.ID（tagTargetID）] = reps.TimeIs
 
-		for _, timeis := range findCtx.MatchTimeIssAtFindTimeIs {
-			for _, tag := range findCtx.MatchTimeIsTags {
-				if timeis.ID == tag.TargetID {
-					if existTimeIs, exist := tagNameMap[tag.Tag][timeis.ID]; exist {
-						if timeis.UpdateTime.After(existTimeIs.UpdateTime) {
-							tagNameMap[tag.Tag][timeis.ID] = timeis
-						}
-					} else {
-						tagNameMap[tag.Tag][timeis.ID] = timeis
-					}
-				}
+		for _, tag := range findCtx.MatchTimeIsTags {
+			if _, exist := tagNameMap[tag.Tag]; !exist {
+				tagNameMap[tag.Tag] = map[string]*reps.TimeIs{}
 			}
+
+			timeis, exist := findCtx.MatchTimeIssAtFindTimeIs[tag.TargetID]
+			if !exist {
+				continue
+			}
+
+			tagNameMap[tag.Tag][timeis.ID] = timeis
 		}
 
 		// タグ無しの情報もtagNameMapにいれる

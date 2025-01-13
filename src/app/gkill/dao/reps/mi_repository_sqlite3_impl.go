@@ -258,7 +258,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForCheck = " CHECKED IS NOT NULL AND " + sqlWhereForCheck
+	sqlWhereForCheck = " IS_CHECKED IS NOT NULL AND " + sqlWhereForCheck
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForCheck += " AND "
 		sqlWhereForCheck += " BOARD_NAME = ? "
