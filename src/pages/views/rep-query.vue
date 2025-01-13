@@ -61,6 +61,7 @@ import type { ApplicationConfig } from '@/classes/datas/config/application-confi
 import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
+import { deepEquals } from '@/classes/deep-equals'
 
 const foldable_struct_reps = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const foldable_struct_devices = ref<InstanceType<typeof FoldableStruct> | null>(null)
@@ -70,6 +71,7 @@ const props = defineProps<RepQueryProps>()
 const emits = defineEmits<RepQueryEmits>()
 defineExpose({ get_checked_reps, get_checked_devices, get_checked_rep_types })
 
+const old_cloned_query: Ref<FindKyouQuery | null> = ref(null)
 const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
@@ -96,7 +98,7 @@ watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
 })
 
 const skip_emits_this_tick = ref(false)
-watch(() => props.application_config, async () => {
+watch(() => props.application_config, async (_new_application_config: ApplicationConfig, old_application_config: ApplicationConfig) => {
     cloned_application_config.value = props.application_config.clone()
     const errors = await cloned_application_config.value.load_all()
     if (errors !== null && errors.length !== 0) {
@@ -134,9 +136,10 @@ watch(() => props.application_config, async () => {
     emits('inited')
 })
 
-watch(() => props.find_kyou_query, async (new_value: FindKyouQuery) => {
+watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
     loading.value = true
     cloned_query.value = new_value.clone()
+    old_cloned_query.value = old_value
     const reps = cloned_query.value.reps
     const devices = cloned_query.value.devices_in_sidebar
     const rep_types = cloned_query.value.rep_types_in_sidebar
@@ -289,7 +292,7 @@ async function update_check_reps(items: Array<string>, is_checked: CheckState, p
         f(cloned_application_config.value.parsed_rep_struct)
     }
     const reps = foldable_struct_reps.value?.get_selected_items()
-    if (reps) {
+    if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
         emits('request_update_checked_reps', reps, true)
     }
 }
@@ -337,12 +340,12 @@ async function update_check_devices(items: Array<string>, is_checked: CheckState
     }
 
     const devices = foldable_struct_devices.value?.get_selected_items()
-    if (devices) {
+    if (devices && !deepEquals(devices, old_cloned_query.value?.devices_in_sidebar)) {
         emits('request_update_checked_devices', devices, true)
     }
     if (!loading.value) {
         const reps = calc_reps_by_types_and_devices()
-        if (reps) {
+        if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
             update_check_reps(reps, CheckState.checked, true)
         }
     }
@@ -391,12 +394,12 @@ async function update_check_rep_types(items: Array<string>, is_checked: CheckSta
     }
 
     const rep_types = foldable_struct_rep_types.value?.get_selected_items()
-    if (rep_types) {
+    if (rep_types && !deepEquals(rep_types, old_cloned_query.value?.rep_types)) {
         emits('request_update_checked_rep_types', rep_types, true)
     }
     if (!loading.value) {
         const reps = calc_reps_by_types_and_devices()
-        if (reps) {
+        if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
             update_check_reps(reps, CheckState.checked, true)
         }
     }
