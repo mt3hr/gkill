@@ -12,13 +12,14 @@ export class AggregateLocation {
     }
 }
 
-export async function aggregate_locations_from_kyous(kyous: Array<Kyou>): Promise<Array<AggregateLocation>> {
+export async function aggregate_locations_from_kyous(kyous: Array<Kyou>, abort_controller: AbortController): Promise<Array<AggregateLocation>> {
     const aggregate_locations = new Array<AggregateLocation>()
     const aggregate_locations_map = new Map<string, AggregateLocation>()// map[title]aggregate_location
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
         if (kyou.data_type.startsWith("timeis")) {
             if (!kyou.typed_timeis) {
+                kyou.abort_controller = abort_controller
                 await kyou.load_typed_timeis()
             }
         } else if (kyou.data_type.startsWith("kmemo")) {

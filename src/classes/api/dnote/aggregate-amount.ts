@@ -16,11 +16,12 @@ export class AggregateAmount {
     }
 }
 
-export async function aggregate_amounts_from_kyous(kyous: Array<Kyou>): Promise<Array<AggregateAmount>> {
+export async function aggregate_amounts_from_kyous(kyous: Array<Kyou>, abort_controller: AbortController): Promise<Array<AggregateAmount>> {
     const aggregate_amounts = new Array<AggregateAmount>()
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
         if (!kyou.typed_nlog) {
+            kyou.abort_controller = abort_controller
             await kyou.load_typed_nlog()
         }
     }
