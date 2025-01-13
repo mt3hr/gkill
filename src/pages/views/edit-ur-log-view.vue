@@ -87,7 +87,8 @@ load()
 
 async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
-    await cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_typed_datas()
+    cloned_kyou.value.load_all()
     title.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.title : ""
     url.value = cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.url : ""
     related_date.value = moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("YYYY-MM-DD")

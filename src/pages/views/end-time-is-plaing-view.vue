@@ -93,7 +93,8 @@ load()
 
 async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
-    await cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_typed_datas()
+    cloned_kyou.value.load_all()
     timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
     timeis_start_date.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("YYYY-MM-DD")
     timeis_start_time.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
