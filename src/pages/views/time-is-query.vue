@@ -66,16 +66,6 @@ const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 
-const loading = ref(false)
-watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
-    if (new_value !== old_value && new_value) {
-        const tags = cloned_query.value.timeis_tags
-        if (tags) {
-            await update_check(tags, CheckState.checked, true)
-        }
-    }
-})
-
 const skip_emits_this_tick = ref(false)
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
@@ -104,19 +94,16 @@ watch(() => props.application_config, async () => {
     emits('inited')
 })
 
-watch(() => props.find_kyou_query, async (new_query: FindKyouQuery, old_query: FindKyouQuery) => {
-    loading.value = true
+watch(() => props.find_kyou_query, async () => {
     cloned_query.value = props.find_kyou_query.clone()
-    await update_check_state(cloned_query.value.tags, CheckState.checked)
+    await update_check_state(cloned_query.value.timeis_tags, CheckState.checked)
     const checked_items = foldable_struct.value?.get_selected_items()
-    if (checked_items && !deepEquals(new_query.timeis_tags, checked_items)) {
+    if (checked_items) {
         emits('request_update_checked_timeis_tags', checked_items, false)
     }
-    loading.value = false
 })
 
-
-async function clicked_items(_e: MouseEvent, items: Array<string>, check_state: CheckState, _is_user: boolean): Promise<void> {
+async function clicked_items(_e: MouseEvent, items: Array<string>, check_state: CheckState): Promise<void> {
     update_check(items, check_state, true)
 }
 
