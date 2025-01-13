@@ -309,7 +309,7 @@ async function extruct_location_kyous(): Promise<void> {
     }
     location_timeis_kmemo_kyous.value = res.kyous
 
-    const aggregated_locations = await aggregate_locations_from_kyous(location_timeis_kmemo_kyous.value)
+    const aggregated_locations = await aggregate_locations_from_kyous(location_timeis_kmemo_kyous.value, abort_controller.value)
     aggregated_locations.sort((a, b) => b.duration_milli_second - a.duration_milli_second)
     aggregate_locations.value = aggregated_locations
 }
@@ -339,7 +339,7 @@ async function extruct_people_kyous(): Promise<void> {
         emits('received_messages', res.messages)
     }
     people_timeis_kmemo_kyous.value = res.kyous
-    const aggregated_peoples = await aggregate_peoples_from_kyous(people_timeis_kmemo_kyous.value)
+    const aggregated_peoples = await aggregate_peoples_from_kyous(people_timeis_kmemo_kyous.value, abort_controller.value)
     aggregated_peoples.sort((a, b) => b.duration_milli_second - a.duration_milli_second)
     aggregate_peoples.value = aggregated_peoples
 }
@@ -387,7 +387,7 @@ async function extruct_nlog_kyous(): Promise<void> {
         }
     }
 
-    const aggregate_nlogs = await aggregate_amounts_from_kyous(nlog_kyous.value)
+    const aggregate_nlogs = await aggregate_amounts_from_kyous(nlog_kyous.value, abort_controller.value)
     aggregate_nlogs.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
     aggregate_amounts.value = aggregate_nlogs
 

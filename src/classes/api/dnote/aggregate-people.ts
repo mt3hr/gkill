@@ -15,13 +15,14 @@ export class AggregatePeople {
     }
 }
 
-export async function aggregate_peoples_from_kyous(kyous: Array<Kyou>): Promise<Array<AggregatePeople>> {
+export async function aggregate_peoples_from_kyous(kyous: Array<Kyou>, abort_controller: AbortController): Promise<Array<AggregatePeople>> {
     const aggregate_peoples = new Array<AggregatePeople>()
     const aggregate_peoples_map = new Map<string, AggregatePeople>()// map[title]aggregate_people
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
         if (kyou.data_type.startsWith("timeis")) {
             if (!kyou.typed_timeis) {
+                kyou.abort_controller = abort_controller
                 await kyou.load_typed_timeis()
             }
         } else if (kyou.data_type.startsWith("kmemo")) {
