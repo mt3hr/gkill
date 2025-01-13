@@ -36,7 +36,6 @@ CREATE TABLE IF NOT EXISTS "MI" (
   ID NOT NULL,
   TITLE NOT NULL,
   IS_CHECKED NOT NULL,
-  CHECKED_TIME,
   BOARD_NAME NOT NULL,
   LIMIT_TIME,
   ESTIMATE_START_TIME,
@@ -111,7 +110,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  CHECKED_TIME AS RELATED_TIME,
+		  UPDATE_TIME AS RELATED_TIME,
 		  CREATE_TIME,
 		  CREATE_APP,
 		  CREATE_DEVICE,
@@ -250,7 +249,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "CHECKED_TIME"
+	relatedTimeColumnName = "RELATED_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -259,7 +258,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForCheck = "CHECKED_TIME IS NOT NULL AND " + sqlWhereForCheck
+	sqlWhereForCheck = " CHECKED IS NOT NULL AND " + sqlWhereForCheck
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForCheck += " AND "
 		sqlWhereForCheck += " BOARD_NAME = ? "
@@ -598,7 +597,6 @@ SELECT
   ID,
   TITLE,
   IS_CHECKED,
-  CHECKED_TIME,
   BOARD_NAME,
   LIMIT_TIME,
   ESTIMATE_START_TIME,
@@ -659,14 +657,13 @@ WHERE
 			mi := &Mi{}
 			mi.RepName = repName
 			createTimeStr, updateTimeStr := "", ""
-			checkedTime, limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
+			limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
 
 			err = rows.Scan(
 				&mi.IsDeleted,
 				&mi.ID,
 				&mi.Title,
 				&mi.IsChecked,
-				&checkedTime,
 				&mi.BoardName,
 				&limitTime,
 				&estimateStartTime,
@@ -696,10 +693,6 @@ WHERE
 			if err != nil {
 				err = fmt.Errorf("error at parse update time %s in MI: %w", updateTimeStr, err)
 				return nil, err
-			}
-			if checkedTime.Valid {
-				parsedCheckedTime, _ := time.Parse(sqlite3impl.TimeLayout, checkedTime.String)
-				mi.CheckedTime = &parsedCheckedTime
 			}
 			if limitTime.Valid {
 				parsedLimitTime, _ := time.Parse(sqlite3impl.TimeLayout, limitTime.String)
@@ -754,7 +747,6 @@ SELECT
   ID,
   TITLE,
   IS_CHECKED,
-  CHECKED_TIME,
   BOARD_NAME,
   LIMIT_TIME,
   ESTIMATE_START_TIME,
@@ -841,14 +833,13 @@ WHERE
 			mi := &Mi{}
 			mi.RepName = repName
 			createTimeStr, updateTimeStr := "", ""
-			checkedTime, limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
+			limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
 
 			err = rows.Scan(
 				&mi.IsDeleted,
 				&mi.ID,
 				&mi.Title,
 				&mi.IsChecked,
-				&checkedTime,
 				&mi.BoardName,
 				&limitTime,
 				&estimateStartTime,
@@ -879,10 +870,6 @@ WHERE
 				err = fmt.Errorf("error at parse update time %s in MI: %w", updateTimeStr, err)
 				return nil, err
 			}
-			if checkedTime.Valid {
-				parsedCheckedTime, _ := time.Parse(sqlite3impl.TimeLayout, checkedTime.String)
-				mi.CheckedTime = &parsedCheckedTime
-			}
 			if limitTime.Valid {
 				parsedLimitTime, _ := time.Parse(sqlite3impl.TimeLayout, limitTime.String)
 				mi.LimitTime = &parsedLimitTime
@@ -909,7 +896,6 @@ INSERT INTO MI (
   ID,
   TITLE,
   IS_CHECKED,
-  CHECKED_TIME,
   BOARD_NAME,
   LIMIT_TIME,
   ESTIMATE_START_TIME,
@@ -949,12 +935,6 @@ INSERT INTO MI (
 	}
 	defer stmt.Close()
 
-	var checkedTimeStr interface{}
-	if mi.CheckedTime == nil {
-		checkedTimeStr = nil
-	} else {
-		checkedTimeStr = mi.CheckedTime.Format(sqlite3impl.TimeLayout)
-	}
 	var limitTimeStr interface{}
 	if mi.LimitTime == nil {
 		limitTimeStr = nil
@@ -979,7 +959,6 @@ INSERT INTO MI (
 		mi.ID,
 		mi.Title,
 		mi.IsChecked,
-		checkedTimeStr,
 		mi.BoardName,
 		limitTimeStr,
 		startTimeStr,

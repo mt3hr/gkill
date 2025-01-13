@@ -334,11 +334,6 @@ async function save(): Promise<void> {
     updated_mi.update_device = gkill_info_res.device
     updated_mi.update_time = new Date(Date.now())
     updated_mi.update_user = gkill_info_res.user_id
-    if (updated_mi.is_checked) {
-        updated_mi.checked_time = new Date(Date.now())
-    } else {
-        updated_mi.checked_time = null
-    }
 
     // 更新リクエストを飛ばす
     const req = new UpdateMiRequest()
