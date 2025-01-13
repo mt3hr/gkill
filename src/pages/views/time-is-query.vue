@@ -2,8 +2,8 @@
     <div>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-checkbox v-model="query.use_timeis"
-                    @change="emits('request_update_use_timeis_query', query.use_timeis)" label="状況" hide-details
+                <v-checkbox v-model="cloned_query.use_timeis"
+                    @change="emits('request_update_use_timeis_query', cloned_query.use_timeis)" label="状況" hide-details
                     class="pa-0 ma-0" />
             </v-col>
             <v-spacer />
@@ -11,33 +11,33 @@
                 <v-btn @click="emits('request_clear_timeis_query')" hide-details>クリア</v-btn>
             </v-col>
         </v-row>
-        <v-row v-show="query.use_timeis" class="pa-0 ma-0">
+        <v-row v-show="cloned_query.use_timeis" class="pa-0 ma-0">
             <v-col cols="2" class="pa-0 ma-0">
-                <v-btn v-if="query.timeis_words_and" icon="mdi-set-center"
-                    @click="query.timeis_words_and = !query.timeis_words_and; emits('request_update_and_search_timeis_word', query.timeis_words_and)" />
-                <v-btn v-if="!query.timeis_words_and" icon="mdi-set-all"
-                    @click="query.timeis_words_and = !query.timeis_words_and; emits('request_update_and_search_timeis_word', query.timeis_words_and)" />
+                <v-btn v-if="cloned_query.timeis_words_and" icon="mdi-set-center"
+                    @click="cloned_query.timeis_words_and = !cloned_query.timeis_words_and; emits('request_update_and_search_timeis_word', cloned_query.timeis_words_and)" />
+                <v-btn v-if="!cloned_query.timeis_words_and" icon="mdi-set-all"
+                    @click="cloned_query.timeis_words_and = !cloned_query.timeis_words_and; emits('request_update_and_search_timeis_word', cloned_query.timeis_words_and)" />
             </v-col>
             <v-col cols="10" class="pa-0 ma-0">
-                <v-text-field v-model="query.timeis_keywords" label="状況キーワード" hide-details
-                    @change="emits('request_update_timeis_keywords', query.timeis_keywords)" />
+                <v-text-field v-model="cloned_query.timeis_keywords" label="状況キーワード" hide-details
+                    @change="emits('request_update_timeis_keywords', cloned_query.timeis_keywords)" />
             </v-col>
         </v-row>
-        <v-row v-show="query.use_timeis" class="pa-0 ma-0">
+        <v-row v-show="cloned_query.use_timeis" class="pa-0 ma-0">
             <v-col cols="2" class="pa-0 ma-0">
-                <v-btn v-if="query.timeis_tags_and" icon="mdi-set-center"
-                    @click="query.timeis_tags_and = !query.timeis_tags_and; emits('request_update_and_search_timeis_tags', query.timeis_tags_and)" />
-                <v-btn v-if="!query.timeis_tags_and" icon="mdi-set-all"
-                    @click="query.timeis_tags_and = !query.timeis_tags_and; emits('request_update_and_search_timeis_tags', query.timeis_tags_and)" />
+                <v-btn v-if="cloned_query.timeis_tags_and" icon="mdi-set-center"
+                    @click="cloned_query.timeis_tags_and = !cloned_query.timeis_tags_and; emits('request_update_and_search_timeis_tags', cloned_query.timeis_tags_and)" />
+                <v-btn v-if="!cloned_query.timeis_tags_and" icon="mdi-set-all"
+                    @click="cloned_query.timeis_tags_and = !cloned_query.timeis_tags_and; emits('request_update_and_search_timeis_tags', cloned_query.timeis_tags_and)" />
             </v-col>
             <v-col cols="10" class="pt-4 pa-0 ma-0">
-                <v-checkbox v-model="query.use_timeis_tags"
-                    @click="query.use_timeis_tags = !query.use_timeis_tags; emits('request_update_use_timeis_query', query.use_timeis_tags)"
+                <v-checkbox v-model="cloned_query.use_timeis_tags"
+                    @click="cloned_query.use_timeis_tags = !cloned_query.use_timeis_tags; emits('request_update_use_timeis_query', cloned_query.use_timeis_tags)"
                     label="状況タグ" hide-details class="pa-0 ma-0" />
             </v-col>
         </v-row>
     </div>
-    <table v-show="query.use_timeis_tags" class="taglist">
+    <table v-show="cloned_query.use_timeis_tags" class="taglist">
         <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
             :is_open="true" :struct_obj="cloned_application_config.parsed_tag_struct" :is_editable="false"
             :is_root="true" :is_show_checkbox="true" @clicked_items="clicked_items"
@@ -56,6 +56,7 @@ import FoldableStruct from './foldable-struct.vue'
 import { CheckState } from './check-state'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { FoldableStructModel } from './foldable-struct-model'
+import { deepEquals } from '@/classes/deep-equals'
 
 const props = defineProps<TimeIsQueryProps>()
 const emits = defineEmits<TimeIsQueryEmits>()
@@ -63,8 +64,17 @@ defineExpose({ get_use_timeis, get_use_and_search_timeis_words, get_use_and_sear
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
+const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 
-const query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
+const loading = ref(false)
+watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
+    if (new_value !== old_value && new_value) {
+        const tags = cloned_query.value.timeis_tags
+        if (tags) {
+            await update_check(tags, CheckState.checked, true)
+        }
+    }
+})
 
 const skip_emits_this_tick = ref(false)
 watch(() => props.application_config, async () => {
@@ -77,7 +87,7 @@ watch(() => props.application_config, async () => {
     if (props.inited) {
         skip_emits_this_tick.value = true
         nextTick(() => skip_emits_this_tick.value = false)
-        update_check(query.value.timeis_tags, CheckState.checked, true)
+        update_check(cloned_query.value.timeis_tags, CheckState.checked, true)
         return
     }
     const tags = Array<string>()
@@ -94,37 +104,36 @@ watch(() => props.application_config, async () => {
     emits('inited')
 })
 
-watch(() => props.find_kyou_query, async () => {
-    query.value = props.find_kyou_query.clone()
-    await update_check_state(query.value.tags, CheckState.checked)
+watch(() => props.find_kyou_query, async (new_query: FindKyouQuery, old_query: FindKyouQuery) => {
+    loading.value = true
+    cloned_query.value = props.find_kyou_query.clone()
+    await update_check_state(cloned_query.value.tags, CheckState.checked)
     const checked_items = foldable_struct.value?.get_selected_items()
-    if (checked_items) {
+    if (checked_items && !deepEquals(new_query.timeis_tags, checked_items)) {
         emits('request_update_checked_timeis_tags', checked_items, false)
     }
+    loading.value = false
 })
 
 
-async function clicked_items(_e: MouseEvent, _items: Array<string>, _check_state: CheckState, _is_user: boolean): Promise<void> {
-    const checked_items = foldable_struct.value?.get_selected_items()
-    if (checked_items) {
-        emits('request_update_checked_timeis_tags', checked_items, true)
-    }
+async function clicked_items(_e: MouseEvent, items: Array<string>, check_state: CheckState, _is_user: boolean): Promise<void> {
+    update_check(items, check_state, true)
 }
 
 function get_use_timeis(): boolean {
-    return query.value.use_timeis
+    return cloned_query.value.use_timeis
 }
 function get_use_timeis_tags(): boolean {
-    return query.value.use_timeis_tags
+    return cloned_query.value.use_timeis_tags
 }
 function get_use_and_search_timeis_words(): boolean {
-    return query.value.timeis_words_and
+    return cloned_query.value.timeis_words_and
 }
 function get_use_and_search_timeis_tags(): boolean {
-    return query.value.timeis_tags_and
+    return cloned_query.value.timeis_tags_and
 }
 function get_timeis_keywords(): string {
-    return query.value.timeis_keywords
+    return cloned_query.value.timeis_keywords
 }
 function get_timeis_tags(): Array<string> {
     const tags = foldable_struct.value?.get_selected_items()
@@ -135,7 +144,7 @@ function get_timeis_tags(): Array<string> {
 }
 
 async function update_check_state(items: Array<string>, is_checked: CheckState): Promise<void> {
-    update_check(items, is_checked, false)
+    await update_check(items, is_checked, false)
 }
 
 async function update_check(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
