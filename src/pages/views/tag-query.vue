@@ -87,7 +87,7 @@ async function clicked_items(e: MouseEvent, items: Array<string>, is_checked: Ch
 }
 
 async function update_check_state(items: Array<string>, is_checked: CheckState): Promise<void> {
-    update_check(items, is_checked, false)
+    await update_check(items, is_checked, false)
 }
 
 async function update_check(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
