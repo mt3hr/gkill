@@ -31,8 +31,6 @@ type Mi struct {
 
 	IsChecked bool `json:"is_checked"`
 
-	CheckedTime *time.Time `json:"checked_time"`
-
 	BoardName string `json:"board_name"`
 
 	LimitTime *time.Time `json:"limit_time"`
