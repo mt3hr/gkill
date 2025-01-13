@@ -74,8 +74,9 @@ load()
 
 async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
-    await cloned_kyou.value.load_all()
-    mood.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_lantana!.mood : 0
+    await cloned_kyou.value.load_typed_datas()
+    cloned_kyou.value.load_all()
+    mood.value = cloned_kyou.value.typed_lantana ? cloned_kyou.value.typed_lantana!.mood : 0
     related_date.value = moment(props.kyou.related_time).format("YYYY-MM-DD")
     related_time.value = moment(props.kyou.related_time).format("HH:mm:ss")
 }

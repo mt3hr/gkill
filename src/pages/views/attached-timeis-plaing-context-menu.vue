@@ -78,7 +78,7 @@ const context_menu_style = computed(() => `{ position: absolute; left: ${Math.mi
 
 function reload_cloned_timeis_kyou(): void {
     cloned_timeis_kyou.value = props.timeis_kyou.clone()
-    cloned_timeis_kyou.value.load_all()
+    cloned_timeis_kyou.value.load_typed_datas()
 }
 
 async function show(e: PointerEvent): Promise<void> {

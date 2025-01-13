@@ -141,7 +141,8 @@ load()
 
 async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
-    await cloned_kyou.value.load_all()
+    await cloned_kyou.value.load_typed_datas()
+    cloned_kyou.value.load_all()
     mi_title.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.title : ""
     mi_board_name.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.board_name : ""
     mi_estimate_start_date.value = cloned_kyou.value.typed_mi && cloned_kyou.value.typed_mi.estimate_start_time ? moment(cloned_kyou.value.typed_mi.estimate_start_time).format("YYYY-MM-DD") : ""
