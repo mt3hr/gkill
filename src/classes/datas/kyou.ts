@@ -26,7 +26,6 @@ import moment from 'moment'
 import { GetIDFKyouRequest } from '../api/req_res/get-idf-kyou-request'
 
 export class Kyou extends InfoBase {
-    abort_controller = new AbortController()
     is_deleted: boolean
     image_source: string
     attached_histories: Array<Kyou>
