@@ -263,17 +263,16 @@ async function calculate_dnote(): Promise<void> {
         abort_controller.value.abort()
         abort_controller.value = new AbortController()
 
-        const wait_promises = new Array<Promise<any>>()
-        wait_promises.push(extruct_location_kyous())
-        wait_promises.push(extruct_people_kyous())
-        wait_promises.push(extruct_nlog_kyous())
-        wait_promises.push(calc_total_awake_time()) // 時間合算
-        wait_promises.push(calc_total_sleep_time()) //時間合算
-        wait_promises.push(calc_total_work_time()) //時間合算
-        wait_promises.push(calc_total_tabaco_record_count()) //条件付き件数
-        wait_promises.push(calc_average_lantana_mood()) // 平均
-        wait_promises.push(calc_total_git_addition_deletion_count()) //合算
-        await Promise.all(wait_promises)
+        // Promise.allをするとChromeでエラーが出るため全部await
+        await calc_average_lantana_mood() // 平均
+        await calc_total_git_addition_deletion_count() //合算
+        await extruct_location_kyous()
+        await extruct_people_kyous()
+        await extruct_nlog_kyous()
+        await calc_total_awake_time() // 時間合算
+        await calc_total_sleep_time() //時間合算
+        await calc_total_work_time() //時間合算
+        await calc_total_tabaco_record_count() //条件付き件数
     } finally {
         is_loading.value = false
     }
