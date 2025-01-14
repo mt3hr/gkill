@@ -1,13 +1,15 @@
 <template>
     <div class="mi_view_wrap">
-        <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
-            <v-progress-circular indeterminate color="primary" />
-        </v-overlay>
         <v-app-bar :height="app_title_bar_height" class="app_bar" color="primary" app flat>
             <v-toolbar-title> {{ share_title }} </v-toolbar-title>
         </v-app-bar>
-        <v-main class="main" v-show="inited">
-            <table class="mi_view_table">
+        <v-main class="main">
+            <div class="overlay_target">
+                <v-overlay v-model="is_loading" class="align-center justify-center" persistent contained>
+                    <v-progress-circular indeterminate color="primary" />
+                </v-overlay>
+            </div>
+            <table class="mi_view_table" v-show="!is_loading">
                 <tr>
                     <td valign="top">
                         <v-card>
@@ -191,5 +193,13 @@ nextTick(() => load_content())
 
 .mi_view_wrap {
     position: relative;
+}
+</style>
+<style lang="css" scoped>
+.overlay_target {
+    z-index: -10000;
+    position: absolute;
+    min-height: calc(v-bind('app_content_height.toString().concat("px")'));
+    min-width: calc(100vw);
 }
 </style>
