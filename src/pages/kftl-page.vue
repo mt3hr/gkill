@@ -1,43 +1,47 @@
 <template>
-    <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
-        <v-progress-circular indeterminate color="primary" />
-    </v-overlay>
-    <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
-        <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
-        <v-toolbar-title>
-            <div>
-                <span>
-                    kftl
-                </span>
-                <v-menu activator="parent">
-                    <v-list>
-                        <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
-                            :key="index" :value="index">
-                            <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
-                        </v-list-item>
-                    </v-list>
-                </v-menu>
+    <div class="kftl_view_wrap">
+        <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
+            <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
+            <v-toolbar-title>
+                <div>
+                    <span>
+                        kftl
+                    </span>
+                    <v-menu activator="parent">
+                        <v-list>
+                            <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
+                                :key="index" :value="index">
+                                <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
+                            </v-list-item>
+                        </v-list>
+                    </v-menu>
+                </div>
+            </v-toolbar-title>
+            <v-spacer />
+            <v-divider vertical />
+            <v-btn icon="mdi-cog" @click="is_show_application_config_dialog = true" />
+        </v-app-bar>
+        <v-main class="main">
+            <div class="overlay_target">
+                <v-overlay v-model="is_loading" class="align-center justify-center" persistent contained>
+                    <v-progress-circular indeterminate color="primary" />
+                </v-overlay>
             </div>
-        </v-toolbar-title>
-        <v-spacer />
-        <v-divider vertical />
-        <v-btn icon="mdi-cog" @click="is_show_application_config_dialog = true" />
-    </v-app-bar>
-    <v-main class="main">
-        <kftlView :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
-            @received_messages="write_messages" />
-        <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
-            :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :is_show="is_show_application_config_dialog" @received_errors="write_errors"
-            @received_messages="write_messages" @requested_reload_application_config="load_application_config" />
-    </v-main>
-    <div class="alert_container">
-        <v-slide-y-transition group>
-            <v-alert v-for="message in messages" theme="dark" :key="message.id">
-                {{ message.message }}
-            </v-alert>
-        </v-slide-y-transition>
+            <kftlView :app_content_height="app_content_height" :app_content_width="app_content_width"
+                :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
+                @received_messages="write_messages" />
+            <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
+                :app_content_height="app_content_height" :app_content_width="app_content_width"
+                :is_show="is_show_application_config_dialog" @received_errors="write_errors"
+                @received_messages="write_messages" @requested_reload_application_config="load_application_config" />
+        </v-main>
+        <div class="alert_container">
+            <v-slide-y-transition group>
+                <v-alert v-for="message in messages" theme="dark" :key="message.id">
+                    {{ message.message }}
+                </v-alert>
+            </v-slide-y-transition>
+        </div>
     </div>
 </template>
 
@@ -276,5 +280,13 @@ table,
 tr,
 td {
     border-spacing: 0 !important;
+}
+</style>
+<style lang="css" scoped>
+.overlay_target {
+    z-index: -10000;
+    position: absolute;
+    min-height: calc(v-bind('app_content_height.toString().concat("px")'));
+    min-width: calc(100vw);
 }
 </style>

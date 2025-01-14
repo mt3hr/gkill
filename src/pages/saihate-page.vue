@@ -1,71 +1,75 @@
 <template>
-    <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
-        <v-progress-circular indeterminate color="primary" />
-    </v-overlay>
-    <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
-        <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
-        <v-toolbar-title>さいはて</v-toolbar-title>
-    </v-app-bar>
-    <v-main class="main">
-        <v-avatar :style="floatingActionButtonStyle()" color="indigo" class="position-fixed">
-            <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
-                <template v-slot:activator="{ props }">
-                    <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" />
-                </template>
-                <v-list>
-                    <v-list-item @click="show_kftl_dialog()">
-                        <v-list-item-title>kftl</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item @click="show_urlog_dialog()">
-                        <v-list-item-title>urlog</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item @click="show_timeis_dialog()">
-                        <v-list-item-title>timeis</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item @click="show_mi_dialog()">
-                        <v-list-item-title>mi</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item @click="show_nlog_dialog()">
-                        <v-list-item-title>nlog</v-list-item-title>
-                    </v-list-item>
-                    <v-list-item @click="show_lantana_dialog()">
-                        <v-list-item-title>lantana</v-list-item-title>
-                    </v-list-item>
-                </v-list>
-            </v-menu>
-        </v-avatar>
-        <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
-            ref="add_timeis_dialog" />
-        <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
-            ref="add_lantana_dialog" />
-        <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
-            ref="add_urlog_dialog" />
-        <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
-            ref="add_mi_dialog" />
-        <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-            :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
-            ref="add_nlog_dialog" />
-        <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-            :last_added_tag="''" :kyou="new Kyou()" :app_content_height="app_content_height"
-            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            :app_content_width="app_content_width" @received_errors="write_errors" @received_messages="write_messages"
-            ref="kftl_dialog" />
-    </v-main>
-    <div class="alert_container">
-        <v-slide-y-transition group>
-            <v-alert v-for="message in messages" theme="dark" :key="message.id">
-                {{ message.message }}
-            </v-alert>
-        </v-slide-y-transition>
+    <div class="saihate_view_wrap">
+        <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
+            <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
+            <v-toolbar-title>さいはて</v-toolbar-title>
+        </v-app-bar>
+        <v-main class="main">
+            <div class="overlay_target">
+                <v-overlay v-model="is_loading" class="align-center justify-center" persistent contained>
+                    <v-progress-circular indeterminate color="primary" />
+                </v-overlay>
+            </div>
+            <v-avatar :style="floatingActionButtonStyle()" color="indigo" class="position-fixed">
+                <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
+                    <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" />
+                    </template>
+                    <v-list>
+                        <v-list-item @click="show_kftl_dialog()">
+                            <v-list-item-title>kftl</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_urlog_dialog()">
+                            <v-list-item-title>urlog</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_timeis_dialog()">
+                            <v-list-item-title>timeis</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_mi_dialog()">
+                            <v-list-item-title>mi</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_nlog_dialog()">
+                            <v-list-item-title>nlog</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_lantana_dialog()">
+                            <v-list-item-title>lantana</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+            </v-avatar>
+            <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                ref="add_timeis_dialog" />
+            <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                ref="add_lantana_dialog" />
+            <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                ref="add_urlog_dialog" />
+            <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                ref="add_mi_dialog" />
+            <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                ref="add_nlog_dialog" />
+            <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="''" :kyou="new Kyou()" :app_content_height="app_content_height"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                :app_content_width="app_content_width" @received_errors="write_errors"
+                @received_messages="write_messages" ref="kftl_dialog" />
+        </v-main>
+        <div class="alert_container">
+            <v-slide-y-transition group>
+                <v-alert v-for="message in messages" theme="dark" :key="message.id">
+                    {{ message.message }}
+                </v-alert>
+            </v-slide-y-transition>
+        </div>
     </div>
 </template>
 
@@ -286,5 +290,13 @@ table,
 tr,
 td {
     border-spacing: 0 !important;
+}
+</style>
+<style lang="css" scoped>
+.overlay_target {
+    z-index: -10000;
+    position: absolute;
+    min-height: calc(v-bind('app_content_height.toString().concat("px")'));
+    min-width: calc(100vw);
 }
 </style>
