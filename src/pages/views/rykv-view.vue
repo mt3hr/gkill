@@ -87,11 +87,13 @@
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
                 ref="query_editor_sidebar" />
         </v-navigation-drawer>
-        <v-main class="main" v-show="!is_loading">
-            <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
-                <v-progress-circular indeterminate color="primary" />
-            </v-overlay>
-            <table class="rykv_view_table">
+        <v-main class="main">
+            <div class="overlay_target">
+                <v-overlay v-model="is_loading" class="align-center justify-center" persistent contained>
+                    <v-progress-circular indeterminate color="primary" />
+                </v-overlay>
+            </div>
+            <table class="rykv_view_table" v-show="inited">
                 <tr>
                     <td valign="top" v-for="query, index in querys" :key="query.query_id">
                         <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
@@ -391,9 +393,6 @@ async function init(): Promise<void> {
     return nextTick(async () => {
         const waitPromises = new Array<Promise<void>>()
         try {
-            // is_show_kyou_count_calendar.value = props.app_content_width.valueOf() >= 420
-            // is_show_gps_log_map.value = props.app_content_width.valueOf() >= 420
-
             // スクロール位置の復元
             match_kyous_list_top_list.value = props.gkill_api.get_saved_rykv_scroll_indexs()
 
@@ -413,6 +412,7 @@ async function init(): Promise<void> {
                     kyou_list_view.scroll_to(scroll_top)
                 }))
             }
+            is_loading.value = false
         } finally {
             Promise.all(waitPromises).then(() => {
                 focused_column_index.value = 0
@@ -427,7 +427,6 @@ async function init(): Promise<void> {
                     kyou_list_view.scroll_to(scroll_top)
                 }
 
-                is_loading.value = false
                 inited.value = true
                 drawer_mode_is_mobile.value = null
                 drawer.value = props.app_content_width.valueOf() >= 420
@@ -605,7 +604,6 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
 
             const req = new GetKyousRequest()
             abort_controllers.value[column_index] = req.abort_controller
-            req.session_id = props.gkill_api.get_session_id()
             req.query = query.clone()
             req.query.parse_words_and_not_words()
             if (update_cache) {
@@ -708,5 +706,13 @@ function show_urlog_dialog(): void {
 
 .rykv_view_wrap {
     position: relative;
+}
+</style>
+<style lang="css" scoped>
+.overlay_target {
+    z-index: -10000;
+    position: absolute;
+    min-height: calc(v-bind('app_content_height.toString().concat("px")'));
+    min-width: calc(100vw);
 }
 </style>

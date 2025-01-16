@@ -63,11 +63,24 @@ const emits = defineEmits<TimeIsQueryEmits>()
 defineExpose({ get_use_timeis, get_use_and_search_timeis_words, get_use_and_search_timeis_tags, get_timeis_keywords, get_use_timeis_tags, get_timeis_tags })
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
+const old_cloned_query: Ref<FindKyouQuery | null> = ref(null)
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 
+const loading = ref(false)
+watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
+    if (new_value !== old_value && new_value) {
+        const tags = cloned_query.value.tags
+        if (tags) {
+            await update_check(tags, CheckState.checked, true)
+        }
+    }
+})
+
 const skip_emits_this_tick = ref(false)
 watch(() => props.application_config, async () => {
+    loading.value = true
+    cloned_query.value = props.find_kyou_query
     cloned_application_config.value = props.application_config.clone()
     const errors = await cloned_application_config.value.load_all()
     if (errors !== null && errors.length !== 0) {
@@ -94,7 +107,10 @@ watch(() => props.application_config, async () => {
     emits('inited')
 })
 
-watch(() => props.find_kyou_query, async () => {
+watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
+    loading.value = true
+    old_cloned_query.value = old_value
+    cloned_query.value = new_value.clone()
     cloned_query.value = props.find_kyou_query.clone()
     await update_check_state(cloned_query.value.timeis_tags, CheckState.checked)
     const checked_items = foldable_struct.value?.get_selected_items()

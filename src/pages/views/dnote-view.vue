@@ -247,6 +247,15 @@ async function load_query(): Promise<void> {
 async function calculate_dnote(): Promise<void> {
     try {
         is_loading.value = true
+        calclutated_total_awake_time.value = ""
+        calclutated_total_sleep_time.value = ""
+        calclutated_total_work_time.value = ""
+        calclutated_tabaco_record_count.value = 0
+        calclated_average_lantana_mood.value = 0
+        calclutated_total_git_addition_count.value = 0
+        calclutated_total_git_deletion_count.value = 0
+        calclutated_total_nlog_plus_amount.value = 0
+        calclutated_total_nlog_minus_amount.value = 0
         aggregate_amounts.value.splice(0)
         aggregate_locations.value.splice(0)
         aggregate_peoples.value.splice(0)
@@ -293,7 +302,6 @@ async function extruct_location_kyous(): Promise<void> {
     query_for_extruct_location_kyous.tags = ["ろ"]
 
     const req = new GetKyousRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_location_kyous
 
@@ -321,10 +329,8 @@ async function extruct_people_kyous(): Promise<void> {
     query_for_extruct_people_kyous.use_rep_types = true
     query_for_extruct_people_kyous.rep_types = ["timeis", "kmemo"]
     query_for_extruct_people_kyous.tags = ["あ", "通話"]
-    query_for_extruct_people_kyous.tags_and = false
 
     const req = new GetKyousRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_people_kyous
 
@@ -354,7 +360,6 @@ async function extruct_nlog_kyous(): Promise<void> {
     query_for_nlog_kyous.use_rep_types = true
     query_for_nlog_kyous.rep_types = ["nlog"]
     const req = new GetKyousRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_nlog_kyous
     req.query.parse_words_and_not_words()
@@ -409,7 +414,6 @@ async function calc_total_awake_time(): Promise<void> {
     query_for_extruct_awake_kyous.words_and = true
 
     const req = new GetKyousRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_awake_kyous
 
@@ -456,7 +460,6 @@ async function calc_total_sleep_time(): Promise<void> {
     query_for_extruct_sleep_kyous.words_and = true
 
     const req = new GetKyousRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_sleep_kyous
 
@@ -502,7 +505,6 @@ async function calc_total_work_time(): Promise<void> {
     query_for_extruct_work_kyous.words_and = true
 
     const req = new GetKyousRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_work_kyous
 
@@ -546,7 +548,6 @@ async function calc_total_tabaco_record_count(): Promise<void> {
     query_for_extruct_tabaco_kyous.tags = ["煙草"]
 
     const req = new GetKyousRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_tabaco_kyous
 
@@ -573,7 +574,6 @@ async function calc_average_lantana_mood(): Promise<void> {
     query_for_extruct_lantana_kyous.use_rep_types = true
     query_for_extruct_lantana_kyous.rep_types = ["lantana"]
     const req = new GetKyousRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_lantana_kyous
 
@@ -617,7 +617,6 @@ async function calc_total_git_addition_deletion_count(): Promise<void> {
     query_for_extruct_git_commit_log_kyous.use_rep_types = true
     query_for_extruct_git_commit_log_kyous.rep_types = ["git_commit_log"]
     const req = new GetKyousRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.abort_controller = abort_controller.value
     req.query = query_for_extruct_git_commit_log_kyous
 

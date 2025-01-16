@@ -23,7 +23,7 @@ export class URLog extends InfoBase {
     async load_attached_histories(): Promise<Array<GkillError>> {
         const req = new GetURLogRequest()
         req.abort_controller = this.abort_controller
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_urlog(req)
         if (res.errors && res.errors.length !== 0) {

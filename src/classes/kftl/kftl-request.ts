@@ -40,13 +40,13 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         let errors = Array<GkillError>()
         const time = this.get_related_time() != null ? this.get_related_time()!! : new Date(Date.now())
         const req = new GetGkillInfoRequest()
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         const res = await GkillAPI.get_gkill_api().get_gkill_info(req)
 
         for (let i = 0; i < this.tags.length; i++) {
             const tag = this.tags[i]
             const req = new AddTagRequest()
-            req.session_id = GkillAPI.get_gkill_api().get_session_id()
+            
             req.tag.id = GkillAPI.get_gkill_api().generate_uuid()
             req.tag.tag = tag
             req.tag.target_id = this.get_request_id()
@@ -70,7 +70,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
             const text = text_entry[1]
 
             const req = new AddTextRequest()
-            req.session_id = GkillAPI.get_gkill_api().get_session_id()
+            
             req.text.id = id
             req.text.target_id = this.get_request_id()
             req.text.text = text

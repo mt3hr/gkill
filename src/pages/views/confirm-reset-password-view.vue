@@ -27,7 +27,6 @@ const emits = defineEmits<ConfirmResetPasswordViewEmits>()
 
 async function reset_password(): Promise<void> {
     const req = new ResetPasswordRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.target_user_id = props.account.user_id
     const res = await props.gkill_api.reset_password(req)
     if (res.errors && res.errors.length !== 0) {
