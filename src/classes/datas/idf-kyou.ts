@@ -19,7 +19,7 @@ export class IDFKyou extends InfoBase {
         /*
         const req = new GetIDFKyouRequest()
         req.abort_controller = this.abort_controller
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_idf_kyou(req)
         if (res.errors && res.errors.length !== 0) {

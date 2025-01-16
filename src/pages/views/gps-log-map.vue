@@ -92,7 +92,6 @@ async function update_gps_log_lines(): Promise<void> {
     const req = new GetGPSLogRequest()
     req.start_date = moment(start_date_str.value.replace("-", "/") + " 00:00:00").toDate()
     req.end_date = moment(end_date_str.value.replace("-", "/") + " 23:59:59").toDate()
-    req.session_id = props.gkill_api.get_session_id()
     const res = await props.gkill_api.get_gps_log(req)
     // エラーチェック
     if (res.errors && res.errors.length !== 0) {

@@ -96,7 +96,6 @@ function show_create_account_dialog(): void {
 async function update_is_enable_account(account: Account, is_enable: boolean): Promise<void> {
     const req = new UpdateAccountStatusRequest()
     req.enable = is_enable
-    req.session_id = props.gkill_api.get_session_id()
     req.target_user_id = account.user_id
     const res = await props.gkill_api.update_account_status(req)
     if (res.errors && res.errors.length !== 0) {
@@ -120,7 +119,6 @@ function show_confirm_reset_password_dialog(account: Account): void {
 
 async function show_show_password_reset_link_dialog(account: Account): Promise<void> {
     const req = new GetServerConfigsRequest()
-    req.session_id = props.gkill_api.get_session_id()
     const res = await props.gkill_api.get_server_configs(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)

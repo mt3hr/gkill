@@ -186,7 +186,6 @@ async function reload_cloned_application_config(): Promise<void> {
 
 async function load_mi_board_names(): Promise<void> {
     const req = new GetMiBoardRequest()
-    req.session_id = props.gkill_api.get_session_id()
 
     const res = await props.gkill_api.get_mi_board_list(req)
     if (res.errors && res.errors.length !== 0) {
@@ -208,7 +207,6 @@ async function update_application_config(): Promise<void> {
     application_config.mi_default_board = mi_default_board.value
 
     const req = new UpdateApplicationConfigRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.application_config = application_config
 
     const res = await props.gkill_api.update_application_config(req)
@@ -225,7 +223,6 @@ async function update_application_config(): Promise<void> {
 
 async function logout(): Promise<void> {
     const req = new LogoutRequest()
-    req.session_id = props.gkill_api.get_session_id()
     const res = await props.gkill_api.logout(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)

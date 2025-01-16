@@ -1590,7 +1590,6 @@ export class GkillAPI {
                 this.check_auth(response)
 
                 const gkill_info_req = new GetGkillInfoRequest()
-                gkill_info_req.session_id = this.get_session_id()
                 const gkill_info_res = await this.get_gkill_info(gkill_info_req)
                 if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
                         response.errors = response.errors.concat(gkill_info_res.errors)

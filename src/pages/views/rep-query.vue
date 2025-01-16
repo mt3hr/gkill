@@ -130,9 +130,15 @@ watch(() => props.application_config, async (_new_application_config: Applicatio
             rep_types.push(rep_type.rep_type_name)
         }
     })
-    await update_check_reps(reps, CheckState.checked, true)
     await update_check_devices(devices, CheckState.checked, true)
     await update_check_reps(rep_types, CheckState.checked, true)
+
+    const calclated_reps = calc_reps_by_types_and_devices()
+    if (!calclated_reps) {
+        await update_check_reps(reps, CheckState.checked, true)
+    } else {
+        await update_check_reps(calclated_reps, CheckState.checked, true)
+    }
     emits('inited')
 })
 
@@ -178,7 +184,9 @@ function calc_reps_by_types_and_devices(): Array<string> | null {
         walk = (struct: FoldableStructModel): void => {
             struct.indeterminate = false
             if (struct.is_checked && struct.key == rep_struct.type) {
-                type_is_match = true
+                if (!type_is_match) {
+                    type_is_match = true
+                }
             }
             if (struct.children) {
                 struct.children.forEach(child => walk(child))
@@ -189,7 +197,9 @@ function calc_reps_by_types_and_devices(): Array<string> | null {
         walk = (struct: FoldableStructModel): void => {
             struct.indeterminate = false
             if (struct.is_checked && struct.key == rep_struct.device) {
-                device_is_match = true
+                if (!device_is_match) {
+                    device_is_match = true
+                }
             }
             if (struct.children) {
                 struct.children.forEach(child => walk(child))
@@ -211,10 +221,10 @@ function calc_reps_by_types_and_devices(): Array<string> | null {
 // 引数のrep.nameから{type: "", device: "", time: ""}なオブジェクトを作ります。
 // rep.nameがdvnf形式ではない場合は、{type: rep.name, device: 'なし', time: ''}が作成されます。
 function rep_to_struct(rep: RepStructElementData): { type: string, device: string, time: string } {
-    const spl = rep.key.split('_')
+    const spl = rep.rep_name.split('_')
     if (spl.length !== 3) {
         return {
-            type: rep.key,
+            type: rep.rep_name,
             device: 'なし',
             time: ''
         }

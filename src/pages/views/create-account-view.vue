@@ -40,7 +40,6 @@ async function create_account(): Promise<void> {
     req.account_info.password_reset_token = null
     req.account_info.user_id = new_user_id.value
     req.do_initialize = do_initialize.value
-    req.session_id = props.gkill_api.get_session_id()
 
     const res = await props.gkill_api.add_account(req)
     if (res.errors && res.errors.length !== 0) {

@@ -64,7 +64,7 @@ const props = defineProps<FoldableStructProps>()
 const emits = defineEmits<FoldableStructEmits>()
 defineExpose({ get_selected_items, handle_move_struct_obj, get_foldable_struct, delete_struct })
 
-const open_group: Ref<boolean> = ref(props.is_open)
+const open_group: Ref<boolean> = ref(props.is_root ? props.is_open : false)
 const check: Ref<boolean> = ref(false)
 const struct_list: Ref<Array<FoldableStructModel>> = ref(new Array<FoldableStructModel>())
 const indeterminate_group: Ref<boolean> = ref(false)
