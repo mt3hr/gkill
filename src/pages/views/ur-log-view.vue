@@ -14,7 +14,8 @@
                         :src="'data:image;base64,' + (kyou.typed_urlog.favicon_image)" />
                 </td>
                 <td>
-                    <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url">{{ kyou.typed_urlog.url }}</a>
+                    <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url" target="_blank" @click="open_urlog_link">{{
+                        kyou.typed_urlog.url }}</a>
                 </td>
             </tr>
         </table>
@@ -54,6 +55,13 @@ defineExpose({ show_context_menu })
 function show_context_menu(e: PointerEvent): void {
     if (props.enable_context_menu) {
         context_menu.value?.show(e)
+    }
+}
+
+function open_urlog_link(): void {
+    const url = props.kyou.typed_urlog?.url
+    if (url) {
+        window.open(url, "_blank")
     }
 }
 </script>
