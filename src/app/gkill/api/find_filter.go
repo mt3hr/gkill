@@ -87,16 +87,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		}
 	}()
 
-	gkillErr, err = f.parseTagFilterModeFromQuery(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at parse tag filter mode: %w", err)
-		return nil, gkillErr, err
-	}
-	gkillErr, err = f.parseTimeIsTagFilterModeFromQuery(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at parse timeis tag filter mode: %w", err)
-		return nil, gkillErr, err
-	}
 	gkillErr, err = f.getAllTags(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags: %w", err)
@@ -425,61 +415,14 @@ func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *F
 		}
 	}
 
-	lenOfTagReps := len(findCtx.Repositories.TagReps)
-
-	// 非表示タグ取得用検索クエリ
-	falseValue := false
-	trueValue := true
-	findTagsQuery := &find.FindQuery{
-		IsDeleted: &falseValue,
-		UseWords:  &trueValue,
-		Words:     &hideTagNames,
-	}
-
-	existErr := false
-	wg := &sync.WaitGroup{}
-	tagsCh := make(chan []*reps.Tag, lenOfTagReps)
-	errch := make(chan error, lenOfTagReps)
-	defer close(tagsCh)
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range findCtx.Repositories.TagReps {
-		wg.Add(1)
-		go func(tagRep reps.TagRepository) {
-			defer wg.Done()
-			tags, err := tagRep.FindTags(ctx, findTagsQuery)
-			if err != nil {
-				errch <- err
-				return
-			}
-			tagsCh <- tags
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-	// エラー集約
-	for range lenOfTagReps {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at get all tags: %w: %w:", e, err)
-			existErr = true
+	for _, hideTagName := range hideTagNames {
+		hideTagsInReps, err := findCtx.Repositories.TagReps.GetTagsByTagName(ctx, hideTagName)
+		if err != nil {
+			err = fmt.Errorf("error at get tags by tagname tagname=%s: %w", hideTagName, err)
+			return nil, err
 		}
-	}
-	if existErr {
-		return nil, err
-	}
-	// Tag集約
-	for range lenOfTagReps {
-		matchTags := <-tagsCh
-		for _, tag := range matchTags {
-			if existTag, exist := findCtx.AllHideTagsWhenUnchecked[tag.ID]; exist {
-				if tag.UpdateTime.After(existTag.UpdateTime) {
-					findCtx.AllHideTagsWhenUnchecked[tag.ID] = tag
-				}
-			} else {
-				findCtx.AllHideTagsWhenUnchecked[tag.ID] = tag
-			}
+		for _, hideTag := range hideTagsInReps {
+			findCtx.AllHideTagsWhenUnchecked[hideTag.ID] = hideTag
 		}
 	}
 	return nil, nil
@@ -524,8 +467,6 @@ func (f *FindFilter) getMatchHideTagsWhenUnckedTimeIs(ctx context.Context, findC
 }
 
 func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	var err error
-
 	// タグを使わない場合は全タグを使う
 	if findCtx.ParsedFindQuery.UseTimeIsTags == nil || !(*findCtx.ParsedFindQuery.UseTimeIsTags) {
 		for _, tag := range findCtx.AllTags {
@@ -534,193 +475,32 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 		return nil, nil
 	}
 
-	lenOfTagReps := len(findCtx.Repositories.TagReps)
-
-	// 対象タグ取得用検索クエリ
-	trueValue := true
-	falseValue := false
-	findTagsQueries := []*find.FindQuery{}
-	for _, tag := range *findCtx.ParsedFindQuery.TimeIsTags {
-		if tag == NoTags {
-			continue
+	for _, tagName := range *findCtx.ParsedFindQuery.TimeIsTags {
+		matchTags, err := findCtx.Repositories.TagReps.GetTagsByTagName(ctx, tagName)
+		if err != nil {
+			err = fmt.Errorf("error at get tags by name %s: %w", tagName, err)
+			return nil, err
 		}
-		words := []string{tag}
-		findTagsQuery := &find.FindQuery{IsDeleted: &falseValue,
-			UseWords: &trueValue,
-			Words:    &words,
-			WordsAnd: &falseValue,
-		}
-		findTagsQueries = append(findTagsQueries, findTagsQuery)
-	}
-
-	existErr := false
-	wg := &sync.WaitGroup{}
-	tagsCh := make(chan []*reps.Tag, lenOfTagReps)
-	errch := make(chan error, lenOfTagReps)
-	defer close(tagsCh)
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range findCtx.Repositories.TagReps {
-		wg.Add(1)
-		go func(tagRep reps.TagRepository) {
-			defer wg.Done()
-			tagsInRep := []*reps.Tag{}
-			for _, findTagsQuery := range findTagsQueries {
-				tags, err := tagRep.FindTags(ctx, findTagsQuery)
-				if err != nil {
-					errch <- err
-					return
-				}
-				tagsInRep = append(tagsInRep, tags...)
-			}
-			tagsCh <- tagsInRep
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-	// エラー集約
-	for range lenOfTagReps {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at find timeis tags: %w: %w:", e, err)
-			existErr = true
-		}
-	}
-
-	if existErr {
-		return nil, err
-	}
-
-	// TimeIsのTag集約
-	for range lenOfTagReps {
-		matchTags := <-tagsCh
 		for _, tag := range matchTags {
-			if existTag, exist := findCtx.MatchTimeIsTags[tag.ID]; exist {
-				if tag.UpdateTime.After(existTag.UpdateTime) {
-					findCtx.MatchTimeIsTags[tag.ID] = tag
-				}
-			} else {
-				findCtx.MatchTimeIsTags[tag.ID] = tag
-			}
+			findCtx.MatchTimeIsTags[tag.ID] = tag
 		}
 	}
-
 	return nil, nil
 }
 
 func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	var err error
-
-	lenOfTagReps := 0
-	for range findCtx.Repositories.TagReps {
-		lenOfTagReps++
+	for _, tag := range findCtx.AllTags {
+		findCtx.MatchTags[tag.Tag] = tag
 	}
-
-	// 対象タグ取得用検索クエリ
-	trueValue := true
-	falseValue := false
-	findTagsQueries := []*find.FindQuery{}
-	for _, tag := range *findCtx.ParsedFindQuery.Tags {
-		if tag == NoTags {
-			continue
+	for _, tagName := range *findCtx.ParsedFindQuery.Tags {
+		matchTags, err := findCtx.Repositories.TagReps.GetTagsByTagName(ctx, tagName)
+		if err != nil {
+			err = fmt.Errorf("error at get tags by name %s: %w", tagName, err)
+			return nil, err
 		}
-		words := []string{tag}
-		findTagsQuery := &find.FindQuery{
-			IsDeleted: &falseValue,
-			UseWords:  &trueValue,
-			Words:     &words,
-			WordsAnd:  &falseValue,
-		}
-		findTagsQueries = append(findTagsQueries, findTagsQuery)
-	}
-
-	existErr := false
-	wg := &sync.WaitGroup{}
-	tagsCh := make(chan []*reps.Tag, lenOfTagReps)
-	errch := make(chan error, lenOfTagReps)
-	defer close(tagsCh)
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range findCtx.Repositories.TagReps {
-		wg.Add(1)
-		go func(tagRep reps.TagRepository) {
-			defer wg.Done()
-			tagsInRep := []*reps.Tag{}
-			for _, findTagsQuery := range findTagsQueries {
-				tags, err := tagRep.FindTags(ctx, findTagsQuery)
-				if err != nil {
-					errch <- err
-					return
-				}
-				tagsInRep = append(tagsInRep, tags...)
-			}
-			tagsCh <- tagsInRep
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-	// エラー集約
-	for range lenOfTagReps {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at find  tags: %w: %w:", e, err)
-			existErr = true
-		}
-	}
-
-	if existErr {
-		return nil, err
-	}
-
-	// Tag集約
-	for range lenOfTagReps {
-		matchTags := <-tagsCh
 		for _, tag := range matchTags {
-			if existTag, exist := findCtx.MatchTags[tag.ID]; exist {
-				if tag.UpdateTime.After(existTag.UpdateTime) {
-					findCtx.MatchTags[tag.ID] = tag
-				}
-			} else {
-				findCtx.MatchTags[tag.ID] = tag
-			}
+			findCtx.MatchTags[tag.ID] = tag
 		}
-	}
-
-	return nil, nil
-}
-
-func (f *FindFilter) parseTagFilterModeFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	tagFilterModeIsAnd := false
-	if findCtx.ParsedFindQuery.TagsAnd != nil {
-		tagFilterModeIsAnd = *findCtx.ParsedFindQuery.TagsAnd
-	}
-	if tagFilterModeIsAnd {
-		var tagFilterMode find.TagFilterMode
-		tagFilterMode = find.And
-		findCtx.TagFilterMode = &tagFilterMode
-	} else {
-		var tagFilterMode find.TagFilterMode
-		tagFilterMode = find.Or
-		findCtx.TagFilterMode = &tagFilterMode
-	}
-	return nil, nil
-}
-
-func (f *FindFilter) parseTimeIsTagFilterModeFromQuery(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	timeisTagFilterModeIsAnd := false
-	if findCtx.ParsedFindQuery.TimeIsTagsAnd != nil {
-		timeisTagFilterModeIsAnd = *findCtx.ParsedFindQuery.TimeIsTagsAnd
-	}
-	if timeisTagFilterModeIsAnd {
-		var timeisTagFilterMode find.TagFilterMode
-		timeisTagFilterMode = find.And
-		findCtx.TimeIsTagFilterMode = &timeisTagFilterMode
-	} else {
-		var timeisTagFilterMode find.TagFilterMode
-		timeisTagFilterMode = find.Or
-		findCtx.TimeIsTagFilterMode = &timeisTagFilterMode
 	}
 	return nil, nil
 }
@@ -861,7 +641,7 @@ func (f *FindFilter) filterMiForMi(ctx context.Context, findCtx *FindKyouContext
 }
 
 func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.TagFilterMode != nil && *findCtx.TagFilterMode == find.Or {
+	if findCtx.ParsedFindQuery.Tags != nil && findCtx.ParsedFindQuery.TagsAnd != nil && !(*findCtx.ParsedFindQuery.TagsAnd) {
 		// ORの場合のフィルタリング処理
 
 		// タグ対象Kyouリスト
@@ -913,11 +693,21 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		}
 
 		findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterTags
-	} else if findCtx.TagFilterMode != nil && *findCtx.TagFilterMode == find.And {
+	} else if findCtx.ParsedFindQuery.Tags != nil && findCtx.ParsedFindQuery.TagsAnd != nil && (*findCtx.ParsedFindQuery.TagsAnd) {
 		// ANDの場合のフィルタリング処理
 		tagNameMap := map[string]map[string]*reps.Kyou{} // map[タグ名][kyou.ID（tagTargetID）] = reps.kyou
 
 		for _, tag := range findCtx.MatchTags {
+			isTagInQuery := false
+			for _, tagName := range *findCtx.ParsedFindQuery.Tags {
+				if tagName == tag.Tag {
+					isTagInQuery = true
+					break
+				}
+			}
+			if !isTagInQuery {
+				continue
+			}
 			if _, exist := tagNameMap[tag.Tag]; !exist {
 				tagNameMap[tag.Tag] = map[string]*reps.Kyou{}
 			}
@@ -948,14 +738,10 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			for _, kyou := range findCtx.MatchKyousCurrent {
 				_, relatedTagKyou := findCtx.RelatedTagIDs[kyou.ID]
 				if !relatedTagKyou {
-					if existKyou, exist := tagNameMap[NoTags][kyou.ID]; exist {
-						if kyou.UpdateTime.After(existKyou.UpdateTime) {
-							tagNameMap[NoTags][kyou.ID] = kyou
-						}
-					} else {
+					if _, exist := tagNameMap[NoTags][kyou.ID]; !exist {
 						tagNameMap[NoTags] = map[string]*reps.Kyou{}
-						tagNameMap[NoTags][kyou.ID] = kyou
 					}
+					tagNameMap[NoTags][kyou.ID] = kyou
 				}
 			}
 		}
@@ -968,13 +754,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			case 0:
 				// 初回ループは全部いれる
 				for _, kyou := range kyouIDMap {
-					if existKyou, exist := hasAllMatchTagsKyousMap[kyou.ID]; exist {
-						if kyou.UpdateTime.After(existKyou.UpdateTime) {
-							hasAllMatchTagsKyousMap[kyou.ID] = kyou
-						}
-					} else {
-						hasAllMatchTagsKyousMap[kyou.ID] = kyou
-					}
+					hasAllMatchTagsKyousMap[kyou.ID] = kyou
 				}
 			default:
 				matchThisLoopKyousMap := map[string]*reps.Kyou{}
@@ -997,7 +777,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			delete(findCtx.MatchKyousAtFilterTags, hideTag.TargetID)
 		}
 
-		findCtx.MatchKyousCurrent = hasAllMatchTagsKyousMap
+		findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFilterTags
 	}
 
 	return nil, nil
@@ -1009,7 +789,7 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 		return nil, nil
 	}
 
-	if (findCtx.TimeIsTagFilterMode != nil && *findCtx.TimeIsTagFilterMode == find.Or) || findCtx.TimeIsTagFilterMode == nil {
+	if findCtx.ParsedFindQuery.TimeIsTags != nil && findCtx.ParsedFindQuery.TimeIsTagsAnd != nil && !(*findCtx.ParsedFindQuery.TimeIsTagsAnd) {
 		// ORの場合のフィルタリング処理
 
 		// タグ対象Kyouリスト
@@ -1059,19 +839,28 @@ func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouCont
 			delete(findCtx.MatchTimeIssAtFilterTags, hideTag.TargetID)
 		}
 
-	} else if findCtx.TimeIsTagFilterMode != nil && *findCtx.TimeIsTagFilterMode == find.And {
+	} else if findCtx.ParsedFindQuery.TimeIsTags != nil && findCtx.ParsedFindQuery.TimeIsTagsAnd != nil && (*findCtx.ParsedFindQuery.TimeIsTagsAnd) {
 		// ANDの場合のフィルタリング処理
 
 		tagNameMap := map[string]map[string]*reps.TimeIs{} // map[タグ名][kyou.ID（tagTargetID）] = reps.TimeIs
 
 		for _, tag := range findCtx.MatchTimeIsTags {
-			if _, exist := tagNameMap[tag.Tag]; !exist {
-				tagNameMap[tag.Tag] = map[string]*reps.TimeIs{}
+			isTagInQuery := false
+			for _, tagName := range *findCtx.ParsedFindQuery.TimeIsTags {
+				if tagName == tag.Tag {
+					isTagInQuery = true
+					break
+				}
 			}
-
+			if !isTagInQuery {
+				continue
+			}
 			timeis, exist := findCtx.MatchTimeIssAtFindTimeIs[tag.TargetID]
 			if !exist {
 				continue
+			}
+			if _, exist := tagNameMap[tag.Tag]; !exist {
+				tagNameMap[tag.Tag] = map[string]*reps.TimeIs{}
 			}
 
 			tagNameMap[tag.Tag][timeis.ID] = timeis

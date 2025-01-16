@@ -52,7 +52,6 @@ const last_added_tag: Ref<string> = ref("")
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
-    req.session_id = GkillAPI.get_instance().get_session_id()
 
     return gkill_api.value.get_application_config(req)
         .then(async res => {
@@ -147,7 +146,7 @@ async function subscribe(vapidPublicKey: string) {
         })
         .then(async function (subscription) {
             const req = new RegisterGkillNotificationRequest()
-            req.session_id = GkillAPI.get_gkill_api().get_session_id()
+            
             req.subscription = subscription
             req.public_key = vapidPublicKey
             const res = await GkillAPI.get_gkill_api().register_gkill_notification(req)
@@ -181,7 +180,7 @@ async function register_gkill_task_notification(): Promise<void> {
             .then(async function (subscription) {
                 if (!subscription) {
                     const req = new GetGkillNotificationPublicKeyRequest()
-                    req.session_id = GkillAPI.get_gkill_api().get_session_id()
+                    
                     const res = await GkillAPI.get_gkill_api().get_gkill_notification_public_key(req)
                     if (res.errors && res.errors.length !== 0) {
                         write_errors(res.errors)

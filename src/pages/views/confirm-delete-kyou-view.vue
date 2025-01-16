@@ -105,11 +105,9 @@ async function delete_kyou(): Promise<void> {
 
 async function delete_kmemo(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
     const req = new UpdateKmemoRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.kmemo = cloned_kyou.value.typed_kmemo!!.clone()
     req.kmemo.is_deleted = true
 
@@ -123,11 +121,9 @@ async function delete_kmemo(): Promise<Array<GkillError>> {
 }
 async function delete_urlog(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
     const req = new UpdateURLogRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.urlog = cloned_kyou.value.typed_urlog!!.clone()
     req.urlog.is_deleted = true
 
@@ -142,11 +138,9 @@ async function delete_urlog(): Promise<Array<GkillError>> {
 
 async function delete_nlog(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
     const req = new UpdateNlogRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.nlog = cloned_kyou.value.typed_nlog!!.clone()
     req.nlog.is_deleted = true
 
@@ -161,11 +155,9 @@ async function delete_nlog(): Promise<Array<GkillError>> {
 
 async function delete_timeis(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
     const req = new UpdateTimeisRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.timeis = cloned_kyou.value.typed_timeis!!.clone()
     req.timeis.is_deleted = true
 
@@ -180,11 +172,9 @@ async function delete_timeis(): Promise<Array<GkillError>> {
 
 async function delete_mi(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
     const req = new UpdateMiRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.mi = cloned_kyou.value.typed_mi!!.clone()
     req.mi.is_deleted = true
 
@@ -199,11 +189,9 @@ async function delete_mi(): Promise<Array<GkillError>> {
 
 async function delete_lantana(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
     const req = new UpdateLantanaRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.lantana = cloned_kyou.value.typed_lantana!!.clone()
     req.lantana.is_deleted = true
 
@@ -219,11 +207,9 @@ async function delete_lantana(): Promise<Array<GkillError>> {
 
 async function delete_idf_kyou(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
     const req = new UpdateIDFKyouRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.idf_kyou = cloned_kyou.value.typed_idf_kyou!!.clone()
     req.idf_kyou.is_deleted = true
 
@@ -242,11 +228,9 @@ async function delete_git_commit_log(): Promise<Array<GkillError>> {
 
 async function delete_rekyou(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
     const req = new UpdateReKyouRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.rekyou = cloned_kyou.value.typed_rekyou!!.clone()
     req.rekyou.is_deleted = true
 

@@ -38,7 +38,7 @@ export class KFTLRequestBase {
 
     async apply_default_value_kftl_request_base(): Promise<void> {
         const req = new GetGkillInfoRequest()
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         const res = await GkillAPI.get_gkill_api().get_gkill_info(req)
 
         this.is_deleted = false

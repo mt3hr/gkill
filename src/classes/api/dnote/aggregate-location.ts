@@ -17,9 +17,9 @@ export async function aggregate_locations_from_kyous(kyous: Array<Kyou>, abort_c
     const aggregate_locations_map = new Map<string, AggregateLocation>()// map[title]aggregate_location
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
+        kyou.abort_controller = abort_controller
         if (kyou.data_type.startsWith("timeis")) {
             if (!kyou.typed_timeis) {
-                kyou.abort_controller = abort_controller
                 await kyou.load_typed_timeis()
             }
         } else if (kyou.data_type.startsWith("kmemo")) {
@@ -37,7 +37,12 @@ export async function aggregate_locations_from_kyous(kyous: Array<Kyou>, abort_c
         if (kyou.data_type.startsWith("timeis")) {
             if (kyou.typed_timeis) {
                 title = kyou.typed_timeis.title
-                duration_milli_second = Math.abs(moment.duration(moment(kyou.typed_timeis.start_time).diff(kyou.typed_timeis.end_time)).asMilliseconds())
+                const end_time = kyou.typed_timeis.end_time?.getTime()
+                if ((kyou.typed_timeis.start_time.getTime() < (end_time ? end_time : 0))) {
+                    duration_milli_second = Math.abs(moment.duration(moment(kyou.typed_timeis.start_time).diff(kyou.typed_timeis.end_time)).asMilliseconds())
+                } else {
+                    duration_milli_second = 0
+                }
             }
         } else if (kyou.data_type.startsWith("kmemo")) {
             if (kyou.typed_kmemo) {

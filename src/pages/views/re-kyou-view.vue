@@ -43,7 +43,6 @@ watch(() => props.kyou, () => get_target_kyou())
 
 async function get_target_kyou() {
     const req = new GetKyouRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.id = props.rekyou.target_id
     const res = await props.gkill_api.get_kyou(req)
     if (res.errors && res.errors.length !== 0) {

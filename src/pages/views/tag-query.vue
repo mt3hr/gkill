@@ -41,8 +41,19 @@ const use_tag: Ref<boolean> = ref(true)
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const is_and_search: Ref<boolean> = ref(false)
 
+const old_cloned_query: Ref<FindKyouQuery | null> = ref(null)
 const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
+
+const loading = ref(false)
+watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
+    if (new_value !== old_value && new_value) {
+        const tags = cloned_query.value.tags
+        if (tags) {
+            await update_check(tags, CheckState.checked, true)
+        }
+    }
+})
 
 const skip_emits_this_tick = ref(false)
 watch(() => props.application_config, async () => {
@@ -72,8 +83,10 @@ watch(() => props.application_config, async () => {
     emits('inited')
 })
 
-watch(() => props.find_kyou_query, async () => {
-    cloned_query.value = props.find_kyou_query.clone()
+watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
+    loading.value = true
+    old_cloned_query.value = old_value
+    cloned_query.value = new_value.clone()
     is_and_search.value = props.find_kyou_query.tags_and
     await update_check_state(cloned_query.value.tags, CheckState.checked)
     const checked_items = foldable_struct.value?.get_selected_items()

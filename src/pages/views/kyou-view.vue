@@ -34,7 +34,7 @@
                 </v-col>
                 <v-spacer />
                 <v-col class="kyou_rep_name pa-0 ma-0" cols="auto">
-                    {{ cloned_kyou.rep_name }}
+                    <span>{{ cloned_kyou.rep_name }}</span>
                 </v-col>
             </v-row>
         </div>

@@ -60,7 +60,6 @@ async function show_share_task_list_link_dialog(share_mi_task_list_info: ShareMi
 
 async function delete_share_task_link_info(share_mi_task_list_info: ShareMiTaskListInfo): Promise<void> {
     const req = new DeleteShareMiTaskListInfosRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.share_mi_task_list_info = share_mi_task_list_info
     const res = await props.gkill_api.delete_share_mi_task_list_infos(req)
     if (res.errors && res.errors.length !== 0) {
@@ -76,7 +75,6 @@ async function delete_share_task_link_info(share_mi_task_list_info: ShareMiTaskL
 
 async function reload_share_mi_task_list_infos(): Promise<void> {
     const req = new GetShareMiTaskListInfosRequest()
-    req.session_id = props.gkill_api.get_session_id()
     const res = await props.gkill_api.get_share_mi_task_list_infos(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)

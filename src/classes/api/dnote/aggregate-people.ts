@@ -20,9 +20,9 @@ export async function aggregate_peoples_from_kyous(kyous: Array<Kyou>, abort_con
     const aggregate_peoples_map = new Map<string, AggregatePeople>()// map[title]aggregate_people
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
+        kyou.abort_controller = abort_controller
         if (kyou.data_type.startsWith("timeis")) {
             if (!kyou.typed_timeis) {
-                kyou.abort_controller = abort_controller
                 await kyou.load_typed_timeis()
             }
         } else if (kyou.data_type.startsWith("kmemo")) {
@@ -41,7 +41,12 @@ export async function aggregate_peoples_from_kyous(kyous: Array<Kyou>, abort_con
         if (kyou.data_type.startsWith("timeis")) {
             if (kyou.typed_timeis) {
                 title = kyou.typed_timeis.title
-                duration_milli_second = Math.abs(moment.duration(moment(kyou.typed_timeis.start_time).diff(kyou.typed_timeis.end_time)).asMilliseconds())
+                const end_time = kyou.typed_timeis.end_time?.getTime()
+                if ((kyou.typed_timeis.start_time.getTime() < (end_time ? end_time : 0))) {
+                    duration_milli_second = Math.abs(moment.duration(moment(kyou.typed_timeis.start_time).diff(kyou.typed_timeis.end_time)).asMilliseconds())
+                } else {
+                    duration_milli_second = 0
+                }
             }
         } else if (kyou.data_type.startsWith("kmemo")) {
             if (kyou.typed_kmemo) {
@@ -50,7 +55,7 @@ export async function aggregate_peoples_from_kyous(kyous: Array<Kyou>, abort_con
             }
         }
 
-        if (isNaN(duration_milli_second)) {
+        if (isNaN(duration_milli_second) || duration_milli_second < 0) {
             // NaNはスキップ
             continue
         }
