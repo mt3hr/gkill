@@ -32,7 +32,6 @@ const check_when_inited: Ref<boolean> = ref(props.struct_obj.check_when_inited)
 
 async function apply(): Promise<void> {
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)

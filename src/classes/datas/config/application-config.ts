@@ -78,9 +78,9 @@ export class ApplicationConfig {
     }
     async load_all(): Promise<Array<GkillError>> {
         const errors = Array<GkillError>()
+        errors.concat(await this.append_not_found_reps())
         errors.concat(await this.append_not_found_devices())
         errors.concat(await this.append_not_found_rep_types())
-        errors.concat(await this.append_not_found_reps())
         errors.concat(await this.append_not_found_tags())
         errors.concat(await this.append_not_found_mi_boards())
         errors.concat(await this.append_no_devices())
@@ -91,14 +91,13 @@ export class ApplicationConfig {
     }
     async append_not_found_reps(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
@@ -134,14 +133,13 @@ export class ApplicationConfig {
     }
     async append_not_found_tags(): Promise<Array<GkillError>> {
         const req = new GetAllTagNamesRequest()
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         const res = await GkillAPI.get_gkill_api().get_all_tag_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
@@ -178,14 +176,13 @@ export class ApplicationConfig {
 
     async append_not_found_mi_boards(): Promise<Array<GkillError>> {
         const req = new GetMiBoardRequest()
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         const res = await GkillAPI.get_gkill_api().get_mi_board_list(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
@@ -221,7 +218,6 @@ export class ApplicationConfig {
 
     async append_no_devices(): Promise<Array<GkillError>> {
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
@@ -250,14 +246,13 @@ export class ApplicationConfig {
 
     async append_not_found_devices(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
@@ -293,14 +288,13 @@ export class ApplicationConfig {
     }
     async append_not_found_rep_types(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (res.errors && res.errors.length !== 0) {
             return gkill_info_res.errors
@@ -834,7 +828,6 @@ export class ApplicationConfig {
 
     async append_no_tags(): Promise<Array<GkillError>> {
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors
@@ -864,7 +857,6 @@ export class ApplicationConfig {
 
     async append_all_mi_board(): Promise<Array<GkillError>> {
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
         if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
             return gkill_info_res.errors

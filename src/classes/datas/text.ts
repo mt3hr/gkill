@@ -14,7 +14,7 @@ export class Text extends MetaInfoBase {
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         const req = new GetTextHistoryByTextIDRequest()
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_text_history_by_text_id(req)
         if (res.errors && res.errors.length !== 0) {

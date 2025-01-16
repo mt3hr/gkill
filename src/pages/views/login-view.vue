@@ -8,12 +8,14 @@
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field label="ユーザID" v-model="user_id" autofocus />
+                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" label="ユーザID" v-model="user_id"
+                        autofocus />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field label="パスワード" :type="'password'" v-model="password" />
+                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" label="パスワード" :type="'password'"
+                        v-model="password" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">

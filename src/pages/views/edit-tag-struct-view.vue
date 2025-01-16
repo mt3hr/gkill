@@ -87,7 +87,8 @@ cloned_application_config.value.parse_tag_struct()
 
 async function reload_cloned_application_config(): Promise<void> {
     cloned_application_config.value = props.application_config.clone()
-    cloned_application_config.value.parse_tag_struct()
+    await cloned_application_config.value.append_not_found_tags()
+    await cloned_application_config.value.parse_tag_struct()
 }
 
 function show_tag_contextmenu(e: MouseEvent, id: string | null): void {
@@ -162,7 +163,6 @@ async function apply(): Promise<void> {
 
     // 更新する
     const req = new UpdateTagStructRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.tag_struct = cloned_application_config.value.tag_struct
     const res = await props.gkill_api.update_tag_struct(req)
     if (res.errors && res.errors.length !== 0) {
@@ -182,7 +182,6 @@ function show_add_new_folder_dialog(): void {
 }
 async function add_folder_struct_element(folder_struct_element: FolderStructElementData): Promise<void> {
     const req = new GetGkillInfoRequest()
-    req.session_id = props.gkill_api.get_session_id()
     const res = await props.gkill_api.get_gkill_info(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
@@ -215,7 +214,6 @@ async function add_folder_struct_element(folder_struct_element: FolderStructElem
 }
 async function add_tag_struct_element(tag_struct_element: TagStructElementData): Promise<void> {
     const req = new GetGkillInfoRequest()
-    req.session_id = props.gkill_api.get_session_id()
     const res = await props.gkill_api.get_gkill_info(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)

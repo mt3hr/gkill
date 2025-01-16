@@ -61,7 +61,6 @@ function copy_over_lan_share_mi_link(): void {
 
 async function update(): Promise<void> {
     const gkill_req = new GetGkillInfoRequest()
-    gkill_req.session_id = props.gkill_api.get_session_id()
     const gkill_res = await props.gkill_api.get_gkill_info(gkill_req)
     if (gkill_res.errors && gkill_res.errors.length !== 0) {
         emits('received_errors', gkill_res.errors)
@@ -70,7 +69,6 @@ async function update(): Promise<void> {
 
     cloned_share_mi_task_list_info.value.is_share_detail = !share_time_only.value
     const req = new UpdateShareMiTaskListInfoRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.share_mi_task_list_info = cloned_share_mi_task_list_info.value
     const res = await props.gkill_api.update_share_mi_task_list_info(req)
     if (res.errors && res.errors.length !== 0) {

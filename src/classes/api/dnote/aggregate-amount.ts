@@ -20,8 +20,8 @@ export async function aggregate_amounts_from_kyous(kyous: Array<Kyou>, abort_con
     const aggregate_amounts = new Array<AggregateAmount>()
     for (let i = 0; i < kyous.length; i++) {
         const kyou = kyous[i]
+        kyou.abort_controller = abort_controller
         if (!kyou.typed_nlog) {
-            kyou.abort_controller = abort_controller
             await kyou.load_typed_nlog()
         }
     }
