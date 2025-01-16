@@ -106,7 +106,6 @@ async function clicked_mi_check(): Promise<void> {
 
     // UserIDやDevice情報を取得する
     const get_gkill_req = new GetGkillInfoRequest()
-    get_gkill_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
@@ -123,7 +122,6 @@ async function clicked_mi_check(): Promise<void> {
 
     // 更新リクエストを飛ばす
     const req = new UpdateMiRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.mi = updated_mi
     const res = await props.gkill_api.update_mi(req)
     if (res.errors && res.errors.length !== 0) {

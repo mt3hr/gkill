@@ -30,7 +30,5 @@ type FindKyouContext struct {
 	MatchKyousAtFilterTimeIs         map[string]*reps.Kyou   `json:"match_kyous_at_filter_time_is"`
 	MatchKyousAtFilterLocation       map[string]*reps.Kyou   `json:"match_kyous_at_filter_location"`
 	ResultKyous                      []*reps.Kyou            `json:"result_kyous"`
-	TagFilterMode                    *find.TagFilterMode     `json:"tag_filter_mode"`
-	TimeIsTagFilterMode              *find.TagFilterMode     `json:"time_is_tag_filter_mode"`
 	MatchKyousAtFilterImage          map[string]*reps.Kyou   `json:"match_kyous_at_filter_image"`
 }

@@ -38,13 +38,12 @@ export class KFTLURLogRequest extends KFTLRequest {
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
 
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddURLogRequest()
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         req.urlog.id = this.get_request_id()
         req.urlog.related_time = time
         req.urlog.url = this.url

@@ -207,7 +207,6 @@ async function search(update_cache: boolean): Promise<void> {
 
         const req = new GetKyousRequest()
         abort_controller.value = req.abort_controller
-        req.session_id = props.gkill_api.get_session_id()
         req.query = query.value.clone()
         req.query.parse_words_and_not_words()
         if (update_cache) {

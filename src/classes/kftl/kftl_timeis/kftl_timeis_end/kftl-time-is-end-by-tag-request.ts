@@ -42,13 +42,11 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
 
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
 
         // 対象のtimeisを取得する
         let target_timeis: TimeIs | null = null
         const get_plaing_timeis_req = new GetPlaingTimeisRequest()
-        get_plaing_timeis_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const get_plaing_timeis_res = await GkillAPI.get_gkill_api().get_plaing_timeis(get_plaing_timeis_req)
         if (get_plaing_timeis_res.errors && get_plaing_timeis_res.errors.length !== 0) {
             errors = errors.concat(get_plaing_timeis_res.errors)
@@ -96,7 +94,6 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
 
         // end_timeをいれてUPDATEする
         const update_timeis_req = new UpdateTimeisRequest()
-        update_timeis_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         update_timeis_req.timeis = target_timeis
         update_timeis_req.timeis.end_time = time
         update_timeis_req.timeis.update_app = "gkill_kftl"

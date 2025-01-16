@@ -39,12 +39,11 @@ export class KFTLMiRequest extends KFTLRequest {
         }
 
         const gkill_info_req = new GetGkillInfoRequest()
-        gkill_info_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
 
         if (this.board_name == "") {
             const req = new GetApplicationConfigRequest()
-            req.session_id = GkillAPI.get_gkill_api().get_session_id()
+            
             const res = await GkillAPI.get_gkill_api().get_application_config(req)
             this.board_name = res.application_config.mi_default_board
         }
@@ -53,7 +52,7 @@ export class KFTLMiRequest extends KFTLRequest {
         }
 
         const req = new GetApplicationConfigRequest()
-        req.session_id = GkillAPI.get_gkill_api().get_session_id()
+        
         const res = await GkillAPI.get_gkill_api().get_application_config(req)
         if (res.errors && res.errors.length !== 0) {
             errors = errors.concat(res.errors)
@@ -68,7 +67,6 @@ export class KFTLMiRequest extends KFTLRequest {
 
         const mi_req = new AddMiRequest()
 
-        mi_req.session_id = GkillAPI.get_gkill_api().get_session_id()
         mi_req.mi.id = id
         mi_req.mi.title = this.title
         mi_req.mi.board_name = board_name

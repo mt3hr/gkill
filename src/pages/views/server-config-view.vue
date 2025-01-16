@@ -261,7 +261,6 @@ async function update_server_config(): Promise<void> {
     update_enable_device()
 
     const gkill_info_req = new GetGkillInfoRequest()
-    gkill_info_req.session_id = props.gkill_api.get_session_id()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
@@ -272,7 +271,6 @@ async function update_server_config(): Promise<void> {
     }
 
     const req = new UpdateServerConfigsRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.server_configs = cloned_server_configs.value.concat()
 
     const res = await props.gkill_api.update_server_config(req)

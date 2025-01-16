@@ -89,7 +89,8 @@ cloned_application_config.value.parse_rep_type_struct()
 
 async function reload_cloned_application_config(): Promise<void> {
     cloned_application_config.value = props.application_config.clone()
-    cloned_application_config.value.parse_rep_type_struct()
+    await cloned_application_config.value.append_not_found_rep_types()
+    await cloned_application_config.value.parse_rep_type_struct()
 }
 
 function show_rep_type_contextmenu(e: MouseEvent, id: string | null): void {
@@ -164,7 +165,6 @@ async function apply(): Promise<void> {
 
     // 更新する
     const req = new UpdateRepTypeStructRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.rep_type_struct = cloned_application_config.value.rep_type_struct
     const res = await props.gkill_api.update_rep_type_struct(req)
     if (res.errors && res.errors.length !== 0) {
@@ -184,7 +184,6 @@ function show_add_new_folder_dialog(): void {
 }
 async function add_folder_struct_element(folder_struct_element: FolderStructElementData): Promise<void> {
     const req = new GetGkillInfoRequest()
-    req.session_id = props.gkill_api.get_session_id()
     const res = await props.gkill_api.get_gkill_info(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
@@ -215,7 +214,6 @@ async function add_folder_struct_element(folder_struct_element: FolderStructElem
 }
 async function add_rep_type_struct_element(rep_type_struct_element: RepTypeStructElementData): Promise<void> {
     const req = new GetGkillInfoRequest()
-    req.session_id = props.gkill_api.get_session_id()
     const res = await props.gkill_api.get_gkill_info(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)

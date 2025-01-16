@@ -29,7 +29,6 @@ const share_time_only: Ref<boolean> = ref(false)
 
 async function share(): Promise<void> {
     const gkill_req = new GetGkillInfoRequest()
-    gkill_req.session_id = props.gkill_api.get_session_id()
     const gkill_res = await props.gkill_api.get_gkill_info(gkill_req)
     if (gkill_res.errors && gkill_res.errors.length !== 0) {
         emits('received_errors', gkill_res.errors)
@@ -45,7 +44,6 @@ async function share(): Promise<void> {
     share_mi_task_list_info.share_title = share_title.value
 
     const req = new AddShareMiTaskListInfoRequest()
-    req.session_id = props.gkill_api.get_session_id()
     req.share_mi_task_list_info = share_mi_task_list_info
     const res = await props.gkill_api.add_share_mi_task_list_info(req)
     if (res.errors && res.errors.length !== 0) {
