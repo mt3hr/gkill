@@ -139,7 +139,10 @@ watch(() => props.application_config, async (_new_application_config: Applicatio
     } else {
         await update_check_reps(calclated_reps, CheckState.checked, true)
     }
-    emits('inited')
+    emits('request_update_checked_reps', reps, true)
+    if (!props.inited) {
+        emits('inited')
+    }
 })
 
 watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {

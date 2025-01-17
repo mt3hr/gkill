@@ -2136,7 +2136,7 @@ export class GkillAPI {
                 if (session_id === "") {
                         document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + "; max-age=0"
                 } else {
-                        document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + "; " + moment().add(400, 'days').toDate().toUTCString()
+                        document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + "; max-age=" + 86400 * 400
                 }
         }
 
@@ -2159,7 +2159,7 @@ export class GkillAPI {
                 if (google_map_api_key === "") {
                         document.cookie = this.google_map_api_key_cookie_key + "=" + google_map_api_key + "; max-age=0"
                 } else {
-                        document.cookie = this.google_map_api_key_cookie_key + "=" + google_map_api_key + ";" + moment().add(400, 'days').toDate().toUTCString()
+                        document.cookie = this.google_map_api_key_cookie_key + "=" + google_map_api_key + "; max-age=" + 86400 * 400
                 }
         }
 
