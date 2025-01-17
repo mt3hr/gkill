@@ -16,7 +16,7 @@
                 <label>タイトル</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input text" readonly type="text" v-model="timeis_title" label="タイトル" autofocus />
+                <input readonly type="text" v-model="timeis_title" label="タイトル" autofocus />
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -24,8 +24,8 @@
                 <label>開始日時</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input date" readonly type="date" v-model="timeis_start_date" label="開始日付" />
-                <input class="input time" readonly type="time" v-model="timeis_start_time" label="開始時刻" />
+                <input readonly type="date" v-model="timeis_start_date" label="開始日付" />
+                <input readonly type="time" v-model="timeis_start_time" label="開始時刻" />
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">

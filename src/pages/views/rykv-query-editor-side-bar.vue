@@ -62,7 +62,7 @@ import TagQuery from './tag-query.vue'
 import TimeIsQuery from './time-is-query.vue'
 import type { rykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-emits'
 import type { rykvQueryEditorSidebarProps } from './rykv-query-editor-sidebar-props'
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, type Ref, ref, watch } from 'vue'
 import { deepEquals } from '@/classes/deep-equals'
 
 const sidebar_header = ref<InstanceType<typeof SidebarHeader> | null>(null);
@@ -87,16 +87,16 @@ const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
 const is_mounted = ref(false)
-nextTick(() => is_mounted.value = true)
+onMounted(() => is_mounted.value = true)
 
 const inited = computed(() => {
     if (!is_mounted.value) {
         return false
     }
     return inited_keyword_query_for_query_sidebar.value &&
-        inited_timeis_query_for_query_sidebar.value &&
         inited_rep_query_for_query_sidebar.value &&
         inited_tag_query_for_query_sidebar.value &&
+        inited_timeis_query_for_query_sidebar.value &&
         inited_calendar_query_for_query_sidebar.value &&
         inited_map_query_for_query_sidebar.value
 })

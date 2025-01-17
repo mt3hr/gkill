@@ -75,12 +75,14 @@ watch(() => props.application_config, async () => {
             tags.push(tag.tag_name)
         }
     })
-    await update_check_state(tags, CheckState.checked)
+    await update_check(tags, CheckState.checked, true)
     const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {
         emits('request_update_checked_tags', checked_items, false)
     }
-    emits('inited')
+    if (!props.inited) {
+        emits('inited')
+    }
 })
 
 watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
