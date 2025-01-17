@@ -168,7 +168,7 @@ async function subscribe(vapidPublicKey: string) {
         })
         .then(async function (subscription) {
             const req = new RegisterGkillNotificationRequest()
-            
+
             req.subscription = subscription
             req.public_key = vapidPublicKey
             const res = await GkillAPI.get_gkill_api().register_gkill_notification(req)
@@ -203,7 +203,7 @@ async function register_gkill_task_notification(): Promise<void> {
             .then(async function (subscription) {
                 if (!subscription) {
                     const req = new GetGkillNotificationPublicKeyRequest()
-                    
+
                     const res = await GkillAPI.get_gkill_api().get_gkill_notification_public_key(req)
                     if (res.errors && res.errors.length !== 0) {
                         write_errors(res.errors)
@@ -257,6 +257,9 @@ body {
 .kyou_detail_view::-webkit-scrollbar,
 .kyou_list_view::-webkit-scrollbar,
 .kyou_list_view_image::-webkit-scrollbar,
+.aggregate_amount_list::-webkit-scrollbar,
+.aggregate_location_list::-webkit-scrollbar,
+.aggregate_people_list::-webkit-scrollbar,
 .kftl_text_area::-webkit-scrollbar,
 .v-dialog .v-card::-webkit-scrollbar {
     margin-left: 1px;
@@ -267,6 +270,9 @@ body {
 .kyou_detail_view::-webkit-scrollbar-thumb,
 .kyou_list_view::-webkit-scrollbar-thumb,
 .kyou_list_view_image::-webkit-scrollbar-thumb,
+.aggregate_amount_list::-webkit-scrollbar-thumb,
+.aggregate_location_list::-webkit-scrollbar-thumb,
+.aggregate_people_list::-webkit-scrollbar-thumb,
 .kftl_text_area::-webkit-scrollbar-thumb,
 .v-dialog .v-card::-webkit-scrollbar-thumb {
     background: rgb(var(--v-theme-primary));
