@@ -924,7 +924,6 @@ INSERT INTO MI (
   ?,
   ?,
   ?,
-  ?,
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
