@@ -110,11 +110,13 @@ func (n *notificator) waitAndNotify() {
 
 	for _, notificationTarget := range notificationTargets {
 		content := &struct {
-			Content string `json:"content"`
-			URL     string `json:"url"`
+			Content string    `json:"content"`
+			URL     string    `json:"url"`
+			Time    time.Time `json:"time"`
 		}{
 			Content: n.notification.Content,
 			URL:     "/kyou?kyou_id=" + n.notification.TargetID,
+			Time:    n.notification.NotificationTime,
 		}
 		contentJSONb, err := json.Marshal(content)
 		if err != nil {
