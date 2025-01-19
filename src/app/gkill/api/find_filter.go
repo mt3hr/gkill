@@ -489,9 +489,6 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 }
 
 func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	for _, tag := range findCtx.AllTags {
-		findCtx.MatchTags[tag.Tag] = tag
-	}
 	for _, tagName := range *findCtx.ParsedFindQuery.Tags {
 		matchTags, err := findCtx.Repositories.TagReps.GetTagsByTagName(ctx, tagName)
 		if err != nil {
