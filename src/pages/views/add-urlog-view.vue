@@ -9,18 +9,18 @@
         </v-card-title>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto">
-                <label>タイトル</label>
-            </v-col>
-            <v-col cols="auto">
-                <input class="input text" type="text" v-model="title" label="タイトル" autofocus />
-            </v-col>
-        </v-row>
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
                 <label>URL</label>
             </v-col>
             <v-col cols="auto">
                 <input class="input text" type="text" v-model="url" label="URL" />
+            </v-col>
+        </v-row>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto">
+                <label>タイトル</label>
+            </v-col>
+            <v-col cols="auto">
+                <input class="input text" type="text" v-model="title" label="タイトル" autofocus />
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
