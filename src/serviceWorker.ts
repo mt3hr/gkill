@@ -13,6 +13,7 @@ self.addEventListener('push', function (event: any) {
     body: data.content,
     requireInteraction: true,
     data: data,
+    timestamp: Math.floor(data.time),
   }
   event.waitUntil(self.registration.showNotification(title, options))
 })
