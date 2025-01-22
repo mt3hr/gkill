@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+import moment from 'moment';
 import { precacheAndRoute } from 'workbox-precaching'
 export default null
 declare let self: ServiceWorkerGlobalScope
@@ -13,7 +14,7 @@ self.addEventListener('push', function (event: any) {
     body: data.content,
     requireInteraction: true,
     data: data,
-    timestamp: Math.floor(data.time),
+    timestamp: Math.floor(new Date(data.time as string).getTime())
   }
   event.waitUntil(self.registration.showNotification(title, options))
 })
