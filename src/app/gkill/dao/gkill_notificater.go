@@ -14,19 +14,16 @@ import (
 )
 
 type notificator struct {
-	doing           bool
 	gkillDAOManager *GkillDAOManager
 	gkillReps       *reps.GkillRepositories
 	ctx             context.Context
 	notification    *reps.Notification
-	timer           *time.Timer
 }
 
 // 作って通知にそなえて構えます。
 // キャンセルはctxからやってください
 func newNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, gkillReps *reps.GkillRepositories, notification *reps.Notification) *notificator {
 	newNotificator := &notificator{
-		doing:           false,
 		ctx:             ctx,
 		gkillDAOManager: gkillDAOManager,
 		gkillReps:       gkillReps,
@@ -37,27 +34,17 @@ func newNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, gkill
 }
 
 func (n *notificator) waitAndNotify() {
-	if n.doing {
-		return
-	}
-	n.doing = true
-	if n.timer != nil {
-		n.timer.Stop()
-	}
 	// 時間が来たときの通知ハンドラ。
 	// まだ通知対象に残っていれば通知する。
 	// その後、通知を更新済みに更新し、通知対象から削除する
 	if time.Now().Before(n.notification.NotificationTime) {
 		// まだだったら時刻まで待機する
 		diff := n.notification.NotificationTime.Sub(time.Now())
-		n.timer = time.NewTimer(diff)
 
 		select {
 		case <-n.ctx.Done():
-			n.timer.Stop()
 			return
-		case <-n.timer.C:
-			n.timer.Stop()
+		case <-time.After(diff):
 		}
 	}
 
@@ -149,7 +136,6 @@ type GkillNotificator struct {
 	gkillReps              *reps.GkillRepositories
 	notificators           map[string]*notificator
 	m                      sync.Mutex
-	ticker                 *time.Ticker
 	notificationServiceCtx context.Context
 	notificationCtx        context.Context
 	cancelFunc             context.CancelFunc
@@ -160,7 +146,6 @@ func NewGkillNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, 
 		gkillDAOManager:        gkillDAOManager,
 		gkillReps:              gkillReps,
 		notificators:           map[string]*notificator{},
-		ticker:                 time.NewTicker(time.Hour * 1), // 1時間に1回自動で更新する
 		notificationServiceCtx: ctx,
 	}
 	go gkillNotificator.updateLoopWhenTick()
@@ -168,7 +153,6 @@ func NewGkillNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, 
 }
 
 func (g *GkillNotificator) updateLoopWhenTick() {
-loop:
 	for {
 		err := g.UpdateNotificationTargets(context.Background())
 		if err != nil {
@@ -178,9 +162,8 @@ loop:
 		select {
 		case <-g.notificationServiceCtx.Done():
 			g.cancelFunc()
-			break loop
-		case <-g.ticker.C:
-			continue loop
+			return
+		case <-time.After(1 * time.Hour):
 		}
 	}
 }
@@ -220,6 +203,5 @@ func (g *GkillNotificator) UpdateNotificationTargets(ctx context.Context) error 
 
 func (g *GkillNotificator) Close(ctx context.Context) error {
 	g.cancelFunc()
-	g.ticker.Stop()
 	return nil
 }
