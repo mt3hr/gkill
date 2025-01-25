@@ -109,6 +109,32 @@ const application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 
+async function show_dialog(): Promise<void> {
+    const dialog = new URL(location.href).searchParams.get('dialog')
+    switch (dialog) {
+        case 'timeis':
+            show_timeis_dialog()
+            break
+        case 'mi':
+            show_mi_dialog()
+            break
+        case 'nlog':
+            show_nlog_dialog()
+            break
+        case 'lantana':
+            show_lantana_dialog()
+            break
+        case 'urlog':
+            show_urlog_dialog()
+            break
+        case 'kftl':
+            show_kftl_dialog()
+            break
+        default:
+            break
+    }
+}
+
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
 
@@ -183,6 +209,11 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 const is_loading = ref(true)
 watch(() => application_config.value, () => {
     is_loading.value = false
+})
+watch(() => is_loading.value, (new_value: boolean, old_value: boolean) => {
+    if (old_value !== new_value && !new_value) {
+        show_dialog()
+    }
 })
 
 window.addEventListener('resize', () => {
