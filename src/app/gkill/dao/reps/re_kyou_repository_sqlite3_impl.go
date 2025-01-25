@@ -102,6 +102,24 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 				break
 			}
 		}
+
+		matchID := false
+		if query.UseIDs == nil || !*query.UseIDs {
+			matchID = true
+		} else if *query.UseIDs {
+			if query.IDs != nil && len(*query.IDs) != 0 {
+				for _, id := range *query.IDs {
+					if id == rekyou.ID {
+						matchID = true
+						break
+					}
+				}
+			}
+		}
+		if !matchID {
+			continue
+		}
+
 		if existInRep {
 			kyou := &Kyou{}
 			kyou.IsDeleted = rekyou.IsDeleted
