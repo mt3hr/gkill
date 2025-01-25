@@ -237,8 +237,19 @@ errloop:
 }
 
 func (r Repositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements Reps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	for _, rep := range r {
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (r Repositories) GetRepName(ctx context.Context) (string, error) {

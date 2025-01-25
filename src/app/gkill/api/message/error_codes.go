@@ -293,4 +293,10 @@ const (
 	GetNotificationHistoriesByNotificationIDError                    = "ERR000288"
 	GetNotificationHistoriesByNotificationIDSuccessMessage           = "ERR000289"
 	GetNotificatorError                                              = "ERR000290"
+	InvalidRegisterOpenDirectoryResponse                             = "ERR000291"
+	InvalidRegisterOpenDirectoryRequest                              = "ERR000292"
+	InvalidRegisterOpenFileResponse                                  = "ERR000293"
+	InvalidRegisterOpenFileRequest                                   = "ERR000294"
+	OpenFolderError                                                  = "ERR000295"
+	OpenFolderNotLocalAccountError                                   = "ERR000296"
 )
