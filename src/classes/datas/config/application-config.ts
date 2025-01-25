@@ -41,6 +41,7 @@ export class ApplicationConfig {
     rep_type_struct: Array<RepTypeStruct>
     kftl_template_struct: Array<KFTLTemplateStruct>
     mi_board_struct: Array<MiBoardStruct>
+    session_is_local: boolean
     async parse_template_and_struct(): Promise<Array<GkillError>> {
         const awaitPromises = new Array<Promise<any>>()
         awaitPromises.push(this.parse_tag_struct())
@@ -74,6 +75,7 @@ export class ApplicationConfig {
         application_config.kftl_template_struct = this.kftl_template_struct
         application_config.account_is_admin = this.account_is_admin
         application_config.mi_board_struct = this.mi_board_struct
+        application_config.session_is_local = this.session_is_local
         return application_config
     }
     async load_all(): Promise<Array<GkillError>> {
@@ -91,7 +93,7 @@ export class ApplicationConfig {
     }
     async append_not_found_reps(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
-        
+
         const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
@@ -133,7 +135,7 @@ export class ApplicationConfig {
     }
     async append_not_found_tags(): Promise<Array<GkillError>> {
         const req = new GetAllTagNamesRequest()
-        
+
         const res = await GkillAPI.get_gkill_api().get_all_tag_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
@@ -176,7 +178,7 @@ export class ApplicationConfig {
 
     async append_not_found_mi_boards(): Promise<Array<GkillError>> {
         const req = new GetMiBoardRequest()
-        
+
         const res = await GkillAPI.get_gkill_api().get_mi_board_list(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
@@ -246,7 +248,7 @@ export class ApplicationConfig {
 
     async append_not_found_devices(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
-        
+
         const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
@@ -288,7 +290,7 @@ export class ApplicationConfig {
     }
     async append_not_found_rep_types(): Promise<Array<GkillError>> {
         const req = new GetAllRepNamesRequest()
-        
+
         const res = await GkillAPI.get_gkill_api().get_all_rep_names(req)
         if (res.errors && res.errors.length !== 0) {
             return res.errors
@@ -906,6 +908,7 @@ export class ApplicationConfig {
         this.kftl_template_struct = new Array<KFTLTemplateStruct>()
         this.parsed_mi_boad_struct = new MiBoardStructElementData()
         this.mi_board_struct = new Array<MiBoardStruct>()
+        this.session_is_local = false
     }
 
 

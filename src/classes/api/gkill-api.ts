@@ -164,6 +164,10 @@ import type { GetNotificationsByTargetIDRequest } from "./req_res/get-notificati
 import type { GetNotificationsByTargetIDResponse } from "./req_res/get-notifications-by-target-id-response"
 import type { UpdateNotificationRequest } from "./req_res/update-notification-request"
 import type { UpdateNotificationResponse } from "./req_res/update-notification-response"
+import type { OpenFileRequest } from "./req_res/open-file-request"
+import type { OpenFileResponse } from "./req_res/open-file-response"
+import type { OpenDirectoryRequest } from "./req_res/open-directory-request"
+import type { OpenDirectoryResponse } from "./req_res/open-directory-response"
 
 export class GkillAPI {
         // 画面以外から参照されるやつ
@@ -257,6 +261,8 @@ export class GkillAPI {
         get_gkill_notification_public_key_address: string
         register_gkill_notification_address: string
         gkill_webpush_service_worker_js_address: string
+        open_directory_address: string
+        open_file_address: string
 
         login_method: string
         logout_method: string
@@ -332,6 +338,8 @@ export class GkillAPI {
         get_repositories_method: string
         get_gkill_notification_public_key_method: string
         register_gkill_notification_method: string
+        open_directory_method: string
+        open_file_method: string
 
         protected constructor() {
                 this.saved_application_config = null
@@ -408,6 +416,8 @@ export class GkillAPI {
                 this.get_gkill_notification_public_key_address = "/api/get_gkill_notification_public_key"
                 this.register_gkill_notification_address = "/api/register_gkill_notification"
                 this.gkill_webpush_service_worker_js_address = "/serviceWorker.js"
+                this.open_directory_address = "/api/open_directory"
+                this.open_file_address = "/api/open_file"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
@@ -482,6 +492,8 @@ export class GkillAPI {
                 this.get_repositories_method = "POST"
                 this.get_gkill_notification_public_key_method = "POST"
                 this.register_gkill_notification_method = "POST"
+                this.open_directory_method = "POST"
+                this.open_file_method = "POST"
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
@@ -1615,6 +1627,7 @@ export class GkillAPI {
                 application_config.rykv_hot_reload = response.application_config.rykv_hot_reload
                 application_config.rykv_image_list_column_number = response.application_config.rykv_image_list_column_number
                 application_config.user_id = response.application_config.user_id
+                application_config.session_is_local = response.application_config.session_is_local
                 response.application_config = application_config
 
                 await response.application_config.load_all()
@@ -2113,6 +2126,36 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: RegisterGkillNotificationResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async open_directory(req: OpenDirectoryRequest): Promise<OpenDirectoryResponse> {
+                const res = await fetch(this.open_directory_address, {
+                        'method': this.open_directory_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: OpenDirectoryResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async open_file(req: OpenFileRequest): Promise<OpenFileResponse> {
+                const res = await fetch(this.open_file_address, {
+                        'method': this.open_file_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: OpenFileResponse = json
                 this.check_auth(response)
                 return response
         }
