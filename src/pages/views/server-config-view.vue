@@ -1,5 +1,8 @@
 <template>
     <v-card>
+        <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
+            <v-progress-circular indeterminate color="primary" />
+        </v-overlay>
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -162,6 +165,8 @@ const confirm_generate_tls_files_dialog = ref<InstanceType<typeof ConfirmGenerat
 const manage_account_dialog = ref<InstanceType<typeof ManageAccountDialog> | null>(null);
 const new_device_name_dialog = ref<InstanceType<typeof NewDeviceNameDialog> | null>(null);
 
+const is_loading = ref(false)
+
 const props = defineProps<ServerConfigViewProps>()
 const emits = defineEmits<ServerConfigViewEmits>()
 
@@ -258,6 +263,7 @@ function show_new_device_name_dialog(): void {
 }
 
 async function update_server_config(): Promise<void> {
+    is_loading.value = true
     update_enable_device()
 
     const gkill_info_req = new GetGkillInfoRequest()
@@ -281,6 +287,7 @@ async function update_server_config(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
+    is_loading.value = false
     emits('requested_reload_server_config')
     emits('requested_close_dialog')
 }
