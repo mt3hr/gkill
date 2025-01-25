@@ -1,6 +1,6 @@
 <template>
     <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" app color="primary" flat>
-        <v-toolbar-title>gkill パスワード再設定</v-toolbar-title>
+        <v-toolbar-title>gkill パスワード設定</v-toolbar-title>
         <v-spacer />
         <span class="gkill_version">version: {{ gkill_version }}</span>
     </v-app-bar>
