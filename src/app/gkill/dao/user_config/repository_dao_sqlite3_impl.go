@@ -166,6 +166,119 @@ WHERE USER_ID = ? AND DEVICE = ?
 	return repositories, nil
 }
 
+func (r *repositoryDAOSQLite3Impl) DeleteWriteRepositories(ctx context.Context, userID string, repositories []*Repository) (bool, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin: %w", err)
+		return false, err
+	}
+
+	sql := `
+DELETE FROM REPOSITORY
+WHERE USER_ID = ?
+`
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at delete repository sql: %w", err)
+		return false, err
+	}
+	defer stmt.Close()
+
+	queryArgs := []interface{}{
+		userID,
+	}
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	_, err = stmt.ExecContext(ctx, queryArgs...)
+
+	if err != nil {
+		errAtRollback := tx.Rollback()
+		err = fmt.Errorf("%w, %w", err, errAtRollback)
+		err = fmt.Errorf("error at query :%w", err)
+		return false, err
+	}
+
+	for _, repository := range repositories {
+		sql := `
+INSERT INTO REPOSITORY (
+  ID,
+  USER_ID,
+  DEVICE,
+  TYPE,
+  FILE,
+  USE_TO_WRITE,
+  IS_EXECUTE_IDF_WHEN_RELOAD,
+  IS_ENABLE 
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)
+`
+
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		stmt, err := tx.PrepareContext(ctx, sql)
+		if err != nil {
+			err = fmt.Errorf("error at add repositories sql: %w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+		defer stmt.Close()
+
+		queryArgs := []interface{}{
+			repository.ID,
+			repository.UserID,
+			repository.Device,
+			repository.Type,
+			repository.File,
+			repository.UseToWrite,
+			repository.IsExecuteIDFWhenReload,
+			repository.IsEnable,
+		}
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+
+		if err != nil {
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+	}
+
+	for _, repository := range repositories {
+		err = r.checkUseToWriteRepositoryCount(ctx, tx, repository.UserID)
+		if err != nil {
+			errAtRollback := tx.Rollback()
+			err = fmt.Errorf("%w, %w", err, errAtRollback)
+			err = fmt.Errorf("error at query :%w", err)
+			return false, err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		fmt.Errorf("error at commit: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (r *repositoryDAOSQLite3Impl) AddRepository(ctx context.Context, repository *Repository) (bool, error) {
 	sql := `
 INSERT INTO REPOSITORY (
@@ -437,10 +550,78 @@ func (r *repositoryDAOSQLite3Impl) Close(ctx context.Context) error {
 
 func (r *repositoryDAOSQLite3Impl) checkUseToWriteRepositoryCount(ctx context.Context, tx *sql.Tx, userID string) error {
 	sql := `
-SELECT TYPE, DEVICE, COUNT(*) AS COUNT
+WITH TYPE_AND_DEVICE AS (SELECT ? AS USER_ID)
+SELECT 'directory' AS TYPE, DEVICE, COUNT(*) AS COUNT
 FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = ?
-AND USER_ID = ?
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'directory'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'gpslog' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'gpslog'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'kmemo' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'kmemo'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'lantana' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'lantana'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'mi' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'mi'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'nlog' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'nlog'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'notification' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'notification'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'rekyou' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'rekyou'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'tag' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'tag'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'text' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'text'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'timeis' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'timeis'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+UNION
+SELECT 'urlog' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE REPOSITORY.USE_TO_WRITE = TRUE
+AND TYPE = 'urlog'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
 GROUP BY TYPE, DEVICE
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -452,7 +633,6 @@ GROUP BY TYPE, DEVICE
 	defer stmt.Close()
 
 	queryArgs := []interface{}{
-		true,
 		userID,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
@@ -479,12 +659,14 @@ GROUP BY TYPE, DEVICE
 			)
 			if err != nil {
 				err = fmt.Errorf("error at get use to write repository count: %w", err)
+				err = fmt.Errorf("書き込み先Rep1つに対してがプロファイルに対して1つとなるよ兎にしてください。対象：「%s」", repType)
 				return err
 			}
 
 			if count >= 2 {
-				err = fmt.Errorf("error at check use to write repository count")
-				err = fmt.Errorf("rep type %s use to write rep count is %d: %w", repType, count, err)
+				// err = fmt.Errorf("error at check use to write repository count")
+				// err = fmt.Errorf("rep type %s use to write rep count is %d: %w", repType, count, err)
+				err = fmt.Errorf("書き込み先Rep1つに対してがプロファイルに対して1つとなるよ兎にしてください。対象：「%s」", repType)
 				return err
 			}
 		}
