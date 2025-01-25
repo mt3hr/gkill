@@ -239,7 +239,17 @@ errloop:
 func (r Repositories) GetPath(ctx context.Context, id string) (string, error) {
 	// 並列処理
 	matchPaths := []string{}
+	trueValue := true
+	ids := []string{id}
 	for _, rep := range r {
+		query := &find.FindQuery{
+			IDs:    &ids,
+			UseIDs: &trueValue,
+		}
+		kyous, err := rep.FindKyous(ctx, query)
+		if len(kyous) == 0 || err != nil {
+			continue
+		}
 		matchPathInRep, err := rep.GetPath(ctx, id)
 		if err != nil {
 			continue
