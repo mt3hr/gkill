@@ -937,6 +937,7 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 	if err != nil {
 		fmt.Errorf("error at close repositories: %w", err)
 	}
+	delete(g.gkillRepositories, userID)
 	return true, nil
 }
 
