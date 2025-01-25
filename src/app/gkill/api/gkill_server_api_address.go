@@ -151,6 +151,8 @@ type GkillServerAPIAddress struct {
 
 	OpenFileAddress string
 
+	ReloadRepositoriesAddress string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -298,6 +300,8 @@ type GkillServerAPIAddress struct {
 	OpenDirectoryMethod string
 
 	OpenFileMethod string
+
+	ReloadRepositoriesMethod string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -378,6 +382,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GkillWebpushServiceWorkerJsAddress = "/serviceWorker.js"
 	gkillAPIAddress.OpenDirectoryAddress = "/api/open_directory"
 	gkillAPIAddress.OpenFileAddress = "/api/open_file"
+	gkillAPIAddress.ReloadRepositoriesAddress = "/api/reload_repositories"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
@@ -452,5 +457,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.RegisterGkillNotificationMethod = "POST"
 	gkillAPIAddress.OpenDirectoryMethod = "POST"
 	gkillAPIAddress.OpenFileMethod = "POST"
+	gkillAPIAddress.ReloadRepositoriesMethod = "POST"
 	return gkillAPIAddress
 }

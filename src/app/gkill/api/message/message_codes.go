@@ -71,4 +71,5 @@ const (
 	AddNotificationSuccessMessage            = "MSG000066"
 	OpenDirectorySuccessMessage              = "MSG000067"
 	OpenFileSuccessMessage                   = "MSG000068"
+	ReloadRepositoriesSuccessMessage         = "MSG000069"
 )

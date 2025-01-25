@@ -384,6 +384,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.OpenFileAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleOpenFile(w, r)
 	}).Methods(g.APIAddress.OpenFileMethod)
+	router.HandleFunc(g.APIAddress.ReloadRepositoriesAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleReloadRepositories(w, r)
+	}).Methods(g.APIAddress.ReloadRepositoriesMethod)
 
 	gkillPage, err := fs.Sub(htmlFS, "embed/html")
 	if err != nil {
@@ -9898,6 +9901,77 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.OpenFileSuccessMessage,
 		Message:     "ファイルを開きました",
+	})
+}
+
+func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.ReloadRepositoriesRequest{}
+	response := &req_res.ReloadRepositoriesResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse reload repositories response to json: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidReloadRepositoriesResponse,
+				ErrorMessage: "リロードに失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse reload repositories request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidRegisterOpenFileRequest,
+			ErrorMessage: "リロードに失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	g.GkillDAOManager.CloseUserRepositories(userID, device)
+	_, err = g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "リロードに失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.ReloadRepositoriesSuccessMessage,
+		Message:     "リロードしました",
 	})
 }
 
