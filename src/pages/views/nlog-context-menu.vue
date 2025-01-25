@@ -22,6 +22,12 @@
             <v-list-item @click="copy_id()">
                 <v-list-item-title>IDをコピー</v-list-item-title>
             </v-list-item>
+            <v-list-item v-if="application_config.session_is_local" @click="open_folder()">
+                <v-list-item-title>フォルダを開く</v-list-item-title>
+            </v-list-item>
+            <v-list-item v-if="application_config.session_is_local" @click="open_file()">
+                <v-list-item-title>ファイルを開く</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="show_confirm_delete_kyou_dialog()">
                 <v-list-item-title>削除</v-list-item-title>
             </v-list-item>
@@ -92,6 +98,8 @@ import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-idf-kyou-dialog.v
 import { GkillMessage } from '@/classes/api/gkill-message'
 import KyouHistoriesDialog from '../dialogs/kyou-histories-dialog.vue'
 import { computed, type Ref, ref } from 'vue'
+import { OpenDirectoryRequest } from '@/classes/api/req_res/open-directory-request'
+import { OpenFileRequest } from '@/classes/api/req_res/open-file-request'
 
 const edit_nlog_dialog = ref<InstanceType<typeof EditNlogDialog> | null>(null);
 const add_tag_dialog = ref<InstanceType<typeof AddTagDialog> | null>(null);
@@ -109,7 +117,7 @@ defineExpose({ show })
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
-const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(document.defaultView!.innerHeight - 400, position_y.value.valueOf())}px; }`)
+const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(document.defaultView!.innerHeight - (props.application_config.session_is_local ? 500 : 400), position_y.value.valueOf())}px; }`)
 
 async function show(e: PointerEvent): Promise<void> {
     position_x.value = e.clientX
@@ -153,5 +161,29 @@ async function show_confirm_rekyou_dialog(): Promise<void> {
 
 async function show_kyou_histories_dialog(): Promise<void> {
     kyou_histories_dialog.value?.show()
+}
+
+async function open_folder(): Promise<void> {
+    const req = new OpenDirectoryRequest()
+    req.target_id = props.kyou.id
+    const res = await props.gkill_api.open_directory(req)
+    if (res.errors && res.errors.length > 0) {
+        emits('received_errors', res.errors)
+    }
+    if (res.messages && res.messages.length > 0) {
+        emits('received_messages', res.messages)
+    }
+}
+
+async function open_file(): Promise<void> {
+    const req = new OpenFileRequest()
+    req.target_id = props.kyou.id
+    const res = await props.gkill_api.open_file(req)
+    if (res.errors && res.errors.length > 0) {
+        emits('received_errors', res.errors)
+    }
+    if (res.messages && res.messages.length > 0) {
+        emits('received_messages', res.messages)
+    }
 }
 </script>

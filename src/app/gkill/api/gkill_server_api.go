@@ -22,6 +22,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -377,6 +378,12 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.RegisterGkillNotificationAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleRegisterGkillNotification(w, r)
 	}).Methods(g.APIAddress.RegisterGkillNotificationMethod)
+	router.HandleFunc(g.APIAddress.OpenDirectoryAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleOpenDirectory(w, r)
+	}).Methods(g.APIAddress.OpenDirectoryMethod)
+	router.HandleFunc(g.APIAddress.OpenFileAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleOpenFile(w, r)
+	}).Methods(g.APIAddress.OpenFileMethod)
 
 	gkillPage, err := fs.Sub(htmlFS, "embed/html")
 	if err != nil {
@@ -6123,12 +6130,25 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		return
 	}
 
+	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
+	if err != nil {
+		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetApplicationConfigError,
+			ErrorMessage: "ApplicationConfig取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	applicationConfig.KFTLTemplate = kftlTemplates
 	applicationConfig.TagStruct = tagStructs
 	applicationConfig.RepStruct = repStructs
 	applicationConfig.DeviceStruct = deviceStructs
 	applicationConfig.RepTypeStruct = repTypeStructs
 	applicationConfig.AccountIsAdmin = account.IsAdmin
+	applicationConfig.SessionIsLocal = session.IsLocalAppUser
 	response.ApplicationConfig = applicationConfig
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetApplicationConfigSuccessMessage,
@@ -9141,7 +9161,6 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 }
 
 func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID string) (*account.Account, *message.GkillError, error) {
-
 	loginSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, sessionID)
 	if loginSession == nil || err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", sessionID, err)
@@ -9638,6 +9657,264 @@ func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateTagSuccessMessage,
 		Message:     "通知登録が完了しました",
+	})
+}
+
+func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.OpenDirectoryRequest{}
+	response := &req_res.OpenDirectoryResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse open directory response to json: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidRegisterOpenDirectoryResponse,
+				ErrorMessage: "フォルダを開けませんでした",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse open directory request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidRegisterOpenDirectoryRequest,
+			ErrorMessage: "フォルダを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
+	if err != nil {
+		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.OpenFolderError,
+			ErrorMessage: "フォルダを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	if !session.IsLocalAppUser {
+		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.OpenFolderNotLocalAccountError,
+			ErrorMessage: "フォルダを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
+	if err != nil {
+		err = fmt.Errorf("error at get server config device = %s: %w", device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetServerConfigError,
+			ErrorMessage: "フォルダを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(session.UserID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories. userid = %s device = %s: %w", session.UserID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetRepositoriesError,
+			ErrorMessage: "フォルダを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	filename, err := repositories.Reps.GetPath(r.Context(), request.TargetID)
+	if err != nil {
+		err = fmt.Errorf("error at get path. id = %s userid = %s device = %s: %w", request.TargetID, session.UserID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetRepPathError,
+			ErrorMessage: "フォルダを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	cmd := os.Expand(serverConfig.OpenDirectoryCommand, func(str string) string {
+		if str == "filename" {
+			return filename
+		}
+		return ""
+	})
+	spl := strings.SplitN(cmd, " ", -1)
+	cmd, args := spl[0], spl[1:]
+
+	err = exec.Command(cmd, args...).Start()
+	if err != nil {
+		err = fmt.Errorf("error at open file. device = %s: %w", device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetServerConfigError,
+			ErrorMessage: "フォルダを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.OpenDirectorySuccessMessage,
+		Message:     "フォルダを開きました",
+	})
+}
+
+func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.OpenFileRequest{}
+	response := &req_res.OpenFileResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse open file response to json: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidRegisterOpenFileResponse,
+				ErrorMessage: "ファイルを開けませんでした",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse open file request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidRegisterOpenFileRequest,
+			ErrorMessage: "ファイルを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
+	if err != nil {
+		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.OpenFolderError,
+			ErrorMessage: "ファイルを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	if !session.IsLocalAppUser {
+		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.OpenFolderNotLocalAccountError,
+			ErrorMessage: "ファイルを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
+	if err != nil {
+		err = fmt.Errorf("error at get server config device = %s: %w", device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetServerConfigError,
+			ErrorMessage: "ファイルを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(session.UserID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories. userid = %s device = %s: %w", session.UserID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetRepositoriesError,
+			ErrorMessage: "ファイルを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	filename, err := repositories.Reps.GetPath(r.Context(), request.TargetID)
+	if err != nil {
+		err = fmt.Errorf("error at get path. id = %s userid = %s device = %s: %w", request.TargetID, session.UserID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetRepPathError,
+			ErrorMessage: "ファイルを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	cmd := os.Expand(serverConfig.OpenFileCommand, func(str string) string {
+		if str == "filename" {
+			return filename
+		}
+		return ""
+	})
+	spl := strings.SplitN(cmd, " ", -1)
+	cmd, args := spl[0], spl[1:]
+
+	err = exec.Command(cmd, args...).Start()
+	if err != nil {
+		err = fmt.Errorf("error at open file. device = %s: %w", device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetServerConfigError,
+			ErrorMessage: "ファイルを開けませんでした",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.OpenFileSuccessMessage,
+		Message:     "ファイルを開きました",
 	})
 }
 

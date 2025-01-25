@@ -69,4 +69,6 @@ const (
 	UpdateShareMiTaskListInfoSuccessMessage  = "MSG000064"
 	GetPlaingTimeIsSuccessMessage            = "MSG000065"
 	AddNotificationSuccessMessage            = "MSG000066"
+	OpenDirectorySuccessMessage              = "MSG000067"
+	OpenFileSuccessMessage                   = "MSG000068"
 )
