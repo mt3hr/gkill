@@ -170,6 +170,7 @@ watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
     cloned_application_config.value.parse_template_and_struct()
 })
+
 const is_loading = ref(false)
 
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())

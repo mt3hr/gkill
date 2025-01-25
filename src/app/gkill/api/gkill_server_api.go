@@ -64,13 +64,13 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 		return nil, err
 	}
 	if len(accounts) == 0 {
-		passwordSha256Admin := "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+		passwordResetToken := GenerateNewID()
 		adminAccount := &account.Account{
 			UserID:             "admin",
-			PasswordSha256:     &passwordSha256Admin,
+			PasswordSha256:     nil,
 			IsAdmin:            true,
 			IsEnable:           true,
-			PasswordResetToken: nil,
+			PasswordResetToken: &passwordResetToken,
 		}
 		_, err := gkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(context.TODO(), adminAccount)
 		if err != nil {
@@ -99,7 +99,6 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 			err = fmt.Errorf("error at add application config admin: %w", err)
 			return nil, err
 		}
-
 	}
 
 	serverConfigs, err := gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.TODO())
@@ -359,8 +358,7 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.AddShareMiTaskListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleAddShareMiTaskListInfo(w, r)
 	}).Methods(g.APIAddress.AddShareMiTaskListInfoMethod)
-	router.HandleFunc(g.APIAddress.
-		UpdateShareMiTaskListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc(g.APIAddress.UpdateShareMiTaskListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleUpdateShareMiTaskListInfo(w, r)
 	}).Methods(g.APIAddress.UpdateShareMiTaskListInfoMethod)
 	router.HandleFunc(g.APIAddress.DeleteShareMiTaskListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
@@ -398,40 +396,70 @@ func (g *GkillServerAPI) Serve() error {
 		})))
 	router.PathPrefix("/rykv").Handler(http.StripPrefix("/rykv",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/kftl").Handler(http.StripPrefix("/kftl",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/mi").Handler(http.StripPrefix("/mi",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/kyou").Handler(http.StripPrefix("/kyou",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/saihate").Handler(http.StripPrefix("/saihate",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/plaing").Handler(http.StripPrefix("/plaing",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/mkfl").Handler(http.StripPrefix("/mkfl",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/shared_mi").Handler(http.StripPrefix("/shared_mi",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/set_new_password").Handler(http.StripPrefix("/set_new_password",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
+	router.Path("/").HandlerFunc(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+			return
+		}
+		http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+	}))
 	router.PathPrefix("/").HandlerFunc(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 	}))
@@ -7777,6 +7805,33 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 		return
 	}
 
+	err = g.GkillDAOManager.Close()
+	if err != nil {
+		if err != nil {
+			err = fmt.Errorf("error at close gkill dao manager: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+		}
+		gkillError := &message.GkillError{
+			ErrorCode:    message.UpdateServerConfigError,
+			ErrorMessage: "設定更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	g.GkillDAOManager, err = dao.NewGkillDAOManager()
+	if err != nil {
+		if err != nil {
+			err = fmt.Errorf("error at reload gkill dao manager: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+		}
+		gkillError := &message.GkillError{
+			ErrorCode:    message.UpdateServerConfigError,
+			ErrorMessage: "設定更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateServerConfigSuccessMessage,
 		Message:     "設定を更新しました",
@@ -9973,6 +10028,31 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		MessageCode: message.ReloadRepositoriesSuccessMessage,
 		Message:     "リロードしました",
 	})
+}
+
+func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWriter, r *http.Request) bool {
+	accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(context.TODO())
+	if err != nil {
+		err = fmt.Errorf("error at get all account config")
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetAllAccountConfigError,
+			ErrorMessage: "アカウント設定情報の取得に失敗しました",
+		}
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return false
+	}
+
+	if len(accounts) == 1 {
+		if accounts[0].UserID != "admin" {
+			return false
+		}
+
+		http.Redirect(w, r, fmt.Sprintf("/set_new_password?reset_token=%s&user_id=%s", *accounts[0].PasswordResetToken, accounts[0].UserID), http.StatusTemporaryRedirect)
+		return true
+	}
+	return false
 }
 
 func (g *GkillServerAPI) GetDevice() (string, error) {

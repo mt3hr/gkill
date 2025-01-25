@@ -92,6 +92,9 @@ func (f *fileRepCacheUpdaterImpl) RemoveWatchFileRep(filename string, userID str
 func (f *fileRepCacheUpdaterImpl) Close() error {
 	var err error
 	for _, watchTarget := range f.watchTargets {
+		if watchTarget.watcher == nil {
+			continue
+		}
 		e := watchTarget.watcher.Close().Error()
 		if err != nil {
 			targetFileName, _ := watchTarget.GetTargetFileName()
