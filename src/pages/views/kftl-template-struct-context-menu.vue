@@ -15,7 +15,7 @@ import { computed, ref, type Ref } from 'vue';
 import type { KFTLTemplateStructContextMenuEmits } from './kftl_template-struct-context-menu-emits';
 import type { KFTLTemplateStructContextMenuProps } from './kftl_template-struct-context-menu-props';
 
-defineProps<KFTLTemplateStructContextMenuProps>()
+const props = defineProps<KFTLTemplateStructContextMenuProps>()
 const emits = defineEmits<KFTLTemplateStructContextMenuEmits>()
 defineExpose({ show, hide })
 
@@ -23,7 +23,7 @@ const id: Ref<string> = ref("")
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
-const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(document.defaultView!.innerHeight - 400, position_y.value.valueOf())}px; }`)
+const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(document.defaultView!.innerHeight - (props.application_config.session_is_local ? 500 : 400), position_y.value.valueOf())}px; }`)
 
 async function show(e: MouseEvent, kftl_template_id: string): Promise<void> {
     id.value = kftl_template_id
