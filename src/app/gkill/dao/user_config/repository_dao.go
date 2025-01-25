@@ -17,5 +17,7 @@ type RepositoryDAO interface {
 
 	DeleteAllRepositoriesByUser(ctx context.Context, userID string, device string) (bool, error)
 
+	DeleteWriteRepositories(ctx context.Context, userID string, repositories []*Repository) (bool, error)
+
 	Close(ctx context.Context) error
 }
