@@ -8,7 +8,7 @@
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field label="ユーザID" v-model="user_id" autofocus />
+                    <v-text-field label="ユーザID" v-model="user_id" autofocus :readonly="useRoute().query.user_id" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
@@ -33,16 +33,17 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { computed, ref, type Ref } from 'vue'
+import { computed, nextTick, ref, type Ref } from 'vue'
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
 import type { SetNewPasswordViewEmits } from './set-new-password-view-emits'
 import type { SetNewPasswordViewProps } from './set-new-password-view-props'
 import { useRoute } from 'vue-router';
 import { SetNewPasswordRequest } from '@/classes/api/req_res/set-new-password-request';
+import { GkillMessage } from '@/classes/api/gkill-message';
 
 const password_reset_token: Ref<string> = ref(useRoute().query.reset_token ? useRoute().query.reset_token!.toString() : "")
-const user_id: Ref<string> = ref("")
+const user_id: Ref<string> = ref(useRoute().query.user_id ? useRoute().query.user_id!.toString() : "")
 const password: Ref<string> = ref("")
 const password_retype: Ref<string> = ref("")
 
@@ -61,6 +62,15 @@ const password_sha256 = computed(async () => {
         .map((b) => b.toString(16).padStart(2, '0'))
         .join('');
     return hashHex;
+})
+
+nextTick(() => {
+    if (user_id.value === "admin") {
+        const message = new GkillMessage()
+        message.message_code = "//TODO"
+        message.message = "管理アカウントのパスワードを設定してください"
+        emits('received_messages', [message])
+    }
 })
 
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
