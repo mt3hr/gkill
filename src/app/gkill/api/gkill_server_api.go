@@ -7656,31 +7656,18 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	userID = targetAccount.UserID
 	device = ""
 
-	ok, err := g.GkillDAOManager.ConfigDAOs.RepositoryDAO.DeleteAllRepositoriesByUser(r.Context(), userID, device)
+	ok, err := g.GkillDAOManager.ConfigDAOs.RepositoryDAO.DeleteWriteRepositories(r.Context(), userID, request.UpdatedReps)
 	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at delete all repositories by users user id = %s device = %s id = %s: %w", userID, device, err)
-			gkill_log.Debug.Printf(err.Error())
-		}
 		gkillError := &message.GkillError{
-			ErrorCode:    message.DeleteAllRepositoriesByUserError,
-			ErrorMessage: "Re",
+			ErrorCode:    message.AddUpdatedRepositoriesByUser,
+			ErrorMessage: fmt.Sprintf("Rep更新に失敗しました。%s", err.Error()),
 		}
 		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	ok, err = g.GkillDAOManager.ConfigDAOs.RepositoryDAO.AddRepositories(r.Context(), request.UpdatedReps)
-	if !ok || err != nil {
 		if err != nil {
 			err = fmt.Errorf("error at delete add all repositories by users user id = %s device = %s id = %s: %w", userID, device, err)
 			gkill_log.Debug.Printf(err.Error())
 		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddUpdatedRepositoriesByUser,
-			ErrorMessage: "Re",
-		}
-		response.Errors = append(response.Errors, gkillError)
+
 		return
 	}
 
@@ -9312,6 +9299,8 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 		}
 	}
 
+	repositories := []*user_config.Repository{}
+
 	repTypeFileNameMap := map[string]string{}
 	repTypeFileNameMap["kmemo"] = "Kmemo.db"
 	repTypeFileNameMap["urlog"] = "URLog.db"
@@ -9347,11 +9336,7 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 			IsExecuteIDFWhenReload: true,
 			IsEnable:               true,
 		}
-		_, err = g.GkillDAOManager.ConfigDAOs.RepositoryDAO.AddRepository(ctx, repository)
-		if err != nil {
-			err = fmt.Errorf("error at initialize new user reps. error at add repository reptype = %s repfilename = %s: %w", repType, repFileFullName, err)
-			return err
-		}
+		repositories = append(repositories, repository)
 	}
 
 	repType, repFileName := "directory", "Files"
@@ -9371,11 +9356,7 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 		IsExecuteIDFWhenReload: true,
 		IsEnable:               true,
 	}
-	_, err = g.GkillDAOManager.ConfigDAOs.RepositoryDAO.AddRepository(ctx, repository)
-	if err != nil {
-		err = fmt.Errorf("error at initialize new user reps. error at add repository reptype = %s repfilename = %s: %w", repType, repFileFullName, err)
-		return err
-	}
+	repositories = append(repositories, repository)
 
 	repType, repFileName = "gpslog", "GPSLog"
 	repFileFullName = filepath.Join(userDataRootDirectory, repFileName)
@@ -9394,9 +9375,11 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 		IsExecuteIDFWhenReload: true,
 		IsEnable:               true,
 	}
-	_, err = g.GkillDAOManager.ConfigDAOs.RepositoryDAO.AddRepository(ctx, repository)
-	if err != nil {
-		err = fmt.Errorf("error at initialize new user reps. error at add repository reptype = %s repfilename = %s: %w", repType, repFileFullName, err)
+	repositories = append(repositories, repository)
+
+	ok, err := g.GkillDAOManager.ConfigDAOs.RepositoryDAO.DeleteWriteRepositories(ctx, account.UserID, repositories)
+	if !ok || err != nil {
+		err = fmt.Errorf("error at delete write repositories: %w", err)
 		return err
 	}
 
