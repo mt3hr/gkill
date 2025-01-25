@@ -1,11 +1,17 @@
 <template>
     <v-card>
+        <v-overlay v-model="is_loading" class="align-center justify-center" persistent>
+            <v-progress-circular indeterminate color="primary" />
+        </v-overlay>
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <span>設定</span>
                 </v-col>
                 <v-spacer />
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <v-btn @click="reload_repositories()" color="'primary'">再読込</v-btn>
+                </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn @click="logout()" color="'primary'">ログアウト</v-btn>
                 </v-col>
@@ -146,6 +152,7 @@ import { UpdateApplicationConfigRequest } from '@/classes/api/req_res/update-app
 import ServerConfigDialog from '../dialogs/server-config-dialog.vue'
 import { LogoutRequest } from '@/classes/api/req_res/logout-request'
 import router from '@/router'
+import { ReloadRepositoriesRequest } from '@/classes/api/req_res/reload-repositories-request'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 const edit_device_struct_dialog = ref<InstanceType<typeof EditDeviceStructDialog> | null>(null);
@@ -163,6 +170,7 @@ watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
     cloned_application_config.value.parse_template_and_struct()
 })
+const is_loading = ref(false)
 
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
 
@@ -256,5 +264,20 @@ function update_board_name(board_name: string): void {
 function show_server_config_dialog(): void {
     server_config_dialog.value?.show()
 }
+
+async function reload_repositories(): Promise<void> {
+    is_loading.value = true
+    const req = new ReloadRepositoriesRequest()
+    const res = await props.gkill_api.reload_repositories(req)
+    if (res.errors && res.errors.length !== 0) {
+        emits('received_errors', res.errors)
+        return
+    }
+    if (res.messages && res.messages.length !== 0) {
+        emits('received_messages', res.messages)
+    }
+    is_loading.value = false
+}
+
 load_mi_board_names()
 </script>

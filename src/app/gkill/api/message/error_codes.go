@@ -299,4 +299,5 @@ const (
 	InvalidRegisterOpenFileRequest                                   = "ERR000294"
 	OpenFolderError                                                  = "ERR000295"
 	OpenFolderNotLocalAccountError                                   = "ERR000296"
+	InvalidReloadRepositoriesResponse                                = "ERR000297"
 )
