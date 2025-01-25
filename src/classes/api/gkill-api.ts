@@ -168,6 +168,8 @@ import type { OpenFileRequest } from "./req_res/open-file-request"
 import type { OpenFileResponse } from "./req_res/open-file-response"
 import type { OpenDirectoryRequest } from "./req_res/open-directory-request"
 import type { OpenDirectoryResponse } from "./req_res/open-directory-response"
+import type { ReloadRepositoriesRequest } from "./req_res/reload-repositories-request"
+import type { ReloadRepositoriesResponse } from "./req_res/reload-repositories-response"
 
 export class GkillAPI {
         // 画面以外から参照されるやつ
@@ -263,6 +265,7 @@ export class GkillAPI {
         gkill_webpush_service_worker_js_address: string
         open_directory_address: string
         open_file_address: string
+        reload_repositories_address: string
 
         login_method: string
         logout_method: string
@@ -340,6 +343,7 @@ export class GkillAPI {
         register_gkill_notification_method: string
         open_directory_method: string
         open_file_method: string
+        reload_repositories_method: string
 
         protected constructor() {
                 this.saved_application_config = null
@@ -418,6 +422,7 @@ export class GkillAPI {
                 this.gkill_webpush_service_worker_js_address = "/serviceWorker.js"
                 this.open_directory_address = "/api/open_directory"
                 this.open_file_address = "/api/open_file"
+                this.reload_repositories_address = "/api/reload_repositories"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
@@ -494,6 +499,7 @@ export class GkillAPI {
                 this.register_gkill_notification_method = "POST"
                 this.open_directory_method = "POST"
                 this.open_file_method = "POST"
+                this.reload_repositories_method = "POST"
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
@@ -2156,6 +2162,21 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: OpenFileResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async reload_repositories(req: ReloadRepositoriesRequest): Promise<ReloadRepositoriesResponse> {
+                const res = await fetch(this.reload_repositories_address, {
+                        'method': this.reload_repositories_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: ReloadRepositoriesResponse = json
                 this.check_auth(response)
                 return response
         }
