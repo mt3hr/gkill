@@ -385,6 +385,9 @@ func (g *GkillServerAPI) Serve() error {
 	router.HandleFunc(g.APIAddress.ReloadRepositoriesAddress, func(w http.ResponseWriter, r *http.Request) {
 		g.HandleReloadRepositories(w, r)
 	}).Methods(g.APIAddress.ReloadRepositoriesMethod)
+	router.HandleFunc(g.APIAddress.URLogBookmarkletAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleURLogBookmarkletAddress(w, r)
+	}).Methods(g.APIAddress.URLogBookmarkletMethod)
 
 	gkillPage, err := fs.Sub(htmlFS, "embed/html")
 	if err != nil {
@@ -10058,6 +10061,262 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 	return false
 }
 
+func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Content-Type", "application/json")
+
+	request := &req_res.URLogBookmarkletRequest{}
+
+	defer r.Body.Close()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse urlog bookmarklet request to json: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidAddKmemoRequestDataError,
+			ErrorMessage: "URLog追加に失敗しました",
+		}
+		// response.Errors = append(response.Errors, gkillError)
+		_ = gkillError
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		gkill_log.Debug.Printf(err.Error())
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "URLog追加に失敗しました",
+		}
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	var imgBase64 string
+	if request.ImageURL != "" {
+		imgBase64, err = httpGetBase64Data(request.ImageURL)
+		if err != nil {
+			err = fmt.Errorf("error at http get base 64 data from %s: %w", request.ImageURL, err)
+			log.Printf("err = %+v\n", err)
+		}
+	}
+	var faviconBase64 string
+	if request.FaviconURL != "" {
+		faviconBase64, err = httpGetBase64Data(request.FaviconURL)
+		if err != nil {
+			err = fmt.Errorf("error at http get base 64 data from %s: %w", request.FaviconURL, err)
+			log.Printf("err = %+v\n", err)
+		}
+	}
+
+	urlog := &reps.URLog{
+		IsDeleted:      false,
+		ID:             GenerateNewID(),
+		RelatedTime:    time.Now(),
+		CreateTime:     time.Now(),
+		CreateApp:      "urlog_bookmarklet",
+		CreateDevice:   device,
+		CreateUser:     userID,
+		UpdateTime:     time.Now(),
+		UpdateApp:      "urlog_bookmarklet",
+		UpdateUser:     userID,
+		UpdateDevice:   device,
+		URL:            request.URL,
+		Title:          request.Title,
+		Description:    request.Description,
+		FaviconImage:   faviconBase64,
+		ThumbnailImage: imgBase64,
+	}
+
+	// 対象が存在する場合はエラー
+	existURLog, err := repositories.URLogReps.GetURLog(r.Context(), urlog.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetURLogError,
+			ErrorMessage: "URLog追加に失敗しました",
+		}
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if existURLog != nil {
+		err = fmt.Errorf("exist urlog id = %s", urlog.ID)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AleadyExistURLogError,
+			ErrorMessage: "URLog追加に失敗しました",
+		}
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// applicationConfigを取得
+	applicationConfig, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get applicationConfig user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetApplicationConfigError,
+			ErrorMessage: "ApplicationConfig取得に失敗しました",
+		}
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// serverConfigを取得
+	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(r.Context(), device)
+	if err != nil {
+		err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetServerConfigError,
+			ErrorMessage: "ServerConfig取得に失敗しました",
+		}
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	urlog.FillURLogField(serverConfig, applicationConfig)
+
+	err = repositories.WriteURLogRep.AddURLogInfo(r.Context(), urlog)
+	if err != nil {
+		err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddURLogError,
+			ErrorMessage: "URLog追加に失敗しました",
+		}
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetURLogError,
+			ErrorMessage: "URLog追加後取得に失敗しました",
+		}
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		IsDeleted:                urlog.IsDeleted,
+		TargetID:                 urlog.ID,
+		DataUpdateTime:           urlog.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
+	if err != nil {
+		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetURLogError,
+			ErrorMessage: "URLog追加後取得に失敗しました",
+		}
+		_ = gkillError
+		// response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// 通知する
+	// 現在のServerConfigを取得する
+	var currentServerConfig *server_config.ServerConfig
+	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(r.Context())
+	if err != nil {
+		gkill_log.Debug.Print(err)
+		return
+	}
+	for _, serverConfig := range serverConfigs {
+		if serverConfig.EnableThisDevice {
+			currentServerConfig = serverConfig
+		}
+	}
+	if currentServerConfig == nil {
+		err = fmt.Errorf("current server config is not found. in gkill notificator.")
+		gkill_log.Debug.Print(err)
+		return
+	}
+
+	// 送信対象を取得する
+	notificationTargets, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.GetGkillNotificationTargets(r.Context(), userID, currentServerConfig.GkillNotificationPublicKey)
+	if err != nil {
+		err = fmt.Errorf("get notification target. in gkill notificator.: %w", err)
+		gkill_log.Debug.Print(err)
+		return
+	}
+
+	content := &struct {
+		Content string    `json:"content"`
+		URL     string    `json:"url"`
+		Time    time.Time `json:"time"`
+	}{
+		Content: urlog.Title,
+		URL:     "/kyou?kyou_id=" + urlog.ID,
+		Time:    urlog.CreateTime,
+	}
+	contentJSONb, err := json.Marshal(content)
+	if err != nil {
+		err = fmt.Errorf("error at marshal webpush content: %w", err)
+		gkill_log.Debug.Print(err)
+		return
+	}
+
+	for _, notificationTarget := range notificationTargets {
+		subscription := string(notificationTarget.Subscription)
+		s := &webpush.Subscription{}
+		json.Unmarshal([]byte(subscription), s)
+		resp, err := webpush.SendNotification(contentJSONb, s, &webpush.Options{
+			Subscriber:      "example@example.com",
+			VAPIDPublicKey:  currentServerConfig.GkillNotificationPublicKey,
+			VAPIDPrivateKey: currentServerConfig.GkillNotificationPrivateKey,
+			TTL:             0,
+		})
+		if err != nil {
+			err = fmt.Errorf("error at send gkill notification: %w", err)
+		}
+		if resp.Body == nil {
+			return
+		}
+		defer resp.Body.Close()
+	}
+}
+
 func (g *GkillServerAPI) GetDevice() (string, error) {
 	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.Background())
 	if err != nil {
@@ -10095,4 +10354,29 @@ func publicKey(priv any) any {
 	default:
 		return nil
 	}
+}
+
+func httpGetBase64Data(url string) (string, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		err = fmt.Errorf("error at new http get request: %w", err)
+		return "", err
+	}
+	req.Header.Set("Referer", url)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		err = fmt.Errorf("error at http get %s: %w", url, err)
+		return "", err
+	}
+	defer res.Body.Close()
+
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		err = fmt.Errorf("error at read all body %s: %w", url, err)
+		return "", err
+	}
+
+	base64Data := base64.StdEncoding.EncodeToString(b)
+	return base64Data, nil
 }
