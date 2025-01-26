@@ -6303,6 +6303,9 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 	request := &req_res.UploadFilesRequest{}
 	response := &req_res.UploadFilesResponse{}
 
+	g.GkillDAOManager.SetSkipIDF(true)
+	defer g.GkillDAOManager.SetSkipIDF(false)
+
 	defer r.Body.Close()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
@@ -6329,6 +6332,9 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+
+	g.GkillDAOManager.SetSkipIDF(true)
+	defer g.GkillDAOManager.SetSkipIDF(false)
 
 	// アカウントを取得
 	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
@@ -6431,8 +6437,8 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			// ファイル書き込み
 			defer wg.Done()
 			var gkillError *message.GkillError
-			base64Reader := bufio.NewReader(strings.NewReader(base64Data))
-			decoder := base64.NewDecoder(base64.RawStdEncoding.Strict(), base64Reader)
+			base64Reader := bufio.NewReader(strings.NewReader(strings.SplitN(base64Data, ",", 2)[1]))
+			decoder := base64.NewDecoder(base64.RawStdEncoding, base64Reader)
 
 			file, err := os.OpenFile(filename, os.O_CREATE, os.ModePerm)
 			if err != nil {
@@ -6461,7 +6467,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 				UpdateApp:    "gkill",
 				UpdateUser:   userID,
 				UpdateDevice: device,
-				TargetFile:   filename,
+				TargetFile:   filepath.Base(filename),
 				RepName:      request.TargetRepName, // 無視される
 				DataType:     "idf",                 // 無視される
 				FileURL:      "",                    // 無視される
@@ -6523,6 +6529,14 @@ loop:
 					DataUpdateTime:           idfKyou.UpdateTime,
 					LatestDataRepositoryName: repName,
 				})
+				if err != nil {
+					err = fmt.Errorf("error at update or add latest data repository address: %w", err)
+					gkill_log.Debug.Printf(err.Error())
+					gkillError = &message.GkillError{
+						ErrorCode:    message.UpdateRepositoryAddressError,
+						ErrorMessage: "ファイルアップロードに失敗しました",
+					}
+				}
 			}
 		default:
 			break loop
@@ -6651,13 +6665,13 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 	}
 
 	// ファイルを保存/GPSLogを追加する
-	repDir := ""
 	gkillErrors := []*message.GkillError{}
 	gpsLogsCh := make(chan []*reps.GPSLog, len(request.GPSLogFiles))
 	gkillErrorCh := make(chan *message.GkillError, len(request.GPSLogFiles))
 	defer close(gpsLogsCh)
 	defer close(gkillErrorCh)
 	wg := &sync.WaitGroup{}
+	repDir := ""
 	for _, fileInfo := range request.GPSLogFiles {
 		repDir, err = targetRep.GetPath(r.Context(), "")
 		if err != nil {
@@ -6675,23 +6689,11 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		go func(filename string, base64Data string) {
 			// テンポラリファイル書き込み
 			defer wg.Done()
-			tempFile, err := os.CreateTemp("gkill_gpx_temp", filename)
+			base64Reader := bufio.NewReader(strings.NewReader(strings.SplitN(base64Data, ",", 2)[1]))
+			decoder := base64.NewDecoder(base64.RawStdEncoding, base64Reader)
+			base64DataBytes, err := io.ReadAll(decoder)
 			if err != nil {
-				err = fmt.Errorf("error at create temp file %s: %w", filename, err)
-				gkill_log.Debug.Printf(err.Error())
-				gkillError = &message.GkillError{
-					ErrorCode:    message.ConvertGPSLogError,
-					ErrorMessage: "GPSLogファイルアップロードに失敗しました",
-				}
-				gkillErrorCh <- gkillError
-				return
-			}
-			defer tempFile.SetDeadline(time.Now())
-			base64Reader := bufio.NewReader(strings.NewReader(base64Data))
-			decoder := base64.NewDecoder(base64.RawStdEncoding.Strict(), base64Reader)
-			_, err = io.Copy(tempFile, decoder)
-			if err != nil {
-				err = fmt.Errorf("error at write temp file %s: %w", filename, err)
+				err := fmt.Errorf("error at load gps log file content filename = %s: %w", filename, err)
 				gkill_log.Debug.Printf(err.Error())
 				gkillError = &message.GkillError{
 					ErrorCode:    message.ConvertGPSLogError,
@@ -6702,8 +6704,8 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 			}
 
 			var gkillError *message.GkillError
-			// gpsLogを作る
-			gpsLog, err := gpslogs.GPSLogFileAsGPSLogs(repDir, filename, request.ConflictBehavior, base64Data)
+			// gpsLogsを作る
+			gpsLogs, err := gpslogs.GPSLogFileAsGPSLogs(repDir, filename, request.ConflictBehavior, string(base64DataBytes))
 			if err != nil {
 				err := fmt.Errorf("error at gps log file as gpx file filename = %s: %w", filename, err)
 				gkill_log.Debug.Printf(err.Error())
@@ -6714,7 +6716,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 				gkillErrorCh <- gkillError
 				return
 			}
-			gpsLogsCh <- gpsLog
+			gpsLogsCh <- gpsLogs
 		}(fileInfo.FileName, fileInfo.DataBase64)
 	}
 	wg.Wait()
@@ -6750,7 +6752,7 @@ loop:
 	}
 
 	// 日ごとに分ける
-	const dateFormat = "20220401"
+	const dateFormat = "20060102"
 	gpsLogDateMap := map[string][]*reps.GPSLog{}
 	fileCount := 0
 	for _, gpsLog := range uploadedGPSLogs {
@@ -6783,6 +6785,7 @@ loop:
 
 		wg2.Add(1)
 		go func(filename string, gpsLogs []*reps.GPSLog) {
+			defer wg2.Done()
 			// Mergeだったら既存のデータも混ぜる
 			if request.ConflictBehavior == req_res.Merge {
 				startTime, err := time.Parse(dateFormat, datestr)
@@ -6807,7 +6810,7 @@ loop:
 				gkillErrorCh2 <- gkillError
 				return
 			}
-			file, err := os.OpenFile(filename, os.O_CREATE, os.ModePerm)
+			file, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC, os.ModePerm)
 			if err != nil {
 				err := fmt.Errorf("error at open file filename= %s: %w", filename, err)
 				gkill_log.Debug.Printf(err.Error())
@@ -6830,9 +6833,9 @@ loop:
 				gkillErrorCh <- gkillError
 				return
 			}
-
 		}(estimateCreateFileName, gpsLogs)
 	}
+	wg2.Wait()
 
 	// エラー集約
 errloop2:
@@ -9257,13 +9260,13 @@ func GenerateNewID() string {
 func (g *GkillServerAPI) resolveFileName(repDir string, filename string, behavior req_res.FileUploadConflictBehavior) (string, error) {
 	fullFilename := filepath.Join(repDir, filename)
 	_, err := os.Stat(fullFilename)
-	if err == nil {
+	if err != nil {
 		return fullFilename, nil
 	} else {
-		switch behavior {
-		case req_res.Override:
+		switch string(behavior) {
+		case string(req_res.Override):
 			return fullFilename, nil
-		case req_res.Rename:
+		case string(req_res.Rename):
 			// カッコのついていないファイル名。例えば「hogehoge (1).txt」なら「hogehoge.txt」。
 			planeFileName := g.planeFileName(fullFilename)
 			ext := filepath.Ext(planeFileName)
@@ -9293,7 +9296,7 @@ func (g *GkillServerAPI) resolveFileName(repDir string, filename string, behavio
 				})
 			}
 			return fullFilename, nil
-		case req_res.Merge:
+		case string(req_res.Merge):
 			return fullFilename, nil
 		}
 	}
@@ -9315,8 +9318,8 @@ func (g *GkillServerAPI) generateGPXFileContent(gpsLogs []*reps.GPSLog) (string,
 	}
 	gpxData.Trk[0].TrkSeg[0].TrkPt = trkPts
 
-	gpsDataResult := ""
-	writer := bufio.NewWriter(bytes.NewBufferString(gpsDataResult))
+	buf := bytes.NewBufferString("")
+	writer := bufio.NewWriter(buf)
 	err := gpxData.Write(writer)
 	if err != nil {
 		err = fmt.Errorf("error at write gpx data: %w", err)
@@ -9329,7 +9332,7 @@ func (g *GkillServerAPI) generateGPXFileContent(gpsLogs []*reps.GPSLog) (string,
 		return "", err
 	}
 
-	return gpsDataResult, nil
+	return buf.String(), nil
 }
 
 func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *account.Account) error {
