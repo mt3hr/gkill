@@ -16,4 +16,6 @@ type Repository struct {
 	IsExecuteIDFWhenReload bool `json:"is_execute_idf_when_reload"`
 
 	IsEnable bool `json:"is_enable"`
+
+	RepName string `json:"rep_name"`
 }

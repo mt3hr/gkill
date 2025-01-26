@@ -34,6 +34,9 @@
                         <v-list-item @click="show_lantana_dialog()">
                             <v-list-item-title>lantana</v-list-item-title>
                         </v-list-item>
+                        <v-list-item @click="show_upload_file_dialog()">
+                            <v-list-item-title>アップロード</v-list-item-title>
+                        </v-list-item>
                     </v-list>
                 </v-menu>
             </v-avatar>
@@ -62,6 +65,9 @@
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 :app_content_width="app_content_width" @received_errors="write_errors"
                 @received_messages="write_messages" ref="kftl_dialog" />
+            <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+                :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
+                @received_errors="write_errors" @received_messages="write_messages" ref="upload_file_dialog" />
         </v-main>
         <div class="alert_container">
             <v-slide-y-transition group>
@@ -89,6 +95,7 @@ import AddUrlogDialog from './dialogs/add-urlog-dialog.vue'
 import AddMiDialog from './dialogs/add-mi-dialog.vue'
 import AddNlogDialog from './dialogs/add-nlog-dialog.vue'
 import kftlDialog from './dialogs/kftl-dialog.vue'
+import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
 const add_nlog_dialog = ref<InstanceType<typeof AddNlogDialog> | null>(null);
@@ -96,6 +103,7 @@ const add_lantana_dialog = ref<InstanceType<typeof AddLantanaDialog> | null>(nul
 const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null);
 const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof kftlDialog> | null>(null);
+const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(false)
@@ -129,6 +137,9 @@ async function show_dialog(): Promise<void> {
             break
         case 'kftl':
             show_kftl_dialog()
+            break
+        case 'file':
+            show_upload_file_dialog()
             break
         default:
             break
@@ -257,6 +268,10 @@ function show_lantana_dialog(): void {
 
 function show_urlog_dialog(): void {
     add_urlog_dialog.value?.show()
+}
+
+function show_upload_file_dialog(): void {
+    upload_file_dialog.value?.show()
 }
 
 </script>

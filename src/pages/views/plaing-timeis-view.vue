@@ -54,7 +54,10 @@
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="reload_list(false)"
             ref="kftl_dialog" />
-
+        <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)" ref="upload_file_dialog" />
         <v-avatar :style="floatingActionButtonStyle()" color="indigo" class="position-fixed">
             <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
                 <template v-slot:activator="{ props }">
@@ -79,6 +82,9 @@
                     <v-list-item @click="show_lantana_dialog()">
                         <v-list-item-title>lantana</v-list-item-title>
                     </v-list-item>
+                    <v-list-item @click="show_upload_file_dialog()">
+                        <v-list-item-title>アップロード</v-list-item-title>
+                    </v-list-item>
                 </v-list>
             </v-menu>
         </v-avatar>
@@ -97,6 +103,7 @@ import type KftlDialog from '../dialogs/kftl-dialog.vue'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
 import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
+import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import moment from 'moment'
 import type { PlaingTimeIsViewProps } from './plaing-timeis-view-props'
 import type { PlaingTimeIsViewEmits } from './plaing-timeis-emits'
@@ -110,6 +117,7 @@ const add_lantana_dialog = ref<InstanceType<typeof AddLantanaDialog> | null>(nul
 const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null);
 const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
+const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
 const kyou_list_views = ref();
 
 const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
@@ -281,6 +289,9 @@ function show_urlog_dialog(): void {
     add_urlog_dialog.value?.show()
 }
 
+function show_upload_file_dialog(): void {
+    upload_file_dialog.value?.show()
+}
 </script>
 <style lang="css">
 .plaing_timeis_view_table {

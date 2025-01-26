@@ -40,10 +40,14 @@ type GkillDAOManager struct {
 	debugLogFile     *os.File
 	traceLogFile     *os.File
 	traceSQLLogFile  *os.File
+
+	skipUpdateCache *bool
 }
 
 func NewGkillDAOManager() (*GkillDAOManager, error) {
-	fileRepWatchCacheUpdater, err := rep_cache_updater.NewFileRepCacheUpdater()
+	skipUpdateCache := false
+
+	fileRepWatchCacheUpdater, err := rep_cache_updater.NewFileRepCacheUpdater(&skipUpdateCache)
 	if err != nil {
 		err = fmt.Errorf("error at new file rep cache updater: %w", err)
 		return nil, err
@@ -70,6 +74,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 			"id.db",
 		},
 		fileRepWatchCacheUpdater: fileRepWatchCacheUpdater,
+		skipUpdateCache:          &skipUpdateCache,
 	}
 
 	configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)
@@ -884,6 +889,10 @@ func (g *GkillDAOManager) Close() error {
 	}
 
 	return err
+}
+
+func (g *GkillDAOManager) SetSkipIDF(skip bool) {
+	*g.skipUpdateCache = skip
 }
 
 func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (bool, error) {

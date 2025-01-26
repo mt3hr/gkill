@@ -14,8 +14,8 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>日時</label>
-                <input class="input" type="date" v-model="related_date" label="日付" />
-                <input class="input" type="time" v-model="related_time" label="時刻" />
+                <input class="input date" type="date" v-model="related_date" label="日付" />
+                <input class="input time" type="time" v-model="related_time" label="時刻" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
@@ -190,5 +190,11 @@ table,
 tr,
 td {
     border-spacing: 0 !important;
+}
+
+.input.date,
+.input.time,
+.input.text {
+    border: solid 1px silver;
 }
 </style>
