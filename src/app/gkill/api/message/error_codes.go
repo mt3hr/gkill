@@ -300,4 +300,6 @@ const (
 	OpenFolderError                                                  = "ERR000295"
 	OpenFolderNotLocalAccountError                                   = "ERR000296"
 	InvalidReloadRepositoriesResponse                                = "ERR000297"
+	IDFError                                                         = "ERR000298"
+	UpdateRepositoryAddressError                                     = "ERR000299"
 )

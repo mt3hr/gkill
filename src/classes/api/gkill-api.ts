@@ -1670,6 +1670,24 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: UploadFilesResponse = json
                 this.check_auth(response)
+
+                for (const key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.uploaded_kyous.length; i++) {
+                        const kyou = new Kyou()
+                        for (const key in response.uploaded_kyous[i]) {
+                                (kyou as any)[key] = (response.uploaded_kyous[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (kyou as any)[key]) {
+                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                }
+                        }
+                        response.uploaded_kyous[i] = kyou
+                }
+
                 return response
         }
 

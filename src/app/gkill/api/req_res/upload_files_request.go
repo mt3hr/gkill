@@ -1,11 +1,11 @@
 package req_res
 
 type UploadFilesRequest struct {
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	Files []*FileData
+	Files []*FileData `json:"files"`
 
-	TargetRepName string
+	TargetRepName string `json:"target_rep_name"`
 
-	ConflictBehavior FileUploadConflictBehavior
+	ConflictBehavior FileUploadConflictBehavior `json:"conflict_behavior"`
 }
