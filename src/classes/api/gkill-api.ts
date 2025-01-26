@@ -266,6 +266,7 @@ export class GkillAPI {
         open_directory_address: string
         open_file_address: string
         reload_repositories_address: string
+        urlog_bookmarklet_address: string
 
         login_method: string
         logout_method: string
@@ -344,6 +345,7 @@ export class GkillAPI {
         open_directory_method: string
         open_file_method: string
         reload_repositories_method: string
+        urlog_bookmarklet_method: string
 
         protected constructor() {
                 this.saved_application_config = null
@@ -423,6 +425,7 @@ export class GkillAPI {
                 this.open_directory_address = "/api/open_directory"
                 this.open_file_address = "/api/open_file"
                 this.reload_repositories_address = "/api/reload_repositories"
+                this.urlog_bookmarklet_address = "/api/urlog_bookmarklet"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
@@ -500,6 +503,7 @@ export class GkillAPI {
                 this.open_directory_method = "POST"
                 this.open_file_method = "POST"
                 this.reload_repositories_method = "POST"
+                this.urlog_bookmarklet_method = "POST"
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
