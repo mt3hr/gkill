@@ -153,6 +153,8 @@ type GkillServerAPIAddress struct {
 
 	ReloadRepositoriesAddress string
 
+	URLogBookmarkletAddress string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -302,6 +304,8 @@ type GkillServerAPIAddress struct {
 	OpenFileMethod string
 
 	ReloadRepositoriesMethod string
+
+	URLogBookmarkletMethod string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -383,6 +387,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.OpenDirectoryAddress = "/api/open_directory"
 	gkillAPIAddress.OpenFileAddress = "/api/open_file"
 	gkillAPIAddress.ReloadRepositoriesAddress = "/api/reload_repositories"
+	gkillAPIAddress.URLogBookmarkletAddress = "/api/urlog_bookmarklet"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
@@ -458,5 +463,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.OpenDirectoryMethod = "POST"
 	gkillAPIAddress.OpenFileMethod = "POST"
 	gkillAPIAddress.ReloadRepositoriesMethod = "POST"
+	gkillAPIAddress.URLogBookmarkletMethod = "POST"
 	return gkillAPIAddress
 }

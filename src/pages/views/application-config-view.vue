@@ -66,7 +66,15 @@
                         <v-checkbox v-model="rykv_hot_reload" hide-detail label="rykvホットリロード" />
                     </td>
                 </tr>
-
+                <tr>
+                    <td>
+                        URLogブックマークレット
+                    </td>
+                    <td>
+                        <v-text-field width="400" v-model="urlog_bookmarklet" readonly
+                            @focus="$event.target.select()"></v-text-field>
+                    </td>
+                </tr>
             </table>
             <table>
                 <tr>
@@ -279,6 +287,66 @@ async function reload_repositories(): Promise<void> {
     }
     is_loading.value = false
 }
+
+const urlog_bookmarklet: Ref<string> = ref((`
+javascript: (function () {
+	function genURLog() {
+		let description = '';
+		let image_url = '';
+		
+		if (new URL(location.href).host == "www.youtube.com") {
+			let youtubeDescriptionTag = document.querySelector('#description > yt-formatted-string');
+			if (youtubeDescriptionTag !== null) {
+				description = youtubeDescriptionTag.textContent;
+			}
+		}
+		if (description == '') {
+			let descriptionTag = document.querySelector("meta[name='description']");
+			if (descriptionTag !== null) {
+				description = descriptionTag.getAttribute('content');
+			} else {
+				descriptionTag = document.querySelector("meta[property='og:description']");
+				if (descriptionTag !== null) {
+					description = descriptionTag.getAttribute('content');
+				}
+			}
+		}
+
+		if (new URL(location.href).host == "www.amazon.co.jp" || new URL(location.href).host == "www.amazon.com") {
+			let amazonImageTag = document.querySelector('#landingImage');
+			if (amazonImageTag !== null) {
+				image_url = amazonImageTag.getAttribute('src');
+			}
+		}
+		if (image_url == '') {
+			let imageOGTag = document.querySelector('meta[property="og:image"]');
+			if (imageOGTag !== null) {
+				image_url = imageOGTag.getAttribute('content');
+			}
+		}
+
+		return {
+			url: location.href,
+			title: document.title,
+			time: new Date().toISOString(),
+			favicon_url: 'http://www.google.com/s2/favicons?domain=' + new URL(location.href).host,
+			description: description,
+			image_url: image_url,
+			session_id: '`+ props.gkill_api.get_session_id() + `',
+		};
+	};
+	function sendURLog() {
+		let urlog = JSON.stringify(genURLog());
+		fetch('`  + location.protocol + "//" + location.host + props.gkill_api.urlog_bookmarklet_address + `', {
+			method: '`+ props.gkill_api.urlog_bookmarklet_method + `',
+            mode: 'no-cors',
+			headers: { 'Content-Type': 'application/json' },
+				body: urlog
+			}
+		)
+	};
+	addEventListener('onload', sendURLog());
+}());`).replace("\n", "").replace("\t", ""))
 
 load_mi_board_names()
 </script>
