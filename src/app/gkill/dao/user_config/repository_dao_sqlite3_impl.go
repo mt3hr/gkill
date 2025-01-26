@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"path/filepath"
 	"sync"
 
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
@@ -102,6 +103,10 @@ FROM REPOSITORY
 				&repository.IsExecuteIDFWhenReload,
 				&repository.IsEnable,
 			)
+			base := filepath.Base(repository.File)
+			ext := filepath.Ext(base)
+			withoutExt := base[:len(base)-len(ext)]
+			repository.RepName = withoutExt
 			repositories = append(repositories, repository)
 		}
 	}
@@ -160,6 +165,11 @@ WHERE USER_ID = ? AND DEVICE = ?
 				&repository.IsExecuteIDFWhenReload,
 				&repository.IsEnable,
 			)
+			base := filepath.Base(repository.File)
+			ext := filepath.Ext(base)
+			withoutExt := base[:len(base)-len(ext)]
+			repository.RepName = withoutExt
+
 			repositories = append(repositories, repository)
 		}
 	}

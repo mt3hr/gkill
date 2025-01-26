@@ -1,5 +1,5 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog" persistent>
         <ProgressUploadGPSFileView :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" @uploaded_kyous="hide()" />
@@ -10,6 +10,7 @@ import { type Ref, ref } from 'vue'
 import type { ProgressUploadGPSFileDialogEmits } from './progress-upload-gps-file-dialog-emits'
 import type { ProgressUploadGPSFileDialogProps } from './progress-upload-gps-file-dialog-props'
 import ProgressUploadGPSFileView from '../views/progress-upload-gps-file-view.vue'
+
 defineProps<ProgressUploadGPSFileDialogProps>()
 const emits = defineEmits<ProgressUploadGPSFileDialogEmits>()
 defineExpose({ show, hide })

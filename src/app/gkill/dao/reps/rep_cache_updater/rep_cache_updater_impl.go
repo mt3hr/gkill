@@ -5,15 +5,17 @@ import (
 	"sync"
 )
 
-func NewFileRepCacheUpdater() (FileRepCacheUpdater, error) {
+func NewFileRepCacheUpdater(skip *bool) (FileRepCacheUpdater, error) {
 	return &fileRepCacheUpdaterImpl{
 		watchTargets: map[string]*watchTargetEntry{},
+		skip:         skip,
 	}, nil
 }
 
 type fileRepCacheUpdaterImpl struct {
 	m            sync.Mutex
 	watchTargets map[string]*watchTargetEntry // map[対象ファイル名] = 監視対象の情報
+	skip         *bool
 }
 
 func (f *fileRepCacheUpdaterImpl) RegisterWatchFileRep(rep CacheUpdatable, filename string, ignoreFilePrefixes []string, userID string) error {
@@ -25,7 +27,7 @@ func (f *fileRepCacheUpdaterImpl) RegisterWatchFileRep(rep CacheUpdatable, filen
 	target, exist := f.watchTargets[filename]
 	if !exist {
 		// なかったら作って監視を開始する
-		target, err = newWatchTargetEntry(rep, filename, ignoreFilePrefixes)
+		target, err = newWatchTargetEntry(rep, filename, ignoreFilePrefixes, f.skip)
 		if err != nil {
 			err = fmt.Errorf("error at new watch target entry: %w", err)
 			return err

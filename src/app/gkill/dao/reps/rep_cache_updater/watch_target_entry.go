@@ -18,9 +18,11 @@ type watchTargetEntry struct {
 	watcher        *fsnotify.Watcher
 	requestCloseCh chan interface{}
 	watchUsers     map[string]struct{}
+
+	skip *bool
 }
 
-func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes []string) (*watchTargetEntry, error) {
+func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes []string, skip *bool) (*watchTargetEntry, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		err = fmt.Errorf("error at new watcher: %w", err)
@@ -65,6 +67,10 @@ func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes
 					continue
 				}
 
+				if *skip {
+					continue
+				}
+
 				// 無視対象でなければキャッシュを更新する
 				err := rep.UpdateCache(context.TODO())
 				if err != nil {
@@ -92,6 +98,8 @@ func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes
 		requestCloseCh: requestCloseCh,
 
 		watchUsers: map[string]struct{}{},
+
+		skip: skip,
 	}, nil
 }
 

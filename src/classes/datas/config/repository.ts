@@ -17,6 +17,8 @@ export class Repository {
 
     is_enable: boolean
 
+    rep_name: string
+
     constructor() {
         this.id = ""
         this.user_id = ""
@@ -26,6 +28,7 @@ export class Repository {
         this.use_to_write = false
         this.is_execute_idf_when_reload = false
         this.is_enable = false
+        this.rep_name = ""
     }
 
 }

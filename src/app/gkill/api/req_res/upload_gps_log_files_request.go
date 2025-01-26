@@ -1,11 +1,11 @@
 package req_res
 
 type UploadGPSLogFilesRequest struct {
-	SessionID string
+	SessionID string `json:"session_id"`
 
-	GPSLogFiles []*FileData
+	GPSLogFiles []*FileData `json:"gps_log_files"`
 
-	TargetRepName string
+	TargetRepName string `json:"target_rep_name"`
 
-	ConflictBehavior FileUploadConflictBehavior
+	ConflictBehavior FileUploadConflictBehavior `json:"conflict_behavior"`
 }
