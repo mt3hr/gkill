@@ -322,9 +322,11 @@ function emits_cleard_calendar_query(): void {
 }
 
 function emits_default_query(): void {
+    const board_name = props.find_kyou_query.mi_board_name
     const find_query = default_query.value.clone()
     find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_mi_board_name = false
+    find_query.mi_board_name= board_name
     query.value = find_query
     emits('updated_query_clear', find_query)
 }
