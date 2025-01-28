@@ -27,7 +27,7 @@
             </v-btn>
 
             <v-divider vertical />
-            <v-btn icon="mdi-cog" @click="emits('requested_show_application_config_dialog')" />
+            <v-btn icon="mdi-cog" :disabled="!inited" @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
         <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height"
             :mobile="drawer_mode_is_mobile">

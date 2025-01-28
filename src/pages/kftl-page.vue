@@ -19,7 +19,7 @@
             </v-toolbar-title>
             <v-spacer />
             <v-divider vertical />
-            <v-btn icon="mdi-cog" @click="is_show_application_config_dialog = true" />
+            <v-btn icon="mdi-cog" :disabled="!application_config.is_loaded" @click="show_application_config_dialog()" />
         </v-app-bar>
         <v-main class="main">
             <div class="overlay_target">
@@ -33,7 +33,8 @@
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :is_show="is_show_application_config_dialog" @received_errors="write_errors"
-                @received_messages="write_messages" @requested_reload_application_config="load_application_config" />
+                @received_messages="write_messages" @requested_reload_application_config="load_application_config"
+                ref="application_config_dialog" />
         </v-main>
         <div class="alert_container">
             <v-slide-y-transition group>
@@ -59,6 +60,8 @@ import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
 import kftlView from './views/kftl-view.vue'
 import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
+
+const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -218,6 +221,9 @@ async function register_gkill_task_notification(): Promise<void> {
     }
 }
 
+function show_application_config_dialog(): void {
+    application_config_dialog.value?.show()
+}
 </script>
 <style lang="css">
 /* 不要なスクロールバーを消す */
