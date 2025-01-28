@@ -1644,6 +1644,7 @@ export class GkillAPI {
                 this.check_auth(response)
 
                 this.set_google_map_api_key(response.application_config.google_map_api_key)
+                response.application_config.is_loaded = true
                 return response
         }
 
