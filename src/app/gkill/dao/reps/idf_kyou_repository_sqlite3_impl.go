@@ -220,7 +220,7 @@ WHERE
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
 			idf.IsVideo = i.isVideo(idf.TargetFile)
-			idf.IsImage = i.isAudio(idf.TargetFile)
+			idf.IsAudio = i.isAudio(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
