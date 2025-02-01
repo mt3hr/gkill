@@ -703,14 +703,42 @@ function show_upload_file_dialog(): void {
     min-width: calc(400px + 8px);
 }
 
-.kyou_detail_view img.kyou_image {
+.kyou_detail_view .kyou_image {
     width: unset !important;
     height: fit-content !important;
     max-width: calc(400px - 2px) !important;
     max-height: 85vh !important;
 }
 
-.kyou_dialog img.kyou_image {
+.kyou_detail_view .kyou_video {
+    width: unset !important;
+    height: fit-content !important;
+    max-width: calc(400px - 2px) !important;
+    max-height: 85vh !important;
+}
+
+.kyou_detail_view .kyou_audio {
+    width: unset !important;
+    height: fit-content !important;
+    max-width: calc(400px - 2px) !important;
+    max-height: 85vh !important;
+}
+
+.kyou_dialog .kyou_image {
+    width: unset !important;
+    height: unset !important;
+    max-width: 85vw !important;
+    max-height: 85vh !important;
+}
+
+.kyou_dialog .kyou_video {
+    width: unset !important;
+    height: unset !important;
+    max-width: 85vw !important;
+    max-height: 85vh !important;
+}
+
+.kyou_dialog .kyou_audio {
     width: unset !important;
     height: unset !important;
     max-width: 85vw !important;

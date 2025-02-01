@@ -158,7 +158,7 @@ WHERE
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
-	findWordTargetColumns := []string{}
+	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
 	appendOrderBy := true
 	appendGroupBy := true
@@ -219,6 +219,8 @@ WHERE
 
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
+			idf.IsVideo = i.isVideo(idf.TargetFile)
+			idf.IsImage = i.isAudio(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -428,7 +430,7 @@ WHERE
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
-	findWordTargetColumns := []string{}
+	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
 	appendOrderBy := true
 	appendGroupBy := false
@@ -486,6 +488,8 @@ WHERE
 
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
+			idf.IsVideo = i.isVideo(idf.TargetFile)
+			idf.IsAudio = i.isAudio(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -635,6 +639,8 @@ WHERE
 
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
+			idf.IsVideo = i.isVideo(idf.TargetFile)
+			idf.IsAudio = i.isAudio(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -736,7 +742,7 @@ WHERE
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
-	findWordTargetColumns := []string{}
+	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
 	appendOrderBy := true
 	appendGroupBy := true
@@ -799,6 +805,8 @@ WHERE
 
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
+			idf.IsVideo = i.isVideo(idf.TargetFile)
+			idf.IsAudio = i.isAudio(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -1036,6 +1044,8 @@ WHERE
 
 			// 画像であるか判定
 			idf.IsImage = i.isImage(idf.TargetFile)
+			idf.IsVideo = i.isVideo(idf.TargetFile)
+			idf.IsAudio = i.isAudio(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -1298,12 +1308,101 @@ func (i *idfKyouRepositorySQLite3Impl) HandleFileServe(w http.ResponseWriter, r 
 func (i *idfKyouRepositorySQLite3Impl) isImage(filename string) bool {
 	ext := strings.ToLower(filepath.Ext(filename))
 	switch ext {
-	case ".jpg",
+	case ".apng",
+		".avif",
+		".gif",
+		".jpg",
 		".jpeg",
 		".jfif",
+		".pjpeg",
+		".pjp",
 		".png",
-		".gif",
-		".bmp":
+		".svg",
+		".webp",
+		".bmp",
+		".ico",
+		".cur",
+		".tif",
+		".tiff",
+		".tga",
+		".dds",
+		".heif",
+		".heic",
+		".jpe",
+		".jif",
+		".jfi",
+		".jp2",
+		".j2k",
+		".jpf",
+		".jpx",
+		".jpm",
+		".mj2",
+		".xpm",
+		".wbmp",
+		".xbm",
+		".pcx",
+		".pnm",
+		".pgm",
+		".pbm",
+		".ppm",
+		".pam",
+		".pfm":
+		return true
+	}
+	return false
+}
+
+func (i *idfKyouRepositorySQLite3Impl) isVideo(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch ext {
+	case ".mp4",
+		".webm",
+		".avi",
+		".mov",
+		".mpg",
+		".mkv",
+		".mwv",
+		".flv",
+		".asf",
+		".f4v",
+		".m4v",
+		".3gp",
+		".3g2",
+		".3gp2",
+		".3gpp",
+		".ogv",
+		".ogm",
+		".ts",
+		".vob",
+		".rm",
+		".rmvb",
+		".wmv",
+		".mks",
+		".mk3d":
+		return true
+	}
+	return false
+}
+
+func (i *idfKyouRepositorySQLite3Impl) isAudio(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	switch ext {
+	case
+		".mp3",
+		".aac",
+		".m4a",
+		".m4b",
+		".m4p",
+		".m4r",
+		".ogg",
+		".oga",
+		".spx",
+		".opus",
+		".flac",
+		".wav",
+		".weba",
+		".mka",
+		".wma":
 		return true
 	}
 	return false
