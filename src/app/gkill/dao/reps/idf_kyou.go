@@ -34,4 +34,8 @@ type IDFKyou struct {
 	FileURL string `json:"file_url"`
 
 	IsImage bool `json:"is_image"`
+
+	IsVideo bool `json:"is_video"`
+
+	IsAudio bool `json:"is_audio"`
 }
