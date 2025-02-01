@@ -103,19 +103,19 @@ loop:
 				}
 			}
 
-			// ワードand検索である場合の判定
-			if query.WordsAnd != nil && *query.WordsAnd {
-				match = false
-				words := []string{}
-				if query.Words != nil {
-					words = *query.Words
-				}
-				notWords := []string{}
-				if query.NotWords != nil {
-					notWords = *query.NotWords
-				}
+			words := []string{}
+			notWords := []string{}
+			if query.Words != nil {
+				words = *query.Words
+			}
+			if query.NotWords != nil {
+				notWords = *query.NotWords
+			}
 
+			if query.UseWords != nil && *query.UseWords {
+				// ワードand検索である場合の判定
 				if query.WordsAnd != nil && *query.WordsAnd {
+					match = true
 					for _, word := range words {
 						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
 						if !match {
@@ -125,16 +125,14 @@ loop:
 					if !match {
 						continue
 					}
-				} else {
+				} else if query.WordsAnd != nil && !(*query.WordsAnd) {
 					// ワードor検索である場合の判定
+					match = false
 					for _, word := range words {
 						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
-						if !match {
+						if match {
 							break
 						}
-					}
-					if !match {
-						continue
 					}
 				}
 
@@ -142,13 +140,12 @@ loop:
 				for _, notWord := range notWords {
 					match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)
 					if match {
+						match = false
 						break
 					}
 				}
-				if !match {
-					continue
-				}
 			}
+
 			if !match {
 				continue
 			}
@@ -347,15 +344,19 @@ loop:
 				}
 			}
 
-			// ワードand検索である場合の判定
-			if query.WordsAnd != nil {
-				match = false
-				// ワードを解析
+			words := []string{}
+			notWords := []string{}
+			if query.Words != nil {
+				words = *query.Words
+			}
+			if query.NotWords != nil {
+				notWords = *query.NotWords
+			}
+
+			if query.UseWords != nil && *query.UseWords {
+				// ワードand検索である場合の判定
 				if query.WordsAnd != nil && *query.WordsAnd {
-					words := []string{}
-					if query.Words != nil {
-						words = *query.Words
-					}
+					match = true
 					for _, word := range words {
 						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
 						if !match {
@@ -365,38 +366,26 @@ loop:
 					if !match {
 						continue
 					}
-				} else {
-					words := []string{}
-					if query.Words != nil {
-						words = *query.Words
-					}
+				} else if query.WordsAnd != nil && !(*query.WordsAnd) {
 					// ワードor検索である場合の判定
+					match = false
 					for _, word := range words {
 						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
 						if match {
 							break
 						}
 					}
-					if !match {
-						continue
-					}
-				}
-
-				notWords := []string{}
-				if query.NotWords != nil {
-					notWords = *query.NotWords
 				}
 				// notワードを除外する場合の判定
 				for _, notWord := range notWords {
 					match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)
 					if match {
+						match = false
 						break
 					}
 				}
-				if !match {
-					continue
-				}
 			}
+
 			if !match {
 				continue
 			}
