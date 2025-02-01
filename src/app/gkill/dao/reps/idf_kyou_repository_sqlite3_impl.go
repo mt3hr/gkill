@@ -294,31 +294,29 @@ WHERE
 
 			match := true
 			if query.UseWords != nil && *query.UseWords {
+				// ワードand検索である場合の判定
 				if query.WordsAnd != nil && *query.WordsAnd {
-					// ワードand検索である場合の判定
-					if query.WordsAnd != nil && *query.WordsAnd {
-						match = true
-						for _, word := range words {
-							match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
-							if !match {
-								break
-							}
-						}
+					match = true
+					for _, word := range words {
+						match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
 						if !match {
 							break
 						}
-					} else if query.WordsAnd != nil && !(*query.WordsAnd) {
-						// ワードor検索である場合の判定
-						match = false
-						for _, word := range words {
-							match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
-							if match {
-								break
-							}
-						}
+					}
+					if !match {
+						continue
+					}
+				} else if query.WordsAnd != nil && !(*query.WordsAnd) {
+					// ワードor検索である場合の判定
+					match = false
+					for _, word := range words {
+						match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
 						if match {
 							break
 						}
+					}
+					if match {
+						continue
 					}
 				}
 				// notワードを除外する場合の判定
@@ -864,31 +862,29 @@ WHERE
 
 			match := true
 			if query.UseWords != nil && *query.UseWords {
+				// ワードand検索である場合の判定
 				if query.WordsAnd != nil && *query.WordsAnd {
-					// ワードand検索である場合の判定
-					if query.WordsAnd != nil && *query.WordsAnd {
-						match = true
-						for _, word := range words {
-							match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
-							if !match {
-								break
-							}
-						}
+					match = true
+					for _, word := range words {
+						match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
 						if !match {
 							break
 						}
-					} else if query.WordsAnd != nil && !(*query.WordsAnd) {
-						// ワードor検索である場合の判定
-						match = false
-						for _, word := range words {
-							match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
-							if match {
-								break
-							}
-						}
+					}
+					if !match {
+						continue
+					}
+				} else if query.WordsAnd != nil && !(*query.WordsAnd) {
+					// ワードor検索である場合の判定
+					match = false
+					for _, word := range words {
+						match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
 						if match {
 							break
 						}
+					}
+					if match {
+						continue
 					}
 				}
 				// notワードを除外する場合の判定
