@@ -117,7 +117,7 @@ loop:
 				if query.WordsAnd != nil && *query.WordsAnd {
 					match = true
 					for _, word := range words {
-						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
+						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word))
 						if !match {
 							break
 						}
@@ -129,7 +129,7 @@ loop:
 					// ワードor検索である場合の判定
 					match = false
 					for _, word := range words {
-						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
+						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word))
 						if match {
 							break
 						}
@@ -138,7 +138,7 @@ loop:
 
 				// notワードを除外する場合の判定
 				for _, notWord := range notWords {
-					match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)
+					match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(notWord))
 					if match {
 						match = false
 						break
@@ -358,7 +358,7 @@ loop:
 				if query.WordsAnd != nil && *query.WordsAnd {
 					match = true
 					for _, word := range words {
-						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
+						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word))
 						if !match {
 							break
 						}
@@ -370,7 +370,7 @@ loop:
 					// ワードor検索である場合の判定
 					match = false
 					for _, word := range words {
-						match = strings.Contains(fmt.Sprintf("%s", commit.Message), word)
+						match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(word))
 						if match {
 							break
 						}
@@ -378,7 +378,7 @@ loop:
 				}
 				// notワードを除外する場合の判定
 				for _, notWord := range notWords {
-					match = strings.Contains(fmt.Sprintf("%s", commit.Message), notWord)
+					match = strings.Contains(strings.ToLower(commit.Message), strings.ToLower(notWord))
 					if match {
 						match = false
 						break
