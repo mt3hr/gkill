@@ -137,6 +137,7 @@ async function upload_files() {
         const filedata = new FileData()
         filedata.data_base64 = await to_base64(file)
         filedata.file_name = file.name
+        filedata.last_modified = new Date(file.lastModified)
         req.files.push(filedata)
     }
 
