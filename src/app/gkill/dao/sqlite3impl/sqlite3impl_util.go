@@ -109,10 +109,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 							sql += " AND "
 						}
 						if findWordUseLike {
-							sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+							sql += fmt.Sprintf("LOWER(%s) LIKE LOWER(?)", findWordTargetColumnName)
 							*queryArgs = append(*queryArgs, "%"+word+"%")
 						} else {
-							sql += fmt.Sprintf("%s = ?", findWordTargetColumnName)
+							sql += fmt.Sprintf("LOWER(%s) = LOWER(?)", findWordTargetColumnName)
 							*queryArgs = append(*queryArgs, word)
 						}
 						if i == len(*query.Words)-1 {
@@ -141,10 +141,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 							sql += " OR "
 						}
 						if findWordUseLike {
-							sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+							sql += fmt.Sprintf("LOWER(%s) LIKE LOWER(?)", findWordTargetColumnName)
 							*queryArgs = append(*queryArgs, "%"+word+"%")
 						} else {
-							sql += fmt.Sprintf("%s = ?", findWordTargetColumnName)
+							sql += fmt.Sprintf("LOWER(%s) = LOWER(?)", findWordTargetColumnName)
 							*queryArgs = append(*queryArgs, word)
 						}
 						if i == len(*query.Words)-1 {
@@ -176,10 +176,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 						sql += " AND "
 					}
 					if findWordUseLike {
-						sql += fmt.Sprintf("%s LIKE ?", findWordTargetColumnName)
+						sql += fmt.Sprintf("LOWER(%s) LIKE LOWER(?)", findWordTargetColumnName)
 						*queryArgs = append(*queryArgs, "%"+notWord+"%")
 					} else {
-						sql += fmt.Sprintf("%s = ?", findWordTargetColumnName)
+						sql += fmt.Sprintf("LOWER(%s) = LOWER(?)", findWordTargetColumnName)
 						*queryArgs = append(*queryArgs, notWord)
 					}
 					if i == len(*query.NotWords)-1 {
