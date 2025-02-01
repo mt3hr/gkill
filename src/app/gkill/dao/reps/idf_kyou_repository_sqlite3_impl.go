@@ -315,9 +315,6 @@ WHERE
 							break
 						}
 					}
-					if match {
-						continue
-					}
 				}
 				// notワードを除外する場合の判定
 				for _, notWord := range notWords {
@@ -882,9 +879,6 @@ WHERE
 						if match {
 							break
 						}
-					}
-					if match {
-						continue
 					}
 				}
 				// notワードを除外する場合の判定
