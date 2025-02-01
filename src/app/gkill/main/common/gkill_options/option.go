@@ -13,4 +13,22 @@ var (
 	IsCacheInMemory = true
 	IsOutputLog     = false
 	DisableTLSForce = false
+
+	IDFIgnore = []string{
+		".gkill",
+		".kyou",
+		"gkill_id.db",
+		"gkill_id.db-journal",
+		"gkill_id.db-shm",
+		"gkill_id.db-wal",
+		".nomedia",
+		"desktop.ini",
+		"thumbnails",
+		".thumbnails",
+		"Thumbs.db",
+		"steam_autocloud.vdf",
+		".DS_Store",
+		".localized",
+		"id.db",
+	}
 )

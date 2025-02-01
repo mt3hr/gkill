@@ -31,6 +31,7 @@ func init() {
 	serverCmd.PersistentFlags().BoolVar(&gkill_options.DisableTLSForce, "disable_tls", gkill_options.DisableTLSForce, "")
 	serverCmd.PersistentFlags().BoolVar(&gkill_options.IsCacheInMemory, "cache_in_memory", gkill_options.IsCacheInMemory, "")
 	serverCmd.AddCommand(common.IDFCmd)
+	serverCmd.AddCommand(common.DVNFCmd)
 }
 
 var (
