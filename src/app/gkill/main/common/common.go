@@ -1,10 +1,12 @@
 package common
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -14,12 +16,76 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
+	"github.com/gorilla/mux"
+	"github.com/mattn/go-zglob"
 	"github.com/mt3hr/gkill/src/app/gkill/api"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/spf13/cobra"
 )
 
 var (
 	gkillServerAPI *api.GkillServerAPI
+
+	idfTargetForIDFCmd string
+	IDFCmd             = &cobra.Command{
+		Use: "idf",
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				cmd.Usage()
+				return
+			}
+
+			targetDirs := args
+
+			autoIDF := false
+			router := mux.NewRouter()
+			idfIgnore := []string{
+				".gkill",
+				".kyou",
+				"gkill_id.db",
+				"gkill_id.db-journal",
+				"gkill_id.db-shm",
+				"gkill_id.db-wal",
+				".nomedia",
+				"desktop.ini",
+				"thumbnails",
+				".thumbnails",
+				"Thumbs.db",
+				"steam_autocloud.vdf",
+				".DS_Store",
+				".localized",
+				"id.db",
+			}
+
+			for _, filenamePattern := range targetDirs {
+				filenamePattern = os.ExpandEnv(filenamePattern)
+				matchFiles, _ := zglob.Glob(filenamePattern)
+				for _, filename := range matchFiles {
+					if _, err := os.Stat(filename); os.IsNotExist(err) {
+						fmt.Printf("Directory not found. skip idf: %s\n", filename)
+						continue
+					}
+					parentDir := filepath.Join(filename, ".gkill")
+					err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
+					if err != nil {
+						err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
+						fmt.Printf("%s\n", err)
+						fmt.Printf("skip idf: %s\n", filename)
+						continue
+					}
+					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
+					idfKyouRep, err := reps.NewIDFDirRep(context.TODO(), filename, idDBFilename, router, &autoIDF, &idfIgnore, nil)
+					if err != nil {
+						err = fmt.Errorf("error at new idf dir rep: %w", err)
+						fmt.Printf("skip idf: %s\n", filename)
+						continue
+					}
+					idfKyouRep.IDF(context.TODO())
+				}
+			}
+		},
+	}
 )
 
 func init() {
