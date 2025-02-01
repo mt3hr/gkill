@@ -9,7 +9,7 @@
         <video v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_video" :src="kyou.typed_idf_kyou.file_url"
             class="kyou_video" controls></video>
         <audio v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_audio" :src="kyou.typed_idf_kyou.file_url"
-            class="kyou_audio"></audio>
+            class="kyou_audio" controls></audio>
         <IDFKyouContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" ref="context_menu"
@@ -55,13 +55,6 @@ function open_link(): void {
 }
 
 .kyou_video {
-    border: 1px solid gray;
-    height: 198px;
-    width: 198px;
-    object-fit: cover;
-}
-
-.kyou_audio {
     border: 1px solid gray;
     height: 198px;
     width: 198px;
