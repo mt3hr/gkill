@@ -6456,12 +6456,13 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			}
 			defer file.Close()
 			io.Copy(file, decoder)
+			os.Chtimes(filename, time.Now(), fileInfo.LastModified)
 
 			// idfKyouを作る
 			idfKyou := &reps.IDFKyou{
 				IsDeleted:    false,
 				ID:           GenerateNewID(),
-				RelatedTime:  time.Now(),
+				RelatedTime:  fileInfo.LastModified,
 				CreateTime:   time.Now(),
 				CreateApp:    "gkill",
 				CreateDevice: device,

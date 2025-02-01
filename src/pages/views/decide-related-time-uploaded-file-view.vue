@@ -60,4 +60,22 @@ const kyou_height_px = computed(() => kyou_height.value ? kyou_height.value.toSt
     max-height: v-bind(kyou_height_px) !important;
     border-top: 1px solid silver;
 }
+
+.edit_idf_kyou_view_wrap .kyou {
+    overflow: hidden !important;
+    width: unset;
+    max-width: unset;
+    min-width: unset;
+    border-top: 1px solid silver;
+    height: unset !important;
+    min-height: unset !important;
+    max-height: unset !important;
+}
+
+.edit_idf_kyou_view_wrap .kyou .kyou_image{
+    width: -webkit-fill-available !important;
+    height: fit-content !important;
+    max-width: -webkit-fill-available !important;
+    max-height: 85vh !important;
+}
 </style>
