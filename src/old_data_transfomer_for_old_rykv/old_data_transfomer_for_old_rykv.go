@@ -362,23 +362,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 
 	dummyRouter := mux.NewRouter()
 	falseValue := false
-	idfIgnore := []string{
-		".gkill",
-		".kyou",
-		"gkill_id.db",
-		"gkill_id.db-journal",
-		"gkill_id.db-shm",
-		"gkill_id.db-wal",
-		".nomedia",
-		"desktop.ini",
-		"thumbnails",
-		".thumbnails",
-		"Thumbs.db",
-		"steam_autocloud.vdf",
-		".DS_Store",
-		".localized",
-		"id.db",
-	}
+	idfIgnore := gkill_options.IDFIgnore
 	repositoriesRefDummy, err := reps.NewGkillRepositories("")
 	if err != nil {
 		panic(err)

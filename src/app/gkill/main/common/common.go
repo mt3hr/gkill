@@ -20,6 +20,7 @@ import (
 	"github.com/mattn/go-zglob"
 	"github.com/mt3hr/gkill/src/app/gkill/api"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+	dvnf_cmd "github.com/mt3hr/gkill/src/app/gkill/dvnf/cmd"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/spf13/cobra"
 )
@@ -40,23 +41,7 @@ var (
 
 			autoIDF := false
 			router := mux.NewRouter()
-			idfIgnore := []string{
-				".gkill",
-				".kyou",
-				"gkill_id.db",
-				"gkill_id.db-journal",
-				"gkill_id.db-shm",
-				"gkill_id.db-wal",
-				".nomedia",
-				"desktop.ini",
-				"thumbnails",
-				".thumbnails",
-				"Thumbs.db",
-				"steam_autocloud.vdf",
-				".DS_Store",
-				".localized",
-				"id.db",
-			}
+			idfIgnore := gkill_options.IDFIgnore
 
 			for _, filenamePattern := range targetDirs {
 				filenamePattern = os.ExpandEnv(filenamePattern)
@@ -86,6 +71,7 @@ var (
 			}
 		},
 	}
+	DVNFCmd = dvnf_cmd.DVNFCmd
 )
 
 func init() {
@@ -96,6 +82,8 @@ func init() {
 	go func() {
 		http.ListenAndServe("localhost:6060", nil) // pprof用
 	}()
+
+	IDFCmd.PersistentFlags().StringArrayVarP(&gkill_options.IDFIgnore, "ignore", "i", gkill_options.IDFIgnore, "ignore files")
 }
 
 func InitGkillOptions() {
