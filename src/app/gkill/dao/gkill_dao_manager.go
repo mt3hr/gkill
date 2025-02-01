@@ -57,25 +57,9 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 
 	ctx := context.Background()
 	gkillDAOManager := &GkillDAOManager{
-		autoIDF: &autoIDF, //TODO
-		router:  &mux.Router{},
-		IDFIgnore: []string{
-			".gkill",
-			".kyou",
-			"gkill_id.db",
-			"gkill_id.db-journal",
-			"gkill_id.db-shm",
-			"gkill_id.db-wal",
-			".nomedia",
-			"desktop.ini",
-			"thumbnails",
-			".thumbnails",
-			"Thumbs.db",
-			"steam_autocloud.vdf",
-			".DS_Store",
-			".localized",
-			"id.db",
-		},
+		autoIDF:                  &autoIDF, //TODO
+		router:                   &mux.Router{},
+		IDFIgnore:                gkill_options.IDFIgnore,
 		fileRepWatchCacheUpdater: fileRepWatchCacheUpdater,
 		skipUpdateCache:          &skipUpdateCache,
 	}
