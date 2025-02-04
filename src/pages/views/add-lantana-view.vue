@@ -72,7 +72,7 @@ async function save(): Promise<void> {
     if (related_date.value === "" || related_time.value === "") {
         const error = new GkillError()
         error.error_code = "//TODO"
-        error.error_message = "開始日時が入力されていません"
+        error.error_message = "日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -106,6 +106,7 @@ async function save(): Promise<void> {
     new_lantana.create_app = "gkill"
     new_lantana.create_device = gkill_info_res.device
     new_lantana.create_time = new Date(Date.now())
+    new_lantana.create_user = gkill_info_res.user_id
     new_lantana.update_app = "gkill"
     new_lantana.update_device = gkill_info_res.device
     new_lantana.update_time = new Date(Date.now())

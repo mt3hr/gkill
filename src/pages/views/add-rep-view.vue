@@ -11,7 +11,7 @@
         <v-checkbox v-model="is_enable" :label="'有効'" />
         <v-checkbox v-model="use_to_write" :label="'書込先として使用'" />
         <v-checkbox v-model="is_execute_idf_when_reload" :label="'更新時にID自動割り当て'" />
-        <v-text-field v-model="device" :label="'デバイス名'" />
+        <v-select :label="'デバイス名'" v-model="device" :items="devices" />
         <v-select v-model="type" :items="rep_types" label="RepType" />
         <v-text-field v-model="file" :label="'PATH'" />
         <v-card-action>
@@ -41,6 +41,14 @@ const file: Ref<string> = ref("")
 const use_to_write: Ref<boolean> = ref(false)
 const is_execute_idf_when_reload: Ref<boolean> = ref(false)
 const is_enable: Ref<boolean> = ref(true)
+
+const devices: Ref<Array<string>> = ref((() => {
+    const devices = Array<string>()
+    for (let i = 0; i < props.server_configs.length; i++) {
+        devices.push(props.server_configs[i].device)
+    }
+    return devices
+})())
 
 const rep_types: Ref<Array<string>> = ref([
     "kmemo",

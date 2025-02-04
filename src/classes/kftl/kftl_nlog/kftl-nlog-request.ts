@@ -13,13 +13,13 @@ export class KFTLNlogRequest extends KFTLRequest {
 
     titles: Array<string>
 
-    amounts: Array<Number>
+    amounts: Array<number>
 
     constructor(request_id: string, context: KFTLStatementLineContext) {
         super(request_id, context)
         this.shop_name = ""
         this.titles = new Array<string>()
-        this.amounts = new Array<Number>()
+        this.amounts = new Array<number>()
     }
 
     async do_request(): Promise<Array<GkillError>> {
@@ -80,7 +80,7 @@ export class KFTLNlogRequest extends KFTLRequest {
         this.titles.push(title)
     }
 
-    add_amount(amount: Number): void {
+    add_amount(amount: number): void {
         this.amounts.push(amount)
     }
 

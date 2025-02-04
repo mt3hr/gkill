@@ -48,9 +48,9 @@ const nlog: Ref<Nlog> = ref((() => {
     nlog.related_time = new Date(Date.now())
     return nlog
 })())
-const nlog_title_value: Ref<string> = ref(nlog.value ? nlog.value.title : "")
-const nlog_amount_value: Ref<Number> = ref(nlog.value ? nlog.value.amount : 0)
-const nlog_shop_value: Ref<string> = ref(nlog.value ? nlog.value.shop : "")
+const nlog_title_value: Ref<string> = ref("")
+const nlog_amount_value: Ref<number> = ref(0)
+const nlog_shop_value: Ref<string> = ref("")
 
 const related_date: Ref<string> = ref(moment().format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment().format("HH:mm:ss"))
@@ -71,20 +71,40 @@ async function save(): Promise<void> {
     if (related_date.value === "" || related_time.value === "") {
         const error = new GkillError()
         error.error_code = "//TODO"
-        error.error_message = "開始日時が入力されていません"
+        error.error_message = "日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
         return
     }
 
-    // 更新がなかったらエラーメッセージを出力する
-    if (nlog_amount_value.value === nlog.value.amount &&
-        nlog_shop_value.value === nlog.value.shop &&
-        nlog_title_value.value === nlog.value.title) {
+    // 金額入力チェック
+    if (Number.isNaN(nlog_amount_value.value) || nlog_amount_value.value.toString() === "") {
         const error = new GkillError()
         error.error_code = "//TODO"
-        error.error_message = "Nlogが入力されていません"
+        error.error_message = "金額が入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
+    // 店名入力チェック
+    if (nlog_shop_value.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "店名が入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
+    // タイトル入力チェック
+    if (nlog_title_value.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "タイトルが入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

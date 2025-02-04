@@ -12,7 +12,7 @@ export class Nlog extends InfoBase {
 
     title: string
 
-    amount: Number
+    amount: number
 
     attached_histories: Array<Nlog>
 
@@ -73,7 +73,7 @@ export class Nlog extends InfoBase {
         nlog.update_app = this.update_app
         nlog.update_user = this.update_user
         nlog.update_device = this.update_device
-        nlog.is_checked = this.is_checked
+        nlog.is_checked_kyou = this.is_checked_kyou
         nlog.shop = this.shop
         nlog.title = this.title
         nlog.amount = this.amount

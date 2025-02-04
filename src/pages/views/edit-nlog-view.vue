@@ -64,7 +64,7 @@ const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const nlog_title_value: Ref<string> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.title : "")
-const nlog_amount_value: Ref<Number> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.amount : 0)
+const nlog_amount_value: Ref<number> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.amount : 0)
 const nlog_shop_value: Ref<string> = ref(props.kyou.typed_nlog ? props.kyou.typed_nlog.shop : "")
 
 const related_date: Ref<string> = ref(moment(props.kyou.related_time).format("YYYY-MM-DD"))
@@ -109,10 +109,44 @@ async function save(): Promise<void> {
         return
     }
 
+    // 金額入力チェック
+    if (Number.isNaN(nlog_amount_value.value)) {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "金額が入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
+    // 店名入力チェック
+    if (nlog_shop_value.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "店名が入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
+    // タイトル入力チェック
+    if (nlog_title_value.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "タイトルが入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
     // 更新がなかったらエラーメッセージを出力する
     if (nlog_amount_value.value === nlog.amount &&
         nlog_shop_value.value === nlog.shop &&
-        nlog_title_value.value === nlog.title) {
+        nlog_title_value.value === nlog.title &&
+        moment(related_date.value + " " + related_time.value).toDate().getTime() === moment(nlog.related_time).toDate().getTime()) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "Nlog更新されていません"

@@ -35,7 +35,7 @@ const (
 	InvalidAddURLogResponseDataError                                 = "ERR000032"
 	AddNlogError                                                     = "ERR000033"
 	GetNlogError                                                     = "ERR000034"
-	InvalidAddNlogRequestDataError                                   = "ERR000035"
+	InvalidAddNlogRequestDataError                                   = "ERR000036"
 	InvalidAddNlogResponseDataError                                  = "ERR000036"
 	AddTimeIsError                                                   = "ERR000037"
 	GetTimeIsError                                                   = "ERR000038"
