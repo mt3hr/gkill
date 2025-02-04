@@ -11,22 +11,24 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
-                <label>タイトル</label>
-            </v-col>
-            <v-col cols="auto">
-                <input class="input text" type="text" v-model="title" label="タイトル" autofocus />
-            </v-col>
-        </v-row>
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
-                <label>URL</label>
-            </v-col>
-            <v-col cols="auto">
-                <input class="input text" type="text" v-model="url" label="URL" />
-            </v-col>
-        </v-row>
+        <table>
+            <tr>
+                <td>
+                    <label>URL</label>
+                </td>
+                <td>
+                    <input class="input text" type="text" v-model="url" label="URL" autofocus />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>タイトル</label>
+                </td>
+                <td>
+                    <input class="input text" type="text" v-model="title" label="タイトル" />
+                </td>
+            </tr>
+        </table>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>日時</label>
@@ -126,10 +128,22 @@ async function save(): Promise<void> {
         return
     }
 
+    // URL入力チェック
+    if (url.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "URLが入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
     // 更新がなかったらエラーメッセージを出力する
     if (urlog.title === title.value &&
-        moment(urlog.related_time) === (moment(related_date.value + " " + related_time.value)) &&
-        moment(urlog.related_time) === moment(related_date.value + " " + related_time.value)) {
+        urlog.url === url.value &&
+        moment(urlog.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime() &&
+        moment(urlog.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "URLogが更新されていません"

@@ -134,6 +134,7 @@ async function save(): Promise<void> {
         emits('received_errors', errors)
         return
     }
+
     // 終了日時 片方だけ入力されていたらエラーチェック
     if (timeis_end_date.value === "" || timeis_end_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
         if ((timeis_end_date.value === "" && timeis_end_time.value !== "") ||
@@ -148,13 +149,11 @@ async function save(): Promise<void> {
         }
     }
 
-    // 更新がなかったらエラーメッセージを出力する
-    if (timeis.value.title === timeis_title.value &&
-        moment(timeis.value.start_time) === (moment(timeis_start_date.value + " " + timeis_start_time.value)) &&
-        moment(timeis.value.end_time) === moment(timeis_end_date.value + " " + timeis_end_time.value)) {
+    // タイトル入力チェック
+    if (timeis_title.value === "") {
         const error = new GkillError()
         error.error_code = "//TODO"
-        error.error_message = "TimeIsが更新されていません"
+        error.error_message = "タイトルが入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

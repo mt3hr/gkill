@@ -22,6 +22,7 @@ import { ref, type Ref } from 'vue';
 import type { AddNewFoloderViewEmits } from './add-new-foloder-view-emits'
 import type { AddNewFoloderViewProps } from './add-new-foloder-view-props'
 import { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data';
+import { GkillError } from '@/classes/api/gkill-error';
 
 const props = defineProps<AddNewFoloderViewProps>()
 const emits = defineEmits<AddNewFoloderViewEmits>()
@@ -31,6 +32,14 @@ defineExpose({ reset_folder_name })
 const folder_name: Ref<string> = ref("")
 
 function emits_folder(): void {
+    if (folder_name.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "フォルダ名が入力されていません"
+        emits('received_errors', [error])
+        return
+    }
+
     const folder_struct_element = new FolderStructElementData()
     folder_struct_element.id = props.gkill_api.generate_uuid()
     folder_struct_element.folder_name = folder_name.value

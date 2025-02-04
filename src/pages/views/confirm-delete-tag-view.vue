@@ -76,7 +76,7 @@ async function delete_tag(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits('deleted_tag', res.updated_tag)
-    emits('requested_reload_list')
+    emits('requested_reload_kyou', props.kyou)
     emits('requested_close_dialog')
     return
 }

@@ -1,6 +1,9 @@
 package reps
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Nlog struct {
 	IsDeleted bool `json:"is_deleted"`
@@ -33,5 +36,5 @@ type Nlog struct {
 
 	Title string `json:"title"`
 
-	Amount int `json:"amount"`
+	Amount json.Number `json:"amount"`
 }

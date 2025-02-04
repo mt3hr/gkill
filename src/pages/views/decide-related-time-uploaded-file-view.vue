@@ -47,6 +47,10 @@ const kyou_height: Ref<number> = ref(180)
 const kyou_height_px = computed(() => kyou_height.value ? kyou_height.value.toString().concat("px") : "0px")
 </script>
 <style lang="css">
+.decide_related_time_uploaded_files_kyou_list_view .kyou_in_list .v-card {
+    overflow: hidden;
+}
+
 .edit_idf_kyou_view_wrap {
     width: calc(400px + 8px);
     max-width: calc(400px + 8px);
@@ -72,7 +76,7 @@ const kyou_height_px = computed(() => kyou_height.value ? kyou_height.value.toSt
     max-height: unset !important;
 }
 
-.edit_idf_kyou_view_wrap .kyou .kyou_image{
+.edit_idf_kyou_view_wrap .kyou_image {
     width: -webkit-fill-available !important;
     height: fit-content !important;
     max-width: -webkit-fill-available !important;

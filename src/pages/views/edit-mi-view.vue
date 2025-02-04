@@ -125,7 +125,7 @@ const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const show_kyou: Ref<boolean> = ref(false)
-const mi_board_names: Ref<Array<string>> = ref(new Array())
+const mi_board_names: Ref<Array<string>> = ref(props.application_config.mi_default_board !== "" ? [props.application_config.mi_default_board] : [])
 
 const mi_title: Ref<string> = ref(cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.title : "")
 const mi_board_name: Ref<string> = ref(cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.board_name : "")
@@ -164,6 +164,17 @@ async function load_mi_board_names(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         // emits('received_messages', res.messages)
     }
+
+    let is_contain_default_board = false
+    res.boards.forEach((board_name) => {
+        if (board_name === props.application_config.mi_default_board) {
+            is_contain_default_board = true
+        }
+    })
+    if (!is_contain_default_board) {
+        res.boards.push(props.application_config.mi_default_board)
+    }
+
     mi_board_names.value = res.boards
 }
 
@@ -245,6 +256,17 @@ async function save(): Promise<void> {
         return
     }
 
+    // タイトルの入力チェック
+    if (mi_title.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "タイトルが入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
     // 開始日時 片方だけ入力されていたらエラーチェック
     if (mi_estimate_start_date.value === "" || mi_estimate_start_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
         if ((mi_estimate_start_date.value === "" && mi_estimate_start_time.value !== "") ||
@@ -289,10 +311,10 @@ async function save(): Promise<void> {
 
     // 更新がなかったらエラーメッセージを出力する
     if (mi.title === mi_title.value &&
-        moment(mi.estimate_start_time) === (moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value)) &&
-        moment(mi.estimate_end_time) === moment(mi_estimate_end_date.value + " " + mi_estimate_end_time.value) &&
-        moment(mi.limit_time) === (moment(mi_limit_date.value + " " + mi_limit_time.value))
-    ) {
+        mi.board_name === mi_board_name.value &&
+        (moment(mi.estimate_start_time).toDate().getTime() === moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value).toDate().getTime() || (mi.estimate_start_time == null && mi_estimate_start_date.value === "" && mi_estimate_start_time.value === "")) &&
+        (moment(mi.estimate_end_time).toDate().getTime() === moment(mi_estimate_end_date.value + " " + mi_estimate_end_time.value).toDate().getTime() || (mi.estimate_end_time == null && mi_estimate_end_date.value === "" && mi_estimate_end_time.value === "")) &&
+        (moment(mi.limit_time).toDate().getTime() === moment(mi_limit_date.value + " " + mi_limit_time.value).toDate().getTime() || (mi.limit_time == null && mi_limit_date.value === "" && mi_limit_time.value === ""))) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "Miが更新されていません"

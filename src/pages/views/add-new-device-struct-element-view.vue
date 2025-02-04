@@ -24,6 +24,7 @@ import { DeviceStructElementData } from '@/classes/datas/config/device-struct-el
 import { type Ref, ref } from 'vue';
 import type { AddNewDeviceStructElementViewEmits } from './add-new-device-struct-element-view-emits'
 import type { AddNewDeviceStructElementViewProps } from './add-new-device-struct-element-view-props'
+import { GkillError } from '@/classes/api/gkill-error';
 
 const props = defineProps<AddNewDeviceStructElementViewProps>()
 const emits = defineEmits<AddNewDeviceStructElementViewEmits>()
@@ -35,6 +36,14 @@ const check_when_inited: Ref<boolean> = ref(true)
 const is_force_hide: Ref<boolean> = ref(false)
 
 function emits_device_name(): void {
+    if (device_name.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "デバイス名が入力されていません"
+        emits('received_errors', [error])
+        return
+    }
+
     const device_struct_element = new DeviceStructElementData()
     device_struct_element.id = props.gkill_api.generate_uuid()
     device_struct_element.check_when_inited = check_when_inited.value

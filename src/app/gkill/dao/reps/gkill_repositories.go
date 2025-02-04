@@ -1039,7 +1039,7 @@ func (g *GkillRepositories) GetTagsByTargetID(ctx context.Context, target_id str
 
 	tagHistoriesList := []*Tag{}
 	for _, tag := range matchTags {
-		if tag == nil {
+		if tag == nil || tag.IsDeleted {
 			continue
 		}
 		tagHistoriesList = append(tagHistoriesList, tag)
@@ -1612,7 +1612,7 @@ loop:
 
 	textHistoriesList := []*Text{}
 	for _, text := range matchTexts {
-		if text == nil {
+		if text == nil || text.IsDeleted {
 			continue
 		}
 		textHistoriesList = append(textHistoriesList, text)
@@ -1688,19 +1688,19 @@ loop:
 		}
 	}
 
-	textHistoriesList := []*Notification{}
-	for _, text := range matchNotifications {
-		if text == nil {
+	notificationHistoriesList := []*Notification{}
+	for _, notification := range matchNotifications {
+		if notification == nil || notification.IsDeleted {
 			continue
 		}
-		textHistoriesList = append(textHistoriesList, text)
+		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
-	sort.Slice(textHistoriesList, func(i, j int) bool {
-		return textHistoriesList[i].UpdateTime.After(textHistoriesList[j].UpdateTime)
+	sort.Slice(notificationHistoriesList, func(i, j int) bool {
+		return notificationHistoriesList[i].UpdateTime.After(notificationHistoriesList[j].UpdateTime)
 	})
 
-	return textHistoriesList, nil
+	return notificationHistoriesList, nil
 }
 
 func (g *GkillRepositories) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {

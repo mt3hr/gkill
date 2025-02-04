@@ -59,6 +59,17 @@ async function load(): Promise<void> {
 }
 
 async function save(): Promise<void> {
+    // 値がなかったらエラーメッセージを出力する
+    if (text_value.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "テキストが未入力です"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
     // 更新がなかったらエラーメッセージを出力する
     if (cloned_text.value.text === text_value.value) {
         const error = new GkillError()

@@ -81,10 +81,10 @@ const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const timeis_title: Ref<string> = ref(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : "")
-const timeis_start_date: Ref<string> = ref(moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("YYYY-MM-DD"))
-const timeis_start_time: Ref<string> = ref(moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss"))
-const timeis_end_date: Ref<string> = ref(moment().format("YYYY-MM-DD"))
-const timeis_end_time: Ref<string> = ref(moment().format("HH:mm:ss"))
+const timeis_start_date: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.start_time).format("YYYY-MM-DD") : "")
+const timeis_start_time: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.start_time).format("HH:mm:ss") : "")
+const timeis_end_date: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.end_time).format("YYYY-MM-DD") : "")
+const timeis_end_time: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.end_time).format("HH:mm:ss") : "")
 
 const show_kyou: Ref<boolean> = ref(false)
 
@@ -104,10 +104,18 @@ async function load(): Promise<void> {
 
 function reset(): void {
     timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
-    timeis_start_date.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("YYYY-MM-DD")
-    timeis_start_time.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
-    timeis_end_date.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("YYYY-MM-DD")
-    timeis_end_time.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("HH:mm:ss")
+    reset_start_date_time()
+    reset_end_date_time()
+}
+
+function reset_start_date_time(): void {
+    timeis_start_date.value = cloned_kyou.value.typed_timeis?.start_time ? moment(cloned_kyou.value.typed_timeis.start_time).format("YYYY-MM-DD") : ""
+    timeis_start_time.value = cloned_kyou.value.typed_timeis?.start_time ? moment(cloned_kyou.value.typed_timeis.start_time).format("HH:mm:ss") : ""
+}
+
+function reset_end_date_time(): void {
+    timeis_end_date.value = cloned_kyou.value.typed_timeis?.end_time ? moment(cloned_kyou.value.typed_timeis.end_time).format("YYYY-MM-DD") : ""
+    timeis_end_time.value = cloned_kyou.value.typed_timeis?.end_time ? moment(cloned_kyou.value.typed_timeis.end_time).format("HH:mm:ss") : ""
 }
 
 function clear_end_date_time(): void {
@@ -133,6 +141,17 @@ async function save(): Promise<void> {
         return
     }
 
+    // タイトル入力チェック
+    if (timeis_title.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "タイトルが入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
     // 開始日時必須入力チェック
     if (timeis_start_date.value === "" || timeis_start_time.value === "") {
         const error = new GkillError()
@@ -143,24 +162,23 @@ async function save(): Promise<void> {
         emits('received_errors', errors)
         return
     }
-    // 終了日時 片方だけ入力されていたらエラーチェック
-    if (timeis_end_date.value === "" || timeis_end_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
-        if ((timeis_end_date.value === "" && timeis_end_time.value !== "") ||
-            (timeis_end_date.value !== "" && timeis_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
-            const error = new GkillError()
-            error.error_code = "//TODO"
-            error.error_message = "終了日付または終了時刻が入力されていません"
-            const errors = new Array<GkillError>()
-            errors.push(error)
-            emits('received_errors', errors)
-            return
-        }
+
+    // 終了日時入力チェック
+    if ((timeis_end_date.value === "" && timeis_end_time.value !== "") ||
+        (timeis_end_date.value !== "" && timeis_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "終了日付または終了時刻が入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
     }
 
     // 更新がなかったらエラーメッセージを出力する
     if (timeis.title === timeis_title.value &&
-        moment(timeis.start_time) === (moment(timeis_start_date.value + " " + timeis_start_time.value)) &&
-        moment(timeis.end_time) === moment(timeis_end_date.value + " " + timeis_end_time.value)) {
+        (moment(timeis.start_time).toDate().getTime() === moment(timeis_start_date.value + " " + timeis_start_time.value).toDate().getTime()) &&
+        (moment(timeis.end_time).toDate().getTime() === moment(timeis_end_date.value + " " + timeis_end_time.value).toDate().getTime()) || (timeis.end_time === null && timeis_end_date.value === "" && timeis_end_time.value === "")) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "TimeIsが更新されていません"
