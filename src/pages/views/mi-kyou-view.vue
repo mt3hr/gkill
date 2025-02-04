@@ -2,8 +2,7 @@
     <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
             <v-col cols="1" class="pa-0 ma-0">
-                <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()"
-                    :readonly="is_readonly_mi_check" />
+                <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()" />
             </v-col>
             <v-col cols="8" class="pa-0 ma-0">
                 <v-card-title>
@@ -59,11 +58,21 @@ const props = defineProps<miKyouViewProps>()
 const emits = defineEmits<miKyouViewEmits>()
 defineExpose({ show_context_menu })
 
+const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const is_checked_mi: Ref<boolean> = ref(props.kyou.typed_mi ? props.kyou.typed_mi.is_checked : false)
 
-watch(() => props.kyou, () => {
-    is_checked_mi.value = props.kyou.typed_mi ? props.kyou.typed_mi.is_checked : false
+load_cloned_kyou()
+
+watch(() => props.kyou, async () => {
+    await load_cloned_kyou()
+    is_checked_mi.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.is_checked : false
 })
+
+async function load_cloned_kyou() {
+    const kyou = props.kyou.clone()
+    await kyou.load_all()
+    cloned_kyou.value = kyou
+}
 
 function format_time(time: Date): string {
     return moment(time).format("yyyy-MM-DD HH:mm:ss")
@@ -81,8 +90,10 @@ async function clicked_mi_check(): Promise<void> {
         return
     }
 
+    is_checked_mi.value = !is_checked_mi.value
+
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const mi = props.kyou.typed_mi
+    const mi = cloned_kyou.value.typed_mi
     if (!mi) {
         const error = new GkillError()
         error.error_code = "//TODO"
@@ -94,7 +105,7 @@ async function clicked_mi_check(): Promise<void> {
     }
 
     // 更新がなかったらエラーメッセージを出力する
-    if (mi.is_checked === !is_checked_mi.value) {
+    if (mi.is_checked === is_checked_mi.value) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "miが更新されていません"
@@ -131,7 +142,7 @@ async function clicked_mi_check(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
-    emits('updated_kyou', res.updated_mi_kyou)
+    emits('requested_reload_kyou', props.kyou)
     return
 }
 </script>

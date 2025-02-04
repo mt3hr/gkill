@@ -30,7 +30,7 @@ export abstract class InfoBase {
     attached_texts: Array<Text>
     attached_notifications: Array<Notification>
     attached_timeis_kyou: Array<Kyou>
-    is_checked: boolean
+    is_checked_kyou: boolean
 
     async load_all(): Promise<Array<GkillError>> {
         return this.load_attached_datas()
@@ -181,7 +181,7 @@ export abstract class InfoBase {
         this.attached_texts = new Array<Text>()
         this.attached_notifications = new Array<Notification>()
         this.attached_timeis_kyou = new Array<Kyou>()
-        this.is_checked = false
+        this.is_checked_kyou = false
     }
 }
 

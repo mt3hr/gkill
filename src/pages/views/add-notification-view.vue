@@ -61,6 +61,17 @@ const notification_date: Ref<string> = ref("")
 const notification_time: Ref<string> = ref("")
 
 async function save(): Promise<void> {
+    // 日時必須入力チェック
+    if (notification_date.value === "" || notification_time.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "通知日時が入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
     // 値がなかったらエラーメッセージを出力する
     if (content_value.value === "") {
         const error = new GkillError()

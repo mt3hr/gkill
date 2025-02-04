@@ -104,7 +104,9 @@
                             :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="true"
                             :show_content_only="false" @scroll_list="(scroll_top: number) => {
                                 match_kyous_list_top_list[index] = scroll_top
-                                props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
+                                if (inited) {
+                                    props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
+                                }
                             }" @clicked_list_view="() => {
                                 skip_search_this_tick = true
                                 focused_query = querys[index]
@@ -181,10 +183,9 @@
                                 :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag"
                                 :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true"
-                                :height="app_content_height.valueOf()" :is_readonly_mi_check="false" :width="400 + 8"
-                                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                                :show_attached_timeis="true" class="kyou_detail_view"
+                                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'fit-content'"
+                                :is_readonly_mi_check="false" :width="400" :enable_context_menu="enable_context_menu"
+                                :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
                                 @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
@@ -370,7 +371,9 @@ watch(() => focused_time.value, () => {
     if (!kyou_list_view) {
         return
     }
-    kyou_list_view.scroll_to_time(focused_time.value)
+    if (inited.value) {
+        kyou_list_view.scroll_to_time(focused_time.value)
+    }
 })
 
 watch(() => is_show_kyou_count_calendar.value, () => {
@@ -414,25 +417,23 @@ async function init(): Promise<void> {
             }
 
             for (let i = 0; i < saved_querys.length; i++) {
-                waitPromises.push(search(i, saved_querys[i], true).then(() => {
-                    const kyou_list_view = kyou_list_views.value[i] as any
-                    const scroll_top = match_kyous_list_top_list.value[i]
-                    kyou_list_view.scroll_to(scroll_top)
-                }))
+                await nextTick(() => {
+                    skip_search_this_tick.value = true
+                    waitPromises.push(search(i, saved_querys[i], true).then(async () => {
+                        return nextTick(() => {
+                            kyou_list_views.value[i].scroll_to(match_kyous_list_top_list.value[i])
+                            kyou_list_views.value[i].set_loading(false)
+                        })
+                    }))
+                })
             }
             is_loading.value = false
         } finally {
-            Promise.all(waitPromises).then(() => {
+            Promise.all(waitPromises).then(async () => {
                 focused_column_index.value = 0
                 if (querys.value[focused_column_index.value].calendar_start_date && querys.value[focused_column_index.value].calendar_end_date) {
                     gps_log_map_start_time.value = querys.value[focused_column_index.value].calendar_start_date!
                     gps_log_map_end_time.value = querys.value[focused_column_index.value].calendar_end_date!
-                }
-
-                for (let i = 0; i < querys.value.length; i++) {
-                    const kyou_list_view = kyou_list_views.value[i] as any
-                    const scroll_top = match_kyous_list_top_list.value[i]
-                    kyou_list_view.scroll_to(scroll_top)
                 }
 
                 inited.value = true
@@ -472,7 +473,9 @@ async function close_list_view(column_index: number): Promise<void> {
         if (!kyou_list_view) {
             return
         }
-        kyou_list_view.scroll_to(match_kyous_list_top_list.value[i])
+        if (inited.value) {
+            kyou_list_view.scroll_to(match_kyous_list_top_list.value[i])
+        }
     }
     props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
     props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
@@ -498,7 +501,9 @@ function add_list_view(query?: FindKyouQuery): void {
         querys.value.push(query)
         focused_query.value = query
     }
-    focused_column_index.value = querys.value.length - 1
+    if (inited.value) {
+        focused_column_index.value = querys.value.length - 1
+    }
 }
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
@@ -527,27 +532,34 @@ async function reload_list(column_index: number): Promise<void> {
 }
 
 async function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): Promise<void> {
-    for (let i = 0; i < match_kyous_list.value[focused_column_index.value].length; i++) {
-        const kyou = match_kyous_list.value[focused_column_index.value][i]
-        for (let j = 0; j < kyous.length; j++) {
-            const check_target_kyou = kyous[j]
-            if (kyou.id === check_target_kyou.id) {
-                kyou.is_checked = is_checked
-                if (is_checked) {
-                    focused_column_checked_kyous.value.push(kyou)
-                } else {
-                    let remove_index = -1;
-                    for (let k = 0; k < focused_column_checked_kyous.value.length; k++) {
-                        if (focused_column_checked_kyous.value[k].id === kyou.id) {
-                            remove_index = k
-                            break
+    for (let k = 0; k < kyous.length; k++) {
+        const kyou = kyous[k]
+        for (let i = 0; i < match_kyous_list.value.length; i++) {
+            const kyous_list = match_kyous_list.value[focused_column_index.value]
+            for (let j = 0; j < kyous_list.length; j++) {
+                const kyou_in_list = kyous_list[j]
+                if (kyou.id === kyou_in_list.id) {
+                    const updated_kyou = kyou.clone()
+                    await updated_kyou.reload()
+                    await updated_kyou.load_all()
+                    updated_kyou.is_checked_kyou = is_checked
+                    kyous_list.splice(j, 1, updated_kyou)
+
+                    if (is_checked) {
+                        focused_column_checked_kyous.value.push(updated_kyou)
+                    } else {
+                        let remove_index = -1;
+                        for (let l = 0; l < focused_column_checked_kyous.value.length; l++) {
+                            if (focused_column_checked_kyous.value[l].id === kyou.id) {
+                                remove_index = l
+                                break
+                            }
+                        }
+                        if (remove_index !== -1) {
+                            focused_column_checked_kyous.value.splice(remove_index, 1)
                         }
                     }
-                    if (remove_index !== -1) {
-                        focused_column_checked_kyous.value.splice(remove_index, 1)
-                    }
                 }
-                break
             }
         }
     }
@@ -567,14 +579,16 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Prom
 
     for (let i = 0; i < update_target_column_indexs.length; i++) {
         const target_column_index = update_target_column_indexs[i]
-        kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
+        if (inited.value) {
+            kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
+        }
     }
 }
 
 const abort_controllers: Ref<Array<AbortController>> = ref([])
 async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
     // 検索する。Tickでまとめる
-    nextTick(async () => {
+    return nextTick(async () => {
         try {
             querys.value[column_index] = query
             if (!force_search) {
@@ -600,7 +614,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             }
 
             const kyou_list_view = kyou_list_views.value[column_index] as any
-            if (kyou_list_view) {
+            if (kyou_list_view && inited.value) {
                 kyou_list_view.scroll_to(0)
             }
             await nextTick(async () => {
@@ -637,9 +651,11 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
                 if (!kyou_list_view) {
                     return
                 }
-                kyou_list_view.scroll_to(0)
-                kyou_list_view.set_loading(false)
-                skip_search_this_tick.value = false
+                if (inited.value) {
+                    kyou_list_view.scroll_to(0)
+                    kyou_list_view.set_loading(false)
+                    skip_search_this_tick.value = false
+                }
             })
         } catch (err: any) {
             // abortは握りつぶす
@@ -695,6 +711,7 @@ function show_upload_file_dialog(): void {
 
 .kyou_detail_view.dummy {
     overflow-x: hidden;
+    overflow-y: scroll;
 }
 
 .kyou_detail_view {

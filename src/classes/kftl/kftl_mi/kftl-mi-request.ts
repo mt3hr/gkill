@@ -43,7 +43,7 @@ export class KFTLMiRequest extends KFTLRequest {
 
         if (this.board_name == "") {
             const req = new GetApplicationConfigRequest()
-            
+
             const res = await GkillAPI.get_gkill_api().get_application_config(req)
             this.board_name = res.application_config.mi_default_board
         }
@@ -52,7 +52,7 @@ export class KFTLMiRequest extends KFTLRequest {
         }
 
         const req = new GetApplicationConfigRequest()
-        
+
         const res = await GkillAPI.get_gkill_api().get_application_config(req)
         if (res.errors && res.errors.length !== 0) {
             errors = errors.concat(res.errors)

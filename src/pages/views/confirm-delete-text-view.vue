@@ -81,8 +81,8 @@ async function delete_text(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits('deleted_text', res.updated_text)
+    emits('requested_reload_kyou', props.kyou)
     emits('requested_close_dialog')
-    emits('requested_reload_list')
     return
 }
 </script>
