@@ -1,5 +1,5 @@
 <template>
-    <v-card @contextmenu.prevent.stop="show_context_menu" :width="width" :height="height">
+    <v-card @contextmenu.prevent.stop="() => {/*show_context_menu*/ }" :width="width" :height="height">
         <KyouView :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
             :is_image_view="false" :kyou="target_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
             :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"

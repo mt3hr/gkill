@@ -576,6 +576,7 @@ export class Kyou extends InfoBase {
     clone(): Kyou {
         const cloned_kyou = new Kyou()
         cloned_kyou.is_deleted = this.is_deleted
+        cloned_kyou.is_checked_kyou = this.is_checked_kyou
         cloned_kyou.id = this.id
         cloned_kyou.rep_name = this.rep_name
         cloned_kyou.related_time = this.related_time

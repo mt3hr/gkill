@@ -84,7 +84,7 @@ async function save(): Promise<void> {
     if (related_date.value === "" || related_time.value === "") {
         const error = new GkillError()
         error.error_code = "//TODO"
-        error.error_message = "開始日時が入力されていません"
+        error.error_message = "日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

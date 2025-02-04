@@ -2051,65 +2051,75 @@ export class GkillAPI {
                 for (const key in json) {
                         (response as any)[key] = json[key]
                 }
-                for (let i = 0; i < json.mi_kyous.length; i++) {
-                        const kyou = new Kyou()
-                        for (const key in json.mi_kyous[i]) {
-                                (kyou as any)[key] = (json.mi_kyous[i] as any)[key]
+                if (json.mi_kyous) {
+                        for (let i = 0; i < json.mi_kyous.length; i++) {
+                                const kyou = new Kyou()
+                                for (const key in json.mi_kyous[i]) {
+                                        (kyou as any)[key] = (json.mi_kyous[i] as any)[key]
 
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (kyou as any)[key]) {
-                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (kyou as any)[key]) {
+                                                (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                        }
                                 }
+                                response.mi_kyous[i] = kyou
                         }
-                        response.mi_kyous[i] = kyou
                 }
-                for (let i = 0; i < json.mis.length; i++) {
-                        const mi = new Mi()
-                        for (const key in json.mis[i]) {
-                                (mi as any)[key] = (json.mis[i] as any)[key]
+                if (json.mis) {
+                        for (let i = 0; i < json.mis.length; i++) {
+                                const mi = new Mi()
+                                for (const key in json.mis[i]) {
+                                        (mi as any)[key] = (json.mis[i] as any)[key]
 
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (mi as any)[key]) {
-                                        (mi as any)[key] = moment((mi as any)[key]).toDate()
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (mi as any)[key]) {
+                                                (mi as any)[key] = moment((mi as any)[key]).toDate()
+                                        }
                                 }
+                                response.mis[i] = mi
                         }
-                        response.mis[i] = mi
                 }
-                for (let i = 0; i < json.tags.length; i++) {
-                        const tag = new Tag()
-                        for (const key in json.tags[i]) {
-                                (tag as any)[key] = (json.tags[i] as any)[key]
+                if (json.tags) {
+                        for (let i = 0; i < json.tags.length; i++) {
+                                const tag = new Tag()
+                                for (const key in json.tags[i]) {
+                                        (tag as any)[key] = (json.tags[i] as any)[key]
 
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (tag as any)[key]) {
-                                        (tag as any)[key] = moment((tag as any)[key]).toDate()
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (tag as any)[key]) {
+                                                (tag as any)[key] = moment((tag as any)[key]).toDate()
+                                        }
                                 }
+                                response.tags[i] = tag
                         }
-                        response.tags[i] = tag
                 }
-                for (let i = 0; i < json.texts.length; i++) {
-                        const text = new Text()
-                        for (const key in json.texts[i]) {
-                                (text as any)[key] = (json.texts[i] as any)[key]
+                if (json.texts) {
+                        for (let i = 0; i < json.texts.length; i++) {
+                                const text = new Text()
+                                for (const key in json.texts[i]) {
+                                        (text as any)[key] = (json.texts[i] as any)[key]
 
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (text as any)[key]) {
-                                        (text as any)[key] = moment((text as any)[key]).toDate()
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (text as any)[key]) {
+                                                (text as any)[key] = moment((text as any)[key]).toDate()
+                                        }
                                 }
+                                response.texts[i] = text
                         }
-                        response.texts[i] = text
                 }
-                for (let i = 0; i < json.timeiss.length; i++) {
-                        const timeis = new TimeIs()
-                        for (const key in json.timeiss[i]) {
-                                (timeis as any)[key] = (json.timeiss[i] as any)[key]
+                if (json.timeiss) {
+                        for (let i = 0; i < json.timeiss.length; i++) {
+                                const timeis = new TimeIs()
+                                for (const key in json.timeiss[i]) {
+                                        (timeis as any)[key] = (json.timeiss[i] as any)[key]
 
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (timeis as any)[key]) {
-                                        (timeis as any)[key] = moment((timeis as any)[key]).toDate()
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (timeis as any)[key]) {
+                                                (timeis as any)[key] = moment((timeis as any)[key]).toDate()
+                                        }
                                 }
+                                response.timeiss[i] = timeis
                         }
-                        response.timeiss[i] = timeis
                 }
                 return response
         }

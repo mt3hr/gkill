@@ -6,9 +6,9 @@
         <div>現在の検索条件でタスク一覧を共有します。</div>
         <v-text-field v-model="share_title" label="タイトル" />
         <v-checkbox v-model="share_time_only" label="タスク有無と時刻のみ共有" />
-        <v-row>
+        <v-row class="pa-0 ma-0">
             <v-spacer />
-            <v-col>
+            <v-col class="pa-0 ma-0" cols="auto">
                 <v-btn @click="share()">OK</v-btn>
             </v-col>
         </v-row>

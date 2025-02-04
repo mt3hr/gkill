@@ -58,12 +58,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="enable_browser_cache" hide-detail label="ブラウザキャッシュ有効" />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="rykv_hot_reload" hide-detail label="rykvホットリロード" />
+                        <v-checkbox v-model="rykv_hot_reload" hide-detail label="ホットリロード" />
                     </td>
                 </tr>
                 <tr>
@@ -245,6 +240,13 @@ async function logout(): Promise<void> {
         emits('received_errors', res.errors)
         return
     }
+    if (res.messages && res.messages.length !== 0) {
+        emits('received_messages', res.messages)
+    }
+    await sleep(1500)
+
+    deleteAllCookies()
+
     router.replace("/")
 }
 
@@ -349,4 +351,16 @@ javascript: (function () {
 }());`).replace("\n", "").replace("\t", ""))
 
 load_mi_board_names()
+
+const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
+
+function deleteAllCookies() {
+    const cookies = document.cookie.split(';')
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i]
+        const eqPos = cookie.indexOf('=')
+        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie
+        document.cookie = name + '=;max-age=0'
+    }
+}
 </script>

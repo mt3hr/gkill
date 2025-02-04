@@ -26,8 +26,8 @@
             <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: any) => show_context_menu(e as PointerEvent)"
                 :class="kyou_class">
                 <v-col v-if="show_checkbox" class="kyou_check_box pa-0 ma-0" cols="auto">
-                    <input type="checkbox" v-model="cloned_kyou.is_checked" class="pa-0 ma-0"
-                        @change="emits('requested_update_check_kyous', [kyou], !kyou.is_checked)" />
+                    <input type="checkbox" class="pa-0 ma-0" v-model="kyou.is_checked_kyou"
+                        @click="emits('requested_update_check_kyous', [kyou], !kyou.is_checked_kyou)" />
                 </v-col>
                 <v-col class="kyou_related_time pa-0 ma-0" cols="auto">
                     {{ format_time(cloned_kyou.related_time) }}
@@ -80,9 +80,10 @@
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
                 ref="lantana_view" />
             <TimeIsView v-if="cloned_kyou.typed_timeis" :timeis="cloned_kyou.typed_timeis"
-                :show_timeis_plaing_end_button="true" :application_config="application_config" :gkill_api="gkill_api"
-                :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
-                :height="height" :width="width" @received_errors="(errors) => emits('received_errors', errors)"
+                :show_timeis_plaing_end_button="show_timeis_plaing_end_button" :application_config="application_config"
+                :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
+                :last_added_tag="last_added_tag" :height="height" :width="width"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -165,7 +166,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, watch, type Ref, ref, nextTick, onMounted, onUnmounted, onUpdated } from 'vue'
+import { computed, watch, type Ref, ref, nextTick } from 'vue'
 
 import AttachedTag from './attached-tag.vue'
 import AttachedText from './attached-text.vue'
@@ -225,7 +226,7 @@ const kyou_class = computed(() => {
     if (highlighted) {
         return "highlighted_kyou"
     }
-    return "kyou"
+    return ""
 })
 
 async function load_attached_infos(): Promise<void> {

@@ -146,7 +146,7 @@ const mi: Ref<Mi> = ref((() => {
     mi.id = id.value
     return mi
 })())
-const mi_board_names: Ref<Array<string>> = ref(new Array())
+const mi_board_names: Ref<Array<string>> = ref(props.application_config.mi_default_board !== "" ? [props.application_config.mi_default_board] : [])
 
 const mi_title: Ref<string> = ref(mi.value ? mi.value.title : "")
 const mi_board_name: Ref<string> = ref(props.application_config.mi_default_board !== "" ? props.application_config.mi_default_board : "Inbox")
@@ -173,6 +173,17 @@ async function load_mi_board_names(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         // emits('received_messages', res.messages)
     }
+
+    let is_contain_default_board = false
+    res.boards.forEach((board_name) => {
+        if (board_name === props.application_config.mi_default_board) {
+            is_contain_default_board = true
+        }
+    })
+    if (!is_contain_default_board) {
+        res.boards.push(props.application_config.mi_default_board)
+    }
+
     mi_board_names.value = res.boards
 }
 
@@ -247,6 +258,17 @@ async function save(): Promise<void> {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "クライアントのデータが変です"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
+    // タイトルの入力チェック
+    if (mi_title.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "タイトルが入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

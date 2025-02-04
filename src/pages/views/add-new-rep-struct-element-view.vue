@@ -24,6 +24,7 @@ import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-
 import { type Ref, ref } from 'vue';
 import type { AddNewRepStructElementViewEmits } from './add-new-rep-struct-element-view-emits'
 import type { AddNewRepStructElementViewProps } from './add-new-rep-struct-element-view-props'
+import { GkillError } from '@/classes/api/gkill-error';
 
 const props = defineProps<AddNewRepStructElementViewProps>()
 const emits = defineEmits<AddNewRepStructElementViewEmits>()
@@ -35,6 +36,14 @@ const check_when_inited: Ref<boolean> = ref(true)
 const ignore_check_rep_rykv: Ref<boolean> = ref(false)
 
 function emits_rep_name(): void {
+    if (rep_name.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "記録保管場所名が入力されていません"
+        emits('received_errors', [error])
+        return
+    }
+
     const rep_struct_element = new RepStructElementData()
     rep_struct_element.id = props.gkill_api.generate_uuid()
     rep_struct_element.check_when_inited = check_when_inited.value

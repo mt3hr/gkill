@@ -24,6 +24,7 @@ import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-
 import { type Ref, ref } from 'vue';
 import type { AddNewTagStructElementViewEmits } from './add-new-tag-struct-element-view-emits'
 import type { AddNewTagStructElementViewProps } from './add-new-tag-struct-element-view-props'
+import { GkillError } from '@/classes/api/gkill-error';
 
 const props = defineProps<AddNewTagStructElementViewProps>()
 const emits = defineEmits<AddNewTagStructElementViewEmits>()
@@ -35,6 +36,14 @@ const check_when_inited: Ref<boolean> = ref(true)
 const is_force_hide: Ref<boolean> = ref(false)
 
 function emits_tag_name(): void {
+    if (tag_name.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "タグ名が入力されていません"
+        emits('received_errors', [error])
+        return
+    }
+
     const tag_struct_element = new TagStructElementData()
     tag_struct_element.id = props.gkill_api.generate_uuid()
     tag_struct_element.check_when_inited = check_when_inited.value

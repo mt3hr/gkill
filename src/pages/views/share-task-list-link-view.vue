@@ -9,9 +9,9 @@
             @focus="$event.target.select()" />
         <v-text-field v-model="over_lan_share_url" label="それ以外" readonly @click="copy_over_lan_share_mi_link"
             @focus="$event.target.select()" />
-        <v-row>
+        <v-row class="pa-0 ma-0">
             <v-spacer />
-            <v-col>
+            <v-col class="pa-0 ma-0" cols="auto">
                 <v-btn @click="update()">更新</v-btn>
             </v-col>
         </v-row>
