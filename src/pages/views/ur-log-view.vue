@@ -11,11 +11,12 @@
             <tr>
                 <td>
                     <img v-if="kyou.typed_urlog" class="urlog_favicon"
-                        :src="'data:image;base64,' + (kyou.typed_urlog.favicon_image)" />
+                        :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : 'data:image;base64,' + (kyou.typed_urlog.favicon_image)" />
                 </td>
                 <td>
-                    <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url" target="_blank" @click="open_urlog_link">{{
-                        kyou.typed_urlog.url }}</a>
+                    <a v-if="kyou.typed_urlog" :href="kyou.typed_urlog.url" target="_blank" @click="open_urlog_link"
+                        style="white-space: nowrap;">{{
+                            kyou.typed_urlog.url }}</a>
                 </td>
             </tr>
         </table>
@@ -23,7 +24,7 @@
             <tr>
                 <td>
                     <img v-if="kyou.typed_urlog" class="urlog_thumbnail"
-                        :src="'data:image;base64,' + (kyou.typed_urlog.thumbnail_image)" />
+                        :src="kyou.typed_urlog.thumbnail_image === '' ? '/noimage.png' : 'data:image;base64,' + (kyou.typed_urlog.thumbnail_image)" />
                 </td>
                 <td>
                     <div v-if="kyou.typed_urlog" class="urlog_description">{{ kyou.typed_urlog.description }}</div>

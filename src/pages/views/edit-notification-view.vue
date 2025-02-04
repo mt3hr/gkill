@@ -73,8 +73,31 @@ async function load(): Promise<void> {
 }
 
 async function save(): Promise<void> {
+    // 日時必須入力チェック
+    if (notification_date.value === "" || notification_time.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "通知日時が入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
+    // 値がなかったらエラーメッセージを出力する
+    if (content_value.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "通知内容が未入力です"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
     // 更新がなかったらエラーメッセージを出力する
-    if (cloned_notification.value.content === content_value.value) {
+    if (cloned_notification.value.content === content_value.value &&
+        (moment(cloned_notification.value.notification_time).toDate().getTime() === moment(notification_date.value + " " + notification_time.value).toDate().getTime())) {
         const error = new GkillError()
         error.error_code = "//TODO"
         error.error_message = "内容が更新されていません"

@@ -1739,7 +1739,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err = fmt.Errorf("error at parse add urlog request to json: %w", err)
+		err = fmt.Errorf("error at parse add nlog request to json: %w", err)
 		gkill_log.Debug.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddNlogRequestDataError,
@@ -3967,14 +3967,24 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// すでに存在する場合はエラー
-	_, err = repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
+	// 対象が存在しない場合はエラー
+	existMi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
 		gkill_log.Debug.Printf(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi更新後取得に失敗しました",
+			ErrorMessage: "Mi更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if existMi == nil {
+		err = fmt.Errorf("not exist mi id = %s", request.Mi.ID)
+		gkill_log.Debug.Printf(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.NotFoundMiError,
+			ErrorMessage: "Mi更新に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4027,29 +4037,6 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
 			ErrorMessage: "Mi追加後取得に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// 対象が存在しない場合はエラー
-	existMi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
-	if err != nil {
-		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi更新に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	if existMi == nil {
-		err = fmt.Errorf("not exist mi id = %s", request.Mi.ID)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.NotFoundMiError,
-			ErrorMessage: "Mi更新に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9279,13 +9266,9 @@ func (g *GkillServerAPI) resolveFileName(repDir string, filename string, behavio
 			// ファイルが存在しない名前になるまでカッコ内の数字をインクリメントし続ける
 			// targetFilenameは最終的な移動先ファイル名
 			fullFilename = planeFileName
-			for count := 0; ; count++ {
+			for count := 1; ; count++ {
 				if _, err := os.Stat(fullFilename); err != nil {
 					break
-				}
-				// 初回は無視。count:=0としないほうがfor文としてきれいに収まる
-				if count == 0 {
-					continue
 				}
 				fullFilename = os.Expand("${name} (${count})${ext}", func(str string) string {
 					switch str {

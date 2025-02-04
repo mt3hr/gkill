@@ -1,5 +1,5 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
+    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height" style="overflow: unset">
         <LantanaFlowersView v-if="kyou.typed_lantana" :application_config="application_config" :gkill_api="gkill_api"
             :editable="false" :mood="kyou.typed_lantana.mood" />
         <LantanaContextMenu :application_config="application_config" :gkill_api="gkill_api"

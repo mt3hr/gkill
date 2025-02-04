@@ -61,7 +61,6 @@
                                 }
                             }
                         })
-
                     };
                 }" @updated_query_clear="(new_query: FindKyouQuery) => {
                     if (application_config.rykv_hot_reload) {
@@ -72,8 +71,6 @@
                         skip_search_this_tick = true // 使い方違うけど
                         search(focused_column_index, new_query, true)
                     };
-                    if (new_query.calendar_start_date && new_query.calendar_end_date) {
-                    }
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
                 @request_open_focus_board="(board_name: string) => open_or_focus_board(board_name)"
                 @received_errors="(errors) => emits('received_errors', errors)"
@@ -100,7 +97,9 @@
                                 :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true"
                                 :show_content_only="false" @scroll_list="(scroll_top: number) => {
                                     match_kyous_list_top_list[index] = scroll_top
-                                    props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list)
+                                    if (inited) {
+                                        props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list)
+                                    }
                                 }" @clicked_list_view="() => {
                                     skip_search_this_tick = true
                                     focused_query = querys[index]
@@ -114,7 +113,6 @@
                                     skip_search_this_tick = true
                                     focused_query = querys[index]
                                     clicked_kyou_in_list_view(index, kyou)
-
                                 }" @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
@@ -304,7 +302,6 @@ const focused_time: Ref<Date> = ref(moment().toDate())
 const focused_column_checked_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const is_show_kyou_detail_view: Ref<boolean> = ref(true)
 const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
-const is_show_gps_log_map: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
 const drawer: Ref<boolean | null> = ref(false)
 const drawer_mode_is_mobile: Ref<boolean | null> = ref(false)
@@ -339,10 +336,10 @@ watch(() => focused_time.value, () => {
             break
         }
     }
-    kyou_list_view.scroll_to_kyou(target_kyou)
+    if (inited.value) {
+        kyou_list_view.scroll_to_kyou(target_kyou)
+    }
 })
-
-
 
 function update_focused_kyous_list(column_index: number): void {
     focused_kyous_list.value.splice(0)
@@ -380,7 +377,7 @@ async function reload_list(column_index: number): Promise<void> {
     search(column_index, querys.value[column_index], true)
 }
 
-function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
+async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Promise<void> {
     focused_kyou.value = kyou
     focused_column_index.value = column_index
 
@@ -391,19 +388,10 @@ function clicked_kyou_in_list_view(column_index: number, kyou: Kyou) {
         }
     }
 
-    let scrolled = false
     for (let i = 0; i < update_target_column_indexs.length; i++) {
         const target_column_index = update_target_column_indexs[i]
-        for (let j = 0; j < match_kyous_list.value[target_column_index].length; j++) {
-            const kyou_in_list = match_kyous_list.value[target_column_index][j]
-            if (kyou.id === kyou_in_list.id) {
-                kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
-                scrolled = true
-                break
-            }
-            if (scrolled) {
-                break
-            }
+        if (inited.value) {
+            kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
         }
     }
 }
@@ -418,7 +406,7 @@ async function init(): Promise<void> {
         const waitPromises = new Array<Promise<void>>()
         try {
             // スクロール位置の復元
-            match_kyous_list_top_list.value = props.gkill_api.get_saved_mi_scroll_indexs()
+            match_kyous_list_top_list.value = props.gkill_api.get_saved_rykv_scroll_indexs()
 
             // 前回開いていた列があれば復元する
             skip_search_this_tick.value = true
@@ -434,26 +422,23 @@ async function init(): Promise<void> {
                     add_list_view(saved_querys[i])
                 }
             }
-            await nextTick(() => { })
             skip_search_this_tick.value = true
 
             for (let i = 0; i < saved_querys.length; i++) {
-                waitPromises.push(search(i, saved_querys[i], true).then(() => {
-                    const kyou_list_view = kyou_list_views.value[i] as any
-                    const scroll_top = match_kyous_list_top_list.value[i]
-                    kyou_list_view.scroll_to(scroll_top)
-                }))
+                await nextTick(() => {
+                    skip_search_this_tick.value = true
+                    waitPromises.push(search(i, saved_querys[i], true).then(async () => {
+                        return nextTick(() => {
+                            kyou_list_views.value[i].scroll_to(match_kyous_list_top_list.value[i])
+                            kyou_list_views.value[i].set_loading(false)
+                        })
+                    }))
+                })
             }
             is_loading.value = false
         } finally {
-            Promise.all(waitPromises).then(() => {
+            Promise.all(waitPromises).then(async () => {
                 focused_column_index.value = 0
-
-                for (let i = 0; i < querys.value.length; i++) {
-                    const kyou_list_view = kyou_list_views.value[i] as any
-                    const scroll_top = match_kyous_list_top_list.value[i]
-                    kyou_list_view.scroll_to(scroll_top)
-                }
 
                 inited.value = true
                 drawer_mode_is_mobile.value = null
@@ -464,7 +449,7 @@ async function init(): Promise<void> {
 }
 async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
     // 検索する。Tickでまとめる
-    nextTick(async () => {
+    return nextTick(async () => {
         try {
             querys.value[column_index] = query
             if (!force_search) {
@@ -475,12 +460,12 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             querys_backup.value[column_index] = query
             focused_query.value = query
 
-            const target_board_name = focused_query.value.mi_board_name
-
             props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
 
             focused_column_checked_kyous.value = []
             nextTick(() => dnote_view.value?.recalc_all())
+
+            const target_board_name = focused_query.value.mi_board_name
 
             // 前の検索処理を中断する
             if (abort_controllers.value[column_index]) {
@@ -492,7 +477,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             }
 
             const kyou_list_view = kyou_list_views.value[column_index] as any
-            if (kyou_list_view) {
+            if (kyou_list_view && inited.value) {
                 kyou_list_view.scroll_to(0)
             }
             await nextTick(async () => {
@@ -540,9 +525,11 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
                 if (!kyou_list_view) {
                     return
                 }
-                kyou_list_view.scroll_to(0)
-                kyou_list_view.set_loading(false)
-                skip_search_this_tick.value = false
+                if (inited.value) {
+                    kyou_list_view.scroll_to(0)
+                    kyou_list_view.set_loading(false)
+                    skip_search_this_tick.value = false
+                }
             })
         } catch (err: any) {
             // abortは握りつぶす
@@ -554,10 +541,10 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
     })
 }
 
-async function close_list_view(column_index: number): Promise<void> {
+function close_list_view(column_index: number) {
     skip_search_this_tick.value = true
+    focused_query.value = querys.value[focused_column_index.value]
     focused_column_index.value = -1
-    focused_query.value = querys.value[0]
     focused_kyous_list.value.splice(0)
 
     querys.value.splice(column_index, 1)
@@ -576,7 +563,9 @@ async function close_list_view(column_index: number): Promise<void> {
         if (!kyou_list_view) {
             return
         }
-        kyou_list_view.scroll_to(match_kyous_list_top_list.value[i])
+        if (inited.value) {
+            kyou_list_view.scroll_to(match_kyous_list_top_list.value[i])
+        }
     }
     props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
     props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list.value)
@@ -602,7 +591,9 @@ function add_list_view(query?: FindKyouQuery): void {
         querys.value.push(query)
         focused_query.value = query
     }
-    focused_column_index.value = querys.value.length - 1
+    if (inited.value) {
+        focused_column_index.value = querys.value.length - 1
+    }
 }
 
 function floatingActionButtonStyle() {

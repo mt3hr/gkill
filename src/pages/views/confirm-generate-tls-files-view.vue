@@ -62,5 +62,6 @@ async function generate_tls_files(): Promise<void> {
         emits('received_messages', res.messages)
     }
     emits('generated_tls_files')
+    emits('requested_close_dialog')
 }
 </script>

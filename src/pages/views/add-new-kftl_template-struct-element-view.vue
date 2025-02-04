@@ -23,6 +23,7 @@ import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-templ
 import { type Ref, ref } from 'vue';
 import type { AddNewKFTLTemplateStructElementViewEmits } from './add-new-kftl-template-struct-element-view-emits'
 import type { AddNewKFTLTemplateStructElementViewProps } from './add-new-kftl-template-struct-element-view-props'
+import { GkillError } from '@/classes/api/gkill-error';
 
 const props = defineProps<AddNewKFTLTemplateStructElementViewProps>()
 const emits = defineEmits<AddNewKFTLTemplateStructElementViewEmits>()
@@ -33,6 +34,22 @@ const title: Ref<string> = ref("")
 const template: Ref<string> = ref("")
 
 function emits_kftl_template_name(): void {
+    if (title.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "タイトルが入力されていません"
+        emits('received_errors', [error])
+        return
+    }
+
+    if (template.value === "") {
+        const error = new GkillError()
+        error.error_code = "//TODO"
+        error.error_message = "テンプレートが入力されていません"
+        emits('received_errors', [error])
+        return
+    }
+
     const kftl_template_struct_element = new KFTLTemplateStructElementData()
     kftl_template_struct_element.id = props.gkill_api.generate_uuid()
     kftl_template_struct_element.key = title.value
