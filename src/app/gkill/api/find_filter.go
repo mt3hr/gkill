@@ -13,6 +13,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 const (
@@ -55,6 +56,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at get repositories: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("getRepositories")
 
 	// フィルタ
 	gkillErr, err = f.selectMatchRepsFromQuery(ctx, findKyouContext)
@@ -62,11 +64,13 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at select match reps: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("selectMatchRepsFromQuery")
 	gkillErr, err = f.updateCache(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at update cache: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("updateCache")
 
 	// キャッシュ更新終わったら、
 	// 最新のKyouがどのRepにあるかを取得
@@ -92,82 +96,99 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at get all tags: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("getAllTags")
 	gkillErr, err = f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get hide tags when unchecked tags: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("getAllHideTagsWhenUnChecked")
 	gkillErr, err = f.findTags(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find tags: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("findTags")
 	gkillErr, err = f.findTexts(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find texts: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("findTexts")
 	gkillErr, err = f.findTimeIsTexts(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis texts: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("findTimeIsTexts")
 	gkillErr, err = f.findTimeIs(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("findTimeIs")
 	gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis tags: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("findTimeIsTags")
 	gkillErr, err = f.getMatchHideTagsWhenUnckedTimeIs(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("getMatchHideTagsWhenUnckedTimeIs")
 	gkillErr, err = f.filterTagsTimeIs(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter tags timeis: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("filterTagsTimeIs")
 	gkillErr, err = f.findKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("findKyous")
 	gkillErr, err = f.filterMiForMi(ctx, findKyouContext) //miの場合のみ
 	if err != nil {
 		err = fmt.Errorf("error at filter mi for mi: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("filterMiForMi")
 	gkillErr, err = f.getMatchHideTagsWhenUnckedKyou(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("getMatchHideTagsWhenUnckedKyou")
 	gkillErr, err = f.filterTagsKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter tags kyous: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("filterTagsKyous")
 	gkillErr, err = f.filterPlaingTimeIsKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter plaing time is kyous: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("filterPlaingTimeIsKyous")
 	gkillErr, err = f.filterLocationKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter location kyous: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("filterLocationKyous")
 	gkillErr, err = f.filterImageKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter image kyous: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("filterImageKyous")
 
+	gkill_log.Debug.Printf("waitLatestDataWg")
 	latestDatasWg.Wait()
 	err = <-errCh
 	if err != nil {
@@ -178,6 +199,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at replace latest kyou infos: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("replaceLatestKyouInfos")
 
 	for _, rep := range findKyouContext.MatchKyousCurrent {
 		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, rep)
@@ -188,12 +210,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at override kyous: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("overrideKyous")
 
 	gkillErr, err = f.sortResultKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at sort result kyous: %w", err)
 		return nil, gkillErr, err
 	}
+	gkill_log.Debug.Printf("sortResultKyous")
 
 	return findKyouContext.ResultKyous, nil, nil
 }
@@ -489,15 +513,21 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 }
 
 func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	for _, tagName := range *findCtx.ParsedFindQuery.Tags {
-		matchTags, err := findCtx.Repositories.TagReps.GetTagsByTagName(ctx, tagName)
-		if err != nil {
-			err = fmt.Errorf("error at get tags by name %s: %w", tagName, err)
-			return nil, err
-		}
-		for _, tag := range matchTags {
-			findCtx.MatchTags[tag.ID] = tag
-		}
+	trueValue := true
+	falseValue := false
+
+	query := &find.FindQuery{
+		IsDeleted: &falseValue,
+		UseWords:  &trueValue,
+		Words:     findCtx.ParsedFindQuery.Words,
+	}
+	matchTags, err := findCtx.Repositories.TagReps.FindTags(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at get tags by name %#v: %w", findCtx.ParsedFindQuery.Words, err)
+		return nil, err
+	}
+	for _, tag := range matchTags {
+		findCtx.MatchTags[tag.ID] = tag
 	}
 	return nil, nil
 }
