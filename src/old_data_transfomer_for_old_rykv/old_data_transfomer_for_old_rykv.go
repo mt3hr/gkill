@@ -1337,53 +1337,113 @@ func newAllDataDB(db *sql.DB, userName string) (*allDataDB, error) {
 		UserName: userName,
 	}
 	var err error
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "kmemo" (ID NOT NULL, Content NOT NULL, Time NOT NULL, RepName NOT NULL);`)
+	_, err = db.Exec(`PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE IF NOT EXISTS "kmemo" (ID NOT NULL, Content NOT NULL, Time NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create kmemo db")
-		err = fmt.Errorf("error at create table: %w", err)
+		err = fmt.Errorf("error at PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE: %w", err)
 		return nil, err
 	}
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "urlog" (ID NOT NULL, URL NOT NULL, Title NOT NULL, Description NOT NULL, Favicon NOT NULL, Image NOT NULL, Time NOT NULL, RepName NOT NULL);`)
+	_, err = db.Exec(`PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE IF NOT EXISTS "urlog" (ID NOT NULL, URL NOT NULL, Title NOT NULL, Description NOT NULL, Favicon NOT NULL, Image NOT NULL, Time NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create urlog db")
-		err = fmt.Errorf("error at create table to database: %w", err)
+		err = fmt.Errorf("error at PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE to database: %w", err)
 		return nil, err
 	}
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "nlog" (ID NOT NULL, Time NOT NULL, Amount NOT NULL, Memo NOT NULL, ShopName NOT NULL, RepName NOT NULL);`)
+	_, err = db.Exec(`PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE IF NOT EXISTS "nlog" (ID NOT NULL, Time NOT NULL, Amount NOT NULL, Memo NOT NULL, ShopName NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create nlog db")
-		err = fmt.Errorf("error at create table to database: %w", err)
+		err = fmt.Errorf("error at PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE to database: %w", err)
 		return nil, err
 	}
 
 	_, err = db.Exec(`
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS lantana (LantanaID TEXT NOT NULL, Time TEXT NOT NULL, Mood INTEGER NOT NULL, RepName NOT NULL);
 	`)
 	if err != nil {
 		err = fmt.Errorf("error at create lantana db")
-		err = fmt.Errorf("error at create table to database: %w", err)
+		err = fmt.Errorf("error at PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE to database: %w", err)
 		return nil, err
 	}
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "id" (Target NOT NULL, ID NOT NULL, Time NOT NULL, LastMod NOT NULL, RepName NOT NULL);`)
+	_, err = db.Exec(`PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE IF NOT EXISTS "id" (Target NOT NULL, ID NOT NULL, Time NOT NULL, LastMod NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create id db")
-		err = fmt.Errorf("error at create table to database: %w", err)
+		err = fmt.Errorf("error at PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE to database: %w", err)
 		return nil, err
 	}
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "tag" (ID NOT NULL, Target NOT NULL, Tag NOT NULL, Time NOT NULL, RepName NOT NULL);`)
+	_, err = db.Exec(`PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE IF NOT EXISTS "tag" (ID NOT NULL, Target NOT NULL, Tag NOT NULL, Time NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create tag db")
-		err = fmt.Errorf("error at create table to database: %w", err)
+		err = fmt.Errorf("error at PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE to database: %w", err)
 		return nil, err
 	}
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "text" (ID NOT NULL, Text NOT NULL, Target NOT NULL, Time NOT NULL, RepName NOT NULL);`)
+	_, err = db.Exec(`PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE IF NOT EXISTS "text" (ID NOT NULL, Text NOT NULL, Target NOT NULL, Time NOT NULL, RepName NOT NULL);`)
 	if err != nil {
 		err = fmt.Errorf("error at create text db")
-		err = fmt.Errorf("error at create table to database: %w", err)
+		err = fmt.Errorf("error at PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE to database: %w", err)
 		return nil, err
 	}
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "timeis_start" (
+	_, err = db.Exec(`PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE IF NOT EXISTS "timeis_start" (
 		ID        TEXT NOT NULL,
 		Title     TEXT NOT NULL,
 		StartTime TEXT NOT NULL,
@@ -1394,7 +1454,11 @@ CREATE TABLE IF NOT EXISTS lantana (LantanaID TEXT NOT NULL, Time TEXT NOT NULL,
 		err = fmt.Errorf("error at create start table: %w", err)
 		return nil, err
 	}
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS "timeis_end" (
+	_, err = db.Exec(`PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE IF NOT EXISTS "timeis_end" (
 		ID      TEXT NOT NULL,
 		StartID NOT NULL,
 		EndTime TEXT,
@@ -1406,6 +1470,10 @@ CREATE TABLE IF NOT EXISTS lantana (LantanaID TEXT NOT NULL, Time TEXT NOT NULL,
 		return nil, err
 	}
 	_, err = db.Exec(`
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS Task (
     TaskID TEXT NOT NULL,
     CreatedTime TEXT NOT NULL,
@@ -1418,6 +1486,10 @@ CREATE TABLE IF NOT EXISTS Task (
 	}
 	_, err = db.Exec(`
 
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS TaskTitleInfo (
     TaskTitleID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1432,6 +1504,10 @@ CREATE TABLE IF NOT EXISTS TaskTitleInfo (
 	}
 	_, err = db.Exec(`
 
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS CheckStateInfo (
     CheckStateID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1446,6 +1522,10 @@ CREATE TABLE IF NOT EXISTS CheckStateInfo (
 	}
 	_, err = db.Exec(`
 
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS LimitInfo (
     LimitID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1460,6 +1540,10 @@ CREATE TABLE IF NOT EXISTS LimitInfo (
 	}
 	_, err = db.Exec(`
 
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS MiStartInfo (
     StartID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1474,6 +1558,10 @@ CREATE TABLE IF NOT EXISTS MiStartInfo (
 	}
 	_, err = db.Exec(`
 
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS MiEndInfo (
     EndID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1488,6 +1576,10 @@ CREATE TABLE IF NOT EXISTS MiEndInfo (
 	}
 	_, err = db.Exec(`
 
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS BoardInfo (
     BoardInfoID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1498,7 +1590,11 @@ CREATE TABLE IF NOT EXISTS BoardInfo (
 `)
 	if err != nil {
 		err = fmt.Errorf("error at mi db")
-		err = fmt.Errorf("error at create table to database: %w", err)
+		err = fmt.Errorf("error at PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
+CREATE TABLE to database: %w", err)
 		return nil, err
 	}
 	return allDataDB, nil

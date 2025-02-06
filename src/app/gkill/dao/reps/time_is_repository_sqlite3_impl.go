@@ -31,6 +31,10 @@ func NewTimeIsRepositorySQLite3Impl(ctx context.Context, filename string) (TimeI
 	}
 
 	sql := `
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS "TIMEIS" (
   IS_DELETED NOT NULL,
   ID NOT NULL,

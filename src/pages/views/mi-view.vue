@@ -435,7 +435,6 @@ async function init(): Promise<void> {
                     }))
                 })
             }
-            is_loading.value = false
         } finally {
             Promise.all(waitPromises).then(async () => {
                 focused_column_index.value = 0
@@ -443,6 +442,7 @@ async function init(): Promise<void> {
                 inited.value = true
                 drawer_mode_is_mobile.value = null
                 drawer.value = props.app_content_width.valueOf() >= 420
+                is_loading.value = false
             })
         }
     })

@@ -29,6 +29,10 @@ func NewNotificationRepositorySQLite3Impl(ctx context.Context, filename string) 
 	}
 
 	sql := `
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
