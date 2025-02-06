@@ -70,7 +70,7 @@ watch(() => props.kyou, async () => {
 
 async function load_cloned_kyou() {
     const kyou = props.kyou.clone()
-    await kyou.load_all()
+    await kyou.load_typed_datas()
     cloned_kyou.value = kyou
 }
 
