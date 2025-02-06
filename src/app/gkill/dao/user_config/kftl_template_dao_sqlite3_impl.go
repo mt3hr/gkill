@@ -25,6 +25,10 @@ func NewKFTLTemplateDAOSQLite3Impl(ctx context.Context, filename string) (KFTLTe
 	}
 
 	sql := `
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS "KFTL_TEMPLATE" (
   ID PRIMARY KEY NOT NULL,
   USER_ID NOT NULL,
