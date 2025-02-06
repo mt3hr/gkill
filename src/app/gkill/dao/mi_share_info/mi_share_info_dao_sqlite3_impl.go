@@ -25,6 +25,10 @@ func NewMiShareInfoDAOSQLite3Impl(ctx context.Context, filename string) (MiShare
 	}
 
 	sql := `
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS "MI_SHARE_INFO" (
   ID PRIMARY KEY NOT NULL,
   USER_ID NOT NULL,

@@ -27,6 +27,10 @@ func NewFileUploadHistoryDAOSQLite3Impl(ctx context.Context, filename string) (F
 	}
 
 	sql := `
+PRAGMA temp_store = MEMORY;
+PRAGMA cache_size = -50000;
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;VACUUM;
 CREATE TABLE IF NOT EXISTS "FILE_UPLOAD_HISTORY" (
   ID PRIMARY KEY NOT NULL,
   USER_ID NOT NULL,

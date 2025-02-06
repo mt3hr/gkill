@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS %s (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create table LATEST_DATA_REPOSITORY_ADDRESS statement %s: %w", err)
+		err = fmt.Errorf("error at CREATE TABLE LATEST_DATA_REPOSITORY_ADDRESS statement %s: %w", err)
 		return err
 	}
 	defer stmt.Close()
