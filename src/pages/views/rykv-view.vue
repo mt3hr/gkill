@@ -419,12 +419,16 @@ async function init(): Promise<void> {
             for (let i = 0; i < saved_querys.length; i++) {
                 await nextTick(() => {
                     skip_search_this_tick.value = true
-                    waitPromises.push(search(i, saved_querys[i], true).then(async () => {
-                        return nextTick(() => {
-                            kyou_list_views.value[i].scroll_to(match_kyous_list_top_list.value[i])
-                            kyou_list_views.value[i].set_loading(false)
-                        })
-                    }))
+                    if (props.application_config.rykv_hot_reload) {
+                        waitPromises.push(search(i, saved_querys[i], true).then(async () => {
+                            return nextTick(() => {
+                                kyou_list_views.value[i].scroll_to(match_kyous_list_top_list.value[i])
+                                kyou_list_views.value[i].set_loading(false)
+                            })
+                        }))
+                    } else {
+                        querys.value = saved_querys
+                    }
                 })
             }
         } finally {
