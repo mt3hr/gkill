@@ -888,7 +888,7 @@ export class GkillAPI {
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
                 })
-                const json = await res.json()
+                let json = await res.json()
 
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
                 const response: GetKyousResponse = json
@@ -900,20 +900,28 @@ export class GkillAPI {
                 for (const key in json) {
                         (response as any)[key] = json[key]
                 }
+                json = null
+
+                const waitPromises = Array<Promise<void>>()
                 // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
-                for (let i = 0; i < response.kyous.length; i++) {
-                        const kyou = new Kyou()
-                        for (const key in response.kyous[i]) {
-                                (kyou as any)[key] = (response.kyous[i] as any)[key]
+                const worker_task_limit = 5000
+                for (let i = 0; i < response.kyous.length; i += worker_task_limit) {
+                        waitPromises.push((async (): Promise<void> => {
+                                for (let j = i; j < response.kyous.length && j < i + worker_task_limit; j++) {
+                                        const kyou = new Kyou()
+                                        for (const key in response.kyous[j]) {
+                                                (kyou as any)[key] = (response.kyous[j] as any)[key]
 
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (kyou as any)[key]) {
-                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                                // 時刻はDate型に変換
+                                                if (key.endsWith("time") && (kyou as any)[key]) {
+                                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                                }
+                                        }
+                                        response.kyous[j] = kyou
                                 }
-                        }
-                        response.kyous[i] = kyou
+                        })())
                 }
-
+                await Promise.all(waitPromises)
                 return response
         }
 
