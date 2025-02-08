@@ -39,25 +39,26 @@ export abstract class KFTLRequest extends KFTLRequestBase {
     async do_request(): Promise<Array<GkillError>> {
         let errors = Array<GkillError>()
         const time = this.get_related_time() != null ? this.get_related_time()!! : new Date(Date.now())
+        const now = new Date(Date.now())
         const req = new GetGkillInfoRequest()
-        
+
         const res = await GkillAPI.get_gkill_api().get_gkill_info(req)
 
         for (let i = 0; i < this.tags.length; i++) {
             const tag = this.tags[i]
             const req = new AddTagRequest()
-            
+
             req.tag.id = GkillAPI.get_gkill_api().generate_uuid()
             req.tag.tag = tag
             req.tag.target_id = this.get_request_id()
             req.tag.related_time = time
             req.tag.create_app = "gkill_kftl"
             req.tag.create_device = res.device
-            req.tag.create_time = time
+            req.tag.create_time = now
             req.tag.create_user = res.user_id
             req.tag.update_app = "gkill_kftl"
             req.tag.update_device = res.device
-            req.tag.update_time = time
+            req.tag.update_time = now
             req.tag.update_user = res.user_id
             await GkillAPI.get_gkill_api().add_tag(req).then((res) => {
                 if (res.errors && res.errors.length !== 0) {
@@ -70,18 +71,18 @@ export abstract class KFTLRequest extends KFTLRequestBase {
             const text = text_entry[1]
 
             const req = new AddTextRequest()
-            
+
             req.text.id = id
             req.text.target_id = this.get_request_id()
             req.text.text = text
             req.text.related_time = time
             req.text.create_app = "gkill_kftl"
             req.text.create_device = res.device
-            req.text.create_time = time
+            req.text.create_time = now
             req.text.create_user = res.user_id
             req.text.update_app = "gkill_kftl"
             req.text.update_device = res.device
-            req.text.update_time = time
+            req.text.update_time = now
             req.text.update_user = res.user_id
             await GkillAPI.get_gkill_api().add_text(req).then((res) => {
                 if (res.errors && res.errors.length !== 0) {
@@ -120,7 +121,15 @@ export abstract class KFTLRequest extends KFTLRequestBase {
     }
 
     get_related_time(): Date | null {
-        return this.related_time
+        let time = new Date(Date.now())
+        if (this.related_time != null) {
+            time = new Date(this.related_time.getTime())
+        } else {
+            for (let i = 0; i < this.context.get_add_second().valueOf(); i++) {
+                time.setTime(time.getTime() + 1000)
+            }
+        }
+        return time
     }
 
     set_related_time(time: Date | null): void {
