@@ -18,18 +18,13 @@ type applicationConfigDAOSQLite3Impl struct {
 
 func NewApplicationConfigDAOSQLite3Impl(ctx context.Context, filename string) (ApplicationConfigDAO, error) {
 	var err error
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
 
 	sql := `
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
   USER_ID NOT NULL,
   DEVICE NOT NULL,
@@ -38,6 +33,8 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
   RYKV_IMAGE_LIST_COLUMN_NUMBER NOT NULL,
   RYKV_HOT_RELOAD NOT NULL,
   MI_DEFAULT_BOARD NOT NULL,
+  RYKV_DEFAULT_PERIOD NOT NULL,
+  MI_DEFAULT_PERIOD NOT NULL,
   PRIMARY KEY(USER_ID, DEVICE)
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -71,7 +68,9 @@ SELECT
   GOOGLE_MAP_API_KEY,
   RYKV_IMAGE_LIST_COLUMN_NUMBER,
   RYKV_HOT_RELOAD,
-  MI_DEFAULT_BOARD
+  MI_DEFAULT_BOARD,
+  RYKV_DEFAULT_PERIOD,
+  MI_DEFAULT_PERIOD
 FROM APPLICATION_CONFIG
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -105,6 +104,8 @@ FROM APPLICATION_CONFIG
 				&applicationConfig.RykvImageListColumnNumber,
 				&applicationConfig.RykvHotReload,
 				&applicationConfig.MiDefaultBoard,
+				&applicationConfig.RykvDefaultPeriod,
+				&applicationConfig.MiDefaultPeriod,
 			)
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
@@ -121,7 +122,9 @@ SELECT
   GOOGLE_MAP_API_KEY,
   RYKV_IMAGE_LIST_COLUMN_NUMBER,
   RYKV_HOT_RELOAD,
-  MI_DEFAULT_BOARD
+  MI_DEFAULT_BOARD,
+  RYKV_DEFAULT_PERIOD,
+  MI_DEFAULT_PERIOD
 FROM APPLICATION_CONFIG
 WHERE USER_ID = ? AND DEVICE = ?
 `
@@ -161,6 +164,8 @@ WHERE USER_ID = ? AND DEVICE = ?
 				&applicationConfig.RykvImageListColumnNumber,
 				&applicationConfig.RykvHotReload,
 				&applicationConfig.MiDefaultBoard,
+				&applicationConfig.RykvDefaultPeriod,
+				&applicationConfig.MiDefaultPeriod,
 			)
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
@@ -182,8 +187,12 @@ INSERT INTO APPLICATION_CONFIG (
   GOOGLE_MAP_API_KEY,
   RYKV_IMAGE_LIST_COLUMN_NUMBER,
   RYKV_HOT_RELOAD,
-  MI_DEFAULT_BOARD
+  MI_DEFAULT_BOARD,
+  RYKV_DEFAULT_PERIOD,
+  MI_DEFAULT_PERIOD
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -209,6 +218,8 @@ INSERT INTO APPLICATION_CONFIG (
 		applicationConfig.RykvImageListColumnNumber,
 		applicationConfig.RykvHotReload,
 		applicationConfig.MiDefaultBoard,
+		applicationConfig.RykvDefaultPeriod,
+		applicationConfig.MiDefaultPeriod,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -229,7 +240,9 @@ UPDATE APPLICATION_CONFIG SET
   GOOGLE_MAP_API_KEY = ?,
   RYKV_IMAGE_LIST_COLUMN_NUMBER = ?,
   RYKV_HOT_RELOAD = ?,
-  MI_DEFAULT_BOARD = ?
+  MI_DEFAULT_BOARD = ?,
+  RYKV_DEFAULT_PERIOD = ?,
+  MI_DEFAULT_PERIOD = ?
 WHERE USER_ID = ? AND DEVICE = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -248,6 +261,8 @@ WHERE USER_ID = ? AND DEVICE = ?
 		applicationConfig.RykvImageListColumnNumber,
 		applicationConfig.RykvHotReload,
 		applicationConfig.MiDefaultBoard,
+		applicationConfig.RykvDefaultPeriod,
+		applicationConfig.MiDefaultPeriod,
 		applicationConfig.UserID,
 		applicationConfig.Device,
 	}

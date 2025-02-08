@@ -54,18 +54,13 @@ type fileinfo struct {
 func NewIDFDirRep(ctx context.Context, dir, dbFilename string, r *mux.Router, autoIDF *bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
 	filename := dbFilename
 
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
 
 	sql := `
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS "IDF" (
   IS_DELETED NOT NULL,
   ID NOT NULL,

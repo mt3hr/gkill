@@ -64,6 +64,7 @@ import type { rykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-em
 import type { rykvQueryEditorSidebarProps } from './rykv-query-editor-sidebar-props'
 import { computed, nextTick, onMounted, type Ref, ref, watch } from 'vue'
 import { deepEquals } from '@/classes/deep-equals'
+import moment from 'moment'
 
 const sidebar_header = ref<InstanceType<typeof SidebarHeader> | null>(null);
 const keyword_query = ref<InstanceType<typeof KeywordQuery> | null>(null);
@@ -126,6 +127,11 @@ watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyo
 
 function get_default_query(): FindKyouQuery {
     const query = default_query.value?.clone()
+    if (props.application_config.rykv_default_period !== -1) {
+        query.use_calendar = true
+        query.calendar_start_date = moment(moment().add(-props.application_config.rykv_default_period, "days").format("YYYY-MM-DD 00:00:00")).toDate()
+        query.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00")).add(1, "days").add(-1, "milliseconds").toDate()
+    }
     return query
 }
 
@@ -201,9 +207,9 @@ function generate_query(query_id?: string): FindKyouQuery {
 function emits_cleard_keyword_query(): void {
     const find_query = generate_query()
     find_query.query_id = props.gkill_api.generate_uuid()
-    find_query.use_words = default_query.value.use_words
-    find_query.keywords = default_query.value.keywords
-    find_query.words_and = default_query.value.words_and
+    find_query.use_words = get_default_query().use_words
+    find_query.keywords = get_default_query().keywords
+    find_query.words_and = get_default_query().words_and
     query.value = find_query
     emits('updated_query_clear', find_query)
 }
@@ -211,13 +217,13 @@ function emits_cleard_keyword_query(): void {
 function emits_cleard_timeis_query(): void {
     const find_query = generate_query()
     find_query.query_id = props.gkill_api.generate_uuid()
-    find_query.use_timeis = default_query.value.use_timeis
-    find_query.use_timeis_tags = default_query.value.use_timeis_tags
-    find_query.timeis_keywords = default_query.value.timeis_keywords
-    find_query.timeis_words_and = default_query.value.timeis_words_and
-    find_query.use_timeis_tags = default_query.value.use_timeis_tags
-    find_query.timeis_tags = default_query.value.timeis_tags
-    find_query.timeis_tags_and = default_query.value.timeis_tags_and
+    find_query.use_timeis = get_default_query().use_timeis
+    find_query.use_timeis_tags = get_default_query().use_timeis_tags
+    find_query.timeis_keywords = get_default_query().timeis_keywords
+    find_query.timeis_words_and = get_default_query().timeis_words_and
+    find_query.use_timeis_tags = get_default_query().use_timeis_tags
+    find_query.timeis_tags = get_default_query().timeis_tags
+    find_query.timeis_tags_and = get_default_query().timeis_tags_and
     query.value = find_query
     emits('updated_query_clear', find_query)
 }
@@ -225,9 +231,9 @@ function emits_cleard_timeis_query(): void {
 function emits_cleard_rep_query(): void {
     const find_query = generate_query()
     find_query.query_id = props.gkill_api.generate_uuid()
-    find_query.reps = default_query.value.reps
-    find_query.devices_in_sidebar = default_query.value.devices_in_sidebar
-    find_query.rep_types_in_sidebar = default_query.value.rep_types_in_sidebar
+    find_query.reps = get_default_query().reps
+    find_query.devices_in_sidebar = get_default_query().devices_in_sidebar
+    find_query.rep_types_in_sidebar = get_default_query().rep_types_in_sidebar
     query.value = find_query
     emits('updated_query_clear', find_query)
 }
@@ -235,8 +241,8 @@ function emits_cleard_rep_query(): void {
 function emits_cleard_tag_query(): void {
     const find_query = generate_query()
     find_query.query_id = props.gkill_api.generate_uuid()
-    find_query.tags = default_query.value.tags
-    find_query.tags_and = default_query.value.tags_and
+    find_query.tags = get_default_query().tags
+    find_query.tags_and = get_default_query().tags_and
     query.value = find_query
     emits('updated_query_clear', find_query)
 }
@@ -244,11 +250,11 @@ function emits_cleard_tag_query(): void {
 function emits_cleard_map_query(): void {
     const find_query = generate_query()
     find_query.query_id = props.gkill_api.generate_uuid()
-    find_query.use_map = default_query.value.use_map
-    find_query.map_latitude = default_query.value.map_latitude
-    find_query.map_longitude = default_query.value.map_longitude
-    find_query.is_enable_map_circle_in_sidebar = default_query.value.is_enable_map_circle_in_sidebar
-    find_query.map_radius = default_query.value.map_radius
+    find_query.use_map = get_default_query().use_map
+    find_query.map_latitude = get_default_query().map_latitude
+    find_query.map_longitude = get_default_query().map_longitude
+    find_query.is_enable_map_circle_in_sidebar = get_default_query().is_enable_map_circle_in_sidebar
+    find_query.map_radius = get_default_query().map_radius
     query.value = find_query
     emits('updated_query_clear', find_query)
 }
@@ -256,15 +262,15 @@ function emits_cleard_map_query(): void {
 function emits_cleard_calendar_query(): void {
     const find_query = generate_query()
     find_query.query_id = props.gkill_api.generate_uuid()
-    find_query.use_calendar = default_query.value.use_calendar
-    find_query.calendar_start_date = default_query.value.calendar_start_date
-    find_query.calendar_end_date = default_query.value.calendar_end_date
+    find_query.use_calendar = get_default_query().use_calendar
+    find_query.calendar_start_date = get_default_query().calendar_start_date
+    find_query.calendar_end_date = get_default_query().calendar_end_date
     query.value = find_query
     emits('updated_query_clear', find_query)
 }
 
 function emits_default_query(): void {
-    const find_query = default_query.value.clone()
+    const find_query = get_default_query().clone()
     find_query.query_id = props.gkill_api.generate_uuid()
     query.value = find_query
     emits('updated_query_clear', find_query)
