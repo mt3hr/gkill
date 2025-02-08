@@ -96,6 +96,9 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 		if query.Words != nil && len(*query.Words) != 0 {
 			if query.WordsAnd != nil && *query.WordsAnd {
 				for j, findWordTargetColumnName := range findWordTargetColumns {
+					if *whereCounter != 0 {
+						sql += " AND "
+					}
 					if j == 0 {
 						sql += " ( "
 					} else {
@@ -128,6 +131,9 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 			} else {
 				// ワードor検索である場合のSQL追記
 				for j, findWordTargetColumnName := range findWordTargetColumns {
+					if *whereCounter != 0 {
+						sql += " AND "
+					}
 					if j == 0 {
 						sql += " ( "
 					} else {
@@ -163,6 +169,9 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 		if query.NotWords != nil && len(*query.NotWords) != 0 {
 			// notワードを除外するSQLを追記
 			for j, findWordTargetColumnName := range findWordTargetColumns {
+				if *whereCounter != 0 {
+					sql += " AND "
+				}
 				if j == 0 {
 					sql += " ( "
 				} else {
