@@ -80,9 +80,9 @@
                 @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)"
                 ref="lantana_view" />
             <TimeIsView v-if="cloned_kyou.typed_timeis" :timeis="cloned_kyou.typed_timeis"
-                :show_timeis_plaing_end_button="show_timeis_plaing_end_button" :application_config="application_config"
-                :gkill_api="gkill_api" :highlight_targets="highlight_targets" :kyou="cloned_kyou"
-                :last_added_tag="last_added_tag" :height="height" :width="width"
+                :show_timeis_elapsed_time="show_timeis_elapsed_time" :show_timeis_plaing_end_button="show_timeis_plaing_end_button"
+                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @received_messages="(messages) => emits('received_messages', messages)"
@@ -166,7 +166,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, watch, type Ref, ref, nextTick } from 'vue'
+import { computed, watch, type Ref, ref, nextTick, onUnmounted } from 'vue'
 
 import AttachedTag from './attached-tag.vue'
 import AttachedText from './attached-text.vue'
@@ -189,6 +189,7 @@ import { Kyou } from '@/classes/datas/kyou'
 import type MiKyouView from './mi-kyou-view.vue'
 import type UrLogView from './ur-log-view.vue'
 import type IdfKyouView from './idf-kyou-view.vue'
+import moment from 'moment'
 
 const kyou_dialog = ref<InstanceType<typeof kyouDialog> | null>(null);
 const kmemo_view = ref<InstanceType<typeof KmemoView> | null>(null);
@@ -206,12 +207,17 @@ const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 
+onUnmounted(() => {
+    cloned_kyou.value.abort_controller.abort()
+})
+
 watch(() => props.kyou, () => {
+    cloned_kyou.value.abort_controller.abort()
     cloned_kyou.value = props.kyou.clone();
     (() => load_attached_infos())(); //非同期で実行してほしい
 });
-
 (() => load_attached_infos())(); //非同期で実行してほしい
+
 
 const kyou_class = computed(() => {
     let highlighted = false;
@@ -230,12 +236,6 @@ const kyou_class = computed(() => {
 })
 
 async function load_attached_infos(): Promise<void> {
-    await nextTick(() => { })
-    if (cloned_kyou.value.abort_controller) {
-        cloned_kyou.value.abort_controller.abort()
-    }
-    cloned_kyou.value.abort_controller = new AbortController()
-
     try {
         const awaitPromises = new Array<Promise<any>>()
         try {
@@ -243,7 +243,6 @@ async function load_attached_infos(): Promise<void> {
             awaitPromises.push(cloned_kyou.value.load_attached_tags())
             awaitPromises.push(cloned_kyou.value.load_attached_texts())
             awaitPromises.push(cloned_kyou.value.load_attached_notifications())
-            awaitPromises.push(cloned_kyou.value.load_attached_histories())
             awaitPromises.push(cloned_kyou.value.load_attached_histories())
             if (props.show_attached_timeis) {
                 awaitPromises.push(cloned_kyou.value.load_attached_timeis())
@@ -255,26 +254,6 @@ async function load_attached_infos(): Promise<void> {
                 // abort以外はエラー出力する
                 console.error(err)
             }
-        }
-
-    } catch (err: any) {
-        // abortは握りつぶす
-        if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
-            // abort以外はエラー出力する
-            console.error(err)
-        }
-    }
-}
-async function clear_attached_infos(): Promise<void> {
-    if (cloned_kyou.value.abort_controller) {
-        cloned_kyou.value.abort_controller.abort()
-    }
-    cloned_kyou.value.abort_controller = new AbortController()
-
-    try {
-        const errors = await cloned_kyou.value.clear_all()
-        if (errors && errors.length !== 0) {
-            emits('received_errors', errors)
         }
     } catch (err: any) {
         // abortは握りつぶす
@@ -307,6 +286,7 @@ function show_kyou_dialog(): void {
 }
 
 function format_time(time: Date) {
+    time = moment(time).toDate()
     let year: string | number = time.getFullYear()
     let month: string | number = time.getMonth() + 1
     let date: string | number = time.getDate()

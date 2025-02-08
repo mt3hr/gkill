@@ -1,12 +1,12 @@
 <template>
     <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <div>{{ kyou.typed_timeis?.title }}</div>
-        <div v-if="kyou.typed_timeis && kyou.typed_timeis.start_time">{{ duration }}</div>
+        <div v-if="kyou.typed_timeis && kyou.typed_timeis.start_time && show_timeis_elapsed_time">{{ duration }}</div>
         <br />
         <div v-if="kyou.typed_timeis">開始日時：<span>{{ format_time(kyou.typed_timeis.start_time) }}</span></div>
         <div v-if="kyou.typed_timeis && kyou.typed_timeis.end_time">終了日時：<span>{{
             format_time(kyou.typed_timeis?.end_time) }}</span></div>
-        <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time">実行中</div>
+        <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time && show_timeis_elapsed_time">実行中</div>
         <v-row v-if="show_timeis_plaing_end_button && kyou.typed_timeis && !kyou.typed_timeis.end_time"
             class="pa-0 ma-0">
             <v-spacer cols="auto" />

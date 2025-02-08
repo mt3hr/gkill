@@ -51,7 +51,7 @@ func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes
 			case event, ok := <-watcher.Events:
 				if !ok {
 					err := fmt.Errorf("file watch event is not ok")
-					gkill_log.Debug.Fatal(err)
+					gkill_log.Debug.Print(err)
 					return
 				}
 
@@ -81,7 +81,7 @@ func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					err := fmt.Errorf("file watch event is not ok")
-					gkill_log.Debug.Fatal(err)
+					gkill_log.Debug.Print(err)
 					return
 				}
 				gkill_log.Debug.Print(err)

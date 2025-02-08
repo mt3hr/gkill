@@ -34,7 +34,8 @@ func NewMiRepositorySQLite3Impl(ctx context.Context, filename string) (MiReposit
 PRAGMA temp_store = MEMORY;
 PRAGMA cache_size = -50000;
 PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;VACUUM;
+PRAGMA synchronous = NORMAL;
+VACUUM;
 CREATE TABLE IF NOT EXISTS "MI" (
   IS_DELETED NOT NULL,
   ID NOT NULL,

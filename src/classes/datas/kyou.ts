@@ -45,7 +45,7 @@ export class Kyou extends InfoBase {
         }
         const req = new GetKyouRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_kyou(req)
         if (res.errors && res.errors.length != 0) {
@@ -59,8 +59,8 @@ export class Kyou extends InfoBase {
         const awaitPromises = new Array<Promise<any>>()
         try {
             awaitPromises.push(this.load_typed_datas())
-            awaitPromises.push(this.load_attached_datas())
-            awaitPromises.push(this.load_attached_histories())
+            this.load_attached_histories()
+            this.load_attached_datas()
             return Promise.all(awaitPromises).then((errors_list) => {
                 const errors = new Array<GkillError>()
                 errors_list.forEach(e => {
@@ -164,7 +164,7 @@ export class Kyou extends InfoBase {
     async load_typed_kmemo(): Promise<Array<GkillError>> {
         const req = new GetKmemoRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_kmemo(req)
         if (res.errors && res.errors.length != 0) {
@@ -206,7 +206,7 @@ export class Kyou extends InfoBase {
     async load_typed_urlog(): Promise<Array<GkillError>> {
         const req = new GetURLogRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_urlog(req)
         if (res.errors && res.errors.length != 0) {
@@ -248,7 +248,7 @@ export class Kyou extends InfoBase {
     async load_typed_nlog(): Promise<Array<GkillError>> {
         const req = new GetNlogRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_nlog(req)
         if (res.errors && res.errors.length != 0) {
@@ -290,7 +290,7 @@ export class Kyou extends InfoBase {
     async load_typed_timeis(): Promise<Array<GkillError>> {
         const req = new GetTimeisRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_timeis(req)
         if (res.errors && res.errors.length != 0) {
@@ -332,7 +332,7 @@ export class Kyou extends InfoBase {
     async load_typed_mi(): Promise<Array<GkillError>> {
         const req = new GetMiRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_mi(req)
         if (res.errors && res.errors.length != 0) {
@@ -374,7 +374,7 @@ export class Kyou extends InfoBase {
     async load_typed_lantana(): Promise<Array<GkillError>> {
         const req = new GetLantanaRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_lantana(req)
         if (res.errors && res.errors.length != 0) {
@@ -416,7 +416,7 @@ export class Kyou extends InfoBase {
     async load_typed_idf_kyou(): Promise<Array<GkillError>> {
         const req = new GetIDFKyouRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_idf_kyou(req)
         if (res.errors && res.errors.length != 0) {
@@ -458,7 +458,7 @@ export class Kyou extends InfoBase {
     async load_typed_git_commit_log(): Promise<Array<GkillError>> {
         const req = new GetGitCommitLogRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_git_commit_log(req)
         if (res.errors && res.errors.length != 0) {
@@ -494,7 +494,7 @@ export class Kyou extends InfoBase {
     async load_typed_rekyou(): Promise<Array<GkillError>> {
         const req = new GetReKyouRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_rekyou(req)
         if (res.errors && res.errors.length != 0) {
@@ -549,7 +549,7 @@ export class Kyou extends InfoBase {
     async reload(): Promise<Array<GkillError>> {
         const req = new GetKyouRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_kyou(req)
         if (res.errors && res.errors.length != 0) {
