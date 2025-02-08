@@ -19,4 +19,5 @@ export interface KyouListViewProps extends GkillPropsBase {
     enable_context_menu: boolean
     enable_dialog: boolean
     show_content_only: boolean
+    show_timeis_plaing_end_button: boolean
 }

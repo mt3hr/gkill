@@ -40,17 +40,18 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddTimeisRequest()
-        
+        const now = new Date(Date.now())
+
         req.timeis.id = this.get_request_id()
         req.timeis.start_time = time
         req.timeis.title = this.title
         req.timeis.create_app = "gkill_kftl"
         req.timeis.create_device = gkill_info_res.device
-        req.timeis.create_time = time
+        req.timeis.create_time = now
         req.timeis.create_user = gkill_info_res.user_id
         req.timeis.update_app = "gkill_kftl"
         req.timeis.update_device = gkill_info_res.device
-        req.timeis.update_time = time
+        req.timeis.update_time = now
         req.timeis.update_user = gkill_info_res.user_id
         await GkillAPI.get_gkill_api().add_timeis(req).then(res => {
             if (res.errors && res.errors.length !== 0) {

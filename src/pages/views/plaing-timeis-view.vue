@@ -4,11 +4,12 @@
             <tr>
                 <td valign="top">
                     <KyouListView :kyou_height="180" :width="app_content_width" :list_height="kyou_list_view_height"
-                        :application_config="application_config" :gkill_api="gkill_api"
-                        :matched_kyous="match_kyous_list" :query="query" :last_added_tag="last_added_tag"
-                        :is_focused_list="true" :closable="false" :enable_context_menu="enable_context_menu"
-                        :enable_dialog="enable_dialog" :is_readonly_mi_check="false" :show_checkbox="true"
-                        :show_footer="true" :show_content_only="true" @updated_kyou="reload_list(false)"
+                        :show_timeis_plaing_end_button="true" :application_config="application_config"
+                        :gkill_api="gkill_api" :matched_kyous="match_kyous_list" :query="query"
+                        :last_added_tag="last_added_tag" :is_focused_list="true" :closable="false"
+                        :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                        :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="true"
+                        :show_content_only="true" @updated_kyou="reload_list(false)"
                         @registered_kyou="reload_list(false)" @deleted_kyou="reload_list(false)"
                         @received_errors="(errors) => emits('received_errors', errors)"
                         @received_messages="(messages) => emits('received_messages', messages)"

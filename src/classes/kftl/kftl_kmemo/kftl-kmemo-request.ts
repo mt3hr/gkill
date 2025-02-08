@@ -33,7 +33,8 @@ export class KFTLKmemoRequest extends KFTLRequest {
         await super.do_request().then(super_errors => (errors = errors.concat(super_errors)))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddKmemoRequest()
-        
+        const now = new Date(Date.now())
+
         req.kmemo = new Kmemo()
         req.kmemo.content = this.kmemo_content
         req.kmemo.id = this.get_request_id()
@@ -41,11 +42,11 @@ export class KFTLKmemoRequest extends KFTLRequest {
 
         req.kmemo.create_app = "gkill_kftl"
         req.kmemo.create_device = gkill_info_res.device
-        req.kmemo.create_time = time
+        req.kmemo.create_time = now
         req.kmemo.create_user = gkill_info_res.user_id
         req.kmemo.update_app = "gkill_kftl"
         req.kmemo.update_device = gkill_info_res.device
-        req.kmemo.update_time = time
+        req.kmemo.update_time = now
         req.kmemo.update_user = gkill_info_res.user_id
         await GkillAPI.get_gkill_api().add_kmemo(req).then((res) => {
             if (res.errors && res.errors.length !== 0) {
