@@ -18,18 +18,13 @@ type repStructDAOSQLite3Impl struct {
 
 func NewRepStructDAOSQLite3Impl(ctx context.Context, filename string) (RepStructDAO, error) {
 	var err error
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
 
 	sql := `
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS "REP_STRUCT" (
   ID PRIMARY KEY NOT NULL,
   USER_ID NOT NULL,
