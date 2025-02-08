@@ -32,7 +32,8 @@ func NewTextRepositorySQLite3Impl(ctx context.Context, filename string) (TextRep
 PRAGMA temp_store = MEMORY;
 PRAGMA cache_size = -50000;
 PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;VACUUM;
+PRAGMA synchronous = NORMAL;
+VACUUM;
 CREATE TABLE IF NOT EXISTS "TEXT" (
   IS_DELETED NOT NULL,
   ID NOT NULL,

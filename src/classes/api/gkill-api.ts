@@ -908,7 +908,7 @@ export class GkillAPI {
                 for (let i = 0; i < response.kyous.length; i += worker_task_limit) {
                         waitPromises.push((async (): Promise<void> => {
                                 for (let j = i; j < response.kyous.length && j < i + worker_task_limit; j++) {
-                                        const kyou = new Kyou()
+                                        let kyou: Kyou | null = new Kyou()
                                         for (const key in response.kyous[j]) {
                                                 (kyou as any)[key] = (response.kyous[j] as any)[key]
 
@@ -918,6 +918,7 @@ export class GkillAPI {
                                                 }
                                         }
                                         response.kyous[j] = kyou
+                                        kyou = null
                                 }
                         })())
                 }

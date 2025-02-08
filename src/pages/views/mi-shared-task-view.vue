@@ -47,10 +47,10 @@
                                             :last_added_tag="''" :show_checkbox="false" :show_content_only="false"
                                             :show_mi_create_time="true" :show_mi_estimate_end_time="true"
                                             :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                                            :show_attached_timeis="true" :show_timeis_plaing_end_button="true"
-                                            :height="app_content_height.valueOf()" :is_readonly_mi_check="true"
-                                            :width="400" :enable_context_menu="false" :enable_dialog="false"
-                                            class="kyou_detail_view"
+                                            :show_attached_timeis="true" :show_timeis_elapsed_time="false"
+                                            :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
+                                            :is_readonly_mi_check="true" :width="400" :enable_context_menu="false"
+                                            :enable_dialog="false" class="kyou_detail_view"
                                             @received_errors="(errors) => emits('received_errors', errors)"
                                             @received_messages="(messages) => emits('received_messages', messages)" />
                                     </div>

@@ -28,7 +28,8 @@ func NewRepTypeStructDAOSQLite3Impl(ctx context.Context, filename string) (RepTy
 PRAGMA temp_store = MEMORY;
 PRAGMA cache_size = -50000;
 PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;VACUUM;
+PRAGMA synchronous = NORMAL;
+VACUUM;
 CREATE TABLE IF NOT EXISTS "REP_TYPE_STRUCT" (
   ID PRIMARY KEY NOT NULL,
   USER_ID NOT NULL,

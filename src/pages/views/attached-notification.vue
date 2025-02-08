@@ -69,7 +69,7 @@ function format_time(time: Date) {
 <style lang="css" scoped>
 .notification {
     background-color: #eee;
-    border: dashed 1px;
+    border: solid 1px;
     margin: 8px;
     padding: 8px;
 }

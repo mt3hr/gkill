@@ -103,7 +103,7 @@
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()">保存</v-btn>
             </v-col>
         </v-row>
         <NewBoardNameDialog v-if="mi" :application_config="application_config" :gkill_api="gkill_api"

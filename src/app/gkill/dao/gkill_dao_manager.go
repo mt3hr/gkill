@@ -813,44 +813,71 @@ func (g *GkillDAOManager) Close() error {
 			}
 		}
 	}
-	g.gkillRepositories = nil
+	g.gkillNotificators = nil
 
-	daos := map[string]closable{}
-	daos["account"] = g.ConfigDAOs.AccountDAO
-	daos["login_session"] = g.ConfigDAOs.LoginSessionDAO
-	daos["file_upload_history"] = g.ConfigDAOs.FileUploadHistoryDAO
-	daos["mi_share_info"] = g.ConfigDAOs.MiShareInfoDAO
-	daos["server_config"] = g.ConfigDAOs.ServerConfigDAO
-	daos["application_config"] = g.ConfigDAOs.AppllicationConfigDAO
-	daos["repository"] = g.ConfigDAOs.RepositoryDAO
-	daos["kftl_template"] = g.ConfigDAOs.KFTLTemplateDAO
-	daos["tag_struct"] = g.ConfigDAOs.TagStructDAO
-	daos["rep_struct"] = g.ConfigDAOs.RepStructDAO
-	daos["device_struct"] = g.ConfigDAOs.DeviceStructDAO
-	daos["rep_type_struct"] = g.ConfigDAOs.RepTypeStructDAO
-
-	for dbName, dao := range daos {
-		err = dao.Close(ctx)
+	if g.ConfigDAOs != nil {
+		err = g.ConfigDAOs.AccountDAO.Close(ctx)
 		if err != nil {
-			if allErrors != nil {
-				allErrors = fmt.Errorf("error at close db = %s: %w", dbName, err)
-			} else {
-				allErrors = fmt.Errorf("error at close db = %s", dbName)
-			}
+			return err
 		}
+		err = g.ConfigDAOs.LoginSessionDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+		err = g.ConfigDAOs.FileUploadHistoryDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+		err = g.ConfigDAOs.MiShareInfoDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+		err = g.ConfigDAOs.ServerConfigDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+		err = g.ConfigDAOs.AppllicationConfigDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+		err = g.ConfigDAOs.RepositoryDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+		err = g.ConfigDAOs.KFTLTemplateDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+		err = g.ConfigDAOs.TagStructDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+		err = g.ConfigDAOs.RepStructDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+		err = g.ConfigDAOs.DeviceStructDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+		err = g.ConfigDAOs.RepTypeStructDAO.Close(ctx)
+		if err != nil {
+			return err
+		}
+
+		g.ConfigDAOs.AccountDAO = nil
+		g.ConfigDAOs.LoginSessionDAO = nil
+		g.ConfigDAOs.FileUploadHistoryDAO = nil
+		g.ConfigDAOs.MiShareInfoDAO = nil
+		g.ConfigDAOs.ServerConfigDAO = nil
+		g.ConfigDAOs.AppllicationConfigDAO = nil
+		g.ConfigDAOs.RepositoryDAO = nil
+		g.ConfigDAOs.KFTLTemplateDAO = nil
+		g.ConfigDAOs.TagStructDAO = nil
+		g.ConfigDAOs.RepStructDAO = nil
+		g.ConfigDAOs.DeviceStructDAO = nil
+		g.ConfigDAOs.RepTypeStructDAO = nil
 	}
-	g.ConfigDAOs.AccountDAO = nil
-	g.ConfigDAOs.LoginSessionDAO = nil
-	g.ConfigDAOs.FileUploadHistoryDAO = nil
-	g.ConfigDAOs.MiShareInfoDAO = nil
-	g.ConfigDAOs.ServerConfigDAO = nil
-	g.ConfigDAOs.AppllicationConfigDAO = nil
-	g.ConfigDAOs.RepositoryDAO = nil
-	g.ConfigDAOs.KFTLTemplateDAO = nil
-	g.ConfigDAOs.TagStructDAO = nil
-	g.ConfigDAOs.RepStructDAO = nil
-	g.ConfigDAOs.DeviceStructDAO = nil
-	g.ConfigDAOs.RepTypeStructDAO = nil
 
 	g.ConfigDAOs = nil
 	g.router = nil

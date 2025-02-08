@@ -23,9 +23,9 @@
                 :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="false"
-                :show_attached_timeis="true"
+                :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
+                :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" :is_readonly_mi_check="false" :show_attached_timeis="true"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -38,7 +38,7 @@
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import type { ConfirmDeleteTagViewProps } from './confirm-delete-tag-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { type Ref, ref } from 'vue'
+import { nextTick, type Ref, ref } from 'vue'
 import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request';
 import KyouView from './kyou-view.vue'
 

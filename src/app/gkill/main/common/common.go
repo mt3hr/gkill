@@ -131,9 +131,17 @@ func LaunchGkillServerAPI() error {
 		os.Exit(0)
 	}()
 
-	err = gkillServerAPI.Serve()
-	if err != nil {
-		return err
+	for err == nil {
+		err = gkillServerAPI.Serve()
+		if err != nil {
+			return err
+		}
+		if err == nil {
+			err = InitGkillServerAPI()
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
