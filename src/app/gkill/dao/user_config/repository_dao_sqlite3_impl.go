@@ -266,14 +266,12 @@ INSERT INTO REPOSITORY (
 		}
 	}
 
-	for _, repository := range repositories {
-		err = r.checkUseToWriteRepositoryCount(ctx, tx, repository.UserID)
-		if err != nil {
-			errAtRollback := tx.Rollback()
-			err = fmt.Errorf("%w, %w", err, errAtRollback)
-			err = fmt.Errorf("error at query :%w", err)
-			return false, err
-		}
+	err = r.checkUseToWriteRepositoryCount(ctx, tx, userID)
+	if err != nil {
+		errAtRollback := tx.Rollback()
+		err = fmt.Errorf("%w, %w", err, errAtRollback)
+		err = fmt.Errorf("error at query :%w", err)
+		return false, err
 	}
 
 	err = tx.Commit()
@@ -559,125 +557,183 @@ func (r *repositoryDAOSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (r *repositoryDAOSQLite3Impl) checkUseToWriteRepositoryCount(ctx context.Context, tx *sql.Tx, userID string) error {
-	sql := `
-WITH TYPE_AND_DEVICE AS (SELECT ? AS USER_ID)
-SELECT 'directory' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'directory'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'gpslog' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'gpslog'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'kmemo' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'kmemo'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'lantana' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'lantana'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'mi' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'mi'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'nlog' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'nlog'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'notification' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'notification'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'rekyou' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'rekyou'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'tag' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'tag'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'text' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'text'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'timeis' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'timeis'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-UNION
-SELECT 'urlog' AS TYPE, DEVICE, COUNT(*) AS COUNT
-FROM REPOSITORY
-WHERE REPOSITORY.USE_TO_WRITE = TRUE
-AND TYPE = 'urlog'
-AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
-GROUP BY TYPE, DEVICE
+	selectDeviceSQL := `
+SELECT DEVICE FROM REPOSITORY WHERE USER_ID = ? GROUP BY DEVICE
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := tx.PrepareContext(ctx, sql)
+	selectDeviceQueryArgs := []interface{}{
+		userID,
+	}
+	gkill_log.TraceSQL.Printf("sql: %s", selectDeviceSQL)
+	stmt, err := tx.PrepareContext(ctx, selectDeviceSQL)
 	if err != nil {
-		err = fmt.Errorf("error at get use to write repository count sql: %w", err)
 		return err
 	}
 	defer stmt.Close()
-
-	queryArgs := []interface{}{
-		userID,
-	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-	rows, err := stmt.QueryContext(ctx, queryArgs...)
-
+	gkill_log.TraceSQL.Printf("sql: %s query: %#v", selectDeviceSQL, selectDeviceQueryArgs)
+	rows, err := stmt.QueryContext(ctx, selectDeviceQueryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at query :%w", err)
 		return err
 	}
 	defer rows.Close()
 
+	devices := []string{}
 	for rows.Next() {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			repType := ""
-			device := ""
-			count := 0
-			err := rows.Scan(
-				&repType,
-				&device,
-				&count,
-			)
-			if err != nil {
-				err = fmt.Errorf("error at get use to write repository count: %w", err)
-				err = fmt.Errorf("書き込み先Rep1つに対してがプロファイルに対して1つとなるよ兎にしてください。対象：「%s」", repType)
-				return err
-			}
+		device := ""
+		err := rows.Scan(
+			&device,
+		)
+		if err != nil {
+			return err
+		}
+		devices = append(devices, device)
+	}
 
-			if count >= 2 {
-				// err = fmt.Errorf("error at check use to write repository count")
-				// err = fmt.Errorf("rep type %s use to write rep count is %d: %w", repType, count, err)
-				err = fmt.Errorf("書き込み先Rep1つに対してがプロファイルに対して1つとなるよ兎にしてください。対象：「%s」", repType)
-				return err
+	for _, targetDevice := range devices {
+		sql := `
+WITH TYPE_AND_DEVICE AS (SELECT ? AS USER_ID, ? AS DEVICE)
+SELECT TYPE, COUNT FROM (
+SELECT 'directory' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'directory'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'gpslog' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'gpslog'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'kmemo' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'kmemo'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'lantana' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'lantana'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'mi' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'mi'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'nlog' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'nlog'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'notification' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'notification'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'rekyou' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'rekyou'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'tag' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'tag'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'text' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'text'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'timeis' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'timeis'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+UNION
+SELECT 'urlog' AS TYPE, DEVICE, COUNT(*) AS COUNT
+FROM REPOSITORY
+WHERE USE_TO_WRITE = TRUE
+AND TYPE = 'urlog'
+AND USER_ID = (SELECT USER_ID FROM TYPE_AND_DEVICE)
+AND DEVICE = (SELECT DEVICE FROM TYPE_AND_DEVICE)
+AND IS_ENABLE = TRUE
+)
+GROUP BY TYPE, DEVICE
+`
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		stmt, err := tx.PrepareContext(ctx, sql)
+		if err != nil {
+			err = fmt.Errorf("error at get use to write repository count sql: %w", err)
+			return err
+		}
+		defer stmt.Close()
+
+		queryArgs := []interface{}{
+			userID,
+			targetDevice,
+		}
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+		rows, err := stmt.QueryContext(ctx, queryArgs...)
+		if err != nil {
+			err = fmt.Errorf("error at query :%w", err)
+			return err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+				repType := ""
+				count := 0
+				err := rows.Scan(
+					&repType,
+					&count,
+				)
+				if err != nil {
+					gkill_log.Debug.Print(err)
+					// err = fmt.Errorf("error at get use to write repository count: %w", err)
+					err = fmt.Errorf("書き込み先Rep1つに対してがプロファイルに対して1つとなるようにしてください。対象：「%s」「%s」「%d」", targetDevice, repType, count)
+					return err
+				}
+
+				if count != 1 {
+					// err = fmt.Errorf("error at check use to write repository count")
+					// err = fmt.Errorf("rep type %s use to write rep count is %d: %w", repType, count, err)
+					err = fmt.Errorf("書き込み先Rep1つに対してがプロファイルに対して1つとなるようにしてください。対象：「%s」「%s」「%d」", targetDevice, repType, count)
+					return err
+				}
 			}
 		}
 	}

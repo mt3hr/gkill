@@ -7742,7 +7742,6 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	}
 
 	userID = targetAccount.UserID
-	device = ""
 
 	ok, err := g.GkillDAOManager.ConfigDAOs.RepositoryDAO.DeleteWriteRepositories(r.Context(), userID, request.UpdatedReps)
 	if !ok || err != nil {
