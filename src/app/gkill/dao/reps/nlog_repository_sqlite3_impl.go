@@ -3,8 +3,10 @@ package reps
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 
@@ -437,6 +439,7 @@ WHERE
 			nlog := &Nlog{}
 			nlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			amount := 0
 
 			err = rows.Scan(&nlog.IsDeleted,
 				&nlog.ID,
@@ -451,10 +454,12 @@ WHERE
 				&nlog.UpdateUser,
 				&nlog.Shop,
 				&nlog.Title,
-				&nlog.Amount,
+				&amount,
 				&nlog.RepName,
 				&nlog.DataType,
 			)
+
+			nlog.Amount = json.Number(strconv.Itoa(amount))
 
 			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -584,6 +589,7 @@ WHERE
 			nlog := &Nlog{}
 			nlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			amount := 0
 
 			err = rows.Scan(&nlog.IsDeleted,
 				&nlog.ID,
@@ -598,10 +604,12 @@ WHERE
 				&nlog.UpdateUser,
 				&nlog.Shop,
 				&nlog.Title,
-				&nlog.Amount,
+				&amount,
 				&nlog.RepName,
 				&nlog.DataType,
 			)
+
+			nlog.Amount = json.Number(strconv.Itoa(amount))
 
 			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -670,7 +678,7 @@ INSERT INTO NLOG (
 		nlog.ID,
 		nlog.Shop,
 		nlog.Title,
-		nlog.Amount,
+		nlog.Amount.String(),
 		nlog.RelatedTime.Format(sqlite3impl.TimeLayout),
 		nlog.CreateTime.Format(sqlite3impl.TimeLayout),
 		nlog.CreateApp,
