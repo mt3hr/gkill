@@ -28,6 +28,8 @@ export class ApplicationConfig {
     rykv_image_list_column_number: number
     rykv_hot_reload: boolean
     mi_default_board: string
+    rykv_default_period: number
+    mi_default_period: number
     account_is_admin: boolean
     parsed_kftl_template: KFTLTemplateElementData
     parsed_tag_struct: TagStructElementData
@@ -76,6 +78,8 @@ export class ApplicationConfig {
         application_config.account_is_admin = this.account_is_admin
         application_config.mi_board_struct = this.mi_board_struct
         application_config.session_is_local = this.session_is_local
+        application_config.rykv_default_period = this.rykv_default_period
+        application_config.mi_default_period = this.mi_default_period
         return application_config
     }
     async load_all(): Promise<Array<GkillError>> {
@@ -896,6 +900,8 @@ export class ApplicationConfig {
         this.rykv_hot_reload = false
         this.mi_default_board = ""
         this.account_is_admin = false
+        this.rykv_default_period = -1
+        this.mi_default_period = -1
         this.parsed_kftl_template = new KFTLTemplateElementData()
         this.parsed_tag_struct = new TagStructElementData()
         this.parsed_rep_struct = new RepStructElementData()

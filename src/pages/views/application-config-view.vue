@@ -70,6 +70,22 @@
                             @focus="$event.target.select()"></v-text-field>
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <v-checkbox v-model="is_checked_use_rykv_period" hide-detail label="rykv表示日数" />
+                    </td>
+                    <td v-show="rykv_default_period !== -1">
+                        <v-text-field type="number" min="-1" width="400" v-model="rykv_default_period" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <v-checkbox v-model="is_checked_use_mi_period" hide-detail label="mi表示日数" />
+                    </td>
+                    <td v-show="mi_default_period !== -1">
+                        <v-text-field type="number" min="-1" width="400" v-model="mi_default_period" />
+                    </td>
+                </tr>
             </table>
             <table>
                 <tr>
@@ -184,6 +200,26 @@ const enable_browser_cache: Ref<boolean> = ref(cloned_application_config.value.e
 const rykv_hot_reload: Ref<boolean> = ref(cloned_application_config.value.rykv_hot_reload)
 const mi_default_board: Ref<string> = ref(cloned_application_config.value.mi_default_board)
 const mi_board_names: Ref<Array<string>> = ref(new Array())
+const rykv_default_period: Ref<number> = ref(cloned_application_config.value.rykv_default_period)
+const mi_default_period: Ref<number> = ref(cloned_application_config.value.mi_default_period)
+const is_checked_use_rykv_period: Ref<boolean> = ref(cloned_application_config.value.rykv_default_period !== -1)
+const is_checked_use_mi_period: Ref<boolean> = ref(cloned_application_config.value.mi_default_period !== -1)
+
+watch(() => is_checked_use_rykv_period.value, () => {
+    if (is_checked_use_rykv_period.value) {
+        rykv_default_period.value = 31
+    } else {
+        rykv_default_period.value = -1
+    }
+})
+
+watch(() => is_checked_use_mi_period.value, () => {
+    if (is_checked_use_mi_period.value) {
+        mi_default_period.value = 31
+    } else {
+        mi_default_period.value = -1
+    }
+})
 
 async function reload_cloned_application_config(): Promise<void> {
     cloned_application_config.value = props.application_config.clone()
@@ -193,6 +229,8 @@ async function reload_cloned_application_config(): Promise<void> {
     rykv_hot_reload.value = cloned_application_config.value.rykv_hot_reload
     mi_default_board.value = cloned_application_config.value.mi_default_board
     mi_board_names.value = new Array()
+    rykv_default_period.value = cloned_application_config.value.rykv_default_period
+    mi_default_period.value = cloned_application_config.value.mi_default_period
     load_mi_board_names()
 }
 
@@ -217,6 +255,8 @@ async function update_application_config(): Promise<void> {
     application_config.enable_browser_cache = enable_browser_cache.value
     application_config.rykv_hot_reload = rykv_hot_reload.value
     application_config.mi_default_board = mi_default_board.value
+    application_config.rykv_default_period = rykv_default_period.value
+    application_config.mi_default_period = mi_default_period.value
 
     const req = new UpdateApplicationConfigRequest()
     req.application_config = application_config
