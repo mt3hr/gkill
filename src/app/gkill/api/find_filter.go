@@ -56,7 +56,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at get repositories: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("getRepositories")
+	gkill_log.Trace.Printf("finish getRepositories")
 
 	// フィルタ
 	gkillErr, err = f.selectMatchRepsFromQuery(ctx, findKyouContext)
@@ -64,13 +64,13 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at select match reps: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("selectMatchRepsFromQuery")
+	gkill_log.Trace.Printf("finish selectMatchRepsFromQuery")
 	gkillErr, err = f.updateCache(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at update cache: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("updateCache")
+	gkill_log.Trace.Printf("finish updateCache")
 
 	// キャッシュ更新終わったら、
 	// 最新のKyouがどのRepにあるかを取得
@@ -96,99 +96,99 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at get all tags: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("getAllTags")
+	gkill_log.Trace.Printf("finish getAllTags")
 	gkillErr, err = f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get hide tags when unchecked tags: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("getAllHideTagsWhenUnChecked")
+	gkill_log.Trace.Printf("finish getAllHideTagsWhenUnChecked")
 	gkillErr, err = f.findTags(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find tags: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("findTags")
+	gkill_log.Trace.Printf("finish findTags")
 	gkillErr, err = f.findTexts(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find texts: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("findTexts")
+	gkill_log.Trace.Printf("finish findTexts")
 	gkillErr, err = f.findTimeIsTexts(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis texts: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("findTimeIsTexts")
+	gkill_log.Trace.Printf("finish findTimeIsTexts")
 	gkillErr, err = f.findTimeIs(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("findTimeIs")
+	gkill_log.Trace.Printf("finish findTimeIs")
 	gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis tags: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("findTimeIsTags")
+	gkill_log.Trace.Printf("finish findTimeIsTags")
 	gkillErr, err = f.getMatchHideTagsWhenUnckedTimeIs(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("getMatchHideTagsWhenUnckedTimeIs")
+	gkill_log.Trace.Printf("finish getMatchHideTagsWhenUnckedTimeIs")
 	gkillErr, err = f.filterTagsTimeIs(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter tags timeis: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("filterTagsTimeIs")
+	gkill_log.Trace.Printf("finish filterTagsTimeIs")
 	gkillErr, err = f.findKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("findKyous")
+	gkill_log.Trace.Printf("finish findKyous")
 	gkillErr, err = f.filterMiForMi(ctx, findKyouContext) //miの場合のみ
 	if err != nil {
 		err = fmt.Errorf("error at filter mi for mi: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("filterMiForMi")
+	gkill_log.Trace.Printf("finish filterMiForMi")
 	gkillErr, err = f.getMatchHideTagsWhenUnckedKyou(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("getMatchHideTagsWhenUnckedKyou")
+	gkill_log.Trace.Printf("finish getMatchHideTagsWhenUnckedKyou")
 	gkillErr, err = f.filterTagsKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter tags kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("filterTagsKyous")
+	gkill_log.Trace.Printf("finish filterTagsKyous")
 	gkillErr, err = f.filterPlaingTimeIsKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter plaing time is kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("filterPlaingTimeIsKyous")
+	gkill_log.Trace.Printf("finish filterPlaingTimeIsKyous")
 	gkillErr, err = f.filterLocationKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter location kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("filterLocationKyous")
+	gkill_log.Trace.Printf("finish filterLocationKyous")
 	gkillErr, err = f.filterImageKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter image kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("filterImageKyous")
+	gkill_log.Trace.Printf("finish filterImageKyous")
 
-	gkill_log.Debug.Printf("waitLatestDataWg")
+	gkill_log.Trace.Printf("finish waitLatestDataWg")
 	latestDatasWg.Wait()
 	err = <-errCh
 	if err != nil {
@@ -199,7 +199,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at replace latest kyou infos: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("replaceLatestKyouInfos")
+	gkill_log.Trace.Printf("finish replaceLatestKyouInfos")
 
 	for _, rep := range findKyouContext.MatchKyousCurrent {
 		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, rep)
@@ -210,14 +210,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at override kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("overrideKyous")
+	gkill_log.Trace.Printf("finish overrideKyous")
 
 	gkillErr, err = f.sortResultKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at sort result kyous: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Debug.Printf("sortResultKyous")
+	gkill_log.Trace.Printf("finish sortResultKyous")
 
 	return findKyouContext.ResultKyous, nil, nil
 }

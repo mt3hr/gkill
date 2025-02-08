@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/memory_db"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -22,34 +24,23 @@ type latestDataRepositoryAddressSQLite3Impl struct {
 }
 
 func NewLatestDataRepositoryAddressSQLite3Impl(userID string) (LatestDataRepositoryAddressDAO, error) {
-	latestDataRepositoryAddress := &latestDataRepositoryAddressSQLite3Impl{
-		m:      &sync.Mutex{},
-		userID: userID,
-	}
-	err := latestDataRepositoryAddress.createTableIfNotExist()
-	if err != nil {
-		return nil, err
-	}
-
-	return latestDataRepositoryAddress, nil
-}
-
-func (l *latestDataRepositoryAddressSQLite3Impl) createTableIfNotExist() error {
 	var err error
+
+	latestDataRepositoryAddress := &latestDataRepositoryAddressSQLite3Impl{
+		m:         &sync.Mutex{},
+		userID:    userID,
+		tableName: fmt.Sprintf("LATEST_DATA_REPOSITORY_ADDRESS_%s", userID),
+	}
+
 	ctx := context.Background()
 
-	l.tableName = fmt.Sprintf("LATEST_DATA_REPOSITORY_ADDRESS_%s", l.userID)
 	if gkill_options.IsCacheInMemory {
-		l.db, err = sql.Open("sqlite3", "file::memory:?cache=shared")
-		if err != nil {
-			err = fmt.Errorf("error at open database: %w", err)
-			return err
-		}
+		latestDataRepositoryAddress.db = memory_db.MemoryDB
 	} else {
-		l.db, err = sql.Open("sqlite3", filepath.Join(gkill_options.CacheDir, l.tableName+".db"))
+		latestDataRepositoryAddress.db, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, latestDataRepositoryAddress.tableName+".db?_journal=WAL&_busy_timeout=100000")))
 		if err != nil {
 			err = fmt.Errorf("error at open database: %w", err)
-			return err
+			return nil, err
 		}
 	}
 
@@ -60,12 +51,12 @@ CREATE TABLE IF NOT EXISTS %s (
   LATEST_DATA_REPOSITORY_NAME NOT NULL,
   DATA_UPDATE_TIME NOT NULL,
   PRIMARY KEY(TARGET_ID)
-);`, l.tableName)
+);`, latestDataRepositoryAddress.tableName)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := l.db.PrepareContext(ctx, sql)
+	stmt, err := latestDataRepositoryAddress.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at CREATE TABLE LATEST_DATA_REPOSITORY_ADDRESS statement %s: %w", err)
-		return err
+		return nil, err
 	}
 	defer stmt.Close()
 
@@ -73,12 +64,15 @@ CREATE TABLE IF NOT EXISTS %s (
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create LATEST_DATA_REPOSITORY_ADDRESS table to %s: %w", err)
-		return err
+		return nil, err
 	}
-	return nil
+
+	return latestDataRepositoryAddress, nil
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetAllLatestDataRepositoryAddresses(ctx context.Context) (map[string]*LatestDataRepositoryAddress, error) {
+	l.m.Lock()
+	l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -131,6 +125,8 @@ FROM %s
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressesByRepName(ctx context.Context, repName string) (map[string]*LatestDataRepositoryAddress, error) {
+	l.m.Lock()
+	l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -187,6 +183,8 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, targetID string) (*LatestDataRepositoryAddress, error) {
+	l.m.Lock()
+	l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -308,32 +306,38 @@ INSERT INTO %s (
 )
 `, l.tableName)
 	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at add latest data repoisitory address sql: %w", err)
-			errTx := tx.Rollback()
-			if errTx != nil {
-				err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
+		_, err := func() (bool, error) {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			stmt, err := tx.PrepareContext(ctx, sql)
+			if err != nil {
+				err = fmt.Errorf("error at add latest data repoisitory address sql: %w", err)
+				errTx := tx.Rollback()
+				if errTx != nil {
+					err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
+				}
+				return false, err
 			}
-			return false, err
-		}
-		defer stmt.Close()
+			defer stmt.Close()
 
-		queryArgs := []interface{}{
-			latestDataRepositoryAddress.IsDeleted,
-			latestDataRepositoryAddress.TargetID,
-			latestDataRepositoryAddress.LatestDataRepositoryName,
-			latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
-		}
-		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-		_, err = stmt.ExecContext(ctx, queryArgs...)
-		if err != nil {
-			err = fmt.Errorf("error at query :%w", err)
-			errTx := tx.Rollback()
-			if errTx != nil {
-				err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
+			queryArgs := []interface{}{
+				latestDataRepositoryAddress.IsDeleted,
+				latestDataRepositoryAddress.TargetID,
+				latestDataRepositoryAddress.LatestDataRepositoryName,
+				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
 			}
+			gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+			_, err = stmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at query :%w", err)
+				errTx := tx.Rollback()
+				if errTx != nil {
+					err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
+				}
+				return false, err
+			}
+			return true, nil
+		}()
+		if err != nil {
 			return false, err
 		}
 	}
@@ -585,5 +589,8 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) Close(ctx context.Context) error {
-	return l.db.Close()
+	if !gkill_options.IsCacheInMemory {
+		return l.db.Close()
+	}
+	return nil
 }

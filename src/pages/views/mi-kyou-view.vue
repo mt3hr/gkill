@@ -42,7 +42,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref, watch } from 'vue'
+import { nextTick, type Ref, ref, watch } from 'vue'
 import MiContextMenu from './mi-context-menu.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { miKyouViewProps } from './mi-kyou-view-props'
@@ -134,6 +134,7 @@ async function clicked_mi_check(): Promise<void> {
     // 更新リクエストを飛ばす
     const req = new UpdateMiRequest()
     req.mi = updated_mi
+
     const res = await props.gkill_api.update_mi(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)

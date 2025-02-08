@@ -20,7 +20,7 @@ export class Notification extends MetaInfoBase {
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         const req = new GetNotificationHistoryByNotificationIDRequest()
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_notification_history_by_notification_id(req)
         if (res.errors && res.errors.length !== 0) {

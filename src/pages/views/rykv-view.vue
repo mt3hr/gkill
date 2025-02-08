@@ -1,7 +1,7 @@
 <template>
     <div class="rykv_view_wrap">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
-            <v-app-bar-nav-icon @click.stop="() => { drawer = !drawer }" />
+            <v-app-bar-nav-icon @click.stop="() => { if (inited) { drawer = !drawer } }" />
             <v-toolbar-title>
                 <div>
                     <span>
@@ -31,7 +31,8 @@
                 <v-icon>mdi-map</v-icon>
             </v-btn>
             <v-divider vertical />
-            <v-btn icon="mdi-cog" :disabled="!inited" @click="emits('requested_show_application_config_dialog')" />
+            <v-btn icon="mdi-cog" :disabled="!application_config.is_loaded"
+                @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
         <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height"
             :mobile="drawer_mode_is_mobile">
@@ -52,21 +53,18 @@
                     if (!inited) {
                         return
                     }
-                    if (application_config.rykv_hot_reload) {
-                        if (skip_search_this_tick) {
-                            nextTick(() => skip_search_this_tick = false)
-                            return
-                        }
-                        search(focused_column_index, new_query).then(() => {
-                            if (kyou_list_views.value && kyou_list_views.value.length - 1 >= querys.length - 1) {
-                                const kyou_list_view = kyou_list_views.value[querys.length - 1] as any
-                                if (!kyou_list_view) {
-                                    return
-                                }
+                    if (skip_search_this_tick) {
+                        nextTick(() => skip_search_this_tick = false)
+                        return
+                    }
+                    search(focused_column_index, new_query).then(() => {
+                        if (kyou_list_views.value && kyou_list_views.value.length - 1 >= querys.length - 1) {
+                            const kyou_list_view = kyou_list_views.value[querys.length - 1] as any
+                            if (!kyou_list_view) {
+                                return
                             }
-                        })
-
-                    };
+                        }
+                    })
                     if (new_query.calendar_start_date && new_query.calendar_end_date) {
                         gps_log_map_start_time = new_query.calendar_start_date
                         gps_log_map_end_time = new_query.calendar_end_date
@@ -111,7 +109,7 @@
                                 skip_search_this_tick = true
                                 focused_query = querys[index]
 
-                                if (is_show_kyou_count_calendar) {
+                                if (is_show_kyou_count_calendar || is_show_dnote) {
                                     update_focused_kyous_list(index)
                                 }
                                 focused_column_index = index
@@ -183,7 +181,8 @@
                                 :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag"
                                 :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                                :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'fit-content'"
+                                :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
+                                :show_timeis_plaing_end_button="true" :height="'fit-content'"
                                 :is_readonly_mi_check="false" :width="400" :enable_context_menu="enable_context_menu"
                                 :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
                                 @received_errors="(errors) => emits('received_errors', errors)"
@@ -416,20 +415,21 @@ async function init(): Promise<void> {
                 saved_querys.push(default_query)
             }
 
-            for (let i = 0; i < saved_querys.length; i++) {
-                await nextTick(() => {
-                    skip_search_this_tick.value = true
-                    if (props.application_config.rykv_hot_reload) {
+            if (props.application_config.rykv_hot_reload) {
+                for (let i = 0; i < saved_querys.length; i++) {
+                    await nextTick(() => {
+                        skip_search_this_tick.value = true
                         waitPromises.push(search(i, saved_querys[i], true).then(async () => {
                             return nextTick(() => {
                                 kyou_list_views.value[i].scroll_to(match_kyous_list_top_list.value[i])
                                 kyou_list_views.value[i].set_loading(false)
                             })
                         }))
-                    } else {
-                        querys.value = saved_querys
-                    }
-                })
+                    })
+                }
+            } else {
+                querys.value = saved_querys
+                querys_backup.value = saved_querys
             }
         } finally {
             Promise.all(waitPromises).then(async () => {
@@ -443,6 +443,7 @@ async function init(): Promise<void> {
                 drawer_mode_is_mobile.value = null
                 drawer.value = props.app_content_width.valueOf() >= 420
                 is_loading.value = false
+                skip_search_this_tick.value = false
             })
         }
     })
@@ -511,24 +512,29 @@ function add_list_view(query?: FindKyouQuery): void {
 }
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
-    for (let i = 0; i < match_kyous_list.value.length; i++) {
-        const kyous_list = match_kyous_list.value[i]
-        for (let j = 0; j < kyous_list.length; j++) {
-            const kyou_in_list = kyous_list[j]
-            if (kyou.id === kyou_in_list.id) {
-                const updated_kyou = kyou.clone()
-                await updated_kyou.reload()
-                await updated_kyou.load_all()
-                kyous_list.splice(j, 1, updated_kyou)
+    (async (): Promise<void> => {
+        for (let i = 0; i < match_kyous_list.value.length; i++) {
+            const kyous_list = match_kyous_list.value[i]
+            for (let j = 0; j < kyous_list.length; j++) {
+                const kyou_in_list = kyous_list[j]
+                if (kyou.id === kyou_in_list.id) {
+                    const updated_kyou = kyou.clone()
+                    await updated_kyou.reload()
+                    await updated_kyou.load_all()
+                    kyous_list.splice(j, 1, updated_kyou)
+                    break
+                }
             }
         }
-    }
-    if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
-        const updated_kyou = kyou.clone()
-        await updated_kyou.reload()
-        await updated_kyou.load_all()
-        focused_kyou.value = updated_kyou
-    }
+    })();
+    (async (): Promise<void> => {
+        if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
+            const updated_kyou = kyou.clone()
+            await updated_kyou.reload()
+            await updated_kyou.load_all()
+            focused_kyou.value = updated_kyou
+        }
+    })();
 }
 
 async function reload_list(column_index: number): Promise<void> {
@@ -646,10 +652,10 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
                 emits('received_messages', res.messages)
             }
             match_kyous_list.value[column_index] = res.kyous
-            focused_kyous_list.value.splice(0)
-            for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
-                focused_kyous_list.value.push(match_kyous_list.value[column_index][i])
+            if (is_show_kyou_count_calendar.value || is_show_dnote.value) {
+                update_focused_kyous_list(column_index)
             }
+
             await nextTick(() => {
                 const kyou_list_view = kyou_list_views.value[column_index] as any
                 if (!kyou_list_view) {
