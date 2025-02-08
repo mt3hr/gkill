@@ -18,7 +18,7 @@ type accountDAOSQLite3Impl struct {
 
 func NewAccountDAOSQLite3Impl(ctx context.Context, filename string) (AccountDAO, error) {
 	var err error
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err

@@ -1,5 +1,7 @@
 package user_config
 
+import "encoding/json"
+
 type ApplicationConfig struct {
 	UserID string `json:"user_id"`
 
@@ -14,6 +16,10 @@ type ApplicationConfig struct {
 	RykvHotReload bool `json:"rykv_hot_reload"`
 
 	MiDefaultBoard string `json:"mi_default_board"`
+
+	RykvDefaultPeriod json.Number `json:"rykv_default_period"`
+
+	MiDefaultPeriod json.Number `json:"mi_default_period"`
 
 	KFTLTemplate []*KFTLTemplate `json:"kftl_template_struct"`
 

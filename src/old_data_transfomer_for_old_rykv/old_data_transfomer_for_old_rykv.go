@@ -599,7 +599,7 @@ type TimeIsEnd struct {
 }
 
 func getNlogsFromOldDB(filename string) ([]*Nlog, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -635,7 +635,7 @@ func getNlogsFromOldDB(filename string) ([]*Nlog, error) {
 }
 
 func getKmemosFromOldDB(filename string) ([]*Kmemo, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -677,7 +677,7 @@ FROM "kmemo";`
 }
 
 func getURLogsFromOldDB(filename string) ([]*URLog, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -722,7 +722,7 @@ FROM "urlog";`
 }
 
 func getLantanasFromOldDB(filename string) ([]*Lantana, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -808,7 +808,7 @@ func getIDFKyousFromOldDB(filename string) ([]*IDFKyou, error) {
 }
 
 func getTagsFromOldDB(filename string) ([]*Tag, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -845,7 +845,7 @@ func getTagsFromOldDB(filename string) ([]*Tag, error) {
 }
 
 func getTextsFromOldDB(filename string) ([]*Text, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -882,7 +882,7 @@ func getTextsFromOldDB(filename string) ([]*Text, error) {
 }
 
 func getTimeisStartsFromOldDB(filename string) ([]*TimeIsStart, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -918,7 +918,7 @@ FROM start;`)
 }
 
 func getTimeisEndsFromOldDB(filename string) ([]*TimeIsEnd, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -962,7 +962,7 @@ FROM end;`)
 }
 
 func getMiTasksFromOldDB(filename string) ([]*MiTask, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1004,7 +1004,7 @@ FROM
 }
 
 func getMiCheckStatesFromOldDB(filename string) ([]*MiCheckStateInfo, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1058,7 +1058,7 @@ FROM
 }
 
 func getMiTaskTitlesFromOldDB(filename string) ([]*MiTaskTitleInfo, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1106,7 +1106,7 @@ FROM
 }
 
 func getMiLimitsFromOldDB(filename string) ([]*MiLimitInfo, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1163,7 +1163,7 @@ FROM
 }
 
 func getMiStartsFromOldDB(filename string) ([]*MiStartInfo, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1221,7 +1221,7 @@ FROM
 }
 
 func getMiEndsFromOldDB(filename string) ([]*MiEndInfo, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1279,7 +1279,7 @@ FROM
 }
 
 func getMiBoardsFromOldDB(filename string) ([]*MiBoardInfo, error) {
-	db, err := sql.Open("sqlite3", filename)
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_auto_vacuum=1&_timeout=60000&_journal=WAL&_cache_size=-50000&_mutex=full&_sync=1&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1388,11 +1388,6 @@ CREATE TABLE to database: %w", err)
 	}
 
 	_, err = db.Exec(`
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS lantana (LantanaID TEXT NOT NULL, Time TEXT NOT NULL, Mood INTEGER NOT NULL, RepName NOT NULL);
 	`)
 	if err != nil {
@@ -1486,11 +1481,6 @@ CREATE TABLE IF NOT EXISTS "timeis_end" (
 		return nil, err
 	}
 	_, err = db.Exec(`
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS Task (
     TaskID TEXT NOT NULL,
     CreatedTime TEXT NOT NULL,
@@ -1503,11 +1493,6 @@ CREATE TABLE IF NOT EXISTS Task (
 	}
 	_, err = db.Exec(`
 
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS TaskTitleInfo (
     TaskTitleID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1522,11 +1507,6 @@ CREATE TABLE IF NOT EXISTS TaskTitleInfo (
 	}
 	_, err = db.Exec(`
 
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS CheckStateInfo (
     CheckStateID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1541,11 +1521,6 @@ CREATE TABLE IF NOT EXISTS CheckStateInfo (
 	}
 	_, err = db.Exec(`
 
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS LimitInfo (
     LimitID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1560,11 +1535,6 @@ CREATE TABLE IF NOT EXISTS LimitInfo (
 	}
 	_, err = db.Exec(`
 
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS MiStartInfo (
     StartID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1579,11 +1549,6 @@ CREATE TABLE IF NOT EXISTS MiStartInfo (
 	}
 	_, err = db.Exec(`
 
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS MiEndInfo (
     EndID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
@@ -1598,11 +1563,6 @@ CREATE TABLE IF NOT EXISTS MiEndInfo (
 	}
 	_, err = db.Exec(`
 
-PRAGMA temp_store = MEMORY;
-PRAGMA cache_size = -50000;
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-VACUUM;
 CREATE TABLE IF NOT EXISTS BoardInfo (
     BoardInfoID TEXT NOT NULL,
     TaskID TEXT NOT NULL,
