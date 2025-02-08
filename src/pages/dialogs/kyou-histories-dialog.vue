@@ -25,7 +25,7 @@
                     :highlight_targets="[kyou.generate_info_identifer()]" :is_image_view="false" :kyou="kyou"
                     :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                     :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                    :show_mi_limit_time="true" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
+                    :show_mi_limit_time="true" :show_timeis_elapsed_time="false" :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"
                     :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                     :show_attached_timeis="true" :is_readonly_mi_check="false"
                     @received_errors="(errors) => emits('received_errors', errors)"

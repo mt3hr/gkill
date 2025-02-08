@@ -72,4 +72,5 @@ const (
 	OpenDirectorySuccessMessage              = "MSG000067"
 	OpenFileSuccessMessage                   = "MSG000068"
 	ReloadRepositoriesSuccessMessage         = "MSG000069"
+	RebootingMessage                         = "MSG000070"
 )

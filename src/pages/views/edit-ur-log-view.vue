@@ -44,11 +44,11 @@
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
-            <KyouView :application_config="application_config" :gkill_api="gkill_api"
+            <KyouView :application_config="application_config" :gkill_api="gkill_api" :show_timeis_elapsed_time="true"
                 :show_timeis_plaing_end_button="true" :highlight_targets="highlight_targets" :is_image_view="false"
                 :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
@@ -63,7 +63,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref, watch } from 'vue'
+import { nextTick, type Ref, ref, watch } from 'vue'
 import type { EditURLogViewProps } from './edit-ur-log-view-props'
 import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -105,6 +105,8 @@ function reset(): void {
 }
 
 async function save(): Promise<void> {
+    cloned_kyou.value.abort_controller.abort()
+
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
     const urlog = cloned_kyou.value.typed_urlog
     if (!urlog) {
@@ -174,6 +176,7 @@ async function save(): Promise<void> {
     // 更新リクエストを飛ばす
     const req = new UpdateURLogRequest()
     req.urlog = updated_urlog
+
     const res = await props.gkill_api.update_urlog(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)

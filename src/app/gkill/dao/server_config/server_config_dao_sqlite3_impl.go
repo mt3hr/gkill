@@ -28,7 +28,8 @@ func NewServerConfigDAOSQLite3Impl(ctx context.Context, filename string) (Server
 PRAGMA temp_store = MEMORY;
 PRAGMA cache_size = -50000;
 PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;VACUUM;
+PRAGMA synchronous = NORMAL;
+VACUUM;
 CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
   ENABLE_THIS_DEVICE NOT NULL,
   DEVICE PRIMARY KEY NOT NULL,

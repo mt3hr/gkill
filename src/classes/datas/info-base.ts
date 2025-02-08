@@ -40,7 +40,7 @@ export abstract class InfoBase {
         const errors = new Array<GkillError>()
         const req = new GetTagsByTargetIDRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.target_id = this.id
         const res = await GkillAPI.get_gkill_api().get_tags_by_target_id(req)
         if (res.errors && res.errors.length != 0) {
@@ -54,7 +54,7 @@ export abstract class InfoBase {
         const errors = new Array<GkillError>()
         const req = new GetTextsByTargetIDRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.target_id = this.id
         const res = await GkillAPI.get_gkill_api().get_texts_by_target_id(req)
         if (res.errors && res.errors.length != 0) {
@@ -68,7 +68,7 @@ export abstract class InfoBase {
         const errors = new Array<GkillError>()
         const req = new GetNotificationsByTargetIDRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.target_id = this.id
         const res = await GkillAPI.get_gkill_api().get_notifications_by_target_id(req)
         if (res.errors && res.errors.length != 0) {
@@ -100,7 +100,7 @@ export abstract class InfoBase {
 
         const req = new GetKyousRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.query.use_plaing = true
         req.query.plaing_time = this.related_time
         req.query.reps = reps
@@ -184,5 +184,3 @@ export abstract class InfoBase {
         this.is_checked_kyou = false
     }
 }
-
-
