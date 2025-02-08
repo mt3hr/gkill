@@ -64,6 +64,7 @@ export class KFTLMiRequest extends KFTLRequest {
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
         const id = this.get_request_id()
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
+        const now = new Date(Date.now())
 
         const mi_req = new AddMiRequest()
 
@@ -77,11 +78,11 @@ export class KFTLMiRequest extends KFTLRequest {
 
         mi_req.mi.create_app = "gkill_kftl"
         mi_req.mi.create_device = gkill_info_res.device
-        mi_req.mi.create_time = time
+        mi_req.mi.create_time = now
         mi_req.mi.create_user = gkill_info_res.user_id
         mi_req.mi.update_app = "gkill_kftl"
         mi_req.mi.update_device = gkill_info_res.device
-        mi_req.mi.update_time = time
+        mi_req.mi.update_time = now
         mi_req.mi.update_user = gkill_info_res.user_id
 
         await GkillAPI.get_gkill_api().add_mi(mi_req).then(res => {

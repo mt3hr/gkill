@@ -47,7 +47,8 @@ export class KFTLNlogRequest extends KFTLRequest {
             }
             const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
             const req = new AddNlogRequest()
-            
+            const now = new Date(Date.now())
+
             req.nlog.id = GkillAPI.get_gkill_api().generate_uuid()
             req.nlog.shop = this.shop_name
             req.nlog.amount = amount
@@ -56,11 +57,11 @@ export class KFTLNlogRequest extends KFTLRequest {
 
             req.nlog.create_app = "gkill_kftl"
             req.nlog.create_device = gkill_info_res.device
-            req.nlog.create_time = time
+            req.nlog.create_time = now
             req.nlog.create_user = gkill_info_res.user_id
             req.nlog.update_app = "gkill_kftl"
             req.nlog.update_device = gkill_info_res.device
-            req.nlog.update_time = time
+            req.nlog.update_time = now
             req.nlog.update_user = gkill_info_res.user_id
 
             await GkillAPI.get_gkill_api().add_nlog(req).then(res => {
