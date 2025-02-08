@@ -519,7 +519,8 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 	query := &find.FindQuery{
 		IsDeleted: &falseValue,
 		UseWords:  &trueValue,
-		Words:     findCtx.ParsedFindQuery.Words,
+		Words:     findCtx.ParsedFindQuery.Tags,
+		WordsAnd:  &falseValue,
 	}
 	matchTags, err := findCtx.Repositories.TagReps.FindTags(ctx, query)
 	if err != nil {
