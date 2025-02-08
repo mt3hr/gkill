@@ -25,18 +25,19 @@ export class KFTLLantanaRequest extends KFTLRequest {
 
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddLantanaRequest()
-        
+        const now = new Date(Date.now())
+
         req.lantana.id = this.get_request_id()
         req.lantana.mood = this.mood
         req.lantana.related_time = time
 
         req.lantana.create_app = "gkill_kftl"
         req.lantana.create_device = gkill_info_res.device
-        req.lantana.create_time = time
+        req.lantana.create_time = now
         req.lantana.create_user = gkill_info_res.user_id
         req.lantana.update_app = "gkill_kftl"
         req.lantana.update_device = gkill_info_res.device
-        req.lantana.update_time = time
+        req.lantana.update_time = now
         req.lantana.update_user = gkill_info_res.user_id
 
         await GkillAPI.get_gkill_api().add_lantana(req).then(res => {
