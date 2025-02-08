@@ -103,6 +103,7 @@
                         <v-text-field width="400" v-model="server_config.urlog_useragent"></v-text-field>
                     </td>
                 </tr>
+                <!--
                 <tr>
                     <td>
                         アップロード容量月額制限
@@ -111,6 +112,7 @@
                         <v-text-field width="400" v-model="server_config.upload_size_limit_month"></v-text-field>
                     </td>
                 </tr>
+                -->
                 <tr>
                     <td>
                         ユーザデータディレクトリ

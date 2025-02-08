@@ -64,7 +64,8 @@ func NewIDFDirRep(ctx context.Context, dir, dbFilename string, r *mux.Router, au
 PRAGMA temp_store = MEMORY;
 PRAGMA cache_size = -50000;
 PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;VACUUM;
+PRAGMA synchronous = NORMAL;
+VACUUM;
 CREATE TABLE IF NOT EXISTS "IDF" (
   IS_DELETED NOT NULL,
   ID NOT NULL,

@@ -19,9 +19,10 @@
                     <EditIDFKyouView v-if="focused_kyou" :application_config="application_config" :gkill_api="gkill_api"
                         :highlight_targets="[]" :kyou="focused_kyou" :last_added_tag="last_added_tag"
                         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                        @received_errors="(errors) => emits('received_errors', errors)"
-                        @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
-                        ref="edit_idf_kyou_view" />
+                        @received_errors="(errors) => emits('received_errors', errors)" @requested_reload_kyou="(kyou) => {
+                            reload_focused_kyou()
+                            emits('requested_reload_kyou', kyou)
+                        }" ref="edit_idf_kyou_view" />
                 </div>
             </v-col>
         </v-row>
@@ -45,6 +46,16 @@ const focused_kyou: Ref<Kyou | null> = ref(null)
 
 const kyou_height: Ref<number> = ref(180)
 const kyou_height_px = computed(() => kyou_height.value ? kyou_height.value.toString().concat("px") : "0px")
+
+async function reload_focused_kyou(): Promise<void> {
+    if (!focused_kyou.value) {
+        return
+    }
+    const updated_kyou = focused_kyou.value.clone()
+    await updated_kyou.reload()
+    await updated_kyou.load_all()
+    focused_kyou.value = updated_kyou
+}
 </script>
 <style lang="css">
 .decide_related_time_uploaded_files_kyou_list_view .kyou_in_list .v-card {

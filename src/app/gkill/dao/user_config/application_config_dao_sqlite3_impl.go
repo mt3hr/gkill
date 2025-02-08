@@ -28,7 +28,8 @@ func NewApplicationConfigDAOSQLite3Impl(ctx context.Context, filename string) (A
 PRAGMA temp_store = MEMORY;
 PRAGMA cache_size = -50000;
 PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;VACUUM;
+PRAGMA synchronous = NORMAL;
+VACUUM;
 CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
   USER_ID NOT NULL,
   DEVICE NOT NULL,

@@ -93,7 +93,6 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		return nil, err
 	}
 
-	// latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(context.Background(), filepath.Join(configDBRootDir, fmt.Sprintf("latest_data_repository_address_%s.db", userID)))
 	// メモリ上でやる
 	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(userID)
 	if err != nil {
