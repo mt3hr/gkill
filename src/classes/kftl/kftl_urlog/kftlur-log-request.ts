@@ -43,18 +43,19 @@ export class KFTLURLogRequest extends KFTLRequest {
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddURLogRequest()
-        
+        const now = new Date(Date.now())
+
         req.urlog.id = this.get_request_id()
         req.urlog.related_time = time
         req.urlog.url = this.url
         req.urlog.title = this.title
         req.urlog.create_app = "gkill_kftl"
         req.urlog.create_device = gkill_info_res.device
-        req.urlog.create_time = time
+        req.urlog.create_time = now
         req.urlog.create_user = gkill_info_res.user_id
         req.urlog.update_app = "gkill_kftl"
         req.urlog.update_device = gkill_info_res.device
-        req.urlog.update_time = time
+        req.urlog.update_time = now
         req.urlog.update_user = gkill_info_res.user_id
 
         await GkillAPI.get_gkill_api().add_urlog(req).then(res => {

@@ -14,7 +14,7 @@
                     <td valign="top">
                         <v-card>
                             <v-card-title>{{ share_title }}</v-card-title>
-                            <KyouListView :kyou_height="56 + 35" :width="400"
+                            <KyouListView :kyou_height="56 + 35" :width="400" :show_timeis_plaing_end_button="false"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
                                 :matched_kyous="match_kyous" :query="new FindKyouQuery()" :last_added_tag="''"

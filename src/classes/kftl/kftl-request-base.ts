@@ -37,8 +37,9 @@ export class KFTLRequestBase {
     }
 
     async apply_default_value_kftl_request_base(): Promise<void> {
+        const now = new Date(Date.now())
         const req = new GetGkillInfoRequest()
-        
+
         const res = await GkillAPI.get_gkill_api().get_gkill_info(req)
 
         this.is_deleted = false
@@ -48,8 +49,8 @@ export class KFTLRequestBase {
         this.create_user = res.user_id
         this.update_device = ""
         this.update_user = ""
-        this.create_time = moment().toDate()
-        this.update_time = new Date(0)
+        this.create_time = now
+        this.update_time = now
     }
 
     get_create_time(): Date {

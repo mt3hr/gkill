@@ -94,7 +94,7 @@
                                 :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
                                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                                 :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true"
-                                :show_content_only="false" @scroll_list="(scroll_top: number) => {
+                                :show_content_only="false" :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
                                     match_kyous_list_top_list[index] = scroll_top
                                     if (inited) {
                                         props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list)
