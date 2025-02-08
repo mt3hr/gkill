@@ -3,7 +3,9 @@ package user_config
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -96,6 +98,9 @@ FROM APPLICATION_CONFIG
 			return nil, ctx.Err()
 		default:
 			applicationConfig := &ApplicationConfig{}
+			rykvDefaultPeriod := -1
+			miDefaultPeriod := -1
+
 			err = rows.Scan(
 				&applicationConfig.UserID,
 				&applicationConfig.Device,
@@ -104,9 +109,13 @@ FROM APPLICATION_CONFIG
 				&applicationConfig.RykvImageListColumnNumber,
 				&applicationConfig.RykvHotReload,
 				&applicationConfig.MiDefaultBoard,
-				&applicationConfig.RykvDefaultPeriod,
-				&applicationConfig.MiDefaultPeriod,
+				&rykvDefaultPeriod,
+				&miDefaultPeriod,
 			)
+
+			applicationConfig.RykvDefaultPeriod = json.Number(strconv.Itoa(rykvDefaultPeriod))
+			applicationConfig.MiDefaultPeriod = json.Number(strconv.Itoa(miDefaultPeriod))
+
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
 	}
@@ -156,6 +165,10 @@ WHERE USER_ID = ? AND DEVICE = ?
 			return nil, ctx.Err()
 		default:
 			applicationConfig := &ApplicationConfig{}
+
+			rykvDefaultPeriod := -1
+			miDefaultPeriod := -1
+
 			err = rows.Scan(
 				&applicationConfig.UserID,
 				&applicationConfig.Device,
@@ -164,9 +177,13 @@ WHERE USER_ID = ? AND DEVICE = ?
 				&applicationConfig.RykvImageListColumnNumber,
 				&applicationConfig.RykvHotReload,
 				&applicationConfig.MiDefaultBoard,
-				&applicationConfig.RykvDefaultPeriod,
-				&applicationConfig.MiDefaultPeriod,
+				&rykvDefaultPeriod,
+				&miDefaultPeriod,
 			)
+
+			applicationConfig.RykvDefaultPeriod = json.Number(strconv.Itoa(rykvDefaultPeriod))
+			applicationConfig.MiDefaultPeriod = json.Number(strconv.Itoa(miDefaultPeriod))
+
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
 	}
@@ -218,8 +235,8 @@ INSERT INTO APPLICATION_CONFIG (
 		applicationConfig.RykvImageListColumnNumber,
 		applicationConfig.RykvHotReload,
 		applicationConfig.MiDefaultBoard,
-		applicationConfig.RykvDefaultPeriod,
-		applicationConfig.MiDefaultPeriod,
+		applicationConfig.RykvDefaultPeriod.String(),
+		applicationConfig.MiDefaultPeriod.String(),
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -261,8 +278,8 @@ WHERE USER_ID = ? AND DEVICE = ?
 		applicationConfig.RykvImageListColumnNumber,
 		applicationConfig.RykvHotReload,
 		applicationConfig.MiDefaultBoard,
-		applicationConfig.RykvDefaultPeriod,
-		applicationConfig.MiDefaultPeriod,
+		applicationConfig.RykvDefaultPeriod.String(),
+		applicationConfig.MiDefaultPeriod.String(),
 		applicationConfig.UserID,
 		applicationConfig.Device,
 	}
