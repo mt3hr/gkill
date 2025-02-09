@@ -6225,7 +6225,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	response.ApplicationConfig = applicationConfig
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetApplicationConfigSuccessMessage,
-		Message:     "取得完了",
+		Message:     "設定データ取得完了",
 	})
 }
 
@@ -8520,7 +8520,7 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 	response.GPSLogs = gpsLogHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetGPSLogSuccessMessage,
-		Message:     "取得完了",
+		Message:     "GPSLog取得完了",
 	})
 }
 

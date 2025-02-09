@@ -155,11 +155,11 @@ watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyo
 })
 
 function get_default_query(): FindKyouQuery {
-    const query = get_default_query()?.clone()
+    const query = default_query.value.clone()
     if (props.application_config.mi_default_period !== -1) {
         query.use_calendar = true
-        query.calendar_start_date = moment(moment().add(-props.application_config.rykv_default_period, "days").format("YYYY-MM-DD 00:00:00")).toDate()
-        query.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00")).add(1, "days").add(-1, "milliseconds").toDate()
+        query.calendar_start_date = moment(moment().add(-props.application_config.mi_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
+        query.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
     }
     return query
 }

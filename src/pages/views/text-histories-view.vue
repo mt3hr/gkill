@@ -1,5 +1,5 @@
 <template>
-    <TextView v-for="text in cloned_text.attached_histories" :key="text.id"
+    <TextView class="text_history" v-for="text in cloned_text.attached_histories" :key="text.id"
         :application_config="application_config" :gkill_api="gkill_api" :text="text" :kyou="kyou"
         :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
         @received_errors="(errors) => emits('received_errors', errors)" :enable_context_menu="enable_context_menu"
@@ -25,3 +25,9 @@ watch(() => props.text, () => {
 nextTick(() => cloned_text.value.load_attached_histories())
 
 </script>
+<style lang="css">
+.text_history .highlighted_text,
+.text_history .text {
+    width: 400px;
+}
+</style>

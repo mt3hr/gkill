@@ -1,43 +1,61 @@
-export function deepEquals(d1:any, d2:any){
-    function toKV(o:any){
-        return Object.entries(o).sort(([k1], [k2])=>{
-            let i = 0;
+const isArray = Array.isArray;
+const keyList = Object.keys;
+const hasProp = Object.prototype.hasOwnProperty;
 
-            while(k1[i] === k2[i]){
-                if(k1[i] === undefined && k2[i] === undefined){
-                    throw "Same property name.";
+export function deepEquals<T extends any>(a: T, b: T): boolean {
+    if (a === b) { return true; }
+
+
+    if (a && b && typeof a === 'object' && typeof b === 'object') {
+        const arrA = isArray(a)
+            , arrB = isArray(b);
+        let i
+            , length
+            , key;
+
+        if (arrA && arrB) {
+            length = a.length;
+            if (length !== b.length) { return false; }
+            for (i = length; i-- !== 0;) {
+                if (!deepEquals(a[i], b[i])) {
+                    return false;
                 }
-
-                i++;
             }
+            return true;
+        }
 
-            return (k1.codePointAt(i) ?? 0) - (k2.codePointAt(i) ?? 0);
-        });
-    }
+        if (arrA !== arrB) { return false; }
 
-    if(d1 === d2){
+        const dateA = a instanceof Date
+            , dateB = b instanceof Date;
+        if (dateA !== dateB) { return false; }
+        if (dateA && dateB) { return a.getTime() === b.getTime(); }
+
+        const regexpA = a instanceof RegExp
+            , regexpB = b instanceof RegExp;
+        if (regexpA !== regexpB) { return false; }
+        if (regexpA && regexpB) { return a.toString() === b.toString(); }
+
+        const keys = keyList(a);
+        length = keys.length;
+
+        if (length !== keyList(b).length) {
+            return false;
+        }
+
+        for (i = length; i-- !== 0;) {
+            if (!hasProp.call(b, keys[i])) {
+                return false;
+            }
+        }
+
+        for (i = length; i-- !== 0;) {
+            key = keys[i];
+            if (!deepEquals((a as any)[key], (b as any)[key])) { return false; }
+        }
+
         return true;
     }
 
-    if(typeof d1 !== "object" || typeof d2 !== "object" || d1 === null || d2 === null){
-        return false;
-    }
-
-    const kv1 = toKV(d1);
-    const kv2 = toKV(d2);
-
-    if(kv1.length !== kv2.length){
-        return false;
-    }
-
-    for(let i = 0; i < kv1.length; i++){
-        const [k1, v1] = kv1[i];
-        const [k2, v2] = kv2[i];
-
-        if(k1 !== k2 || !deepEquals(v1, v2)){
-            return false;
-        }
-    }
-
-    return true;
+    return a !== a && b !== b;
 }
