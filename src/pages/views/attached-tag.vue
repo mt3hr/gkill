@@ -1,5 +1,5 @@
 <template>
-    <span>
+    <span class="tag_wrap">
         <span :class="tag_class" @contextmenu.prevent="async (e) => show_context_menu(e as PointerEvent)">
             {{ tag.tag }}
         </span>
