@@ -1,5 +1,5 @@
 <template>
-    <NotificationView v-for="notification in cloned_notification.attached_histories" :key="notification.id"
+    <NotificationView class="notification_history" v-for="notification in cloned_notification.attached_histories" :key="notification.id"
         :application_config="application_config" :gkill_api="gkill_api" :notification="notification" :kyou="kyou"
         :last_added_tag="last_added_tag" :highlight_targets="highlight_targets"
         @received_errors="(errors) => emits('received_errors', errors)" :enable_context_menu="enable_context_menu"
@@ -25,3 +25,9 @@ watch(() => props.notification, () => {
 nextTick(() => cloned_notification.value.load_attached_histories())
 
 </script>
+<style lang="css">
+.notification_history .highlighted_notification,
+.notification_history .notification {
+    width: 400px;
+}
+</style>

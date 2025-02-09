@@ -328,7 +328,7 @@ loop:
 						matchTags[tag.ID] = tag
 					}
 				} else {
-					matchTags[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)] = tag
+					matchTags[tag.ID] = tag
 				}
 			}
 		default:
@@ -602,12 +602,12 @@ loop:
 				continue loop
 			}
 			for _, tag := range matchTagsInRep {
-				if existTag, exist := allTags[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+				if existTag, exist := allTags[tag.ID]; exist {
 					if tag.UpdateTime.After(existTag.UpdateTime) {
-						allTags[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)] = tag
+						allTags[tag.ID] = tag
 					}
 				} else {
-					allTags[tag.ID+tag.UpdateTime.Format(sqlite3impl.TimeLayout)] = tag
+					allTags[tag.ID] = tag
 				}
 			}
 		default:

@@ -250,7 +250,7 @@ loop:
 						matchTexts[text.ID] = text
 					}
 				} else {
-					matchTexts[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
+					matchTexts[text.ID] = text
 				}
 			}
 		default:
