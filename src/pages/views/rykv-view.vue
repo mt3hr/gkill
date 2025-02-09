@@ -35,7 +35,7 @@
                 @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
         <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height"
-            :mobile="drawer_mode_is_mobile">
+            :mobile="drawer_mode_is_mobile" :touchless="drawer_mode_is_mobile !== false">
             <RykvQueryEditorSideBar v-show="inited" class="rykv_query_editor_sidebar"
                 :application_config="application_config" :gkill_api="gkill_api"
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
@@ -456,10 +456,10 @@ function update_focused_kyous_list(column_index: number): void {
     }
 }
 
-async function close_list_view(column_index: number): Promise<void> {
+function close_list_view(column_index: number) {
     skip_search_this_tick.value = true
     focused_column_index.value = -1
-    focused_query.value = querys.value[0]
+    focused_query.value = querys.value[focused_column_index.value]
     focused_kyous_list.value.splice(0)
 
     querys.value.splice(column_index, 1)
@@ -484,7 +484,10 @@ async function close_list_view(column_index: number): Promise<void> {
     }
     props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
     props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list.value)
-    focused_column_index.value = 0
+    nextTick(() => {
+        skip_search_this_tick.value = true
+        focused_column_index.value = 0
+    })
 }
 
 function add_list_view(query?: FindKyouQuery): void {

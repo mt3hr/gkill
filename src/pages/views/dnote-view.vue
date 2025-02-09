@@ -311,9 +311,6 @@ async function extruct_location_kyous(): Promise<void> {
         emits('received_errors', res.errors)
         return
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
     location_timeis_kmemo_kyous.value = res.kyous
 
     const aggregated_locations = await aggregate_locations_from_kyous(location_timeis_kmemo_kyous.value, abort_controller.value)
@@ -340,9 +337,6 @@ async function extruct_people_kyous(): Promise<void> {
         emits('received_errors', res.errors)
         return
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
     people_timeis_kmemo_kyous.value = res.kyous
     const aggregated_peoples = await aggregate_peoples_from_kyous(people_timeis_kmemo_kyous.value, abort_controller.value)
     aggregated_peoples.sort((a, b) => b.duration_milli_second - a.duration_milli_second)
@@ -367,9 +361,6 @@ async function extruct_nlog_kyous(): Promise<void> {
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
     }
     nlog_kyous.value = res.kyous
 
@@ -423,9 +414,6 @@ async function calc_total_awake_time(): Promise<void> {
         emits('received_errors', res.errors)
         return
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
     awake_timeis_kyous.value.push(...res.kyous)
 
     for (let i = 0; i < awake_timeis_kyous.value.length; i++) {
@@ -469,9 +457,6 @@ async function calc_total_sleep_time(): Promise<void> {
         emits('received_errors', res.errors)
         return
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
     sleep_timeis_kyous.value.push(...res.kyous)
 
     for (let i = 0; i < sleep_timeis_kyous.value.length; i++) {
@@ -514,9 +499,6 @@ async function calc_total_work_time(): Promise<void> {
         emits('received_errors', res.errors)
         return
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
     work_timeis_kyous.value.push(...res.kyous)
 
     for (let i = 0; i < work_timeis_kyous.value.length; i++) {
@@ -557,9 +539,6 @@ async function calc_total_tabaco_record_count(): Promise<void> {
         emits('received_errors', res.errors)
         return
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
     tabaco_kmemo_kyous.value.push(...res.kyous)
     calclutated_tabaco_record_count.value = tabaco_kmemo_kyous.value.length
 }
@@ -582,9 +561,6 @@ async function calc_average_lantana_mood(): Promise<void> {
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
     }
     lantana_kyous.value.push(...res.kyous)
 
@@ -625,9 +601,6 @@ async function calc_total_git_addition_deletion_count(): Promise<void> {
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
     }
     git_commit_log_kyous.value.push(...res.kyous)
 

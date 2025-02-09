@@ -1511,6 +1511,11 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 			continue
 		}
 
+		// Plaingで最新が入っていなかったら消す
+		if findCtx.ParsedFindQuery.UsePlaing != nil && *(findCtx.ParsedFindQuery.UsePlaing) && findCtx.ParsedFindQuery.PlaingTime != nil {
+			continue
+		}
+
 		// 最新が入っていなかったらもらってくる
 		for _, rep := range findCtx.Repositories.Reps {
 			repName, err := rep.GetRepName(ctx)

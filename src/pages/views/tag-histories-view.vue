@@ -1,5 +1,5 @@
 <template>
-    <TagView v-for="tag in cloned_tag.attached_histories" :key="tag.update_time.getTime()" :application_config="application_config"
+    <TagView class="tag_history" v-for="tag in cloned_tag.attached_histories" :key="tag.update_time.getTime()" :application_config="application_config"
         :highlight_targets="highlight_targets" :gkill_api="gkill_api" :tag="tag" :kyou="kyou"
         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :last_added_tag="last_added_tag"
         @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -25,3 +25,9 @@ watch(() => props.tag, () => {
 cloned_tag.value.load_attached_histories()
 
 </script>
+<style lang="css">
+.tag_history .tag_wrap{
+    display: block;
+    width: 400px;
+}
+</style>

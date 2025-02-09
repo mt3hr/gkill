@@ -98,9 +98,6 @@ async function update_gps_log_lines(): Promise<void> {
         emits('received_errors', res.errors)
         return
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
     res.gps_logs.sort((gps_log1, gps_log2): number => moment(gps_log1.related_time).unix() - moment(gps_log2.related_time).unix())
 
     const lines: Array<{ lat: number, lng: number }> = []

@@ -86,7 +86,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 				sql += " AND "
 			}
 			sql += fmt.Sprintf("datetime(%s, 'localtime') <= datetime(?, 'localtime')", relatedTimeColumnName)
-			*queryArgs = append(*queryArgs, calendarEndDate.Add(time.Hour*24).Add(time.Millisecond*-1).Format(TimeLayout))
+			*queryArgs = append(*queryArgs, calendarEndDate.Format(TimeLayout))
 			*whereCounter++
 		}
 	}
