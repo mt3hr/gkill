@@ -449,7 +449,7 @@ async function init(): Promise<void> {
                 focused_column_index.value = 0
 
                 inited.value = true
-                drawer_mode_is_mobile.value = null
+                drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 420)
                 drawer.value = props.app_content_width.valueOf() >= 420
                 is_loading.value = false
                 skip_search_this_tick.value = false

@@ -16,7 +16,6 @@ var (
 
 	IDFIgnore = []string{
 		".gkill",
-		".kyou",
 		"gkill_id.db",
 		"gkill_id.db-journal",
 		"gkill_id.db-shm",
@@ -29,6 +28,10 @@ var (
 		"steam_autocloud.vdf",
 		".DS_Store",
 		".localized",
+		".kyou",
 		"id.db",
+		"id.db-journal",
+		"id.db-shm",
+		"id.db-wal",
 	}
 )
