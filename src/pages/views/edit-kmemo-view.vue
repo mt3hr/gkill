@@ -56,6 +56,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateKmemoRequest } from '@/classes/api/req_res/update-kmemo-request'
 import moment from 'moment'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const props = defineProps<EditKmemoViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -85,7 +86,7 @@ async function save(): Promise<void> {
     const kmemo = cloned_kyou.value.typed_kmemo
     if (!kmemo) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.client_kmemo_is_null
         error.error_message = "クライアントのデータが変です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -93,10 +94,23 @@ async function save(): Promise<void> {
         return
     }
 
+    // タイトル入力チェック
+    if (kmemo_value.value === "") {
+        const error = new GkillError()
+        error.error_code = GkillErrorCodes.kmemo_content_is_blank
+        error.error_message = "内容が入力されていません"
+        const errors = new Array<GkillError>()
+        errors.push(error)
+        emits('received_errors', errors)
+        return
+    }
+
+
+
     // 日時必須入力チェック
     if (related_date.value === "" || related_time.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.kmemo_related_time_is_blank
         error.error_message = "日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -107,7 +121,7 @@ async function save(): Promise<void> {
     // 更新がなかったらエラーメッセージを出力する
     if (kmemo.content === kmemo_value.value) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.kmemo_is_no_update
         error.error_message = "Kmemo更新されていません"
         const errors = new Array<GkillError>()
         errors.push(error)

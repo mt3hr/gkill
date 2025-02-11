@@ -8,6 +8,7 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { GetPlaingTimeisRequest } from '@/classes/api/req_res/get-plaing-timeis-request'
 import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request'
 import type { TimeIs } from '@/classes/datas/time-is'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
 
@@ -28,7 +29,7 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
         let errors = Array<GkillError>()
         if (this.title == "") {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_setted_timeis_end_title
             error.error_message = "TimeIs終了タイトルを指定してください"
             errors.push(error)
             return errors
@@ -70,9 +71,9 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
                 return errors
             }
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_end_timeis_target
             error.error_message = "終了対象のTimeIsが存在しませんでした"
-            throw new Error(error.error_message)
+            return [error]
         }
 
         // end_timeをいれてUPDATEする

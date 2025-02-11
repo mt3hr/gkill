@@ -51,6 +51,8 @@ import EditTextDialog from '../dialogs/edit-text-dialog.vue'
 import ConfirmDeleteTextDialog from '../dialogs/confirm-delete-text-dialog.vue'
 import TextHistoriesDialog from '../dialogs/text-histories-dialog.vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 
 const edit_text_dialog = ref<InstanceType<typeof EditTextDialog> | null>(null);
 const confirm_delete_text_dialog = ref<InstanceType<typeof ConfirmDeleteTextDialog> | null>(null);
@@ -86,7 +88,7 @@ async function show_text_histories_dialog(): Promise<void> {
 async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.text.id)
     const message = new GkillMessage()
-    message.message_code = "//TODO"
+    message.message_code = GkillMessageCodes.copied_text_id
     message.message = "テキストIDをコピーしました"
     const messages = new Array<GkillMessage>()
     messages.push(message)

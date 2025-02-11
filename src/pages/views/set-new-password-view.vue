@@ -41,6 +41,8 @@ import type { SetNewPasswordViewProps } from './set-new-password-view-props'
 import { useRoute } from 'vue-router';
 import { SetNewPasswordRequest } from '@/classes/api/req_res/set-new-password-request';
 import { GkillMessage } from '@/classes/api/gkill-message';
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
 const password_reset_token: Ref<string> = ref(useRoute().query.reset_token ? useRoute().query.reset_token!.toString() : "")
 const user_id: Ref<string> = ref(useRoute().query.user_id ? useRoute().query.user_id!.toString() : "")
@@ -67,7 +69,7 @@ const password_sha256 = computed(async () => {
 nextTick(() => {
     if (user_id.value === "admin") {
         const message = new GkillMessage()
-        message.message_code = "//TODO"
+        message.message_code = GkillMessageCodes.set_admin_password_request
         message.message = "管理アカウントのパスワードを設定してください"
         emits('received_messages', [message])
     }
@@ -79,7 +81,7 @@ async function try_set_new_password(): Promise<boolean> {
     // 未入力チェック
     if (user_id.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.user_id_is_blank
         error.error_message = "ユーザIDを入力してください"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -88,7 +90,7 @@ async function try_set_new_password(): Promise<boolean> {
     }
     if (password.value === "" || password_retype.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.password_is_blank
         error.error_message = "パスワードを入力してください"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -97,7 +99,7 @@ async function try_set_new_password(): Promise<boolean> {
     }
     if (password.value !== password_retype.value) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.password_retype_is_blank
         error.error_message = "再入力されたパスワードが一致しません"
         const errors = new Array<GkillError>()
         errors.push(error)

@@ -25,6 +25,8 @@ import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info';
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import { UpdateShareMiTaskListInfoRequest } from '@/classes/api/req_res/update-share-mi-task-list-info-request';
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
 const props = defineProps<ShareTaskListLinkViewProps>()
 const emits = defineEmits<ShareTaskListLinkViewEmits>()
@@ -46,7 +48,7 @@ const over_lan_share_url = computed(() => {
 function copy_lan_share_mi_link(): void {
     navigator.clipboard.writeText(lan_share_url.value);
     const message = new GkillMessage()
-    message.message_code = "//TODO"
+    message.message_code = GkillErrorCodes.copied_lan_share_mi_link
     message.message = "コピーしました"
     emits('received_messages', [message])
 }
@@ -54,7 +56,7 @@ function copy_lan_share_mi_link(): void {
 function copy_over_lan_share_mi_link(): void {
     navigator.clipboard.writeText(over_lan_share_url.value);
     const message = new GkillMessage()
-    message.message_code = "//TODO"
+    message.message_code = GkillErrorCodes.copied_over_lan_share_mi_link
     message.message = "コピーしました"
     emits('received_messages', [message])
 }

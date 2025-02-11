@@ -76,7 +76,7 @@ function format_time(time: Date) {
 
 .highlighted_notification {
     background-color: lightgreen;
-    border: dashed 1px;
+    border: solid 1px;
     margin: 8px;
     padding: 8px;
 }
