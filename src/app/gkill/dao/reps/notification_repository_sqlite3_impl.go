@@ -251,11 +251,11 @@ WHERE
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at tag: %w", err)
+		err = fmt.Errorf("error at get rep name at notification: %w", err)
 		return nil, err
 	}
 
-	dataType := "tag"
+	dataType := "notification"
 
 	trueValue := true
 	targetIDs := []string{target_id}
@@ -521,7 +521,7 @@ WHERE
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at tag: %w", err)
+		err = fmt.Errorf("error at get rep name at notification: %w", err)
 		return nil, err
 	}
 	dataType := "notification"
@@ -539,7 +539,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "NOTIFICATION_TIME"
+	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := true

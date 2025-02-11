@@ -55,6 +55,7 @@ import type { EditNotificationViewProps } from './edit-notification-view-props';
 import type { Notification } from '@/classes/datas/notification';
 import { UpdateNotificationRequest } from '@/classes/api/req_res/update-notification-request';
 import moment from 'moment';
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
 const props = defineProps<EditNotificationViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -77,7 +78,7 @@ async function save(): Promise<void> {
     // 日時必須入力チェック
     if (notification_date.value === "" || notification_time.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.notification_time_is_blank
         error.error_message = "通知日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -88,7 +89,7 @@ async function save(): Promise<void> {
     // 値がなかったらエラーメッセージを出力する
     if (content_value.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.notification_content_is_blank
         error.error_message = "通知内容が未入力です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -100,7 +101,7 @@ async function save(): Promise<void> {
     if (cloned_notification.value.content === content_value.value &&
         (moment(cloned_notification.value.notification_time).toDate().getTime() === moment(notification_date.value + " " + notification_time.value).toDate().getTime())) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.notification_is_no_update
         error.error_message = "内容が更新されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -116,13 +117,13 @@ async function save(): Promise<void> {
         return
     }
 
-    // 更新後テキスト情報を用意する
+    // 更新後通知情報を用意する
     const updated_notification = await cloned_notification.value.clone()
     updated_notification.content = content_value.value
     updated_notification.notification_time = moment(notification_date.value + " " + notification_time.value).toDate()
     updated_notification.update_app = "gkill"
     updated_notification.update_device = gkill_info_res.device
-    updated_notification.update_time = new Date(Date.now())
+    updated_notification.update_time = moment(new Date(Date.now())).toDate()
     updated_notification.update_user = gkill_info_res.user_id
 
     // 更新リクエストを飛ばす

@@ -7,6 +7,7 @@ import { AddKmemoRequest } from '@/classes/api/req_res/add-kmemo-request'
 import { Kmemo } from '@/classes/datas/kmemo'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 export class KFTLKmemoRequest extends KFTLRequest {
 
@@ -21,7 +22,7 @@ export class KFTLKmemoRequest extends KFTLRequest {
         let errors: Array<GkillError> = new Array<GkillError>()
         if (this.kmemo_content == "") {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.skiped_no_content_kmemo
             error.error_message = "内容がないKmemoの保存がスキップされました"
             errors.push(error)
             return errors

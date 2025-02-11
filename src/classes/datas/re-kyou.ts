@@ -2,6 +2,7 @@
 
 import { GkillAPI } from '../api/gkill-api'
 import { GkillError } from '../api/gkill-error'
+import { GkillErrorCodes } from '../api/message/gkill_error'
 import { GetKyouRequest } from '../api/req_res/get-kyou-request'
 import { GetReKyouRequest } from '../api/req_res/get-re-kyou-request'
 import { InfoBase } from './info-base'
@@ -19,7 +20,7 @@ export class ReKyou extends InfoBase {
     async load_attached_kyou(): Promise<Array<GkillError>> {
         const req = new GetKyouRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.target_id
         const res = await GkillAPI.get_gkill_api().get_kyou(req)
         if (res.errors && res.errors.length !== 0) {
@@ -27,7 +28,7 @@ export class ReKyou extends InfoBase {
         }
         if (!res.kyou_histories || res.kyou_histories.length < 1) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_rekyou_target
             error.error_message = "ReKyou対象の情報が見つかりませんでした"
             return [error]
         }
@@ -39,7 +40,7 @@ export class ReKyou extends InfoBase {
     async load_attached_histories(): Promise<Array<GkillError>> {
         const req = new GetReKyouRequest()
         req.abort_controller = this.abort_controller
-        
+
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_rekyou(req)
         if (res.errors && res.errors.length !== 0) {

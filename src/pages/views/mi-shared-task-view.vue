@@ -76,6 +76,7 @@ import KyouCountCalendar from './kyou-count-calendar.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GetSharedMiTasksRequest } from '@/classes/api/req_res/get-shared-mi-tasks-request'
 import { GkillError } from '@/classes/api/gkill-error'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 const kyou_list_view = ref();
 
 const props = defineProps<miSharedTaskViewProps>()
@@ -130,7 +131,7 @@ async function load_content(): Promise<void> {
     } catch (e) {
         console.error(e)
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.failed_shared_mi_tasks
         error.error_message = "読み込みに失敗しました"
         emits('received_errors', [error])
         inited.value = true

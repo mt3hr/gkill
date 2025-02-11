@@ -5,7 +5,7 @@
         </v-card-title>
         <v-text-field class="input" type="text" v-model="device_name" label="デバイス名" />
         <v-checkbox v-model="check_when_inited" hide-detail label="初期化時チェック" />
-        <v-checkbox v-model="is_force_hide" hide-detail label="非表示優先" />
+        <!-- <v-checkbox v-model="is_force_hide" hide-detail label="非表示優先" /> -->
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -25,6 +25,7 @@ import { type Ref, ref } from 'vue';
 import type { AddNewDeviceStructElementViewEmits } from './add-new-device-struct-element-view-emits'
 import type { AddNewDeviceStructElementViewProps } from './add-new-device-struct-element-view-props'
 import { GkillError } from '@/classes/api/gkill-error';
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
 const props = defineProps<AddNewDeviceStructElementViewProps>()
 const emits = defineEmits<AddNewDeviceStructElementViewEmits>()
@@ -38,7 +39,7 @@ const is_force_hide: Ref<boolean> = ref(false)
 function emits_device_name(): void {
     if (device_name.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.device_name_is_blank
         error.error_message = "デバイス名が入力されていません"
         emits('received_errors', [error])
         return

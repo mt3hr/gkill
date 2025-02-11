@@ -69,6 +69,7 @@ import { computed, type Ref, ref } from 'vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { OpenDirectoryRequest } from '@/classes/api/req_res/open-directory-request'
 import { OpenFileRequest } from '@/classes/api/req_res/open-file-request'
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 
 const add_tag_dialog = ref<InstanceType<typeof AddTagDialog> | null>(null);
 const add_text_dialog = ref<InstanceType<typeof AddTextDialog> | null>(null);
@@ -93,8 +94,8 @@ defineExpose({ show })
 async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.kyou.id)
     const message = new GkillMessage()
-    message.message_code = "//TODO"
-    message.message = "KmemoIDをコピーしました"
+    message.message_code =GkillMessageCodes.copied_git_commit_log_id
+    message.message = "GitCommitLogIDをコピーしました"
     const messages = new Array<GkillMessage>()
     messages.push(message)
     emits('received_messages', messages)

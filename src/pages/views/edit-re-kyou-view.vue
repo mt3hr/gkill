@@ -14,8 +14,8 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>日時</label>
-                <input class="input" type="date" v-model="related_date" label="日付" />
-                <input class="input" type="time" v-model="related_time" label="時刻" />
+                <input class="input date" type="date" v-model="related_date" label="日付" />
+                <input class="input time" type="time" v-model="related_time" label="時刻" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
@@ -48,6 +48,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import moment from 'moment'
 import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const props = defineProps<EditReKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -75,7 +76,7 @@ async function save(): Promise<void> {
     const rekyou = cloned_kyou.value.typed_rekyou?.clone()
     if (!rekyou) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.client_rekyou_is_null
         error.error_message = "クライアントのデータが変です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -86,7 +87,7 @@ async function save(): Promise<void> {
     // 日時必須入力チェック
     if (related_date.value === "" || related_time.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.rekyou_related_time_is_blank
         error.error_message = "日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -98,7 +99,7 @@ async function save(): Promise<void> {
     if (moment(rekyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime() &&
         moment(rekyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.rekyou_is_no_update
         error.error_message = "ReKyouが更新されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -206,5 +207,12 @@ table,
 tr,
 td {
     border-spacing: 0 !important;
+}
+</style>
+<style lang="css" scoped>
+.input.date,
+.input.time,
+.input.text {
+    border: solid 1px silver;
 }
 </style>

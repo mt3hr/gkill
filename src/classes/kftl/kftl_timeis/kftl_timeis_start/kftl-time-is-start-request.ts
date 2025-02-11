@@ -6,6 +6,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 export class KFTLTimeIsStartRequest extends KFTLRequest {
 
@@ -28,7 +29,7 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         let errors = Array<GkillError>()
         if (this.title == "") {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.skiped_no_content_timeis
             error.error_message = "内容がないtimeisの保存がスキップされました"
             errors.push(error)
             return errors

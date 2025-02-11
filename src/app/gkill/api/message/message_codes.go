@@ -73,4 +73,5 @@ const (
 	OpenFileSuccessMessage                   = "MSG000068"
 	ReloadRepositoriesSuccessMessage         = "MSG000069"
 	RebootingMessage                         = "MSG000070"
+	TLSFileCreateSuccessMessage              = "MSG000071"
 )

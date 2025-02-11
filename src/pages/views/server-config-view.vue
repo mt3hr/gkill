@@ -162,6 +162,7 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { GkillError } from '@/classes/api/gkill-error'
 import { UpdateServerConfigsRequest } from '@/classes/api/req_res/update-server-configs-request'
 import NewDeviceNameDialog from '../dialogs/new-device-name-dialog.vue'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const confirm_generate_tls_files_dialog = ref<InstanceType<typeof ConfirmGenerateTLSFilesDialog> | null>(null);
 const manage_account_dialog = ref<InstanceType<typeof ManageAccountDialog> | null>(null);
@@ -203,7 +204,7 @@ function add_device(device_name: string): void {
     for (let i = 0; i < cloned_server_configs.value.length; i++) {
         if (cloned_server_configs.value[i].device === device_name) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.device_is_aleady_exist
             error.error_message = "入力されたプロファイル名はすでに存在します"
             emits('received_errors', [error])
             return
@@ -244,7 +245,7 @@ async function load_current_server_config(): Promise<void> {
     }
     if (!current_server_config) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.not_found_enable_device
         error.error_message = "有効なプロファイルが見つかりませんでした"
         emits('received_errors', [error])
         return
@@ -304,7 +305,7 @@ function delete_current_server_config(): void {
     }
     if (delete_target_server_config_index === -1) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.not_found_delete_target_device
         error.error_message = "削除対象のプロファイルが見つかりませんでした"
         emits('received_errors', [error])
         return

@@ -24,6 +24,7 @@ import { type Ref, ref } from 'vue';
 import type { AddNewRepTypeStructElementViewEmits } from './add-new-rep-type-struct-element-view-emits'
 import type { AddNewRepTypeStructElementViewProps } from './add-new-rep-type-struct-element-view-props'
 import { GkillError } from '@/classes/api/gkill-error';
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
 const props = defineProps<AddNewRepTypeStructElementViewProps>()
 const emits = defineEmits<AddNewRepTypeStructElementViewEmits>()
@@ -36,7 +37,7 @@ const check_when_inited: Ref<boolean> = ref(true)
 function emits_rep_type_name(): void {
     if (rep_type_name.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.rep_type_struct_title_is_blank
         error.error_message = "データタイプ名が入力されていません"
         emits('received_errors', [error])
         return

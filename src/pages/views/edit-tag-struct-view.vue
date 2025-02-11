@@ -131,9 +131,15 @@ function update_tag_struct(tag_struct_obj: TagStruct): void {
 }
 
 function update_seq(_tag_struct: Array<FoldableStructModel>): void {
+    const exist_ids = new Array<string>()
+
     // 並び順再決定
     let f = (_struct: FoldableStructModel, _parent: FoldableStructModel, _seq: number) => { }
     let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
+        if (struct.id) {
+            exist_ids.push(struct.id)
+        }
+
         for (let i = 0; i < cloned_application_config.value.tag_struct.length; i++) {
             if (struct.id === cloned_application_config.value.tag_struct[i].id) {
                 cloned_application_config.value.tag_struct[i].seq = seq
@@ -147,9 +153,23 @@ function update_seq(_tag_struct: Array<FoldableStructModel>): void {
         }
     }
     f = func
+
     if (cloned_application_config.value.parsed_tag_struct.children) {
         for (let i = 0; i < cloned_application_config.value.parsed_tag_struct.children.length; i++) {
             f(cloned_application_config.value.parsed_tag_struct.children[i], cloned_application_config.value.parsed_tag_struct, i)
+        }
+    }
+
+    // 存在しないものを消す
+    for (let i = 0; i < cloned_application_config.value.tag_struct.length; i++) {
+        let exist = false
+        for (let j = 0; j < exist_ids.length; j++) {
+            if (cloned_application_config.value.tag_struct[i].id === exist_ids[j]) {
+                exist = true
+            }
+        }
+        if (!exist) {
+            cloned_application_config.value.tag_struct.splice(i, 1)
         }
     }
 }

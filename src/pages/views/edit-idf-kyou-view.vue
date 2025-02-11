@@ -48,6 +48,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import moment from 'moment'
 import { UpdateIDFKyouRequest } from '@/classes/api/req_res/update-idf-kyou-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const props = defineProps<EditIDFKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -75,7 +76,7 @@ async function save(): Promise<void> {
     const idf_kyou = cloned_kyou.value.typed_idf_kyou?.clone()
     if (!idf_kyou) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.client_idf_kyou_is_null
         error.error_message = "クライアントのデータが変です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -86,7 +87,7 @@ async function save(): Promise<void> {
     // 日時必須入力チェック
     if (related_date.value === "" || related_time.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.idf_kyou_related_time_is_blank
         error.error_message = "日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)

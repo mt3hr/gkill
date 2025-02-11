@@ -7,7 +7,7 @@ export class RepStructElementData implements FoldableStructModel {
 
     seq_in_parent: number
 
-    id: string | null
+    id: string
 
     rep_name: string
 
@@ -23,7 +23,7 @@ export class RepStructElementData implements FoldableStructModel {
 
     indeterminate: boolean
 
-    parent_folder_id: string  | null
+    parent_folder_id: string | null
 
     seq: number
 

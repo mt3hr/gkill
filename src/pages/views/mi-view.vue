@@ -68,7 +68,7 @@
                             return
                         }
                         skip_search_this_tick = true // 使い方違うけど
-                        search(focused_column_index, new_query, true)
+                        search(focused_column_index, new_query, application_config.rykv_hot_reload)
                     };
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
                 @request_open_focus_board="(board_name: string) => open_or_focus_board(board_name)"

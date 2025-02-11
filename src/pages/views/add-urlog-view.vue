@@ -54,6 +54,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const props = defineProps<EditURLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -79,7 +80,7 @@ async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
     if (!urlog.value) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.client_urlog_is_null
         error.error_message = "クライアントのデータが変です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -90,7 +91,7 @@ async function save(): Promise<void> {
     // 日時必須入力チェック
     if (related_date.value === "" || related_time.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.urlog_related_time_is_blank
         error.error_message = "日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -101,7 +102,7 @@ async function save(): Promise<void> {
     // URL入力チェック
     if (url.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.urlog_url_is_blank
         error.error_message = "URLが入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)

@@ -24,6 +24,7 @@ import { GetGitCommitLogRequest } from '../api/req_res/get-git-commit-log-reques
 import { GetReKyouRequest } from '../api/req_res/get-re-kyou-request'
 import moment from 'moment'
 import { GetIDFKyouRequest } from '../api/req_res/get-idf-kyou-request'
+import { GkillErrorCodes } from '../api/message/gkill_error'
 
 export class Kyou extends InfoBase {
     is_deleted: boolean
@@ -173,7 +174,7 @@ export class Kyou extends InfoBase {
 
         if (!res.kmemo_histories || res.kmemo_histories.length < 1) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_kmemo
             error.error_message = "Kmemoが見つかりませんでした"
             return [error]
         }
@@ -215,7 +216,7 @@ export class Kyou extends InfoBase {
 
         if (!res.urlog_histories || res.urlog_histories.length < 1) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_urlog
             error.error_message = "URLogが見つかりませんでした"
             return [error]
         }
@@ -257,7 +258,7 @@ export class Kyou extends InfoBase {
 
         if (!res.nlog_histories || res.nlog_histories.length < 1) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_nlog
             error.error_message = "Nlogが見つかりませんでした"
             return [error]
         }
@@ -299,7 +300,7 @@ export class Kyou extends InfoBase {
 
         if (!res.timeis_histories || res.timeis_histories.length < 1) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_timeis
             error.error_message = "TimeIsが見つかりませんでした"
             return [error]
         }
@@ -341,7 +342,7 @@ export class Kyou extends InfoBase {
 
         if (!res.mi_histories || res.mi_histories.length < 1) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_mi
             error.error_message = "Miが見つかりませんでした"
             return [error]
         }
@@ -383,7 +384,7 @@ export class Kyou extends InfoBase {
 
         if (!res.lantana_histories || res.lantana_histories.length < 1) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_lantana
             error.error_message = "Lantanaが見つかりませんでした"
             return [error]
         }
@@ -425,7 +426,7 @@ export class Kyou extends InfoBase {
 
         if (!res.idf_kyou_histories || res.idf_kyou_histories.length < 1) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_idf_kyou
             error.error_message = "IDFKyouが見つかりませんでした"
             return [error]
         }
@@ -467,7 +468,7 @@ export class Kyou extends InfoBase {
 
         if (!res.git_commit_log_histories || res.git_commit_log_histories.length < 1) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_git_commit_log
             error.error_message = "GitCommitLogが見つかりませんでした"
             return [error]
         }
@@ -503,7 +504,7 @@ export class Kyou extends InfoBase {
 
         if (!res.rekyou_histories || res.rekyou_histories.length < 1) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.not_found_rekyou
             error.error_message = "ReKyouが見つかりませんでした"
             return [error]
         }
