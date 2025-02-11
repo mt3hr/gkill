@@ -161,234 +161,465 @@ type GkillServerAPI struct {
 func (g *GkillServerAPI) Serve() error {
 	router := g.GkillDAOManager.GetRouter()
 	router.PathPrefix("/files/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleFileServe(w, r)
 	})
 	router.HandleFunc(g.APIAddress.LoginAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleLogin(w, r)
 	}).Methods(g.APIAddress.LoginMethod)
 	router.HandleFunc(g.APIAddress.LogoutAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleLogout(w, r)
 	}).Methods(g.APIAddress.LogoutMethod)
 	router.HandleFunc(g.APIAddress.ResetPasswordAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleResetPassword(w, r)
 	}).Methods(g.APIAddress.ResetPasswordMethod)
 	router.HandleFunc(g.APIAddress.SetNewPasswordAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleSetNewPassword(w, r)
 	}).Methods(g.APIAddress.SetNewPasswordMethod)
 	router.HandleFunc(g.APIAddress.AddTagAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddTag(w, r)
 	}).Methods(g.APIAddress.AddTagMethod)
 	router.HandleFunc(g.APIAddress.AddTextAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddText(w, r)
 	}).Methods(g.APIAddress.AddTextMethod)
 	router.HandleFunc(g.APIAddress.AddNotificationAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddNotification(w, r)
 	}).Methods(g.APIAddress.AddNotificationMethod)
 	router.HandleFunc(g.APIAddress.AddKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddKmemo(w, r)
 	}).Methods(g.APIAddress.AddKmemoMethod)
 	router.HandleFunc(g.APIAddress.AddURLogAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddURLog(w, r)
 	}).Methods(g.APIAddress.AddURLogMethod)
 	router.HandleFunc(g.APIAddress.AddNlogAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddNlog(w, r)
 	}).Methods(g.APIAddress.AddNlogMethod)
 	router.HandleFunc(g.APIAddress.AddTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddTimeis(w, r)
 	}).Methods(g.APIAddress.AddTimeisMethod)
 	router.HandleFunc(g.APIAddress.AddMiAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddMi(w, r)
 	}).Methods(g.APIAddress.AddMiMethod)
 	router.HandleFunc(g.APIAddress.AddLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddLantana(w, r)
 	}).Methods(g.APIAddress.AddLantanaMethod)
 	router.HandleFunc(g.APIAddress.AddRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddRekyou(w, r)
 	}).Methods(g.APIAddress.AddRekyouMethod)
 	router.HandleFunc(g.APIAddress.UpdateTagAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateTag(w, r)
 	}).Methods(g.APIAddress.UpdateTagMethod)
 	router.HandleFunc(g.APIAddress.UpdateTextAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateText(w, r)
 	}).Methods(g.APIAddress.UpdateTextMethod)
 	router.HandleFunc(g.APIAddress.UpdateNotificationAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateNotification(w, r)
 	}).Methods(g.APIAddress.UpdateNotificationMethod)
 	router.HandleFunc(g.APIAddress.UpdateKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateKmemo(w, r)
 	}).Methods(g.APIAddress.UpdateKmemoMethod)
 	router.HandleFunc(g.APIAddress.UpdateURLogAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateURLog(w, r)
 	}).Methods(g.APIAddress.UpdateURLogMethod)
 	router.HandleFunc(g.APIAddress.UpdateNlogAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateNlog(w, r)
 	}).Methods(g.APIAddress.UpdateNlogMethod)
 	router.HandleFunc(g.APIAddress.UpdateTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateTimeis(w, r)
 	}).Methods(g.APIAddress.UpdateTimeisMethod)
 	router.HandleFunc(g.APIAddress.UpdateLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateLantana(w, r)
 	}).Methods(g.APIAddress.UpdateLantanaMethod)
 	router.HandleFunc(g.APIAddress.UpdateIDFKyouAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateIDFKyou(w, r)
 	}).Methods(g.APIAddress.UpdateIDFKyouMethod)
 	router.HandleFunc(g.APIAddress.UpdateMiAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateMi(w, r)
 	}).Methods(g.APIAddress.UpdateMiMethod)
 	router.HandleFunc(g.APIAddress.UpdateRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateRekyou(w, r)
 	}).Methods(g.APIAddress.UpdateRekyouMethod)
 	router.HandleFunc(g.APIAddress.GetKyousAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetKyous(w, r)
 	}).Methods(g.APIAddress.GetKyousMethod)
 	router.HandleFunc(g.APIAddress.GetKyouAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetKyou(w, r)
 	}).Methods(g.APIAddress.GetKyouMethod)
 	router.HandleFunc(g.APIAddress.GetKmemoAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetKmemo(w, r)
 	}).Methods(g.APIAddress.GetKmemoMethod)
 	router.HandleFunc(g.APIAddress.GetURLogAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetURLog(w, r)
 	}).Methods(g.APIAddress.GetURLogMethod)
 	router.HandleFunc(g.APIAddress.GetNlogAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetNlog(w, r)
 	}).Methods(g.APIAddress.GetNlogMethod)
 	router.HandleFunc(g.APIAddress.GetTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetTimeis(w, r)
 	}).Methods(g.APIAddress.GetTimeisMethod)
 	router.HandleFunc(g.APIAddress.GetMiAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetMi(w, r)
 	}).Methods(g.APIAddress.GetMiMethod)
 	router.HandleFunc(g.APIAddress.GetLantanaAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetLantana(w, r)
 	}).Methods(g.APIAddress.GetLantanaMethod)
 	router.HandleFunc(g.APIAddress.GetRekyouAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetRekyou(w, r)
 	}).Methods(g.APIAddress.GetRekyouMethod)
 	router.HandleFunc(g.APIAddress.GetGitCommitLogAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetGitCommitLog(w, r)
 	}).Methods(g.APIAddress.GetGitCommitLogMethod)
 	router.HandleFunc(g.APIAddress.GetIDFKyouAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetIDFKyou(w, r)
 	}).Methods(g.APIAddress.GetIDFKyouMethod)
 	router.HandleFunc(g.APIAddress.GetMiBoardListAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetMiBoardList(w, r)
 	}).Methods(g.APIAddress.GetMiBoardListMethod)
 	router.HandleFunc(g.APIAddress.GetPlaingTimeisAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetPlaingTimeis(w, r)
 	}).Methods(g.APIAddress.GetPlaingTimeisMethod)
 	router.HandleFunc(g.APIAddress.GetAllTagNamesAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetAllTagNames(w, r)
 	}).Methods(g.APIAddress.GetAllTagNamesMethod)
 	router.HandleFunc(g.APIAddress.GetAllRepNamesAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetAllRepNames(w, r)
 	}).Methods(g.APIAddress.GetAllRepNamesMethod)
 	router.HandleFunc(g.APIAddress.GetTagsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetTagsByTargetID(w, r)
 	}).Methods(g.APIAddress.GetTagsByTargetIDMethod)
 	router.HandleFunc(g.APIAddress.GetTagHistoriesByTagIDAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetTagHistoriesByTagID(w, r)
 	}).Methods(g.APIAddress.GetTagHistoriesByTagIDMethod)
 	router.HandleFunc(g.APIAddress.GetTextsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetTextsByTargetID(w, r)
 	}).Methods(g.APIAddress.GetTextsByTargetIDMethod)
 	router.HandleFunc(g.APIAddress.GetNotificationsByTargetIDAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetNotificationsByTargetID(w, r)
 	}).Methods(g.APIAddress.GetNotificationsByTargetIDMethod)
 	router.HandleFunc(g.APIAddress.GetTextHistoriesByTextIDAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetTextHistoriesByTextID(w, r)
 	}).Methods(g.APIAddress.GetTextHistoriesByTagIDMethod)
 	router.HandleFunc(g.APIAddress.GetNotificationHistoriesByNotificationIDAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetNotificationHistoriesByNotificationID(w, r)
 	}).Methods(g.APIAddress.GetNotificationHistoriesByTagIDMethod)
 	router.HandleFunc(g.APIAddress.GetApplicationConfigAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetApplicationConfig(w, r)
 	}).Methods(g.APIAddress.GetApplicationConfigMethod)
 	router.HandleFunc(g.APIAddress.GetServerConfigsAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetServerConfigs(w, r)
 	}).Methods(g.APIAddress.GetServerConfigsMethod)
 	router.HandleFunc(g.APIAddress.UploadFilesAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUploadFiles(w, r)
 	}).Methods(g.APIAddress.UploadFilesMethod)
 	router.HandleFunc(g.APIAddress.UploadGPSLogFilesAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUploadGPSLogFiles(w, r)
 	}).Methods(g.APIAddress.UploadGPSLogFilesMethod)
 	router.HandleFunc(g.APIAddress.UpdateApplicationConfigAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateApplicationConfig(w, r)
 	}).Methods(g.APIAddress.UpdateApplicationConfigMethod)
 	router.HandleFunc(g.APIAddress.UpdateTagStructAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateTagStruct(w, r)
 	}).Methods(g.APIAddress.UpdateTagStructMethod)
 	router.HandleFunc(g.APIAddress.UpdateRepStructAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateRepStruct(w, r)
 	}).Methods(g.APIAddress.UpdateRepStructMethod)
 	router.HandleFunc(g.APIAddress.UpdateDeviceStructAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateDeviceStruct(w, r)
 	}).Methods(g.APIAddress.UpdateDeviceStructMethod)
 	router.HandleFunc(g.APIAddress.UpdateRepTypeStructAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateRepTypeStruct(w, r)
 	}).Methods(g.APIAddress.UpdateRepTypeStructMethod)
 	router.HandleFunc(g.APIAddress.UpdateKFTLTemplateAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateKFTLTemplate(w, r)
 	}).Methods(g.APIAddress.UpdateKFTLTemplateStructMethod)
 	router.HandleFunc(g.APIAddress.UpdateAccountStatusAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateAccountStatus(w, r)
 	}).Methods(g.APIAddress.UpdateAccountStatusMethod)
 	router.HandleFunc(g.APIAddress.UpdateUserRepsAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateUserReps(w, r)
 	}).Methods(g.APIAddress.UpdateUserRepsMethod)
 	router.HandleFunc(g.APIAddress.UpdateServerConfigsAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateServerConfigs(w, r)
 	}).Methods(g.APIAddress.UpdateServerConfigsMethod)
 	router.HandleFunc(g.APIAddress.AddAccountAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddAccount(w, r)
 	}).Methods(g.APIAddress.AddAccountMethod)
 	router.HandleFunc(g.APIAddress.GenerateTLSFileAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGenerateTLSFile(w, r)
 	}).Methods(g.APIAddress.GenerateTLSFileMethod)
 	router.HandleFunc(g.APIAddress.GetGPSLogAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetGPSLog(w, r)
 	}).Methods(g.APIAddress.GetGPSLogMethod)
 	router.HandleFunc(g.APIAddress.GetKFTLTemplateAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetKFTLTemplate(w, r)
 	}).Methods(g.APIAddress.GetKFTLTemplateMethod)
 	router.HandleFunc(g.APIAddress.GetGkillInfoAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetGkillInfo(w, r)
 	}).Methods(g.APIAddress.GetGkillInfoMethod)
 	router.HandleFunc(g.APIAddress.GetShareMiTaskListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetShareMiTaskListInfos(w, r)
 	}).Methods(g.APIAddress.GetShareMiTaskListInfosMethod)
 	router.HandleFunc(g.APIAddress.AddShareMiTaskListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleAddShareMiTaskListInfo(w, r)
 	}).Methods(g.APIAddress.AddShareMiTaskListInfoMethod)
 	router.HandleFunc(g.APIAddress.UpdateShareMiTaskListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleUpdateShareMiTaskListInfo(w, r)
 	}).Methods(g.APIAddress.UpdateShareMiTaskListInfoMethod)
 	router.HandleFunc(g.APIAddress.DeleteShareMiTaskListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleDeleteShareMiTaskListInfos(w, r)
 	}).Methods(g.APIAddress.DeleteShareMiTaskListInfosMethod)
 	router.HandleFunc(g.APIAddress.GetMiSharedTasksAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetMiSharedTask(w, r)
 	}).Methods(g.APIAddress.GetMiSharedTasksMethod)
 	router.HandleFunc(g.APIAddress.GetRepositoriesAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetRepositories(w, r)
 	}).Methods(g.APIAddress.GetRepositoriesMethod)
 	router.HandleFunc(g.APIAddress.GetGkillNotificationPublicKeyAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleGetGkillNotificationPublicKey(w, r)
 	}).Methods(g.APIAddress.GetGkillNotificationPublicKeyMethod)
 	router.HandleFunc(g.APIAddress.RegisterGkillNotificationAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleRegisterGkillNotification(w, r)
 	}).Methods(g.APIAddress.RegisterGkillNotificationMethod)
 	router.HandleFunc(g.APIAddress.OpenDirectoryAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleOpenDirectory(w, r)
 	}).Methods(g.APIAddress.OpenDirectoryMethod)
 	router.HandleFunc(g.APIAddress.OpenFileAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleOpenFile(w, r)
 	}).Methods(g.APIAddress.OpenFileMethod)
 	router.HandleFunc(g.APIAddress.ReloadRepositoriesAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleReloadRepositories(w, r)
 	}).Methods(g.APIAddress.ReloadRepositoriesMethod)
 	router.HandleFunc(g.APIAddress.URLogBookmarkletAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		g.HandleURLogBookmarkletAddress(w, r)
 	}).Methods(g.APIAddress.URLogBookmarkletMethod)
 
@@ -398,10 +629,16 @@ func (g *GkillServerAPI) Serve() error {
 	}
 	router.PathPrefix(g.APIAddress.GkillWebpushServiceWorkerJsAddress).Handler(http.StripPrefix("",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/rykv").Handler(http.StripPrefix("/rykv",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
 			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
 				return
 			}
@@ -409,6 +646,9 @@ func (g *GkillServerAPI) Serve() error {
 		})))
 	router.PathPrefix("/kftl").Handler(http.StripPrefix("/kftl",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
 			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
 				return
 			}
@@ -416,6 +656,9 @@ func (g *GkillServerAPI) Serve() error {
 		})))
 	router.PathPrefix("/mi").Handler(http.StripPrefix("/mi",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
 			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
 				return
 			}
@@ -423,6 +666,9 @@ func (g *GkillServerAPI) Serve() error {
 		})))
 	router.PathPrefix("/kyou").Handler(http.StripPrefix("/kyou",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
 			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
 				return
 			}
@@ -430,6 +676,9 @@ func (g *GkillServerAPI) Serve() error {
 		})))
 	router.PathPrefix("/saihate").Handler(http.StripPrefix("/saihate",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
 			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
 				return
 			}
@@ -437,6 +686,9 @@ func (g *GkillServerAPI) Serve() error {
 		})))
 	router.PathPrefix("/plaing").Handler(http.StripPrefix("/plaing",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
 			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
 				return
 			}
@@ -444,6 +696,9 @@ func (g *GkillServerAPI) Serve() error {
 		})))
 	router.PathPrefix("/mkfl").Handler(http.StripPrefix("/mkfl",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
 			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
 				return
 			}
@@ -451,6 +706,9 @@ func (g *GkillServerAPI) Serve() error {
 		})))
 	router.PathPrefix("/shared_mi").Handler(http.StripPrefix("/shared_mi",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
 			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
 				return
 			}
@@ -458,15 +716,24 @@ func (g *GkillServerAPI) Serve() error {
 		})))
 	router.PathPrefix("/set_new_password").Handler(http.StripPrefix("/set_new_password",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.Path("/").HandlerFunc(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
 			return
 		}
 		http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 	}))
 	router.PathPrefix("/").HandlerFunc(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
 		http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 	}))
 
@@ -6337,7 +6604,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 	response.ServerConfigs = serverConfigs
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetServerConfigSuccessMessage,
-		Message:     "取得完了",
+		Message:     "サーバ設定データ取得完了",
 	})
 }
 
@@ -8393,7 +8660,6 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	log.Print("wrote cert.pem\n")
 
 	keyOut, err := os.OpenFile(pemFileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
@@ -8437,7 +8703,11 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	log.Print("wrote key.pem\n")
+	message := &message.GkillMessage{
+		MessageCode: message.TLSFileCreateSuccessMessage,
+		Message:     "TLSファイル作成完了",
+	}
+	response.Messages = append(response.Messages, message)
 }
 
 func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request) {
@@ -8592,7 +8862,7 @@ func (g *GkillServerAPI) HandleGetKFTLTemplate(w http.ResponseWriter, r *http.Re
 	response.KFTLTemplates = kftlTemplates
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetApplicationConfigSuccessMessage,
-		Message:     "取得完了",
+		Message:     "KFTLテンプレートデータ取得完了",
 	})
 }
 
@@ -9262,7 +9532,7 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 	response.Repositories = repositories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetRepositoriesSuccessMessage,
-		Message:     "取得完了",
+		Message:     "記録保存先データ取得完了",
 	})
 }
 
@@ -10437,4 +10707,55 @@ func httpGetBase64Data(url string) (string, error) {
 
 	base64Data := base64.StdEncoding.EncodeToString(b)
 	return base64Data, nil
+}
+
+func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request) bool {
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Printf(err.Error())
+		/*
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetDeviceError,
+				ErrorMessage: "内部エラー",
+			}
+			response.Errors = append(response.Errors, gkillError)
+		*/
+		w.WriteHeader(http.StatusInternalServerError)
+		return false
+	}
+
+	// serverConfigを取得
+	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(r.Context(), device)
+	if err != nil {
+		err = fmt.Errorf("error at get serverConfig device = %s: %w", device, err)
+		gkill_log.Debug.Printf(err.Error())
+		/*
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetServerConfigError,
+				ErrorMessage: "ServerConfig取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+		*/
+		w.WriteHeader(http.StatusInternalServerError)
+		return false
+	}
+	if !serverConfig.IsLocalOnlyAccess {
+		return true
+	}
+
+	spl := strings.Split(r.RemoteAddr, ":")
+	remoteHost := strings.Join(spl[:len(spl)-1], ":")
+	switch remoteHost {
+	case "localhost":
+		fallthrough
+	case "127.0.0.1":
+		fallthrough
+	case "[::1]":
+		fallthrough
+	case "::1":
+		return true
+	}
+	w.WriteHeader(http.StatusForbidden)
+	return false
 }

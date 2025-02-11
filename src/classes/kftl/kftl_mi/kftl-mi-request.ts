@@ -7,6 +7,7 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 export class KFTLMiRequest extends KFTLRequest {
 
@@ -33,7 +34,7 @@ export class KFTLMiRequest extends KFTLRequest {
         let errors = new Array<GkillError>()
         if (this.title == "") {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.mi_title_is_blank
             error.error_message = "タイトルが未入力です"
             errors = errors.concat([error])
         }

@@ -43,6 +43,7 @@ import { UpdateTextRequest } from '@/classes/api/req_res/update-text-request';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import { GkillError } from '@/classes/api/gkill-error';
 import type { Text } from '@/classes/datas/text';
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
 const props = defineProps<EditTextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -63,7 +64,7 @@ async function save(): Promise<void> {
     // 値がなかったらエラーメッセージを出力する
     if (text_value.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.text_is_blank
         error.error_message = "テキストが未入力です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -74,7 +75,7 @@ async function save(): Promise<void> {
     // 更新がなかったらエラーメッセージを出力する
     if (cloned_text.value.text === text_value.value) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.text_is_no_update
         error.error_message = "テキストが更新されていません"
         const errors = new Array<GkillError>()
         errors.push(error)

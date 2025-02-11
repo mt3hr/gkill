@@ -54,6 +54,8 @@ import { KFTLStatement } from '@/classes/kftl/kftl-statement'
 import { TextAreaInfo } from '@/classes/kftl/text-area-info'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 const kftl_template_dialog = ref<InstanceType<typeof KFTLTemplateDialog> | null>(null);
 
 const text_area_content: Ref<string> = ref("")
@@ -171,7 +173,7 @@ async function submit(): Promise<void> {
     try {
         if (invalid_line_numbers.value.length != 0) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.kftl_has_invalid_line
             error.error_message = "おかしな行があります"
             emits('received_errors', [error])
             return
@@ -189,7 +191,7 @@ async function submit(): Promise<void> {
         }
         clear()
         const message = new GkillMessage()
-        message.message_code = "//TODO"
+        message.message_code = GkillMessageCodes.saved_kftls
         message.message = "保存しました"
         emits('received_messages', [message])
         emits('saved_kyou_by_kftl')

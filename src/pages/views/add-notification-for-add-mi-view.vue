@@ -19,6 +19,7 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { Notification } from '@/classes/datas/notification'
 import moment from 'moment'
 import type { AddNotificationForAddMiViewProps } from './add-notification-for-add-mi-view-props'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const props = defineProps<AddNotificationForAddMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -32,7 +33,7 @@ async function get_notification(): Promise<Notification | null> {
     // 値がなかったらエラーメッセージを出力する
     if (content_value.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.notification_content_is_blank
         error.error_message = "通知内容が未入力です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -42,7 +43,7 @@ async function get_notification(): Promise<Notification | null> {
     // 通知日時 入力なしエラーチェック
     if (notification_date.value === "" || notification_time.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.notification_time_is_blank
         error.error_message = "通知日付付または通知時刻が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)

@@ -43,6 +43,7 @@ import KyouView from './kyou-view.vue'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const props = defineProps<AddTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -54,7 +55,7 @@ async function save(): Promise<void> {
     // 値がなかったらエラーメッセージを出力する
     if (tag_name.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.tag_is_blank
         error.error_message = "タグが未入力です"
         const errors = new Array<GkillError>()
         errors.push(error)

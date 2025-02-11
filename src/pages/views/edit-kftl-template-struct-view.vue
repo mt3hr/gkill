@@ -135,6 +135,8 @@ function update_kftl_template_struct(kftl_template_struct_obj: KFTLTemplateStruc
 }
 
 function update_seq(_kftl_template_struct: Array<FoldableStructModel>): void {
+    const exist_ids = new Array<string>()
+
     // 並び順再決定
     let f = (_struct: FoldableStructModel, _parent: FoldableStructModel, _seq: number) => { }
     let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
@@ -156,6 +158,20 @@ function update_seq(_kftl_template_struct: Array<FoldableStructModel>): void {
             f(cloned_application_config.value.parsed_kftl_template.children[i], cloned_application_config.value.parsed_kftl_template, i)
         }
     }
+
+    // 存在しないものを消す
+    for (let i = 0; i < cloned_application_config.value.kftl_template_struct.length; i++) {
+        let exist = false
+        for (let j = 0; j < exist_ids.length; j++) {
+            if (cloned_application_config.value.kftl_template_struct[i].id === exist_ids[j]) {
+                exist = true
+            }
+        }
+        if (!exist) {
+            cloned_application_config.value.kftl_template_struct.splice(i, 1)
+        }
+    }
+
 }
 
 async function apply(): Promise<void> {

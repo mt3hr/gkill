@@ -36,6 +36,7 @@ import type LoginViewEmits from './login-view-emits'
 import { LoginRequest } from '@/classes/api/req_res/login-request';
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
 const user_id: Ref<string> = ref("")
 const password: Ref<string> = ref("")
@@ -70,7 +71,7 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
     // 未入力チェック
     if (user_id === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.user_id_is_blank
         error.error_message = "ユーザIDを入力してください"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -79,7 +80,7 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
     }
     if (password.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.password_is_blank
         error.error_message = "パスワードを入力してください"
         const errors = new Array<GkillError>()
         errors.push(error)

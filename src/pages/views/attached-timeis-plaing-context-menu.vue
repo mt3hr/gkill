@@ -52,6 +52,7 @@ import ConfirmDeleteKyouDialog from '../dialogs/confirm-delete-idf-kyou-dialog.v
 import KyouHistoriesDialog from '../dialogs/kyou-histories-dialog.vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 
 const edit_timeis_dialog = ref<InstanceType<typeof EditTimeIsDialog> | null>(null);
 const confirm_delete_kyou_dialog = ref<InstanceType<typeof ConfirmDeleteKyouDialog> | null>(null);
@@ -63,13 +64,11 @@ defineExpose({ show, hide })
 
 const cloned_timeis_kyou: Ref<Kyou> = ref(props.timeis_kyou.clone())
 
-/*
 watch(() => props.timeis_kyou, () => {
     reload_cloned_timeis_kyou()
 })
 
 reload_cloned_timeis_kyou()
-*/
 
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
@@ -102,7 +101,7 @@ async function show_timeis_histories_dialog(): Promise<void> {
 async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.timeis_kyou.id)
     const message = new GkillMessage()
-    message.message_code = "//TODO"
+    message.message_code = GkillMessageCodes.copied_timeis_id
     message.message = "TimeIsIDをコピーしました"
     const messages = new Array<GkillMessage>()
     messages.push(message)

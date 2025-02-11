@@ -2,6 +2,7 @@
 
 import { GkillAPI } from "../api/gkill-api"
 import { GkillError } from "../api/gkill-error"
+import { GkillErrorCodes } from "../api/message/gkill_error"
 import { GetKyousRequest } from "../api/req_res/get-kyous-request"
 import { GetNotificationsByTargetIDRequest } from "../api/req_res/get-notifications-by-target-id-request"
 import { GetTagsByTargetIDRequest } from "../api/req_res/get-tags-by-target-id-request"
@@ -84,7 +85,7 @@ export abstract class InfoBase {
         const application_config = GkillAPI.get_gkill_api().get_saved_application_config()
         if (!application_config) {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.incomplete_application_config_error
             error.error_message = "設定読込が完了していません"
             return errors
         }

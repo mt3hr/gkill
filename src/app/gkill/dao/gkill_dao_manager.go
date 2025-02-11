@@ -57,7 +57,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 
 	ctx := context.Background()
 	gkillDAOManager := &GkillDAOManager{
-		autoIDF:                  &autoIDF, //TODO
+		autoIDF:                  &autoIDF,
 		router:                   &mux.Router{},
 		IDFIgnore:                gkill_options.IDFIgnore,
 		fileRepWatchCacheUpdater: fileRepWatchCacheUpdater,
