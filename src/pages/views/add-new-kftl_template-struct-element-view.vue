@@ -24,6 +24,7 @@ import { type Ref, ref } from 'vue';
 import type { AddNewKFTLTemplateStructElementViewEmits } from './add-new-kftl-template-struct-element-view-emits'
 import type { AddNewKFTLTemplateStructElementViewProps } from './add-new-kftl-template-struct-element-view-props'
 import { GkillError } from '@/classes/api/gkill-error';
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
 const props = defineProps<AddNewKFTLTemplateStructElementViewProps>()
 const emits = defineEmits<AddNewKFTLTemplateStructElementViewEmits>()
@@ -36,7 +37,7 @@ const template: Ref<string> = ref("")
 function emits_kftl_template_name(): void {
     if (title.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.kftl_template_title_is_blank
         error.error_message = "タイトルが入力されていません"
         emits('received_errors', [error])
         return
@@ -44,7 +45,7 @@ function emits_kftl_template_name(): void {
 
     if (template.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.kftl_template_content_is_blank
         error.error_message = "テンプレートが入力されていません"
         emits('received_errors', [error])
         return

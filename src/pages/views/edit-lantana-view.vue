@@ -58,6 +58,7 @@ import { UpdateLantanaRequest } from '@/classes/api/req_res/update-lantana-reque
 import moment from 'moment'
 import LantanaFlowersView from './lantana-flowers-view.vue'
 import type { Kyou } from '@/classes/datas/kyou'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const edit_lantana_flowers = ref<InstanceType<typeof LantanaFlowersView> | null>(null);
 
@@ -90,7 +91,7 @@ async function save(): Promise<void> {
     const lantana = props.kyou.typed_lantana
     if (!lantana) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.client_lantana_is_null
         error.error_message = "クライアントのデータが変です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -101,7 +102,7 @@ async function save(): Promise<void> {
     // 日時必須入力チェック
     if (related_date.value === "" || related_time.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.lantana_related_time_is_blank
         error.error_message = "日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -112,7 +113,7 @@ async function save(): Promise<void> {
     // 更新がなかったらエラーメッセージを出力する
     if (lantana.mood === await edit_lantana_flowers.value?.get_mood()) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.lantana_is_no_update
         error.error_message = "Lantanaが更新されていません"
         const errors = new Array<GkillError>()
         errors.push(error)

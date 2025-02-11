@@ -52,6 +52,7 @@ import type { AddNotificationViewProps } from './add-notification-view-props'
 import { Notification } from '@/classes/datas/notification'
 import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-request'
 import moment from 'moment'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const props = defineProps<AddNotificationViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -65,7 +66,7 @@ async function save(): Promise<void> {
     // 日時必須入力チェック
     if (notification_date.value === "" || notification_time.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.notification_time_is_blank
         error.error_message = "通知日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -76,7 +77,7 @@ async function save(): Promise<void> {
     // 値がなかったらエラーメッセージを出力する
     if (content_value.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.notification_content_is_blank
         error.error_message = "通知内容が未入力です"
         const errors = new Array<GkillError>()
         errors.push(error)

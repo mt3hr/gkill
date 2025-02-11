@@ -99,6 +99,7 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import KyouHistoriesDialog from '../dialogs/kyou-histories-dialog.vue'
 import { OpenDirectoryRequest } from '@/classes/api/req_res/open-directory-request'
 import { OpenFileRequest } from '@/classes/api/req_res/open-file-request'
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 
 const edit_idf_kyou_dialog = ref<InstanceType<typeof EditIDFKyouDialog> | null>(null);
 const add_tag_dialog = ref<InstanceType<typeof AddTagDialog> | null>(null);
@@ -126,7 +127,7 @@ async function show(e: PointerEvent): Promise<void> {
 async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.kyou.id)
     const message = new GkillMessage()
-    message.message_code = "//TODO"
+    message.message_code = GkillMessageCodes.copied_idf_kyou_id
     message.message = "KyouIDをコピーしました"
     const messages = new Array<GkillMessage>()
     messages.push(message)

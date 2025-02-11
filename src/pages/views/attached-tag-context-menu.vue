@@ -51,6 +51,7 @@ import EditTagDialog from '../dialogs/edit-tag-dialog.vue'
 import ConfirmDeleteTagDialog from '../dialogs/confirm-delete-tag-dialog.vue'
 import TagHistoriesDialog from '../dialogs/tag-histories-dialog.vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 
 const edit_tag_dialog = ref<InstanceType<typeof EditTagDialog> | null>(null);
 const confirm_delete_tag_dialog = ref<InstanceType<typeof ConfirmDeleteTagDialog> | null>(null);
@@ -86,7 +87,7 @@ async function show_tag_histories_dialog(): Promise<void> {
 async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.tag.id)
     const message = new GkillMessage()
-    message.message_code = "//TODO"
+    message.message_code = GkillMessageCodes.copied_tag_id
     message.message = "タグIDをコピーしました"
     const messages = new Array<GkillMessage>()
     messages.push(message)

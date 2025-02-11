@@ -6,6 +6,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 export class KFTLURLogRequest extends KFTLRequest {
 
@@ -31,7 +32,7 @@ export class KFTLURLogRequest extends KFTLRequest {
         let errors = Array<GkillError>()
         if (this.url == "" && this.title == "") {
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.skiped_no_content_urlog
             error.error_message = "内容がないurlogの保存がスキップされました"
             errors.push(error)
             return errors

@@ -1,10 +1,10 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
-        <ServerConfigView :application_config="application_config" :gkill_api="gkill_api" :server_configs="server_configs"
+        <ServerConfigView v-if="server_configs.length !== 0" :application_config="application_config"
+            :gkill_api="gkill_api" :server_configs="server_configs"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_server_config="load_server_configs()"
-            @requested_close_dialog="hide" />
+            @requested_reload_server_config="load_server_configs()" @requested_close_dialog="hide" />
     </v-dialog>
 </template>
 <script lang="ts" setup>

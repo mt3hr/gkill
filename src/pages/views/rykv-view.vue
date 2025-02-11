@@ -76,7 +76,7 @@
                             return
                         }
                         skip_search_this_tick = true // 使い方違うけど
-                        search(focused_column_index, new_query, true)
+                        search(focused_column_index, new_query, application_config.rykv_hot_reload)
                     };
                     if (new_query.calendar_start_date && new_query.calendar_end_date) {
                         gps_log_map_start_time = new_query.calendar_start_date

@@ -72,6 +72,7 @@ import { UpdateURLogRequest } from '@/classes/api/req_res/update-ur-log-request'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import type { Kyou } from '@/classes/datas/kyou'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const props = defineProps<EditURLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -111,7 +112,7 @@ async function save(): Promise<void> {
     const urlog = cloned_kyou.value.typed_urlog
     if (!urlog) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.client_urlog_is_null
         error.error_message = "クライアントのデータが変です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -122,7 +123,7 @@ async function save(): Promise<void> {
     // 日時必須入力チェック
     if (related_date.value === "" || related_time.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.urlog_related_time_is_blank
         error.error_message = "日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -133,7 +134,7 @@ async function save(): Promise<void> {
     // URL入力チェック
     if (url.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.urlog_url_is_blank
         error.error_message = "URLが入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -147,7 +148,7 @@ async function save(): Promise<void> {
         moment(urlog.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime() &&
         moment(urlog.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.urlog_is_no_update
         error.error_message = "URLogが更新されていません"
         const errors = new Array<GkillError>()
         errors.push(error)

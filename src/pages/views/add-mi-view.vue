@@ -128,6 +128,7 @@ import { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
 import { Kyou } from '@/classes/datas/kyou'
 import { Notification } from '@/classes/datas/notification'
 import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 const add_notification_views = ref<any>(null);
@@ -256,7 +257,7 @@ async function save(): Promise<void> {
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
     if (!mi.value) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.client_mi_is_null
         error.error_message = "クライアントのデータが変です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -267,7 +268,7 @@ async function save(): Promise<void> {
     // タイトルの入力チェック
     if (mi_title.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.mi_title_is_blank
         error.error_message = "タイトルが入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -280,7 +281,7 @@ async function save(): Promise<void> {
         if ((mi_estimate_start_date.value === "" && mi_estimate_start_time.value !== "") ||
             (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.mi_estimate_start_time_is_blank
             error.error_message = "開始日付付または開始時刻が入力されていません"
             const errors = new Array<GkillError>()
             errors.push(error)
@@ -294,7 +295,7 @@ async function save(): Promise<void> {
         if ((mi_estimate_end_date.value === "" && mi_estimate_end_time.value !== "") ||
             (mi_estimate_end_date.value !== "" && mi_estimate_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.mi_estimate_end_time_is_blank
             error.error_message = "終了日付または終了時刻が入力されていません"
             const errors = new Array<GkillError>()
             errors.push(error)
@@ -308,7 +309,7 @@ async function save(): Promise<void> {
         if ((mi_limit_date.value === "" && mi_limit_time.value !== "") ||
             (mi_limit_date.value !== "" && mi_limit_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
             const error = new GkillError()
-            error.error_code = "//TODO"
+            error.error_code = GkillErrorCodes.mi_limit_time_is_blank
             error.error_message = "期限日付付または期限時刻が入力されていません"
             const errors = new Array<GkillError>()
             errors.push(error)
@@ -324,8 +325,8 @@ async function save(): Promise<void> {
         moment(mi.value.limit_time) === (moment(mi_limit_date.value + " " + mi_limit_time.value))
     ) {
         const error = new GkillError()
-        error.error_code = "//TODO"
-        error.error_message = "Miが入力されていません"
+        error.error_code = GkillErrorCodes.mi_is_no_update
+        error.error_message = "Miが更新されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

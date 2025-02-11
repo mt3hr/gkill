@@ -30,6 +30,7 @@ import { type Ref, ref, watch } from 'vue';
 import type { ShowPasswordResetLinkViewEmits } from './show-password-reset-link-view-emits'
 import type { ShowPasswordResetLinkViewProps } from './show-password-reset-link-view-props'
 import { GkillMessage } from '@/classes/api/gkill-message';
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 
 const props = defineProps<ShowPasswordResetLinkViewProps>()
 const emits = defineEmits<ShowPasswordResetLinkViewEmits>()
@@ -52,14 +53,14 @@ function update_password_reset_urls(): void {
 function copy_lan_password_reset_url(): void {
     navigator.clipboard.writeText(lan_password_reset_url.value);
     const message = new GkillMessage()
-    message.message_code = "//TODO"
+    message.message_code = GkillMessageCodes.copied_lan_set_password_link
     message.message = "コピーしました"
     emits('received_messages', [message])
 }
 function copy_over_lan_password_reset_url(): void {
     navigator.clipboard.writeText(over_lan_password_reset_url.value);
     const message = new GkillMessage()
-    message.message_code = "//TODO"
+    message.message_code = GkillMessageCodes.copied_over_lan_set_password_link
     message.message = "コピーしました"
     emits('received_messages', [message])
 }
