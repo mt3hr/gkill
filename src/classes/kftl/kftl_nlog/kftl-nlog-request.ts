@@ -6,6 +6,7 @@ import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { GkillError } from '@/classes/api/gkill-error'
 import { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 export class KFTLNlogRequest extends KFTLRequest {
 
@@ -31,8 +32,8 @@ export class KFTLNlogRequest extends KFTLRequest {
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
         if (this.titles.length != this.amounts.length) {
             const error = new GkillError()
-            error.error_code = "//TODO"
-            error.error_message = "メモと金額の個数が一致していません"
+            error.error_code = GkillErrorCodes.nlog_title_amount_count_not_equal
+            error.error_message = "タイトルと金額の個数が一致していません"
             errors.push(error)
             return errors
         }
@@ -41,7 +42,7 @@ export class KFTLNlogRequest extends KFTLRequest {
             const amount = this.amounts[i]
             if (memo == "" && amount == 0 && this.shop_name == "") {
                 const error = new GkillError()
-                error.error_code = "//TODO"
+                error.error_code = GkillErrorCodes.skiped_no_content_nlog
                 error.error_message = "内容がないnlogの保存がスキップされました"
                 errors.push(error)
             }

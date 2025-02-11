@@ -23,6 +23,7 @@ import type { AddNewFoloderViewEmits } from './add-new-foloder-view-emits'
 import type { AddNewFoloderViewProps } from './add-new-foloder-view-props'
 import { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data';
 import { GkillError } from '@/classes/api/gkill-error';
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
 const props = defineProps<AddNewFoloderViewProps>()
 const emits = defineEmits<AddNewFoloderViewEmits>()
@@ -34,7 +35,7 @@ const folder_name: Ref<string> = ref("")
 function emits_folder(): void {
     if (folder_name.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.folder_name_is_blank
         error.error_message = "フォルダ名が入力されていません"
         emits('received_errors', [error])
         return

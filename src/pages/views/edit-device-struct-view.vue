@@ -132,9 +132,15 @@ function update_device_struct(device_struct_obj: DeviceStruct): void {
 }
 
 function update_seq(_device_struct: Array<FoldableStructModel>): void {
+    const exist_ids = new Array<string>()
+
     // 並び順再決定
     let f = (_struct: FoldableStructModel, _parent: FoldableStructModel, _seq: number) => { }
     let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
+        if (struct.id) {
+            exist_ids.push(struct.id)
+        }
+
         for (let i = 0; i < cloned_application_config.value.device_struct.length; i++) {
             if (struct.id === cloned_application_config.value.device_struct[i].id) {
                 cloned_application_config.value.device_struct[i].seq = seq
@@ -153,6 +159,20 @@ function update_seq(_device_struct: Array<FoldableStructModel>): void {
             f(cloned_application_config.value.parsed_device_struct.children[i], cloned_application_config.value.parsed_device_struct, i)
         }
     }
+
+    // 存在しないものを消す
+    for (let i = 0; i < cloned_application_config.value.device_struct.length; i++) {
+        let exist = false
+        for (let j = 0; j < exist_ids.length; j++) {
+            if (cloned_application_config.value.device_struct[i].id === exist_ids[j]) {
+                exist = true
+            }
+        }
+        if (!exist) {
+            cloned_application_config.value.device_struct.splice(i, 1)
+        }
+    }
+
 }
 
 async function apply(): Promise<void> {

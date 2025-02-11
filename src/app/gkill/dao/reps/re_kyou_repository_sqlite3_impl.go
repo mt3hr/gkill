@@ -97,7 +97,7 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 	for _, rekyou := range notDeletedAllReKyous {
 		existInRep := false
 		for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-			if latestDataRepositoryAddress.TargetID == rekyou.TargetID {
+			if latestDataRepositoryAddress.TargetID == rekyou.TargetID && !latestDataRepositoryAddress.IsDeleted {
 				existInRep = true
 				break
 			}

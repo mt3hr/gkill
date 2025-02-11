@@ -51,6 +51,7 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import { computed, type Ref, ref } from 'vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import type { AttachedNotificationContextMenuProps } from './attached-notification-context-menu-props';
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 
 const edit_notification_dialog = ref<InstanceType<typeof EditNotificationDialog> | null>(null);
 const confirm_delete_notification_dialog = ref<InstanceType<typeof ConfirmDeleteNotificationDialog> | null>(null);
@@ -86,7 +87,7 @@ async function show_notification_histories_dialog(): Promise<void> {
 async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.notification.id)
     const message = new GkillMessage()
-    message.message_code = "//TODO"
+    message.message_code = GkillMessageCodes.copied_notification_id
     message.message = "通知IDをコピーしました"
     const messages = new Array<GkillMessage>()
     messages.push(message)

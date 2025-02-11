@@ -51,6 +51,7 @@ import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const context_menu = ref<InstanceType<typeof MiContextMenu> | null>(null);
 
@@ -96,7 +97,7 @@ async function clicked_mi_check(): Promise<void> {
     const mi = cloned_kyou.value.typed_mi
     if (!mi) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.client_mi_is_null
         error.error_message = "クライアントのデータが変です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -107,7 +108,7 @@ async function clicked_mi_check(): Promise<void> {
     // 更新がなかったらエラーメッセージを出力する
     if (mi.is_checked === is_checked_mi.value) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.mi_is_no_update
         error.error_message = "miが更新されていません"
         const errors = new Array<GkillError>()
         errors.push(error)

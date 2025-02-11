@@ -76,6 +76,7 @@ import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request'
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const props = defineProps<EndTimeIsPlaingViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -134,7 +135,7 @@ async function save(): Promise<void> {
     const timeis = cloned_kyou.value.typed_timeis
     if (!timeis) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.client_timeis_is_null
         error.error_message = "クライアントのデータが変です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -145,7 +146,7 @@ async function save(): Promise<void> {
     // タイトル入力チェック
     if (timeis_title.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.timeis_title_is_blank
         error.error_message = "タイトルが入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -156,7 +157,7 @@ async function save(): Promise<void> {
     // 開始日時必須入力チェック
     if (timeis_start_date.value === "" || timeis_start_time.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.timeis_start_time_is_blank
         error.error_message = "開始日時が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -168,7 +169,7 @@ async function save(): Promise<void> {
     if ((timeis_end_date.value === "" && timeis_end_time.value !== "") ||
         (timeis_end_date.value !== "" && timeis_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.timeis_end_time_is_blank
         error.error_message = "終了日付または終了時刻が入力されていません"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -181,7 +182,7 @@ async function save(): Promise<void> {
         (moment(timeis.start_time).toDate().getTime() === moment(timeis_start_date.value + " " + timeis_start_time.value).toDate().getTime()) &&
         (moment(timeis.end_time).toDate().getTime() === moment(timeis_end_date.value + " " + timeis_end_time.value).toDate().getTime()) || (timeis.end_time === null && timeis_end_date.value === "" && timeis_end_time.value === "")) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.timeis_is_no_update
         error.error_message = "TimeIsが更新されていません"
         const errors = new Array<GkillError>()
         errors.push(error)

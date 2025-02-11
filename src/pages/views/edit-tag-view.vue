@@ -43,6 +43,7 @@ import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import { GkillError } from '@/classes/api/gkill-error';
 import type { Tag } from '@/classes/datas/tag';
+import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
 const props = defineProps<EditTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -63,7 +64,7 @@ async function save(): Promise<void> {
     // 値がなかったらエラーメッセージを出力する
     if (tag_name.value === "") {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.tag_is_blank
         error.error_message = "タグが未入力です"
         const errors = new Array<GkillError>()
         errors.push(error)
@@ -74,7 +75,7 @@ async function save(): Promise<void> {
     // 更新がなかったらエラーメッセージを出力する
     if (cloned_tag.value.tag === tag_name.value) {
         const error = new GkillError()
-        error.error_code = "//TODO"
+        error.error_code = GkillErrorCodes.tag_is_no_update
         error.error_message = "タグが更新されていません"
         const errors = new Array<GkillError>()
         errors.push(error)

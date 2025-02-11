@@ -10,7 +10,7 @@
                     @received_errors="(errors) => emits('received_errors', errors)" :last_added_tag="last_added_tag"
                     :is_readonly_mi_check="true" :enable_context_menu="enable_context_menu"
                     :enable_dialog="enable_dialog"
-                    @received_messages="(messages) => emits('received_messages', messages)" :scroll_top="0 /* //TODO */"
+                    @received_messages="(messages) => emits('received_messages', messages)" :scroll_top="0"
                     :show_checkbox="false" :show_footer="false" :show_content_only="false"
                     @clicked_kyou="(kyou) => focused_kyou = kyou"
                     @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" ref="kyou_list_view" />

@@ -5,6 +5,8 @@ import { Repository } from './repository'
 
 export class ServerConfig {
 
+    is_loaded: boolean
+
     enable_this_device: boolean
 
     device: string
@@ -41,6 +43,7 @@ export class ServerConfig {
 
     async clone(): Promise<ServerConfig> {
         const server_config = new ServerConfig()
+        server_config.is_loaded = this.is_loaded
         server_config.enable_this_device = this.enable_this_device
         server_config.device = this.device
         server_config.is_local_only_access = this.is_local_only_access
@@ -62,6 +65,7 @@ export class ServerConfig {
     }
 
     constructor() {
+        this.is_loaded = false
         this.enable_this_device = false
         this.device = ""
         this.is_local_only_access = true

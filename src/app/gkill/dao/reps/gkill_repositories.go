@@ -1673,13 +1673,13 @@ loop:
 			if matchNotificationsInRep == nil {
 				continue loop
 			}
-			for _, text := range matchNotificationsInRep {
-				if existNotification, exist := matchNotifications[text.ID]; exist {
-					if text.UpdateTime.After(existNotification.UpdateTime) {
-						matchNotifications[text.ID] = text
+			for _, notification := range matchNotificationsInRep {
+				if existNotification, exist := matchNotifications[notification.ID]; exist {
+					if notification.UpdateTime.After(existNotification.UpdateTime) {
+						matchNotifications[notification.ID] = notification
 					}
 				} else {
-					matchNotifications[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
+					matchNotifications[notification.ID+notification.UpdateTime.Format(sqlite3impl.TimeLayout)] = notification
 				}
 			}
 		default:
