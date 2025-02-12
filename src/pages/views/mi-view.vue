@@ -49,7 +49,7 @@
                     if (!inited) {
                         return
                     }
-                    if (skip_search_this_tick) {
+                    if (skip_search_this_tick || !application_config.rykv_hot_reload) {
                         nextTick(() => skip_search_this_tick = false)
                         return
                     }
@@ -62,14 +62,12 @@
                         }
                     })
                 }" @updated_query_clear="(new_query: FindKyouQuery) => {
-                    if (application_config.rykv_hot_reload) {
-                        if (skip_search_this_tick) {
-                            nextTick(() => skip_search_this_tick = false)
-                            return
-                        }
-                        skip_search_this_tick = true // 使い方違うけど
-                        search(focused_column_index, new_query, application_config.rykv_hot_reload)
-                    };
+                    if (skip_search_this_tick || !application_config.rykv_hot_reload) {
+                        nextTick(() => skip_search_this_tick = false)
+                        return
+                    }
+                    skip_search_this_tick = true // 使い方違うけど
+                    search(focused_column_index, new_query, application_config.rykv_hot_reload)
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
                 @request_open_focus_board="(board_name: string) => open_or_focus_board(board_name)"
                 @received_errors="(errors) => emits('received_errors', errors)"
@@ -406,6 +404,9 @@ const received_init_request = ref(false)
 const skip_search_this_tick = ref(false)
 const abort_controllers: Ref<Array<AbortController>> = ref([])
 async function init(): Promise<void> {
+    if (inited.value) {
+        return
+    }
     return nextTick(async () => {
         const waitPromises = new Array<Promise<void>>()
         try {
@@ -441,8 +442,11 @@ async function init(): Promise<void> {
                     })
                 }
             } else {
-                querys.value = saved_querys
-                querys_backup.value = saved_querys
+                querys.value = saved_querys.concat()
+                querys_backup.value = saved_querys.concat()
+                for (let i = 0; i < saved_querys.length; i++) {
+                    match_kyous_list.value.push([])
+                }
             }
         } finally {
             Promise.all(waitPromises).then(async () => {
@@ -461,12 +465,12 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
     // 検索する。Tickでまとめる
     return nextTick(async () => {
         try {
-            querys.value[column_index] = query
             if (!force_search) {
                 if (deepEquals(querys_backup.value[column_index], query)) {
                     return
                 }
             }
+            querys.value[column_index] = query
             querys_backup.value[column_index] = query
             focused_query.value = query
 
@@ -553,8 +557,6 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
 
 function close_list_view(column_index: number) {
     skip_search_this_tick.value = true
-    focused_column_index.value = -1
-    focused_query.value = querys.value[focused_column_index.value]
     focused_kyous_list.value.splice(0)
 
     querys.value.splice(column_index, 1)
@@ -565,13 +567,14 @@ function close_list_view(column_index: number) {
     }
 
     match_kyous_list.value.splice(column_index, 1)
+    match_kyous_list_top_list.value.splice(column_index, 1)
     abort_controllers.value.splice(column_index, 1)
 
     match_kyous_list_top_list.value.splice(column_index, 1)
     for (let i = column_index; i < querys.value.length; i++) {
         const kyou_list_view = kyou_list_views.value[i] as any
         if (!kyou_list_view) {
-            return
+            continue
         }
         if (inited.value) {
             kyou_list_view.scroll_to(match_kyous_list_top_list.value[i])
@@ -607,6 +610,8 @@ function add_list_view(query?: FindKyouQuery): void {
     if (inited.value) {
         focused_column_index.value = querys.value.length - 1
     }
+    props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
+    props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list.value)
 }
 
 function floatingActionButtonStyle() {

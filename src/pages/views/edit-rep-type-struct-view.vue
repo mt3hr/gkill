@@ -171,6 +171,7 @@ function update_seq(_rep_type_struct: Array<FoldableStructModel>): void {
         }
         if (!exist) {
             cloned_application_config.value.rep_type_struct.splice(i, 1)
+            i--
         }
     }
 }
