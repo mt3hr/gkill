@@ -170,6 +170,7 @@ function update_seq(_tag_struct: Array<FoldableStructModel>): void {
         }
         if (!exist) {
             cloned_application_config.value.tag_struct.splice(i, 1)
+            i--
         }
     }
 }
