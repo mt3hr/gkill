@@ -140,6 +140,9 @@ function update_seq(_kftl_template_struct: Array<FoldableStructModel>): void {
     // 並び順再決定
     let f = (_struct: FoldableStructModel, _parent: FoldableStructModel, _seq: number) => { }
     let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
+        if(struct.id) {
+            exist_ids.push(struct.id)
+        }
         for (let i = 0; i < cloned_application_config.value.kftl_template_struct.length; i++) {
             if (struct.id === cloned_application_config.value.kftl_template_struct[i].id) {
                 cloned_application_config.value.kftl_template_struct[i].seq = seq
@@ -169,6 +172,7 @@ function update_seq(_kftl_template_struct: Array<FoldableStructModel>): void {
         }
         if (!exist) {
             cloned_application_config.value.kftl_template_struct.splice(i, 1)
+            i--
         }
     }
 
