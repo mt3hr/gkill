@@ -156,6 +156,7 @@ watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyo
 
 function get_default_query(): FindKyouQuery {
     const query = default_query.value.clone()
+    query.query_id = props.gkill_api.generate_uuid()
     if (props.application_config.mi_default_period !== -1) {
         query.use_calendar = true
         query.calendar_start_date = moment(moment().add(-props.application_config.mi_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
