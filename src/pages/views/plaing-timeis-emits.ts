@@ -17,5 +17,9 @@ export interface PlaingTimeIsViewEmits {
     (e: 'registered_text', text: Text): void
     (e: 'updated_text', text: Text): void
     (e: 'deleted_text', text: Text): void
+    (e: 'registered_notification', notification: Notification): void
+    (e: 'updated_notification', notification: Notification): void
+    (e: 'deleted_notification', notification: Notification): void
     (e: 'requested_show_application_config_dialog'): void
+    (e: 'requested_reload_application_config'): void
 }

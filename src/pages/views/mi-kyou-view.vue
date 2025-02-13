@@ -33,6 +33,18 @@
         <MiContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
+            @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
+            @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
+            @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
+            @registered_kyou="(registered_kyou) => emits('registered_kyou', registered_kyou)"
+            @registered_tag="(registered_tag) => emits('registered_tag', registered_tag)"
+            @registered_text="(registered_text) => emits('registered_text', registered_text)"
+            @registered_notification="(registered_notification) => emits('registered_notification', registered_notification)"
+            @updated_kyou="(updated_kyou) => emits('updated_kyou', updated_kyou)"
+            @updated_tag="(updated_tag) => emits('updated_tag', updated_tag)"
+            @updated_text="(updated_text) => emits('updated_text', updated_text)"
+            @updated_notification="(updated_notification) => emits('updated_notification', updated_notification)"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
@@ -52,11 +64,12 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import type { KyouViewEmits } from './kyou-view-emits'
 
 const context_menu = ref<InstanceType<typeof MiContextMenu> | null>(null);
 
 const props = defineProps<miKyouViewProps>()
-const emits = defineEmits<miKyouViewEmits>()
+const emits = defineEmits<KyouViewEmits>()
 defineExpose({ show_context_menu })
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())

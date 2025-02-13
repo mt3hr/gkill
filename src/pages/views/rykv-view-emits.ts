@@ -18,4 +18,5 @@ export interface rykvViewEmits {
     (e: 'updated_text', text: Text): void
     (e: 'deleted_text', text: Text): void
     (e: 'requested_show_application_config_dialog'): void
+    (e: 'requested_reload_application_config'): void
 }

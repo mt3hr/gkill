@@ -28,6 +28,11 @@
                     <input class="input text" type="text" v-model="title" label="タイトル" />
                 </td>
             </tr>
+            <tr>
+                <td>
+                    <v-checkbox v-model="re_get_urlog_content" label="再取得" hide-details color="primary" />
+                </td>
+            </tr>
         </table>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
@@ -55,6 +60,18 @@
                 :show_mi_limit_time="true" :show_urlog_plaing_end_button="true" :height="'100%'" :width="'100%'"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="true"
                 :show_attached_timeis="true" @received_errors="(errors) => emits('received_errors', errors)"
+                @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
+                @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
+                @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
+                @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
+                @registered_kyou="(registered_kyou) => emits('registered_kyou', registered_kyou)"
+                @registered_tag="(registered_tag) => emits('registered_tag', registered_tag)"
+                @registered_text="(registered_text) => emits('registered_text', registered_text)"
+                @registered_notification="(registered_notification) => emits('registered_notification', registered_notification)"
+                @updated_kyou="(updated_kyou) => emits('updated_kyou', updated_kyou)"
+                @updated_tag="(updated_tag) => emits('updated_tag', updated_tag)"
+                @updated_text="(updated_text) => emits('updated_text', updated_text)"
+                @updated_notification="(updated_notification) => emits('updated_notification', updated_notification)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
@@ -82,6 +99,7 @@ const title: Ref<string> = ref(cloned_kyou.value.typed_urlog ? cloned_kyou.value
 const url: Ref<string> = ref(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.url : "")
 const related_date: Ref<string> = ref(moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment(cloned_kyou.value.typed_urlog ? cloned_kyou.value.typed_urlog.related_time : "").format("HH:mm:ss"))
+const re_get_urlog_content: Ref<boolean> = ref(true)
 
 const show_kyou: Ref<boolean> = ref(false)
 
@@ -173,6 +191,13 @@ async function save(): Promise<void> {
     updated_urlog.update_device = gkill_info_res.device
     updated_urlog.update_time = new Date(Date.now())
     updated_urlog.update_user = gkill_info_res.user_id
+
+    // 再取得の場合、URLとタイトル以外をブランクにする
+    if (re_get_urlog_content.value) {
+        updated_urlog.description = ""
+        updated_urlog.favicon_image = ""
+        updated_urlog.thumbnail_image = ""
+    }
 
     // 更新リクエストを飛ばす
     const req = new UpdateURLogRequest()

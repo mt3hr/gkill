@@ -3,7 +3,7 @@
         <MiView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
             @requested_show_application_config_dialog="show_application_config_dialog()" @received_errors="write_errors"
-            @received_messages="write_messages" />
+            @received_messages="write_messages" @requested_reload_application_config="load_application_config()" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
             :is_show="is_show_application_config_dialog" @received_errors="write_errors"
