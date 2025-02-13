@@ -13,13 +13,38 @@
                     @received_messages="(messages) => emits('received_messages', messages)" :scroll_top="0"
                     :show_checkbox="false" :show_footer="false" :show_content_only="false"
                     @clicked_kyou="(kyou) => focused_kyou = kyou"
-                    @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" ref="kyou_list_view" />
+                    @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)"
+                    @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
+                    @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
+                    @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
+                    @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
+                    @registered_kyou="(registered_kyou) => emits('registered_kyou', registered_kyou)"
+                    @registered_tag="(registered_tag) => emits('registered_tag', registered_tag)"
+                    @registered_text="(registered_text) => emits('registered_text', registered_text)"
+                    @registered_notification="(registered_notification) => emits('registered_notification', registered_notification)"
+                    @updated_kyou="(updated_kyou) => emits('updated_kyou', updated_kyou)"
+                    @updated_tag="(updated_tag) => emits('updated_tag', updated_tag)"
+                    @updated_text="(updated_text) => emits('updated_text', updated_text)"
+                    @updated_notification="(updated_notification) => emits('updated_notification', updated_notification)"
+                    ref="kyou_list_view" />
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
                 <div class="edit_idf_kyou_view_wrap">
                     <EditIDFKyouView v-if="focused_kyou" :application_config="application_config" :gkill_api="gkill_api"
                         :highlight_targets="[]" :kyou="focused_kyou" :last_added_tag="last_added_tag"
                         :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                        @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
+                        @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
+                        @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
+                        @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
+                        @registered_kyou="(registered_kyou) => emits('registered_kyou', registered_kyou)"
+                        @registered_tag="(registered_tag) => emits('registered_tag', registered_tag)"
+                        @registered_text="(registered_text) => emits('registered_text', registered_text)"
+                        @registered_notification="(registered_notification) => emits('registered_notification', registered_notification)"
+                        @updated_kyou="(updated_kyou) => emits('updated_kyou', updated_kyou)"
+                        @updated_tag="(updated_tag) => emits('updated_tag', updated_tag)"
+                        @updated_text="(updated_text) => emits('updated_text', updated_text)"
+                        @updated_notification="(updated_notification) => emits('updated_notification', updated_notification)"
                         @received_errors="(errors) => emits('received_errors', errors)" @requested_reload_kyou="(kyou) => {
                             reload_focused_kyou()
                             emits('requested_reload_kyou', kyou)

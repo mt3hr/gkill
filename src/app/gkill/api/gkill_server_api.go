@@ -3476,6 +3476,73 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	if request.ReGetURLogContent {
+		var currentServerConfig *server_config.ServerConfig
+		serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetServerConfigError,
+				ErrorMessage: "Miタスク通知登録に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		for _, serverConfig := range serverConfigs {
+			if serverConfig.Device == device {
+				currentServerConfig = serverConfig
+				break
+			}
+		}
+		if currentServerConfig == nil {
+			err = fmt.Errorf("error at get serverConfig user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Printf(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetServerConfigError,
+				ErrorMessage: "ServerConfig取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		applicationConfig, err := g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+		if err != nil || applicationConfig == nil {
+			err = fmt.Errorf("error at get applicationConfig user id = %s device = %s: %w", userID, device, err)
+			err = fmt.Errorf("try create application config user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Printf(err.Error())
+
+			newApplicationConfig := &user_config.ApplicationConfig{
+				UserID:                    userID,
+				Device:                    device,
+				EnableBrowserCache:        false,
+				GoogleMapAPIKey:           "",
+				RykvImageListColumnNumber: 3,
+				RykvHotReload:             false,
+				MiDefaultBoard:            "Inbox",
+			}
+			_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), newApplicationConfig)
+			if err != nil {
+				gkillError := &message.GkillError{
+					ErrorCode:    message.GetApplicationConfigError,
+					ErrorMessage: "ApplicationConfig取得に失敗しました",
+				}
+				response.Errors = append(response.Errors, gkillError)
+				return
+			}
+			applicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+			if err != nil {
+				gkillError := &message.GkillError{
+					ErrorCode:    message.GetApplicationConfigError,
+					ErrorMessage: "ApplicationConfig取得に失敗しました",
+				}
+				response.Errors = append(response.Errors, gkillError)
+				return
+			}
+		}
+
+		request.URLog.FillURLogField(currentServerConfig, applicationConfig)
+	}
+
 	err = repositories.WriteURLogRep.AddURLogInfo(r.Context(), request.URLog)
 	if err != nil {
 		err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
