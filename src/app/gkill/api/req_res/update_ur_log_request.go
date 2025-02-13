@@ -6,4 +6,6 @@ type UpdateURLogRequest struct {
 	SessionID string `json:"session_id"`
 
 	URLog *reps.URLog `json:"urlog"`
+
+	ReGetURLogContent bool `json:"re_get_urlog_content"`
 }

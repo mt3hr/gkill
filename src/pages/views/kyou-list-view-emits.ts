@@ -4,14 +4,14 @@ import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
 import type { Kyou } from "@/classes/datas/kyou"
 import type { Tag } from "@/classes/datas/tag"
+import type { Text } from "@/classes/datas/text"
+import type { Notification } from "@/classes/datas/notification"
 
 export interface KyouListViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'requested_reload_list',): void
-    (e: 'requested_switch_list_style', is_image_only: boolean): void
-    (e: 'updated_match_kyous', kyous: Array<Kyou>): void
-    (e: 'updated_checked_kyous', kyous: Array<Kyou>): void
+    (e: 'received_messages', message: Array<GkillMessage>): void
+    (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'registered_kyou', kyou: Kyou): void
     (e: 'updated_kyou', kyou: Kyou): void
     (e: 'deleted_kyou', kyou: Kyou): void
@@ -21,6 +21,14 @@ export interface KyouListViewEmits {
     (e: 'registered_text', text: Text): void
     (e: 'updated_text', text: Text): void
     (e: 'deleted_text', text: Text): void
+    (e: 'registered_notification', notification: Notification): void
+    (e: 'updated_notification', notification: Notification): void
+    (e: 'deleted_notification', notification: Notification): void
+    (e: 'requested_update_check_kyous', kyou: Array<Kyou>, is_checked: boolean): void
+    (e: 'requested_reload_kyou', kyou: Kyou): void
+    (e: 'requested_reload_list'): void
+    (e: 'requested_close_dialog'): void
+    (e: 'clicked_kyou', kyou: Kyou): void
     (e: 'requested_reload_kyou', kyou: Kyou): void
     (e: 'requested_focus_kyou', kyou: Kyou): void
     (e: 'requested_update_check_kyous', kyou: Array<Kyou>, is_checked: boolean): void

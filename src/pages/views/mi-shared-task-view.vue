@@ -25,6 +25,18 @@
                                 @clicked_kyou="(kyou) => { focused_kyou = kyou }"
                                 @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
+                                @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
+                                @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
+                                @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
+                                @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
+                                @registered_kyou="(registered_kyou) => emits('registered_kyou', registered_kyou)"
+                                @registered_tag="(registered_tag) => emits('registered_tag', registered_tag)"
+                                @registered_text="(registered_text) => emits('registered_text', registered_text)"
+                                @registered_notification="(registered_notification) => emits('registered_notification', registered_notification)"
+                                @updated_kyou="(updated_kyou) => emits('updated_kyou', updated_kyou)"
+                                @updated_tag="(updated_tag) => emits('updated_tag', updated_tag)"
+                                @updated_text="(updated_text) => emits('updated_text', updated_text)"
+                                @updated_notification="(updated_notification) => emits('updated_notification', updated_notification)"
                                 ref="kyou_list_view" />
                         </v-card>
                     </td>
@@ -77,10 +89,11 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { GetSharedMiTasksRequest } from '@/classes/api/req_res/get-shared-mi-tasks-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import type { KyouViewEmits } from './kyou-view-emits'
 const kyou_list_view = ref();
 
 const props = defineProps<miSharedTaskViewProps>()
-const emits = defineEmits<miSharedTaskViewEmits>()
+const emits = defineEmits<KyouViewEmits>()
 
 const match_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_time: Ref<Date> = ref(new Date())
