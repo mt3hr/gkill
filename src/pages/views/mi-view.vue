@@ -37,14 +37,7 @@
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
                 :app_content_width="app_content_width" :find_kyou_query="focused_query"
                 :inited="false /* これは見られないのでfalseのままでOK */" @requested_search="(update_cache: boolean) => {
-                    search(focused_column_index, querys[focused_column_index], true, update_cache).then(() => {
-                        if (kyou_list_views.value && kyou_list_views.value.length - 1 >= querys.length - 1) {
-                            const kyou_list_view = kyou_list_views.value[querys.length - 1] as any
-                            if (!kyou_list_view) {
-                                return
-                            }
-                        }
-                    })
+                    nextTick(() => search(focused_column_index, querys[focused_column_index], true, update_cache))
                 }" @updated_query="(new_query: FindKyouQuery) => {
                     if (!inited) {
                         return
@@ -53,14 +46,7 @@
                         nextTick(() => skip_search_this_tick = false)
                         return
                     }
-                    search(focused_column_index, new_query).then(() => {
-                        if (kyou_list_views.value && kyou_list_views.value.length - 1 >= querys.length - 1) {
-                            const kyou_list_view = kyou_list_views.value[querys.length - 1] as any
-                            if (!kyou_list_view) {
-                                return
-                            }
-                        }
-                    })
+                    search(focused_column_index, new_query)
                 }" @updated_query_clear="(new_query: FindKyouQuery) => {
                     if (skip_search_this_tick || !application_config.rykv_hot_reload) {
                         nextTick(() => skip_search_this_tick = false)
@@ -113,7 +99,7 @@
                                 }" @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
-                                @requested_reload_list="reload_list(index)"
+                                @requested_reload_list="() => nextTick(() => reload_list(index))"
                                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                                 @requested_change_focus_kyou="(is_focus_kyou) => {
                                     skip_search_this_tick = true
@@ -123,25 +109,16 @@
                                     query.is_focus_kyou_in_list_view = is_focus_kyou
                                     querys.splice(index, 1, query)
                                     querys_backup.splice(index, 1, query)
-                                }" @requested_search="search(index, querys[index], true).then(() => {
-                                    if (kyou_list_views.value && kyou_list_views.value.length - 1 >= querys.length - 1) {
-                                        const kyou_list_view = kyou_list_views.value[querys.length - 1] as any
-                                        if (!kyou_list_view) {
-                                            return
-                                        }
-                                    }
-                                })" ref="kyou_list_views" @requested_change_is_image_only_view="(is_image_only_view: boolean) => {
+                                }" @requested_search="() => {
+                                    focused_column_index = index
+                                    nextTick(() => search(focused_column_index, querys[focused_column_index], true))
+                                }" ref="kyou_list_views" @requested_change_is_image_only_view="(is_image_only_view: boolean) => {
                                     focused_column_index = index
                                     focused_kyous_list = match_kyous_list[index]
                                     const query = querys[index].clone()
                                     query.is_image_only = is_image_only_view
                                     querys[index] = query
-                                    search(index, query, true).then(() => {
-                                        const kyou_list_view = kyou_list_views.value[index] as any
-                                        if (!kyou_list_view) {
-                                            return
-                                        }
-                                    })
+                                    search(index, query, true)
                                 }" @requested_close_column="close_list_view(index)"
                                 @deleted_kyou="(deleted_kyou) => { reload_list(index); reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                                 @deleted_tag="(deleted_tag) => { }" @deleted_text="(deleted_text) => { }"
@@ -303,7 +280,6 @@ import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { Kyou } from '@/classes/datas/kyou'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
-import Dnote from './dnote-view.vue'
 import KyouCountCalendar from './kyou-count-calendar.vue'
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
@@ -330,7 +306,6 @@ const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null)
 const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
 const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
-const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
 const kyou_list_views = ref();
 
 const querys: Ref<Array<FindKyouQuery>> = ref([new FindKyouQuery()])
@@ -342,7 +317,6 @@ const focused_column_index: Ref<number> = ref(0)
 const focused_kyous_list: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_kyou: Ref<Kyou | null> = ref(null)
 const focused_time: Ref<Date> = ref(moment().toDate())
-const focused_column_checked_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const is_show_kyou_detail_view: Ref<boolean> = ref(true)
 const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
@@ -422,7 +396,7 @@ async function update_check_kyous(_kyou: Array<Kyou>, _is_checked: boolean): Pro
 }
 
 async function reload_list(column_index: number): Promise<void> {
-    search(column_index, querys.value[column_index], true)
+    return search(column_index, querys.value[column_index], true)
 }
 
 const is_loading: Ref<boolean> = ref(true)
@@ -438,7 +412,7 @@ async function init(): Promise<void> {
         const waitPromises = new Array<Promise<void>>()
         try {
             // スクロール位置の復元
-            match_kyous_list_top_list.value = props.gkill_api.get_saved_rykv_scroll_indexs()
+            match_kyous_list_top_list.value = props.gkill_api.get_saved_mi_scroll_indexs()
 
             // 前回開いていた列があれば復元する
             skip_search_this_tick.value = true
@@ -448,13 +422,6 @@ async function init(): Promise<void> {
                 default_query.query_id = props.gkill_api.generate_uuid()
                 saved_querys.push(default_query)
             }
-
-            for (let i = 0; i < saved_querys.length; i++) {
-                if (i !== 0) {
-                    add_list_view(saved_querys[i])
-                }
-            }
-            skip_search_this_tick.value = true
 
             if (props.application_config.rykv_hot_reload) {
                 for (let i = 0; i < saved_querys.length; i++) {
@@ -469,6 +436,7 @@ async function init(): Promise<void> {
                     })
                 }
             } else {
+                close_list_view(0)
                 querys.value = saved_querys.concat()
                 querys_backup.value = saved_querys.concat()
                 for (let i = 0; i < saved_querys.length; i++) {
@@ -478,7 +446,6 @@ async function init(): Promise<void> {
         } finally {
             Promise.all(waitPromises).then(async () => {
                 focused_column_index.value = 0
-
                 inited.value = true
                 drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 420)
                 drawer.value = props.app_content_width.valueOf() >= 420
@@ -488,132 +455,41 @@ async function init(): Promise<void> {
         }
     })
 }
-async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
-    // 検索する。Tickでまとめる
-    return nextTick(async () => {
-        try {
-            querys.value[column_index] = query
-            if (!force_search) {
-                if (deepEquals(querys_backup.value[column_index], query)) {
-                    return
-                }
-            }
-            querys_backup.value[column_index] = query
-            focused_query.value = query
 
-            props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
-
-            focused_column_checked_kyous.value = []
-            nextTick(() => dnote_view.value?.recalc_all())
-
-            const target_board_name = querys.value[column_index].mi_board_name
-
-            // 前の検索処理を中断する
-            if (abort_controllers.value[column_index]) {
-                abort_controllers.value[column_index].abort()
-            }
-
-            if (match_kyous_list.value[column_index]) {
-                match_kyous_list.value[column_index] = []
-            }
-
-            const kyou_list_view = kyou_list_views.value[column_index] as any
-            if (kyou_list_view && inited.value) {
-                kyou_list_view.scroll_to(0)
-            }
-            await nextTick(async () => {
-                const kyou_list_view = kyou_list_views.value[column_index] as any
-                if (!kyou_list_view) {
-                    return
-                }
-                kyou_list_view.set_loading(true)
-                return nextTick(() => { }) // loading表記切り替え待ち
-            })
-
-            const req = new GetKyousRequest()
-            abort_controllers.value[column_index] = req.abort_controller
-            req.query = query.clone()
-            req.query.parse_words_and_not_words()
-            if (update_cache) {
-                req.query.update_cache = true
-            }
-            const res = await props.gkill_api.get_kyous(req)
-            if (res.errors && res.errors.length !== 0) {
-                emits('received_errors', res.errors)
-                return
-            }
-            if (res.messages && res.messages.length !== 0) {
-                emits('received_messages', res.messages)
-            }
-
-            // 検索後の板位置を取得する
-            column_index = -1
-            for (let i = 0; i < querys.value.length; i++) {
-                const query = querys.value[i]
-                if (query.mi_board_name === target_board_name) {
-                    column_index = i
-                    break
-                }
-            }
-
-            match_kyous_list.value[column_index] = res.kyous
-            if (is_show_kyou_count_calendar.value) {
-                update_focused_kyous_list(column_index)
-            }
-
-            await nextTick(() => {
-                const kyou_list_view = kyou_list_views.value[column_index] as any
-                if (!kyou_list_view) {
-                    return
-                }
-                if (inited.value) {
-                    kyou_list_view.scroll_to(0)
-                    kyou_list_view.set_loading(false)
-                    skip_search_this_tick.value = false
-                }
-            })
-        } catch (err: any) {
-            // abortは握りつぶす
-            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
-                // abort以外はエラー出力する
-                console.error(err)
-            }
-        }
-    })
-}
-
-function close_list_view(column_index: number) {
-    skip_search_this_tick.value = true
-    focused_column_index.value = -1
-    focused_query.value = querys.value[focused_column_index.value]
-    focused_kyous_list.value.splice(0)
-
-    querys.value.splice(column_index, 1)
-    querys_backup.value.splice(column_index, 1)
-
-    if (abort_controllers.value[column_index]) {
-        abort_controllers.value[column_index].abort()
-    }
-
-    match_kyous_list.value.splice(column_index, 1)
-    match_kyous_list_top_list.value.splice(column_index, 1)
-    abort_controllers.value.splice(column_index, 1)
-
-    match_kyous_list_top_list.value.splice(column_index, 1)
-    for (let i = column_index; i < querys.value.length; i++) {
-        const kyou_list_view = kyou_list_views.value[i] as any
-        if (!kyou_list_view) {
-            continue
-        }
-        if (inited.value) {
-            kyou_list_view.scroll_to(match_kyous_list_top_list.value[i])
-        }
-    }
-    props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
-    props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list.value)
-    nextTick(() => {
+async function close_list_view(column_index: number): Promise<void> {
+    return nextTick(() => {
         skip_search_this_tick.value = true
-        focused_column_index.value = 0
+        focused_column_index.value = -1
+        focused_query.value = querys.value[focused_column_index.value]
+        focused_kyous_list.value.splice(0)
+
+        querys.value.splice(column_index, 1)
+        querys_backup.value.splice(column_index, 1)
+
+        if (abort_controllers.value[column_index]) {
+            abort_controllers.value[column_index].abort()
+        }
+
+        match_kyous_list.value.splice(column_index, 1)
+        match_kyous_list_top_list.value.splice(column_index, 1)
+        abort_controllers.value.splice(column_index, 1)
+
+        match_kyous_list_top_list.value.splice(column_index, 1)
+        for (let i = column_index; i < querys.value.length; i++) {
+            const kyou_list_view = kyou_list_views.value[i] as any
+            if (!kyou_list_view) {
+                continue
+            }
+            if (inited.value) {
+                kyou_list_view.scroll_to(match_kyous_list_top_list.value[i])
+            }
+        }
+        props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
+        props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list.value)
+        nextTick(() => {
+            skip_search_this_tick.value = true
+            focused_column_index.value = 0
+        })
     })
 }
 
@@ -671,21 +547,112 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Prom
     }
 }
 
-async function open_or_focus_board(board_name: string): Promise<void> {
+async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
+    const query_id = query.query_id
+    // 検索する。Tickでまとめる
+    return nextTick(async () => {
+        try {
+            if (!force_search) {
+                if (deepEquals(querys_backup.value[column_index], query)) {
+                    return
+                }
+            }
+            querys.value[column_index] = query
+            querys_backup.value[column_index] = query
+            focused_query.value = query
+
+            props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
+
+            // 前の検索処理を中断する
+            if (abort_controllers.value[column_index]) {
+                abort_controllers.value[column_index].abort()
+            }
+
+            if (match_kyous_list.value[column_index]) {
+                match_kyous_list.value[column_index] = []
+            }
+
+            const kyou_list_view = kyou_list_views.value[column_index] as any
+            if (kyou_list_view && inited.value) {
+                kyou_list_view.scroll_to(0)
+            }
+            await nextTick(async () => {
+                const kyou_list_view = kyou_list_views.value[column_index] as any
+                if (!kyou_list_view) {
+                    return
+                }
+                kyou_list_view.set_loading(true)
+                return nextTick(() => { }) // loading表記切り替え待ち
+            })
+
+            const req = new GetKyousRequest()
+            abort_controllers.value[column_index] = req.abort_controller
+            req.query = query.clone()
+            req.query.parse_words_and_not_words()
+            if (update_cache) {
+                req.query.update_cache = true
+            }
+            const res = await props.gkill_api.get_kyous(req)
+            if (res.errors && res.errors.length !== 0) {
+                emits('received_errors', res.errors)
+                return
+            }
+            if (res.messages && res.messages.length !== 0) {
+                emits('received_messages', res.messages)
+            }
+
+            // 検索後の列位置を取得する
+            column_index = -1
+            for (let i = 0; i < querys.value.length; i++) {
+                const query = querys.value[i]
+                if (query.query_id === query_id) {
+                    column_index = i
+                    break
+                }
+            }
+
+            if (column_index === -1) {
+                return
+            }
+
+            match_kyous_list.value[column_index] = res.kyous
+            if (is_show_kyou_count_calendar.value) {
+                update_focused_kyous_list(column_index)
+            }
+
+            await nextTick(() => {
+                const kyou_list_view = kyou_list_views.value[column_index] as any
+                if (!kyou_list_view) {
+                    return
+                }
+                if (inited.value) {
+                    kyou_list_view.scroll_to(0)
+                    kyou_list_view.set_loading(false)
+                    skip_search_this_tick.value = false
+                }
+            })
+        } catch (err: any) {
+            // abortは握りつぶす
+            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+                // abort以外はエラー出力する
+                console.error(err)
+            }
+        }
+    })
+}
+
+function open_or_focus_board(board_name: string): void {
     let opened = false
     for (let i = 0; i < querys.value.length; i++) {
         const query = querys.value[i]
         if (query.mi_board_name === board_name) {
-            skip_search_this_tick.value = true
-            focused_query.value = querys.value[i]
+            focused_query.value = querys.value[i].clone()
 
             focused_kyous_list.value.splice(0)
             for (let j = 0; j < match_kyous_list.value[i].length; j++) {
                 focused_kyous_list.value.push(match_kyous_list.value[i][j])
             }
             focused_column_index.value = i
-            await nextTick(() => { })
-            skip_search_this_tick.value = false
             opened = true
             break
         }
@@ -705,9 +672,9 @@ async function open_or_focus_board(board_name: string): Promise<void> {
 
     skip_search_this_tick.value = true
     add_list_view(query)
-    await nextTick(() => { })
-    await search(querys.value.length - 1, query, true)
-    nextTick(() => skip_search_this_tick.value = false)
+    if (props.application_config.rykv_hot_reload) {
+        search(querys.value.length - 1, query, true)
+    }
 }
 
 const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${position_x.value}px; top: ${position_y.value}px; }`)
