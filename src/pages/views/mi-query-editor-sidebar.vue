@@ -116,6 +116,7 @@ const inited = computed(() => {
     if (!is_mounted.value) {
         return false
     }
+
     return inited_keyword_query_for_query_sidebar.value &&
         inited_timeis_query_for_query_sidebar.value &&
         inited_tag_query_for_query_sidebar.value &&
