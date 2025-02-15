@@ -981,12 +981,31 @@ INSERT INTO MI (
 }
 
 func (m *miRepositorySQLite3Impl) GetBoardNames(ctx context.Context) ([]string, error) {
+	var err error
+
 	sql := `
 SELECT 
-DISTINCT BOARD_NAME
-FROM MI 
-WHERE IS_DELETED = FALSE
+  DISTINCT BOARD_NAME
+FROM MI
+WHERE
 `
+	query := &find.FindQuery{}
+	queryArgs := []interface{}{}
+
+	whereCounter := 0
+	onlyLatestData := true
+	relatedTimeColumnName := "UPDATE_TIME"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := true
+	appendGroupBy := true
+	findWordUseLike := false
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	sql = fmt.Sprintf("%s %s", sql, sqlWhereForCreate)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
