@@ -118,7 +118,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TEXT"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -270,17 +270,17 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TARGET_ID"}
 	ignoreFindWord := false
-	appendOrderBy := true
+	appendOrderBy := false
 	appendGroupBy := true
 	findWordUseLike := false
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
-
+	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -412,17 +412,17 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TEXT"}
 	ignoreFindWord := false
-	appendOrderBy := true
+	appendOrderBy := false
 	appendGroupBy := false
 	findWordUseLike := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
-
+	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
