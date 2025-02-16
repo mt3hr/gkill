@@ -152,7 +152,7 @@
 </template>
 <script setup lang="ts">
 import { ServerConfig } from '@/classes/datas/config/server-config'
-import { ref, watch, type Ref } from 'vue'
+import { nextTick, ref, watch, type Ref } from 'vue'
 import ConfirmGenerateTLSFilesDialog from '../dialogs/confirm-generate-tls-files-dialog.vue'
 import CreateAccountDialog from '../dialogs/create-account-dialog.vue'
 import ManageAccountDialog from '../dialogs/manage-account-dialog.vue'
@@ -179,7 +179,10 @@ const server_config: Ref<ServerConfig> = ref(new ServerConfig())
 const device: Ref<string> = ref("")
 const devices: Ref<Array<string>> = ref(new Array<string>())
 
-load_devices()
+nextTick(() => {
+    load_devices()
+    device.value = props.server_configs.filter((server_cofnig) => server_cofnig.enable_this_device)[0].device
+})
 
 watch(() => props.server_configs, () => {
     cloned_server_configs.value = props.server_configs.concat()

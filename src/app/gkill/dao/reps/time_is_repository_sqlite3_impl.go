@@ -135,7 +135,7 @@ FROM TIMEIS
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -161,7 +161,7 @@ FROM TIMEIS
 
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "RELATED_TIME"
+	relatedTimeColumnName = "datetime(RELATED_TIME, 'localtime')"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -313,7 +313,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -323,7 +323,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-
+	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -468,7 +468,7 @@ FROM TIMEIS
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -634,7 +634,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -656,7 +656,7 @@ WHERE
 	}
 
 	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
-	sql += " ORDER BY RELATED_TIME DESC"
+	sql += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
