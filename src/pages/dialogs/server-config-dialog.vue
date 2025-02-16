@@ -31,6 +31,7 @@ async function hide(): Promise<void> {
     is_show_dialog.value = false
 }
 async function load_server_configs(): Promise<void> {
+    server_configs.value.splice(0)
     const req = new GetServerConfigsRequest()
     const res = await props.gkill_api.get_server_configs(req)
     if (res.errors && res.errors.length !== 0) {

@@ -227,7 +227,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "CREATE_TIME"
+	relatedTimeColumnName := "datetime(CREATE_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -249,7 +249,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "RELATED_TIME"
+	relatedTimeColumnName = "datetime(RELATED_TIME, 'localtime')"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -270,7 +270,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "LIMIT_TIME"
+	relatedTimeColumnName = "datetime(LIMIT_TIME, 'localtime')"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -291,7 +291,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "ESTIMATE_START_TIME"
+	relatedTimeColumnName = "datetime(ESTIMATE_START_TIME, 'localtime')"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -312,7 +312,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "ESTIMATE_END_TIME"
+	relatedTimeColumnName = "datetime(ESTIMATE_END_TIME, 'localtime')"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -468,7 +468,7 @@ WHERE
 	}
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "CREATE_TIME"
+	relatedTimeColumnName := "datetime(CREATE_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -479,6 +479,7 @@ WHERE
 		return nil, err
 	}
 	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
+	sqlWhereForCreate += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	sql += sqlWhereForCreate
 
@@ -620,7 +621,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "CREATE_TIME"
+	relatedTimeColumnName := "datetime(CREATE_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -786,10 +787,10 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "CREATE_TIME"
+	relatedTimeColumnName := "datetime(CREATE_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
-	appendOrderBy := true
+	appendOrderBy := false
 	appendGroupBy := false
 	findWordUseLike := true
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForCreate)
@@ -797,6 +798,7 @@ WHERE
 		return nil, err
 	}
 	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
+	sqlWhereForCreate += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForCreate += " AND BOARD_NAME = ? "
@@ -994,7 +996,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "UPDATE_TIME"
+	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := true
