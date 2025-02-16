@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,11 +25,11 @@ import (
 */
 
 func main() {
-	if len(os.Args) != 1 {
+	if len(os.Args) != 2 {
 		log.Fatal("ユーザ名を入力して下さい。例を示します\nold_data_transfomer_for_old_rykv \"mt3hr\"")
 	}
+	userName := os.Args[1]
 
-	userName := os.Args[0]
 	err := DataTransfer(SrcKyouDir, TranserDestinationDir, userName)
 	if err != nil {
 		panic(err)
@@ -39,7 +41,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	os.Setenv("HOME", os.Getenv(home))
+	os.Setenv("HOME", home)
 }
 
 const TimeLayout = time.RFC3339
@@ -47,6 +49,7 @@ const TimeLayout = time.RFC3339
 var (
 	SrcKyouDir            = "$HOME/KyouOld"       // 抽出元のKyouDir
 	TranserDestinationDir = "$HOME/GkillTransfer" // 変換済みデータ格納先
+	TempDBFile            = ":memory:"
 )
 
 func DataTransfer(srcKyouDir string, transferDestinationDir string, userName string) error {
@@ -54,6 +57,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 	srcKyouDir = SrcKyouDir
 	TranserDestinationDir = os.ExpandEnv(transferDestinationDir)
 	transferDestinationDir = TranserDestinationDir
+	TempDBFile = os.ExpandEnv(TempDBFile)
 
 	err := os.MkdirAll(TranserDestinationDir, os.ModePerm)
 	if err != nil {
@@ -247,7 +251,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 	}
 
 	// テンポラリDBから新データを生成、取得する
-	tempDB, err := sql.Open("sqlite3", ":memory:")
+	tempDB, err := sql.Open("sqlite3", TempDBFile)
 	if err != nil {
 		panic(err)
 	}
@@ -373,7 +377,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 	dummyRouter := mux.NewRouter()
 	falseValue := false
 	idfIgnore := gkill_options.IDFIgnore
-	repositoriesRefDummy, err := reps.NewGkillRepositories("")
+	repositoriesRefDummy, err := reps.NewGkillRepositories(userName)
 	if err != nil {
 		panic(err)
 	}
@@ -2223,7 +2227,8 @@ FROM "nlog";`
 	for rows.Next() {
 		nlog := &reps.Nlog{}
 		timestr := ""
-		err = rows.Scan(&nlog.ID, &timestr, &nlog.Amount, &nlog.Shop, &nlog.Title, &nlog.RepName)
+		amount := 0
+		err = rows.Scan(&nlog.ID, &timestr, &amount, &nlog.Shop, &nlog.Title, &nlog.RepName)
 		if err != nil {
 			err = fmt.Errorf("error at scan rows: %w", err)
 			return nil, err
@@ -2234,6 +2239,7 @@ FROM "nlog";`
 			err = fmt.Errorf("error at parse time '%s' at %s: %w", timestr, nlog.ID, err)
 			return nil, err
 		}
+		nlog.Amount = json.Number(strconv.Itoa(amount))
 		nlog.IsDeleted = false
 		nlog.CreateApp = "nlog"
 		nlog.CreateDevice = strings.Split(nlog.RepName, "_")[1]
