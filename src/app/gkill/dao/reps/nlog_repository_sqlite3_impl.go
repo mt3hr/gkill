@@ -114,7 +114,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -256,10 +256,10 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
-	appendOrderBy := true
+	appendOrderBy := false
 	appendGroupBy := false
 	findWordUseLike := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
@@ -267,6 +267,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
+	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -402,7 +403,7 @@ WHERE
 	}
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -551,10 +552,10 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
-	appendOrderBy := true
+	appendOrderBy := false
 	appendGroupBy := true
 	findWordUseLike := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
@@ -562,6 +563,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
+	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)

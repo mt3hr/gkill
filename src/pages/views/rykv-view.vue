@@ -451,7 +451,6 @@ async function init(): Promise<void> {
                     })
                 }
             } else {
-                close_list_view(0)
                 querys.value = saved_querys.concat()
                 querys_backup.value = saved_querys.concat()
                 for (let i = 0; i < saved_querys.length; i++) {
