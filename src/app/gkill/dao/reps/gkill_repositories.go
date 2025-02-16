@@ -1781,7 +1781,7 @@ loop:
 }
 
 func (g *GkillRepositories) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
-	textHistories := map[string]*Notification{}
+	notificationHistories := map[string]*Notification{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -1811,7 +1811,7 @@ errloop:
 	for {
 		select {
 		case e := <-errch:
-			err = fmt.Errorf("error at find get text histories: %w", e)
+			err = fmt.Errorf("error at find get notification histories: %w", e)
 			existErr = true
 		default:
 			break errloop
@@ -1829,13 +1829,13 @@ loop:
 			if matchNotificationsInRep == nil {
 				continue loop
 			}
-			for _, text := range matchNotificationsInRep {
-				if existNotification, exist := textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
-					if text.UpdateTime.After(existNotification.UpdateTime) {
-						textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
+			for _, notification := range matchNotificationsInRep {
+				if existNotification, exist := notificationHistories[notification.ID+notification.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if notification.UpdateTime.After(existNotification.UpdateTime) {
+						notificationHistories[notification.ID+notification.UpdateTime.Format(sqlite3impl.TimeLayout)] = notification
 					}
 				} else {
-					textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
+					notificationHistories[notification.ID+notification.UpdateTime.Format(sqlite3impl.TimeLayout)] = notification
 				}
 			}
 		default:
@@ -1843,19 +1843,19 @@ loop:
 		}
 	}
 
-	textHistoriesList := []*Notification{}
-	for _, text := range textHistories {
-		if text == nil {
+	notificationHistoriesList := []*Notification{}
+	for _, notification := range notificationHistories {
+		if notification == nil {
 			continue
 		}
-		textHistoriesList = append(textHistoriesList, text)
+		notificationHistoriesList = append(notificationHistoriesList, notification)
 	}
 
-	sort.Slice(textHistoriesList, func(i, j int) bool {
-		return textHistoriesList[i].UpdateTime.After(textHistoriesList[j].UpdateTime)
+	sort.Slice(notificationHistoriesList, func(i, j int) bool {
+		return notificationHistoriesList[i].UpdateTime.After(notificationHistoriesList[j].UpdateTime)
 	})
 
-	return textHistoriesList, nil
+	return notificationHistoriesList, nil
 }
 
 func (g *GkillRepositories) AddTextInfo(ctx context.Context, text *Text) error {

@@ -115,7 +115,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "NOTIFICATION_TIME"
+	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -213,9 +213,9 @@ func (t *notificationRepositorySQLite3Impl) GetNotification(ctx context.Context,
 
 	// updateTimeが指定されていれば一致するものを返す
 	if updateTime != nil {
-		for _, kyou := range notificationHistories {
-			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
-				return kyou, nil
+		for _, notification := range notificationHistories {
+			if notification.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+				return notification, nil
 			}
 		}
 		return nil, nil
@@ -270,17 +270,17 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "NOTIFICATION_TIME"
+	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
 	findWordTargetColumns := []string{"TARGET_ID"}
 	ignoreFindWord := false
-	appendOrderBy := true
+	appendOrderBy := false
 	appendGroupBy := true
 	findWordUseLike := false
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
-
+	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -394,7 +394,7 @@ WHERE
 
 	whereCounter := 1
 	onlyLatestData := true
-	relatedTimeColumnName := "NOTIFICATION_TIME"
+	relatedTimeColumnName := "datetime(NOTIFICATION_TIME, 'localtime')"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -539,17 +539,17 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "UPDATE_TIME"
-	findWordTargetColumns := []string{"CONTENT"}
-	ignoreFindWord := false
-	appendOrderBy := true
+	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
+	findWordTargetColumns := []string{}
+	ignoreFindWord := true
+	appendOrderBy := false
 	appendGroupBy := false
 	findWordUseLike := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
-
+	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
