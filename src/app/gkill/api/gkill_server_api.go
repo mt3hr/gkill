@@ -10445,7 +10445,7 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 	}
 
 	if len(accounts) == 1 {
-		if accounts[0].UserID != "admin" {
+		if accounts[0].UserID != "admin" || accounts[0].PasswordSha256 != nil {
 			return false
 		}
 
