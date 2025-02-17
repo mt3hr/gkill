@@ -116,7 +116,7 @@ SELECT
   PARENT_FOLDER_ID,
   SEQ
 FROM KFTL_TEMPLATE
-WHERE USER_ID = ? AND DEVICE = ?
+WHERE USER_ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
@@ -128,7 +128,6 @@ WHERE USER_ID = ? AND DEVICE = ?
 
 	queryArgs := []interface{}{
 		userID,
-		device,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
