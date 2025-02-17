@@ -66,6 +66,7 @@ var (
 						fmt.Printf("skip idf: %s\n", filename)
 						continue
 					}
+					defer idfKyouRep.Close(context.TODO())
 					idfKyouRep.IDF(context.TODO())
 				}
 			}
