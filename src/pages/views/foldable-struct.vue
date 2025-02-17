@@ -140,6 +140,8 @@ function is_item() {
     return props.struct_obj.children === null
 }
 function get_group_open(index: number) {
+    return false
+    /*
     let group_name = struct_list.value[index].key
     if (group_name.endsWith(',close') || group_name.endsWith(', close')) {
         return false
@@ -147,6 +149,7 @@ function get_group_open(index: number) {
         return true
     }
     return true
+    */
 }
 // 子アイテムのグループ名を取得するためにv-for内から使われます。
 function get_group_name(index: number) {
