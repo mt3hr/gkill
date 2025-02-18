@@ -81,6 +81,9 @@ loop:
 		if notification == nil {
 			continue
 		}
+		if notification.IsDeleted {
+			continue
+		}
 		matchNotificationsList = append(matchNotificationsList, notification)
 	}
 

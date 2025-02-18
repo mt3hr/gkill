@@ -7,6 +7,8 @@ import (
 type FindQuery struct {
 	UpdateCache       *bool         `json:"update_cache"`
 	IsDeleted         *bool         `json:"is_deleted"`
+	UseTags           *bool         `json:"use_tags"`
+	UseReps           *bool         `json:"use_reps"`
 	UseRepTypes       *bool         `json:"use_rep_types"`
 	RepTypes          *[]string     `json:"rep_types"`
 	UseIDs            *bool         `json:"use_ids"`
