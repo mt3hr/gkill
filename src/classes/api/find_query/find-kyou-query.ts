@@ -6,6 +6,8 @@ import { MiSortType } from "./mi-sort-type"
 export class FindKyouQuery {
     query_id: string
 
+    use_tags: boolean
+    use_reps: boolean
     update_cache: boolean
     use_words: boolean
     keywords: string
@@ -61,6 +63,8 @@ export class FindKyouQuery {
     clone(): FindKyouQuery {
         const cloned = new FindKyouQuery()
         cloned.query_id = this.query_id
+        cloned.use_reps = this.use_reps
+        cloned.use_tags = this.use_tags
         cloned.update_cache = this.update_cache
         cloned.use_words = this.use_words
         cloned.keywords = this.keywords.concat()
@@ -112,6 +116,8 @@ export class FindKyouQuery {
 
     constructor() {
         this.query_id = ""
+        this.use_tags = true
+        this.use_reps = true
         this.update_cache = false
         this.use_words = false
         this.keywords = ""
@@ -158,7 +164,7 @@ export class FindKyouQuery {
         this.include_check_mi = false
         this.include_limit_mi = false
         this.include_start_mi = false
-        this.include_end_mi   = false
+        this.include_end_mi = false
     }
 
     parse_words_and_not_words() {

@@ -91,24 +91,30 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		}
 	}()
 
-	gkillErr, err = f.getAllTags(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at get all tags: %w", err)
-		return nil, gkillErr, err
+	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+		gkillErr, err = f.getAllTags(ctx, findKyouContext)
+		if err != nil {
+			err = fmt.Errorf("error at get all tags: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish getAllTags")
 	}
-	gkill_log.Trace.Printf("finish getAllTags")
-	gkillErr, err = f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get hide tags when unchecked tags: %w", err)
-		return nil, gkillErr, err
+	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+		gkillErr, err = f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at get hide tags when unchecked tags: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish getAllHideTagsWhenUnChecked")
 	}
-	gkill_log.Trace.Printf("finish getAllHideTagsWhenUnChecked")
-	gkillErr, err = f.findTags(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at find tags: %w", err)
-		return nil, gkillErr, err
+	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+		gkillErr, err = f.findTags(ctx, findKyouContext)
+		if err != nil {
+			err = fmt.Errorf("error at find tags: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish findTags")
 	}
-	gkill_log.Trace.Printf("finish findTags")
 	gkillErr, err = f.findTexts(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find texts: %w", err)
@@ -126,25 +132,31 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		err = fmt.Errorf("error at find timeis: %w", err)
 		return nil, gkillErr, err
 	}
-	gkill_log.Trace.Printf("finish findTimeIs")
-	gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at find timeis tags: %w", err)
-		return nil, gkillErr, err
+	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+		gkill_log.Trace.Printf("finish findTimeIs")
+		gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
+		if err != nil {
+			err = fmt.Errorf("error at find timeis tags: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish findTimeIsTags")
 	}
-	gkill_log.Trace.Printf("finish findTimeIsTags")
-	gkillErr, err = f.getMatchHideTagsWhenUnckedTimeIs(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
-		return nil, gkillErr, err
+	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+		gkillErr, err = f.getMatchHideTagsWhenUnckedTimeIs(ctx, findKyouContext)
+		if err != nil {
+			err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish getMatchHideTagsWhenUnckedTimeIs")
 	}
-	gkill_log.Trace.Printf("finish getMatchHideTagsWhenUnckedTimeIs")
-	gkillErr, err = f.filterTagsTimeIs(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at filter tags timeis: %w", err)
-		return nil, gkillErr, err
+	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+		gkillErr, err = f.filterTagsTimeIs(ctx, findKyouContext)
+		if err != nil {
+			err = fmt.Errorf("error at filter tags timeis: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish filterTagsTimeIs")
 	}
-	gkill_log.Trace.Printf("finish filterTagsTimeIs")
 	gkillErr, err = f.findKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous: %w", err)
@@ -157,18 +169,22 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish filterMiForMi")
-	gkillErr, err = f.getMatchHideTagsWhenUnckedKyou(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
-		return nil, gkillErr, err
+	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+		gkillErr, err = f.getMatchHideTagsWhenUnckedKyou(ctx, findKyouContext)
+		if err != nil {
+			err = fmt.Errorf("error at get match hide tags when unchecked timeis: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish getMatchHideTagsWhenUnckedKyou")
 	}
-	gkill_log.Trace.Printf("finish getMatchHideTagsWhenUnckedKyou")
-	gkillErr, err = f.filterTagsKyous(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at filter tags kyous: %w", err)
-		return nil, gkillErr, err
+	if findQuery.UseTags != nil && *(findQuery.UseTags) {
+		gkillErr, err = f.filterTagsKyous(ctx, findKyouContext)
+		if err != nil {
+			err = fmt.Errorf("error at filter tags kyous: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish filterTagsKyous")
 	}
-	gkill_log.Trace.Printf("finish filterTagsKyous")
 	gkillErr, err = f.filterPlaingTimeIsKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter plaing time is kyous: %w", err)
@@ -420,6 +436,9 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 
 	// タグの対象をリスト
 	for _, tag := range findCtx.AllTags {
+		if tag.IsDeleted {
+			continue
+		}
 		findCtx.RelatedTagIDs[tag.TargetID] = struct{}{}
 	}
 
@@ -446,6 +465,9 @@ func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *F
 			return nil, err
 		}
 		for _, hideTag := range hideTagsInReps {
+			if hideTag.IsDeleted {
+				continue
+			}
 			findCtx.AllHideTagsWhenUnchecked[hideTag.ID] = hideTag
 		}
 	}
@@ -506,6 +528,9 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 			return nil, err
 		}
 		for _, tag := range matchTags {
+			if tag.IsDeleted {
+				continue
+			}
 			findCtx.MatchTimeIsTags[tag.ID] = tag
 		}
 	}
@@ -517,10 +542,10 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 	falseValue := false
 
 	query := &find.FindQuery{
-		IsDeleted: &falseValue,
-		UseWords:  &trueValue,
-		Words:     findCtx.ParsedFindQuery.Tags,
-		WordsAnd:  &falseValue,
+		// IsDeleted: &falseValue, // TagReps.FindTags内に考慮があるため削除
+		UseWords: &trueValue,
+		Words:    findCtx.ParsedFindQuery.Tags,
+		WordsAnd: &falseValue,
 	}
 	matchTags, err := findCtx.Repositories.TagReps.FindTags(ctx, query)
 	if err != nil {
@@ -528,6 +553,9 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 		return nil, err
 	}
 	for _, tag := range matchTags {
+		if tag.IsDeleted {
+			continue
+		}
 		findCtx.MatchTags[tag.ID] = tag
 	}
 	return nil, nil
@@ -1340,11 +1368,11 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 	falseValue := false
 
 	findTextsQuery := &find.FindQuery{
-		IsDeleted: &falseValue,
-		UseWords:  &trueValue,
-		Words:     &words,
-		NotWords:  &notWords,
-		WordsAnd:  &falseValue,
+		// IsDeleted: &falseValue, // TextReps.FindTexts内に考慮があるため削除
+		UseWords: &trueValue,
+		Words:    &words,
+		NotWords: &notWords,
+		WordsAnd: &falseValue,
 	}
 
 	existErr := false
@@ -1438,12 +1466,13 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	// 対象タグ取得用検索クエリ
 	trueValue := true
 	falseValue := false
+
 	findTextsQuery := &find.FindQuery{
-		IsDeleted: &falseValue,
-		UseWords:  &trueValue,
-		Words:     &words,
-		NotWords:  &notWords,
-		WordsAnd:  &falseValue,
+		// IsDeleted: &falseValue, // TextReps.FindTexts内に考慮があるため削除
+		UseWords: &trueValue,
+		Words:    &words,
+		NotWords: &notWords,
+		WordsAnd: &falseValue,
 	}
 
 	existErr := false

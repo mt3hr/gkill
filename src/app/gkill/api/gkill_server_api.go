@@ -5639,9 +5639,11 @@ func (g *GkillServerAPI) HandleGetPlaingTimeis(w http.ResponseWriter, r *http.Re
 	}
 
 	trueValue := true
+	falseValue := false
 	now := time.Now()
 
 	findQuery := &find.FindQuery{}
+	findQuery.UseTags = &falseValue
 	findQuery.UsePlaing = &trueValue
 	findQuery.PlaingTime = &now
 	findQuery.Reps = &[]string{}
