@@ -31,7 +31,7 @@
                 @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
         <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height"
-            :mobile="drawer_mode_is_mobile" :touchless="drawer_mode_is_mobile !== false">
+            :mobile="drawer_mode_is_mobile" :touchless="!drawer_mode_is_mobile">
             <MiQueryEditorSidebar v-show="inited" class="mi_query_editor_sidebar"
                 :application_config="application_config" :gkill_api="gkill_api"
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
