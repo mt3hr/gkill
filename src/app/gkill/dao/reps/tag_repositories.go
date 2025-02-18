@@ -81,6 +81,9 @@ loop:
 		if tag == nil {
 			continue
 		}
+		if tag.IsDeleted {
+			continue
+		}
 		matchTagsList = append(matchTagsList, tag)
 	}
 
@@ -263,6 +266,9 @@ loop:
 		if tag == nil {
 			continue
 		}
+		if tag.IsDeleted {
+			continue
+		}
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
 
@@ -339,6 +345,9 @@ loop:
 	tagHistoriesList := []*Tag{}
 	for _, tag := range matchTags {
 		if tag == nil {
+			continue
+		}
+		if tag.IsDeleted {
 			continue
 		}
 		tagHistoriesList = append(tagHistoriesList, tag)
@@ -484,72 +493,34 @@ func (t TagRepositories) AddTagInfo(ctx context.Context, tag *Tag) error {
 }
 
 func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
-	tagNames := map[string]struct{}{}
-	existErr := false
-	var err error
-	wg := &sync.WaitGroup{}
-	ch := make(chan []string, len(t))
-	errch := make(chan error, len(t))
-	defer close(ch)
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range t {
-		wg.Add(1)
-
-		go func(rep TagRepository) {
-			defer wg.Done()
-			matchTagNamesInRep, err := rep.GetAllTagNames(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagNamesInRep
-		}(rep)
-	}
-	wg.Wait()
-
-	// エラー集約
-errloop:
-	for {
-		select {
-		case e := <-errch:
-			err = fmt.Errorf("error at get all tagnames: %w", e)
-			existErr = true
-		default:
-			break errloop
-		}
-	}
-	if existErr {
+	tagNames := []string{}
+	tags, err := t.GetAllTags(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get all tags: %w", err)
 		return nil, err
 	}
 
-	// タグ名集約
-loop:
-	for {
-		select {
-		case tagNamesInRep := <-ch:
-			if tagNamesInRep == nil {
-				continue loop
+	latestTags := map[string]*Tag{}
+	for _, tag := range tags {
+		if existTag, exist := latestTags[tag.ID]; exist {
+			if tag.UpdateTime.After(existTag.UpdateTime) {
+				latestTags[tag.ID] = tag
 			}
-			for _, tagName := range tagNamesInRep {
-				tagNames[tagName] = struct{}{}
-			}
-		default:
-			break loop
+		} else {
+			latestTags[tag.ID] = tag
 		}
 	}
 
-	tagNamesList := []string{}
-	for tagName := range tagNames {
-		tagNamesList = append(tagNamesList, tagName)
+	for _, tag := range latestTags {
+		if tag == nil {
+			continue
+		}
+		if tag.IsDeleted {
+			continue
+		}
+		tagNames = append(tagNames, tag.Tag)
 	}
-
-	sort.Slice(tagNamesList, func(i, j int) bool {
-		return tagNamesList[i] < tagNamesList[j]
-	})
-
-	return tagNamesList, nil
+	return tagNames, nil
 }
 
 func (t TagRepositories) GetAllTags(ctx context.Context) ([]*Tag, error) {
@@ -615,17 +586,20 @@ loop:
 		}
 	}
 
-	tagHistoriesList := []*Tag{}
+	allTagsList := []*Tag{}
 	for _, tag := range allTags {
 		if tag == nil {
 			continue
 		}
-		tagHistoriesList = append(tagHistoriesList, tag)
+		if tag.IsDeleted {
+			continue
+		}
+		allTagsList = append(allTagsList, tag)
 	}
 
-	sort.Slice(tagHistoriesList, func(i, j int) bool {
-		return tagHistoriesList[i].UpdateTime.After(tagHistoriesList[j].UpdateTime)
+	sort.Slice(allTagsList, func(i, j int) bool {
+		return allTagsList[i].UpdateTime.After(allTagsList[j].UpdateTime)
 	})
 
-	return tagHistoriesList, nil
+	return allTagsList, nil
 }

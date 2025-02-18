@@ -323,6 +323,9 @@ loop:
 		if kyou == nil {
 			continue
 		}
+		if kyou.IsDeleted {
+			continue
+		}
 		matchKyousList = append(matchKyousList, kyou)
 	}
 
@@ -876,6 +879,9 @@ loop:
 		if tag == nil {
 			continue
 		}
+		if tag.IsDeleted {
+			continue
+		}
 		matchTagsList = append(matchTagsList, tag)
 	}
 
@@ -1018,6 +1024,9 @@ loop:
 		if tag == nil {
 			continue
 		}
+		if tag.IsDeleted {
+			continue
+		}
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
 
@@ -1038,7 +1047,10 @@ func (g *GkillRepositories) GetTagsByTargetID(ctx context.Context, target_id str
 
 	tagHistoriesList := []*Tag{}
 	for _, tag := range matchTags {
-		if tag == nil || tag.IsDeleted {
+		if tag == nil {
+			continue
+		}
+		if tag.IsDeleted {
 			continue
 		}
 		tagHistoriesList = append(tagHistoriesList, tag)
@@ -1119,6 +1131,9 @@ loop:
 		if tag == nil {
 			continue
 		}
+		if tag.IsDeleted {
+			continue
+		}
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
 
@@ -1135,104 +1150,7 @@ func (g *GkillRepositories) AddTagInfo(ctx context.Context, tag *Tag) error {
 }
 
 func (g *GkillRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
-	allTags := map[string]*Tag{}
-	tagNames := map[string]struct{}{}
-	existErr := false
-	var err error
-
-	latestDatasWg := &sync.WaitGroup{}
-	latestDatasCh := make(chan map[string]*account_state.LatestDataRepositoryAddress, 1)
-	errCh := make(chan error, 1)
-	defer close(latestDatasCh)
-	defer close(errCh)
-	latestDatasWg.Add(1)
-	go func() {
-		defer latestDatasWg.Done()
-		latestDatas, err := g.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		case errCh <- err:
-			latestDatasCh <- latestDatas
-		}
-	}()
-
-	wg := &sync.WaitGroup{}
-	ch := make(chan []*Tag, len(g.TagReps))
-	errch := make(chan error, len(g.TagReps))
-	defer close(ch)
-	defer close(errch)
-	// 並列処理
-	for _, rep := range g.TagReps {
-		wg.Add(1)
-
-		go func(rep TagRepository) {
-			defer wg.Done()
-			tags, err := rep.GetAllTags(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- tags
-		}(rep)
-	}
-	wg.Wait()
-
-	// エラー集約
-errloop:
-	for {
-		select {
-		case e := <-errch:
-			err = fmt.Errorf("error at get all tagnames: %w", e)
-			existErr = true
-		default:
-			break errloop
-		}
-	}
-	if existErr {
-		return nil, err
-	}
-
-	// タグ集約
-loop:
-	for {
-		select {
-		case tags := <-ch:
-			if tags == nil {
-				continue loop
-			}
-			for _, tag := range tags {
-				allTags[tag.ID] = tag
-			}
-		default:
-			break loop
-		}
-	}
-
-	// 対象が存在するタグ名のみ抽出
-	err = <-errCh
-	if err != nil {
-		return nil, err
-	}
-	latestDatas := <-latestDatasCh
-	for _, tag := range allTags {
-		latestData, exist := latestDatas[tag.TargetID]
-		if exist && !latestData.IsDeleted {
-			tagNames[tag.Tag] = struct{}{}
-		}
-	}
-
-	tagNamesList := []string{}
-	for tagName := range tagNames {
-		tagNamesList = append(tagNamesList, tagName)
-	}
-
-	sort.Slice(tagNamesList, func(i, j int) bool {
-		return tagNamesList[i] < tagNamesList[j]
-	})
-
-	return tagNamesList, nil
+	return g.TagReps.GetAllTagNames(ctx)
 }
 
 func (g *GkillRepositories) GetAllRepNames(ctx context.Context) ([]string, error) {
@@ -1405,6 +1323,9 @@ loop:
 	matchTextsList := []*Text{}
 	for _, text := range matchTexts {
 		if text == nil {
+			continue
+		}
+		if text.IsDeleted {
 			continue
 		}
 		matchTextsList = append(matchTextsList, text)
@@ -1611,7 +1532,10 @@ loop:
 
 	textHistoriesList := []*Text{}
 	for _, text := range matchTexts {
-		if text == nil || text.IsDeleted {
+		if text == nil {
+			continue
+		}
+		if text.IsDeleted {
 			continue
 		}
 		textHistoriesList = append(textHistoriesList, text)
@@ -1689,7 +1613,10 @@ loop:
 
 	notificationHistoriesList := []*Notification{}
 	for _, notification := range matchNotifications {
-		if notification == nil || notification.IsDeleted {
+		if notification == nil {
+			continue
+		}
+		if notification.IsDeleted {
 			continue
 		}
 		notificationHistoriesList = append(notificationHistoriesList, notification)
@@ -1770,6 +1697,9 @@ loop:
 		if text == nil {
 			continue
 		}
+		if text.IsDeleted {
+			continue
+		}
 		textHistoriesList = append(textHistoriesList, text)
 	}
 
@@ -1846,6 +1776,9 @@ loop:
 	notificationHistoriesList := []*Notification{}
 	for _, notification := range notificationHistories {
 		if notification == nil {
+			continue
+		}
+		if notification.IsDeleted {
 			continue
 		}
 		notificationHistoriesList = append(notificationHistoriesList, notification)
