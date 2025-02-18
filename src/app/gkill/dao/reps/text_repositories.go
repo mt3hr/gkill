@@ -81,6 +81,9 @@ loop:
 		if text == nil {
 			continue
 		}
+		if text.IsDeleted {
+			continue
+		}
 		matchTextsList = append(matchTextsList, text)
 	}
 

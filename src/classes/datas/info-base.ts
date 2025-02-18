@@ -102,6 +102,7 @@ export abstract class InfoBase {
         const req = new GetKyousRequest()
         req.abort_controller = this.abort_controller
 
+        req.query.use_tags = false
         req.query.use_plaing = true
         req.query.plaing_time = this.related_time
         req.query.reps = reps
