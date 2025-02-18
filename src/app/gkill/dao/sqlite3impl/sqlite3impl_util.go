@@ -95,14 +95,14 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 	if query.UseWords != nil && *query.UseWords {
 		if query.Words != nil && len(*query.Words) != 0 {
 			if query.WordsAnd != nil && *query.WordsAnd {
+				if *whereCounter != 0 {
+					sql += " AND "
+				}
 				for j, findWordTargetColumnName := range findWordTargetColumns {
-					if *whereCounter != 0 {
-						sql += " AND "
-					}
 					if j == 0 {
 						sql += " ( "
 					} else {
-						sql += " OR "
+						sql += " AND "
 					}
 
 					for i, word := range *query.Words {
@@ -130,10 +130,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 				}
 			} else {
 				// ワードor検索である場合のSQL追記
+				if *whereCounter != 0 {
+					sql += " AND "
+				}
 				for j, findWordTargetColumnName := range findWordTargetColumns {
-					if *whereCounter != 0 {
-						sql += " AND "
-					}
 					if j == 0 {
 						sql += " ( "
 					} else {
@@ -168,10 +168,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 
 		if query.NotWords != nil && len(*query.NotWords) != 0 {
 			// notワードを除外するSQLを追記
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
 			for j, findWordTargetColumnName := range findWordTargetColumns {
-				if *whereCounter != 0 {
-					sql += " AND "
-				}
 				if j == 0 {
 					sql += " ( "
 				} else {
@@ -185,10 +185,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 						sql += " AND "
 					}
 					if findWordUseLike {
-						sql += fmt.Sprintf("LOWER(%s) LIKE LOWER(?)", findWordTargetColumnName)
+						sql += fmt.Sprintf("LOWER(%s) NOT LIKE LOWER(?)", findWordTargetColumnName)
 						*queryArgs = append(*queryArgs, "%"+notWord+"%")
 					} else {
-						sql += fmt.Sprintf("LOWER(%s) = LOWER(?)", findWordTargetColumnName)
+						sql += fmt.Sprintf("LOWER(%s) <> LOWER(?)", findWordTargetColumnName)
 						*queryArgs = append(*queryArgs, notWord)
 					}
 					if i == len(*query.NotWords)-1 {
