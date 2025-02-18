@@ -16,8 +16,7 @@
                         @requested_reload_kyou="reload_list(false)" @requested_reload_list="reload_list(false)"
                         @requested_search="search(false)" @deleted_tag="(deleted_tag) => { }"
                         @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-                        @registered_tag="(registered_tag) => {}"
-                        @registered_text="(registered_text) => { }"
+                        @registered_tag="(registered_tag) => { }" @registered_text="(registered_text) => { }"
                         @registered_notification="(registered_notification) => { }" @updated_tag="(updated_tag) => { }"
                         @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
                         ref="kyou_list_views" />
@@ -29,8 +28,7 @@
             :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
             @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
             @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-            @registered_kyou="(registered_kyou) => { }"
-            @registered_tag="(registered_tag) => {}"
+            @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
             @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
             @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
             @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
@@ -42,8 +40,7 @@
             :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
             @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
             @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-            @registered_kyou="(registered_kyou) => { }"
-            @registered_tag="(registered_tag) => {}"
+            @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
             @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
             @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
             @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
@@ -55,8 +52,7 @@
             :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
             @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
             @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-            @registered_kyou="(registered_kyou) => { }"
-            @registered_tag="(registered_tag) => {}"
+            @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
             @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
             @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
             @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
@@ -68,8 +64,7 @@
             :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
             @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
             @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-            @registered_kyou="(registered_kyou) => { }"
-            @registered_tag="(registered_tag) => {}"
+            @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
             @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
             @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
             @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
@@ -81,8 +76,7 @@
             :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
             @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
             @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-            @registered_kyou="(registered_kyou) => { }"
-            @registered_tag="(registered_tag) => {}"
+            @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
             @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
             @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
             @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
@@ -93,8 +87,7 @@
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
-            @registered_tag="(registered_tag) => {}"
-            @registered_text="(registered_text) => { }"
+            @registered_tag="(registered_tag) => { }" @registered_text="(registered_text) => { }"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
             ref="kftl_dialog" />
@@ -102,8 +95,7 @@
             :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
             @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
             @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-            @registered_kyou="(registered_kyou) => { }"
-            @registered_tag="(registered_tag) => {}"
+            @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
             @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
             @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
             @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
@@ -175,6 +167,7 @@ const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
 function generate_query(): FindKyouQuery {
     const plaing_timeis_query = new FindKyouQuery()
+    plaing_timeis_query.use_tags = false
     plaing_timeis_query.use_plaing = true
     plaing_timeis_query.plaing_time = moment().toDate()
     props.application_config.rep_struct.forEach(rep_struct => {

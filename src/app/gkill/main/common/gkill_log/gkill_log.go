@@ -3,7 +3,6 @@ package gkill_log
 import (
 	"io"
 	"log"
-	"os"
 )
 
 var (
@@ -14,8 +13,8 @@ var (
 )
 
 func init() {
-	Info = log.New(os.Stdout, "INFO: ", log.LstdFlags)
-	Debug = log.New(os.Stdout, "DEBUG: ", log.LstdFlags)
-	Trace = log.New(os.Stdout, "TRACE: ", log.LstdFlags)
+	Info = log.New(io.Discard, "INFO: ", log.LstdFlags)
+	Debug = log.New(io.Discard, "DEBUG: ", log.LstdFlags)
+	Trace = log.New(io.Discard, "TRACE: ", log.LstdFlags)
 	TraceSQL = log.New(io.Discard, "TRACE_SQL: ", log.LstdFlags)
 }

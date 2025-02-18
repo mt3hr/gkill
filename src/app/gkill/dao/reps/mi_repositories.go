@@ -548,70 +548,23 @@ func (m MiRepositories) AddMiInfo(ctx context.Context, mi *Mi) error {
 }
 
 func (m MiRepositories) GetBoardNames(ctx context.Context) ([]string, error) {
-	boardNames := map[string]struct{}{}
-	existErr := false
-	var err error
-	wg := &sync.WaitGroup{}
-	ch := make(chan []string, len(m))
-	errch := make(chan error, len(m))
-	defer close(ch)
-	defer close(errch)
+	boardNames := map[string]interface{}{}
 
-	// 並列処理
-	for _, rep := range m {
-		wg.Add(1)
-
-		go func(rep MiRepository) {
-			defer wg.Done()
-			boardNamesInRep, err := rep.GetBoardNames(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- boardNamesInRep
-		}(rep)
+	findMiQuery := &find.FindQuery{}
+	mis, err := m.FindMi(ctx, findMiQuery)
+	if err != nil {
+		err = fmt.Errorf("error at find mi: %w", err)
 	}
-	wg.Wait()
-
-	// エラー集約
-errloop:
-	for {
-		select {
-		case e := <-errch:
-			err = fmt.Errorf("error at get board names in rep: %w", e)
-			existErr = true
-		default:
-			break errloop
+	for _, mi := range mis {
+		if mi.IsDeleted {
+			continue
 		}
-	}
-	if existErr {
-		return nil, err
-	}
-
-	// BoardNames集約
-loop:
-	for {
-		select {
-		case boardNamesInRep := <-ch:
-			if boardNamesInRep == nil {
-				continue loop
-			}
-			for _, boardName := range boardNamesInRep {
-				boardNames[boardName] = struct{}{}
-			}
-		default:
-			break loop
-		}
+		boardNames[mi.BoardName] = struct{}{}
 	}
 
 	boardNamesList := []string{}
 	for boardName := range boardNames {
 		boardNamesList = append(boardNamesList, boardName)
 	}
-
-	sort.Slice(boardNamesList, func(i, j int) bool {
-		return boardNamesList[i] < boardNamesList[j]
-	})
-
 	return boardNamesList, nil
 }
