@@ -11,7 +11,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="text_value" label="テキスト" />
+        <v-textarea v-model="text_value" label="テキスト" autofocus />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">

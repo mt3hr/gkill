@@ -11,7 +11,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="content_value" label="通知内容" />
+        <v-textarea v-model="content_value" label="通知内容" autofocus />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>通知日時</label>
