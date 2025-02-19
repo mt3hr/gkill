@@ -1,6 +1,9 @@
 <template>
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
+            <v-list-item v-if="gkill_api.get_saved_last_added_tag() !== ''" @click="add_last_added_tag()">
+                <v-list-item-title>タグ追加「{{ gkill_api.get_saved_last_added_tag() }}」</v-list-item-title>
+            </v-list-item>
             <v-list-item @click="show_add_tag_dialog()">
                 <v-list-item-title>タグ追加</v-list-item-title>
             </v-list-item>
@@ -184,6 +187,9 @@ import kyouHistoriesDialog from '../dialogs/kyou-histories-dialog.vue'
 import { OpenDirectoryRequest } from '@/classes/api/req_res/open-directory-request'
 import { OpenFileRequest } from '@/classes/api/req_res/open-file-request'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
+import { Tag } from '@/classes/datas/tag'
+import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 
 const edit_urlog_dialog = ref<InstanceType<typeof EditURLogDialog> | null>(null);
 const add_tag_dialog = ref<InstanceType<typeof AddTagDialog> | null>(null);
@@ -268,5 +274,50 @@ async function open_file(): Promise<void> {
     if (res.messages && res.messages.length > 0) {
         emits('received_messages', res.messages)
     }
+}
+
+async function add_last_added_tag(): Promise<void> {
+    // UserIDやDevice情報を取得する
+    const get_gkill_req = new GetGkillInfoRequest()
+    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+        emits('received_errors', gkill_info_res.errors)
+        return
+    }
+
+    const tag_names = props.gkill_api.get_saved_last_added_tag().split("、")
+    for (let i = 0; i < tag_names.length; i++) {
+        const tag = tag_names[i]
+        // タグ情報を用意する
+        const new_tag = new Tag()
+        new_tag.tag = tag
+        new_tag.id = props.gkill_api.generate_uuid()
+        new_tag.is_deleted = false
+        new_tag.target_id = props.kyou.id
+        new_tag.related_time = new Date(Date.now())
+        new_tag.create_app = "gkill"
+        new_tag.create_device = gkill_info_res.device
+        new_tag.create_time = new Date(Date.now())
+        new_tag.create_user = gkill_info_res.user_id
+        new_tag.update_app = "gkill"
+        new_tag.update_device = gkill_info_res.device
+        new_tag.update_time = new Date(Date.now())
+        new_tag.update_user = gkill_info_res.user_id
+
+        // 追加リクエストを飛ばす
+        const req = new AddTagRequest()
+        req.tag = new_tag
+        const res = await props.gkill_api.add_tag(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits('registered_tag', res.added_tag)
+        emits('requested_reload_kyou', props.kyou)
+    }
+    return
 }
 </script>

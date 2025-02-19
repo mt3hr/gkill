@@ -2409,6 +2409,24 @@ export class GkillAPI {
                 const indexs: Array<number> = indexs_json
                 return indexs
         }
+
+        private last_added_tag_localstorage_key = "last_added_tag"
+        set_saved_last_added_tag(last_added_tag: string): void {
+                window.localStorage.setItem(this.last_added_tag_localstorage_key, last_added_tag)
+        }
+        get_saved_last_added_tag(): string {
+                const last_added_tag_string = window.localStorage.getItem(this.last_added_tag_localstorage_key)
+                if (!last_added_tag_string) {
+                        return ""
+                }
+                const last_added_tag: any = last_added_tag_string
+                if (!last_added_tag) {
+                        return ""
+                }
+                return last_added_tag
+        }
+
+
 }
 
 export class GkillAPIForSharedMi extends GkillAPI {
