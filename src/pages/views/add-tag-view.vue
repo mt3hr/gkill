@@ -11,7 +11,7 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-model="tag_name" label="タグ" />
+        <v-text-field v-model="tag_name" label="タグ" autofocus />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
@@ -83,35 +83,40 @@ async function save(): Promise<void> {
         return
     }
 
-    // タグ情報を用意する
-    const new_tag = new Tag()
-    new_tag.tag = tag_name.value
-    new_tag.id = props.gkill_api.generate_uuid()
-    new_tag.is_deleted = false
-    new_tag.target_id = props.kyou.id
-    new_tag.related_time = new Date(Date.now())
-    new_tag.create_app = "gkill"
-    new_tag.create_device = gkill_info_res.device
-    new_tag.create_time = new Date(Date.now())
-    new_tag.create_user = gkill_info_res.user_id
-    new_tag.update_app = "gkill"
-    new_tag.update_device = gkill_info_res.device
-    new_tag.update_time = new Date(Date.now())
-    new_tag.update_user = gkill_info_res.user_id
+    const tag_names = tag_name.value.split("、")
+    for (let i = 0; i < tag_names.length; i++) {
+        const tag = tag_names[i]
+        // タグ情報を用意する
+        const new_tag = new Tag()
+        new_tag.tag = tag
+        new_tag.id = props.gkill_api.generate_uuid()
+        new_tag.is_deleted = false
+        new_tag.target_id = props.kyou.id
+        new_tag.related_time = new Date(Date.now())
+        new_tag.create_app = "gkill"
+        new_tag.create_device = gkill_info_res.device
+        new_tag.create_time = new Date(Date.now())
+        new_tag.create_user = gkill_info_res.user_id
+        new_tag.update_app = "gkill"
+        new_tag.update_device = gkill_info_res.device
+        new_tag.update_time = new Date(Date.now())
+        new_tag.update_user = gkill_info_res.user_id
 
-    // 追加リクエストを飛ばす
-    const req = new AddTagRequest()
-    req.tag = new_tag
-    const res = await props.gkill_api.add_tag(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
+        // 追加リクエストを飛ばす
+        const req = new AddTagRequest()
+        req.tag = new_tag
+        const res = await props.gkill_api.add_tag(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits('registered_tag', res.added_tag)
+        emits('requested_reload_kyou', props.kyou)
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits('registered_tag', res.added_tag)
-    emits('requested_reload_kyou', props.kyou)
+    props.gkill_api.set_saved_last_added_tag(tag_name.value)
     emits('requested_close_dialog')
     return
 }
