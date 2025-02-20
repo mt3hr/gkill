@@ -227,7 +227,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "datetime(CREATE_TIME, 'localtime')"
+	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -249,7 +249,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "datetime(RELATED_TIME, 'localtime')"
+	relatedTimeColumnName = "RELATED_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -270,7 +270,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "datetime(LIMIT_TIME, 'localtime')"
+	relatedTimeColumnName = "LIMIT_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -291,7 +291,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "datetime(ESTIMATE_START_TIME, 'localtime')"
+	relatedTimeColumnName = "ESTIMATE_START_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -312,7 +312,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "datetime(ESTIMATE_END_TIME, 'localtime')"
+	relatedTimeColumnName = "ESTIMATE_END_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -468,7 +468,7 @@ WHERE
 	}
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "datetime(CREATE_TIME, 'localtime')"
+	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -621,7 +621,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "datetime(CREATE_TIME, 'localtime')"
+	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -787,7 +787,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "datetime(CREATE_TIME, 'localtime')"
+	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -996,7 +996,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
+	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := true

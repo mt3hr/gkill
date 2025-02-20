@@ -116,7 +116,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
+	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -259,7 +259,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
+	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -413,7 +413,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
+	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -566,7 +566,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
+	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
 	ignoreFindWord := false
 	appendOrderBy := false
