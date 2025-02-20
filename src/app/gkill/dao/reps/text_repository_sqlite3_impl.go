@@ -118,7 +118,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
+	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{"TEXT"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -270,7 +270,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
+	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{"TARGET_ID"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -412,7 +412,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "datetime(UPDATE_TIME, 'localtime')"
+	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{"TEXT"}
 	ignoreFindWord := false
 	appendOrderBy := false
