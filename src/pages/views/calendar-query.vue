@@ -59,7 +59,7 @@ watch(() => props.find_kyou_query, () => {
 function clicked_date(recved_dates: any): void {
     dates.value = recved_dates
     if (dates.value) {
-        emits('request_update_dates', moment(dates.value[0]).toDate(), moment(dates.value[dates.value.length - 1]).toDate())
+        emits('request_update_dates', moment(dates.value[0]).toDate(), moment(dates.value[dates.value.length - 1]).add(1, 'day').add(-1, 'millisecond').toDate())
     } else {
         emits('request_update_dates', null, null)
     }
