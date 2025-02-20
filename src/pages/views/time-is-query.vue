@@ -204,7 +204,6 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
             emits('request_update_checked_timeis_tags', checked_items, true)
         }
     }
+    foldable_struct.value?.update_check()
 }
-
-
 </script>
