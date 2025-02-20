@@ -207,7 +207,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
+	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := false
@@ -418,7 +418,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
+	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := false
@@ -593,7 +593,7 @@ WHERE
 
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "datetime(RELATED_TIME, 'localtime')"
+	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := true
