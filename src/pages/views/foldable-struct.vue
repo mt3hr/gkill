@@ -41,12 +41,12 @@
                     :struct_obj="child_struct" :is_editable="is_editable" @clicked_items="emit_click_items_by_user"
                     :is_show_checkbox="is_show_checkbox" @click_items_by_user="emit_click_items_by_user"
                     :is_root="false" @received_errors="(errors) => emits('received_errors', errors)"
-                    @received_messages="(messages) => emits('received_messages', messages)" ref="foldable_struct"
+                    @received_messages="(messages) => emits('received_messages', messages)"
                     @dblclicked_item="(e: MouseEvent, id: string | null) => emits('dblclicked_item', e, id)"
                     @contextmenu_item.prevent.stop="(e: MouseEvent, id: string | null) => emits('contextmenu_item', e, id)"
                     @requested_update_check_state="(items: Array<string>, check_state: CheckState) => emits('requested_update_check_state', items, check_state)"
-                    @requested_move_struct_obj="handle_move_struct_obj"
-                    @requested_update_struct_obj="update_struct_obj" />
+                    @requested_move_struct_obj="handle_move_struct_obj" @requested_update_struct_obj="update_struct_obj"
+                    ref="child_foldable_structs" />
             </table>
         </td>
     </tr>
@@ -60,9 +60,11 @@ import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
 import { DropTypeFoldableStruct } from '@/classes/api/drop-type-foldable-struct'
 
+const child_foldable_structs = ref()
+
 const props = defineProps<FoldableStructProps>()
 const emits = defineEmits<FoldableStructEmits>()
-defineExpose({ get_selected_items, handle_move_struct_obj, get_foldable_struct, delete_struct })
+defineExpose({ get_selected_items, handle_move_struct_obj, get_foldable_struct, delete_struct, update_check })
 
 const open_group: Ref<boolean> = ref(props.is_root ? props.is_open : false)
 const check: Ref<boolean> = ref(false)
@@ -98,6 +100,11 @@ function update_check() {
     if (is_item()) {
         check.value = (props.struct_obj).is_checked
     } else {
+        if (child_foldable_structs.value) {
+            for (let i = 0; i < child_foldable_structs.value.length; i++) {
+                child_foldable_structs.value[i].update_check()
+            }
+        }
         let exist_checked = false
         let all_checked = true
 

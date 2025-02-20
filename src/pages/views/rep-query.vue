@@ -308,6 +308,7 @@ async function update_check_reps(items: Array<string>, is_checked: CheckState, p
     if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
         emits('request_update_checked_reps', reps, true)
     }
+    foldable_struct_reps.value?.update_check()
 }
 
 async function update_check_devices(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
@@ -362,6 +363,7 @@ async function update_check_devices(items: Array<string>, is_checked: CheckState
             update_check_reps(reps, CheckState.checked, true)
         }
     }
+    foldable_struct_devices.value?.update_check()
 }
 
 async function update_check_rep_types(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
@@ -416,6 +418,7 @@ async function update_check_rep_types(items: Array<string>, is_checked: CheckSta
             update_check_reps(reps, CheckState.checked, true)
         }
     }
+    foldable_struct_rep_types.value?.update_check()
 }
 
 function get_checked_reps(): Array<string> | null {

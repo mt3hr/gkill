@@ -1,16 +1,20 @@
 <template>
     <div>
-        <v-checkbox readonly v-model="use_tag" label="タグ" hide-details />
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-checkbox readonly v-model="use_tag" label="タグ" hide-details />
+            </v-col>
+            <v-spacer />
+            <v-col cols="auto" class="pb-0 mb-0 pr-0">
+                <v-btn @click="emits('request_clear_tag_query')" hide-details>クリア</v-btn>
+            </v-col>
+        </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn v-if="is_and_search" icon="mdi-set-center"
                     @click="is_and_search = !is_and_search; emits('request_update_and_search_tags', is_and_search)" />
                 <v-btn v-if="!is_and_search" icon="mdi-set-all"
                     @click="is_and_search = !is_and_search; emits('request_update_and_search_tags', is_and_search)" />
-            </v-col>
-            <v-spacer />
-            <v-col cols="auto" class="pb-0 mb-0 pr-0">
-                <v-btn @click="emits('request_clear_tag_query')" hide-details>クリア</v-btn>
             </v-col>
         </v-row>
         <table v-show="use_tag" class="taglist">
@@ -157,6 +161,7 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
             emits('request_update_checked_tags', checked_items, true)
         }
     }
+    foldable_struct.value?.update_check()
 }
 
 function get_use_tag(): boolean {
