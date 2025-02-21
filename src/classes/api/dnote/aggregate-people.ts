@@ -39,14 +39,17 @@ export async function aggregate_peoples_from_kyous(kyous: Array<Kyou>, abort_con
         let duration_milli_second = 0
         let type: '通話' | '対面' = '対面'
 
-        const now = new Date(Date.now())
         if (kyou.data_type.startsWith("timeis")) {
             if (kyou.typed_timeis) {
                 title = kyou.typed_timeis.title
-                const start_time_trimed = kyou.typed_timeis.start_time.getTime() <= start_time.getTime() ? start_time : kyou.typed_timeis.start_time
-                const end_time_trimed = kyou.typed_timeis.end_time ? (kyou.typed_timeis.end_time.getTime() >= end_time.getTime() ? end_time : kyou.typed_timeis.end_time) : null
 
-                if ((start_time_trimed.getTime() < (end_time_trimed ? end_time_trimed.getTime() : now.getTime()))) {
+                let start_time_trimed = kyou.typed_timeis!.start_time
+                start_time_trimed = start_time_trimed.getTime() <= start_time.getTime() ? start_time : start_time_trimed
+
+                let end_time_trimed = kyou.typed_timeis?.end_time ? kyou.typed_timeis!.end_time : new Date(Date.now())
+                end_time_trimed = end_time_trimed.getTime() >= end_time.getTime() ? end_time : end_time_trimed
+
+                if ((start_time_trimed.getTime() < end_time_trimed.getTime())) {
                     duration_milli_second = Math.abs(moment.duration(moment(start_time_trimed).diff(moment(end_time_trimed))).asMilliseconds())
                 } else {
                     duration_milli_second = 0
