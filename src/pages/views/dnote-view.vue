@@ -300,7 +300,6 @@ async function extruct_location_kyous(): Promise<void> {
     query_for_extruct_location_kyous.use_rep_types = true
     query_for_extruct_location_kyous.rep_types = ["kmemo", "timeis"]
     query_for_extruct_location_kyous.tags = ["ろ"]
-    query_for_extruct_location_kyous.include_end_timeis = true
     query_for_extruct_location_kyous.for_dnote_timeis_plaing_between_start_time_and_end_time = true
 
     const req = new GetKyousRequest()
@@ -331,7 +330,6 @@ async function extruct_people_kyous(): Promise<void> {
     query_for_extruct_people_kyous.use_rep_types = true
     query_for_extruct_people_kyous.rep_types = ["timeis", "kmemo"]
     query_for_extruct_people_kyous.tags = ["あ", "通話"]
-    query_for_extruct_people_kyous.include_end_timeis = true
     query_for_extruct_people_kyous.for_dnote_timeis_plaing_between_start_time_and_end_time = true
 
     const req = new GetKyousRequest()
@@ -414,7 +412,6 @@ async function calc_total_awake_time(): Promise<void> {
     query_for_extruct_awake_kyous.use_words = true
     query_for_extruct_awake_kyous.keywords = "覚醒"
     query_for_extruct_awake_kyous.words_and = true
-    query_for_extruct_awake_kyous.include_end_timeis = true
     query_for_extruct_awake_kyous.for_dnote_timeis_plaing_between_start_time_and_end_time = true
 
     const req = new GetKyousRequest()
@@ -440,10 +437,10 @@ async function calc_total_awake_time(): Promise<void> {
         const kyou = awake_timeis_kyous.value[i]
 
         let start_time = kyou.typed_timeis!.start_time
-        start_time = start_time <= props.query.calendar_start_date! ? props.query.calendar_start_date! : start_time
+        start_time = start_time.getTime() <= props.query.calendar_start_date!.getTime() ? props.query.calendar_start_date! : start_time
 
         let end_time = kyou.typed_timeis?.end_time ? kyou.typed_timeis!.end_time : new Date(Date.now())
-        end_time = end_time >= props.query.calendar_end_date! ? props.query.calendar_end_date! : end_time
+        end_time = end_time.getTime() >= props.query.calendar_end_date!.getTime() ? props.query.calendar_end_date! : end_time
 
         const diff = moment.duration(moment(start_time).diff(moment(end_time))).asMilliseconds()
         total_diff_milli_second += Math.abs(diff.valueOf())
@@ -464,7 +461,6 @@ async function calc_total_sleep_time(): Promise<void> {
     query_for_extruct_sleep_kyous.use_words = true
     query_for_extruct_sleep_kyous.keywords = "睡眠"
     query_for_extruct_sleep_kyous.words_and = true
-    query_for_extruct_sleep_kyous.include_end_timeis = true
     query_for_extruct_sleep_kyous.for_dnote_timeis_plaing_between_start_time_and_end_time = true
 
     const req = new GetKyousRequest()
@@ -490,10 +486,10 @@ async function calc_total_sleep_time(): Promise<void> {
         const kyou = sleep_timeis_kyous.value[i]
 
         let start_time = kyou.typed_timeis!.start_time
-        start_time = start_time <= props.query.calendar_start_date! ? props.query.calendar_start_date! : start_time
+        start_time = start_time.getTime() <= props.query.calendar_start_date!.getTime() ? props.query.calendar_start_date! : start_time
 
         let end_time = kyou.typed_timeis?.end_time ? kyou.typed_timeis!.end_time : new Date(Date.now())
-        end_time = end_time >= props.query.calendar_end_date! ? props.query.calendar_end_date! : end_time
+        end_time = end_time.getTime() >= props.query.calendar_end_date!.getTime() ? props.query.calendar_end_date! : end_time
 
         const diff = moment.duration(moment(start_time).diff(moment(end_time))).asMilliseconds()
         total_diff_milli_second += Math.abs(diff.valueOf())
@@ -513,7 +509,6 @@ async function calc_total_work_time(): Promise<void> {
     query_for_extruct_work_kyous.use_words = true
     query_for_extruct_work_kyous.keywords = "仕事"
     query_for_extruct_work_kyous.words_and = true
-    query_for_extruct_work_kyous.include_end_timeis = true
     query_for_extruct_work_kyous.for_dnote_timeis_plaing_between_start_time_and_end_time = true
 
     const req = new GetKyousRequest()
@@ -539,10 +534,10 @@ async function calc_total_work_time(): Promise<void> {
         const kyou = work_timeis_kyous.value[i]
 
         let start_time = kyou.typed_timeis!.start_time
-        start_time = start_time <= props.query.calendar_start_date! ? props.query.calendar_start_date! : start_time
+        start_time = start_time.getTime() <= props.query.calendar_start_date!.getTime() ? props.query.calendar_start_date! : start_time
 
         let end_time = kyou.typed_timeis?.end_time ? kyou.typed_timeis!.end_time : new Date(Date.now())
-        end_time = end_time >= props.query.calendar_end_date! ? props.query.calendar_end_date! : end_time
+        end_time = end_time.getTime() >= props.query.calendar_end_date!.getTime() ? props.query.calendar_end_date! : end_time
 
         const diff = moment.duration(moment(start_time).diff(moment(end_time))).asMilliseconds()
         total_diff_milli_second += Math.abs(diff.valueOf())
@@ -578,8 +573,6 @@ async function calc_total_tabaco_record_count(): Promise<void> {
 async function calc_average_lantana_mood(): Promise<void> {
     calclated_average_lantana_mood.value = -1
 
-    // timeisのRepだけを検索対象とする
-    // 検索条件は仕事
     const query_for_extruct_lantana_kyous = cloned_query.value.clone()
     query_for_extruct_lantana_kyous.query_id = props.gkill_api.generate_uuid()
     query_for_extruct_lantana_kyous.use_rep_types = true
@@ -711,10 +704,10 @@ async function calc_checked_timeis(): Promise<void> {
         const kyou = checked_timeis_kyous[i]
 
         let start_time = kyou.typed_timeis!.start_time
-        start_time = start_time <= props.query.calendar_start_date! ? props.query.calendar_start_date! : start_time
+        start_time = start_time.getTime() <= props.query.calendar_start_date!.getTime() ? props.query.calendar_start_date! : start_time
 
         let end_time = kyou.typed_timeis?.end_time ? kyou.typed_timeis!.end_time : new Date(Date.now())
-        end_time = end_time >= props.query.calendar_end_date! ? props.query.calendar_end_date! : end_time
+        end_time = end_time.getTime() >= props.query.calendar_end_date!.getTime() ? props.query.calendar_end_date! : end_time
 
         const diff = moment.duration(moment(start_time).diff(moment(end_time))).asMilliseconds()
         total_diff_milli_second += Math.abs(diff.valueOf())

@@ -98,30 +98,6 @@ SELECT
   'timeis_start' AS DATA_TYPE
 FROM TIMEIS 
 `
-	sqlEndTimeIs := `
-SELECT 
-  IS_DELETED,
-  ID,
-  END_TIME AS RELATED_TIME,
-  CREATE_TIME,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_TIME,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  ? AS REP_NAME,
-  'timeis_end' AS DATA_TYPE
-FROM TIMEIS 
-`
-
-	sqlWhereFilterEndTimeIs := ""
-	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
-		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME IS NOT NULL"
-	} else {
-		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
-	}
 
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
@@ -155,33 +131,7 @@ FROM TIMEIS
 		whereCounter++
 	}
 
-	queryArgsForEnd := []interface{}{
-		repName,
-	}
-
-	whereCounter = 0
-	onlyLatestData = true
-	relatedTimeColumnName = "RELATED_TIME"
-	findWordTargetColumns = []string{"TITLE"}
-	ignoreFindWord = false
-	appendOrderBy = false
-	appendGroupBy = true
-	findWordUseLike = true
-	queryArgsForPlaingEnd := []interface{}{}
-	sqlWhereFilterPlaingTimeisEnd := ""
-	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgsForEnd)
-	if err != nil {
-		return nil, err
-	}
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		whereCounter++
-		whereCounter++
-	}
-
-	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
+	sql := fmt.Sprintf("%s WHERE %s %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart)
 	sql += " ORDER BY RELATED_TIME DESC"
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -192,9 +142,8 @@ FROM TIMEIS
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
-	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
-
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, append(queryArgsForStart, queryArgsForPlaingStart...))
+	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, queryArgsForPlaingStart...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
 		return nil, err
@@ -449,13 +398,6 @@ SELECT
   'timeis_start' AS DATA_TYPE
 FROM TIMEIS 
 `
-	sqlWhereFilterEndTimeIs := ""
-	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
-		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end')"
-	} else {
-		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
-	}
-
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
@@ -488,7 +430,7 @@ FROM TIMEIS
 		whereCounter++
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlWhereFilterEndTimeIs)
+	sql := fmt.Sprintf("%s WHERE %s %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart)
 
 	sql += " ORDER BY RELATED_TIME DESC"
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -499,8 +441,8 @@ FROM TIMEIS
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, append(queryArgsForPlaingStart, queryArgs...))
-	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, append(queryArgs, queryArgsForPlaingStart...))
+	rows, err := stmt.QueryContext(ctx, append(queryArgs, queryArgsForPlaingStart...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
 		return nil, err
