@@ -5659,19 +5659,6 @@ func (g *GkillServerAPI) HandleGetPlaingTimeis(w http.ResponseWriter, r *http.Re
 		*findQuery.Reps = append(*findQuery.Reps, repName)
 	}
 
-	allTagNames, err := repositories.GetAllTagNames(r.Context())
-	if err != nil {
-		err = fmt.Errorf("error at get all tag names user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Printf(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetAllTagNamesError,
-			ErrorMessage: "タグ名全件取得に失敗しました",
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	*findQuery.Tags = append(*findQuery.Tags, allTagNames...)
-
 	kyous, err := repositories.TimeIsReps.FindKyous(r.Context(), findQuery)
 	if err != nil {
 		err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)

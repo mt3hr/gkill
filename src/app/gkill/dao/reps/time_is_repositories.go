@@ -14,9 +14,23 @@ import (
 type TimeIsRepositories []TimeIsRepository
 
 func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
+	var err error
+	// plaingだった場合、TimeIs型で最新を判定する
+	latestPlaingTimeIss := []*TimeIs{}
+	latestPlaingTimeIssWg := &sync.WaitGroup{}
+	latestPlaingTimeIssErrCh := make(chan error, 1)
+	defer close(latestPlaingTimeIssErrCh)
+	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+		latestPlaingTimeIssWg.Add(1)
+		go func() {
+			defer latestPlaingTimeIssWg.Done()
+			latestPlaingTimeIss, err = t.FindTimeIs(ctx, query)
+			latestPlaingTimeIssErrCh <- err
+		}()
+	}
+
 	matchKyous := map[string]*Kyou{}
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
 	ch := make(chan []*Kyou, len(t))
 	errch := make(chan error, len(t))
@@ -76,10 +90,29 @@ loop:
 		}
 	}
 
+	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+		latestPlaingTimeIssWg.Wait()
+		if err := <-latestPlaingTimeIssErrCh; err != nil {
+			return nil, err
+		}
+	}
+
 	matchKyousList := []*Kyou{}
 	for _, kyou := range matchKyous {
 		if kyou == nil {
 			continue
+		}
+		if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+			exist := false
+			for _, latestPlaingTimeIs := range latestPlaingTimeIss {
+				if kyou.ID == latestPlaingTimeIs.ID {
+					exist = true
+					break
+				}
+			}
+			if !exist {
+				continue
+			}
 		}
 		matchKyousList = append(matchKyousList, kyou)
 	}
@@ -386,11 +419,19 @@ loop:
 	}
 
 	matchTimeIssList := []*TimeIs{}
-	for _, kyou := range matchTimeIss {
-		if kyou == nil {
+	for _, timeis := range matchTimeIss {
+		if timeis == nil {
 			continue
 		}
-		matchTimeIssList = append(matchTimeIssList, kyou)
+		// Plaingで最新のものが範囲外だったらそれは追加しない
+		if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+			if query.PlaingTime.After(timeis.StartTime) && (timeis.EndTime == nil || query.PlaingTime.Before(*timeis.EndTime)) {
+				matchTimeIssList = append(matchTimeIssList, timeis)
+			}
+		} else {
+			matchTimeIssList = append(matchTimeIssList, timeis)
+		}
+		matchTimeIssList = append(matchTimeIssList, timeis)
 	}
 
 	sort.Slice(matchTimeIssList, func(i, j int) bool {

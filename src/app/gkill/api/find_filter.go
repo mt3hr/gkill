@@ -28,6 +28,8 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext := &FindKyouContext{}
 
 	// QueryをContextに入れる
+	findKyouContext.UserID = userID
+	findKyouContext.Device = device
 	findKyouContext.GkillDAOManager = gkillDAOManager
 	findKyouContext.ParsedFindQuery = findQuery
 	findKyouContext.MatchReps = map[string]reps.Repository{}
@@ -645,17 +647,15 @@ func (f *FindFilter) appendKyousForDnote(ctx context.Context, findCtx *FindKyouC
 
 	trueValue := true
 	falseValue := false
-	repTypes := []string{"timeis"}
 
 	// StartTime中に実行中のTimeIsを取得して追加
-	queryForStartTimePlaing.UseRepTypes = &trueValue
 	queryForStartTimePlaing.UsePlaing = &trueValue
 	queryForStartTimePlaing.UseCalendar = &falseValue
-	queryForStartTimePlaing.RepTypes = &repTypes
 	queryForStartTimePlaing.PlaingTime = &calendarStartDate
 	queryForStartTimePlaing.CalendarStartDate = nil
 	queryForStartTimePlaing.CalendarEndDate = nil
-	startTimePlaingKyous, err := findCtx.Repositories.FindKyous(ctx, &queryForStartTimePlaing)
+	queryForStartTimePlaing.ForDnoteTimeIsPlaingBetweenStartTimeAndEndTime = &falseValue
+	startTimePlaingKyous, _, err := (&FindFilter{}).FindKyous(ctx, findCtx.UserID, findCtx.Device, findCtx.GkillDAOManager, &queryForStartTimePlaing)
 	if err != nil {
 		err = fmt.Errorf("error at append kyous for dnote find start time plaing kyous: %w", err)
 		return nil, err
@@ -672,14 +672,13 @@ func (f *FindFilter) appendKyousForDnote(ctx context.Context, findCtx *FindKyouC
 	}
 
 	// EndTime中に実行中のTimeIsを取得して追加
-	queryForEndTimePlaing.UseRepTypes = &trueValue
 	queryForEndTimePlaing.UsePlaing = &trueValue
 	queryForEndTimePlaing.UseCalendar = &falseValue
-	queryForEndTimePlaing.RepTypes = &repTypes
 	queryForEndTimePlaing.PlaingTime = &calendarEndDate
 	queryForEndTimePlaing.CalendarStartDate = nil
 	queryForEndTimePlaing.CalendarEndDate = nil
-	endTimePlaingKyous, err := findCtx.Repositories.FindKyous(ctx, &queryForEndTimePlaing)
+	queryForEndTimePlaing.ForDnoteTimeIsPlaingBetweenStartTimeAndEndTime = &falseValue
+	endTimePlaingKyous, _, err := (&FindFilter{}).FindKyous(ctx, findCtx.UserID, findCtx.Device, findCtx.GkillDAOManager, &queryForEndTimePlaing)
 	if err != nil {
 		err = fmt.Errorf("error at append kyous for dnote find end time plaing kyous: %w", err)
 		return nil, err
