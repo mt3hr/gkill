@@ -8,6 +8,8 @@ import (
 
 type FindKyouContext struct {
 	GkillDAOManager                  *dao.GkillDAOManager
+	UserID                           string
+	Device                           string
 	ParsedFindQuery                  *find.FindQuery            `json:"parsed_find_query"`
 	Repositories                     *reps.GkillRepositories    `json:"repositories"`
 	MatchReps                        map[string]reps.Repository `json:"match_reps"`

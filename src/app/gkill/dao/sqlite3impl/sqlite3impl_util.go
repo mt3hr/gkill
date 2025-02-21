@@ -245,7 +245,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 		if havingCount != 0 {
 			sql += " AND "
 		}
-		sql += " datetime(UPDATE_TIME, 'localtime') = MAX(datetime(UPDATE_TIME, 'localtime')) "
+		sql += " datetime(UPDATE_TIME, 'localtime') = datetime(MAX(UPDATE_TIME), 'localtime') "
 		havingCount++
 
 		// 削除済みであるかどうかのSQL追記
