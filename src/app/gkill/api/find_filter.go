@@ -163,6 +163,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish findKyous")
+	if findQuery.ForDnoteTimeIsPlaingBetweenStartTimeAndEndTime != nil && *findQuery.ForDnoteTimeIsPlaingBetweenStartTimeAndEndTime {
+		gkillErr, err = f.appendKyousForDnote(ctx, findKyouContext)
+		if err != nil {
+			err = fmt.Errorf("error at find kyous: %w", err)
+			return nil, gkillErr, err
+		}
+	}
+	gkill_log.Trace.Printf("finish append kyous for dnote")
 	gkillErr, err = f.filterMiForMi(ctx, findKyouContext) //miの場合のみ
 	if err != nil {
 		err = fmt.Errorf("error at filter mi for mi: %w", err)
@@ -624,6 +632,68 @@ func (f *FindFilter) findKyous(ctx context.Context, findCtx *FindKyouContext) ([
 	}
 
 	findCtx.MatchKyousCurrent = findCtx.MatchKyousAtFindKyou
+	return nil, nil
+}
+
+func (f *FindFilter) appendKyousForDnote(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	clonedFindQuery := *findCtx.ParsedFindQuery
+	queryForStartTimePlaing := clonedFindQuery
+	queryForEndTimePlaing := clonedFindQuery
+
+	calendarStartDate := *clonedFindQuery.CalendarStartDate
+	calendarEndDate := *clonedFindQuery.CalendarEndDate
+
+	trueValue := true
+	falseValue := false
+	repTypes := []string{"timeis"}
+
+	// StartTime中に実行中のTimeIsを取得して追加
+	queryForStartTimePlaing.UseRepTypes = &trueValue
+	queryForStartTimePlaing.UsePlaing = &trueValue
+	queryForStartTimePlaing.UseCalendar = &falseValue
+	queryForStartTimePlaing.RepTypes = &repTypes
+	queryForStartTimePlaing.PlaingTime = &calendarStartDate
+	queryForStartTimePlaing.CalendarStartDate = nil
+	queryForStartTimePlaing.CalendarEndDate = nil
+	startTimePlaingKyous, err := findCtx.Repositories.FindKyous(ctx, &queryForStartTimePlaing)
+	if err != nil {
+		err = fmt.Errorf("error at append kyous for dnote find start time plaing kyous: %w", err)
+		return nil, err
+	}
+	for _, kyou := range startTimePlaingKyous {
+		existKyou, exist := findCtx.MatchKyousCurrent[kyou.ID]
+		if exist {
+			if kyou.UpdateTime.After(existKyou.UpdateTime) {
+				findCtx.MatchKyousCurrent[kyou.ID] = kyou
+			}
+		} else {
+			findCtx.MatchKyousCurrent[kyou.ID] = kyou
+		}
+	}
+
+	// EndTime中に実行中のTimeIsを取得して追加
+	queryForEndTimePlaing.UseRepTypes = &trueValue
+	queryForEndTimePlaing.UsePlaing = &trueValue
+	queryForEndTimePlaing.UseCalendar = &falseValue
+	queryForEndTimePlaing.RepTypes = &repTypes
+	queryForEndTimePlaing.PlaingTime = &calendarEndDate
+	queryForEndTimePlaing.CalendarStartDate = nil
+	queryForEndTimePlaing.CalendarEndDate = nil
+	endTimePlaingKyous, err := findCtx.Repositories.FindKyous(ctx, &queryForEndTimePlaing)
+	if err != nil {
+		err = fmt.Errorf("error at append kyous for dnote find end time plaing kyous: %w", err)
+		return nil, err
+	}
+	for _, kyou := range endTimePlaingKyous {
+		existKyou, exist := findCtx.MatchKyousCurrent[kyou.ID]
+		if exist {
+			if kyou.UpdateTime.After(existKyou.UpdateTime) {
+				findCtx.MatchKyousCurrent[kyou.ID] = kyou
+			}
+		} else {
+			findCtx.MatchKyousCurrent[kyou.ID] = kyou
+		}
+	}
 	return nil, nil
 }
 
