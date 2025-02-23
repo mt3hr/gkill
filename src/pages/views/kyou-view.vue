@@ -474,7 +474,7 @@ function format_time(time: Date) {
 </script>
 <style lang="css" scoped>
 .highlighted_kyou>* {
-    background-color: lightgreen;
+    background-color: var(--v-highlight-base);
 }
 
 .kyou_related_time,
