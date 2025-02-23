@@ -8,7 +8,7 @@
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field label="ユーザID" v-model="user_id" autofocus :readonly="useRoute().query.user_id" />
+                    <v-text-field label="ユーザID" v-model="user_id" autofocus :readonly="!(!useRoute().query.user_id)" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">

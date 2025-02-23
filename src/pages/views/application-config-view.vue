@@ -236,6 +236,7 @@ watch(() => is_dark_theme.value, () => {
     } else {
         theme.global.name.value = 'gkill_theme'
     }
+    props.gkill_api.set_use_dark_theme(is_dark_theme.value)
 })
 
 async function reload_cloned_application_config(): Promise<void> {
