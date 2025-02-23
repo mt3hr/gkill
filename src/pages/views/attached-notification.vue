@@ -80,14 +80,14 @@ function format_time(time: Date) {
 </script>
 <style lang="css" scoped>
 .notification {
-    background-color: #eee;
+    background-color: var(--v-attached-text-background-base);
     border: solid 1px;
     margin: 8px;
     padding: 8px;
 }
 
 .highlighted_notification {
-    background-color: lightgreen;
+    background-color: var(--v-highlight-base);
     border: solid 1px;
     margin: 8px;
     padding: 8px;

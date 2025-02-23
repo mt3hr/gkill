@@ -20,7 +20,7 @@ const emits = defineEmits<SidebarHeaderEmits>()
 </script>
 <style lang="css" scoped>
 .background-white {
-    background-color: white;
+    background-color: var(--v-primary-base);
     z-index: 10000;
 }
 </style>

@@ -62,14 +62,14 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
 </script>
 <style lang="css" scoped>
 .text {
-    background-color: #eee;
+    background-color: var(--v-attached-text-background-base);
     border: dashed 1px;
     margin: 8px;
     padding: 8px;
 }
 
 .highlighted_text {
-    background-color: lightgreen;
+    background-color: var(--v-highlight-base);
     border: dashed 1px;
     margin: 8px;
     padding: 8px;

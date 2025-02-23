@@ -71,7 +71,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
 
 
     display: inline-flex;
-    border: solid white 2px;
+    border: solid var(--v-background-base) 2px;
     border-left: 0px;
     color: blue;
     cursor: pointer;
@@ -81,7 +81,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
 
 .plaing::after {
     content: "";
-    background: white;
+    background: var(--v-background-base);
     border-top: 9.5px solid transparent;
     border-left: 10px solid #d3d3d3;
     border-bottom: 9.5px solid transparent;
@@ -89,7 +89,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
 
 .plaing::before {
     content: "";
-    background: white;
+    background: var(--v-background-base);
     border-top: 9.5px solid transparent;
     border-right: 10px solid #d3d3d3;
     border-bottom: 9.5px solid transparent;
@@ -101,27 +101,27 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     top: 6px;
 
     display: inline-flex;
-    border: solid white 2px;
+    border: solid var(--v-background-base) 2px;
     border-left: 0px;
     color: blue;
     cursor: pointer;
     font-size: small;
-    background: lightgreen;
+    background: var(--v-highlight-base);
 }
 
 .highlighted_plaing::after {
     content: "";
-    background: white;
+    background: var(--v-background-base);
     border-top: 9.5px solid transparent;
-    border-left: 10px solid lightgreen;
+    border-left: 10px solid var(--v-highlight-base);
     border-bottom: 9.5px solid transparent;
 }
 
 .highlighted_plaing::before {
     content: "";
-    background: white;
+    background: var(--v-background-base);
     border-top: 9.5px solid transparent;
-    border-right: 10px solid lightgreen;
+    border-right: 10px solid var(--v-highlight-base);
     border-bottom: 9.5px solid transparent;
 }
 </style>

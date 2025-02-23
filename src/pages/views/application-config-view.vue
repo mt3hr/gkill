@@ -58,6 +58,11 @@
                 </tr>
                 <tr>
                     <td>
+                        <v-checkbox v-model="is_dark_theme" hide-detail label="ダークテーマ" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <v-checkbox v-model="rykv_hot_reload" hide-detail label="ホットリロード" />
                     </td>
                 </tr>
@@ -172,6 +177,9 @@ import ServerConfigDialog from '../dialogs/server-config-dialog.vue'
 import { LogoutRequest } from '@/classes/api/req_res/logout-request'
 import router from '@/router'
 import { ReloadRepositoriesRequest } from '@/classes/api/req_res/reload-repositories-request'
+import { useTheme } from 'vuetify'
+
+const theme = useTheme()
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 const edit_device_struct_dialog = ref<InstanceType<typeof EditDeviceStructDialog> | null>(null);
@@ -204,6 +212,7 @@ const rykv_default_period: Ref<number> = ref(cloned_application_config.value.ryk
 const mi_default_period: Ref<number> = ref(cloned_application_config.value.mi_default_period)
 const is_checked_use_rykv_period: Ref<boolean> = ref(cloned_application_config.value.rykv_default_period !== -1)
 const is_checked_use_mi_period: Ref<boolean> = ref(cloned_application_config.value.mi_default_period !== -1)
+const is_dark_theme: Ref<boolean> = ref(theme.global.name.value === 'gkill_dark_theme')
 
 watch(() => is_checked_use_rykv_period.value, () => {
     if (is_checked_use_rykv_period.value) {
@@ -218,6 +227,14 @@ watch(() => is_checked_use_mi_period.value, () => {
         mi_default_period.value = 31
     } else {
         mi_default_period.value = -1
+    }
+})
+
+watch(() => is_dark_theme.value, () => {
+    if (is_dark_theme.value) {
+        theme.global.name.value = 'gkill_dark_theme'
+    } else {
+        theme.global.name.value = 'gkill_theme'
     }
 })
 
