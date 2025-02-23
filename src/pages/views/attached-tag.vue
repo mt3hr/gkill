@@ -61,7 +61,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
 </script>
 <style lang="css" scoped>
 .tag {
-    border: solid white 2px;
+    border: solid var(--v-background-base) 2px;
     border-left: 0px;
     color: blue;
     cursor: pointer;
@@ -74,23 +74,23 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
 
 .tag::before {
     content: "・";
-    color: white;
+    color: var(--v-background-base);
 }
 
 .highlighted_tag {
-    border: solid white 2px;
+    border: solid var(--v-background-base) 2px;
     border-left: 0px;
     color: blue;
     cursor: pointer;
     padding: 0 6px 0 2px;
     font-size: small;
     border-radius: 0 1em 1em 0;
-    background: lightgreen;
+    background: var(--v-highlight-base);
     display: inline-flex;
 }
 
 .highlighted_tag::before {
     content: "・";
-    color: white;
+    color: var(--v-background-base);
 }
 </style>
