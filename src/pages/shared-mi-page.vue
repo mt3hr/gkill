@@ -25,13 +25,13 @@ import miSharedTaskView from './views/mi-shared-task-view.vue'
 import { useRoute } from 'vue-router'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 
-const actual_height: Ref<Number> = ref(0)
-const element_height: Ref<Number> = ref(0)
-const browser_url_bar_height: Ref<Number> = ref(0)
-const app_title_bar_height: Ref<Number> = ref(50)
+const actual_height: Ref<number> = ref(0)
+const element_height: Ref<number> = ref(0)
+const browser_url_bar_height: Ref<number> = ref(0)
+const app_title_bar_height: Ref<number> = ref(50)
 const gkill_api: Ref<GkillAPI> = computed(() => GkillAPIForSharedMi.get_instance_for_share_mi())
-const app_content_height: Ref<Number> = ref(0)
-const app_content_width: Ref<Number> = ref(0)
+const app_content_height: Ref<number> = ref(0)
+const app_content_width: Ref<number> = ref(0)
 const share_mi_id = computed(() => useRoute().query.share_id!.toString())
 
 GkillAPI.set_gkill_api(GkillAPIForSharedMi.get_instance())
@@ -40,8 +40,8 @@ async function resize_content(): Promise<void> {
     const inner_element = document.querySelector('#control-height')
     actual_height.value = window.innerHeight
     element_height.value = inner_element ? inner_element.clientHeight : actual_height.value
-    browser_url_bar_height.value = Number(element_height.value) - Number(actual_height.value)
-    app_content_height.value = Number(element_height.value) - (Number(browser_url_bar_height.value) + Number(app_title_bar_height.value))
+    browser_url_bar_height.value = (Number(element_height.value) - Number(actual_height.value)).valueOf()
+    app_content_height.value = (Number(element_height.value) - (Number(browser_url_bar_height.value) + Number(app_title_bar_height.value))).valueOf()
     app_content_width.value = window.innerWidth
 }
 
