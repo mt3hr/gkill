@@ -71,28 +71,28 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
 
 
     display: inline-flex;
-    border: solid var(--v-background-base) 2px;
+    border: solid rgb(var(--v-theme-background)) 2px;
     border-left: 0px;
     color: blue;
     cursor: pointer;
     font-size: small;
-    background: var(--v-background-base);
+    background: lightgray;
 }
 
 .plaing::after {
     content: "";
-    background: var(--v-background-base);
-    border-top: 9.5px solid transparent;
-    border-left: 10px solid var(--v-background-base);
-    border-bottom: 9.5px solid transparent;
+    background: rgb(var(--v-theme-background));
+    border-top: 9.5px solid rgb(var(--v-theme-background));
+    border-left: 10px solid lightgray;
+    border-bottom: 9.5px solid rgb(var(--v-theme-background));
 }
 
 .plaing::before {
     content: "";
-    background: var(--v-background-base);
-    border-top: 9.5px solid transparent;
-    border-right: 10px solid var(--v-background-base);
-    border-bottom: 9.5px solid transparent;
+    background: rgb(var(--v-theme-background));
+    border-top: 9.5px solid rgb(var(--v-theme-background));
+    border-right: 10px solid lightgray;
+    border-bottom: 9.5px solid rgb(var(--v-theme-background));
 }
 
 .highlighted_plaing {
@@ -101,27 +101,26 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     top: 6px;
 
     display: inline-flex;
-    border: solid var(--v-background-base) 2px;
+    border: solid rgb(var(--v-theme-background)) 2px;
     border-left: 0px;
     color: blue;
     cursor: pointer;
     font-size: small;
-    background: var(--v-highlight-base);
+    background: lightgray;
 }
 
 .highlighted_plaing::after {
     content: "";
-    background: var(--v-background-base);
-    border-top: 9.5px solid transparent;
-    border-left: 10px solid var(--v-highlight-base);
-    border-bottom: 9.5px solid transparent;
+    background: rgb(var(--v-theme-background));
+    border-top: 9.5px solid rgb(var(--v-theme-background));
+    border-left: 10px solid lightgray;
+    border-bottom: 9.5px solid rgb(var(--v-theme-background));
 }
 
 .highlighted_plaing::before {
-    content: "";
-    background: var(--v-background-base);
-    border-top: 9.5px solid transparent;
-    border-right: 10px solid var(--v-highlight-base);
-    border-bottom: 9.5px solid transparent;
+    content: ""; background: rgb(var(--v-theme-background));
+    border-top: 9.5px solid rgb(var(--v-theme-background));
+    border-right: 10px solid lightgray;
+    border-bottom: 9.5px solid rgb(var(--v-theme-background));
 }
 </style>
