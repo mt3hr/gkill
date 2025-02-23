@@ -76,14 +76,14 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     color: blue;
     cursor: pointer;
     font-size: small;
-    background: lightgray
+    background: var(--v-background-base);
 }
 
 .plaing::after {
     content: "";
     background: var(--v-background-base);
     border-top: 9.5px solid transparent;
-    border-left: 10px solid #d3d3d3;
+    border-left: 10px solid var(--v-background-base);
     border-bottom: 9.5px solid transparent;
 }
 
@@ -91,7 +91,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     content: "";
     background: var(--v-background-base);
     border-top: 9.5px solid transparent;
-    border-right: 10px solid #d3d3d3;
+    border-right: 10px solid var(--v-background-base);
     border-bottom: 9.5px solid transparent;
 }
 
