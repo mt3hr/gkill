@@ -21,6 +21,24 @@ const gkill_theme: ThemeDefinition = {
 	},
 }
 
+const gkill_dark_theme: ThemeDefinition = {
+	dark: true,
+	colors: {
+		background: '#212121',
+		surface: '#212121',
+		primary: '#2672ed',
+		'primary-darken-1': '#2672ed',
+		secondary: '#1d96b8',
+		'secondary-darken-1': '#1d96b8',
+		'attached-text-background': '#eee',
+		error: '#7a0117',
+		info: '#1765a3',
+		success: '#218025',
+		warning: '#9e5800',
+		highlight: '#60ab80',
+	},
+}
+
 const vuetify = createVuetify({
 	components,
 	directives,
@@ -34,7 +52,8 @@ const vuetify = createVuetify({
 	theme: {
 		defaultTheme: 'gkill_theme',
 		themes: {
-			gkill_theme
+			gkill_theme,
+			gkill_dark_theme,
 		},
 	},
 })

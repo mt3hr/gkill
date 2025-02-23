@@ -101,7 +101,7 @@ watch(line_label_datas, async () => {
             if (background_is_gray) {
                 background_color = "#f0f0f0"
             } else {
-                background_color = "white"
+                background_color = ""
             }
         }
         if (is_invalid_line(i)) {
