@@ -68,7 +68,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     padding: 0 6px 0 2px;
     font-size: small;
     border-radius: 0 1em 1em 0;
-    background: lightgray;
+    background: var(--v-background-base);
     display: inline-flex;
 }
 
@@ -91,6 +91,6 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
 
 .highlighted_tag::before {
     content: "・";
-    color: var(--v-background-base);
+    color: white;
 }
 </style>
