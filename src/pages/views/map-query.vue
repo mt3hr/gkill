@@ -5,7 +5,7 @@
                 label="場所" hide-details />
         </v-col>
         <v-spacer />
-        <v-col cols="auto" class="pb-0 mb-0">
+        <v-col cols="auto">
             <v-btn @click="emits('request_clear_map_query')">クリア</v-btn>
         </v-col>
     </v-row>
@@ -15,7 +15,8 @@
             latitude = $event.latLng.lat();
             longitude = $event.latLng.lng();
             emits('request_update_area', $event.latLng.lat(), $event.latLng.lng(), radius)
-        }" style="width: 100%; height: 400px" class="googlemap search_google_map" :key="application_config.google_map_api_key">
+        }" style="width: 100%; height: 400px" class="googlemap search_google_map"
+            :key="application_config.google_map_api_key">
             <Circle :options="circle"
                 :key="(circle.center?.lat.toString().concat(circle.center?.lng.toString()).concat(radius.toString()))" />
         </GoogleMap>

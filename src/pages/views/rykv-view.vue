@@ -51,7 +51,7 @@
                         return
                     }
                     search(focused_column_index, new_query)
-                    if (new_query.calendar_start_date && new_query.calendar_end_date) {
+                    if (new_query.use_calendar && new_query.calendar_start_date && new_query.calendar_end_date) {
                         gps_log_map_start_time = new_query.calendar_start_date
                         gps_log_map_end_time = new_query.calendar_end_date
                     }
@@ -62,7 +62,7 @@
                     }
                     skip_search_this_tick = true // 使い方違うけど
                     search(focused_column_index, new_query, application_config.rykv_hot_reload)
-                    if (new_query.calendar_start_date && new_query.calendar_end_date) {
+                    if (new_query.use_calendar && new_query.calendar_start_date && new_query.calendar_end_date) {
                         gps_log_map_start_time = new_query.calendar_start_date
                         gps_log_map_end_time = new_query.calendar_end_date
                     }
@@ -460,7 +460,7 @@ async function init(): Promise<void> {
         } finally {
             Promise.all(waitPromises).then(async () => {
                 focused_column_index.value = 0
-                if (querys.value[focused_column_index.value].calendar_start_date && querys.value[focused_column_index.value].calendar_end_date) {
+                if (querys.value[focused_column_index.value].use_calendar && querys.value[focused_column_index.value].calendar_start_date && querys.value[focused_column_index.value].calendar_end_date) {
                     gps_log_map_start_time.value = querys.value[focused_column_index.value].calendar_start_date!
                     gps_log_map_end_time.value = querys.value[focused_column_index.value].calendar_end_date!
                 }
