@@ -30,7 +30,7 @@
                 <v-btn v-if="!cloned_query.timeis_tags_and" icon="mdi-set-all"
                     @click="cloned_query.timeis_tags_and = !cloned_query.timeis_tags_and; emits('request_update_and_search_timeis_tags', cloned_query.timeis_tags_and)" />
             </v-col>
-            <v-col cols="10" class="pt-4 pa-0 ma-0">
+            <v-col cols="10" class="pa-0 ma-0">
                 <v-checkbox v-model="cloned_query.use_timeis_tags"
                     @click="cloned_query.use_timeis_tags = !cloned_query.use_timeis_tags; emits('request_update_use_timeis_query', cloned_query.use_timeis_tags)"
                     label="状況タグ" hide-details class="pa-0 ma-0" />
@@ -60,7 +60,7 @@ import { deepEquals } from '@/classes/deep-equals'
 
 const props = defineProps<TimeIsQueryProps>()
 const emits = defineEmits<TimeIsQueryEmits>()
-defineExpose({ get_use_timeis, get_use_and_search_timeis_words, get_use_and_search_timeis_tags, get_timeis_keywords, get_use_timeis_tags, get_timeis_tags })
+defineExpose({ get_use_timeis, get_use_and_search_timeis_words, get_use_and_search_timeis_tags, get_timeis_keywords, get_use_timeis_tags, get_timeis_tags, update_check })
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const old_cloned_query: Ref<FindKyouQuery | null> = ref(null)
