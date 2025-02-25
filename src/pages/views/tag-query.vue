@@ -39,7 +39,7 @@ import type { FoldableStructModel } from './foldable-struct-model'
 
 const props = defineProps<TagQueryProps>()
 const emits = defineEmits<TagQueryEmits>()
-defineExpose({ get_use_tag, get_tags, get_is_and_search })
+defineExpose({ get_use_tag, get_tags, get_is_and_search, update_check})
 
 const use_tag: Ref<boolean> = ref(true)
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
