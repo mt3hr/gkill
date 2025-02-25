@@ -1,21 +1,21 @@
 <template>
     <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
-        <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
-            <v-col cols="1" class="pa-0 ma-0">
-                <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()" />
-            </v-col>
-            <v-col cols="8" class="pa-0 ma-0">
-                <v-card-title>
+        <table v-if="kyou.typed_mi" class="pa-0 ma-0">
+            <tr>
+                <td class="pa-0 ma-0">
+                    <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()" />
+                </td>
+                <td class="pa-0 ma-0">
                     <div class="py-1">{{ kyou.typed_mi.title }}</div>
-                </v-card-title>
-            </v-col>
-            <v-spacer />
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-card-title>
-                    <div class="py-1">{{ kyou.typed_mi.board_name }}</div>
-                </v-card-title>
-            </v-col>
-        </v-row>
+                </td>
+                <v-spacer />
+                <td class="pa-0 ma-0">
+                    <v-card-title>
+                        <div class="py-1">{{ kyou.typed_mi.board_name }}</div>
+                    </v-card-title>
+                </td>
+            </tr>
+        </table>
         <div :style="{ 'padding-top': '30px' }">
             <div v-if="kyou.typed_mi && kyou.typed_mi.estimate_start_time">
                 <span>開始日時：</span>

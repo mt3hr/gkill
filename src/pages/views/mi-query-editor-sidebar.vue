@@ -85,6 +85,7 @@ import { deepEquals } from '@/classes/deep-equals'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 import type MiBoardQuery from './mi-board-query.vue'
 import moment from 'moment'
+import { CheckState } from './check-state'
 
 const sidebar_header = ref<InstanceType<typeof SidebarHeader> | null>(null);
 const keyword_query = ref<InstanceType<typeof KeywordQuery> | null>(null);
@@ -184,15 +185,15 @@ function generate_query(query_id?: string): FindKyouQuery {
     if (keyword_query.value) {
         find_query.use_words = keyword_query.value.get_use_words()
         find_query.words_and = keyword_query.value.get_use_word_and_search()
-        find_query.keywords = keyword_query.value.get_keywords()
+        find_query.keywords = keyword_query.value.get_keywords().concat()
     }
 
     if (timeis_query.value) {
         find_query.use_timeis = timeis_query.value.get_use_timeis()
-        find_query.timeis_keywords = timeis_query.value.get_timeis_keywords()
+        find_query.timeis_keywords = timeis_query.value.get_timeis_keywords().concat()
         find_query.timeis_words_and = timeis_query.value.get_use_and_search_timeis_words()
         find_query.use_timeis_tags = timeis_query.value.get_use_timeis_tags()
-        find_query.timeis_tags = timeis_query.value.get_timeis_tags()
+        find_query.timeis_tags = timeis_query.value.get_timeis_tags().concat()
         find_query.timeis_tags_and = timeis_query.value.get_use_and_search_timeis_tags()
     }
 
@@ -236,7 +237,7 @@ function generate_query(query_id?: string): FindKyouQuery {
     }
 
     if (tag_query.value) {
-        const tags = tag_query.value.get_tags()
+        const tags = tag_query.value.get_tags()?.concat()
         if (tags) {
             find_query.tags = tags
         }
@@ -278,7 +279,7 @@ function emits_cleard_keyword_query(): void {
     const find_query = generate_query()
     find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_words = get_default_query().use_words
-    find_query.keywords = get_default_query().keywords
+    find_query.keywords = get_default_query().keywords.concat()
     find_query.words_and = get_default_query().words_and
     query.value = find_query
     emits('updated_query_clear', find_query)
@@ -289,21 +290,23 @@ function emits_cleard_timeis_query(): void {
     find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_timeis = get_default_query().use_timeis
     find_query.use_timeis_tags = get_default_query().use_timeis_tags
-    find_query.timeis_keywords = get_default_query().timeis_keywords
+    find_query.timeis_keywords = get_default_query().timeis_keywords.concat()
     find_query.timeis_words_and = get_default_query().timeis_words_and
     find_query.use_timeis_tags = get_default_query().use_timeis_tags
-    find_query.timeis_tags = get_default_query().timeis_tags
+    find_query.timeis_tags = get_default_query().timeis_tags.concat()
     find_query.timeis_tags_and = get_default_query().timeis_tags_and
     query.value = find_query
+    timeis_query.value?.update_check(find_query.tags, CheckState.checked, true)
     emits('updated_query_clear', find_query)
 }
 
 function emits_cleard_tag_query(): void {
     const find_query = generate_query()
     find_query.query_id = props.gkill_api.generate_uuid()
-    find_query.tags = get_default_query().tags
+    find_query.tags = get_default_query().tags.concat()
     find_query.tags_and = get_default_query().tags_and
     query.value = find_query
+    tag_query.value?.update_check(find_query.tags, CheckState.checked, true)
     emits('updated_query_clear', find_query)
 }
 
@@ -336,6 +339,8 @@ function emits_default_query(): void {
     find_query.use_mi_board_name = false
     find_query.mi_board_name = board_name
     query.value = find_query
+    tag_query.value?.update_check(find_query.tags, CheckState.checked, true)
+    timeis_query.value?.update_check(find_query.tags, CheckState.checked, true)
     emits('updated_query_clear', find_query)
 }
 

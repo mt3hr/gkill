@@ -1,17 +1,18 @@
 <template>
     <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
-        <v-row class="ma-0 pa-0">
-            <v-col v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() > 0" cols="auto" class="ma-0 pa-0">
-                ↑
-            </v-col>
-            <v-col v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() <= 0" cols="auto" class="ma-0 pa-0">
-                ↓
-            </v-col>
-            <v-col v-if="kyou.typed_nlog" cols="auto" class="ma-0 pa-0">
-                {{ kyou.typed_nlog.title }}
-            </v-col>
-            <v-col cols="auto" class="ma-0 pa-0"></v-col>
-        </v-row>
+        <table class="ma-0 pa-0">
+            <tr class="ma-0 pa-0">
+                <td v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() > 0" cols="auto" class="ma-0 pa-0">
+                    ↑
+                </td>
+                <td v-if="kyou.typed_nlog && kyou.typed_nlog.amount.valueOf() <= 0" cols="auto" class="ma-0 pa-0">
+                    ↓
+                </td>
+                <td v-if="kyou.typed_nlog" cols="auto" class="ma-0 pa-0">
+                    {{ kyou.typed_nlog.title }}
+                </td>
+            </tr>
+        </table>
         <v-row class="ma-0 pa-0">
             <v-col v-if="kyou.typed_nlog" cols="auto" class="ma-0 pa-0">
                 {{ "@".concat(kyou.typed_nlog.shop) }}
