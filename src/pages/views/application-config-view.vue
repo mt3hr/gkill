@@ -25,10 +25,12 @@
             <table>
                 <tr>
                     <td>
-                        GoogleMapAPIキー
+                        <v-checkbox v-model="is_dark_theme" hide-detail label="ダークテーマ" />
                     </td>
+                </tr>
+                <tr>
                     <td>
-                        <v-text-field width="400" v-model="google_map_api_key"></v-text-field>
+                        <v-checkbox v-model="rykv_hot_reload" hide-detail label="ホットリロード" />
                     </td>
                 </tr>
                 <tr>
@@ -58,12 +60,18 @@
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="is_dark_theme" hide-detail label="ダークテーマ" />
+                        <v-checkbox v-model="is_checked_use_rykv_period" hide-detail label="rykv表示日数" />
+                    </td>
+                    <td v-show="rykv_default_period !== -1">
+                        <v-text-field type="number" min="-1" width="400" v-model="rykv_default_period" />
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="rykv_hot_reload" hide-detail label="ホットリロード" />
+                        <v-checkbox v-model="is_checked_use_mi_period" hide-detail label="mi表示日数" />
+                    </td>
+                    <td v-show="mi_default_period !== -1">
+                        <v-text-field type="number" min="-1" width="400" v-model="mi_default_period" />
                     </td>
                 </tr>
                 <tr>
@@ -77,18 +85,10 @@
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="is_checked_use_rykv_period" hide-detail label="rykv表示日数" />
+                        GoogleMapAPIキー
                     </td>
-                    <td v-show="rykv_default_period !== -1">
-                        <v-text-field type="number" min="-1" width="400" v-model="rykv_default_period" />
-                    </td>
-                </tr>
-                <tr>
                     <td>
-                        <v-checkbox v-model="is_checked_use_mi_period" hide-detail label="mi表示日数" />
-                    </td>
-                    <td v-show="mi_default_period !== -1">
-                        <v-text-field type="number" min="-1" width="400" v-model="mi_default_period" />
+                        <v-text-field width="400" v-model="google_map_api_key"></v-text-field>
                     </td>
                 </tr>
             </table>

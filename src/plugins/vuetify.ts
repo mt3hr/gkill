@@ -8,6 +8,7 @@ const gkill_theme: ThemeDefinition = {
 	dark: false,
 	colors: {
 		background: '#ffffff',
+		'background-focused': '#C0C0C0',
 		surface: '#ffffff',
 		primary: '#2672ed',
 		'primary-darken-1': '#2672ed',
@@ -25,6 +26,7 @@ const gkill_dark_theme: ThemeDefinition = {
 	dark: true,
 	colors: {
 		background: '#212121',
+		'background-focused': '#4D4D4D',
 		surface: '#212121',
 		primary: '#2672ed',
 		'primary-darken-1': '#2672ed',

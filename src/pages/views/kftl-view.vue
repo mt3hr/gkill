@@ -18,7 +18,7 @@
             <tr>
                 <td>
                     <div class="kftl_line_label line_label_wrap">
-                        <KFTLLineLabel v-for="( line_label_data, index ) in line_label_datas"
+                        <KFTLLineLabel v-for="(line_label_data, index) in line_label_datas"
                             :key="line_label_data.target_request_id" :application_config="application_config"
                             :gkill_api="gkill_api" :line_label_data="line_label_data"
                             :style="line_label_styles[index]" />
@@ -56,6 +56,7 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { useTheme } from 'vuetify'
 const kftl_template_dialog = ref<InstanceType<typeof KFTLTemplateDialog> | null>(null);
 
 const text_area_content: Ref<string> = ref("")
@@ -80,6 +81,8 @@ const line_label_styles: Ref<Array<any>> = ref(new Array<any>())
 const invalid_line_numbers: Ref<Array<Number>> = ref(new Array<Number>())
 const is_requested_submit: Ref<boolean> = ref(false)
 
+const theme = useTheme()
+
 const props = defineProps<KFTLProps>()
 const emits = defineEmits<KFTLViewEmits>()
 
@@ -99,7 +102,11 @@ watch(line_label_datas, async () => {
         if (switch_id) {
             background_is_gray = !background_is_gray
             if (background_is_gray) {
-                background_color = "#f0f0f0"
+                if (props.gkill_api.get_use_dark_theme()) {
+                    background_color = '#C0C0C0'
+                } else {
+                    background_color = "#f0f0f0"
+                }
             } else {
                 background_color = ""
             }
@@ -244,7 +251,7 @@ onMounted(() => resize())
 }
 
 .line_label_wrap {
-    color: silver;
+    color: rgb(var(--v-theme-background-focused));
     padding-right: 16px;
     height: calc(v-bind(line_label_height_px));
     width: calc(v-bind(line_label_width_px));
