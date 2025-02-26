@@ -12,7 +12,7 @@
                             <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
                                 :key="index" :value="index">
                                 <v-list-item-title @click="router.replace('/' + page)">{{ page
-                                    }}</v-list-item-title>
+                                }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>
@@ -547,6 +547,8 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Prom
 }
 
 async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
+
+
     const query_id = query.query_id
     // 検索する。Tickでまとめる
     return nextTick(async () => {
@@ -641,6 +643,10 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
 }
 
 function open_or_focus_board(board_name: string): void {
+    if (board_name === "") {
+        board_name = "すべて"
+    }
+
     let opened = false
     for (let i = 0; i < querys.value.length; i++) {
         const query = querys.value[i]
