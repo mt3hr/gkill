@@ -134,7 +134,6 @@ watch(() => inited.value, async (new_value: boolean, old_value: boolean) => {
         default_query.value.query_id = props.gkill_api.generate_uuid()
         default_query.value.use_mi_board_name = false
         default_query.value.mi_board_name = "すべて"
-        default_query.value.mi_board_name = ""
         nextTick(() => { emits('inited') })
     }
 })

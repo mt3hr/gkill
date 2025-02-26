@@ -248,6 +248,6 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 }
 
 .focused_list>* {
-    background-color: silver;
+    background-color: rgb(var(--v-theme-background-focused));
 }
 </style>
