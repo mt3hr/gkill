@@ -5,7 +5,7 @@
                 label="場所" hide-details />
         </v-col>
         <v-spacer />
-        <v-col cols="auto">
+        <v-col cols="auto" class="pb-0 mb-0 pr-0">
             <v-btn @click="emits('request_clear_map_query')">クリア</v-btn>
         </v-col>
     </v-row>
