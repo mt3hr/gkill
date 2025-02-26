@@ -1,10 +1,10 @@
 <template>
-    <v-row>
-        <v-col cols="auto" class="pb-0 mb-0">
+    <v-row class="pa-0 ma-0">
+        <v-col cols="auto" class="pa-0 ma-0">
             <v-checkbox v-model="query.use_map" @change=" emits('request_update_use_map_query', query.use_map)"
-                label="場所" hide-details />
+                label="場所" hide-details class="pb-0 mb-0" />
         </v-col>
-        <v-spacer />
+        <v-spacer class="pa-0 ma-0" />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
             <v-btn @click="emits('request_clear_map_query')">クリア</v-btn>
         </v-col>
