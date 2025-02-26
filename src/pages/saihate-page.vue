@@ -10,7 +10,7 @@
                     <v-progress-circular indeterminate color="primary" />
                 </v-overlay>
             </div>
-            <v-avatar :style="floatingActionButtonStyle()" color="indigo" class="position-fixed">
+            <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
                 <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" />
