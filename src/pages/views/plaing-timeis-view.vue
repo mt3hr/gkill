@@ -296,7 +296,15 @@ async function search(update_cache: boolean): Promise<void> {
 }
 
 async function reload_list(update_cache: boolean): Promise<void> {
-    return search(update_cache)
+    await search(update_cache)
+    if (!kyou_list_views.value) {
+        return
+    }
+    const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any
+    if (!kyou_list_view) {
+        return
+    }
+    kyou_list_view.scroll_to(0)
 }
 
 function floatingActionButtonStyle() {
