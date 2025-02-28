@@ -124,7 +124,6 @@ function update_tag_struct(tag_struct_obj: TagStruct): void {
             break
         }
     }
-    cloned_application_config.value.parse_tag_struct()
     if (cloned_application_config.value.parsed_tag_struct.children) {
         update_seq(cloned_application_config.value.parsed_tag_struct.children)
     }
