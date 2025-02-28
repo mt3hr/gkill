@@ -125,7 +125,6 @@ function update_device_struct(device_struct_obj: DeviceStruct): void {
             break
         }
     }
-    cloned_application_config.value.parse_device_struct()
     if (cloned_application_config.value.parsed_device_struct.children) {
         update_seq(cloned_application_config.value.parsed_device_struct.children)
     }
