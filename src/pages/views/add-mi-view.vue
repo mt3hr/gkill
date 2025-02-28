@@ -26,7 +26,8 @@
             <v-col cols="auto">
                 <span>
                     <select class="select" v-model="mi_board_name">
-                        <option v-for="board_name, index in mi_board_names" :key="index">{{ board_name }}</option>
+                        <option class="mi_board_option" v-for="board_name, index in mi_board_names" :key="index">{{
+                            board_name }}</option>
                     </select>
                 </span>
             </v-col>
@@ -434,5 +435,9 @@ load_mi_board_names()
 .input.time,
 .input.text {
     border: solid 1px silver;
+}
+
+.mi_board_option {
+    background-color: rgb(var(--v-theme-background));
 }
 </style>

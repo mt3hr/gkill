@@ -126,7 +126,6 @@ function update_rep_type_struct(rep_type_struct_obj: RepTypeStruct): void {
             break
         }
     }
-    cloned_application_config.value.parse_rep_type_struct()
     if (cloned_application_config.value.parsed_rep_type_struct.children) {
         update_seq(cloned_application_config.value.parsed_rep_type_struct.children)
     }
