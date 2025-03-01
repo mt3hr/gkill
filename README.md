@@ -1,18 +1,13 @@
 # ライフログアプリケーション「gkill」
 gkillはライフログアプリケーションです。  
 
-## 開発中・・・ （ [要件書・設計書](https://github.com/mt3hr/gkill/tree/main/documents) ）
-【開発フェーズ】（2025-02-01 リスケ）  
-100% 24-07-18 対応完了 01.計画準備    
-100% 24-08-15 対応完了 02.全体設計    
-100% 25-02-02 対応完了 03.実装  
-100% 25-02-16 対応完了 04.全体テスト  
-     25-02-28 完了目標 05.トライアルテスト フィードバック対応 ←対応中  
-000% 25-03-01 完了目標 06.リリース  
-000% 25-06-01 完了目標 07.資料整備  
+## 資料
+[マニュアル](.) （準備中）  
+[要件書・設計書](https://github.com/mt3hr/gkill/tree/main/documents)  
+[仕様書](.) （準備中）  
 
 ## ダウンロード
-[gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)（テスト中）  
+[gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
 
 ## 実行
 「gkill.exe」または「gkill_server.exe」をダブルクリック  
@@ -45,4 +40,16 @@ npm run install_app
 npm run go_mod
 npm run install_server
 ```
+</details>
+
+<details>
+<summary>かいはつすけじゅーる</summary>
+【開発フェーズ】（2025-02-01 リスケ）  
+100% 24-07-18 対応完了 01.計画準備  
+100% 24-08-15 対応完了 02.全体設計  
+100% 25-02-02 対応完了 03.実装  
+100% 25-02-16 対応完了 04.全体テスト  
+100% 25-02-28 対応完了 05.トライアルテスト フィードバック対応  
+100% 25-03-01 完了目標 06.リリース [gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
+000% 25-06-01 完了目標 07.資料整備  ←対応中  
 </details>
