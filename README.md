@@ -1,7 +1,7 @@
 # ライフログアプリケーション「gkill」
 gkillはライフログアプリケーションです。  
 
-## 資料
+## 資料（準備中）
 [マニュアル](.) （準備中）  
 [要件書・設計書](https://github.com/mt3hr/gkill/tree/main/documents)  
 [仕様書](.) （準備中）  
@@ -10,8 +10,15 @@ gkillはライフログアプリケーションです。
 [gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
 
 ## 実行
-「gkill.exe」または「gkill_server.exe」をダブルクリック  
-（gkill_server.exeの場合は起動後「[http://localhost:9999](http://localhost:9999)」にアクセス）  
+「gkill_server.exe」を実行  
+その後「[http://localhost:9999](http://localhost:9999)」にアクセス  
+
+## 初回起動  
+初回実行時に、管理者アカウント「admin」のパスワード初期化が求められるので実施してください。  
+リセット後、ログイン画面に遷にします。  
+adminアカウントでログインし、画面右上の歯車マーク→サーバコンフィグ→アカウント管理→アカウント追加 で、任意のアカウントを追加できます。  
+このとき、「ユーザ用の各Repを作成し設定する」にチェックを入れて作成するようにしてください。  
+（そのうちマニュアル作ります）  
 
 <details>
 <summary>開発者向け</summary>
@@ -29,13 +36,6 @@ npm i
 
 ### ビルド・インストール
 
-アプリケーションインストール  
-```
-npm run go_mod
-npm run install_app
-```
-
-サーバインストール  
 ```
 npm run go_mod
 npm run install_server
@@ -45,11 +45,40 @@ npm run install_server
 <details>
 <summary>かいはつすけじゅーる</summary>
 【開発フェーズ】（2025-02-01 リスケ）  
+
 100% 24-07-18 対応完了 01.計画準備  
+
 100% 24-08-15 対応完了 02.全体設計  
+
 100% 25-02-02 対応完了 03.実装  
+
 100% 25-02-16 対応完了 04.全体テスト  
+
 100% 25-02-28 対応完了 05.トライアルテスト フィードバック対応  
-100% 25-03-01 完了目標 06.リリース [gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
-000% 25-06-01 完了目標 07.資料整備  ←対応中  
+
+100% 25-03-01 完了目標 06.リリース  
+[gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
+
+</details>
+
+<details>
+<summary>資料整備しんちょく</summary>
+【資料整備フェーズ】  
+
+000% A-1 画面遷移仕様図  
+
+000% A-2 ユースケース仕様書  
+
+000% B-1 ER仕様図  
+
+000% C-1 詳細クラス仕様書  
+
+000% C-2 主要プログラム仕様説明書  
+
+000% D-1 サンプルデータ  
+
+000% D-2 ユーザマニュアル  
+
+000% E-1 README  
+
 </details>
