@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <div>
-            <KyouView v-for="kyou in kyou.attached_histories" :application_config="application_config"
+            <KyouView v-for="kyou in cloned_kyou.attached_histories" :application_config="application_config"
                 :key="kyou.update_time.getTime()" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :is_image_view="false" :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
                 :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
@@ -29,10 +29,21 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { ref } from 'vue';
 import type { KyouHistoriesViewProps } from './kyou-histories-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
+import { Kyou } from '@/classes/datas/kyou';
 
-defineProps<KyouHistoriesViewProps>()
+const props = defineProps<KyouHistoriesViewProps>()
 const emits = defineEmits<KyouViewEmits>()
+
+const cloned_kyou = ref(new Kyou())
+load_cloned_kyou()
+
+async function load_cloned_kyou() {
+    cloned_kyou.value = props.kyou.clone()
+    cloned_kyou.value.load_attached_histories()
+    cloned_kyou.value.load_attached_histories()
+}
 </script>
