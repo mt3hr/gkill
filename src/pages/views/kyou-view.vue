@@ -412,7 +412,7 @@ async function load_attached_infos(): Promise<void> {
             awaitPromises.push(cloned_kyou.value.load_attached_tags())
             awaitPromises.push(cloned_kyou.value.load_attached_texts())
             awaitPromises.push(cloned_kyou.value.load_attached_notifications())
-            awaitPromises.push(cloned_kyou.value.load_attached_histories())
+            // awaitPromises.push(cloned_kyou.value.load_attached_histories()) // 重いのでKyouHistoriesViewで読み込む
             if (props.show_attached_timeis) {
                 awaitPromises.push(cloned_kyou.value.load_attached_timeis())
             }
