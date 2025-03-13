@@ -2434,7 +2434,6 @@ func (a *allDataDB) getGkillIDFKyous() ([]*reps.IDFKyou, error) {
 		fileMetadata.UpdateUser = a.UserName
 		fileMetadata.CreateTime = time
 		fileMetadata.UpdateTime = time
-		fileMetadata.RelatedTime = time
 		fileMetadatas = append(fileMetadatas, fileMetadata)
 	}
 	return fileMetadatas, nil
