@@ -170,6 +170,9 @@ function generate_query(): FindKyouQuery {
     plaing_timeis_query.use_tags = false
     plaing_timeis_query.use_plaing = true
     plaing_timeis_query.plaing_time = moment().toDate()
+    if (plaing_timeis_query.plaing_time.getTime() <= (last_added_request_time.value?.getTime() ?? 0)) {
+        plaing_timeis_query.plaing_time = moment(last_added_request_time.value).add(1, 'second').toDate()
+    }
     props.application_config.rep_struct.forEach(rep_struct => {
         plaing_timeis_query.reps.push(rep_struct.rep_name)
     })
@@ -186,14 +189,14 @@ const focused_kyou: Ref<Kyou | null> = ref(null)
 const focused_time: Ref<Date> = ref(moment().toDate())
 const last_added_tag: Ref<string> = ref("")
 const kyou_list_view_height = computed(() => props.app_content_height)
+const last_added_request_time: Ref<Date | null> = ref(null)
 
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
 
 const props = defineProps<PlaingTimeIsViewProps>()
 const emits = defineEmits<PlaingTimeIsViewEmits>()
-defineExpose({ reload_list })
-
+defineExpose({ reload_list, set_last_added_request_time })
 
 const skip_search_this_tick = ref(false)
 
@@ -300,11 +303,7 @@ async function reload_list(update_cache: boolean): Promise<void> {
     if (!kyou_list_views.value) {
         return
     }
-    const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any
-    if (!kyou_list_view) {
-        return
-    }
-    kyou_list_view.scroll_to(0)
+    kyou_list_views.value.scroll_to(0)
 }
 
 function floatingActionButtonStyle() {
@@ -343,6 +342,10 @@ function show_urlog_dialog(): void {
 
 function show_upload_file_dialog(): void {
     upload_file_dialog.value?.show()
+}
+
+function set_last_added_request_time(time: Date): void {
+    last_added_request_time.value = time
 }
 </script>
 <style lang="css">

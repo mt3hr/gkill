@@ -29,7 +29,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         this.api = GkillAPI.get_gkill_api()
 
         this.request_id = request_id
-        this.tags = new Array<string>
+        this.tags = new Array<string>()
         this.current_text_id = ""
         this.texts_map = new Map<string, string>()
         this.related_time = null
