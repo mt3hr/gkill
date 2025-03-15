@@ -64,7 +64,6 @@ export class KFTLMiRequest extends KFTLRequest {
 
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
         const id = this.get_request_id()
-        const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const now = new Date(Date.now())
 
         const mi_req = new AddMiRequest()
