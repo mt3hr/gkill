@@ -81,8 +81,6 @@ const line_label_styles: Ref<Array<any>> = ref(new Array<any>())
 const invalid_line_numbers: Ref<Array<Number>> = ref(new Array<Number>())
 const is_requested_submit: Ref<boolean> = ref(false)
 
-const theme = useTheme()
-
 const props = defineProps<KFTLProps>()
 const emits = defineEmits<KFTLViewEmits>()
 
@@ -187,9 +185,14 @@ async function submit(): Promise<void> {
         }
         const statement = new KFTLStatement(text_area_content.value)
         const kftl_requests = await statement.generate_requests()
+        let last_added_request_time = new Date(Date.now()) // 「、、」でずれた分をPlaingTimeIsにわたすための考慮。リロード時刻より大きかった場合はこの値でTimeIsをリロードする
         let errors = new Array<GkillError>()
         for (let i = 0; i < kftl_requests.length; i++) {
             const request = kftl_requests[i]
+            const request_related_time = request.get_related_time()
+            if (request_related_time && request_related_time.getTime() > last_added_request_time.getTime()) {
+                last_added_request_time = request_related_time
+            }
             await request.do_request().then(request_errors => errors = errors.concat(request_errors))
         }
         if (errors.length != 0) {
@@ -201,7 +204,7 @@ async function submit(): Promise<void> {
         message.message_code = GkillMessageCodes.saved_kftls
         message.message = "保存しました"
         emits('received_messages', [message])
-        emits('saved_kyou_by_kftl')
+        emits('saved_kyou_by_kftl', last_added_request_time)
     } finally {
         is_requested_submit.value = false
     }
@@ -235,6 +238,8 @@ window.addEventListener("resize", () => {
     update_line_labels()
 })
 onMounted(() => resize())
+
+const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
 </script>
 
