@@ -1322,7 +1322,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Tag.IsDeleted,
 		TargetID:                 request.Tag.ID,
 		DataUpdateTime:           request.Tag.UpdateTime,
@@ -1469,7 +1469,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Text.IsDeleted,
 		TargetID:                 request.Text.ID,
 		DataUpdateTime:           request.Text.UpdateTime,
@@ -1616,7 +1616,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Notification.IsDeleted,
 		TargetID:                 request.Notification.ID,
 		DataUpdateTime:           request.Notification.UpdateTime,
@@ -1787,7 +1787,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Kmemo.IsDeleted,
 		TargetID:                 request.Kmemo.ID,
 		DataUpdateTime:           request.Kmemo.UpdateTime,
@@ -1962,7 +1962,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.URLog.IsDeleted,
 		TargetID:                 request.URLog.ID,
 		DataUpdateTime:           request.URLog.UpdateTime,
@@ -2109,7 +2109,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Nlog.IsDeleted,
 		TargetID:                 request.Nlog.ID,
 		DataUpdateTime:           request.Nlog.UpdateTime,
@@ -2256,7 +2256,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.TimeIs.IsDeleted,
 		TargetID:                 request.TimeIs.ID,
 		DataUpdateTime:           request.TimeIs.UpdateTime,
@@ -2404,7 +2404,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Lantana.IsDeleted,
 		TargetID:                 request.Lantana.ID,
 		DataUpdateTime:           request.Lantana.UpdateTime,
@@ -2551,7 +2551,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Mi.IsDeleted,
 		TargetID:                 request.Mi.ID,
 		DataUpdateTime:           request.Mi.UpdateTime,
@@ -2698,7 +2698,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.ReKyou.IsDeleted,
 		TargetID:                 request.ReKyou.ID,
 		DataUpdateTime:           request.ReKyou.UpdateTime,
@@ -2835,7 +2835,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Tag.IsDeleted,
 		TargetID:                 request.Tag.ID,
 		DataUpdateTime:           request.Tag.UpdateTime,
@@ -2995,7 +2995,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Text.IsDeleted,
 		TargetID:                 request.Text.ID,
 		DataUpdateTime:           request.Text.UpdateTime,
@@ -3155,7 +3155,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Notification.IsDeleted,
 		TargetID:                 request.Notification.ID,
 		DataUpdateTime:           request.Notification.UpdateTime,
@@ -3339,7 +3339,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Kmemo.IsDeleted,
 		TargetID:                 request.Kmemo.ID,
 		DataUpdateTime:           request.Kmemo.UpdateTime,
@@ -3566,7 +3566,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.URLog.IsDeleted,
 		TargetID:                 request.URLog.ID,
 		DataUpdateTime:           request.URLog.UpdateTime,
@@ -3726,7 +3726,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Nlog.IsDeleted,
 		TargetID:                 request.Nlog.ID,
 		DataUpdateTime:           request.Nlog.UpdateTime,
@@ -3886,7 +3886,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.TimeIs.IsDeleted,
 		TargetID:                 request.TimeIs.ID,
 		DataUpdateTime:           request.TimeIs.UpdateTime,
@@ -4046,7 +4046,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Lantana.IsDeleted,
 		TargetID:                 request.Lantana.ID,
 		DataUpdateTime:           request.Lantana.UpdateTime,
@@ -4206,7 +4206,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.IDFKyou.IsDeleted,
 		TargetID:                 request.IDFKyou.ID,
 		DataUpdateTime:           request.IDFKyou.UpdateTime,
@@ -4376,7 +4376,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.Mi.IsDeleted,
 		TargetID:                 request.Mi.ID,
 		DataUpdateTime:           request.Mi.UpdateTime,
@@ -4513,7 +4513,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                request.ReKyou.IsDeleted,
 		TargetID:                 request.ReKyou.ID,
 		DataUpdateTime:           request.ReKyou.UpdateTime,
@@ -6891,7 +6891,7 @@ loop:
 					}
 					return
 				}
-				_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+				_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 					IsDeleted:                idfKyou.IsDeleted,
 					TargetID:                 idfKyou.ID,
 					DataUpdateTime:           idfKyou.UpdateTime,
@@ -10620,7 +10620,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		// response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.UpdateOrAddLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 		IsDeleted:                urlog.IsDeleted,
 		TargetID:                 urlog.ID,
 		DataUpdateTime:           urlog.UpdateTime,

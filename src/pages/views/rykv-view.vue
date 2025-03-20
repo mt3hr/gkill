@@ -158,8 +158,8 @@
                                 :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
-                                :show_timeis_plaing_end_button="true" :height="'auto'"
-                                :is_readonly_mi_check="false" :width="'auto'" :enable_context_menu="enable_context_menu"
+                                :show_timeis_plaing_end_button="true" :height="'auto'" :is_readonly_mi_check="false"
+                                :width="'auto'" :enable_context_menu="enable_context_menu"
                                 :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
                                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                                 @deleted_text="(deleted_text) => { }"
@@ -770,6 +770,7 @@ function show_upload_file_dialog(): void {
     overflow-x: hidden;
     overflow-y: scroll;
     height: calc(v-bind('app_content_height.toString().concat("px")'));
+    width: 400px;
 }
 </style>
 <style lang="css">
