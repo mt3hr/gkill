@@ -274,6 +274,10 @@ body {
     overflow-y: hidden !important;
 }
 
+body::-webkit-scrollbar {
+    display: none;
+}
+
 /* メッセージ、エラーメッセージ */
 .alert_container {
     position: fixed;
