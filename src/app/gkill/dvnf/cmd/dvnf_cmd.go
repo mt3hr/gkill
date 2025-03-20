@@ -1,14 +1,15 @@
 package dvnf_cmd
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
 	zglob "github.com/mattn/go-zglob"
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/app/gkill/dvnf"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,7 +18,6 @@ import (
 func init() {
 	// フラグの設定
 	pf := DVNFCmd.PersistentFlags()
-	pf.StringVar(&rootOpt.configfile, configFileKey, "", "コンフィグファイル")
 	pf.BoolVarP(&rootOpt.createNew, createNewKey, createNewKeyP, false, "新たにdvnfを作成します")
 	pf.BoolVar(&rootOpt.autoCreate, autoCreateKey, true, "1つも存在しなかったときに自動で作成します。")
 	viper.BindPFlags(pf)
@@ -29,19 +29,38 @@ func init() {
 
 	// コンフィグの読み込みとpathの展開
 	DVNFCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		setEnv()
-		err := loadConfig()
+		ctx := context.Background()
+
+		configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)
+		serverConfigDAO, err := server_config.NewServerConfigDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "server_config.db"))
 		if err != nil {
-			err = fmt.Errorf("error at load config file: %w", err)
-			log.Fatal(err)
+			err = fmt.Errorf("error at get serverConfig: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			return
 		}
-		config.Directory = os.ExpandEnv(config.Directory)
+
+		var currentServerConfig *server_config.ServerConfig
+		serverConfigs, err := serverConfigDAO.GetAllServerConfigs(ctx)
+		if err != nil {
+			err = fmt.Errorf("error at get serverConfig: %w", err)
+			gkill_log.Debug.Printf(err.Error())
+			return
+		}
+		for _, serverConfig := range serverConfigs {
+			if serverConfig.EnableThisDevice {
+				currentServerConfig = serverConfig
+				break
+			}
+		}
+
+		config.Directory = os.ExpandEnv(fmt.Sprintf("$HOME/%s", currentServerConfig.Device))
+		config.Device = currentServerConfig.Device
+		config.TimeLength = 8
 	}
 }
 
 var (
 	rootOpt = struct {
-		configfile string
 		createNew  bool
 		autoCreate bool
 	}{}
@@ -135,124 +154,4 @@ func expandDVNFPathium(cfg *Config, dvnfPathium string, splitExtension bool) (op
 		Extension:  ext,
 	}
 	return opt, sub
-}
-
-// 環境変数が設定されていなければ設定します
-// ExpandEnvで使います。
-func setEnv() {
-	// HOME
-	home := os.Getenv("HOME")
-	if home == "" {
-		home, err := homedir.Dir()
-		if err != nil {
-			err = fmt.Errorf("error at get user home directory: %w", err)
-			log.Printf(err.Error())
-		} else {
-			os.Setenv("HOME", home)
-		}
-	}
-
-	// EXE
-	exe := os.Getenv("EXE")
-	if exe == "" {
-		exe, err := os.Executable()
-		if err != nil {
-			err = fmt.Errorf("error at get executable file path: %w", err)
-			log.Printf(err.Error())
-		} else {
-			os.Setenv("EXE", exe)
-		}
-	}
-}
-
-func getConfigFile() string {
-	return rootOpt.configfile
-}
-func getConfig() *Config {
-	return config
-}
-func getConfigName() string {
-	return "dvnf_config"
-}
-func getConfigExt() string {
-	return ".yaml"
-}
-func createDefaultConfigYAML() string {
-	return `Directory: $HOME/Datas
-Device: PC
-TimeLength: 8
-`
-}
-
-func loadConfig() error {
-	configOpt := getConfigFile()
-	config := getConfig()
-	configName := getConfigName()
-	configExt := getConfigExt()
-
-	v := viper.New()
-	configPaths := []string{}
-	if configOpt != "" {
-		// コンフィグファイルが明示的に指定された場合はそれを
-		v.SetConfigFile(configOpt)
-		configPaths = append(configPaths, configOpt)
-	} else {
-		// 実行ファイルの親ディレクトリ、カレントディレクトリ、GkillHomeの順に
-		v.SetConfigName(configName)
-		exe, err := os.Executable()
-		if err != nil {
-			err = fmt.Errorf("error at get executable file path: %w", err)
-			log.Printf(err.Error())
-		} else {
-			v.AddConfigPath(filepath.Dir(exe))
-			configPaths = append(configPaths, filepath.Join(filepath.Dir(exe), configName+configExt))
-		}
-
-		v.AddConfigPath(".")
-		configPaths = append(configPaths, filepath.Join(".", configName+configExt))
-
-		v.AddConfigPath(os.ExpandEnv(gkill_options.GkillHomeDir))
-		configPaths = append(configPaths, filepath.Join(os.ExpandEnv(gkill_options.GkillHomeDir), configName+configExt))
-	}
-
-	// 読み込んでcfgを作成する
-	existConfigPath := false
-	for _, configPath := range configPaths {
-		if _, err := os.Stat(configPath); err == nil {
-			existConfigPath = true
-			break
-		}
-	}
-	if !existConfigPath {
-		// コンフィグファイルが指定されていなくてコンフィグファイルが見つからなかった場合、
-		// ホームディレクトリにデフォルトコンフィグファイルを作成する。
-		// できなければカレントディレクトリにコンフィグファイルを作成する。
-		if configOpt == "" {
-			configDir := os.ExpandEnv(gkill_options.GkillHomeDir)
-
-			configFileName := filepath.Join(configDir, configName+configExt)
-			err := os.WriteFile(configFileName, []byte(createDefaultConfigYAML()), os.ModePerm)
-			if err != nil {
-				err = fmt.Errorf("error at write file to %s: %w", configFileName, err)
-				return err
-			}
-			v.SetConfigFile(configFileName)
-		} else {
-			err := fmt.Errorf("コンフィグファイルが見つかりませんでした。")
-			return err
-		}
-	}
-
-	err := v.ReadInConfig()
-	if err != nil {
-		err = fmt.Errorf("error at read in config: %w", err)
-		return err
-	}
-
-	err = v.Unmarshal(config)
-	if err != nil {
-		err = fmt.Errorf("error at unmarshal config file: %w", err)
-		return err
-	}
-	return nil
 }
