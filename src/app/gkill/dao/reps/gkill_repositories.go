@@ -437,22 +437,32 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 
 		go func(rep Repository) {
 			defer wg.Done()
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get rep name: %w", err)
-				errch <- err
-				return
-			}
+			select {
+			case <-ctx.Done():
+				e := ctx.Err()
+				if e != nil {
+					err = fmt.Errorf("error at update cache: %w", e)
+					errch <- err
+					return
+				}
+			default:
+				repName, err := rep.GetRepName(ctx)
+				if err != nil {
+					err = fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
+					return
+				}
 
-			reps := []string{repName}
-			kyous, err := rep.FindKyous(ctx, &find.FindQuery{Reps: &reps})
-			if err != nil {
-				repName, _ := rep.GetRepName(ctx)
-				err = fmt.Errorf("error at %s: %w", repName, err)
-				errch <- err
-				return
+				reps := []string{repName}
+				kyous, err := rep.FindKyous(ctx, &find.FindQuery{Reps: &reps})
+				if err != nil {
+					repName, _ := rep.GetRepName(ctx)
+					err = fmt.Errorf("error at %s: %w", repName, err)
+					errch <- err
+					return
+				}
+				kyousCh <- kyous
 			}
-			kyousCh <- kyous
 		}(rep)
 	}
 
@@ -462,20 +472,30 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 
 		go func(rep TagRepository) {
 			defer wg.Done()
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get rep name: %w", err)
-				errch <- err
-				return
-			}
+			select {
+			case <-ctx.Done():
+				e := ctx.Err()
+				if e != nil {
+					err = fmt.Errorf("error at update cache: %w", e)
+					errch <- err
+					return
+				}
+			default:
+				repName, err := rep.GetRepName(ctx)
+				if err != nil {
+					err = fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
+					return
+				}
 
-			reps := []string{repName}
-			tags, err := rep.FindTags(ctx, &find.FindQuery{Reps: &reps})
-			if err != nil {
-				errch <- err
-				return
+				reps := []string{repName}
+				tags, err := rep.FindTags(ctx, &find.FindQuery{Reps: &reps})
+				if err != nil {
+					errch <- err
+					return
+				}
+				tagsCh <- tags
 			}
-			tagsCh <- tags
 		}(rep)
 	}
 
@@ -485,24 +505,32 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 
 		go func(rep TextRepository) {
 			defer wg.Done()
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get rep name: %w", err)
-				errch <- err
-				return
-			}
+			select {
+			case <-ctx.Done():
+				e := ctx.Err()
+				if e != nil {
+					err = fmt.Errorf("error at update cache: %w", e)
+					errch <- err
+					return
+				}
+			default:
+				repName, err := rep.GetRepName(ctx)
+				if err != nil {
+					err = fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
+					return
+				}
 
-			reps := []string{repName}
-			texts, err := rep.FindTexts(ctx, &find.FindQuery{Reps: &reps})
-			if err != nil {
-				errch <- err
-				return
+				reps := []string{repName}
+				texts, err := rep.FindTexts(ctx, &find.FindQuery{Reps: &reps})
+				if err != nil {
+					errch <- err
+					return
+				}
+				textsCh <- texts
 			}
-			textsCh <- texts
 		}(rep)
 	}
-
-	wg.Wait()
 
 	// notificationを集める
 	for _, rep := range g.NotificationReps {
@@ -510,20 +538,30 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 
 		go func(rep NotificationRepository) {
 			defer wg.Done()
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get rep name: %w", err)
-				errch <- err
-				return
-			}
+			select {
+			case <-ctx.Done():
+				e := ctx.Err()
+				if e != nil {
+					err = fmt.Errorf("error at update cache: %w", e)
+					errch <- err
+					return
+				}
+			default:
+				repName, err := rep.GetRepName(ctx)
+				if err != nil {
+					err = fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
+					return
+				}
 
-			reps := []string{repName}
-			notifications, err := rep.FindNotifications(ctx, &find.FindQuery{Reps: &reps})
-			if err != nil {
-				errch <- err
-				return
+				reps := []string{repName}
+				notifications, err := rep.FindNotifications(ctx, &find.FindQuery{Reps: &reps})
+				if err != nil {
+					errch <- err
+					return
+				}
+				notificationsCh <- notifications
 			}
-			notificationsCh <- notifications
 		}(rep)
 	}
 
@@ -675,7 +713,7 @@ notificationsloop:
 		return err
 	}
 
-	_, err = g.LatestDataRepositoryAddressDAO.AddLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
+	_, err = g.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
 	if err != nil {
 		err = fmt.Errorf("error at add latest data repository address cache: %w", err)
 		return err
