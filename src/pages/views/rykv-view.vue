@@ -158,8 +158,8 @@
                                 :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
-                                :show_timeis_plaing_end_button="true" :height="'fit-content'"
-                                :is_readonly_mi_check="false" :width="400" :enable_context_menu="enable_context_menu"
+                                :show_timeis_plaing_end_button="true" :height="'auto'"
+                                :is_readonly_mi_check="false" :width="'auto'" :enable_context_menu="enable_context_menu"
                                 :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
                                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                                 @deleted_text="(deleted_text) => { }"
@@ -764,34 +764,33 @@ function show_upload_file_dialog(): void {
     upload_file_dialog.value?.show()
 }
 </script>
+<style lang="css" scoped>
+.kyou_detail_view.dummy {
+    resize: horizontal;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    height: calc(v-bind('app_content_height.toString().concat("px")'));
+}
+</style>
 <style lang="css">
 .rykv_view_table {
     padding-top: 0px;
 }
 
-.kyou_detail_view.dummy {
-    overflow-x: hidden;
-    overflow-y: scroll;
-}
-
-.kyou_detail_view {
-    width: calc(400px + 8px);
-    max-width: calc(400px + 8px);
-    min-width: calc(400px + 8px);
-}
-
 .kyou_detail_view .kyou_image {
-    width: unset !important;
-    height: fit-content !important;
-    max-width: calc(400px - 2px) !important;
-    max-height: 85vh !important;
+    width: -webkit-fill-available !important;
+    height: -webkit-fill-available !important;
+    max-width: -webkit-fill-available !important;
+    max-height: 100vh !important;
+    object-fit: contain;
 }
 
 .kyou_detail_view .kyou_video {
-    width: unset !important;
-    height: fit-content !important;
-    max-width: calc(400px - 2px) !important;
-    max-height: 85vh !important;
+    width: -webkit-fill-available !important;
+    height: -webkit-fill-available !important;
+    max-width: -webkit-fill-available !important;
+    max-height: 100vh !important;
+    object-fit: contain;
 }
 
 .kyou_dialog .kyou_image {
