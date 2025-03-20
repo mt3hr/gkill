@@ -195,28 +195,20 @@ nextTick(() => load_content())
     padding-top: 0px;
 }
 
-.kyou_detail_view.dummy {
-    overflow-x: hidden;
+.kyou_detail_view .kyou_image {
+    width: -webkit-fill-available !important;
+    height: -webkit-fill-available !important;
+    max-width: -webkit-fill-available !important;
+    max-height: 100vh !important;
+    object-fit: contain;
 }
 
-.kyou_detail_view {
-    width: calc(400px + 8px);
-    max-width: calc(400px + 8px);
-    min-width: calc(400px + 8px);
-}
-
-.kyou_detail_view img.kyou_image {
-    width: unset !important;
-    height: unset !important;
-    max-width: calc(400px - 2px) !important;
-    max-height: 85vh !important;
-}
-
-.kyou_dialog img.kyou_image {
-    width: unset !important;
-    height: unset !important;
-    max-width: 85vw !important;
-    max-height: 85vh !important;
+.kyou_detail_view .kyou_video {
+    width: -webkit-fill-available !important;
+    height: -webkit-fill-available !important;
+    max-width: -webkit-fill-available !important;
+    max-height: 100vh !important;
+    object-fit: contain;
 }
 
 .mi_view_wrap {
