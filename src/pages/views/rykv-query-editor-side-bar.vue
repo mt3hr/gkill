@@ -227,7 +227,7 @@ function emits_cleard_timeis_query(): void {
     find_query.timeis_tags = get_default_query().timeis_tags.concat()
     find_query.timeis_tags_and = get_default_query().timeis_tags_and
     query.value = find_query
-    timeis_query.value?.update_check(find_query.tags, CheckState.checked, true)
+    timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
     emits('updated_query_clear', find_query)
 }
 
@@ -247,7 +247,7 @@ function emits_cleard_tag_query(): void {
     find_query.tags = get_default_query().tags.concat()
     find_query.tags_and = get_default_query().tags_and
     query.value = find_query
-    tag_query.value?.update_check(find_query.tags, CheckState.checked, true)
+    tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
     emits('updated_query_clear', find_query)
 }
 
@@ -273,12 +273,12 @@ function emits_cleard_calendar_query(): void {
     emits('updated_query_clear', find_query)
 }
 
-function emits_default_query(): void {
+async function emits_default_query(): Promise<void> {
     const find_query = get_default_query().clone()
     find_query.query_id = props.gkill_api.generate_uuid()
+    await tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
+    await timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
     query.value = find_query
-    tag_query.value?.update_check(find_query.tags, CheckState.checked, true)
-    timeis_query.value?.update_check(find_query.tags, CheckState.checked, true)
     emits('updated_query_clear', find_query)
 }
 </script>

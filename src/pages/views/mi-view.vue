@@ -12,7 +12,7 @@
                             <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
                                 :key="index" :value="index">
                                 <v-list-item-title @click="router.replace('/' + page)">{{ page
-                                }}</v-list-item-title>
+                                    }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>
@@ -53,7 +53,7 @@
                         return
                     }
                     skip_search_this_tick = true // 使い方違うけど
-                    search(focused_column_index, new_query, application_config.rykv_hot_reload)
+                    search(focused_column_index, new_query)
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
                 @request_open_focus_board="(board_name: string) => open_or_focus_board(board_name)"
                 @received_errors="(errors) => emits('received_errors', errors)"
@@ -547,99 +547,95 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Prom
 }
 
 async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
-
-
     const query_id = query.query_id
     // 検索する。Tickでまとめる
-    return nextTick(async () => {
-        try {
-            if (!force_search) {
-                if (deepEquals(querys_backup.value[column_index], query)) {
-                    return
-                }
-            }
-            querys.value[column_index] = query
-            querys_backup.value[column_index] = query
-            focused_query.value = query
-
-            props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
-
-            // 前の検索処理を中断する
-            if (abort_controllers.value[column_index]) {
-                abort_controllers.value[column_index].abort()
-            }
-
-            if (match_kyous_list.value[column_index]) {
-                match_kyous_list.value[column_index] = []
-            }
-
-            const kyou_list_view = kyou_list_views.value[column_index] as any
-            if (kyou_list_view && inited.value) {
-                kyou_list_view.scroll_to(0)
-            }
-            await nextTick(async () => {
-                const kyou_list_view = kyou_list_views.value[column_index] as any
-                if (!kyou_list_view) {
-                    return
-                }
-                kyou_list_view.set_loading(true)
-                return nextTick(() => { }) // loading表記切り替え待ち
-            })
-
-            const req = new GetKyousRequest()
-            abort_controllers.value[column_index] = req.abort_controller
-            req.query = query.clone()
-            req.query.parse_words_and_not_words()
-            if (update_cache) {
-                req.query.update_cache = true
-            }
-            const res = await props.gkill_api.get_kyous(req)
-            if (res.errors && res.errors.length !== 0) {
-                emits('received_errors', res.errors)
+    try {
+        if (!force_search) {
+            if (deepEquals(querys_backup.value[column_index], query)) {
                 return
-            }
-            if (res.messages && res.messages.length !== 0) {
-                emits('received_messages', res.messages)
-            }
-
-            // 検索後の列位置を取得する
-            column_index = -1
-            for (let i = 0; i < querys.value.length; i++) {
-                const query = querys.value[i]
-                if (query.query_id === query_id) {
-                    column_index = i
-                    break
-                }
-            }
-
-            if (column_index === -1) {
-                return
-            }
-
-            match_kyous_list.value[column_index] = res.kyous
-            if (is_show_kyou_count_calendar.value) {
-                update_focused_kyous_list(column_index)
-            }
-
-            await nextTick(() => {
-                const kyou_list_view = kyou_list_views.value[column_index] as any
-                if (!kyou_list_view) {
-                    return
-                }
-                if (inited.value) {
-                    kyou_list_view.scroll_to(0)
-                    kyou_list_view.set_loading(false)
-                    skip_search_this_tick.value = false
-                }
-            })
-        } catch (err: any) {
-            // abortは握りつぶす
-            if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
-                // abort以外はエラー出力する
-                console.error(err)
             }
         }
-    })
+        querys.value[column_index] = query
+        querys_backup.value[column_index] = query
+        focused_query.value = query
+
+        props.gkill_api.set_saved_mi_find_kyou_querys(querys.value)
+
+        // 前の検索処理を中断する
+        if (abort_controllers.value[column_index]) {
+            abort_controllers.value[column_index].abort()
+        }
+
+        if (match_kyous_list.value[column_index]) {
+            match_kyous_list.value[column_index] = []
+        }
+
+        const kyou_list_view = kyou_list_views.value[column_index] as any
+        if (kyou_list_view && inited.value) {
+            kyou_list_view.scroll_to(0)
+        }
+        await nextTick(async () => {
+            const kyou_list_view = kyou_list_views.value[column_index] as any
+            if (!kyou_list_view) {
+                return
+            }
+            kyou_list_view.set_loading(true)
+            return nextTick(() => { }) // loading表記切り替え待ち
+        })
+
+        const req = new GetKyousRequest()
+        abort_controllers.value[column_index] = req.abort_controller
+        req.query = query.clone()
+        req.query.parse_words_and_not_words()
+        if (update_cache) {
+            req.query.update_cache = true
+        }
+        const res = await props.gkill_api.get_kyous(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+
+        // 検索後の列位置を取得する
+        column_index = -1
+        for (let i = 0; i < querys.value.length; i++) {
+            const query = querys.value[i]
+            if (query.query_id === query_id) {
+                column_index = i
+                break
+            }
+        }
+
+        if (column_index === -1) {
+            return
+        }
+
+        match_kyous_list.value[column_index] = res.kyous
+        if (is_show_kyou_count_calendar.value) {
+            update_focused_kyous_list(column_index)
+        }
+
+        await nextTick(() => {
+            const kyou_list_view = kyou_list_views.value[column_index] as any
+            if (!kyou_list_view) {
+                return
+            }
+            if (inited.value) {
+                kyou_list_view.scroll_to(0)
+                kyou_list_view.set_loading(false)
+                skip_search_this_tick.value = false
+            }
+        })
+    } catch (err: any) {
+        // abortは握りつぶす
+        if (!(err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            // abort以外はエラー出力する
+            console.error(err)
+        }
+    }
 }
 
 function open_or_focus_board(board_name: string): void {
