@@ -16,7 +16,8 @@
                 <label>タイトル</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input text" type="text" v-model="mi_title" label="タイトル" autofocus />
+                <input class="input text" type="text" v-model="mi_title" label="タイトル" autofocus
+                    :readonly="is_requested_submit" />
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -32,7 +33,8 @@
                 </span>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="show_new_board_name_dialog()" icon="mdi-plus" dark size="small"></v-btn>
+                <v-btn class="pt-1" @click="show_new_board_name_dialog()" icon="mdi-plus" dark size="small"
+                    :disabled="is_requested_submit"></v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -40,13 +42,15 @@
                 <label>開始日時</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input date" type="date" v-model="mi_estimate_start_date" label="開始日付" />
-                <input class="input time" type="time" v-model="mi_estimate_start_time" label="開始時刻" />
+                <input class="input date" type="date" v-model="mi_estimate_start_date" label="開始日付"
+                    :readonly="is_requested_submit" />
+                <input class="input time" type="time" v-model="mi_estimate_start_time" label="開始時刻"
+                    :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
-                <v-btn color="primary" @click="clear_estimate_start_date_time()">クリア</v-btn>
-                <v-btn color="primary" @click="reset_estimate_start_date_time()">リセット</v-btn>
-                <v-btn color="primary" @click="now_to_estimate_start_date_time()">現在日時</v-btn>
+                <v-btn @click="clear_estimate_start_date_time()" :disabled="is_requested_submit">クリア</v-btn>
+                <v-btn @click="reset_estimate_start_date_time()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn @click="now_to_estimate_start_date_time()" :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -54,13 +58,15 @@
                 <label>終了日時</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input date" type="date" v-model="mi_estimate_end_date" label="終了日付" />
-                <input class="input time" type="time" v-model="mi_estimate_end_time" label="終了時刻" />
+                <input class="input date" type="date" v-model="mi_estimate_end_date" label="終了日付"
+                    :readonly="is_requested_submit" />
+                <input class="input time" type="time" v-model="mi_estimate_end_time" label="終了時刻"
+                    :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
-                <v-btn color="primary" @click="clear_estimate_end_date_time()">クリア</v-btn>
-                <v-btn color="primary" @click="reset_estimate_end_date_time()">リセット</v-btn>
-                <v-btn color="primary" @click="now_to_estimate_end_date_time()">現在日時</v-btn>
+                <v-btn @click="clear_estimate_end_date_time()" :disabled="is_requested_submit">クリア</v-btn>
+                <v-btn @click="reset_estimate_end_date_time()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn @click="now_to_estimate_end_date_time()" :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -68,22 +74,24 @@
                 <label>期限日時</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input date" type="date" v-model="mi_limit_date" label="期限日付" />
-                <input class="input time" type="time" v-model="mi_limit_time" label="期限時刻" />
+                <input class="input date" type="date" v-model="mi_limit_date" label="期限日付"
+                    :readonly="is_requested_submit" />
+                <input class="input time" type="time" v-model="mi_limit_time" label="期限時刻"
+                    :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
-                <v-btn color="primary" @click="clear_limit_date_time()">クリア</v-btn>
-                <v-btn color="primary" @click="reset_limit_date_time()">リセット</v-btn>
-                <v-btn color="primary" @click="now_to_limit_date_time()">現在日時</v-btn>
+                <v-btn @click="clear_limit_date_time()" :disabled="is_requested_submit">クリア</v-btn>
+                <v-btn @click="reset_limit_date_time()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn @click="now_to_limit_date_time()" :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="reset()">リセット</v-btn>
+                <v-btn @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -133,6 +141,8 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
+
+const is_requested_submit = ref(false)
 
 const props = defineProps<EditMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -258,136 +268,141 @@ function reset(): void {
 }
 
 async function save(): Promise<void> {
-    cloned_kyou.value.abort_controller.abort()
+    try {
+        is_requested_submit.value = true
+        cloned_kyou.value.abort_controller.abort()
 
-    // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const mi = cloned_kyou.value.typed_mi
-    if (!mi) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.client_mi_is_null
-        error.error_message = "クライアントのデータが変です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // タイトルの入力チェック
-    if (mi_title.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.mi_title_is_blank
-        error.error_message = "タイトルが入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // 開始日時 片方だけ入力されていたらエラーチェック
-    if (mi_estimate_start_date.value === "" || mi_estimate_start_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
-        if ((mi_estimate_start_date.value === "" && mi_estimate_start_time.value !== "") ||
-            (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
+        // データがちゃんとあるか確認。なければエラーメッセージを出力する
+        const mi = cloned_kyou.value.typed_mi
+        if (!mi) {
             const error = new GkillError()
-            error.error_code = GkillErrorCodes.mi_estimate_start_time_is_blank
-            error.error_message = "開始日付付または開始時刻が入力されていません"
+            error.error_code = GkillErrorCodes.client_mi_is_null
+            error.error_message = "クライアントのデータが変です"
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
             return
         }
-    }
 
-    // 終了日時 片方だけ入力されていたらエラーチェック
-    if (mi_estimate_end_date.value === "" || mi_estimate_end_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
-        if ((mi_estimate_end_date.value === "" && mi_estimate_end_time.value !== "") ||
-            (mi_estimate_end_date.value !== "" && mi_estimate_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
+        // タイトルの入力チェック
+        if (mi_title.value === "") {
             const error = new GkillError()
-            error.error_code = GkillErrorCodes.mi_estimate_end_time_is_blank
-            error.error_message = "終了日付または終了時刻が入力されていません"
+            error.error_code = GkillErrorCodes.mi_title_is_blank
+            error.error_message = "タイトルが入力されていません"
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
             return
         }
-    }
 
-    // 期限日時 片方だけ入力されていたらエラーチェック
-    if (mi_limit_date.value === "" || mi_limit_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
-        if ((mi_limit_date.value === "" && mi_limit_time.value !== "") ||
-            (mi_limit_date.value !== "" && mi_limit_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
+        // 開始日時 片方だけ入力されていたらエラーチェック
+        if (mi_estimate_start_date.value === "" || mi_estimate_start_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
+            if ((mi_estimate_start_date.value === "" && mi_estimate_start_time.value !== "") ||
+                (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
+                const error = new GkillError()
+                error.error_code = GkillErrorCodes.mi_estimate_start_time_is_blank
+                error.error_message = "開始日付付または開始時刻が入力されていません"
+                const errors = new Array<GkillError>()
+                errors.push(error)
+                emits('received_errors', errors)
+                return
+            }
+        }
+
+        // 終了日時 片方だけ入力されていたらエラーチェック
+        if (mi_estimate_end_date.value === "" || mi_estimate_end_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
+            if ((mi_estimate_end_date.value === "" && mi_estimate_end_time.value !== "") ||
+                (mi_estimate_end_date.value !== "" && mi_estimate_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
+                const error = new GkillError()
+                error.error_code = GkillErrorCodes.mi_estimate_end_time_is_blank
+                error.error_message = "終了日付または終了時刻が入力されていません"
+                const errors = new Array<GkillError>()
+                errors.push(error)
+                emits('received_errors', errors)
+                return
+            }
+        }
+
+        // 期限日時 片方だけ入力されていたらエラーチェック
+        if (mi_limit_date.value === "" || mi_limit_time.value === "") {//どっちも入力されていなければOK。nullとして扱う
+            if ((mi_limit_date.value === "" && mi_limit_time.value !== "") ||
+                (mi_limit_date.value !== "" && mi_limit_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
+                const error = new GkillError()
+                error.error_code = GkillErrorCodes.mi_limit_time_is_blank
+                error.error_message = "期限日付付または期限時刻が入力されていません"
+                const errors = new Array<GkillError>()
+                errors.push(error)
+                emits('received_errors', errors)
+                return
+            }
+        }
+
+        // 更新がなかったらエラーメッセージを出力する
+        if (mi.title === mi_title.value &&
+            mi.board_name === mi_board_name.value &&
+            (moment(mi.estimate_start_time).toDate().getTime() === moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value).toDate().getTime() || (mi.estimate_start_time == null && mi_estimate_start_date.value === "" && mi_estimate_start_time.value === "")) &&
+            (moment(mi.estimate_end_time).toDate().getTime() === moment(mi_estimate_end_date.value + " " + mi_estimate_end_time.value).toDate().getTime() || (mi.estimate_end_time == null && mi_estimate_end_date.value === "" && mi_estimate_end_time.value === "")) &&
+            (moment(mi.limit_time).toDate().getTime() === moment(mi_limit_date.value + " " + mi_limit_time.value).toDate().getTime() || (mi.limit_time == null && mi_limit_date.value === "" && mi_limit_time.value === ""))) {
             const error = new GkillError()
-            error.error_code = GkillErrorCodes.mi_limit_time_is_blank
-            error.error_message = "期限日付付または期限時刻が入力されていません"
+            error.error_code = GkillErrorCodes.mi_is_no_update
+            error.error_message = "Miが更新されていません"
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
             return
         }
-    }
 
-    // 更新がなかったらエラーメッセージを出力する
-    if (mi.title === mi_title.value &&
-        mi.board_name === mi_board_name.value &&
-        (moment(mi.estimate_start_time).toDate().getTime() === moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value).toDate().getTime() || (mi.estimate_start_time == null && mi_estimate_start_date.value === "" && mi_estimate_start_time.value === "")) &&
-        (moment(mi.estimate_end_time).toDate().getTime() === moment(mi_estimate_end_date.value + " " + mi_estimate_end_time.value).toDate().getTime() || (mi.estimate_end_time == null && mi_estimate_end_date.value === "" && mi_estimate_end_time.value === "")) &&
-        (moment(mi.limit_time).toDate().getTime() === moment(mi_limit_date.value + " " + mi_limit_time.value).toDate().getTime() || (mi.limit_time == null && mi_limit_date.value === "" && mi_limit_time.value === ""))) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.mi_is_no_update
-        error.error_message = "Miが更新されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
+        }
+
+        // 更新後Mi情報を用意する
+        let estimate_start_time: Date | null = null
+        let estimate_end_time: Date | null = null
+        let limit_time: Date | null = null
+        if (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value !== "") {
+            estimate_start_time = moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value).toDate()
+        }
+        if (mi_estimate_end_date.value !== "" && mi_estimate_end_time.value !== "") {
+            estimate_end_time = moment(mi_estimate_end_date.value + " " + mi_estimate_end_time.value).toDate()
+        }
+        if (mi_limit_date.value !== "" && mi_limit_time.value !== "") {
+            limit_time = moment(mi_limit_date.value + " " + mi_limit_time.value).toDate()
+        }
+        const updated_mi = await mi.clone()
+        updated_mi.title = mi_title.value
+        updated_mi.board_name = mi_board_name.value
+        updated_mi.estimate_start_time = estimate_start_time
+        updated_mi.estimate_end_time = estimate_end_time
+        updated_mi.limit_time = limit_time
+        updated_mi.update_app = "gkill"
+        updated_mi.update_device = gkill_info_res.device
+        updated_mi.update_time = new Date(Date.now())
+        updated_mi.update_user = gkill_info_res.user_id
+
+        // 更新リクエストを飛ばす
+        const req = new UpdateMiRequest()
+        req.mi = updated_mi
+
+        const res = await props.gkill_api.update_mi(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits("updated_kyou", res.updated_mi_kyou)
+        emits('requested_reload_kyou', props.kyou)
+        emits('requested_close_dialog')
         return
+    } finally {
+        is_requested_submit.value = false
     }
-
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
-    // 更新後Mi情報を用意する
-    let estimate_start_time: Date | null = null
-    let estimate_end_time: Date | null = null
-    let limit_time: Date | null = null
-    if (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value !== "") {
-        estimate_start_time = moment(mi_estimate_start_date.value + " " + mi_estimate_start_time.value).toDate()
-    }
-    if (mi_estimate_end_date.value !== "" && mi_estimate_end_time.value !== "") {
-        estimate_end_time = moment(mi_estimate_end_date.value + " " + mi_estimate_end_time.value).toDate()
-    }
-    if (mi_limit_date.value !== "" && mi_limit_time.value !== "") {
-        limit_time = moment(mi_limit_date.value + " " + mi_limit_time.value).toDate()
-    }
-    const updated_mi = await mi.clone()
-    updated_mi.title = mi_title.value
-    updated_mi.board_name = mi_board_name.value
-    updated_mi.estimate_start_time = estimate_start_time
-    updated_mi.estimate_end_time = estimate_end_time
-    updated_mi.limit_time = limit_time
-    updated_mi.update_app = "gkill"
-    updated_mi.update_device = gkill_info_res.device
-    updated_mi.update_time = new Date(Date.now())
-    updated_mi.update_user = gkill_info_res.user_id
-
-    // 更新リクエストを飛ばす
-    const req = new UpdateMiRequest()
-    req.mi = updated_mi
-
-    const res = await props.gkill_api.update_mi(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits("updated_kyou", res.updated_mi_kyou)
-    emits('requested_reload_kyou', props.kyou)
-    emits('requested_close_dialog')
-    return
 }
 
 load_mi_board_names()

@@ -11,11 +11,11 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="text_value" label="テキスト" autofocus />
+        <v-textarea v-model="text_value" label="テキスト" autofocus :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -57,6 +57,8 @@ import { GkillError } from '@/classes/api/gkill-error';
 import type { Text } from '@/classes/datas/text';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
+const is_requested_submit = ref(false)
+
 const props = defineProps<EditTextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
@@ -73,59 +75,64 @@ async function load(): Promise<void> {
 }
 
 async function save(): Promise<void> {
-    // 値がなかったらエラーメッセージを出力する
-    if (text_value.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.text_is_blank
-        error.error_message = "テキストが未入力です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
+    try {
+        is_requested_submit.value = true
+        // 値がなかったらエラーメッセージを出力する
+        if (text_value.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.text_is_blank
+            error.error_message = "テキストが未入力です"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
 
-    // 更新がなかったらエラーメッセージを出力する
-    if (cloned_text.value.text === text_value.value) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.text_is_no_update
-        error.error_message = "テキストが更新されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
+        // 更新がなかったらエラーメッセージを出力する
+        if (cloned_text.value.text === text_value.value) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.text_is_no_update
+            error.error_message = "テキストが更新されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
 
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
+        }
 
-    // 更新後テキスト情報を用意する
-    const updated_text = await cloned_text.value.clone()
-    updated_text.text = text_value.value
-    updated_text.update_app = "gkill"
-    updated_text.update_device = gkill_info_res.device
-    updated_text.update_time = new Date(Date.now())
-    updated_text.update_user = gkill_info_res.user_id
+        // 更新後テキスト情報を用意する
+        const updated_text = await cloned_text.value.clone()
+        updated_text.text = text_value.value
+        updated_text.update_app = "gkill"
+        updated_text.update_device = gkill_info_res.device
+        updated_text.update_time = new Date(Date.now())
+        updated_text.update_user = gkill_info_res.user_id
 
-    // 更新リクエストを飛ばす
-    const req = new UpdateTextRequest()
-    req.text = updated_text
-    const res = await props.gkill_api.update_text(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
+        // 更新リクエストを飛ばす
+        const req = new UpdateTextRequest()
+        req.text = updated_text
+        const res = await props.gkill_api.update_text(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits("updated_text", res.updated_text)
+        emits('requested_reload_kyou', props.kyou)
+        emits('requested_close_dialog')
         return
+    } finally {
+        is_requested_submit.value = false
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits("updated_text", res.updated_text)
-    emits('requested_reload_kyou', props.kyou)
-    emits('requested_close_dialog')
-    return
 }
 </script>
 

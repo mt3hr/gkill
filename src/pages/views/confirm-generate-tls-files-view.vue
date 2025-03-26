@@ -32,7 +32,7 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="generate_tls_files">作成</v-btn>
+                    <v-btn @click="generate_tls_files" color="primary">作成</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">

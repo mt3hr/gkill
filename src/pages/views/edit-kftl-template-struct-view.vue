@@ -3,12 +3,15 @@
         <v-card-title>
             KFTLテンプレート構造
         </v-card-title>
-        <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="'KFTLテンプレート'"
-            :is_open="true" :struct_obj="cloned_application_config.parsed_kftl_template" :is_editable="true"
-            :is_root="true" :is_show_checkbox="false" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @dblclicked_item="(e: MouseEvent, id: string | null) => { if (id) show_edit_kftl_template_struct_dialog(id) }"
-            @contextmenu_item="show_kftl_template_contextmenu" ref="foldable_struct" />
+        <div class="kftl_template_struct_root">
+            <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="'KFTLテンプレート'"
+                :is_open="true" :struct_obj="cloned_application_config.parsed_kftl_template" :is_editable="true"
+                :is_root="true" :is_show_checkbox="false"
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @dblclicked_item="(e: MouseEvent, id: string | null) => { if (id) show_edit_kftl_template_struct_dialog(id) }"
+                @contextmenu_item="show_kftl_template_contextmenu" ref="foldable_struct" />
+        </div>
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -20,7 +23,7 @@
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="apply">適用</v-btn>
+                    <v-btn @click="apply" color="primary">適用</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -140,7 +143,7 @@ function update_seq(_kftl_template_struct: Array<FoldableStructModel>): void {
     // 並び順再決定
     let f = (_struct: FoldableStructModel, _parent: FoldableStructModel, _seq: number) => { }
     let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
-        if(struct.id) {
+        if (struct.id) {
             exist_ids.push(struct.id)
         }
         for (let i = 0; i < cloned_application_config.value.kftl_template_struct.length; i++) {
@@ -285,3 +288,9 @@ function delete_kftl_template_struct(id: string): void {
     foldable_struct.value?.delete_struct(id)
 }
 </script>
+<style lang="css" scoped>
+.kftl_template_struct_root {
+    max-height: 80vh;
+    overflow-y: scroll;
+}
+</style>

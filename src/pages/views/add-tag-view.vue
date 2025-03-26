@@ -11,11 +11,11 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-model="tag_name" label="タグ" autofocus />
+        <v-text-field v-model="tag_name" label="タグ" autofocus :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -57,6 +57,8 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
+const is_requested_submit = ref(false)
+
 const props = defineProps<AddTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
@@ -64,60 +66,65 @@ const show_kyou: Ref<boolean> = ref(false)
 const tag_name: Ref<string> = ref("")
 
 async function save(): Promise<void> {
-    // 値がなかったらエラーメッセージを出力する
-    if (tag_name.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.tag_is_blank
-        error.error_message = "タグが未入力です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
-    const tag_names = tag_name.value.split("、")
-    for (let i = 0; i < tag_names.length; i++) {
-        const tag = tag_names[i]
-        // タグ情報を用意する
-        const new_tag = new Tag()
-        new_tag.tag = tag
-        new_tag.id = props.gkill_api.generate_uuid()
-        new_tag.is_deleted = false
-        new_tag.target_id = props.kyou.id
-        new_tag.related_time = new Date(Date.now())
-        new_tag.create_app = "gkill"
-        new_tag.create_device = gkill_info_res.device
-        new_tag.create_time = new Date(Date.now())
-        new_tag.create_user = gkill_info_res.user_id
-        new_tag.update_app = "gkill"
-        new_tag.update_device = gkill_info_res.device
-        new_tag.update_time = new Date(Date.now())
-        new_tag.update_user = gkill_info_res.user_id
-
-        // 追加リクエストを飛ばす
-        const req = new AddTagRequest()
-        req.tag = new_tag
-        const res = await props.gkill_api.add_tag(req)
-        if (res.errors && res.errors.length !== 0) {
-            emits('received_errors', res.errors)
+    try {
+        is_requested_submit.value = true
+        // 値がなかったらエラーメッセージを出力する
+        if (tag_name.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.tag_is_blank
+            error.error_message = "タグが未入力です"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
             return
         }
-        if (res.messages && res.messages.length !== 0) {
-            emits('received_messages', res.messages)
+
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
         }
-        emits('registered_tag', res.added_tag)
-        emits('requested_reload_kyou', props.kyou)
+
+        const tag_names = tag_name.value.split("、")
+        for (let i = 0; i < tag_names.length; i++) {
+            const tag = tag_names[i]
+            // タグ情報を用意する
+            const new_tag = new Tag()
+            new_tag.tag = tag
+            new_tag.id = props.gkill_api.generate_uuid()
+            new_tag.is_deleted = false
+            new_tag.target_id = props.kyou.id
+            new_tag.related_time = new Date(Date.now())
+            new_tag.create_app = "gkill"
+            new_tag.create_device = gkill_info_res.device
+            new_tag.create_time = new Date(Date.now())
+            new_tag.create_user = gkill_info_res.user_id
+            new_tag.update_app = "gkill"
+            new_tag.update_device = gkill_info_res.device
+            new_tag.update_time = new Date(Date.now())
+            new_tag.update_user = gkill_info_res.user_id
+
+            // 追加リクエストを飛ばす
+            const req = new AddTagRequest()
+            req.tag = new_tag
+            const res = await props.gkill_api.add_tag(req)
+            if (res.errors && res.errors.length !== 0) {
+                emits('received_errors', res.errors)
+                return
+            }
+            if (res.messages && res.messages.length !== 0) {
+                emits('received_messages', res.messages)
+            }
+            emits('registered_tag', res.added_tag)
+            emits('requested_reload_kyou', props.kyou)
+        }
+        props.gkill_api.set_saved_last_added_tag(tag_name.value)
+        emits('requested_close_dialog')
+        return
+    } finally {
+        is_requested_submit.value = false
     }
-    props.gkill_api.set_saved_last_added_tag(tag_name.value)
-    emits('requested_close_dialog')
-    return
 }
 </script>

@@ -11,19 +11,21 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="content_value" label="通知内容" autofocus />
+        <v-textarea v-model="content_value" label="通知内容" autofocus :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>通知日時</label>
-                <input class="input date" type="date" v-model="notification_date" label="日付" />
-                <input class="input time" type="time" v-model="notification_time" label="時刻" />
-                <v-btn color="primary" @click="reset_notification_date_time()">リセット</v-btn>
+                <input class="input date" type="date" v-model="notification_date" label="日付"
+                    :readonly="is_requested_submit" />
+                <input class="input time" type="time" v-model="notification_time" label="時刻"
+                    :readonly="is_requested_submit" />
+                <v-btn @click="reset_notification_date_time()" :disabled="is_requested_submit">リセット</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -66,6 +68,8 @@ import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-r
 import moment from 'moment'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
+const is_requested_submit = ref(false)
+
 const props = defineProps<AddNotificationViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
@@ -75,69 +79,74 @@ const notification_date: Ref<string> = ref("")
 const notification_time: Ref<string> = ref("")
 
 async function save(): Promise<void> {
-    // 日時必須入力チェック
-    if (notification_date.value === "" || notification_time.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.notification_time_is_blank
-        error.error_message = "通知日時が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
+    try {
+        is_requested_submit.value = true
+        // 日時必須入力チェック
+        if (notification_date.value === "" || notification_time.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.notification_time_is_blank
+            error.error_message = "通知日時が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
 
-    // 値がなかったらエラーメッセージを出力する
-    if (content_value.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.notification_content_is_blank
-        error.error_message = "通知内容が未入力です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
+        // 値がなかったらエラーメッセージを出力する
+        if (content_value.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.notification_content_is_blank
+            error.error_message = "通知内容が未入力です"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
 
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
+        }
 
-    // 通知内容情報を用意する
-    const new_notification = new Notification()
-    new_notification.notification_time = moment(notification_date.value + " " + notification_time.value).toDate()
-    new_notification.content = content_value.value
-    new_notification.id = props.gkill_api.generate_uuid()
-    new_notification.is_deleted = false
-    new_notification.target_id = props.kyou.id
-    new_notification.related_time = new Date(Date.now())
-    new_notification.create_app = "gkill"
-    new_notification.create_device = gkill_info_res.device
-    new_notification.create_time = new Date(Date.now())
-    new_notification.create_user = gkill_info_res.user_id
-    new_notification.update_app = "gkill"
-    new_notification.update_app = "gkill"
-    new_notification.update_device = gkill_info_res.device
-    new_notification.update_time = new Date(Date.now())
-    new_notification.update_user = gkill_info_res.user_id
-    new_notification.related_time = new Date(Date.now())
+        // 通知内容情報を用意する
+        const new_notification = new Notification()
+        new_notification.notification_time = moment(notification_date.value + " " + notification_time.value).toDate()
+        new_notification.content = content_value.value
+        new_notification.id = props.gkill_api.generate_uuid()
+        new_notification.is_deleted = false
+        new_notification.target_id = props.kyou.id
+        new_notification.related_time = new Date(Date.now())
+        new_notification.create_app = "gkill"
+        new_notification.create_device = gkill_info_res.device
+        new_notification.create_time = new Date(Date.now())
+        new_notification.create_user = gkill_info_res.user_id
+        new_notification.update_app = "gkill"
+        new_notification.update_app = "gkill"
+        new_notification.update_device = gkill_info_res.device
+        new_notification.update_time = new Date(Date.now())
+        new_notification.update_user = gkill_info_res.user_id
+        new_notification.related_time = new Date(Date.now())
 
-    // 追加リクエストを飛ばす
-    const req = new AddNotificationRequest()
-    req.notification = new_notification
-    const res = await props.gkill_api.add_notification(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
+        // 追加リクエストを飛ばす
+        const req = new AddNotificationRequest()
+        req.notification = new_notification
+        const res = await props.gkill_api.add_notification(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits('requested_reload_kyou', props.kyou)
+        emits('requested_close_dialog')
         return
+    } finally {
+        is_requested_submit.value = false
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits('requested_reload_kyou', props.kyou)
-    emits('requested_close_dialog')
-    return
 }
 
 function reset_notification_date_time(): void {
