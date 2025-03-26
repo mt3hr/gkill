@@ -12,7 +12,7 @@
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                <v-btn @click="emits('requested_close_dialog')">キャンセル</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -37,7 +37,7 @@ async function reset_password(): Promise<void> {
         emits('received_messages', res.messages)
     }
 
-    emits('requested_reload_server_config') 
+    emits('requested_reload_server_config')
     emits('requested_show_show_password_reset_dialog', props.account)
 }
 </script>

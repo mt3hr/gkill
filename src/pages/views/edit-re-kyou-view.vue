@@ -14,12 +14,14 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>日時</label>
-                <input class="input date" type="date" v-model="related_date" label="日付" />
-                <input class="input time" type="time" v-model="related_time" label="時刻" />
+                <input class="input date" type="date" v-model="related_date" label="日付"
+                    :readonly="is_requested_submit" />
+                <input class="input time" type="time" v-model="related_time" label="時刻"
+                    :readonly="is_requested_submit" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -62,6 +64,8 @@ import moment from 'moment'
 import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
+const is_requested_submit = ref(false)
+
 const props = defineProps<EditReKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
@@ -82,75 +86,80 @@ async function load(): Promise<void> {
 }
 
 async function save(): Promise<void> {
-    cloned_kyou.value.abort_controller.abort()
+    try {
+        is_requested_submit.value = true
+        cloned_kyou.value.abort_controller.abort()
 
-    // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const rekyou = cloned_kyou.value.typed_rekyou?.clone()
-    if (!rekyou) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.client_rekyou_is_null
-        error.error_message = "クライアントのデータが変です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
+        // データがちゃんとあるか確認。なければエラーメッセージを出力する
+        const rekyou = cloned_kyou.value.typed_rekyou?.clone()
+        if (!rekyou) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.client_rekyou_is_null
+            error.error_message = "クライアントのデータが変です"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 日時必須入力チェック
+        if (related_date.value === "" || related_time.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.rekyou_related_time_is_blank
+            error.error_message = "日時が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 更新がなかったらエラーメッセージを出力する
+        if (moment(rekyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime() &&
+            moment(rekyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.rekyou_is_no_update
+            error.error_message = "ReKyouが更新されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
+        }
+
+        // 更新後ReKyou情報を用意する
+        const updated_rekyou = rekyou.clone()
+        updated_rekyou.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        updated_rekyou.update_app = "gkill"
+        updated_rekyou.update_device = gkill_info_res.device
+        updated_rekyou.update_time = new Date(Date.now())
+        updated_rekyou.update_user = gkill_info_res.user_id
+
+        // 更新リクエストを飛ばす
+        const req = new UpdateReKyouRequest()
+        req.rekyou = updated_rekyou
+
+        const res = await props.gkill_api.update_rekyou(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits('updated_kyou', res.updated_rekyou_kyou)
+        emits('requested_reload_kyou', props.kyou)
+        emits('requested_close_dialog')
         return
+    } finally {
+        is_requested_submit.value = false
     }
-
-    // 日時必須入力チェック
-    if (related_date.value === "" || related_time.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.rekyou_related_time_is_blank
-        error.error_message = "日時が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // 更新がなかったらエラーメッセージを出力する
-    if (moment(rekyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime() &&
-        moment(rekyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.rekyou_is_no_update
-        error.error_message = "ReKyouが更新されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
-    // 更新後ReKyou情報を用意する
-    const updated_rekyou = rekyou.clone()
-    updated_rekyou.related_time = moment(related_date.value + " " + related_time.value).toDate()
-    updated_rekyou.update_app = "gkill"
-    updated_rekyou.update_device = gkill_info_res.device
-    updated_rekyou.update_time = new Date(Date.now())
-    updated_rekyou.update_user = gkill_info_res.user_id
-
-    // 更新リクエストを飛ばす
-    const req = new UpdateReKyouRequest()
-    req.rekyou = updated_rekyou
-
-    const res = await props.gkill_api.update_rekyou(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits('updated_kyou', res.updated_rekyou_kyou)
-    emits('requested_reload_kyou', props.kyou)
-    emits('requested_close_dialog')
-    return
 }
 </script>
 <style lang="css">

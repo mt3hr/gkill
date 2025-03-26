@@ -17,7 +17,8 @@
                     <label>URL</label>
                 </td>
                 <td>
-                    <input class="input text" type="text" v-model="url" label="URL" autofocus />
+                    <input class="input text" type="text" v-model="url" label="URL" autofocus
+                        :readonly="is_requested_submit" />
                 </td>
             </tr>
             <tr>
@@ -25,7 +26,8 @@
                     <label>タイトル</label>
                 </td>
                 <td>
-                    <input class="input text" type="text" v-model="title" label="タイトル" />
+                    <input class="input text" type="text" v-model="title" label="タイトル"
+                        :readonly="is_requested_submit" />
                 </td>
             </tr>
             <tr>
@@ -37,19 +39,21 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>日時</label>
-                <input class="input date" type="date" v-model="related_date" label="日付" />
-                <input class="input time" type="time" v-model="related_time" label="時刻" />
-                <v-btn color="primary" @click="reset_related_date_time()">リセット</v-btn>
-                <v-btn color="primary" @click="now_to_related_date_time()">現在日時</v-btn>
+                <input class="input date" type="date" v-model="related_date" label="日付"
+                    :readonly="is_requested_submit" />
+                <input class="input time" type="time" v-model="related_time" label="時刻"
+                    :readonly="is_requested_submit" />
+                <v-btn @click="reset_related_date_time()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn @click="now_to_related_date_time()" :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="reset()">リセット</v-btn>
+                <v-btn @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -91,6 +95,8 @@ import KyouView from './kyou-view.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
+const is_requested_submit = ref(false)
+
 const props = defineProps<EditURLogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
@@ -124,97 +130,102 @@ function reset(): void {
 }
 
 async function save(): Promise<void> {
-    cloned_kyou.value.abort_controller.abort()
+    try {
+        is_requested_submit.value = true
+        cloned_kyou.value.abort_controller.abort()
 
-    // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const urlog = cloned_kyou.value.typed_urlog
-    if (!urlog) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.client_urlog_is_null
-        error.error_message = "クライアントのデータが変です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
+        // データがちゃんとあるか確認。なければエラーメッセージを出力する
+        const urlog = cloned_kyou.value.typed_urlog
+        if (!urlog) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.client_urlog_is_null
+            error.error_message = "クライアントのデータが変です"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 日時必須入力チェック
+        if (related_date.value === "" || related_time.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.urlog_related_time_is_blank
+            error.error_message = "日時が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // URL入力チェック
+        if (url.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.urlog_url_is_blank
+            error.error_message = "URLが入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 更新がなかったらエラーメッセージを出力する
+        if (urlog.title === title.value &&
+            urlog.url === url.value &&
+            moment(urlog.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime() &&
+            moment(urlog.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.urlog_is_no_update
+            error.error_message = "URLogが更新されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
+        }
+
+        // 更新後URLog情報を用意する
+        const updated_urlog = await urlog.clone()
+        updated_urlog.title = title.value
+        updated_urlog.url = url.value
+        updated_urlog.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        updated_urlog.update_app = "gkill"
+        updated_urlog.update_device = gkill_info_res.device
+        updated_urlog.update_time = new Date(Date.now())
+        updated_urlog.update_user = gkill_info_res.user_id
+
+        // 再取得の場合、URLとタイトル以外をブランクにする
+        if (re_get_urlog_content.value) {
+            updated_urlog.description = ""
+            updated_urlog.favicon_image = ""
+            updated_urlog.thumbnail_image = ""
+        }
+
+        // 更新リクエストを飛ばす
+        const req = new UpdateURLogRequest()
+        req.urlog = updated_urlog
+
+        const res = await props.gkill_api.update_urlog(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits("updated_kyou", res.updated_urlog_kyou)
+        emits('requested_reload_kyou', props.kyou)
+        emits('requested_close_dialog')
         return
+    } finally {
+        is_requested_submit.value = false
     }
-
-    // 日時必須入力チェック
-    if (related_date.value === "" || related_time.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.urlog_related_time_is_blank
-        error.error_message = "日時が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // URL入力チェック
-    if (url.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.urlog_url_is_blank
-        error.error_message = "URLが入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // 更新がなかったらエラーメッセージを出力する
-    if (urlog.title === title.value &&
-        urlog.url === url.value &&
-        moment(urlog.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime() &&
-        moment(urlog.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.urlog_is_no_update
-        error.error_message = "URLogが更新されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
-    // 更新後URLog情報を用意する
-    const updated_urlog = await urlog.clone()
-    updated_urlog.title = title.value
-    updated_urlog.url = url.value
-    updated_urlog.related_time = moment(related_date.value + " " + related_time.value).toDate()
-    updated_urlog.update_app = "gkill"
-    updated_urlog.update_device = gkill_info_res.device
-    updated_urlog.update_time = new Date(Date.now())
-    updated_urlog.update_user = gkill_info_res.user_id
-
-    // 再取得の場合、URLとタイトル以外をブランクにする
-    if (re_get_urlog_content.value) {
-        updated_urlog.description = ""
-        updated_urlog.favicon_image = ""
-        updated_urlog.thumbnail_image = ""
-    }
-
-    // 更新リクエストを飛ばす
-    const req = new UpdateURLogRequest()
-    req.urlog = updated_urlog
-
-    const res = await props.gkill_api.update_urlog(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits("updated_kyou", res.updated_urlog_kyou)
-    emits('requested_reload_kyou', props.kyou)
-    emits('requested_close_dialog')
-    return
 }
 
 function now_to_related_date_time(): void {

@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-0 ma-0">
+    <v-card class="pa-0 ma-0 aggregate_people_view">
         <div>
             {{ aggregate_people.title }}
         </div>
@@ -9,8 +9,9 @@
             </v-col>
         </v-row>
         <div>
-            <span v-for="type in aggregate_people.type" :key="type">
-                {{ type }}
+            <span v-for="(type, index) in aggregate_people.type" :key="type">
+                <span>{{ type }}</span>
+                <span v-if="index !== aggregate_people?.type.size - 1">&nbsp;</span>
             </span>
         </div>
     </v-card>
@@ -67,4 +68,8 @@ function format_duration(duration_milli_second: number): string {
     return diff_str
 }
 </script>
-<style lang="css"></style>
+<style lang="css">
+.aggregate_people_view {
+    border-top: 1px solid silver;
+}
+</style>

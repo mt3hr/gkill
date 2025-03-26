@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-0 ma-0">
+    <v-card class="pa-0 ma-0 aggregate_location_view">
         <div>
             {{ aggregate_location.title }}
         </div>
@@ -63,4 +63,8 @@ function format_duration(duration_milli_second: number): string {
     return diff_str
 }
 </script>
-<style lang="css"></style>
+<style lang="css">
+.aggregate_location_view {
+    border-top: 1px solid silver;
+}
+</style>
