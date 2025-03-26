@@ -11,11 +11,11 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-model="tag_name" label="タグ" autofocus />
+        <v-text-field v-model="tag_name" label="タグ" autofocus :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -57,6 +57,8 @@ import { GkillError } from '@/classes/api/gkill-error';
 import type { Tag } from '@/classes/datas/tag';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
+const is_requested_submit = ref(false)
+
 const props = defineProps<EditTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
@@ -73,59 +75,64 @@ async function load(): Promise<void> {
 }
 
 async function save(): Promise<void> {
-    // 値がなかったらエラーメッセージを出力する
-    if (tag_name.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.tag_is_blank
-        error.error_message = "タグが未入力です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
+    try {
+        is_requested_submit.value = true
+        // 値がなかったらエラーメッセージを出力する
+        if (tag_name.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.tag_is_blank
+            error.error_message = "タグが未入力です"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
 
-    // 更新がなかったらエラーメッセージを出力する
-    if (cloned_tag.value.tag === tag_name.value) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.tag_is_no_update
-        error.error_message = "タグが更新されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
+        // 更新がなかったらエラーメッセージを出力する
+        if (cloned_tag.value.tag === tag_name.value) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.tag_is_no_update
+            error.error_message = "タグが更新されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
 
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
+        }
 
-    // 更新後タグ情報を用意する
-    const updated_tag = await cloned_tag.value.clone()
-    updated_tag.tag = tag_name.value
-    updated_tag.update_app = "gkill"
-    updated_tag.update_device = gkill_info_res.device
-    updated_tag.update_time = new Date(Date.now())
-    updated_tag.update_user = gkill_info_res.user_id
+        // 更新後タグ情報を用意する
+        const updated_tag = await cloned_tag.value.clone()
+        updated_tag.tag = tag_name.value
+        updated_tag.update_app = "gkill"
+        updated_tag.update_device = gkill_info_res.device
+        updated_tag.update_time = new Date(Date.now())
+        updated_tag.update_user = gkill_info_res.user_id
 
-    // 更新リクエストを飛ばす
-    const req = new UpdateTagRequest()
-    req.tag = updated_tag
-    const res = await props.gkill_api.update_tag(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
+        // 更新リクエストを飛ばす
+        const req = new UpdateTagRequest()
+        req.tag = updated_tag
+        const res = await props.gkill_api.update_tag(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits("updated_tag", res.updated_tag)
+        emits('requested_reload_kyou', props.kyou)
+        emits('requested_close_dialog')
         return
+    } finally {
+        is_requested_submit.value = false
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits("updated_tag", res.updated_tag)
-    emits('requested_reload_kyou', props.kyou)
-    emits('requested_close_dialog')
-    return
 }
 </script>
 

@@ -11,25 +11,29 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_title_value" label="タイトル" autofocus />
-        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_shop_value" label="店名" />
-        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_amount_value" type="number" label="金額" />
+        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_title_value" label="タイトル" autofocus
+            :readonly="is_requested_submit" />
+        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_shop_value" label="店名" :readonly="is_requested_submit" />
+        <v-text-field v-if="kyou.typed_nlog" v-model="nlog_amount_value" type="number" label="金額"
+            :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>日時</label>
-                <input class="input date" type="date" v-model="related_date" label="日付" />
-                <input class="input time" type="time" v-model="related_time" label="時刻" />
-                <v-btn color="primary" @click="reset_related_date_time()">リセット</v-btn>
-                <v-btn color="primary" @click="now_to_related_date_time()">現在日時</v-btn>
+                <input class="input date" type="date" v-model="related_date" label="日付"
+                    :readonly="is_requested_submit" />
+                <input class="input time" type="time" v-model="related_time" label="時刻"
+                    :readonly="is_requested_submit" />
+                <v-btn @click="reset_related_date_time()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn @click="now_to_related_date_time()" :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="reset()">リセット</v-btn>
+                <v-btn @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
 
@@ -73,6 +77,8 @@ import type { EditNlogViewProps } from './edit-nlog-view-props'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
+const is_requested_submit = ref(false)
+
 const props = defineProps<EditNlogViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
@@ -100,113 +106,118 @@ async function load(): Promise<void> {
 }
 
 async function save(): Promise<void> {
-    cloned_kyou.value.abort_controller.abort()
+    try {
+        is_requested_submit.value = true
+        cloned_kyou.value.abort_controller.abort()
 
-    // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const nlog = props.kyou.typed_nlog
-    if (!nlog) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.client_nlog_is_null
-        error.error_message = "クライアントのデータが変です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
+        // データがちゃんとあるか確認。なければエラーメッセージを出力する
+        const nlog = props.kyou.typed_nlog
+        if (!nlog) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.client_nlog_is_null
+            error.error_message = "クライアントのデータが変です"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 日時必須入力チェック
+        if (related_date.value === "" || related_time.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.nlog_related_time_is_blank
+            error.error_message = "日時が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 金額入力チェック
+        if (Number.isNaN(nlog_amount_value.value)) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.nlog_amount_is_blank
+            error.error_message = "金額が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 店名入力チェック
+        if (nlog_shop_value.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.nlog_shop_name_is_blank
+            error.error_message = "店名が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // タイトル入力チェック
+        if (nlog_title_value.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.nlog_title_is_blank
+            error.error_message = "タイトルが入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 更新がなかったらエラーメッセージを出力する
+        if (nlog_amount_value.value === nlog.amount &&
+            nlog_shop_value.value === nlog.shop &&
+            nlog_title_value.value === nlog.title &&
+            moment(related_date.value + " " + related_time.value).toDate().getTime() === moment(nlog.related_time).toDate().getTime()) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.nlog_is_no_update
+            error.error_message = "Nlog更新されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
+        }
+
+        // 更新後Kmemo情報を用意する
+        const updated_nlog = await nlog.clone()
+        updated_nlog.amount = nlog_amount_value.value
+        updated_nlog.shop = nlog_shop_value.value
+        updated_nlog.title = nlog_title_value.value
+        updated_nlog.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        updated_nlog.update_app = "gkill"
+        updated_nlog.update_device = gkill_info_res.device
+        updated_nlog.update_time = new Date(Date.now())
+        updated_nlog.update_user = gkill_info_res.user_id
+
+        // 更新リクエストを飛ばす
+        const req = new UpdateNlogRequest()
+        req.nlog = updated_nlog
+
+        const res = await props.gkill_api.update_nlog(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits('updated_kyou', res.updated_nlog_kyou)
+        emits('requested_reload_kyou', props.kyou)
+        emits('requested_close_dialog')
         return
+    } finally {
+        is_requested_submit.value = false
     }
-
-    // 日時必須入力チェック
-    if (related_date.value === "" || related_time.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.nlog_related_time_is_blank
-        error.error_message = "日時が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // 金額入力チェック
-    if (Number.isNaN(nlog_amount_value.value)) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.nlog_amount_is_blank
-        error.error_message = "金額が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // 店名入力チェック
-    if (nlog_shop_value.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.nlog_shop_name_is_blank
-        error.error_message = "店名が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // タイトル入力チェック
-    if (nlog_title_value.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.nlog_title_is_blank
-        error.error_message = "タイトルが入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // 更新がなかったらエラーメッセージを出力する
-    if (nlog_amount_value.value === nlog.amount &&
-        nlog_shop_value.value === nlog.shop &&
-        nlog_title_value.value === nlog.title &&
-        moment(related_date.value + " " + related_time.value).toDate().getTime() === moment(nlog.related_time).toDate().getTime()) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.nlog_is_no_update
-        error.error_message = "Nlog更新されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
-    // 更新後Kmemo情報を用意する
-    const updated_nlog = await nlog.clone()
-    updated_nlog.amount = nlog_amount_value.value
-    updated_nlog.shop = nlog_shop_value.value
-    updated_nlog.title = nlog_title_value.value
-    updated_nlog.related_time = moment(related_date.value + " " + related_time.value).toDate()
-    updated_nlog.update_app = "gkill"
-    updated_nlog.update_device = gkill_info_res.device
-    updated_nlog.update_time = new Date(Date.now())
-    updated_nlog.update_user = gkill_info_res.user_id
-
-    // 更新リクエストを飛ばす
-    const req = new UpdateNlogRequest()
-    req.nlog = updated_nlog
-
-    const res = await props.gkill_api.update_nlog(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits('updated_kyou', res.updated_nlog_kyou)
-    emits('requested_reload_kyou', props.kyou)
-    emits('requested_close_dialog')
-    return
 }
 
 function now_to_related_date_time(): void {

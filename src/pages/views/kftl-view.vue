@@ -10,7 +10,7 @@
                     <v-btn @click="show_kftl_template_dialog">テンプレート</v-btn>
                 </v-col>
                 <v-col cols="auto">
-                    <v-btn @click="submit" :disabled="is_requested_submit">保存</v-btn>
+                    <v-btn color="primary" @click="submit" :disabled="is_requested_submit">保存</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -26,8 +26,8 @@
                 </td>
                 <td>
                     <div class="kftl_text_area_wrap">
-                        <textarea id="kftl_text_area" class="kftl_text_area" v-model="text_area_content" :readonly="is_requested_submit"
-                            autofocus></textarea>
+                        <textarea id="kftl_text_area" class="kftl_text_area" v-model="text_area_content"
+                            :readonly="is_requested_submit" autofocus></textarea>
                     </div>
                 </td>
             </tr>

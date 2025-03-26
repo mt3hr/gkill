@@ -42,7 +42,7 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="apply">適用</v-btn>
+                    <v-btn @click="apply" color="primary">適用</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">

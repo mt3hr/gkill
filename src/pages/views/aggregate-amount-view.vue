@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-0 ma-0">
+    <v-card class="pa-0 ma-0 aggregate_amount_view">
         <v-row class="pa-0 ma-0">
             <v-col class="aggregate_amount_related_time pa-0 ma-0" cols="auto">
                 {{ format_time(aggregate_amount.related_time) }}
@@ -55,5 +55,9 @@ function format_time(time: Date) {
 
 .aggregate_amount_minus {
     color: crimson;
+}
+
+.aggregate_amount_view {
+    border-top: 1px solid silver;
 }
 </style>
