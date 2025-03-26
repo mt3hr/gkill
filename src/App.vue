@@ -13,8 +13,6 @@ if (use_dark_theme) {
 } else {
   theme.global.name.value = 'gkill_theme'
 }
-console.log(use_dark_theme)
-console.log(theme.global.name.value)
 </script>
 
 <template>
