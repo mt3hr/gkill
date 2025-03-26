@@ -8,24 +8,24 @@
                 <v-spacer />
             </v-row>
         </v-card-title>
-        <LantanaFlowersView :application_config="application_config" :gkill_api="gkill_api" :editable="true"
-            :mood="mood" ref="edit_lantana_flowers" />
+        <LantanaFlowersView :application_config="application_config" :gkill_api="gkill_api" :mood="mood"
+            :editable="!is_requested_submit" ref="edit_lantana_flowers" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>日時</label>
-                <input class="input" type="date" v-model="related_date" label="日付" />
-                <input class="input" type="time" v-model="related_time" label="時刻" />
-                <v-btn color="primary" @click="reset_related_time()">リセット</v-btn>
-                <v-btn color="primary" @click="now_to_related_time()">現在日時</v-btn>
+                <input class="input" type="date" v-model="related_date" label="日付" :readonly="is_requested_submit" />
+                <input class="input" type="time" v-model="related_time" label="時刻" :readonly="is_requested_submit" />
+                <v-btn @click="reset_related_time()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn @click="now_to_related_time()" :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="reset()">リセット</v-btn>
+                <v-btn @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -45,6 +45,8 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
 const edit_lantana_flowers = ref<InstanceType<typeof LantanaFlowersView> | null>(null);
 
+const is_requested_submit = ref(false)
+
 const props = defineProps<AddLantanaViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
@@ -58,76 +60,81 @@ const related_date: Ref<string> = ref(moment().format("YYYY-MM-DD"))
 const related_time: Ref<string> = ref(moment().format("HH:mm:ss"))
 
 async function save(): Promise<void> {
-    // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    if (!lantana.value) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.client_lantana_is_null
-        error.error_message = "クライアントのデータが変です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
+    try {
+        is_requested_submit.value = true
+        // データがちゃんとあるか確認。なければエラーメッセージを出力する
+        if (!lantana.value) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.client_lantana_is_null
+            error.error_message = "クライアントのデータが変です"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
 
-    // 日時必須入力チェック
-    if (related_date.value === "" || related_time.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.lantana_related_time_is_blank
-        error.error_message = "日時が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
+        // 日時必須入力チェック
+        if (related_date.value === "" || related_time.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.lantana_related_time_is_blank
+            error.error_message = "日時が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
 
-    // 更新がなかったらエラーメッセージを出力する
-    if (lantana.value.mood === await edit_lantana_flowers.value?.get_mood()) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.lantana_is_no_update
-        error.error_message = "Lantanaが更新されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
+        // 更新がなかったらエラーメッセージを出力する
+        if (lantana.value.mood === await edit_lantana_flowers.value?.get_mood()) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.lantana_is_no_update
+            error.error_message = "Lantanaが更新されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
 
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
+        }
 
-    // 追加するLantana情報を用意する
-    const new_lantana = await lantana.value.clone()
-    new_lantana.id = props.gkill_api.generate_uuid()
-    new_lantana.mood = await edit_lantana_flowers.value!.get_mood()
-    new_lantana.related_time = moment(related_date.value + " " + related_time.value).toDate()
-    new_lantana.create_app = "gkill"
-    new_lantana.create_device = gkill_info_res.device
-    new_lantana.create_time = new Date(Date.now())
-    new_lantana.create_user = gkill_info_res.user_id
-    new_lantana.update_app = "gkill"
-    new_lantana.update_device = gkill_info_res.device
-    new_lantana.update_time = new Date(Date.now())
-    new_lantana.update_user = gkill_info_res.user_id
+        // 追加するLantana情報を用意する
+        const new_lantana = await lantana.value.clone()
+        new_lantana.id = props.gkill_api.generate_uuid()
+        new_lantana.mood = await edit_lantana_flowers.value!.get_mood()
+        new_lantana.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        new_lantana.create_app = "gkill"
+        new_lantana.create_device = gkill_info_res.device
+        new_lantana.create_time = new Date(Date.now())
+        new_lantana.create_user = gkill_info_res.user_id
+        new_lantana.update_app = "gkill"
+        new_lantana.update_device = gkill_info_res.device
+        new_lantana.update_time = new Date(Date.now())
+        new_lantana.update_user = gkill_info_res.user_id
 
-    // 追加リクエストを飛ばす
-    const req = new AddLantanaRequest()
-    req.lantana = new_lantana
-    const res = await props.gkill_api.add_lantana(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
+        // 追加リクエストを飛ばす
+        const req = new AddLantanaRequest()
+        req.lantana = new_lantana
+        const res = await props.gkill_api.add_lantana(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits('registered_kyou', res.added_lantana_kyou)
+        emits('requested_reload_list')
+        emits('requested_close_dialog')
         return
+    } finally {
+        is_requested_submit.value = false
     }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits('registered_kyou', res.added_lantana_kyou)
-    emits('requested_reload_list')
-    emits('requested_close_dialog')
-    return
 }
 
 function reset_related_time(): void {

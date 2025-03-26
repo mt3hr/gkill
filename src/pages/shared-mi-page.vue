@@ -133,6 +133,11 @@ body::-webkit-scrollbar {
 }
 
 /* スクロールバー */
+.tag_struct_root::-webkit-scrollbar,
+.rep_struct_root::-webkit-scrollbar,
+.rep_type_struct_root::-webkit-scrollbar,
+.device_struct_root::-webkit-scrollbar,
+.kftl_template_struct_root::-webkit-scrollbar,
 .v-navigation-drawer__content::-webkit-scrollbar,
 .kyou_detail_view::-webkit-scrollbar,
 .kyou_list_view::-webkit-scrollbar,
@@ -146,6 +151,11 @@ body::-webkit-scrollbar {
     width: 8px;
 }
 
+.tag_struct_root::-webkit-scrollbar-thumb,
+.rep_struct_root::-webkit-scrollbar-thumb,
+.rep_type_struct_root::-webkit-scrollbar-thumb,
+.device_struct_root::-webkit-scrollbar-thumb,
+.kftl_template_struct_root::-webkit-scrollbar-thumb,
 .v-navigation-drawer__content::-webkit-scrollbar-thumb,
 .kyou_detail_view::-webkit-scrollbar-thumb,
 .kyou_list_view::-webkit-scrollbar-thumb,

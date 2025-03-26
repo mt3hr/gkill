@@ -10,14 +10,14 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="reload_repositories()" color="'primary'">再読込</v-btn>
+                    <v-btn v-if="cloned_application_config.account_is_admin"
+                        @click="show_server_config_dialog()">サーバ設定</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="logout()" color="'primary'">ログアウト</v-btn>
+                    <v-btn @click="reload_repositories()">再読込</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn v-if="cloned_application_config.account_is_admin" @click="show_server_config_dialog()"
-                        color="'primary'">サーバ設定</v-btn>
+                    <v-btn @click="logout()" color="primary">ログアウト</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -31,6 +31,22 @@
                 <tr>
                     <td>
                         <v-checkbox v-model="rykv_hot_reload" hide-detail label="ホットリロード" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <v-checkbox v-model="is_checked_use_rykv_period" hide-detail label="rykv表示日数" />
+                    </td>
+                    <td v-show="rykv_default_period !== -1">
+                        <v-text-field type="number" min="-1" width="400" v-model="rykv_default_period" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <v-checkbox v-model="is_checked_use_mi_period" hide-detail label="mi表示日数" />
+                    </td>
+                    <td v-show="mi_default_period !== -1">
+                        <v-text-field type="number" min="-1" width="400" v-model="mi_default_period" />
                     </td>
                 </tr>
                 <tr>
@@ -51,29 +67,14 @@
                             <v-col class="pa-0 ma-0">
                                 <v-select class="select" v-model="mi_default_board" :items="mi_board_names" />
                             </v-col>
-                            <v-col class="pa-0 ma-0">
+                            <v-col class="pa-0 ma-0 pt-2">
                                 <v-btn color="primary" @click="show_new_board_name_dialog()" icon="mdi-plus" dark
                                     size="small"></v-btn>
                             </v-col>
                         </v-row>
                     </td>
                 </tr>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="is_checked_use_rykv_period" hide-detail label="rykv表示日数" />
-                    </td>
-                    <td v-show="rykv_default_period !== -1">
-                        <v-text-field type="number" min="-1" width="400" v-model="rykv_default_period" />
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <v-checkbox v-model="is_checked_use_mi_period" hide-detail label="mi表示日数" />
-                    </td>
-                    <td v-show="mi_default_period !== -1">
-                        <v-text-field type="number" min="-1" width="400" v-model="mi_default_period" />
-                    </td>
-                </tr>
+
                 <tr>
                     <td>
                         URLogブックマークレット
@@ -95,15 +96,11 @@
             <table>
                 <tr>
                     <td>
-                        <v-btn @click="show_edit_tag_dialog" color="primary">タグ編集</v-btn>
-                        <v-btn @click="show_edit_rep_dialog" color="primary">Rep編集</v-btn>
-                        <v-btn @click="show_edit_device_dialog" color="primary">Device編集</v-btn>
-                        <v-btn @click="show_edit_rep_type_dialog" color="primary">RepType編集</v-btn>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <v-btn @click="show_edit_kftl_template_dialog" color="primary">KFTLテンプレート編集</v-btn>
+                        <v-btn @click="show_edit_tag_dialog">タグ編集</v-btn>
+                        <v-btn @click="show_edit_rep_dialog">Rep編集</v-btn>
+                        <v-btn @click="show_edit_device_dialog">Device編集</v-btn>
+                        <v-btn @click="show_edit_rep_type_dialog">RepType編集</v-btn>
+                        <v-btn @click="show_edit_kftl_template_dialog">KFTLテンプレート編集</v-btn>
                     </td>
                 </tr>
             </table>
@@ -111,7 +108,7 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="update_application_config">適用</v-btn>
+                    <v-btn @click="update_application_config" color="primary">適用</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">

@@ -28,7 +28,7 @@
                                         size="small"></v-btn>
                                 </td>
                                 <td>
-                                    <v-btn color="primary" v-if="cloned_server_configs.length >= 2"
+                                    <v-btn v-if="cloned_server_configs.length >= 2"
                                         @click="delete_current_server_config()" dark>削除</v-btn>
                                 </td>
                             </tr>
@@ -126,7 +126,7 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="update_server_config">適用</v-btn>
+                    <v-btn @click="update_server_config" color="primary">適用</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">

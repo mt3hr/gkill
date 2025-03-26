@@ -11,23 +11,25 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="kmemo_value" label="Kmemo" autofocus />
+        <v-textarea v-model="kmemo_value" label="Kmemo" autofocus :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <label>日時</label>
-                <input class="input date" type="date" v-model="related_date" label="日付" />
-                <input class="input time" type="time" v-model="related_time" label="時刻" />
-                <v-btn color="primary" @click="reset_related_date_time()">リセット</v-btn>
-                <v-btn color="primary" @click="now_to_related_date_time()">現在日時</v-btn>
+                <input class="input date" type="date" v-model="related_date" label="日付"
+                    :readonly="is_requested_submit" />
+                <input class="input time" type="time" v-model="related_time" label="時刻"
+                    :readonly="is_requested_submit" />
+                <v-btn @click="reset_related_date_time()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn @click="now_to_related_date_time()" :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="reset()">リセット</v-btn>
+                <v-btn @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -70,6 +72,8 @@ import { UpdateKmemoRequest } from '@/classes/api/req_res/update-kmemo-request'
 import moment from 'moment'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 
+const is_requested_submit = ref(false)
+
 const props = defineProps<EditKmemoViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
@@ -92,88 +96,93 @@ async function load(): Promise<void> {
 }
 
 async function save(): Promise<void> {
-    cloned_kyou.value.abort_controller.abort()
+    try {
+        is_requested_submit.value = true
+        cloned_kyou.value.abort_controller.abort()
 
-    // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const kmemo = cloned_kyou.value.typed_kmemo
-    if (!kmemo) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.client_kmemo_is_null
-        error.error_message = "クライアントのデータが変です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
+        // データがちゃんとあるか確認。なければエラーメッセージを出力する
+        const kmemo = cloned_kyou.value.typed_kmemo
+        if (!kmemo) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.client_kmemo_is_null
+            error.error_message = "クライアントのデータが変です"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // タイトル入力チェック
+        if (kmemo_value.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.kmemo_content_is_blank
+            error.error_message = "内容が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+
+
+        // 日時必須入力チェック
+        if (related_date.value === "" || related_time.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.kmemo_related_time_is_blank
+            error.error_message = "日時が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 更新がなかったらエラーメッセージを出力する
+        if (kmemo.content === kmemo_value.value) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.kmemo_is_no_update
+            error.error_message = "Kmemo更新されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
+        }
+
+        // 更新後Kmemo情報を用意する
+        const updated_kmemo = await kmemo.clone()
+        updated_kmemo.content = kmemo_value.value
+        updated_kmemo.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        updated_kmemo.update_app = "gkill"
+        updated_kmemo.update_device = gkill_info_res.device
+        updated_kmemo.update_time = new Date(Date.now())
+        updated_kmemo.update_user = gkill_info_res.user_id
+
+        // 更新リクエストを飛ばす
+        const req = new UpdateKmemoRequest()
+        req.kmemo = updated_kmemo
+
+        const res = await props.gkill_api.update_kmemo(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits('updated_kyou', res.updated_kmemo_kyou)
+        emits('requested_reload_kyou', props.kyou)
+        emits('requested_close_dialog')
         return
+    } finally {
+        is_requested_submit.value = false
     }
-
-    // タイトル入力チェック
-    if (kmemo_value.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.kmemo_content_is_blank
-        error.error_message = "内容が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-
-
-    // 日時必須入力チェック
-    if (related_date.value === "" || related_time.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.kmemo_related_time_is_blank
-        error.error_message = "日時が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // 更新がなかったらエラーメッセージを出力する
-    if (kmemo.content === kmemo_value.value) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.kmemo_is_no_update
-        error.error_message = "Kmemo更新されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
-    // 更新後Kmemo情報を用意する
-    const updated_kmemo = await kmemo.clone()
-    updated_kmemo.content = kmemo_value.value
-    updated_kmemo.related_time = moment(related_date.value + " " + related_time.value).toDate()
-    updated_kmemo.update_app = "gkill"
-    updated_kmemo.update_device = gkill_info_res.device
-    updated_kmemo.update_time = new Date(Date.now())
-    updated_kmemo.update_user = gkill_info_res.user_id
-
-    // 更新リクエストを飛ばす
-    const req = new UpdateKmemoRequest()
-    req.kmemo = updated_kmemo
-
-    const res = await props.gkill_api.update_kmemo(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits('updated_kyou', res.updated_kmemo_kyou)
-    emits('requested_reload_kyou', props.kyou)
-    emits('requested_close_dialog')
-    return
 }
 
 function now_to_related_date_time(): void {

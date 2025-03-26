@@ -33,21 +33,23 @@
                 <label>終了日時</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input date" type="date" v-model="timeis_end_date" label="終了日付" />
-                <input class="input date" type="time" v-model="timeis_end_time" label="終了時刻" />
+                <input class="input date" type="date" v-model="timeis_end_date" label="終了日付"
+                    :readonly="is_requested_submit" />
+                <input class="input date" type="time" v-model="timeis_end_time" label="終了時刻"
+                    :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
-                <v-btn color="primary" @click="clear_end_date_time()">クリア</v-btn>
-                <v-btn color="primary" @click="now_to_end_date_time()">現在日時</v-btn>
+                <v-btn @click="clear_end_date_time()" :disabled="is_requested_submit">クリア</v-btn>
+                <v-btn @click="now_to_end_date_time()" :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="reset()">リセット</v-btn>
+                <v-btn @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()">保存</v-btn>
+                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -89,6 +91,8 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+
+const is_requested_submit = ref(false)
 
 const props = defineProps<EndTimeIsPlaingViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -143,103 +147,108 @@ function now_to_end_date_time(): void {
 }
 
 async function save(): Promise<void> {
-    // データがちゃんとあるか確認。なければエラーメッセージを出力する
-    const timeis = cloned_kyou.value.typed_timeis
-    if (!timeis) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.client_timeis_is_null
-        error.error_message = "クライアントのデータが変です"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
+    try {
+        is_requested_submit.value = true
+        // データがちゃんとあるか確認。なければエラーメッセージを出力する
+        const timeis = cloned_kyou.value.typed_timeis
+        if (!timeis) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.client_timeis_is_null
+            error.error_message = "クライアントのデータが変です"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // タイトル入力チェック
+        if (timeis_title.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.timeis_title_is_blank
+            error.error_message = "タイトルが入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 開始日時必須入力チェック
+        if (timeis_start_date.value === "" || timeis_start_time.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.timeis_start_time_is_blank
+            error.error_message = "開始日時が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 終了日時入力チェック
+        if ((timeis_end_date.value === "" && timeis_end_time.value !== "") ||
+            (timeis_end_date.value !== "" && timeis_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.timeis_end_time_is_blank
+            error.error_message = "終了日付または終了時刻が入力されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // 更新がなかったらエラーメッセージを出力する
+        if (timeis.title === timeis_title.value &&
+            (moment(timeis.start_time).toDate().getTime() === moment(timeis_start_date.value + " " + timeis_start_time.value).toDate().getTime()) &&
+            (moment(timeis.end_time).toDate().getTime() === moment(timeis_end_date.value + " " + timeis_end_time.value).toDate().getTime()) || (timeis.end_time === null && timeis_end_date.value === "" && timeis_end_time.value === "")) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.timeis_is_no_update
+            error.error_message = "TimeIsが更新されていません"
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return
+        }
+
+        // UserIDやDevice情報を取得する
+        const get_gkill_req = new GetGkillInfoRequest()
+        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
+        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
+            emits('received_errors', gkill_info_res.errors)
+            return
+        }
+
+        // 更新後TimeIs情報を用意する
+        let end_time: Date | null = null
+        if (timeis_end_date.value !== "" && timeis_end_time.value !== "") {
+            end_time = moment(timeis_end_date.value + " " + timeis_end_time.value).toDate()
+        }
+        const updated_timeis = await timeis.clone()
+        updated_timeis.title = timeis_title.value
+        updated_timeis.start_time = moment(timeis_start_date.value + " " + timeis_start_time.value).toDate()
+        updated_timeis.end_time = end_time
+        updated_timeis.update_app = "gkill"
+        updated_timeis.update_device = gkill_info_res.device
+        updated_timeis.update_time = new Date(Date.now())
+        updated_timeis.update_user = gkill_info_res.user_id
+
+        // 更新リクエストを飛ばす
+        const req = new UpdateTimeisRequest()
+        req.timeis = updated_timeis
+
+        const res = await props.gkill_api.update_timeis(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+        emits("updated_kyou", res.updated_timeis_kyou)
+        emits('requested_reload_kyou', props.kyou)
+        emits('requested_close_dialog')
         return
+    } finally {
+        is_requested_submit.value = false
     }
-
-    // タイトル入力チェック
-    if (timeis_title.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.timeis_title_is_blank
-        error.error_message = "タイトルが入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // 開始日時必須入力チェック
-    if (timeis_start_date.value === "" || timeis_start_time.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.timeis_start_time_is_blank
-        error.error_message = "開始日時が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // 終了日時入力チェック
-    if ((timeis_end_date.value === "" && timeis_end_time.value !== "") ||
-        (timeis_end_date.value !== "" && timeis_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.timeis_end_time_is_blank
-        error.error_message = "終了日付または終了時刻が入力されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // 更新がなかったらエラーメッセージを出力する
-    if (timeis.title === timeis_title.value &&
-        (moment(timeis.start_time).toDate().getTime() === moment(timeis_start_date.value + " " + timeis_start_time.value).toDate().getTime()) &&
-        (moment(timeis.end_time).toDate().getTime() === moment(timeis_end_date.value + " " + timeis_end_time.value).toDate().getTime()) || (timeis.end_time === null && timeis_end_date.value === "" && timeis_end_time.value === "")) {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.timeis_is_no_update
-        error.error_message = "TimeIsが更新されていません"
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return
-    }
-
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
-    // 更新後TimeIs情報を用意する
-    let end_time: Date | null = null
-    if (timeis_end_date.value !== "" && timeis_end_time.value !== "") {
-        end_time = moment(timeis_end_date.value + " " + timeis_end_time.value).toDate()
-    }
-    const updated_timeis = await timeis.clone()
-    updated_timeis.title = timeis_title.value
-    updated_timeis.start_time = moment(timeis_start_date.value + " " + timeis_start_time.value).toDate()
-    updated_timeis.end_time = end_time
-    updated_timeis.update_app = "gkill"
-    updated_timeis.update_device = gkill_info_res.device
-    updated_timeis.update_time = new Date(Date.now())
-    updated_timeis.update_user = gkill_info_res.user_id
-
-    // 更新リクエストを飛ばす
-    const req = new UpdateTimeisRequest()
-    req.timeis = updated_timeis
-
-    const res = await props.gkill_api.update_timeis(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits("updated_kyou", res.updated_timeis_kyou)
-    emits('requested_reload_kyou', props.kyou)
-    emits('requested_close_dialog')
-    return
 }
 </script>
 <style lang="css" scoped>
