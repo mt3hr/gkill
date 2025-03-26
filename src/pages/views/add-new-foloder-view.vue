@@ -11,7 +11,7 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn color="primary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn @click="emits('requested_close_dialog')">キャンセル</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

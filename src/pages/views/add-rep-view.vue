@@ -17,7 +17,7 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="add_rep()">追加</v-btn>
+                    <v-btn @click="add_rep()" color="primary">追加</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">

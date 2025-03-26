@@ -25,9 +25,9 @@
                         <v-btn color="primary" @click="show_allocate_rep_dialog(account)">Rep割当管理</v-btn>
                     </td>
                     <td>
-                        <v-btn v-if="!account.password_reset_token" color="primary"
+                        <v-btn v-if="!account.password_reset_token"
                             @click="show_confirm_reset_password_dialog(account)">パスワードリセット</v-btn>
-                        <v-btn v-if="account.password_reset_token" color="primary"
+                        <v-btn v-if="account.password_reset_token"
                             @click="show_show_password_reset_link_dialog(account)">パスワードリセット中</v-btn>
                     </td>
                 </tr>
