@@ -1,21 +1,25 @@
 <template>
     <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
-        <table v-if="kyou.typed_mi" class="pa-0 ma-0">
-            <tr>
-                <td class="pa-0 ma-0">
-                    <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()" />
-                </td>
-                <td class="pa-0 ma-0">
-                    <div class="py-1">{{ kyou.typed_mi.title }}</div>
-                </td>
-                <v-spacer />
-                <td class="pa-0 ma-0">
-                    <v-card-title>
-                        <div class="py-1">{{ kyou.typed_mi.board_name }}</div>
-                    </v-card-title>
-                </td>
-            </tr>
-        </table>
+        <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
+            <v-col cols="auto" class="pa-0 ma-0" :style="mi_title_style">
+                <table class="pa-0 ma-0">
+                    <tr>
+                        <td class="pa-0 ma-0">
+                            <v-checkbox v-model="is_checked_mi" hide-details @click="clicked_mi_check()" />
+                        </td>
+                        <td class="pa-0 ma-0">
+                            <div class="py-1 mi_title">{{ kyou.typed_mi.title }}</div>
+                        </td>
+                    </tr>
+                </table>
+            </v-col>
+            <v-spacer />
+            <v-col cols="auto" class="pa-0 ma-0">
+                <v-card-title>
+                    <div class="py-1 mi_board_name">{{ kyou.typed_mi.board_name }}</div>
+                </v-card-title>
+            </v-col>
+        </v-row>
         <div :style="{ 'padding-top': '30px' }">
             <div v-if="kyou.typed_mi && kyou.typed_mi.estimate_start_time">
                 <span>開始日時：</span>
@@ -58,7 +62,6 @@ import { nextTick, type Ref, ref, watch } from 'vue'
 import MiContextMenu from './mi-context-menu.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { miKyouViewProps } from './mi-kyou-view-props'
-import type { miKyouViewEmits } from './mi-kyou-view-emits'
 import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
@@ -75,12 +78,22 @@ defineExpose({ show_context_menu })
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const is_checked_mi: Ref<boolean> = ref(props.kyou.typed_mi ? props.kyou.typed_mi.is_checked : false)
 
+const mi_title_style = ref({
+    maxWidth: 'calc(100% - 0px)'
+})
+
 load_cloned_kyou()
+nextTick(() => update_mi_title_style())
 
 watch(() => props.kyou, async () => {
     await load_cloned_kyou()
+    nextTick(() => update_mi_title_style())
     is_checked_mi.value = cloned_kyou.value.typed_mi ? cloned_kyou.value.typed_mi.is_checked : false
 })
+
+function update_mi_title_style(): void {
+    mi_title_style.value.maxWidth = `calc(100% - ${get_board_name_text_width_px()}px)`
+}
 
 async function load_cloned_kyou() {
     const kyou = props.kyou.clone()
@@ -159,6 +172,34 @@ async function clicked_mi_check(): Promise<void> {
     }
     emits('requested_reload_kyou', props.kyou)
     return
+}
+
+function get_board_name_text_width_px(): number {
+    const mi_board_name_element = document.querySelector(".kyou_".concat(props.kyou.id).concat(" ").concat(".mi_board_name"))
+    if (mi_board_name_element == null) {
+        return 0
+    }
+    const text_width = get_text_width(props.kyou.typed_mi?.board_name, get_canvas_font(mi_board_name_element as HTMLElement)).valueOf() + 16 + 16 + 1 // padding + padding + 1
+    return text_width
+}
+
+function get_text_width(text: any, font: any): Number {
+    const canvas: any = (get_text_width as any).canvas || ((get_text_width as any).canvas = document.createElement("canvas"))
+    const context = canvas.getContext("2d")
+    context.font = font
+    const metrics = context.measureText(text)
+    return metrics.width
+}
+
+function get_css_style(element: any, prop: any): string {
+    return window.getComputedStyle(element, null).getPropertyValue(prop)
+}
+
+function get_canvas_font(element = document.body): string {
+    const fontWeight = get_css_style(element, 'font-weight') || 'normal'
+    const fontSize = get_css_style(element, 'font-size') || '16px'
+    const fontFamily = get_css_style(element, 'font-family') || 'Times New Roman'
+    return `${fontWeight} ${fontSize} ${fontFamily}`
 }
 </script>
 <style lang="css" scoped>
