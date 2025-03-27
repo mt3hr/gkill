@@ -1,5 +1,5 @@
 <template>
-    <v-btn @click="emits('request_open_share_mi_dialog')">共有</v-btn>
+    <v-btn dark color="primary" @click="emits('request_open_share_mi_dialog')">共有</v-btn>
 </template>
 <script lang="ts" setup>
 import type { ShareButtonEmits } from './share-button-emits'

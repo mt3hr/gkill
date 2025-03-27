@@ -24,7 +24,7 @@
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto">
-                    <v-btn class="login_button" color="primary" @click="try_set_new_password()">
+                    <v-btn dark class="login_button" color="primary" @click="try_set_new_password()">
                         パスワード再設定
                     </v-btn>
                 </v-col>

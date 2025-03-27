@@ -6,7 +6,7 @@
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0">
-                <v-btn @click="emits('request_clear_tag_query')" hide-details>クリア</v-btn>
+                <v-btn dark color="secondary" @click="emits('request_clear_tag_query')" hide-details>クリア</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -39,7 +39,7 @@ import type { FoldableStructModel } from './foldable-struct-model'
 
 const props = defineProps<TagQueryProps>()
 const emits = defineEmits<TagQueryEmits>()
-defineExpose({ get_use_tag, get_tags, get_is_and_search, update_check})
+defineExpose({ get_use_tag, get_tags, get_is_and_search, update_check })
 
 const use_tag: Ref<boolean> = ref(true)
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)

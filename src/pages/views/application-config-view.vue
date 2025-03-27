@@ -10,14 +10,14 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn v-if="cloned_application_config.account_is_admin"
+                    <v-btn dark color="primary" v-if="cloned_application_config.account_is_admin"
                         @click="show_server_config_dialog()">サーバ設定</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="reload_repositories()">再読込</v-btn>
+                    <v-btn dark color="primary" @click="reload_repositories()">再読込</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="logout()" color="primary">ログアウト</v-btn>
+                    <v-btn dark @click="logout()" color="primary">ログアウト</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -96,11 +96,11 @@
             <table>
                 <tr>
                     <td>
-                        <v-btn @click="show_edit_tag_dialog">タグ編集</v-btn>
-                        <v-btn @click="show_edit_rep_dialog">Rep編集</v-btn>
-                        <v-btn @click="show_edit_device_dialog">Device編集</v-btn>
-                        <v-btn @click="show_edit_rep_type_dialog">RepType編集</v-btn>
-                        <v-btn @click="show_edit_kftl_template_dialog">KFTLテンプレート編集</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_tag_dialog">タグ編集</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_rep_dialog">Rep編集</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_device_dialog">Device編集</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_rep_type_dialog">RepType編集</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_kftl_template_dialog">KFTLテンプレート編集</v-btn>
                     </td>
                 </tr>
             </table>
@@ -108,11 +108,11 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="update_application_config" color="primary">適用</v-btn>
+                    <v-btn dark @click="update_application_config" color="primary">適用</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

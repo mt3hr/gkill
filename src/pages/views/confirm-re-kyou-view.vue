@@ -14,7 +14,7 @@
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="rekyou()">リポスト</v-btn>
+                <v-btn dark color="primary" @click="rekyou()">リポスト</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">

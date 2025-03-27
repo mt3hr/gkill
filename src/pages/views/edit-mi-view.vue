@@ -48,9 +48,12 @@
                     :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
-                <v-btn @click="clear_estimate_start_date_time()" :disabled="is_requested_submit">クリア</v-btn>
-                <v-btn @click="reset_estimate_start_date_time()" :disabled="is_requested_submit">リセット</v-btn>
-                <v-btn @click="now_to_estimate_start_date_time()" :disabled="is_requested_submit">現在日時</v-btn>
+                <v-btn dark color="secondary" @click="clear_estimate_start_date_time()"
+                    :disabled="is_requested_submit">クリア</v-btn>
+                <v-btn dark color="secondary" @click="reset_estimate_start_date_time()"
+                    :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn dark color="primary" @click="now_to_estimate_start_date_time()"
+                    :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -64,9 +67,12 @@
                     :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
-                <v-btn @click="clear_estimate_end_date_time()" :disabled="is_requested_submit">クリア</v-btn>
-                <v-btn @click="reset_estimate_end_date_time()" :disabled="is_requested_submit">リセット</v-btn>
-                <v-btn @click="now_to_estimate_end_date_time()" :disabled="is_requested_submit">現在日時</v-btn>
+                <v-btn dark color="secondary" @click="clear_estimate_end_date_time()"
+                    :disabled="is_requested_submit">クリア</v-btn>
+                <v-btn dark color="secondary" @click="reset_estimate_end_date_time()"
+                    :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn dark color="primary" @click="now_to_estimate_end_date_time()"
+                    :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -80,18 +86,21 @@
                     :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
-                <v-btn @click="clear_limit_date_time()" :disabled="is_requested_submit">クリア</v-btn>
-                <v-btn @click="reset_limit_date_time()" :disabled="is_requested_submit">リセット</v-btn>
-                <v-btn @click="now_to_limit_date_time()" :disabled="is_requested_submit">現在日時</v-btn>
+                <v-btn dark color="secondary" @click="clear_limit_date_time()"
+                    :disabled="is_requested_submit">クリア</v-btn>
+                <v-btn dark color="secondary" @click="reset_limit_date_time()"
+                    :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn dark color="primary" @click="now_to_limit_date_time()"
+                    :disabled="is_requested_submit">現在日時</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">

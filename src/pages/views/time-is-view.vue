@@ -11,7 +11,7 @@
             class="pa-0 ma-0">
             <v-spacer cols="auto" />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="show_end_timeis_dialog()">終了</v-btn>
+                <v-btn dark color="primary" @click="show_end_timeis_dialog()">終了</v-btn>
             </v-col>
         </v-row>
         <TimeIsContextMenu :application_config="application_config" :gkill_api="gkill_api"
