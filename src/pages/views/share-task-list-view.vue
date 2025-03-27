@@ -9,7 +9,7 @@
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col class="pa-0 ma-0" cols="auto">
-                <v-btn @click="share()">OK</v-btn>
+                <v-btn dark color="primary" @click="share()">OK</v-btn>
             </v-col>
         </v-row>
     </v-card>
