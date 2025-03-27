@@ -7,10 +7,10 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto">
-                    <v-btn @click="show_kftl_template_dialog">テンプレート</v-btn>
+                    <v-btn dark color="primary" @click="show_kftl_template_dialog">テンプレート</v-btn>
                 </v-col>
                 <v-col cols="auto">
-                    <v-btn color="primary" @click="submit" :disabled="is_requested_submit">保存</v-btn>
+                    <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">保存</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>

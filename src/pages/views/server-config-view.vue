@@ -10,7 +10,7 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn color="primary" @click="show_manage_account_dialog">アカウント管理</v-btn>
+                    <v-btn dark color="primary" @click="show_manage_account_dialog">アカウント管理</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -28,7 +28,7 @@
                                         size="small"></v-btn>
                                 </td>
                                 <td>
-                                    <v-btn v-if="cloned_server_configs.length >= 2"
+                                    <v-btn color="secondary" v-if="cloned_server_configs.length >= 2"
                                         @click="delete_current_server_config()" dark>削除</v-btn>
                                 </td>
                             </tr>
@@ -44,7 +44,7 @@
                     <td>
                         <v-checkbox v-model="server_config.enable_tls" hide-detail label="TLS有効" />
                     </td>
-                    <v-btn color='primary' @click="show_confirm_generate_tls_files_dialog">オレオレTLSファイル生成</v-btn>
+                    <v-btn dark color="primary" @click="show_confirm_generate_tls_files_dialog">オレオレTLSファイル生成</v-btn>
                 </tr>
                 <tr>
                     <td>
@@ -126,11 +126,11 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="update_server_config" color="primary">適用</v-btn>
+                    <v-btn dark @click="update_server_config" color="primary">適用</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

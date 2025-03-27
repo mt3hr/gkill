@@ -7,7 +7,7 @@
         </v-col>
         <v-spacer />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
-            <v-btn @click="emits('request_clear_keyword_query')" hide-details>クリア</v-btn>
+            <v-btn dark color="secondary" @click="emits('request_clear_keyword_query')" hide-details>クリア</v-btn>
         </v-col>
     </v-row>
 
