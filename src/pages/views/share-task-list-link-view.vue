@@ -12,7 +12,7 @@
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col class="pa-0 ma-0" cols="auto">
-                <v-btn @click="update()">更新</v-btn>
+                <v-btn dark color="primary" @click="update()">更新</v-btn>
             </v-col>
         </v-row>
     </v-card>

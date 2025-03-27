@@ -8,7 +8,8 @@
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="primary" @click="emits('requested_delete_rep', repository); emits('requested_close_dialog')">削除</v-btn>
+                <v-btn dark color="primary"
+                    @click="emits('requested_delete_rep', repository); emits('requested_close_dialog')">削除</v-btn>
             </v-col>
         </v-row>
     </v-card>

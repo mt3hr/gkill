@@ -13,19 +13,19 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="show_add_new_device_struct_element_dialog">デバイス追加</v-btn>
+                    <v-btn dark color="primary" @click="show_add_new_device_struct_element_dialog">デバイス追加</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="show_add_new_folder_dialog">フォルダ追加</v-btn>
+                    <v-btn dark color="primary" @click="show_add_new_folder_dialog">フォルダ追加</v-btn>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="apply" color="primary">適用</v-btn>
+                    <v-btn dark @click="apply" color="primary">適用</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

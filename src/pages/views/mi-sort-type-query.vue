@@ -6,7 +6,7 @@
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0">
-                <v-btn @click="emits('request_clear_sort_type')" hide-details>クリア</v-btn>
+                <v-btn dark color="secondary" @click="emits('request_clear_sort_type')" hide-details>クリア</v-btn>
             </v-col>
         </v-row>
         <v-select class="select" v-model="sort_type" :items="sort_types" :label="'チェック状態'" item-title="name"
@@ -44,7 +44,7 @@ watch(() => sort_type.value, () => {
 function load_sort_type(): void {
     for (let i = 0; i < sort_types.value.length; i++) {
         if (sort_types.value[i].value === query.value.mi_sort_type) {
-            sort_type.value =  sort_types.value[i].value
+            sort_type.value = sort_types.value[i].value
             break
         }
     }
@@ -70,6 +70,6 @@ const sort_types: Ref<Array<{ name: string, value: MiSortType }>> = ref([
 ])
 
 function get_sort_type(): MiSortType {
-    return sort_type.value 
+    return sort_type.value
 }
 </script>
