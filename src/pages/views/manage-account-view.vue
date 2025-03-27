@@ -7,7 +7,7 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn color="primary" @click="show_create_account_dialog">アカウント追加</v-btn>
+                    <v-btn dark color="primary" @click="show_create_account_dialog">アカウント追加</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -22,12 +22,12 @@
                         {{ account.user_id }}
                     </td>
                     <td>
-                        <v-btn color="primary" @click="show_allocate_rep_dialog(account)">Rep割当管理</v-btn>
+                        <v-btn dark color="primary" @click="show_allocate_rep_dialog(account)">Rep割当管理</v-btn>
                     </td>
                     <td>
-                        <v-btn v-if="!account.password_reset_token"
+                        <v-btn dark color="primary" v-if="!account.password_reset_token"
                             @click="show_confirm_reset_password_dialog(account)">パスワードリセット</v-btn>
-                        <v-btn v-if="account.password_reset_token"
+                        <v-btn dark color="primary" v-if="account.password_reset_token"
                             @click="show_show_password_reset_link_dialog(account)">パスワードリセット中</v-btn>
                     </td>
                 </tr>
@@ -37,7 +37,7 @@
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="emits('requested_close_dialog')">閉じる</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">閉じる</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

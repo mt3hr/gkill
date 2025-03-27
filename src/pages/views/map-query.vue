@@ -6,7 +6,7 @@
         </v-col>
         <v-spacer class="pa-0 ma-0" />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
-            <v-btn @click="emits('request_clear_map_query')">クリア</v-btn>
+            <v-btn dark color="secondary" @click="emits('request_clear_map_query')">クリア</v-btn>
         </v-col>
     </v-row>
     <v-sheet v-show="query.use_map">

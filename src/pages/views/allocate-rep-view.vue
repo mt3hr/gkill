@@ -8,7 +8,7 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn color="primary" @click="show_add_rep_dialog(account)">追加</v-btn>
+                    <v-btn dark color="primary" @click="show_add_rep_dialog(account)">追加</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -34,7 +34,7 @@
                         <v-text-field :width="600" :label="'ファイルPath'" v-model="repository.file" />
                     </td>
                     <td>
-                        <v-btn @click="show_confirm_delete_rep_dialog(repository)">削除</v-btn>
+                        <v-btn dark color="secondary" @click="show_confirm_delete_rep_dialog(repository)">削除</v-btn>
                     </td>
                 </tr>
             </table>
@@ -42,11 +42,11 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="apply" color="primary">適用</v-btn>
+                    <v-btn dark @click="apply" color="primary">適用</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

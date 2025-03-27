@@ -6,7 +6,7 @@
         </v-col>
         <v-spacer class="pa-0 ma-0" />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
-            <v-btn @click="clicked_clear_calendar_button" hide-details>クリア</v-btn>
+            <v-btn dark color="secondary" @click="clicked_clear_calendar_button" hide-details>クリア</v-btn>
         </v-col>
     </v-row>
     <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates"

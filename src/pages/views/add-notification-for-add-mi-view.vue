@@ -6,7 +6,7 @@
                 <label>通知日時</label>
                 <input class="input date" type="date" v-model="notification_date" label="日付" />
                 <input class="input time" type="time" v-model="notification_time" label="時刻" />
-                <v-btn @click="reset_notification_date_time()">リセット</v-btn>
+                <v-btn dark color="secondary" @click="reset_notification_date_time()">リセット</v-btn>
             </v-col>
         </v-row>
     </v-card>

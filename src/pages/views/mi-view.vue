@@ -12,7 +12,7 @@
                             <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
                                 :key="index" :value="index">
                                 <v-list-item-title @click="router.replace('/' + page)">{{ page
-                                    }}</v-list-item-title>
+                                }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>

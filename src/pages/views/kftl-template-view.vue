@@ -12,11 +12,10 @@
             </v-row>
         </v-card-title>
         <div class="button_list">
-            <v-btn class="pa-3 ma-3" v-for="template, index in template.children" :key="template.id!"
-                @click="clicked_template_button(template, index)">
+            <v-btn dark color="primary" class="pa-3 ma-3" v-for="template, index in template.children"
+                :key="template.id!" @click="clicked_template_button(template, index)">
                 {{ template.title }}
-                <KFTLTemplateDialog :application_config="application_config"
-                    :gkill_api="gkill_api" :template="template"
+                <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api" :template="template"
                     @received_errors="(errors) => emits('received_errors', errors)"
                     @received_messages="(messages) => emits('received_messages', messages)"
                     @clicked_template_element_leaf="(template) => emits('clicked_template_element_leaf', template)"
