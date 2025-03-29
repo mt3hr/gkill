@@ -93,6 +93,7 @@ async function load_application_config(): Promise<void> {
             } else {
                 theme.global.name.value = 'gkill_theme'
             }
+            gkill_api.value.set_use_dark_theme(use_dark_theme)
 
             application_config.value = res.application_config
             GkillAPI.get_instance().set_saved_application_config(res.application_config)
