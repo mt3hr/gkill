@@ -1726,6 +1726,7 @@ export class GkillAPI {
         }
 
         async update_application_config(req: UpdateApplicationConfigRequest): Promise<UpdateApplicationConfigResponse> {
+                this.set_use_dark_theme(req.application_config.use_dark_theme)
                 const res = await fetch(this.update_application_config_address, {
                         'method': this.update_application_config_method,
                         headers: {
@@ -2424,6 +2425,24 @@ export class GkillAPI {
                         return ""
                 }
                 return last_added_tag
+        }
+        private use_dark_theme_cookie_key = "use_dark_theme"
+
+        get_use_dark_theme(): boolean {
+                const cookies = document.cookie.split(';')
+                const use_dark_theme_string = cookies.find(
+                        (cookie) => cookie.split('=')[0].trim() === this.use_dark_theme_cookie_key.trim()
+                )?.replace(this.use_dark_theme_cookie_key + "=", "").trim()
+                const use_dark_theme = JSON.parse(use_dark_theme_string ? use_dark_theme_string : "false") as boolean
+
+                if (!use_dark_theme) {
+                        this.set_use_dark_theme(false)
+                }
+                return use_dark_theme
+        }
+
+        set_use_dark_theme(use_dark_theme: boolean): void {
+                document.cookie = this.use_dark_theme_cookie_key + "=" + use_dark_theme + "; max-age=" + 86400 * 400
         }
 }
 
