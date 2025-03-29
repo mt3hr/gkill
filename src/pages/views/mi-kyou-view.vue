@@ -179,7 +179,7 @@ function get_board_name_text_width_px(): number {
     if (mi_board_name_element == null) {
         return 0
     }
-    const text_width = get_text_width(props.kyou.typed_mi?.board_name, get_canvas_font(mi_board_name_element as HTMLElement)).valueOf() + 16 + 16 + 1 // padding + padding + 1
+    const text_width = get_text_width(props.kyou.typed_mi?.board_name, get_canvas_font(mi_board_name_element as HTMLElement)).valueOf() + 16 + 16 + 4 // padding + padding + 4px
     return text_width
 }
 
