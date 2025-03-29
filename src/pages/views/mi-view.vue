@@ -30,8 +30,8 @@
             <v-btn icon="mdi-cog" :disabled="!application_config.is_loaded"
                 @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
-        <v-navigation-drawer v-model="drawer" app :width="300" :height="app_content_height"
-            :mobile="drawer_mode_is_mobile" :touchless="!drawer_mode_is_mobile">
+        <v-navigation-drawer v-model="drawer" app :height="app_content_height" :mobile="drawer_mode_is_mobile"
+            :width="312" :touchless="!drawer_mode_is_mobile">
             <MiQueryEditorSidebar v-show="inited" class="mi_query_editor_sidebar"
                 :application_config="application_config" :gkill_api="gkill_api"
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
@@ -446,8 +446,8 @@ async function init(): Promise<void> {
             Promise.all(waitPromises).then(async () => {
                 focused_column_index.value = 0
                 inited.value = true
-                drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 420)
-                drawer.value = props.app_content_width.valueOf() >= 420
+                drawer_mode_is_mobile.value = !(props.app_content_width.valueOf() >= 430)
+                drawer.value = props.app_content_width.valueOf() >= 430
                 is_loading.value = false
                 skip_search_this_tick.value = false
             })
@@ -707,6 +707,13 @@ function show_upload_file_dialog(): void {
     upload_file_dialog.value?.show()
 }
 </script>
+<style lang="css" scoped>
+.kyou_detail_view.dummy {
+    resize: horizontal;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+</style>
 <style lang="css">
 .mi_view_table {
     padding-top: 0px;
@@ -730,6 +737,11 @@ function show_upload_file_dialog(): void {
 
 .mi_view_wrap {
     position: relative;
+}
+
+.v-navigation-drawer {
+    transition: transform 0.3s ease-out !important;
+    will-change: transform;
 }
 </style>
 <style lang="css" scoped>
