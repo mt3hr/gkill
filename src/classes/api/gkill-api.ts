@@ -1639,7 +1639,7 @@ export class GkillAPI {
                 application_config.kftl_template_struct = response.application_config.kftl_template_struct ? response.application_config.kftl_template_struct : []
                 application_config.account_is_admin = response.application_config.account_is_admin
                 application_config.device = response.application_config.device
-                application_config.enable_browser_cache = response.application_config.enable_browser_cache
+                application_config.use_dark_theme = response.application_config.use_dark_theme
                 application_config.google_map_api_key = response.application_config.google_map_api_key
                 application_config.is_loaded = response.application_config.is_loaded
                 application_config.mi_default_board = response.application_config.mi_default_board
@@ -2424,25 +2424,6 @@ export class GkillAPI {
                         return ""
                 }
                 return last_added_tag
-        }
-
-        private use_dark_theme_cookie_key = "use_dark_theme"
-
-        get_use_dark_theme(): boolean {
-                const cookies = document.cookie.split(';')
-                const use_dark_theme_string = cookies.find(
-                        (cookie) => cookie.split('=')[0].trim() === this.use_dark_theme_cookie_key.trim()
-                )?.replace(this.use_dark_theme_cookie_key + "=", "").trim()
-                const use_dark_theme = JSON.parse(use_dark_theme_string ? use_dark_theme_string : "false") as boolean
-
-                if (!use_dark_theme) {
-                        this.set_use_dark_theme(false)
-                }
-                return use_dark_theme
-        }
-
-        set_use_dark_theme(use_dark_theme: boolean): void {
-                document.cookie = this.use_dark_theme_cookie_key + "=" + use_dark_theme + "; max-age=" + 86400 * 400
         }
 }
 

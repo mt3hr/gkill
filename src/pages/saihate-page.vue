@@ -96,6 +96,9 @@ import AddMiDialog from './dialogs/add-mi-dialog.vue'
 import AddNlogDialog from './dialogs/add-nlog-dialog.vue'
 import kftlDialog from './dialogs/kftl-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
+import { useTheme } from 'vuetify'
+
+const theme = useTheme()
 
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
 const add_nlog_dialog = ref<InstanceType<typeof AddNlogDialog> | null>(null);
@@ -154,6 +157,13 @@ async function load_application_config(): Promise<void> {
             if (res.errors && res.errors.length != 0) {
                 write_errors(res.errors)
                 return
+            }
+
+            const use_dark_theme = res.application_config.use_dark_theme
+            if (use_dark_theme) {
+                theme.global.name.value = 'gkill_dark_theme'
+            } else {
+                theme.global.name.value = 'gkill_theme'
             }
 
             application_config.value = res.application_config

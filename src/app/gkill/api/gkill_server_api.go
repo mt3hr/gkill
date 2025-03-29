@@ -89,7 +89,7 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 		applicationConfig := &user_config.ApplicationConfig{
 			UserID:                    "admin",
 			Device:                    "gkill",
-			EnableBrowserCache:        false,
+			UseDarkTheme:              false,
 			GoogleMapAPIKey:           "",
 			RykvImageListColumnNumber: 3,
 			RykvHotReload:             false,
@@ -3514,7 +3514,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			newApplicationConfig := &user_config.ApplicationConfig{
 				UserID:                    userID,
 				Device:                    device,
-				EnableBrowserCache:        false,
+				UseDarkTheme:              false,
 				GoogleMapAPIKey:           "",
 				RykvImageListColumnNumber: 3,
 				RykvHotReload:             false,
@@ -6440,7 +6440,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		newApplicationConfig := &user_config.ApplicationConfig{
 			UserID:                    userID,
 			Device:                    device,
-			EnableBrowserCache:        false,
+			UseDarkTheme:              false,
 			GoogleMapAPIKey:           "",
 			RykvImageListColumnNumber: 3,
 			RykvHotReload:             false,
@@ -8345,7 +8345,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	applicationConfig := &user_config.ApplicationConfig{
 		UserID:                    request.AccountInfo.UserID,
 		Device:                    device,
-		EnableBrowserCache:        false,
+		UseDarkTheme:              false,
 		GoogleMapAPIKey:           "",
 		RykvImageListColumnNumber: 3,
 		RykvHotReload:             false,
@@ -9768,14 +9768,15 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 		}
 
 		repository := &user_config.Repository{
-			ID:                     GenerateNewID(),
-			UserID:                 account.UserID,
-			Device:                 device,
-			Type:                   repType,
-			File:                   repFileFullName,
-			UseToWrite:             true,
-			IsExecuteIDFWhenReload: true,
-			IsEnable:               true,
+			ID:                        GenerateNewID(),
+			UserID:                    account.UserID,
+			Device:                    device,
+			Type:                      repType,
+			File:                      repFileFullName,
+			UseToWrite:                true,
+			IsExecuteIDFWhenReload:    true,
+			IsWatchTargetForUpdateRep: false,
+			IsEnable:                  true,
 		}
 		repositories = append(repositories, repository)
 	}
@@ -9788,14 +9789,15 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 		return err
 	}
 	repository := &user_config.Repository{
-		ID:                     GenerateNewID(),
-		UserID:                 account.UserID,
-		Device:                 device,
-		Type:                   repType,
-		File:                   repFileFullName,
-		UseToWrite:             true,
-		IsExecuteIDFWhenReload: true,
-		IsEnable:               true,
+		ID:                        GenerateNewID(),
+		UserID:                    account.UserID,
+		Device:                    device,
+		Type:                      repType,
+		File:                      repFileFullName,
+		UseToWrite:                true,
+		IsExecuteIDFWhenReload:    true,
+		IsWatchTargetForUpdateRep: false,
+		IsEnable:                  true,
 	}
 	repositories = append(repositories, repository)
 
@@ -9807,14 +9809,15 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 		return err
 	}
 	repository = &user_config.Repository{
-		ID:                     GenerateNewID(),
-		UserID:                 account.UserID,
-		Device:                 device,
-		Type:                   repType,
-		File:                   repFileFullName,
-		UseToWrite:             true,
-		IsExecuteIDFWhenReload: true,
-		IsEnable:               true,
+		ID:                        GenerateNewID(),
+		UserID:                    account.UserID,
+		Device:                    device,
+		Type:                      repType,
+		File:                      repFileFullName,
+		UseToWrite:                true,
+		IsExecuteIDFWhenReload:    true,
+		IsWatchTargetForUpdateRep: false,
+		IsEnable:                  true,
 	}
 	repositories = append(repositories, repository)
 
@@ -10190,10 +10193,14 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	dirname := filepath.Dir(filename)
 
 	cmd := os.Expand(serverConfig.OpenDirectoryCommand, func(str string) string {
 		if str == "filename" {
 			return filename
+		}
+		if str == "dirname" {
+			return dirname
 		}
 		return ""
 	})
@@ -10320,10 +10327,14 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	dirname := filepath.Dir(filename)
 
 	cmd := os.Expand(serverConfig.OpenFileCommand, func(str string) string {
 		if str == "filename" {
 			return filename
+		}
+		if str == "dirname" {
+			return dirname
 		}
 		return ""
 	})

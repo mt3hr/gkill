@@ -7,7 +7,7 @@ type ApplicationConfig struct {
 
 	Device string `json:"device"`
 
-	EnableBrowserCache bool `json:"enable_browser_cache"`
+	UseDarkTheme bool `json:"use_dark_theme"`
 
 	GoogleMapAPIKey string `json:"google_map_api_key"`
 
