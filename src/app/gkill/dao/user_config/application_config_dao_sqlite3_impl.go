@@ -30,7 +30,7 @@ func NewApplicationConfigDAOSQLite3Impl(ctx context.Context, filename string) (A
 CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
   USER_ID NOT NULL,
   DEVICE NOT NULL,
-  ENABLE_BROWSER_CACHE NOT NULL,
+  USE_DARK_THEME NOT NULL,
   GOOGLE_MAP_API_KEY NOT NULL,
   RYKV_IMAGE_LIST_COLUMN_NUMBER NOT NULL,
   RYKV_HOT_RELOAD NOT NULL,
@@ -66,7 +66,7 @@ func (a *applicationConfigDAOSQLite3Impl) GetAllApplicationConfigs(ctx context.C
 SELECT 
   USER_ID,
   DEVICE,
-  ENABLE_BROWSER_CACHE,
+  USE_DARK_THEME,
   GOOGLE_MAP_API_KEY,
   RYKV_IMAGE_LIST_COLUMN_NUMBER,
   RYKV_HOT_RELOAD,
@@ -104,7 +104,7 @@ FROM APPLICATION_CONFIG
 			err = rows.Scan(
 				&applicationConfig.UserID,
 				&applicationConfig.Device,
-				&applicationConfig.EnableBrowserCache,
+				&applicationConfig.UseDarkTheme,
 				&applicationConfig.GoogleMapAPIKey,
 				&applicationConfig.RykvImageListColumnNumber,
 				&applicationConfig.RykvHotReload,
@@ -127,7 +127,7 @@ func (a *applicationConfigDAOSQLite3Impl) GetApplicationConfig(ctx context.Conte
 SELECT 
   USER_ID,
   DEVICE,
-  ENABLE_BROWSER_CACHE,
+  USE_DARK_THEME,
   GOOGLE_MAP_API_KEY,
   RYKV_IMAGE_LIST_COLUMN_NUMBER,
   RYKV_HOT_RELOAD,
@@ -172,7 +172,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 			err = rows.Scan(
 				&applicationConfig.UserID,
 				&applicationConfig.Device,
-				&applicationConfig.EnableBrowserCache,
+				&applicationConfig.UseDarkTheme,
 				&applicationConfig.GoogleMapAPIKey,
 				&applicationConfig.RykvImageListColumnNumber,
 				&applicationConfig.RykvHotReload,
@@ -200,7 +200,7 @@ func (a *applicationConfigDAOSQLite3Impl) AddApplicationConfig(ctx context.Conte
 INSERT INTO APPLICATION_CONFIG (
   USER_ID,
   DEVICE,
-  ENABLE_BROWSER_CACHE,
+  USE_DARK_THEME,
   GOOGLE_MAP_API_KEY,
   RYKV_IMAGE_LIST_COLUMN_NUMBER,
   RYKV_HOT_RELOAD,
@@ -230,7 +230,7 @@ INSERT INTO APPLICATION_CONFIG (
 	queryArgs := []interface{}{
 		applicationConfig.UserID,
 		applicationConfig.Device,
-		applicationConfig.EnableBrowserCache,
+		applicationConfig.UseDarkTheme,
 		applicationConfig.GoogleMapAPIKey,
 		applicationConfig.RykvImageListColumnNumber,
 		applicationConfig.RykvHotReload,
@@ -253,7 +253,7 @@ func (a *applicationConfigDAOSQLite3Impl) UpdateApplicationConfig(ctx context.Co
 UPDATE APPLICATION_CONFIG SET
   USER_ID = ?,
   DEVICE = ?,
-  ENABLE_BROWSER_CACHE = ?,
+  USE_DARK_THEME = ?,
   GOOGLE_MAP_API_KEY = ?,
   RYKV_IMAGE_LIST_COLUMN_NUMBER = ?,
   RYKV_HOT_RELOAD = ?,
@@ -273,7 +273,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	queryArgs := []interface{}{
 		applicationConfig.UserID,
 		applicationConfig.Device,
-		applicationConfig.EnableBrowserCache,
+		applicationConfig.UseDarkTheme,
 		applicationConfig.GoogleMapAPIKey,
 		applicationConfig.RykvImageListColumnNumber,
 		applicationConfig.RykvHotReload,

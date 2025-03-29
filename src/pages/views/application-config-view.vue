@@ -25,7 +25,7 @@
             <table>
                 <tr>
                     <td>
-                        <v-checkbox v-model="is_dark_theme" hide-detail label="ダークテーマ" />
+                        <v-checkbox v-model="use_dark_theme" hide-detail label="ダークテーマ" />
                     </td>
                 </tr>
                 <tr>
@@ -201,7 +201,6 @@ const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_
 
 const google_map_api_key: Ref<string> = ref(cloned_application_config.value.google_map_api_key)
 const rykv_image_list_column_number: Ref<number> = ref(cloned_application_config.value.rykv_image_list_column_number)
-const enable_browser_cache: Ref<boolean> = ref(cloned_application_config.value.enable_browser_cache)
 const rykv_hot_reload: Ref<boolean> = ref(cloned_application_config.value.rykv_hot_reload)
 const mi_default_board: Ref<string> = ref(cloned_application_config.value.mi_default_board)
 const mi_board_names: Ref<Array<string>> = ref(new Array())
@@ -209,7 +208,7 @@ const rykv_default_period: Ref<number> = ref(cloned_application_config.value.ryk
 const mi_default_period: Ref<number> = ref(cloned_application_config.value.mi_default_period)
 const is_checked_use_rykv_period: Ref<boolean> = ref(cloned_application_config.value.rykv_default_period !== -1)
 const is_checked_use_mi_period: Ref<boolean> = ref(cloned_application_config.value.mi_default_period !== -1)
-const is_dark_theme: Ref<boolean> = ref(theme.global.name.value === 'gkill_dark_theme')
+const use_dark_theme: Ref<boolean> = ref(theme.global.name.value === 'gkill_dark_theme')
 
 watch(() => is_checked_use_rykv_period.value, () => {
     if (is_checked_use_rykv_period.value) {
@@ -227,20 +226,18 @@ watch(() => is_checked_use_mi_period.value, () => {
     }
 })
 
-watch(() => is_dark_theme.value, () => {
-    if (is_dark_theme.value) {
+watch(() => use_dark_theme.value, () => {
+    if (use_dark_theme.value) {
         theme.global.name.value = 'gkill_dark_theme'
     } else {
         theme.global.name.value = 'gkill_theme'
     }
-    props.gkill_api.set_use_dark_theme(is_dark_theme.value)
 })
 
 async function reload_cloned_application_config(): Promise<void> {
     cloned_application_config.value = props.application_config.clone()
     google_map_api_key.value = cloned_application_config.value.google_map_api_key
     rykv_image_list_column_number.value = cloned_application_config.value.rykv_image_list_column_number
-    enable_browser_cache.value = cloned_application_config.value.enable_browser_cache
     rykv_hot_reload.value = cloned_application_config.value.rykv_hot_reload
     mi_default_board.value = cloned_application_config.value.mi_default_board
     mi_board_names.value = new Array()
@@ -267,11 +264,11 @@ async function update_application_config(): Promise<void> {
     const application_config = new ApplicationConfig()
     application_config.google_map_api_key = google_map_api_key.value
     application_config.rykv_image_list_column_number = parseInt(rykv_image_list_column_number.value.toString())
-    application_config.enable_browser_cache = enable_browser_cache.value
     application_config.rykv_hot_reload = rykv_hot_reload.value
     application_config.mi_default_board = mi_default_board.value
     application_config.rykv_default_period = rykv_default_period.value
     application_config.mi_default_period = mi_default_period.value
+    application_config.use_dark_theme = use_dark_theme.value
 
     const req = new UpdateApplicationConfigRequest()
     req.application_config = application_config
