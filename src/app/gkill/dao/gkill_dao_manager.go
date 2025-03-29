@@ -270,7 +270,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := kmemoRep
 						enableUpdateRepsCache := false
 						enableUpdateLatestDataRepositoryCache := true
@@ -309,7 +309,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := urlogRep
 						enableUpdateRepsCache := false
 						enableUpdateLatestDataRepositoryCache := true
@@ -348,7 +348,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := timeisRep
 						enableUpdateRepsCache := false
 						enableUpdateLatestDataRepositoryCache := true
@@ -387,7 +387,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := miRep
 						enableUpdateRepsCache := false
 						enableUpdateLatestDataRepositoryCache := true
@@ -426,7 +426,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := nlogRep
 						enableUpdateRepsCache := false
 						enableUpdateLatestDataRepositoryCache := true
@@ -465,7 +465,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := lantanaRep
 						enableUpdateRepsCache := false
 						enableUpdateLatestDataRepositoryCache := true
@@ -503,7 +503,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := tagRep
 						enableUpdateRepsCache := false
 						enableUpdateLatestDataRepositoryCache := true
@@ -541,7 +541,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := textRep
 						enableUpdateRepsCache := false
 						enableUpdateLatestDataRepositoryCache := true
@@ -579,7 +579,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := notificationRep
 						enableUpdateRepsCache := false
 						enableUpdateLatestDataRepositoryCache := true
@@ -618,7 +618,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := reKyouRep
 						enableUpdateRepsCache := false
 						enableUpdateLatestDataRepositoryCache := true
@@ -666,7 +666,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					// ファイル更新があったときにキャッシュを更新する
-					if *g.autoIDF {
+					if rep.IsWatchTargetForUpdateRep {
 						rep := idfKyouRep
 						enableUpdateRepsCache := true
 						enableUpdateLatestDataRepositoryCache := true
@@ -678,9 +678,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
 							return nil, err
 						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						ignoreFileNamePrefixes = append(ignoreFileNamePrefixes, filepath.ToSlash(filepath.Join(repFilename, ".gkill")))
+						repFilename = idDBFilename
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
@@ -700,28 +698,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					repositories.GPSLogReps = append(repositories.GPSLogReps, gpslogRep)
 					if rep.UseToWrite {
 						repositories.WriteGPSLogRep = gpslogRep
-					}
-
-					// ファイル更新があったときにキャッシュを更新する
-					rep := gpslogRep
-					if *g.autoIDF {
-						enableUpdateRepsCache := false
-						enableUpdateLatestDataRepositoryCache := true
-						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
-						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = filepath.ToSlash(repFilename)
-
-						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
-						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
-							return nil, err
-						}
 					}
 
 				case "git_commit_log":

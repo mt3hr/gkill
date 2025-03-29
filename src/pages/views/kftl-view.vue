@@ -56,7 +56,6 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-import { useTheme } from 'vuetify'
 const kftl_template_dialog = ref<InstanceType<typeof KFTLTemplateDialog> | null>(null);
 
 const text_area_content: Ref<string> = ref("")
@@ -100,7 +99,7 @@ watch(line_label_datas, async () => {
         if (switch_id) {
             background_is_gray = !background_is_gray
             if (background_is_gray) {
-                if (props.gkill_api.get_use_dark_theme()) {
+                if (props.application_config.use_dark_theme) {
                     background_color = '#C0C0C0'
                 } else {
                     background_color = "#f0f0f0"

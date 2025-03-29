@@ -65,6 +65,9 @@ import { Kyou } from '@/classes/datas/kyou'
 import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
+import { useTheme } from 'vuetify'
+
+const theme = useTheme()
 
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);
 
@@ -113,6 +116,13 @@ async function load_application_config(): Promise<void> {
             if (res.errors && res.errors.length != 0) {
                 write_errors(res.errors)
                 return
+            }
+
+            const use_dark_theme = res.application_config.use_dark_theme
+            if (use_dark_theme) {
+                theme.global.name.value = 'gkill_dark_theme'
+            } else {
+                theme.global.name.value = 'gkill_theme'
             }
 
             application_config.value = res.application_config

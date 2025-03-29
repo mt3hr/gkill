@@ -23,7 +23,7 @@ export class ApplicationConfig {
     is_loaded: boolean
     user_id: string
     device: string
-    enable_browser_cache: boolean
+    use_dark_theme: boolean
     google_map_api_key: string
     rykv_image_list_column_number: number
     rykv_hot_reload: boolean
@@ -65,7 +65,7 @@ export class ApplicationConfig {
         application_config.is_loaded = this.is_loaded
         application_config.user_id = this.user_id
         application_config.device = this.device
-        application_config.enable_browser_cache = this.enable_browser_cache
+        application_config.use_dark_theme = this.use_dark_theme
         application_config.google_map_api_key = this.google_map_api_key
         application_config.rykv_image_list_column_number = this.rykv_image_list_column_number
         application_config.rykv_hot_reload = this.rykv_hot_reload
@@ -894,7 +894,7 @@ export class ApplicationConfig {
         this.is_loaded = false
         this.user_id = ""
         this.device = ""
-        this.enable_browser_cache = false
+        this.use_dark_theme = false
         this.google_map_api_key = ""
         this.rykv_image_list_column_number = 3
         this.rykv_hot_reload = false
