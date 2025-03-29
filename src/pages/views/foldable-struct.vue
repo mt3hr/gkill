@@ -6,8 +6,8 @@
             <table>
                 <tr>
                     <td v-if="is_show_checkbox">
-                        <input type="checkbox" v-model="check" @change="update_check_item_by_user"
-                            :indeterminate.prop="(struct_obj).indeterminate" />
+                        <input type="checkbox" class="checkbox_in_foldable_struct" v-model="check"
+                            @change="update_check_item_by_user" :indeterminate.prop="(struct_obj).indeterminate" />
                     </td>
                     <td class="tree_item ml-1" @dblclick="dblclick_item_by_user"
                         @click.prevent.stop="click_item_by_user">{{ struct_obj.key }}</td>
@@ -22,8 +22,8 @@
             <table>
                 <tr>
                     <td v-if="is_show_checkbox">
-                        <input type="checkbox" v-model="check" @change="change_group_by_user"
-                            :indeterminate="indeterminate_group" />
+                        <input type="checkbox" class="checkbox_in_foldable_struct" v-model="check"
+                            @change="change_group_by_user" :indeterminate="indeterminate_group" />
                     </td>
                     <td>
                         <span v-if="open_group" style="cursor: default" @click="open_group = !open_group">▽</span>
@@ -477,5 +477,9 @@ function delete_struct(id: string): boolean {
     min-width: 200px;
     cursor: default;
     font-size: v-bind(font_size_px);
+}
+
+.checkbox_in_foldable_struct {
+    accent-color: rgb(var(--v-theme-primary));
 }
 </style>

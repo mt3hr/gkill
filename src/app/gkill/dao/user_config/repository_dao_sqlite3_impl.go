@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
   FILE NOT NULL,
   USE_TO_WRITE NOT NULL,
   IS_EXECUTE_IDF_WHEN_RELOAD NOT NULL,
+  IS_WATCH_TARGET_FOR_UPDATE_REP NOT NULL,
   IS_ENABLE NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -67,6 +68,7 @@ SELECT
   FILE,
   USE_TO_WRITE,
   IS_EXECUTE_IDF_WHEN_RELOAD,
+  IS_WATCH_TARGET_FOR_UPDATE_REP,
   IS_ENABLE
 FROM REPOSITORY
 `
@@ -101,6 +103,7 @@ FROM REPOSITORY
 				&repository.File,
 				&repository.UseToWrite,
 				&repository.IsExecuteIDFWhenReload,
+				&repository.IsWatchTargetForUpdateRep,
 				&repository.IsEnable,
 			)
 			base := filepath.Base(repository.File)
@@ -123,6 +126,7 @@ SELECT
   FILE,
   USE_TO_WRITE,
   IS_EXECUTE_IDF_WHEN_RELOAD,
+  IS_WATCH_TARGET_FOR_UPDATE_REP,
   IS_ENABLE
 FROM REPOSITORY
 WHERE USER_ID = ? AND DEVICE = ?
@@ -163,6 +167,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 				&repository.File,
 				&repository.UseToWrite,
 				&repository.IsExecuteIDFWhenReload,
+				&repository.IsWatchTargetForUpdateRep,
 				&repository.IsEnable,
 			)
 			base := filepath.Base(repository.File)
@@ -218,8 +223,10 @@ INSERT INTO REPOSITORY (
   FILE,
   USE_TO_WRITE,
   IS_EXECUTE_IDF_WHEN_RELOAD,
+  IS_WATCH_TARGET_FOR_UPDATE_REP,
   IS_ENABLE 
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -251,6 +258,7 @@ INSERT INTO REPOSITORY (
 			repository.File,
 			repository.UseToWrite,
 			repository.IsExecuteIDFWhenReload,
+			repository.IsWatchTargetForUpdateRep,
 			repository.IsEnable,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
@@ -297,8 +305,10 @@ INSERT INTO REPOSITORY (
   FILE,
   USE_TO_WRITE,
   IS_EXECUTE_IDF_WHEN_RELOAD,
+  IS_WATCH_TARGET_FOR_UPDATE_REP,
   IS_ENABLE 
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -330,6 +340,7 @@ INSERT INTO REPOSITORY (
 		repository.File,
 		repository.UseToWrite,
 		repository.IsExecuteIDFWhenReload,
+		repository.IsWatchTargetForUpdateRep,
 		repository.IsEnable,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
@@ -372,8 +383,10 @@ INSERT INTO REPOSITORY (
   FILE,
   USE_TO_WRITE,
   IS_EXECUTE_IDF_WHEN_RELOAD,
+  IS_WATCH_TARGET_FOR_UPDATE_REP,
   IS_ENABLE 
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -405,6 +418,7 @@ INSERT INTO REPOSITORY (
 			repository.File,
 			repository.UseToWrite,
 			repository.IsExecuteIDFWhenReload,
+			repository.IsWatchTargetForUpdateRep,
 			repository.IsEnable,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)

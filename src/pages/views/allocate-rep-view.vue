@@ -25,6 +25,9 @@
                         <v-checkbox label="ID自動割当" v-model="repository.is_execute_idf_when_reload" />
                     </td>
                     <td>
+                        <v-checkbox label="更新を監視" v-model="repository.is_watch_target_for_update_rep" />
+                    </td>
+                    <td>
                         <v-select :label="'デバイス名'" v-model="repository.device" :items="devices" />
                     </td>
                     <td>
