@@ -27,15 +27,9 @@
                     <v-progress-circular indeterminate color="primary" />
                 </v-overlay>
             </div>
-            <kftlView :app_content_height="app_content_height.valueOf() / 2" :app_content_width="app_content_width"
+            <MkflView :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
-                @received_messages="write_messages" @saved_kyou_by_kftl="(last_added_request_time: Date) => {
-                    plaing_timeis_view?.set_last_added_request_time(last_added_request_time)
-                    reload_plaing_timeis_view()
-                }" />
-            <PlaingTimeisView :application_config="application_config" :gkill_api="gkill_api"
-                :app_content_height="app_content_height.valueOf() / 2" :app_content_width="app_content_width"
-                @received_errors="write_errors" @received_messages="write_messages" ref="plaing_timeis_view" />
+                @received_messages="write_messages" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :is_show="is_show_application_config_dialog" @received_errors="write_errors"
@@ -60,15 +54,13 @@ import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-applicati
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { type Ref, ref, computed, watch, nextTick } from 'vue'
 import ApplicationConfigDialog from './dialogs/application-config-dialog.vue'
-import kftlView from './views/kftl-view.vue'
-import PlaingTimeisView from './views/plaing-timeis-view.vue'
 import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { useTheme } from 'vuetify'
+import MkflView from './views/mkfl-view.vue'
 
 const theme = useTheme()
 
-const plaing_timeis_view = ref<InstanceType<typeof PlaingTimeisView> | null>(null);
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);
 
 const actual_height: Ref<Number> = ref(0)
@@ -82,9 +74,6 @@ const app_content_width: Ref<Number> = ref(0)
 
 const is_show_application_config_dialog: Ref<boolean> = ref(false)
 
-async function reload_plaing_timeis_view(): Promise<void> {
-    plaing_timeis_view.value?.reload_list(false)
-}
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
