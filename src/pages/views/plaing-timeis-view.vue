@@ -254,12 +254,15 @@ async function search(update_cache: boolean): Promise<void> {
         }
 
         if (match_kyous_list.value) {
-            match_kyous_list.value = []
+            match_kyous_list.value.splice(0)
         }
+
+        match_kyous_list.value.splice(0)
+        focused_kyous_list.value.splice(0)
 
         const kyou_list_view = kyou_list_views.value as any
         if (kyou_list_view) {
-            kyou_list_view.scroll_to(0)
+            kyou_list_view.scroll_to(1)
         }
         await nextTick(async () => {
             const kyou_list_view = kyou_list_views.value as any
@@ -277,6 +280,7 @@ async function search(update_cache: boolean): Promise<void> {
         if (update_cache) {
             req.query.update_cache = true
         }
+
         const res = await props.gkill_api.get_kyous(req)
         if (res.errors && res.errors.length !== 0) {
             emits('received_errors', res.errors)
@@ -285,11 +289,8 @@ async function search(update_cache: boolean): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        match_kyous_list.value = res.kyous
-        focused_kyous_list.value.splice(0)
-        for (let i = 0; i < match_kyous_list.value.length; i++) {
-            focused_kyous_list.value.push(match_kyous_list.value[i])
-        }
+        match_kyous_list.value.push(...res.kyous)
+        focused_kyous_list.value.push(...res.kyous)
         await nextTick(() => {
             const kyou_list_view = kyou_list_views.value as any
             if (!kyou_list_view) {
