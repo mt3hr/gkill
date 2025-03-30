@@ -21,6 +21,7 @@
                                 :is_focused_list="true" :closable="false" :is_readonly_mi_check="true"
                                 :show_checkbox="false" :show_footer="false" :enable_context_menu="false"
                                 :enable_dialog="false" :show_content_only="false"
+                                :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
                                 @clicked_kyou="(kyou) => { focused_kyou = kyou }"
                                 @received_errors="(errors) => emits('received_errors', errors)"

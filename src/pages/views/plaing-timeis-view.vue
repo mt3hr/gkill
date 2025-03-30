@@ -5,7 +5,8 @@
             :matched_kyous="match_kyous_list" :query="query" :last_added_tag="last_added_tag" :is_focused_list="true"
             :closable="false" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="true" :show_content_only="true"
-            @updated_kyou="reload_list(false)" @registered_kyou="reload_list(false)" @deleted_kyou="reload_list(false)"
+            :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false" @updated_kyou="reload_list(false)"
+            @registered_kyou="reload_list(false)" @deleted_kyou="reload_list(false)"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="reload_list(false)" @requested_reload_list="reload_list(false)"
@@ -260,10 +261,6 @@ async function search(update_cache: boolean): Promise<void> {
         match_kyous_list.value.splice(0)
         focused_kyous_list.value.splice(0)
 
-        const kyou_list_view = kyou_list_views.value as any
-        if (kyou_list_view) {
-            kyou_list_view.scroll_to(1)
-        }
         await nextTick(async () => {
             const kyou_list_view = kyou_list_views.value as any
             if (!kyou_list_view) {
@@ -291,6 +288,11 @@ async function search(update_cache: boolean): Promise<void> {
         }
         match_kyous_list.value.push(...res.kyous)
         focused_kyous_list.value.push(...res.kyous)
+
+        const kyou_list_view = kyou_list_views.value as any
+        if (kyou_list_view) {
+            kyou_list_view.scroll_to(1)
+        }
         await nextTick(() => {
             const kyou_list_view = kyou_list_views.value as any
             if (!kyou_list_view) {

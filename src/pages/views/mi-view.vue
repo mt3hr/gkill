@@ -78,6 +78,7 @@
                                 :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
                                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                                 :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true"
+                                :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
                                 :show_content_only="false" :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
                                     match_kyous_list_top_list[index] = scroll_top
                                     if (inited) {
