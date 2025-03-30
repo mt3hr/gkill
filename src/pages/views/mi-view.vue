@@ -12,7 +12,7 @@
                             <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
                                 :key="index" :value="index">
                                 <v-list-item-title @click="router.replace('/' + page)">{{ page
-                                }}</v-list-item-title>
+                                    }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>
@@ -140,8 +140,8 @@
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
                                 :show_timeis_plaing_end_button="true" :height="'unset'" :is_readonly_mi_check="false"
-                                :width="'unset'" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                                :show_attached_timeis="true" class="kyou_detail_view"
+                                :width="'unset'" :enable_context_menu="enable_context_menu"
+                                :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
                                 @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
@@ -712,6 +712,7 @@ function show_upload_file_dialog(): void {
     resize: horizontal;
     overflow-x: hidden;
     overflow-y: scroll;
+    height: calc(v-bind('app_content_height.toString().concat("px")'));
     width: 408px;
 }
 </style>
