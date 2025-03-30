@@ -78,11 +78,19 @@ const kftl_input_width_px = computed(() => kftl_input_width.value.toString().con
 const line_label_datas: Ref<Array<LineLabelData>> = ref(new Array<LineLabelData>())
 const line_label_styles: Ref<Array<any>> = ref(new Array<any>())
 const invalid_line_numbers: Ref<Array<Number>> = ref(new Array<Number>())
-const is_requested_submit: Ref<boolean> = ref(false)
+const is_requested_submit: Ref<boolean> = ref(true)
 
 const props = defineProps<KFTLProps>()
 const emits = defineEmits<KFTLViewEmits>()
 
+if (props.application_config.is_loaded) {
+    is_requested_submit.value = false
+}
+watch(() => props.application_config, () => {
+    if (props.application_config.is_loaded) {
+        is_requested_submit.value = false
+    }
+})
 watch(() => text_area_content.value, () => {
     update_line_labels()
     save_content_to_localstorage()
@@ -220,7 +228,7 @@ async function show_kftl_template_dialog(): Promise<void> {
 async function resize(): Promise<void> {
     line_label_width.value = 100
     line_label_height.value = props.app_content_height.valueOf() - title_height - action_height
-    text_area_width.value = props.app_content_width.valueOf() - line_label_width.value.valueOf() - 5 // 5はマジックナンバー
+    text_area_width.value = props.app_content_width.valueOf() - line_label_width.value.valueOf() - 7 // 7はマジックナンバー
     text_area_height.value = props.app_content_height.valueOf() - title_height - action_height
     kftl_input_width.value = line_label_width.value.valueOf() + text_area_width.value.valueOf()
     kftl_input_height.value = props.app_content_height.valueOf() - title_height - action_height
