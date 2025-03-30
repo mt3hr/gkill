@@ -19,6 +19,9 @@
                         <v-list-item @click="show_kftl_dialog()">
                             <v-list-item-title>kftl</v-list-item-title>
                         </v-list-item>
+                        <v-list-item @click="show_mkfl_dialog()">
+                            <v-list-item-title>mkfl</v-list-item-title>
+                        </v-list-item>
                         <v-list-item @click="show_urlog_dialog()">
                             <v-list-item-title>urlog</v-list-item-title>
                         </v-list-item>
@@ -65,6 +68,11 @@
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 :app_content_width="app_content_width" @received_errors="write_errors"
                 @received_messages="write_messages" ref="kftl_dialog" />
+            <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="''" :kyou="new Kyou()" :app_content_height="app_content_height"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                :app_content_width="app_content_width" @received_errors="write_errors"
+                @received_messages="write_messages" ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
                 @received_errors="write_errors" @received_messages="write_messages" ref="upload_file_dialog" />
@@ -95,6 +103,7 @@ import AddUrlogDialog from './dialogs/add-urlog-dialog.vue'
 import AddMiDialog from './dialogs/add-mi-dialog.vue'
 import AddNlogDialog from './dialogs/add-nlog-dialog.vue'
 import kftlDialog from './dialogs/kftl-dialog.vue'
+import mkflDialog from './dialogs/mkfl-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import { useTheme } from 'vuetify'
 
@@ -106,6 +115,7 @@ const add_lantana_dialog = ref<InstanceType<typeof AddLantanaDialog> | null>(nul
 const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null);
 const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof kftlDialog> | null>(null);
+const mkfl_dialog = ref<InstanceType<typeof mkflDialog> | null>(null);
 const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
 
 const enable_context_menu = ref(true)
@@ -140,6 +150,9 @@ async function show_dialog(): Promise<void> {
             break
         case 'kftl':
             show_kftl_dialog()
+            break
+        case 'mkfl':
+            show_mkfl_dialog()
             break
         case 'file':
             show_upload_file_dialog()
@@ -260,6 +273,10 @@ const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${positi
 
 function show_kftl_dialog(): void {
     kftl_dialog.value?.show()
+}
+
+function show_mkfl_dialog(): void {
+    mkfl_dialog.value?.show()
 }
 
 function show_timeis_dialog(): void {

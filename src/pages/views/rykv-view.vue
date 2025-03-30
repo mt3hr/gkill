@@ -270,6 +270,14 @@
                 @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="kftl_dialog" />
+            <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+                :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
@@ -288,6 +296,9 @@
                     <v-list>
                         <v-list-item @click="show_kftl_dialog()">
                             <v-list-item-title>kftl</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_mkfl_dialog()">
+                            <v-list-item-title>mkfl</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_urlog_dialog()">
                             <v-list-item-title>urlog</v-list-item-title>
@@ -327,6 +338,7 @@ import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
 import RykvQueryEditorSideBar from './rykv-query-editor-side-bar.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
+import mkflDialog from '../dialogs/mkfl-dialog.vue'
 import type { rykvViewEmits } from './rykv-view-emits'
 import type { rykvViewProps } from './rykv-view-props'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
@@ -348,6 +360,7 @@ const add_lantana_dialog = ref<InstanceType<typeof AddLantanaDialog> | null>(nul
 const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null);
 const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
+const mkfl_dialog = ref<InstanceType<typeof mkflDialog> | null>(null);
 const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
 const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
 const kyou_list_views = ref();
@@ -738,7 +751,9 @@ const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${positi
 function show_kftl_dialog(): void {
     kftl_dialog.value?.show()
 }
-
+function show_mkfl_dialog(): void {
+    mkfl_dialog.value?.show()
+}
 function show_timeis_dialog(): void {
     add_timeis_dialog.value?.show()
 }
@@ -811,8 +826,8 @@ function show_upload_file_dialog(): void {
 }
 
 .v-navigation-drawer {
-  transition: transform 0.3s ease-out !important;
-  will-change: transform;
+    transition: transform 0.3s ease-out !important;
+    will-change: transform;
 }
 </style>
 <style lang="css" scoped>
