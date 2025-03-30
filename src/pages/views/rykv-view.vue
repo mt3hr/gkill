@@ -84,6 +84,7 @@
                             :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
                             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                             :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="true"
+                            :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true"
                             :show_content_only="false" :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
                                 match_kyous_list_top_list[index] = scroll_top
                                 if (inited) {
@@ -636,7 +637,7 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Prom
 
     for (let i = 0; i < update_target_column_indexs.length; i++) {
         const target_column_index = update_target_column_indexs[i]
-        if (inited.value) {
+        if (inited.value && column_index !== i) {
             kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
         }
     }
