@@ -1,28 +1,19 @@
 <template>
     <div class="plaing_timeis_view_wrap">
-        <table class="plaing_timeis_view_table">
-            <tr>
-                <td valign="top">
-                    <KyouListView :kyou_height="180" :width="app_content_width" :list_height="kyou_list_view_height"
-                        :show_timeis_plaing_end_button="true" :application_config="application_config"
-                        :gkill_api="gkill_api" :matched_kyous="match_kyous_list" :query="query"
-                        :last_added_tag="last_added_tag" :is_focused_list="true" :closable="false"
-                        :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                        :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="true"
-                        :show_content_only="true" @updated_kyou="reload_list(false)"
-                        @registered_kyou="reload_list(false)" @deleted_kyou="reload_list(false)"
-                        @received_errors="(errors) => emits('received_errors', errors)"
-                        @received_messages="(messages) => emits('received_messages', messages)"
-                        @requested_reload_kyou="reload_list(false)" @requested_reload_list="reload_list(false)"
-                        @requested_search="search(false)" @deleted_tag="(deleted_tag) => { }"
-                        @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-                        @registered_tag="(registered_tag) => { }" @registered_text="(registered_text) => { }"
-                        @registered_notification="(registered_notification) => { }" @updated_tag="(updated_tag) => { }"
-                        @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
-                        ref="kyou_list_views" />
-                </td>
-            </tr>
-        </table>
+        <KyouListView :kyou_height="180" :width="app_content_width.valueOf() - 8" :list_height="kyou_list_view_height"
+            :show_timeis_plaing_end_button="true" :application_config="application_config" :gkill_api="gkill_api"
+            :matched_kyous="match_kyous_list" :query="query" :last_added_tag="last_added_tag" :is_focused_list="true"
+            :closable="false" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="true" :show_content_only="true"
+            @updated_kyou="reload_list(false)" @registered_kyou="reload_list(false)" @deleted_kyou="reload_list(false)"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="reload_list(false)" @requested_reload_list="reload_list(false)"
+            @requested_search="search(false)" @deleted_tag="(deleted_tag) => { }" @deleted_text="(deleted_text) => { }"
+            @deleted_notification="(deleted_notification) => { }" @registered_tag="(registered_tag) => { }"
+            @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
+            @updated_tag="(updated_tag) => { }" @updated_text="(updated_text) => { }"
+            @updated_notification="(updated_notification) => { }" ref="kyou_list_views" />
         <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
@@ -91,6 +82,13 @@
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
             ref="kftl_dialog" />
+        <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
+            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+            ref="mkfl_dialog" />
         <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
             @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
@@ -109,6 +107,9 @@
                 <v-list>
                     <v-list-item @click="show_kftl_dialog()">
                         <v-list-item-title>kftl</v-list-item-title>
+                    </v-list-item>
+                    <v-list-item @click="show_mkfl_dialog()">
+                        <v-list-item-title>mkfl</v-list-item-title>
                     </v-list-item>
                     <v-list-item @click="show_urlog_dialog()">
                         <v-list-item-title>urlog</v-list-item-title>
@@ -141,7 +142,7 @@ import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
 import KyouListView from './kyou-list-view.vue'
 import kftlDialog from '../dialogs/kftl-dialog.vue'
-import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
+import mkflDialog from '../dialogs/mkfl-dialog.vue'
 import type KftlDialog from '../dialogs/kftl-dialog.vue'
 import AddLantanaDialog from '../dialogs/add-lantana-dialog.vue'
 import AddTimeisDialog from '../dialogs/add-timeis-dialog.vue'
@@ -150,6 +151,7 @@ import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import moment from 'moment'
 import type { PlaingTimeIsViewProps } from './plaing-timeis-view-props'
 import type { PlaingTimeIsViewEmits } from './plaing-timeis-emits'
+import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
@@ -160,6 +162,7 @@ const add_lantana_dialog = ref<InstanceType<typeof AddLantanaDialog> | null>(nul
 const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null);
 const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
+const mkfl_dialog = ref<InstanceType<typeof mkflDialog> | null>(null);
 const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
 const kyou_list_views = ref();
 
@@ -200,8 +203,15 @@ defineExpose({ reload_list, set_last_added_request_time })
 
 const skip_search_this_tick = ref(false)
 
-watch(() => props.application_config, () => {
-    search(false)
+if (props.application_config.is_loaded) {
+    nextTick(() => {
+        search(false)
+    })
+}
+watch(() => props.application_config.is_loaded, () => {
+    nextTick(() => {
+        search(false)
+    })
 })
 
 watch(() => focused_time.value, () => {
@@ -321,6 +331,10 @@ function show_kftl_dialog(): void {
     kftl_dialog.value?.show()
 }
 
+function show_mkfl_dialog(): void {
+    mkfl_dialog.value?.show()
+}
+
 function show_timeis_dialog(): void {
     add_timeis_dialog.value?.show()
 }
@@ -370,6 +384,6 @@ function set_last_added_request_time(time: Date): void {
 }
 
 .plaing_timeis_view_wrap {
-    position: relative;
+    overflow-y: hidden;
 }
 </style>
