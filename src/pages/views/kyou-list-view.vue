@@ -94,7 +94,7 @@
                     </v-btn>
                 </v-col>
 
-                <v-col cols="auto" class="pa-0">
+                <v-col cols="auto" class="pa-0" v-if="is_show_doc_image_toggle_button">
                     <v-btn class="rounded-sm mx-auto" icon
                         @click.prevent="emits('requested_change_is_image_only_view', !query.is_image_only)"
                         variant="text">
@@ -103,7 +103,7 @@
                     </v-btn>
                 </v-col>
 
-                <v-col cols="auto" class="pa-0">
+                <v-col cols="auto" class="pa-0" v-if="is_show_arrow_button">
                     <v-btn class="rounded-sm mx-auto" icon variant="text"
                         @click.prevent="emits('requested_change_focus_kyou', !query.is_focus_kyou_in_list_view)">
                         <v-icon v-show="!query.is_focus_kyou_in_list_view">mdi-arrow-down</v-icon>
