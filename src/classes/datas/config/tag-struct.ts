@@ -9,6 +9,8 @@ export class TagStruct {
     seq: Number
     check_when_inited: boolean
     is_force_hide: boolean
+    is_dir: boolean
+    is_open_default: boolean
     async clone(): Promise<TagStruct> {
         throw new Error('Not implemented')
     }
@@ -21,5 +23,7 @@ export class TagStruct {
         this.seq = 0
         this.check_when_inited = false
         this.is_force_hide = false
+        this.is_dir = false
+        this.is_open_default = false
     }
 }

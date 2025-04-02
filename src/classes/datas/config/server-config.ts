@@ -41,6 +41,10 @@ export class ServerConfig {
 
     mi_notification_private_key: string
 
+    use_gkill_notification: boolean
+
+    google_map_api_key: string
+
     async clone(): Promise<ServerConfig> {
         const server_config = new ServerConfig()
         server_config.is_loaded = this.is_loaded
@@ -61,6 +65,8 @@ export class ServerConfig {
         server_config.accounts = this.accounts
         server_config.mi_notification_public_key = this.mi_notification_public_key
         server_config.mi_notification_private_key = this.mi_notification_private_key
+        server_config.use_gkill_notification = this.use_gkill_notification
+        server_config.google_map_api_key = this.google_map_api_key
         return server_config
     }
 
@@ -83,6 +89,8 @@ export class ServerConfig {
         this.mi_notification_private_key = ""
         this.repositories = new Array<Repository>()
         this.accounts = new Array<Account>()
+        this.use_gkill_notification = false
+        this.google_map_api_key = ""
     }
 
 }

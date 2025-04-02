@@ -16,4 +16,8 @@ type TagStruct struct {
 	CheckWhenInited bool `json:"check_when_inited"`
 
 	IsForceHide bool `json:"is_force_hide"`
+
+	IsDir bool `json:"is_dir"`
+
+	IsOpenDefault bool `json:"is_open_default"`
 }

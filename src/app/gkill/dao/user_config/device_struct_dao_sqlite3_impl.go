@@ -32,7 +32,9 @@ CREATE TABLE IF NOT EXISTS "DEVICE_STRUCT" (
   DEVICE_NAME NOT NULL,
   PARENT_FOLDER_ID,
   SEQ NOT NULL,
-  CHECK_WHEN_INITED NOT NULL
+  CHECK_WHEN_INITED NOT NULL,
+  IS_DIR NOT NULL,
+  IS_OPEN_DEFAULT NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
@@ -64,7 +66,9 @@ SELECT
   DEVICE_NAME,
   PARENT_FOLDER_ID,
   SEQ,
-  CHECK_WHEN_INITED
+  CHECK_WHEN_INITED,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 FROM DEVICE_STRUCT
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -98,6 +102,8 @@ FROM DEVICE_STRUCT
 				&deviceStruct.ParentFolderID,
 				&deviceStruct.Seq,
 				&deviceStruct.CheckWhenInited,
+				&deviceStruct.IsDir,
+				&deviceStruct.IsOpenDefault,
 			)
 			deviceStructs = append(deviceStructs, deviceStruct)
 		}
@@ -114,7 +120,9 @@ SELECT
   DEVICE_NAME,
   PARENT_FOLDER_ID,
   SEQ,
-  CHECK_WHEN_INITED
+  CHECK_WHEN_INITED,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 FROM DEVICE_STRUCT
 WHERE USER_ID = ?
 `
@@ -153,6 +161,8 @@ WHERE USER_ID = ?
 				&deviceStruct.ParentFolderID,
 				&deviceStruct.Seq,
 				&deviceStruct.CheckWhenInited,
+				&deviceStruct.IsDir,
+				&deviceStruct.IsOpenDefault,
 			)
 			deviceStructs = append(deviceStructs, deviceStruct)
 		}
@@ -169,8 +179,12 @@ INSERT INTO DEVICE_STRUCT (
   DEVICE_NAME,
   PARENT_FOLDER_ID,
   SEQ,
-  CHECK_WHEN_INITED
+  CHECK_WHEN_INITED,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -196,6 +210,8 @@ INSERT INTO DEVICE_STRUCT (
 		deviceStruct.ParentFolderID,
 		deviceStruct.Seq,
 		deviceStruct.CheckWhenInited,
+		deviceStruct.IsDir,
+		deviceStruct.IsOpenDefault,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -222,8 +238,12 @@ INSERT INTO DEVICE_STRUCT (
   DEVICE_NAME,
   PARENT_FOLDER_ID,
   SEQ,
-  CHECK_WHEN_INITED
+  CHECK_WHEN_INITED,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -253,6 +273,8 @@ INSERT INTO DEVICE_STRUCT (
 			deviceStruct.ParentFolderID,
 			deviceStruct.Seq,
 			deviceStruct.CheckWhenInited,
+			deviceStruct.IsDir,
+			deviceStruct.IsOpenDefault,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 		_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -289,6 +311,8 @@ UPDATE DEVICE_STRUCT SET
   PARENT_FOLDER_ID = ?,
   SEQ = ?,
   CHECK_WHEN_INITED = ?
+  IS_DIR = ?,
+  IS_OPEN_DEFAULT = ?
 WHERE ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -307,6 +331,8 @@ WHERE ID = ?
 		deviceStruct.ParentFolderID,
 		deviceStruct.Seq,
 		deviceStruct.CheckWhenInited,
+		deviceStruct.IsDir,
+		deviceStruct.IsOpenDefault,
 		deviceStruct.ID,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)

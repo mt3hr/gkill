@@ -14,4 +14,8 @@ type KFTLTemplate struct {
 	ParentFolderID string `json:"parent_folder_id"`
 
 	Seq int `json:"seq"`
+
+	IsDir bool `json:"is_dir"`
+
+	IsOpenDefault bool `json:"is_open_default"`
 }

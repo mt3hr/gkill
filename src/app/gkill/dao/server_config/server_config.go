@@ -41,4 +41,8 @@ type ServerConfig struct {
 	GkillNotificationPublicKey string `json:"gkill_notification_public_key"`
 
 	GkillNotificationPrivateKey string `json:"gkill_notification_private_key"`
+
+	UseGkillNotification bool `json:"use_gkill_notification"`
+
+	GoogleMapAPIKey string `json:"google_map_api_key"`
 }

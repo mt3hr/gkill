@@ -27,6 +27,10 @@ export class RepStructElementData implements FoldableStructModel {
 
     seq: number
 
+    is_dir: boolean
+
+    is_open_default: boolean
+
     constructor() {
         this.seq_in_parent = 0
         this.id = ""
@@ -39,6 +43,8 @@ export class RepStructElementData implements FoldableStructModel {
         this.indeterminate = false
         this.parent_folder_id = ""
         this.seq = 0
+        this.is_dir = false
+        this.is_open_default = false
     }
 
 }
