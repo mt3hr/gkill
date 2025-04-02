@@ -264,7 +264,7 @@ WHERE
 				// 接続されていないRepのIDがあったときは無視する
 				continue
 			}
-			fileContentText += filename
+			fileContentText += strings.ToLower(filename)
 			switch filepath.Ext(idf.TargetFile) {
 			case ".md":
 				fallthrough
@@ -287,9 +287,15 @@ WHERE
 			notWords := []string{}
 			if query.Words != nil {
 				words = *query.Words
+				for i := range words {
+					words[i] = strings.ToLower(words[i])
+				}
 			}
 			if query.NotWords != nil {
 				notWords = *query.NotWords
+				for i := range notWords {
+					notWords[i] = strings.ToLower(notWords[i])
+				}
 			}
 
 			match := true
@@ -298,7 +304,7 @@ WHERE
 				if query.WordsAnd != nil && *query.WordsAnd {
 					match = true
 					for _, word := range words {
-						match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
+						match = strings.Contains(fileContentText, word)
 						if !match {
 							break
 						}
@@ -310,7 +316,7 @@ WHERE
 					// ワードor検索である場合の判定
 					match = false
 					for _, word := range words {
-						match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
+						match = strings.Contains(fileContentText, word)
 						if match {
 							break
 						}
@@ -318,7 +324,7 @@ WHERE
 				}
 				// notワードを除外する場合の判定
 				for _, notWord := range notWords {
-					match = strings.Contains(fmt.Sprintf("%s", fileContentText), notWord)
+					match = strings.Contains(fileContentText, notWord)
 					if match {
 						match = false
 						break
