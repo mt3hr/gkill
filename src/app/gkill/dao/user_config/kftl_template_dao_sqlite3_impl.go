@@ -32,7 +32,9 @@ CREATE TABLE IF NOT EXISTS "KFTL_TEMPLATE" (
   TITLE NOT NULL,
   TEMPLATE NOT NULL,
   PARENT_FOLDER_ID,
-  SEQ NOT NULL
+  SEQ NOT NULL,
+  IS_DIR NOT NULL,
+  IS_OPEN_DEFAULT NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
@@ -64,7 +66,9 @@ SELECT
   TITLE,
   TEMPLATE,
   PARENT_FOLDER_ID,
-  SEQ
+  SEQ,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 FROM KFTL_TEMPLATE
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -98,6 +102,8 @@ FROM KFTL_TEMPLATE
 				&kftlTemplate.Template,
 				&kftlTemplate.ParentFolderID,
 				&kftlTemplate.Seq,
+				&kftlTemplate.IsDir,
+				&kftlTemplate.IsOpenDefault,
 			)
 			kftlTemplates = append(kftlTemplates, kftlTemplate)
 		}
@@ -114,7 +120,9 @@ SELECT
   TITLE,
   TEMPLATE,
   PARENT_FOLDER_ID,
-  SEQ
+  SEQ,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 FROM KFTL_TEMPLATE
 WHERE USER_ID = ?
 `
@@ -153,6 +161,8 @@ WHERE USER_ID = ?
 				&kftlTemplate.Template,
 				&kftlTemplate.ParentFolderID,
 				&kftlTemplate.Seq,
+				&kftlTemplate.IsDir,
+				&kftlTemplate.IsOpenDefault,
 			)
 			kftlTemplates = append(kftlTemplates, kftlTemplate)
 		}
@@ -169,8 +179,12 @@ INSERT INTO KFTL_TEMPLATE (
   TITLE,
   TEMPLATE,
   PARENT_FOLDER_ID,
-  SEQ
+  SEQ,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -196,6 +210,8 @@ INSERT INTO KFTL_TEMPLATE (
 		kftlTemplate.Template,
 		kftlTemplate.ParentFolderID,
 		kftlTemplate.Seq,
+		kftlTemplate.IsDir,
+		kftlTemplate.IsOpenDefault,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -222,8 +238,12 @@ INSERT INTO KFTL_TEMPLATE (
   TITLE,
   TEMPLATE,
   PARENT_FOLDER_ID,
-  SEQ
+  SEQ,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -253,6 +273,8 @@ INSERT INTO KFTL_TEMPLATE (
 			kftlTemplate.Template,
 			kftlTemplate.ParentFolderID,
 			kftlTemplate.Seq,
+			kftlTemplate.IsDir,
+			kftlTemplate.IsOpenDefault,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 		_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -287,7 +309,9 @@ UPDATE KFTL_TEMPLATE SET
   TITLE = ?,
   TEMPLATE = ?,
   PARENT_FOLDER_ID = ?,
-  SEQ = ?
+  SEQ = ?,
+  IS_DIR = ?,
+  IS_OPEN_DEFAULT = ?
 WHERE ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -306,6 +330,8 @@ WHERE ID = ?
 		kftlTemplate.Template,
 		kftlTemplate.ParentFolderID,
 		kftlTemplate.Seq,
+		kftlTemplate.IsDir,
+		kftlTemplate.IsOpenDefault,
 		kftlTemplate.ID,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)

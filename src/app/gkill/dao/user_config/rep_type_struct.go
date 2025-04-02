@@ -16,4 +16,8 @@ type RepTypeStruct struct {
 	Seq int `json:"seq"`
 
 	CheckWhenInited bool `json:"check_when_inited"`
+
+	IsDir bool `json:"is_dir"`
+
+	IsOpenDefault bool `json:"is_open_default"`
 }
