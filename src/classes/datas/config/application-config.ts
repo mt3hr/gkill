@@ -133,6 +133,8 @@ export class ApplicationConfig {
             rep_struct.rep_name = rep_name
             rep_struct.seq = 1000 + i++
             rep_struct.user_id = gkill_info_res.user_id
+            rep_struct.is_dir = false
+            rep_struct.is_open_default = false
             this.rep_struct.push(rep_struct)
         })
         return new Array<GkillError>()
@@ -175,6 +177,8 @@ export class ApplicationConfig {
             tag_struct.tag_name = tag_name
             tag_struct.seq = 1000 + i++
             tag_struct.user_id = gkill_info_res.user_id
+            tag_struct.is_dir = false
+            tag_struct.is_open_default = false
             this.tag_struct.push(tag_struct)
         })
         return new Array<GkillError>()
@@ -245,6 +249,8 @@ export class ApplicationConfig {
             device_struct.parent_folder_id = null
             device_struct.seq = -1000
             device_struct.user_id = gkill_info_res.user_id
+            device_struct.is_dir = false
+            device_struct.is_open_default = false
             this.device_struct.push(device_struct)
         }
         return new Array<GkillError>()
@@ -288,6 +294,8 @@ export class ApplicationConfig {
             device_struct.parent_folder_id = null
             device_struct.seq = 1000 + i++
             device_struct.user_id = gkill_info_res.user_id
+            device_struct.is_dir = false
+            device_struct.is_open_default = false
             this.device_struct.push(device_struct)
         })
         return new Array<GkillError>()
@@ -330,6 +338,8 @@ export class ApplicationConfig {
             rep_type_struct.parent_folder_id = null
             rep_type_struct.seq = 1000 + i++
             rep_type_struct.user_id = gkill_info_res.user_id
+            rep_type_struct.is_dir = false
+            rep_type_struct.is_open_default = false
             this.rep_type_struct.push(rep_type_struct)
         })
         return new Array<GkillError>()
@@ -348,6 +358,8 @@ export class ApplicationConfig {
                 struct_element.id = item.id
                 struct_element.title = item.title
                 struct_element.key = item.title
+                struct_element.is_dir = item.is_dir
+                struct_element.is_open_default = item.is_open_default
                 if (item.template) {
                     struct_element.template = item.template
                 }
@@ -389,6 +401,8 @@ export class ApplicationConfig {
                     struct_element.id = item.id
                     struct_element.title = item.title
                     struct_element.key = item.title
+                    struct_element.is_dir = item.is_dir
+                    struct_element.is_open_default = item.is_open_default
                     if (item.template) {
                         struct_element.template = item.template
                     }
@@ -425,6 +439,8 @@ export class ApplicationConfig {
                 struct_element.is_force_hide = item.is_force_hide
                 struct_element.key = item.tag_name
                 struct_element.tag_name = item.tag_name
+                struct_element.is_dir = item.is_dir
+                struct_element.is_open_default = item.is_open_default
 
                 struct.children.push(struct_element)
                 added_list.push(item)
@@ -468,6 +484,8 @@ export class ApplicationConfig {
                     struct_element.is_force_hide = item.is_force_hide
                     struct_element.key = item.tag_name
                     struct_element.tag_name = item.tag_name
+                    struct_element.is_dir = item.is_dir
+                    struct_element.is_open_default = item.is_open_default
 
                     if (!parent_struct.children) {
                         parent_struct.children = new Array<TagStructElementData>()
@@ -511,6 +529,8 @@ export class ApplicationConfig {
                 struct_element.ignore_check_rep_rykv = item.ignore_check_rep_rykv
                 struct_element.key = item.rep_name
                 struct_element.rep_name = item.rep_name
+                struct_element.is_dir = item.is_dir
+                struct_element.is_open_default = item.is_open_default
 
                 struct.children.push(struct_element)
                 added_list.push(item)
@@ -554,6 +574,8 @@ export class ApplicationConfig {
                     struct_element.ignore_check_rep_rykv = item.ignore_check_rep_rykv
                     struct_element.key = item.rep_name
                     struct_element.rep_name = item.rep_name
+                    struct_element.is_dir = item.is_dir
+                    struct_element.is_open_default = item.is_open_default
 
                     if (!parent_struct.children) {
                         parent_struct.children = new Array<RepStructElementData>()
@@ -596,6 +618,8 @@ export class ApplicationConfig {
                 struct_element.is_checked = item.check_when_inited
                 struct_element.key = item.device_name
                 struct_element.device_name = item.device_name
+                struct_element.is_dir = item.is_dir
+                struct_element.is_open_default = item.is_open_default
 
                 struct.children.push(struct_element)
                 added_list.push(item)
@@ -638,6 +662,8 @@ export class ApplicationConfig {
                     struct_element.is_checked = item.check_when_inited
                     struct_element.key = item.device_name
                     struct_element.device_name = item.device_name
+                    struct_element.is_dir = item.is_dir
+                    struct_element.is_open_default = item.is_open_default
 
                     if (!parent_struct.children) {
                         parent_struct.children = new Array<DeviceStructElementData>()
@@ -680,6 +706,8 @@ export class ApplicationConfig {
                 struct_element.is_checked = item.check_when_inited
                 struct_element.key = item.rep_type_name
                 struct_element.rep_type_name = item.rep_type_name
+                struct_element.is_dir = item.is_dir
+                struct_element.is_open_default = item.is_open_default
 
                 struct.children.push(struct_element)
                 added_list.push(item)
@@ -722,6 +750,8 @@ export class ApplicationConfig {
                     struct_element.is_checked = item.check_when_inited
                     struct_element.key = item.rep_type_name
                     struct_element.rep_type_name = item.rep_type_name
+                    struct_element.is_dir = item.is_dir
+                    struct_element.is_open_default = item.is_open_default
 
                     if (!parent_struct.children) {
                         parent_struct.children = new Array<RepTypeStructElementData>()
@@ -856,6 +886,8 @@ export class ApplicationConfig {
             tag_struct.tag_name = "no tags"
             tag_struct.seq = -1000
             tag_struct.user_id = gkill_info_res.user_id
+            tag_struct.is_dir = false
+            tag_struct.is_open_default = false
             this.tag_struct.unshift(tag_struct)
         }
         return new Array<GkillError>()

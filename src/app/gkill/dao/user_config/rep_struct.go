@@ -16,4 +16,8 @@ type RepStruct struct {
 	CheckWhenInited bool `json:"check_when_inited"`
 
 	IgnoreCheckRepRykv bool `json:"ignore_check_rep_rykv"`
+
+	IsDir bool `json:"is_dir"`
+
+	IsOpenDefault bool `json:"is_open_default"`
 }

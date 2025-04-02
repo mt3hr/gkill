@@ -16,6 +16,10 @@ export class RepTypeStruct {
 
     check_when_inited: boolean
 
+    is_dir: boolean
+
+    is_open_default: boolean
+
     constructor() {
         this.id = ""
         this.user_id = ""
@@ -24,6 +28,8 @@ export class RepTypeStruct {
         this.parent_folder_id = ""
         this.seq = 0
         this.check_when_inited = false
+        this.is_dir = false
+        this.is_open_default = false
     }
 
 }

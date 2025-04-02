@@ -18,6 +18,10 @@ export class RepStruct {
 
     ignore_check_rep_rykv: boolean
 
+    is_dir: boolean
+
+    is_open_default: boolean
+
     constructor() {
         this.id = ""
         this.user_id = ""
@@ -27,6 +31,8 @@ export class RepStruct {
         this.seq = 0
         this.check_when_inited = false
         this.ignore_check_rep_rykv = false
+        this.is_dir = false
+        this.is_open_default = false
     }
 
 }

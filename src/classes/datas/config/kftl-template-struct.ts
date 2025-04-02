@@ -16,6 +16,10 @@ export class KFTLTemplateStruct {
 
     seq: Number
 
+    is_dir: boolean
+
+    is_open_default: boolean
+
     constructor() {
         this.id = ""
         this.user_id = ""
@@ -24,6 +28,8 @@ export class KFTLTemplateStruct {
         this.template = ""
         this.parent_folder_id = ""
         this.seq = 0
+        this.is_dir = false
+        this.is_open_default = false
     }
 
 }

@@ -22,6 +22,10 @@ export class TagStructElementData implements FoldableStructModel {
 
     indeterminate: boolean
 
+    is_dir: boolean
+
+    is_open_default: boolean
+
     constructor() {
         this.seq_in_parent = 0
         this.id = ""
@@ -32,6 +36,8 @@ export class TagStructElementData implements FoldableStructModel {
         this.key = ""
         this.is_checked = false
         this.indeterminate = false
+        this.is_dir = false
+        this.is_open_default = false
     }
 
 }
