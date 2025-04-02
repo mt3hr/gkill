@@ -33,7 +33,9 @@ CREATE TABLE IF NOT EXISTS "REP_STRUCT" (
   PARENT_FOLDER_ID,
   SEQ NOT NULL,
   CHECK_WHEN_INITED NOT NULL,
-  IGNORE_CHECK_REP_RYKV NOT NULL
+  IGNORE_CHECK_REP_RYKV NOT NULL,
+  IS_DIR NOT NULL,
+  IS_OPEN_DEFAULT NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
@@ -66,7 +68,9 @@ SELECT
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED,
-  IGNORE_CHECK_REP_RYKV
+  IGNORE_CHECK_REP_RYKV,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 FROM REP_STRUCT
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -101,6 +105,8 @@ FROM REP_STRUCT
 				&repStruct.Seq,
 				&repStruct.CheckWhenInited,
 				&repStruct.IgnoreCheckRepRykv,
+				&repStruct.IsDir,
+				&repStruct.IsOpenDefault,
 			)
 			repStructs = append(repStructs, repStruct)
 		}
@@ -118,7 +124,9 @@ SELECT
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED,
-  IGNORE_CHECK_REP_RYKV
+  IGNORE_CHECK_REP_RYKV,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 FROM REP_STRUCT
 WHERE USER_ID = ?
 `
@@ -158,6 +166,8 @@ WHERE USER_ID = ?
 				&repStruct.Seq,
 				&repStruct.CheckWhenInited,
 				&repStruct.IgnoreCheckRepRykv,
+				&repStruct.IsDir,
+				&repStruct.IsOpenDefault,
 			)
 			repStructs = append(repStructs, repStruct)
 		}
@@ -175,8 +185,12 @@ INSERT INTO REP_STRUCT (
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED,
-  IGNORE_CHECK_REP_RYKV
+  IGNORE_CHECK_REP_RYKV,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -204,6 +218,8 @@ INSERT INTO REP_STRUCT (
 		repStruct.Seq,
 		repStruct.CheckWhenInited,
 		repStruct.IgnoreCheckRepRykv,
+		repStruct.IsDir,
+		repStruct.IsOpenDefault,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -231,8 +247,12 @@ INSERT INTO REP_STRUCT (
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED,
-  IGNORE_CHECK_REP_RYKV
+  IGNORE_CHECK_REP_RYKV,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -264,6 +284,8 @@ INSERT INTO REP_STRUCT (
 			repStruct.Seq,
 			repStruct.CheckWhenInited,
 			repStruct.IgnoreCheckRepRykv,
+			repStruct.IsDir,
+			repStruct.IsOpenDefault,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 		_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -301,7 +323,9 @@ UPDATE REP_STRUCT SET
   PARENT_FOLDER_ID = ?,
   SEQ = ?,
   CHECK_WHEN_INITED = ?,
-  IGNORE_CHECK_REP_RYKV = ?
+  IGNORE_CHECK_REP_RYKV = ?,
+  IS_DIR = ?,
+  IS_OPEN_DEFAULT = ?
 WHERE ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -322,6 +346,8 @@ WHERE ID = ?
 		repStruct.CheckWhenInited,
 		repStruct.IgnoreCheckRepRykv,
 		repStruct.ID,
+		repStruct.IsDir,
+		repStruct.IsOpenDefault,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)

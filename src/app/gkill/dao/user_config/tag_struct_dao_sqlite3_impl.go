@@ -33,7 +33,9 @@ CREATE TABLE IF NOT EXISTS "TAG_STRUCT" (
   PARENT_FOLDER_ID,
   SEQ NOT NULL,
   CHECK_WHEN_INITED NOT NULL,
-  IS_FORCE_HIDE NOT NULL
+  IS_FORCE_HIDE NOT NULL,
+  IS_DIR NOT NULL,
+  IS_OPEN_DEFAULT NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
@@ -66,7 +68,9 @@ SELECT
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED,
-  IS_FORCE_HIDE
+  IS_FORCE_HIDE,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 FROM TAG_STRUCT
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -101,6 +105,8 @@ FROM TAG_STRUCT
 				&tagStruct.Seq,
 				&tagStruct.CheckWhenInited,
 				&tagStruct.IsForceHide,
+				&tagStruct.IsDir,
+				&tagStruct.IsOpenDefault,
 			)
 			tagStructs = append(tagStructs, tagStruct)
 		}
@@ -118,7 +124,9 @@ SELECT
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED,
-  IS_FORCE_HIDE
+  IS_FORCE_HIDE,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 FROM TAG_STRUCT
 WHERE USER_ID = ?
 `
@@ -157,6 +165,8 @@ WHERE USER_ID = ?
 				&tagStruct.Seq,
 				&tagStruct.CheckWhenInited,
 				&tagStruct.IsForceHide,
+				&tagStruct.IsDir,
+				&tagStruct.IsOpenDefault,
 			)
 			tagStructs = append(tagStructs, tagStruct)
 		}
@@ -174,8 +184,12 @@ INSERT INTO TAG_STRUCT (
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED,
-  IS_FORCE_HIDE
+  IS_FORCE_HIDE,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -203,6 +217,8 @@ INSERT INTO TAG_STRUCT (
 		tagStruct.Seq,
 		tagStruct.CheckWhenInited,
 		tagStruct.IsForceHide,
+		tagStruct.IsDir,
+		tagStruct.IsOpenDefault,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -229,8 +245,12 @@ INSERT INTO TAG_STRUCT (
   PARENT_FOLDER_ID,
   SEQ,
   CHECK_WHEN_INITED,
-  IS_FORCE_HIDE
+  IS_FORCE_HIDE,
+  IS_DIR,
+  IS_OPEN_DEFAULT
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -262,6 +282,8 @@ INSERT INTO TAG_STRUCT (
 			tagStruct.Seq,
 			tagStruct.CheckWhenInited,
 			tagStruct.IsForceHide,
+			tagStruct.IsDir,
+			tagStruct.IsOpenDefault,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 		_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -289,7 +311,9 @@ UPDATE TAG_STRUCT SET
   PARENT_FOLDER_ID = ?,
   SEQ = ?,
   CHECK_WHEN_INITED = ?,
-  IS_FORCE_HIDE
+  IS_FORCE_HIDE = ?,
+  IS_DIR = ?,
+  IS_OPEN_DEFAULT = ?
 WHERE ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -309,6 +333,8 @@ WHERE ID = ?
 		tagStruct.Seq,
 		tagStruct.CheckWhenInited,
 		tagStruct.IsForceHide,
+		tagStruct.IsDir,
+		tagStruct.IsOpenDefault,
 		tagStruct.ID,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
