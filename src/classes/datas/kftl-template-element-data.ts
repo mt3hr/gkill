@@ -19,6 +19,9 @@ export class KFTLTemplateElementData implements FoldableStructModel {
     is_checked: boolean // 使わない
     indeterminate: boolean // 使わない
 
+    is_dir: boolean
+    is_open_default: boolean
+
     constructor() {
         this.seq_in_parent = 0
         this.id = ""
@@ -28,6 +31,8 @@ export class KFTLTemplateElementData implements FoldableStructModel {
         this.is_checked = false
         this.indeterminate = false
         this.key = ""
+        this.is_dir = false
+        this.is_open_default = false
     }
 
 }

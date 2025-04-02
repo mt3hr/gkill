@@ -40,7 +40,9 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
   UPLOAD_SIZE_LIMIT_MONTH,
   USER_DATA_DIRECTORY NOT NULL,
   GKILL_NOTIFICATION_PUBLIC_KEY NOT NULL,
-  GKILL_NOTIFICATION_PRIVATE_KEY NOT NULL
+  GKILL_NOTIFICATION_PRIVATE_KEY NOT NULL,
+  USE_GKILL_NOTIFICATION NOT NULL,
+  GOOGLE_MAP_API_KEY NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
@@ -81,7 +83,9 @@ SELECT
   UPLOAD_SIZE_LIMIT_MONTH,
   USER_DATA_DIRECTORY,
   GKILL_NOTIFICATION_PUBLIC_KEY,
-  GKILL_NOTIFICATION_PRIVATE_KEY
+  GKILL_NOTIFICATION_PRIVATE_KEY,
+  USE_GKILL_NOTIFICATION,
+  GOOGLE_MAP_API_KEY
 FROM SERVER_CONFIG
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -123,6 +127,8 @@ FROM SERVER_CONFIG
 				&serverConfig.UserDataDirectory,
 				&serverConfig.GkillNotificationPublicKey,
 				&serverConfig.GkillNotificationPrivateKey,
+				&serverConfig.UseGkillNotification,
+				&serverConfig.GoogleMapAPIKey,
 			)
 			serverConfigs = append(serverConfigs, serverConfig)
 		}
@@ -147,7 +153,9 @@ SELECT
   UPLOAD_SIZE_LIMIT_MONTH,
   USER_DATA_DIRECTORY,
   GKILL_NOTIFICATION_PUBLIC_KEY,
-  GKILL_NOTIFICATION_PRIVATE_KEY
+  GKILL_NOTIFICATION_PRIVATE_KEY,
+  USE_GKILL_NOTIFICATION,
+  GOOGLE_MAP_API_KEY
 FROM SERVER_CONFIG
 WHERE DEVICE = ?
 `
@@ -194,6 +202,8 @@ WHERE DEVICE = ?
 				&serverConfig.UserDataDirectory,
 				&serverConfig.GkillNotificationPublicKey,
 				&serverConfig.GkillNotificationPrivateKey,
+				&serverConfig.UseGkillNotification,
+				&serverConfig.GoogleMapAPIKey,
 			)
 			serverConfigs = append(serverConfigs, serverConfig)
 		}
@@ -223,8 +233,12 @@ INSERT INTO SERVER_CONFIG (
   UPLOAD_SIZE_LIMIT_MONTH,
   USER_DATA_DIRECTORY,
   GKILL_NOTIFICATION_PUBLIC_KEY,
-  GKILL_NOTIFICATION_PRIVATE_KEY
+  GKILL_NOTIFICATION_PRIVATE_KEY,
+  USE_GKILL_NOTIFICATION,
+  GOOGLE_MAP_API_KEY
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -266,6 +280,8 @@ INSERT INTO SERVER_CONFIG (
 		serverConfig.UserDataDirectory,
 		serverConfig.GkillNotificationPublicKey,
 		serverConfig.GkillNotificationPrivateKey,
+		serverConfig.UseGkillNotification,
+		serverConfig.GoogleMapAPIKey,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -300,7 +316,9 @@ UPDATE SERVER_CONFIG SET
   UPLOAD_SIZE_LIMIT_MONTH = ?,
   USER_DATA_DIRECTORY = ?,
   GKILL_NOTIFICATION_PUBLIC_KEY = ?,
-  GKILL_NOTIFICATION_PRIVATE_KEY = ?
+  GKILL_NOTIFICATION_PRIVATE_KEY = ?,
+  USE_GKILL_NOTIFICATION = ?,
+  GOOGLE_MAP_API_KEY = ?
 WHERE DEVICE = ?
 `
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -331,6 +349,8 @@ WHERE DEVICE = ?
 			serverConfig.UserDataDirectory,
 			serverConfig.GkillNotificationPublicKey,
 			serverConfig.GkillNotificationPrivateKey,
+			serverConfig.UseGkillNotification,
+			serverConfig.GoogleMapAPIKey,
 			serverConfig.Device,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
@@ -439,6 +459,8 @@ UPDATE SERVER_CONFIG SET
   USER_DATA_DIRECTORY = ?,
   GKILL_NOTIFICATION_PUBLIC_KEY = ?,
   GKILL_NOTIFICATION_PRIVATE_KEY = ?
+  USE_GKILL_NOTIFICATION = ?,
+  GOOGLE_MAP_API_KEY = ?
 WHERE DEVICE = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -469,6 +491,8 @@ WHERE DEVICE = ?
 		serverConfig.UserDataDirectory,
 		serverConfig.GkillNotificationPublicKey,
 		serverConfig.GkillNotificationPrivateKey,
+		serverConfig.UseGkillNotification,
+		serverConfig.GoogleMapAPIKey,
 		serverConfig.Device,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
@@ -629,8 +653,12 @@ INSERT INTO SERVER_CONFIG (
   UPLOAD_SIZE_LIMIT_MONTH,
   USER_DATA_DIRECTORY,
   GKILL_NOTIFICATION_PUBLIC_KEY,
-  GKILL_NOTIFICATION_PRIVATE_KEY
+  GKILL_NOTIFICATION_PRIVATE_KEY,
+  USE_GKILL_NOTIFICATION,
+  GOOGLE_MAP_API_KEY
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
