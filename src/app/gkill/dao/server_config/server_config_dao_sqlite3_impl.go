@@ -694,6 +694,8 @@ INSERT INTO SERVER_CONFIG (
 			serverConfig.UserDataDirectory,
 			serverConfig.GkillNotificationPublicKey,
 			serverConfig.GkillNotificationPrivateKey,
+			serverConfig.UseGkillNotification,
+			serverConfig.GoogleMapAPIKey,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
 
