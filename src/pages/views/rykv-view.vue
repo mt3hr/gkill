@@ -637,7 +637,7 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Prom
 
     for (let i = 0; i < update_target_column_indexs.length; i++) {
         const target_column_index = update_target_column_indexs[i]
-        if (inited.value && column_index !== i) {
+        if (inited.value && column_index !== target_column_index) {
             kyou_list_views.value[target_column_index].scroll_to_time(kyou.related_time)
         }
     }
