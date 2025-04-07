@@ -3,7 +3,6 @@
         :folder_name="''" :gkill_api="gkill_api" :is_open="true" />
 </template>
 <script setup lang="ts">
-import ApplicationConfigStructContextMenu from './application-config-struct-context-menu.vue'
 import type { KFTLTemplateElementEmits } from './kftl-template-element-emits'
 import type { KFTLTemplateElementProps } from './kftl-template-element-props'
 

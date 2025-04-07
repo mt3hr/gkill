@@ -1,17 +1,17 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            フォルダ追加
+            {{ $t("ADD_FOLDER_TITLE") }}
         </v-card-title>
-        <v-text-field class="input" type="text" v-model="folder_name" label="フォルダ名" />
+        <v-text-field class="input" type="text" v-model="folder_name" :label="$t('FOLDER_NAME_TITLE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="emits_folder">追加</v-btn>
+                    <v-btn dark color="primary" @click="emits_folder">{{ $t("ADD_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -24,6 +24,9 @@ import type { AddNewFoloderViewProps } from './add-new-foloder-view-props'
 import { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data';
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<AddNewFoloderViewProps>()
 const emits = defineEmits<AddNewFoloderViewEmits>()
@@ -36,7 +39,7 @@ function emits_folder(): void {
     if (folder_name.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.folder_name_is_blank
-        error.error_message = "フォルダ名が入力されていません"
+        error.error_message = t("FOLDER_NAME_IS_BLANK_MESSAGE")
         emits('received_errors', [error])
         return
     }

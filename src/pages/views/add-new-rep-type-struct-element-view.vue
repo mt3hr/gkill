@@ -1,18 +1,19 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            データタイプ追加
+            {{ $t("ADD_REP_TYPE_TITLE") }}
         </v-card-title>
-        <v-text-field class="input" type="text" v-model="rep_type_name" label="データタイプ名" />
-        <v-checkbox v-model="check_when_inited" hide-detail label="初期化時チェック" />
+        <v-text-field class="input" type="text" v-model="rep_type_name" :label="$t('REP_TYPE_TITLE')" />
+        <v-checkbox v-model="check_when_inited" hide-detail :label="$t('CHECK_WHEN_INITED_TITLE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="emits_rep_type_name">追加</v-btn>
+                    <v-btn dark color="primary" @click="emits_rep_type_name">{{ $t("ADD_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -25,6 +26,9 @@ import type { AddNewRepTypeStructElementViewEmits } from './add-new-rep-type-str
 import type { AddNewRepTypeStructElementViewProps } from './add-new-rep-type-struct-element-view-props'
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<AddNewRepTypeStructElementViewProps>()
 const emits = defineEmits<AddNewRepTypeStructElementViewEmits>()
@@ -38,7 +42,7 @@ function emits_rep_type_name(): void {
     if (rep_type_name.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.rep_type_struct_title_is_blank
-        error.error_message = "データタイプ名が入力されていません"
+        error.error_message = t("REP_TYPE_IS_BLANK_MESSAGE")
         emits('received_errors', [error])
         return
     }

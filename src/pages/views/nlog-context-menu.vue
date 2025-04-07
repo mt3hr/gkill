@@ -2,37 +2,38 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item v-if="gkill_api.get_saved_last_added_tag() !== ''" @click="add_last_added_tag()">
-                <v-list-item-title>タグ追加「{{ gkill_api.get_saved_last_added_tag() }}」</v-list-item-title>
+                <v-list-item-title>{{ $t("ADD_TAG_TITLE") }} 「{{ gkill_api.get_saved_last_added_tag()
+                    }}」</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_add_tag_dialog()">
-                <v-list-item-title>タグ追加</v-list-item-title>
+                <v-list-item-title>{{ $t("ADD_TAG_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_add_text_dialog()">
-                <v-list-item-title>テキスト追加</v-list-item-title>
+                <v-list-item-title>{{ $t("ADD_TEXT_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_confirm_rekyou_dialog()">
-                <v-list-item-title>リポスト</v-list-item-title>
+                <v-list-item-title>{{ $t("REKYOU_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_add_notification_dialog()">
-                <v-list-item-title>通知追加</v-list-item-title>
+                <v-list-item-title>{{ $t("ADD_NOTIFICATION_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_edit_nlog_dialog()">
-                <v-list-item-title>編集</v-list-item-title>
+                <v-list-item-title>{{ $t("EDIT_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_kyou_histories_dialog()">
-                <v-list-item-title>履歴</v-list-item-title>
+                <v-list-item-title>{{ $t("KYOU_HISTORIES_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="copy_id()">
-                <v-list-item-title>IDをコピー</v-list-item-title>
+                <v-list-item-title>{{ $t("COPY_ID_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item v-if="application_config.session_is_local" @click="open_folder()">
-                <v-list-item-title>フォルダを開く</v-list-item-title>
+                <v-list-item-title>{{ $t("OPEN_FOLDER_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item v-if="application_config.session_is_local" @click="open_file()">
-                <v-list-item-title>ファイルを開く</v-list-item-title>
+                <v-list-item-title>{{ $t("OPEN_FILE_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_confirm_delete_kyou_dialog()">
-                <v-list-item-title>削除</v-list-item-title>
+                <v-list-item-title>{{ $t("DELETE_TITLE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -191,6 +192,9 @@ import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { Tag } from '@/classes/datas/tag'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const edit_nlog_dialog = ref<InstanceType<typeof EditNlogDialog> | null>(null);
 const add_tag_dialog = ref<InstanceType<typeof AddTagDialog> | null>(null);

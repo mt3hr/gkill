@@ -5,37 +5,37 @@
                 ファイルアップロード
             </v-card-title>
             <v-tabs v-model="tab">
-                <v-tab key="file">ファイル</v-tab>
-                <v-tab key="gps_log_file">GPSLogファイル</v-tab>
+                <v-tab key="file">{{ $t("FILE_TITLE") }}</v-tab>
+                <v-tab key="gps_log_file">{{ $t("GPS_LOG_FILE_TITLE") }}</v-tab>
             </v-tabs>
             <v-window v-model="tab">
                 <v-window-item key="file" :eager="true">
                     <v-card>
                         <v-card-title>
-                            ファイル名衝突時
+                            {{ $t("FILE_NAME_COLLISION_TITLE") }}
                         </v-card-title>
                         <v-radio-group v-model="conflict_behavior_file">
-                            <v-radio label="別名保存" :value="'rename'" />
-                            <v-radio label="上書き" :value="'override'" />
+                            <v-radio :label="$t('RENAME_TITLE')" :value="'rename'" />
+                            <v-radio :label="$t('OVERRIDE_TITLE')" :value="'override'" />
                         </v-radio-group>
                         <v-select class="select" v-model="target_rep_name_for_file" :items="target_rep_names_for_file"
-                            label="アップロード先" />
-                        <v-file-input label="ファイル" multiple @change="upload_files" v-model="files" />
+                            :label="$t('UPLOAD_DESTINATION_TITLE')" />
+                        <v-file-input :label="$t('FILE_TITLE')" multiple @change="upload_files" v-model="files" />
                     </v-card>
                 </v-window-item>
                 <v-window-item key="gps_log_file" :eager="true">
                     <v-card>
                         <v-card-title>
-                            ファイル名衝突時
+                            {{ $t("FILE_NAME_COLLITION_TITLE") }}
                         </v-card-title>
                         <v-radio-group v-model="conflict_behavior_gps_file">
-                            <v-radio label="マージ" :value="'merge'" />
-                            <v-radio label="上書き" :value="'override'" />
+                            <v-radio :label="$t('MERGE_TITLE')" :value="'merge'" />
+                            <v-radio :label="$t('OVERRIDE_TITLE')" :value="'override'" />
                         </v-radio-group>
                         <v-select class="select" v-model="target_rep_name_for_gps_file"
-                            :items="target_rep_names_for_gps_file" label="アップロード先" />
-                        <v-file-input label="GPSLogファイル" multiple @change="upload_gps_log_files" v-model="gps_log_files"
-                            accept=".gpx" />
+                            :items="target_rep_names_for_gps_file" :label="$t('UPLOAD_DESTINATION_TITLE')" />
+                        <v-file-input :label="$t('GPS_LOG_FILE_TITLE')" multiple @change="upload_gps_log_files"
+                            v-model="gps_log_files" accept=".gpx" />
                     </v-card>
                 </v-window-item>
             </v-window>
@@ -46,22 +46,11 @@
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="(kyou) => reload_kyou(kyou)" ref="decide_related_time_uploaded_file_dialog" />
-        <ProgressUploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="progress_upload_file_dialog" />
-        <ProgressUploadGPSFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            ref="progress_upload_gps_file_dialog" />
     </div>
 </template>
 <script setup lang="ts">
 import { nextTick, type Ref, ref } from 'vue'
 import DecideRelatedTimeUploadedFileDialog from '../dialogs/decide-related-time-uploaded-file-dialog.vue'
-import ProgressUploadFileDialog from '../dialogs/progress-upload-file-dialog.vue'
-import ProgressUploadGPSFileDialog from '../dialogs/progress-upload-gps-file-dialog.vue'
 
 import type { UploadFileViewEmits } from './upload-file-view-emits'
 import type { UploadFileViewProps } from './upload-file-view-props'
@@ -72,9 +61,10 @@ import { FileData } from '@/classes/api/file-data'
 import { UploadFilesRequest } from '@/classes/api/req_res/upload-files-request'
 import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-request'
 import type { Repository } from '@/classes/datas/config/repository'
+import { useI18n } from 'vue-i18n'
 
-const progress_upload_file_dialog = ref<InstanceType<typeof ProgressUploadFileDialog> | null>(null);
-const progress_upload_gps_file_dialog = ref<InstanceType<typeof ProgressUploadGPSFileDialog> | null>(null);
+const { t } = useI18n()
+
 const decide_related_time_uploaded_file_dialog = ref<InstanceType<typeof DecideRelatedTimeUploadedFileDialog> | null>(null);
 
 const tab = ref(2)
@@ -127,7 +117,6 @@ async function upload_files() {
     if (!files.value) {
         return
     }
-    progress_upload_file_dialog.value?.show()
     const req = new UploadFilesRequest()
     req.conflict_behavior = conflict_behavior_file.value
     req.target_rep_name = target_rep_name_for_file.value
@@ -144,7 +133,6 @@ async function upload_files() {
     const res = await props.gkill_api.upload_files(req)
     if (res.errors && res.errors.length != 0) {
         emits('received_errors', res.errors)
-        progress_upload_file_dialog.value?.hide()
         return
     }
     if (res.messages && res.messages.length != 0) {
@@ -158,7 +146,6 @@ async function upload_files() {
         uploaded_kyous.value.push(uploaded_kyou)
     }
     files.value = null
-    progress_upload_file_dialog.value?.hide()
     decide_related_time_uploaded_file_dialog.value?.show()
 }
 
@@ -166,7 +153,6 @@ async function upload_gps_log_files() {
     if (!gps_log_files.value) {
         return
     }
-    progress_upload_gps_file_dialog.value?.show()
     const req = new UploadGPSLogFilesRequest()
     req.conflict_behavior = conflict_behavior_gps_file.value
     req.target_rep_name = target_rep_name_for_gps_file.value
@@ -182,14 +168,12 @@ async function upload_gps_log_files() {
     const res = await props.gkill_api.upload_gpslog_files(req)
     if (res.errors && res.errors.length != 0) {
         emits('received_errors', res.errors)
-        progress_upload_gps_file_dialog.value?.hide()
         return
     }
     if (res.messages && res.messages.length != 0) {
         emits('received_messages', res.messages)
     }
     gps_log_files.value = null
-    progress_upload_gps_file_dialog.value?.hide()
 }
 async function to_base64(file: any): Promise<string> {
     return new Promise((resolve, reject) => {

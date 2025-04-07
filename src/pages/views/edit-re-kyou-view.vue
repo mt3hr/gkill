@@ -3,25 +3,26 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>ReKyou編集</span>
+                    <span>{{ $t("EDIT_REKYOU_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details color="
+                        primary" />
                 </v-col>
             </v-row>
         </v-card-title>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>日時</label>
-                <input class="input date" type="date" v-model="related_date" label="日付"
+                <label>{{ $t("REKYOU_DATE_TIME_TITLE") }}</label>
+                <input class="input date" type="date" v-model="related_date" :label="$t('REKYOU_DATE_TITLE')"
                     :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="related_time" label="時刻"
+                <input class="input time" type="time" v-model="related_time" :label="$t('REKYOU_TIME_TITLE')"
                     :readonly="is_requested_submit" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -63,6 +64,9 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import moment from 'moment'
 import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const is_requested_submit = ref(false)
 
@@ -95,7 +99,7 @@ async function save(): Promise<void> {
         if (!rekyou) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_rekyou_is_null
-            error.error_message = "クライアントのデータが変です"
+            error.error_message = t("CLIENT_REKYOU_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -106,7 +110,7 @@ async function save(): Promise<void> {
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.rekyou_related_time_is_blank
-            error.error_message = "日時が入力されていません"
+            error.error_message = t("REKYOU_DATE_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -118,7 +122,7 @@ async function save(): Promise<void> {
             moment(rekyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.rekyou_is_no_update
-            error.error_message = "ReKyouが更新されていません"
+            error.error_message = t("REKYOU_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

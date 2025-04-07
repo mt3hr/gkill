@@ -3,11 +3,12 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>Lantana編集</span>
+                    <span>{{ $t("EDIT_LANTANA_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                        color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
@@ -15,24 +16,26 @@
             :editable="!is_requested_submit" :mood="mood" ref="edit_lantana_flowers" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>日時</label>
-                <input class="input date" type="date" v-model="related_date" label="日付"
+                <label>{{ $t("LANTANA_DATE_TIME_TITLE") }}</label>
+                <input class="input date" type="date" v-model="related_date" :label="$t('LANTANA_DATE_TITLE')"
                     :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="related_time" label="時刻"
+                <input class="input time" type="time" v-model="related_time" :label="$t('LANTANA_TIME_TITLE')"
                     :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_related_date_time()"
-                    :disabled="is_requested_submit">リセット</v-btn>
-                <v-btn dark color="primary" @click="now_to_related_date_time()"
-                    :disabled="is_requested_submit">現在日時</v-btn>
+                <v-btn dark color="secondary" @click="reset_related_date_time()" :disabled="is_requested_submit">{{
+                    $t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="now_to_related_date_time()" :disabled="is_requested_submit">{{
+                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
+                <v-btn dark color="primary" @click="() => save()"
+                    :disabled="is_requested_submit">{{ $t("SAVE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -75,6 +78,9 @@ import moment from 'moment'
 import LantanaFlowersView from './lantana-flowers-view.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const edit_lantana_flowers = ref<InstanceType<typeof LantanaFlowersView> | null>(null);
 
@@ -112,7 +118,7 @@ async function save(): Promise<void> {
         if (!lantana) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_lantana_is_null
-            error.error_message = "クライアントのデータが変です"
+            error.error_message = t("CLIENT_LANTANA_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -123,7 +129,7 @@ async function save(): Promise<void> {
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.lantana_related_time_is_blank
-            error.error_message = "日時が入力されていません"
+            error.error_message = t("LANTANA_DATE_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -134,7 +140,7 @@ async function save(): Promise<void> {
         if (lantana.mood === await edit_lantana_flowers.value?.get_mood()) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.lantana_is_no_update
-            error.error_message = "Lantanaが更新されていません"
+            error.error_message = t("LANTANA_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

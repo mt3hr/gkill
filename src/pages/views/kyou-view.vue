@@ -359,6 +359,9 @@ import type MiKyouView from './mi-kyou-view.vue'
 import type UrLogView from './ur-log-view.vue'
 import type IdfKyouView from './idf-kyou-view.vue'
 import moment from 'moment'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const kyou_dialog = ref<InstanceType<typeof kyouDialog> | null>(null);
 const kmemo_view = ref<InstanceType<typeof KmemoView> | null>(null);
@@ -462,7 +465,7 @@ function format_time(time: Date) {
     let hour: string | number = time.getHours()
     let minute: string | number = time.getMinutes()
     let second: string | number = time.getSeconds()
-    const day_of_week = ['日', '月', '火', '水', '木', '金', '土'][time.getDay()]
+    const day_of_week = [t("SUNDAY_TITLE"), t("MONDAY_TITLE"), t("TUESDAY_TITLE"), t("WEDNESDAY_TITLE"), t("THURSDAY_TITLE"), t("FRIDAY_TITLE"), t("SATURDAY_TITLE")][time.getDay()]
     month = ('0' + month).slice(-2)
     date = ('0' + date).slice(-2)
     hour = ('0' + hour).slice(-2)

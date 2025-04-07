@@ -1,18 +1,18 @@
 <template>
     <v-card>
         <v-card-title>
-            タスク一覧共有リンク
+            {{ $t("SHARED_MI_TASK_LINK_LIST_TITLE") }}
         </v-card-title>
-        <v-text-field v-model="cloned_share_mi_task_list_info.share_title" label="タイトル" />
-        <v-checkbox v-model="share_time_only" label="タスク有無と時刻のみ共有" />
-        <v-text-field v-model="lan_share_url" label="ローカル" readonly @click="copy_lan_share_mi_link"
+        <v-text-field v-model="cloned_share_mi_task_list_info.share_title" :label="$t('SHARE_MI_TASK_TITLE_TITLE')" />
+        <v-checkbox v-model="share_time_only" :label="$t('SHARE_MI_TASK_TIME_ONLY_TITLE')" />
+        <v-text-field v-model="lan_share_url" :label="$t('IN_LAN_TITLE')" readonly @click="copy_lan_share_mi_link"
             @focus="$event.target.select()" />
-        <v-text-field v-model="over_lan_share_url" label="それ以外" readonly @click="copy_over_lan_share_mi_link"
-            @focus="$event.target.select()" />
+        <v-text-field v-model="over_lan_share_url" :label="$t('OVER_LAN_TITLE')" readonly
+            @click="copy_over_lan_share_mi_link" @focus="$event.target.select()" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col class="pa-0 ma-0" cols="auto">
-                <v-btn dark color="primary" @click="update()">更新</v-btn>
+                <v-btn dark color="primary" @click="update()">{{ $t("UPDATE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -25,8 +25,10 @@ import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info';
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import { UpdateShareMiTaskListInfoRequest } from '@/classes/api/req_res/update-share-mi-task-list-info-request';
-import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<ShareTaskListLinkViewProps>()
 const emits = defineEmits<ShareTaskListLinkViewEmits>()

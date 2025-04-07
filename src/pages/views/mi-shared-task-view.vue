@@ -91,6 +91,9 @@ import { GetSharedMiTasksRequest } from '@/classes/api/req_res/get-shared-mi-tas
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { KyouViewEmits } from './kyou-view-emits'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const kyou_list_view = ref();
 
 const props = defineProps<miSharedTaskViewProps>()
@@ -146,7 +149,7 @@ async function load_content(): Promise<void> {
         console.error(e)
         const error = new GkillError()
         error.error_code = GkillErrorCodes.failed_shared_mi_tasks
-        error.error_message = "読み込みに失敗しました"
+        error.error_message = t("FAILED_LOAD_MESSAGE")
         emits('received_errors', [error])
         inited.value = true
         is_loading.value = false

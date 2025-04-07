@@ -1,19 +1,19 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            デバイス追加
+            {{ $t("ADD_DEVICE_TITLE") }}
         </v-card-title>
-        <v-text-field class="input" type="text" v-model="device_name" label="デバイス名" />
-        <v-checkbox v-model="check_when_inited" hide-detail label="初期化時チェック" />
-        <!-- <v-checkbox v-model="is_force_hide" hide-detail label="非表示優先" /> -->
+        <v-text-field class="input" type="text" v-model="device_name" :label="$t('DEVICE_TITLE')" />
+        <v-checkbox v-model="check_when_inited" hide-detail :label="$t('CHECK_WHEN_INITED_TITLE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="emits_device_name">追加</v-btn>
+                    <v-btn dark color="primary" @click="emits_device_name">{{ $t("ADD_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">
+                        {{ $t("CANCEL_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -26,6 +26,9 @@ import type { AddNewDeviceStructElementViewEmits } from './add-new-device-struct
 import type { AddNewDeviceStructElementViewProps } from './add-new-device-struct-element-view-props'
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<AddNewDeviceStructElementViewProps>()
 const emits = defineEmits<AddNewDeviceStructElementViewEmits>()
@@ -40,7 +43,7 @@ function emits_device_name(): void {
     if (device_name.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.device_name_is_blank
-        error.error_message = "デバイス名が入力されていません"
+        error.error_message = t("DEVICE_NAME_IS_BLANK_MESSAGE")
         emits('received_errors', [error])
         return
     }

@@ -3,11 +3,12 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>アカウント管理</span>
+                    <span>{{ $t("MANAGE_ACCOUNT_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_create_account_dialog">アカウント追加</v-btn>
+                    <v-btn dark color="primary" @click="show_create_account_dialog">{{ $t("ADD_ACCOUNT_TITLE")
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -22,13 +23,16 @@
                         {{ account.user_id }}
                     </td>
                     <td>
-                        <v-btn dark color="primary" @click="show_allocate_rep_dialog(account)">Rep割当管理</v-btn>
+                        <v-btn dark color="primary" @click="show_allocate_rep_dialog(account)">{{
+                            $t("ALLOCATE_REP_TITLE") }}</v-btn>
                     </td>
                     <td>
                         <v-btn dark color="primary" v-if="!account.password_reset_token"
-                            @click="show_confirm_reset_password_dialog(account)">パスワードリセット</v-btn>
+                            @click="show_confirm_reset_password_dialog(account)">{{ $t("RESETED_PASSWORD_TITLE")
+                            }}</v-btn>
                         <v-btn dark color="primary" v-if="account.password_reset_token"
-                            @click="show_show_password_reset_link_dialog(account)">パスワードリセット中</v-btn>
+                            @click="show_show_password_reset_link_dialog(account)">{{ $t("RESETTING_PASSWORD_TITLE")
+                            }}</v-btn>
                     </td>
                 </tr>
             </table>
@@ -37,7 +41,8 @@
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">閉じる</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CLOSE_TITLE")
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -77,6 +82,9 @@ import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-config
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const allocate_rep_dialog = ref<InstanceType<typeof AllocateRepDialog> | null>(null);
 const confirm_reset_password_dialog = ref<InstanceType<typeof ConfirmResetPasswordDialog> | null>(null);
@@ -103,7 +111,7 @@ async function update_is_enable_account(account: Account, is_enable: boolean): P
         account.is_enable = true
         const error = new GkillError()
         error.error_code = GkillErrorCodes.can_not_disable_self_account
-        error.error_message = 'ログイン中のアカウントは無効化できません'
+        error.error_message = t("CAN_NOT_DISABLE_SELF_ACCOUNT_MESSAGE")
         emits('received_errors', [error])
         return
     }

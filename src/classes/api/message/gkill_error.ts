@@ -76,6 +76,7 @@ export enum GkillErrorCodes {
     copied_over_lan_share_mi_link = "ERR900075",
     kmemo_content_is_blank = "ERR900076",
     can_not_disable_self_account = "ERR900077",
+    idf_kyou_is_no_update = "ERR900078",
 }
 
 

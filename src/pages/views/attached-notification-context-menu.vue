@@ -2,16 +2,16 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item @click="show_edit_notification_dialog()">
-                <v-list-item-title>通知編集</v-list-item-title>
+                <v-list-item-title>{{ $t("NOTIFICATION_CONTEXTMENU_EDIT_NOTIFICATION") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_notification_histories_dialog()">
-                <v-list-item-title>通知履歴</v-list-item-title>
+                <v-list-item-title>{{ $t("NOTIFICATION_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="copy_id()">
-                <v-list-item-title>通知IDコピー</v-list-item-title>
+                <v-list-item-title>{{ $t("NOTIFICATION_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_confirm_delete_notification_dialog()">
-                <v-list-item-title>通知削除</v-list-item-title>
+                <v-list-item-title>{{ $t("NOTIFICATION_CONTEXTMENU_DELETE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -88,6 +88,9 @@ import { computed, type Ref, ref } from 'vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import type { AttachedNotificationContextMenuProps } from './attached-notification-context-menu-props';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const edit_notification_dialog = ref<InstanceType<typeof EditNotificationDialog> | null>(null);
 const confirm_delete_notification_dialog = ref<InstanceType<typeof ConfirmDeleteNotificationDialog> | null>(null);
@@ -124,7 +127,7 @@ async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.notification.id)
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_notification_id
-    message.message = "通知IDをコピーしました"
+    message.message = t("COPIED_ID_MESSAGE")
     const messages = new Array<GkillMessage>()
     messages.push(message)
     emits('received_messages', messages)

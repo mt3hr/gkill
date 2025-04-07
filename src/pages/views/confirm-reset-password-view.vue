@@ -1,18 +1,17 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            パスワードリセット
+            {{ $t("RESET_PASSWORD_TITLE") }}
         </v-card-title>
-        <div>下記アカウントのパスワードをリセットします</div>
-        <div>処理完了後、パスワード再設定用リンクを表示します</div>
+        <div>{{ $t("RESET_PASSWORD_MESSAGE") }}</div>
         <h1>{{ account.user_id }}</h1>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="reset_password">パスワードリセット</v-btn>
+                <v-btn dark color="primary" @click="reset_password">{{ $t("RESET_PASSWORD_TITLE") }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>

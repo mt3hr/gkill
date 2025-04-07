@@ -1,19 +1,19 @@
 <template>
     <v-card>
         <v-card-title>
-            タグ編集
+            {{ $t('EDIT_TAG_STRUCT_ELEMENT') }}
         </v-card-title>
         <p>{{ struct_obj.tag_name }}</p>
-        <v-checkbox v-model="check_when_inited" hide-detail label="初期化時チェック" />
-        <v-checkbox v-model="is_force_hide" hide-detail label="非表示優先" />
+        <v-checkbox v-model="check_when_inited" hide-detail :label="$t('CHECK_WHEN_INITED_TITLE')" />
+        <v-checkbox v-model="is_force_hide" hide-detail :label="$t('IS_FORCE_HIDE_TITLE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="apply" color="primary">適用</v-btn>
+                    <v-btn dark @click="apply" color="primary">{{ $t("APPLY_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

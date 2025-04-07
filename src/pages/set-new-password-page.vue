@@ -1,8 +1,8 @@
 <template>
     <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" app color="primary" flat>
-        <v-toolbar-title>gkill パスワード設定</v-toolbar-title>
+        <v-toolbar-title>{{ $t("RESET_PASSWORD_TITLE") }}</v-toolbar-title>
         <v-spacer />
-        <span class="gkill_version">version: {{ gkill_version }}</span>
+        <span class="gkill_version">{{ $t("VERSION_TITLE") }}: {{ gkill_version }}</span>
     </v-app-bar>
     <v-main class="main">
         <SetNewPasswordView :app_content_height="app_content_height" :app_content_width="app_content_width"
@@ -26,7 +26,9 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import SetNewPasswordView from './views/set-new-password-view.vue'
 import package_json from '../../package.json'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
 const browser_url_bar_height: Ref<Number> = ref(0)

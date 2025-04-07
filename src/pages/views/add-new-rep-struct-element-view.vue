@@ -1,19 +1,20 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            記録保管場所追加
+            {{ $t("ADD_REP_TITLE") }}
         </v-card-title>
-        <v-text-field class="input" type="text" v-model="rep_name" label="記録保管場所名" />
-        <v-checkbox v-model="check_when_inited" hide-detail label="非表示優先" />
-        <v-checkbox v-model="ignore_check_rep_rykv" hide-detail label="サマリチェック無効" />
+        <v-text-field class="input" type="text" v-model="rep_name" :label="$t('REP_TITLE')" />
+        <v-checkbox v-model="check_when_inited" hide-detail :label="$t('IS_FORCE_HIDE_TITLE')" />
+        <v-checkbox v-model="ignore_check_rep_rykv" hide-detail :label="$t('IGNORE_CHECK_REP_RYKV_TITLE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="emits_rep_name">追加</v-btn>
+                    <v-btn dark color="primary" @click="emits_rep_name">{{ $t("ADD_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -26,6 +27,9 @@ import type { AddNewRepStructElementViewEmits } from './add-new-rep-struct-eleme
 import type { AddNewRepStructElementViewProps } from './add-new-rep-struct-element-view-props'
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<AddNewRepStructElementViewProps>()
 const emits = defineEmits<AddNewRepStructElementViewEmits>()
@@ -40,7 +44,7 @@ function emits_rep_name(): void {
     if (rep_name.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.rep_struct_title_is_blank
-        error.error_message = "記録保管場所名が入力されていません"
+        error.error_message = t("REP_IS_BLANK_MESSAGE")
         emits('received_errors', [error])
         return
     }
