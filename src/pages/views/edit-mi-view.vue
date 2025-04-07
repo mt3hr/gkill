@@ -3,26 +3,26 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>Mi編集</span>
+                    <span>{{ $t("EDIT_MI_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU')" hide-details color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto">
-                <label>タイトル</label>
+                <label>{{ $t("MI_TITLE_TITLE") }}</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input text" type="text" v-model="mi_title" label="タイトル" autofocus
+                <input class="input text" type="text" v-model="mi_title" :label="$t('MI_TITLE_TITLE')" autofocus
                     :readonly="is_requested_submit" />
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto">
-                <label>板名</label>
+                <label>{{ $t('MI_BOARD_NAME_TITLE') }}</label>
             </v-col>
             <v-col cols="auto">
                 <span>
@@ -39,68 +39,68 @@
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto">
-                <label>開始日時</label>
+                <label>{{ $t("MI_START_DATE_TIME_TITLE") }}</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input date" type="date" v-model="mi_estimate_start_date" label="開始日付"
-                    :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="mi_estimate_start_time" label="開始時刻"
-                    :readonly="is_requested_submit" />
+                <input class="input date" type="date" v-model="mi_estimate_start_date"
+                    :label="$t('MI_START_DATE_TITLE')" :readonly="is_requested_submit" />
+                <input class="input time" type="time" v-model="mi_estimate_start_time"
+                    :label="$t('MI_START_TIME_TITLE')" :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
                 <v-btn dark color="secondary" @click="clear_estimate_start_date_time()"
-                    :disabled="is_requested_submit">クリア</v-btn>
+                    :disabled="is_requested_submit">{{ $t("CLEAR_TITLE") }}</v-btn>
                 <v-btn dark color="secondary" @click="reset_estimate_start_date_time()"
-                    :disabled="is_requested_submit">リセット</v-btn>
+                    :disabled="is_requested_submit">{{ $t("RESET_TITLE") }}</v-btn>
                 <v-btn dark color="primary" @click="now_to_estimate_start_date_time()"
-                    :disabled="is_requested_submit">現在日時</v-btn>
+                    :disabled="is_requested_submit">{{ $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto">
-                <label>終了日時</label>
+                <label>{{ $t("MI_END_DATE_TIME_TITLE") }}</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input date" type="date" v-model="mi_estimate_end_date" label="終了日付"
+                <input class="input date" type="date" v-model="mi_estimate_end_date" :label="$t('MI_END_DATE_TITLE')"
                     :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="mi_estimate_end_time" label="終了時刻"
+                <input class="input time" type="time" v-model="mi_estimate_end_time" :label="$t('MI_END_TIME_TITLE')"
                     :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
-                <v-btn dark color="secondary" @click="clear_estimate_end_date_time()"
-                    :disabled="is_requested_submit">クリア</v-btn>
-                <v-btn dark color="secondary" @click="reset_estimate_end_date_time()"
-                    :disabled="is_requested_submit">リセット</v-btn>
-                <v-btn dark color="primary" @click="now_to_estimate_end_date_time()"
-                    :disabled="is_requested_submit">現在日時</v-btn>
+                <v-btn dark color="secondary" @click="clear_estimate_end_date_time()" :disabled="is_requested_submit">{{
+                    $t("CLEAR_TITLE") }}</v-btn>
+                <v-btn dark color="secondary" @click="reset_estimate_end_date_time()" :disabled="is_requested_submit">{{
+                    $t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="now_to_estimate_end_date_time()" :disabled="is_requested_submit">{{
+                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto">
-                <label>期限日時</label>
+                <label>{{ $t("MI_LIMIT_DATE_TIME_TITLE") }}</label>
             </v-col>
             <v-col cols="auto">
-                <input class="input date" type="date" v-model="mi_limit_date" label="期限日付"
+                <input class="input date" type="date" v-model="mi_limit_date" :label="$t('MI_LIMIT_DATE_TITLE')"
                     :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="mi_limit_time" label="期限時刻"
+                <input class="input time" type="time" v-model="mi_limit_time" :label="$t('MI_LIMIT_TIME_TITLE')"
                     :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
                 <v-btn dark color="secondary" @click="clear_limit_date_time()"
-                    :disabled="is_requested_submit">クリア</v-btn>
+                    :disabled="is_requested_submit">{{ $t("CLEAR_TITLE") }}</v-btn>
                 <v-btn dark color="secondary" @click="reset_limit_date_time()"
-                    :disabled="is_requested_submit">リセット</v-btn>
+                    :disabled="is_requested_submit">{{ $t("RESET_TITLE") }}</v-btn>
                 <v-btn dark color="primary" @click="now_to_limit_date_time()"
-                    :disabled="is_requested_submit">現在日時</v-btn>
+                    :disabled="is_requested_submit">{{ $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE") }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -148,6 +148,9 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 
@@ -286,7 +289,7 @@ async function save(): Promise<void> {
         if (!mi) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_mi_is_null
-            error.error_message = "クライアントのデータが変です"
+            error.error_message = t("CLIENT_MI_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -297,7 +300,7 @@ async function save(): Promise<void> {
         if (mi_title.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.mi_title_is_blank
-            error.error_message = "タイトルが入力されていません"
+            error.error_message = t("MI_TITLE_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -310,7 +313,7 @@ async function save(): Promise<void> {
                 (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.mi_estimate_start_time_is_blank
-                error.error_message = "開始日付付または開始時刻が入力されていません"
+                error.error_message = t("MI_START_DATE_TIME_IS_BLANK_MESSAGE")
                 const errors = new Array<GkillError>()
                 errors.push(error)
                 emits('received_errors', errors)
@@ -324,7 +327,7 @@ async function save(): Promise<void> {
                 (mi_estimate_end_date.value !== "" && mi_estimate_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.mi_estimate_end_time_is_blank
-                error.error_message = "終了日付または終了時刻が入力されていません"
+                error.error_message = t("MI_END_DATE_TIME_IS_BLANK_MESSAGE")
                 const errors = new Array<GkillError>()
                 errors.push(error)
                 emits('received_errors', errors)
@@ -338,7 +341,7 @@ async function save(): Promise<void> {
                 (mi_limit_date.value !== "" && mi_limit_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.mi_limit_time_is_blank
-                error.error_message = "期限日付付または期限時刻が入力されていません"
+                error.error_message = t("MI_LIMIT_DATE_TIME_IS_BLANK_MESSAGE")
                 const errors = new Array<GkillError>()
                 errors.push(error)
                 emits('received_errors', errors)
@@ -354,7 +357,7 @@ async function save(): Promise<void> {
             (moment(mi.limit_time).toDate().getTime() === moment(mi_limit_date.value + " " + mi_limit_time.value).toDate().getTime() || (mi.limit_time == null && mi_limit_date.value === "" && mi_limit_time.value === ""))) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.mi_is_no_update
-            error.error_message = "Miが更新されていません"
+            error.error_message = t("MI_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

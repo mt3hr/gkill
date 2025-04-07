@@ -3,12 +3,13 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-checkbox v-model="cloned_query.use_timeis"
-                    @change="emits('request_update_use_timeis_query', cloned_query.use_timeis)" label="状況" hide-details
-                    class="pa-0 ma-0" />
+                    @change="emits('request_update_use_timeis_query', cloned_query.use_timeis)"
+                    :label="$t('PLAING_TIMEIS_QUERY_TITLE')" hide-details class="pa-0 ma-0" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0">
-                <v-btn dark color="secondary" @click="emits('request_clear_timeis_query')" hide-details>クリア</v-btn>
+                <v-btn dark color="secondary" @click="emits('request_clear_timeis_query')" hide-details>{{
+                    $t("CLEAR_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row v-show="cloned_query.use_timeis" class="pa-0 ma-0">
@@ -19,8 +20,8 @@
                     @click="cloned_query.timeis_words_and = !cloned_query.timeis_words_and; emits('request_update_and_search_timeis_word', cloned_query.timeis_words_and)" />
             </v-col>
             <v-col cols="10" class="pa-0 ma-0">
-                <v-text-field v-model="cloned_query.timeis_keywords" label="状況キーワード" hide-details
-                    @change="emits('request_update_timeis_keywords', cloned_query.timeis_keywords)" />
+                <v-text-field v-model="cloned_query.timeis_keywords" :label="$t('PLAING_TIMEIS_QUERY_KEYWORD_TITLE')"
+                    hide-details @change="emits('request_update_timeis_keywords', cloned_query.timeis_keywords)" />
             </v-col>
         </v-row>
         <v-row v-show="cloned_query.use_timeis" class="pa-0 ma-0">
@@ -33,7 +34,7 @@
             <v-col cols="10" class="pa-0 ma-0">
                 <v-checkbox v-model="cloned_query.use_timeis_tags"
                     @click="cloned_query.use_timeis_tags = !cloned_query.use_timeis_tags; emits('request_update_use_timeis_query', cloned_query.use_timeis_tags)"
-                    label="状況タグ" hide-details class="pa-0 ma-0" />
+                    :label="$t('PLAING_TIMEIS_TAG_TITLE')" hide-details class="pa-0 ma-0" />
             </v-col>
         </v-row>
     </div>
@@ -57,6 +58,9 @@ import { CheckState } from './check-state'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { FoldableStructModel } from './foldable-struct-model'
 import { deepEquals } from '@/classes/deep-equals'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<TimeIsQueryProps>()
 const emits = defineEmits<TimeIsQueryEmits>()

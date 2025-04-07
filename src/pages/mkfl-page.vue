@@ -5,13 +5,20 @@
             <v-toolbar-title>
                 <div>
                     <span>
-                        MKFL
+                        {{ $t("MKFL_APP_NAME") }}
                     </span>
                     <v-menu activator="parent">
                         <v-list>
-                            <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
-                                :key="index" :value="index">
-                                <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
+                            <v-list-item :key="index" :value="index" v-for="page, index in [
+                                { app_name: $t('RYKV_APP_NAME'), page_name: 'rykv' },
+                                { app_name: $t('MI_APP_NAME'), page_name: 'mi' },
+                                { app_name: $t('KFTL_APP_NAME'), page_name: 'kftl' },
+                                { app_name: $t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
+                                { app_name: $t('MKFL_APP_NAME'), page_name: 'mkfl' },
+                                { app_name: $t('SAIHATE_APP_NAME'), page_name: 'saihate' },
+                            ]">
+                                <v-list-item-title @click="router.replace('/' + page.page_name)">
+                                    {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>
@@ -58,7 +65,9 @@ import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { useTheme } from 'vuetify'
 import MkflView from './views/mkfl-view.vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const theme = useTheme()
 
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);

@@ -1,13 +1,14 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            タグ構造削除
+            {{ $t("DELETE_TAG_STRUCT_TITLE") }}
         </v-card-title>
         {{ tag_struct.tag_name }}
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="emits('requested_delete_tag', tag_struct.id)">削除</v-btn>
+                <v-btn dark color="primary"
+                    @click="emits('requested_delete_tag', tag_struct.id)">{{ $t("DELETE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>

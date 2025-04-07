@@ -2,11 +2,12 @@
     <div>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-checkbox readonly v-model="use_tag" label="タグ" hide-details />
+                <v-checkbox readonly v-model="use_tag" :label="$t('TAG_QUERY_TITLE')" hide-details />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0">
-                <v-btn dark color="secondary" @click="emits('request_clear_tag_query')" hide-details>クリア</v-btn>
+                <v-btn dark color="secondary" @click="emits('request_clear_tag_query')" hide-details>{{
+                    $t("CLEAR_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -36,6 +37,9 @@ import FoldableStruct from './foldable-struct.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<TagQueryProps>()
 const emits = defineEmits<TagQueryEmits>()

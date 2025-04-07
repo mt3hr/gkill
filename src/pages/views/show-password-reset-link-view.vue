@@ -3,23 +3,25 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>パスワードリセット</span>
+                    <span>{{ $t("RESETED_PASSWORD_TITLE") }}</span>
                 </v-col>
             </v-row>
         </v-card-title>
-        <div>下記アカウントのパスワードリセットが完了しました。</div>
-        <div>記載URLをユーザに連絡し、パスワードリセットを実施してください</div>
+        <div>
+            <pre>{{ $t("RESETED_PASSWORD_MESSAGE") }}</pre>
+        </div>
         <div>{{ account.user_id }}</div>
 
-        <v-text-field v-model="lan_password_reset_url" label="LAN内" readonly @click="copy_lan_password_reset_url"
-            @focus="$event.target.select()" />
-        <v-text-field v-model="over_lan_password_reset_url" label="LAN外" readonly
+        <v-text-field v-model="lan_password_reset_url" :label="$t('IN_LAN_TITLE')" readonly
+            @click="copy_lan_password_reset_url" @focus="$event.target.select()" />
+        <v-text-field v-model="over_lan_password_reset_url" :label="$t('OVER_LAN_TITLE')" readonly
             @click="copy_over_lan_password_reset_url" @focus="$event.target.select()" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">閉じる</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CLOSE_TITLE")
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -31,6 +33,9 @@ import type { ShowPasswordResetLinkViewEmits } from './show-password-reset-link-
 import type { ShowPasswordResetLinkViewProps } from './show-password-reset-link-view-props'
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<ShowPasswordResetLinkViewProps>()
 const emits = defineEmits<ShowPasswordResetLinkViewEmits>()
@@ -54,14 +59,14 @@ function copy_lan_password_reset_url(): void {
     navigator.clipboard.writeText(lan_password_reset_url.value);
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_lan_set_password_link
-    message.message = "コピーしました"
+    message.message = t("COPIED_MESSAGE")
     emits('received_messages', [message])
 }
 function copy_over_lan_password_reset_url(): void {
     navigator.clipboard.writeText(over_lan_password_reset_url.value);
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_over_lan_set_password_link
-    message.message = "コピーしました"
+    message.message = t("COPIED_MESSAGE")
     emits('received_messages', [message])
 }
 </script>

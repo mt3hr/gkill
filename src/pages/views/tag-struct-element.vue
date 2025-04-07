@@ -4,7 +4,6 @@
 </template>
 <script setup lang="ts">
 import { type Ref, ref } from 'vue'
-import ApplicationConfigStructContextMenu from './application-config-struct-context-menu.vue'
 import type { TagStructElementEmits } from './tag-struct-element-emits'
 import type { TagStructElementProps } from './tag-struct-element-props'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config';

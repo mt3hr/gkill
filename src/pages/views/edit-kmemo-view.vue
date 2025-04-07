@@ -3,35 +3,38 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>Kmemo編集</span>
+                    <span>{{ $t("EDIT_KMEMO_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                        color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
         <v-textarea v-model="kmemo_value" label="Kmemo" autofocus :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>日時</label>
-                <input class="input date" type="date" v-model="related_date" label="日付"
+                <label>{{ $t("KMEMO_DATE_TIME_TITLE") }}</label>
+                <input class="input date" type="date" v-model="related_date" :label="$t('KMEMO_DATE_TITLE')"
                     :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="related_time" label="時刻"
+                <input class="input time" type="time" v-model="related_time" :label="$t('KMEMO_TIME_TITLE')"
                     :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_related_date_time()"
-                    :disabled="is_requested_submit">リセット</v-btn>
-                <v-btn dark color="primary" @click="now_to_related_date_time()"
-                    :disabled="is_requested_submit">現在日時</v-btn>
+                <v-btn dark color="secondary" @click="reset_related_date_time()" :disabled="is_requested_submit">{{
+                    $t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="now_to_related_date_time()" :disabled="is_requested_submit">{{
+                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                    }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -73,6 +76,9 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { UpdateKmemoRequest } from '@/classes/api/req_res/update-kmemo-request'
 import moment from 'moment'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const is_requested_submit = ref(false)
 
@@ -107,7 +113,7 @@ async function save(): Promise<void> {
         if (!kmemo) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_kmemo_is_null
-            error.error_message = "クライアントのデータが変です"
+            error.error_message = t("CLIENT_KMEMO_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -118,20 +124,18 @@ async function save(): Promise<void> {
         if (kmemo_value.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kmemo_content_is_blank
-            error.error_message = "内容が入力されていません"
+            error.error_message = t("KMEMO_CONTENT_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
             return
         }
 
-
-
         // 日時必須入力チェック
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kmemo_related_time_is_blank
-            error.error_message = "日時が入力されていません"
+            error.error_message = t("KMEMO_CONTENT_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -142,7 +146,7 @@ async function save(): Promise<void> {
         if (kmemo.content === kmemo_value.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kmemo_is_no_update
-            error.error_message = "Kmemo更新されていません"
+            error.error_message = t("KMEMO_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

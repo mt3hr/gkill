@@ -3,7 +3,7 @@
         <v-card-title>
             <v-row>
                 <v-col cols="auto">
-                    テンプレート
+                    {{ $t("KFTL_TEMPLATE_TITLE") }}
                 </v-col>
                 <v-spacer />
                 <v-col class="pa-0 ma-0" cols="auto">
@@ -30,6 +30,9 @@ import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-d
 import KFTLTemplateDialog from '../dialogs/kftl-template-dialog.vue';
 import type { KFTLTemplateViewProps } from './kftl-template-view-props';
 import type { KFTLTemplateViewEmits } from './kftl-template-view-emits';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const child_template_dialogs: Ref<Array<any>> = ref(new Array<any>())
 

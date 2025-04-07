@@ -7,14 +7,15 @@
             <h1><span>{{ start_date_str }}</span><span
                     v-if="end_date_str !== '' && start_date_str != end_date_str">～</span><span
                     v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span><span
-                    v-if="start_date_str === '' && !(end_date_str !== '' && start_date_str != end_date_str)">全期間</span>
+                    v-if="start_date_str === '' && !(end_date_str !== '' && start_date_str != end_date_str)">{{
+                        $t("DNOTE_WHOLE_PERIOD_TITLE") }}</span>
             </h1>
             <table>
                 <tr>
                     <td>
                         <div>
                             <span>
-                                覚醒：
+                                {{ $t("DNOTE_AWAKE_TITLE") }}：
                             </span>
                             <span v-if="calclutated_total_awake_time !== ''">
                                 {{ calclutated_total_awake_time }}
@@ -22,7 +23,7 @@
                         </div>
                         <div>
                             <span>
-                                睡眠：
+                                {{ $t("DNOTE_SLEEP_TITLE") }}：
                             </span>
                             <span v-if="calclutated_total_sleep_time !== ''">
                                 {{ calclutated_total_sleep_time }}
@@ -30,7 +31,7 @@
                         </div>
                         <div>
                             <span>
-                                仕事：
+                                {{ $t("DNOTE_WORK_TITLE") }}：
                             </span>
                             <span v-if="calclutated_total_work_time !== ''">
                                 {{ calclutated_total_work_time }}
@@ -40,20 +41,20 @@
                     <td>
                         <div>
                             <span>
-                                煙草：
+                                {{ $t("DNOTE_TABACO_TITLE") }}：
                             </span>
                             <span v-if="calclutated_tabaco_record_count !== -1">
                                 <span>
                                     {{ calclutated_tabaco_record_count }}
                                 </span>
                                 <span>
-                                    本
+                                    {{ $t("DNOTE_TABACO_COUNT") }}
                                 </span>
                             </span>
                         </div>
                         <div style="display: flex;">
                             <span>
-                                気分：
+                                {{ $t("DNOTE_LANTANA_MOOD_TITLE") }}：
                             </span>
                             <LantanaFlowersView v-if="calclated_average_lantana_mood !== -1" :gkill_api="gkill_api"
                                 :application_config="application_config" :mood="calclated_average_lantana_mood"
@@ -61,33 +62,33 @@
                         </div>
                         <div>
                             <span>
-                                収入：
+                                {{ $t("DNOTE_INCOME_AMOUNT_TITLE") }}：
                             </span>
                             <span v-if="calclutated_total_nlog_plus_amount !== -1">
                                 <span class="amount_plus">
                                     {{ calclutated_total_nlog_plus_amount }}
                                 </span>
                                 <span>
-                                    円
+                                    {{ $t("DNOTE_NLOG_YEN") }}
                                 </span>
                             </span>
                         </div>
                         <div>
                             <span>
-                                支出：
+                                {{ $t("DNOTE_EXPENSE_AMOUNT_TITLE") }}：
                             </span>
                             <span v-if="calclutated_total_nlog_minus_amount !== -1">
                                 <span class="amount_minus">
                                     {{ calclutated_total_nlog_minus_amount }}
                                 </span>
                                 <span>
-                                    円
+                                    {{ $t("DNOTE_NLOG_YEN") }}
                                 </span>
                             </span>
                         </div>
                         <div>
                             <span>
-                                コード：
+                                {{ $t("DNOTE_GIT_CODE_TITLE") }}：
                             </span>
                             <span v-if="calclutated_total_git_addition_count !== -1">
                                 <span class="git_commit_addition">
@@ -96,13 +97,13 @@
                                     </span>
                                 </span>
                                 <span>
-                                    行
+                                    {{ $t("DNOTE_GIT_CODE_COUNT") }}
                                 </span>
                             </span>
                         </div>
                         <div>
                             <span>
-                                コード：
+                                {{ $t("DNOTE_GIT_CODE_TITLE") }}：
                             </span>
                             <span v-if="calclutated_total_git_deletion_count !== -1">
                                 <span class="git_commit_deletion">
@@ -111,7 +112,7 @@
                                     </span>
                                 </span>
                                 <span>
-                                    行
+                                    {{ $t("DNOTE_GIT_CODE_COUNT") }}
                                 </span>
                             </span>
                         </div>
@@ -119,7 +120,7 @@
                     <td>
                         <div>
                             <span>
-                                合計時間：
+                                {{ $t("DNOTE_TOTAL_TIME_TITLE") }}：
                             </span>
                             <span v-if="total_checked_time !== ''">
                                 {{ total_checked_time }}
@@ -127,27 +128,27 @@
                         </div>
                         <div>
                             <span>
-                                合計収入：
+                                {{ $t("DNOTE_TOTAL_INCOME_AMOUNT_TITLE") }}：
                             </span>
                             <span v-if="total_checked_nlog_plus_amount !== -1">
                                 <span class="amount_plus">
                                     {{ total_checked_nlog_plus_amount }}
                                 </span>
                                 <span>
-                                    円
+                                    {{ $t("DNOTE_NLOG_YEN") }}
                                 </span>
                             </span>
                         </div>
                         <div>
                             <span>
-                                合計支出：
+                                {{ $t("DNOTE_TOTAL_EXPENSE_AMOUNT_TITLE") }}：
                             </span>
                             <span v-if="total_checked_nlog_minus_amount !== -1">
                                 <span class="amount_minus">
                                     {{ total_checked_nlog_minus_amount }}
                                 </span>
                                 <span>
-                                    円
+                                    {{ $t("DNOTE_NLOG_YEN") }}
                                 </span>
                             </span>
                         </div>
@@ -155,17 +156,21 @@
                 </tr>
                 <tr>
                     <td>
-                        <h2>収支</h2>
+                        <h2>
+                            {{ $t("DNOTE_AGGREGATE_NLOG_TITLE") }}
+                        </h2>
                         <AggregateAmountListView :application_config="application_config" :gkill_api="gkill_api"
                             :last_added_tag="last_added_tag" :aggregate_ammounts="aggregate_amounts" />
                     </td>
                     <td>
-                        <h2>場所（{{ aggregate_locations.length }}件）</h2>
+                        <h2> {{ $t("DNOTE_AGGREGATE_LOCATION_TITLE") }} （{{ aggregate_locations.length
+                            }}{{ $t("DNOTE_AGGREGATE_LOCATION_COUNT") }}）</h2>
                         <AggregateLocationListView :application_config="application_config" :gkill_api="gkill_api"
                             :last_added_tag="last_added_tag" :aggregate_locations="aggregate_locations" />
                     </td>
                     <td>
-                        <h2>人（{{ aggregate_peoples.length }}件）</h2>
+                        <h2>{{ $t("DNOTE_AGGREGATE_PEOPLE_TITLE") }}（{{ aggregate_peoples.length
+                            }}{{ $t("DNOTE_AGGREGATE_PEOPLE_COUNT") }}）</h2>
                         <AggregatePeopleListView :application_config="application_config" :gkill_api="gkill_api"
                             :last_added_tag="last_added_tag" :aggregate_peoples="aggregate_peoples" />
                     </td>

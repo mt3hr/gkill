@@ -3,31 +3,38 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>Nlog追加</span>
+                    <span>{{ $t('ADD_NLOG_TITLE') }}</span>
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-if="nlog" v-model="nlog_title_value" label="タイトル" autofocus :readonly="is_requested_submit" />
-        <v-text-field v-if="nlog" v-model="nlog_shop_value" label="店名" :readonly="is_requested_submit" />
-        <v-text-field v-if="nlog" v-model="nlog_amount_value" type="number" label="金額"
+        <v-text-field v-if="nlog" v-model="nlog_title_value" :label="$t('NLOG_TITLE_TITLE')" autofocus
+            :readonly="is_requested_submit" />
+        <v-text-field v-if="nlog" v-model="nlog_shop_value" :label="$t('NLOG_SHOP_NAME_TITLE')"
+            :readonly="is_requested_submit" />
+        <v-text-field v-if="nlog" v-model="nlog_amount_value" type="number" :label="$t('NLOG_AMOUNT_TITLE')"
             :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>日時</label>
-                <input class="input" type="date" v-model="related_date" label="日付" :readonly="is_requested_submit" />
-                <input class="input" type="time" v-model="related_time" label="時刻" :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_related_time()" :disabled="is_requested_submit">リセット</v-btn>
-                <v-btn dark color="primary" @click="now_to_related_time()"
-                    :disabled="is_requested_submit">現在日時</v-btn>
+                <label>{{ $t("NLOG_DATE_TIME_TITLE") }}</label>
+                <input class="input" type="date" v-model="related_date" :label="$t('NLOG_DATE_TITLE')"
+                    :readonly="is_requested_submit" />
+                <input class="input" type="time" v-model="related_time" :label="$t('NLOG_TIME_TITLE')"
+                    :readonly="is_requested_submit" />
+                <v-btn dark color="secondary" @click="reset_related_time()" :disabled="is_requested_submit">{{
+                    $t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="now_to_related_time()" :disabled="is_requested_submit">{{
+                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
+                <v-btn dark color="primary" @click="() => save()"
+                    :disabled="is_requested_submit">{{ $t("SAVE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -42,6 +49,9 @@ import moment from 'moment'
 import { Nlog } from '@/classes/datas/nlog'
 import { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const is_requested_submit = ref(false)
 
@@ -67,7 +77,7 @@ async function save(): Promise<void> {
         if (!nlog.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_nlog_is_null
-            error.error_message = "クライアントのデータが変です"
+            error.error_message = t("CLIENT_NLOG_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -78,7 +88,7 @@ async function save(): Promise<void> {
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.nlog_related_time_is_blank
-            error.error_message = "日時が入力されていません"
+            error.error_message = t("NLOG_DATE_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -89,7 +99,7 @@ async function save(): Promise<void> {
         if (Number.isNaN(nlog_amount_value.value) || nlog_amount_value.value.toString() === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.nlog_amount_is_blank
-            error.error_message = "金額が入力されていません"
+            error.error_message = t("NLOG_AMOUNT_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -100,7 +110,7 @@ async function save(): Promise<void> {
         if (nlog_shop_value.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.nlog_shop_name_is_blank
-            error.error_message = "店名が入力されていません"
+            error.error_message = t("NLOG_SHOP_NAME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -111,7 +121,7 @@ async function save(): Promise<void> {
         if (nlog_title_value.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.nlog_title_is_blank
-            error.error_message = "タイトルが入力されていません"
+            error.error_message = t("NLOG_TITLE_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

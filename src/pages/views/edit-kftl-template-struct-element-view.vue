@@ -1,18 +1,18 @@
 <template>
     <v-card>
         <v-card-title>
-            テンプレート編集
+            {{ $t("EDIT_KFTL_TEMPLATE_STRUCT_ELEMENT_TITLE") }}
         </v-card-title>
-        <v-text-field class="input" type="text" v-model="title" label="KFTLテンプレート名" />
-        <v-textarea v-model="template" label="テンプレート内容" />
+        <v-text-field class="input" type="text" v-model="title" :label="$t('TEMPLATE_NAME_TITLE')" />
+        <v-textarea v-model="template" :label="$t('TEMPLATE_CONTENT_TITLE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="apply" color="primary">適用</v-btn>
+                    <v-btn dark @click="apply" color="primary">{{ $t("APPLY_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

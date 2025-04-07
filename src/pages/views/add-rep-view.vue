@@ -3,25 +3,25 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>Rep追加</span>
+                    <span>{{ $t("ADD_REP_TITLE") }}</span>
                 </v-col>
             </v-row>
         </v-card-title>
         <div>{{ account.user_id }}</div>
-        <v-checkbox v-model="is_enable" :label="'有効'" />
-        <v-checkbox v-model="use_to_write" :label="'書込先として使用'" />
-        <v-checkbox v-model="is_execute_idf_when_reload" :label="'更新時にID自動割り当て'" />
-        <v-select :label="'デバイス名'" v-model="device" :items="devices" />
-        <v-select v-model="type" :items="rep_types" label="RepType" />
-        <v-text-field v-model="file" :label="'PATH'" />
+        <v-checkbox v-model="is_enable" :label="$t('ENABLE_TITLE')" />
+        <v-checkbox v-model="use_to_write" :label="$t('USE_TO_WRITE_TITLE')" />
+        <v-checkbox v-model="is_execute_idf_when_reload" :label="$t('USE_TO_WRITE_TITLE')" />
+        <v-select :label="$t('DEVICE_NAME_TITLE')" v-model="device" :items="devices" />
+        <v-select v-model="type" :items="rep_types" :label="$t('REP_TYPE_TITLE')" />
+        <v-text-field v-model="file" :label="$t('FILE_PATH_TITLE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="add_rep()" color="primary">追加</v-btn>
+                    <v-btn dark @click="add_rep()" color="primary">{{ $t("ADD_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

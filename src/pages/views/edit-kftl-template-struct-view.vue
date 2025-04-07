@@ -1,13 +1,13 @@
 <template>
     <v-card>
         <v-card-title>
-            KFTLテンプレート構造
+            {{ $t("EDIT_KFTL_TEMPLATE_STRUCT_TITLE") }}
         </v-card-title>
         <div class="kftl_template_struct_root">
-            <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="'KFTLテンプレート'"
-                :is_open="true" :struct_obj="cloned_application_config.parsed_kftl_template" :is_editable="true"
-                :is_root="true" :is_show_checkbox="false"
-                @received_errors="(errors) => emits('received_errors', errors)"
+            <FoldableStruct :application_config="application_config" :gkill_api="gkill_api"
+                :folder_name="$t('KFTL_TEMPLATE_STRUCT_ELEMENT_TITLE')" :is_open="true"
+                :struct_obj="cloned_application_config.parsed_kftl_template" :is_editable="true" :is_root="true"
+                :is_show_checkbox="false" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @dblclicked_item="(e: MouseEvent, id: string | null) => { if (id) show_edit_kftl_template_struct_dialog(id) }"
                 @contextmenu_item="show_kftl_template_contextmenu" ref="foldable_struct" />
@@ -15,20 +15,21 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary"
-                        @click="show_add_new_kftl_template_struct_element_dialog">KFTLテンプレート追加</v-btn>
+                    <v-btn dark color="primary" @click="show_add_new_kftl_template_struct_element_dialog">{{
+                        $t("ADD_KFTL_TEMPLATE_STRUCT_ELEMENT_TITLE") }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_add_new_folder_dialog">フォルダ追加</v-btn>
+                    <v-btn dark color="primary" @click="show_add_new_folder_dialog">{{ $t("ADD_FOLDER_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="apply" color="primary">適用</v-btn>
+                    <v-btn dark @click="apply" color="primary">{{ $t("APPLY_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
