@@ -20,6 +20,9 @@
 import moment from 'moment';
 import type { AggregatePeopleViewProps } from './aggregate-people-view-props';
 import type { KyouViewEmits } from './kyou-view-emits';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 defineProps<AggregatePeopleViewProps>()
 defineEmits<KyouViewEmits>()
@@ -36,34 +39,34 @@ function format_duration(duration_milli_second: number): string {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += diff_date.getFullYear() - 1970 + "年"
+        diff_str += diff_date.getFullYear() - 1970 + t("YEAR_SUFFIX")
     }
     if (diff_date.getMonth() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += (diff_date.getMonth() + 1) + "ヶ月"
+        diff_str += (diff_date.getMonth() + 1) + t("MONTH_SUFFIX")
     }
     if ((diff_date.getDate() - 1) !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += (diff_date.getDate() - 1) + "日"
+        diff_str += (diff_date.getDate() - 1) + t("DAY_SUFFIX")
     }
     if (diff_date.getHours() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += (diff_date.getHours()) + "時間"
+        diff_str += (diff_date.getHours()) + t("HOUR_SUFFIX")
     }
     if (diff_date.getMinutes() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += diff_date.getMinutes() + "分"
+        diff_str += diff_date.getMinutes() + t("MINUTE_SUFFIX")
     }
     if (diff_str === "") {
-        diff_str += diff_date.getSeconds() + "秒"
+        diff_str += diff_date.getSeconds() + t("SECOND_SUFFIX")
     }
     return diff_str
 }

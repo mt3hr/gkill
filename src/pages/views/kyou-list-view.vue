@@ -84,7 +84,7 @@
         <v-card v-if="show_footer" :class="footer_class" :ripple="false" :link="false">
             <v-row no-gutters>
                 <v-col v-if="matched_kyous && matched_kyous.length" cols="auto" class="py-3">
-                    {{ matched_kyous.length }}件のアイテム
+                    {{ matched_kyous.length }}{{ $t("N_COUNT_ITEMS_TITLE") }}
                 </v-col>
                 <v-spacer />
 

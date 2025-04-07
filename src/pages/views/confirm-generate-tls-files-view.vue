@@ -3,17 +3,18 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>TLSファイル生成</span>
+                    <span>{{ $t('GENERATE_OREORE_TLS_TITLE') }}</span>
                 </v-col>
             </v-row>
         </v-card-title>
         <v-card>
-            <p>下記ファイルにTLS用ファイルを生成します。</p>
-            <p>すでに存在する場合は上書きされます）</p>
+            <p>
+            <pre>{{ $t("GENERATE_OREORE_TLS_FILE_MESSAGE") }}</pre>
+            </p>
             <table>
                 <tr>
                     <td>
-                        TLS CERTファイル：
+                        {{ $t("TLS_CERT_FILE_TITLE") }}：
                     </td>
                     <td>
                         {{ server_config.tls_cert_file }}
@@ -21,7 +22,7 @@
                 </tr>
                 <tr>
                     <td>
-                        TLS KEYファイ：
+                        {{ $t("TLS_KEY_FILE_TITLE") }}：
                     </td>
                     <td>
                         {{ server_config.tls_key_file }}
@@ -32,11 +33,12 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="generate_tls_files" color="primary">作成</v-btn>
+                    <v-btn dark @click="generate_tls_files" color="primary">{{ $t("CREATE_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

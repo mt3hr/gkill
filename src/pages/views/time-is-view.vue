@@ -3,15 +3,17 @@
         <div>{{ kyou.typed_timeis?.title }}</div>
         <div v-if="kyou.typed_timeis && kyou.typed_timeis.start_time && show_timeis_elapsed_time">{{ duration }}</div>
         <br />
-        <div v-if="kyou.typed_timeis">開始日時：<span>{{ format_time(kyou.typed_timeis.start_time) }}</span></div>
-        <div v-if="kyou.typed_timeis && kyou.typed_timeis.end_time">終了日時：<span>{{
+        <div v-if="kyou.typed_timeis">{{ $t("START_DATE_TIME_TITLE") }}：<span>{{
+            format_time(kyou.typed_timeis.start_time) }}</span></div>
+        <div v-if="kyou.typed_timeis && kyou.typed_timeis.end_time">{{ $t("END_DATE_TIME_TITLE") }}：<span>{{
             format_time(kyou.typed_timeis?.end_time) }}</span></div>
-        <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time && show_timeis_elapsed_time">実行中</div>
+        <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time && show_timeis_elapsed_time">{{ $t("PLAING_TITLE")
+            }}</div>
         <v-row v-if="show_timeis_plaing_end_button && kyou.typed_timeis && !kyou.typed_timeis.end_time"
             class="pa-0 ma-0">
             <v-spacer cols="auto" />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="show_end_timeis_dialog()">終了</v-btn>
+                <v-btn dark color="primary" @click="show_end_timeis_dialog()">{{ $t("END_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <TimeIsContextMenu :application_config="application_config" :gkill_api="gkill_api"
@@ -63,6 +65,9 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import TimeIsContextMenu from './time-is-context-menu.vue'
 import moment from 'moment';
 import EndTimeIsPlaingDialog from '../dialogs/end-time-is-plaing-dialog.vue';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const context_menu = ref<InstanceType<typeof TimeIsContextMenu> | null>(null);
 const end_timeis_plaing_dialog = ref<InstanceType<typeof EndTimeIsPlaingDialog> | null>(null);
@@ -84,34 +89,34 @@ const duration = computed(() => {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += diff_date.getFullYear() - 1970 + "年"
+        diff_str += diff_date.getFullYear() - 1970 + t("YEAR_SUFFIX")
     }
     if (diff_date.getMonth() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += (diff_date.getMonth() + 1) + "ヶ月"
+        diff_str += (diff_date.getMonth() + 1) + t("MONTH_SUFFIX")
     }
     if ((diff_date.getDate() - 1) !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += (diff_date.getDate() - 1) + "日"
+        diff_str += (diff_date.getDate() - 1) + t("DAY_SUFFIX")
     }
     if (diff_date.getHours() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += (diff_date.getHours()) + "時間"
+        diff_str += (diff_date.getHours()) + t("HOUR_SUFFIX")
     }
     if (diff_date.getMinutes() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += diff_date.getMinutes() + "分"
+        diff_str += diff_date.getMinutes() + t("MINUTE_SUFFIX")
     }
     if (diff_str === "") {
-        diff_str += diff_date.getSeconds() + "秒"
+        diff_str += diff_date.getSeconds() + t("SECOND_SUFFIX")
     }
     return diff_str
 })

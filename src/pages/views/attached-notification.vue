@@ -32,6 +32,9 @@ import AttachedNotificationContextMenu from './attached-notification-context-men
 import { computed, ref } from 'vue'
 import type { AttachedNotificationProps } from './attached-notification-props';
 import type { KyouViewEmits } from './kyou-view-emits';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const context_menu = ref<InstanceType<typeof AttachedNotificationContextMenu> | null>(null);
 
@@ -68,7 +71,7 @@ function format_time(time: Date) {
     let hour: string | number = time.getHours()
     let minute: string | number = time.getMinutes()
     let second: string | number = time.getSeconds()
-    const day_of_week = ['日', '月', '火', '水', '木', '金', '土'][time.getDay()]
+    const day_of_week = [t("SUNDAY_TITLE"), t("MONDAY_TITLE"), t("TUESDAY_TITLE"), t("WEDNESDAY_TITLE"), t("THURSDAY_TITLE"), t("FRIDAY_TITLE"), t("SATURDAY_TITLE")][time.getDay()]
     month = ('0' + month).slice(-2)
     date = ('0' + date).slice(-2)
     hour = ('0' + hour).slice(-2)

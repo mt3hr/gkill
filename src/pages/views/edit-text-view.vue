@@ -3,19 +3,21 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>テキスト編集</span>
+                    <span>{{ $t("EDIT_TEXT_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                        color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="text_value" label="テキスト" autofocus :readonly="is_requested_submit" />
+        <v-textarea v-model="text_value" :label="$t('TEXT_TITLE')" autofocus :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                    }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -56,6 +58,9 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { GkillError } from '@/classes/api/gkill-error';
 import type { Text } from '@/classes/datas/text';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const is_requested_submit = ref(false)
 
@@ -81,7 +86,7 @@ async function save(): Promise<void> {
         if (text_value.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.text_is_blank
-            error.error_message = "テキストが未入力です"
+            error.error_message = t("TEXT_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -92,7 +97,7 @@ async function save(): Promise<void> {
         if (cloned_text.value.text === text_value.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.text_is_no_update
-            error.error_message = "テキストが更新されていません"
+            error.error_message = t("TEXT_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

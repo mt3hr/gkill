@@ -3,30 +3,33 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>通知追加</span>
+                    <span>{{ $t("ADD_NOTIFICATION_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                        color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="content_value" label="通知内容" autofocus :readonly="is_requested_submit" />
+        <v-textarea v-model="content_value" :label="$t('NOTIFICATION_CONTENT_TITLE')" autofocus
+            :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>通知日時</label>
-                <input class="input date" type="date" v-model="notification_date" label="日付"
+                <label>{{ $t('NOTIFICATION_DATE_TIME_TITLE') }}</label>
+                <input class="input date" type="date" v-model="notification_date" :label="$t('NOTIFICATION_DATE_TITLE')"
                     :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="notification_time" label="時刻"
+                <input class="input time" type="time" v-model="notification_time" :label="$t('NOTIFICATION_TIME_TITLE')"
                     :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_notification_date_time()"
-                    :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn dark color="secondary" @click="reset_notification_date_time()" :disabled="is_requested_submit">{{
+                    $t("RESET_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                    }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -68,6 +71,9 @@ import { Notification } from '@/classes/datas/notification'
 import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-request'
 import moment from 'moment'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const is_requested_submit = ref(false)
 
@@ -86,7 +92,7 @@ async function save(): Promise<void> {
         if (notification_date.value === "" || notification_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.notification_time_is_blank
-            error.error_message = "通知日時が入力されていません"
+            error.error_message = t("NOTIFICATION_DATE_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -97,7 +103,7 @@ async function save(): Promise<void> {
         if (content_value.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.notification_content_is_blank
-            error.error_message = "通知内容が未入力です"
+            error.error_message = t("NOTIFICATION_CONTENT_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

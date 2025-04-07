@@ -6,11 +6,12 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>サーバ設定</span>
+                    <span>{{ $t("SERVER_CONFIG_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_manage_account_dialog">アカウント管理</v-btn>
+                    <v-btn dark color="primary" @click="show_manage_account_dialog">{{ $t("MANAGE_ACCOUNT_TITLE")
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -18,7 +19,7 @@
             <table>
                 <tr>
                     <td>
-                        <v-select v-model="device" :items="devices" label="プロファイル" />
+                        <v-select v-model="device" :items="devices" :label="$t('PROFILE_TITLE')" />
                     </td>
                     <td>
                         <table>
@@ -29,7 +30,7 @@
                                 </td>
                                 <td>
                                     <v-btn color="secondary" v-if="cloned_server_configs.length >= 2"
-                                        @click="delete_current_server_config()" dark>削除</v-btn>
+                                        @click="delete_current_server_config()" dark>{{ $t("DELETE_TITLE") }}</v-btn>
                                 </td>
                             </tr>
                         </table>
@@ -37,18 +38,20 @@
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="server_config.is_local_only_access" hide-detail label="ローカルアクセスのみ許可" />
+                        <v-checkbox v-model="server_config.is_local_only_access" hide-detail
+                            :label="$t('USE_LOCAL_ACCSESS_ONLY_TITLE')" />
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="server_config.enable_tls" hide-detail label="TLS有効" />
+                        <v-checkbox v-model="server_config.enable_tls" hide-detail :label="$t('ENABLE_TLS_TITLE')" />
                     </td>
-                    <v-btn dark color="primary" @click="show_confirm_generate_tls_files_dialog">オレオレTLSファイル生成</v-btn>
+                    <v-btn dark color="primary" @click="show_confirm_generate_tls_files_dialog">{{
+                        $t("GENERATE_OREORE_TLS_TITLE") }}</v-btn>
                 </tr>
                 <tr>
                     <td>
-                        アドレス
+                        {{ $t("ADDRESS_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.address"></v-text-field>
@@ -56,7 +59,7 @@
                 </tr>
                 <tr>
                     <td>
-                        TLS CERTファイル
+                        {{ $t("TLS_CERT_FILE_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.tls_cert_file"></v-text-field>
@@ -64,7 +67,7 @@
                 </tr>
                 <tr>
                     <td>
-                        TLS KEYファイル
+                        {{ $t("TLS_KEY_FILE_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.tls_key_file"></v-text-field>
@@ -72,7 +75,7 @@
                 </tr>
                 <tr>
                     <td>
-                        ディレクトリを開くコマンド
+                        {{ $t("OPEN_DIRECTORY_COMMAND_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.open_directory_command"></v-text-field>
@@ -80,7 +83,7 @@
                 </tr>
                 <tr>
                     <td>
-                        ファイルを開くコマンド
+                        {{ $t("OPEN_FILE_COMMAND_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.open_file_command"></v-text-field>
@@ -88,7 +91,7 @@
                 </tr>
                 <tr>
                     <td>
-                        URLogタイムアウト
+                        {{ $t("URLOG_TIMEOUT_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" type="number" min="5"
@@ -97,25 +100,15 @@
                 </tr>
                 <tr>
                     <td>
-                        URLog U/A
+                        {{ $t("URLOG_USERAGENT_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.urlog_useragent"></v-text-field>
                     </td>
                 </tr>
-                <!--
                 <tr>
                     <td>
-                        アップロード容量月額制限
-                    </td>
-                    <td>
-                        <v-text-field width="400" v-model="server_config.upload_size_limit_month"></v-text-field>
-                    </td>
-                </tr>
-                -->
-                <tr>
-                    <td>
-                        ユーザデータディレクトリ
+                        {{ $t("USER_DATA_DIRECTORY_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.user_data_directory"></v-text-field>
@@ -126,11 +119,12 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="update_server_config" color="primary">適用</v-btn>
+                    <v-btn dark @click="update_server_config" color="primary">{{ $t("APPLY_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -163,6 +157,9 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { UpdateServerConfigsRequest } from '@/classes/api/req_res/update-server-configs-request'
 import NewDeviceNameDialog from '../dialogs/new-device-name-dialog.vue'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const confirm_generate_tls_files_dialog = ref<InstanceType<typeof ConfirmGenerateTLSFilesDialog> | null>(null);
 const manage_account_dialog = ref<InstanceType<typeof ManageAccountDialog> | null>(null);
@@ -208,7 +205,7 @@ function add_device(device_name: string): void {
         if (cloned_server_configs.value[i].device === device_name) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.device_is_aleady_exist
-            error.error_message = "入力されたプロファイル名はすでに存在します"
+            error.error_message = t("ALEADY_EXISTS_PROFILE_MESSAGE")
             emits('received_errors', [error])
             return
         }
@@ -249,7 +246,7 @@ async function load_current_server_config(): Promise<void> {
     if (!current_server_config) {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.not_found_enable_device
-        error.error_message = "有効なプロファイルが見つかりませんでした"
+        error.error_message = t("NOT_FOUND_ENABLE_DEVICE_MESSAGE")
         emits('received_errors', [error])
         return
     }
@@ -309,7 +306,7 @@ function delete_current_server_config(): void {
     if (delete_target_server_config_index === -1) {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.not_found_delete_target_device
-        error.error_message = "削除対象のプロファイルが見つかりませんでした"
+        error.error_message = t("NOT_FOUND_DELETE_TARGET_DEVICE_MESSAGE")
         emits('received_errors', [error])
         return
     }

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <v-checkbox readonly v-model="use_board" label="板" hide-details />
+        <v-checkbox readonly v-model="use_board" :label="$t('BOARD_TITLE')" hide-details />
         <table v-show="use_board" class="boardlist">
             <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                 :is_open="true" :struct_obj="cloned_application_config.parsed_mi_boad_struct" :is_editable="false"
@@ -19,6 +19,9 @@ import FoldableStruct from './foldable-struct.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { CheckState } from './check-state'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 
@@ -28,7 +31,7 @@ defineExpose({ get_board_name })
 
 const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
-const board_name: Ref<string> = ref("すべて")
+const board_name: Ref<string> = ref(t("MI_ALL_TITLE"))
 
 const use_board = ref(true)
 

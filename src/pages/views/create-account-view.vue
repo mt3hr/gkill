@@ -3,20 +3,21 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>アカウント追加</span>
+                    <span>{{ $t("ADD_ACCOUNT_TITLE") }}</span>
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-model="new_user_id" label="ユーザID" />
-        <v-checkbox v-model="do_initialize" label="ユーザ用の各Repを作成し設定する" />
+        <v-text-field v-model="new_user_id" :label="$t('USER_ID_TITLE')" />
+        <v-checkbox v-model="do_initialize" :label="$t('DO_INITIALIZE_ADD_ACCOUNT_MESSAGE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="create_account" color="primary">アカウント作成</v-btn>
+                    <v-btn dark @click="create_account" color="primary">{{ $t("ADD_ACCOUNT_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

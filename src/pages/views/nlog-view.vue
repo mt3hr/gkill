@@ -28,7 +28,7 @@
                 {{ kyou.typed_nlog.amount }}
             </v-col>
             <v-col v-if="kyou.typed_nlog" class="ma-0 pa-0">
-                円
+                {{ $t("YEN_TITLE") }}
             </v-col>
             <v-col cols="auto" class="ma-0 pa-0"></v-col>
         </v-row>
@@ -59,6 +59,9 @@ import type { NlogViewProps } from './nlog-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { ref } from 'vue'
 import NlogContextMenu from './nlog-context-menu.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const context_menu = ref<InstanceType<typeof NlogContextMenu> | null>(null);
 
 const props = defineProps<NlogViewProps>()

@@ -3,12 +3,12 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>Rep割当管理</span>
+                    <span>{{ $t("ALLOCATE_REP_TITLE") }}</span>
                     <span>{{ account.user_id }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_add_rep_dialog(account)">追加</v-btn>
+                    <v-btn dark color="primary" @click="show_add_rep_dialog(account)">{{ $t("ADD_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -16,28 +16,31 @@
             <table>
                 <tr v-for="repository in repositories" :key="repository.id">
                     <td>
-                        <v-checkbox label="有効" v-model="repository.is_enable" />
+                        <v-checkbox :label="$t('ENABLE_TITLE')" v-model="repository.is_enable" />
                     </td>
                     <td>
-                        <v-checkbox label="書込" v-model="repository.use_to_write" />
+                        <v-checkbox :label="$t('WRITE_TITLE')" v-model="repository.use_to_write" />
                     </td>
                     <td>
-                        <v-checkbox label="ID自動割当" v-model="repository.is_execute_idf_when_reload" />
+                        <v-checkbox :label="$t('AUTO_ALLOCATE_ID_TITLE')"
+                            v-model="repository.is_execute_idf_when_reload" />
                     </td>
                     <td>
-                        <v-checkbox label="更新を監視" v-model="repository.is_watch_target_for_update_rep" />
+                        <v-checkbox :label="$t('WATCH_TARGET_FOR_UPDATE_REP_TITLE')"
+                            v-model="repository.is_watch_target_for_update_rep" />
                     </td>
                     <td>
-                        <v-select :label="'デバイス名'" v-model="repository.device" :items="devices" />
+                        <v-select ::label="$t('DEVICE_NAME_TITLE')" v-model="repository.device" :items="devices" />
                     </td>
                     <td>
-                        <v-select v-model="repository.type" readonly :items="rep_types" label="RepType" />
+                        <v-select v-model="repository.type" readonly :items="rep_types" :label="$t('REP_TYPE_TITLE')" />
                     </td>
                     <td>
-                        <v-text-field :width="600" :label="'ファイルPath'" v-model="repository.file" />
+                        <v-text-field :width="600" :label="$t('FILE_PATH_TITLE')" v-model="repository.file" />
                     </td>
                     <td>
-                        <v-btn dark color="secondary" @click="show_confirm_delete_rep_dialog(repository)">削除</v-btn>
+                        <v-btn dark color="secondary" @click="show_confirm_delete_rep_dialog(repository)">{{
+                            $t("DELETE_TITLE") }}</v-btn>
                     </td>
                 </tr>
             </table>

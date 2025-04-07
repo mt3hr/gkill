@@ -5,13 +5,20 @@
             <v-toolbar-title>
                 <div>
                     <span>
-                        rykv
+                        {{ $t("RYKV_APP_TITLE") }}
                     </span>
                     <v-menu activator="parent">
                         <v-list>
-                            <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
-                                :key="index" :value="index">
-                                <v-list-item-title @click="router.replace('/' + page)">{{ page }}</v-list-item-title>
+                            <v-list-item :key="index" :value="index" v-for="page, index in [
+                                { app_name: $t('RYKV_APP_NAME'), page_name: 'rykv' },
+                                { app_name: $t('MI_APP_NAME'), page_name: 'mi' },
+                                { app_name: $t('KFTL_APP_NAME'), page_name: 'kftl' },
+                                { app_name: $t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
+                                { app_name: $t('MKFL_APP_NAME'), page_name: 'mkfl' },
+                                { app_name: $t('SAIHATE_APP_NAME'), page_name: 'saihate' },
+                            ]">
+                                <v-list-item-title @click="router.replace('/' + page.page_name)">
+                                    {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>
@@ -296,28 +303,28 @@
                     </template>
                     <v-list>
                         <v-list-item @click="show_kftl_dialog()">
-                            <v-list-item-title>kftl</v-list-item-title>
+                            <v-list-item-title>{{ $t("KFTL_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_mkfl_dialog()">
-                            <v-list-item-title>mkfl</v-list-item-title>
+                            <v-list-item-title>{{ $t("MKFL_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_urlog_dialog()">
-                            <v-list-item-title>urlog</v-list-item-title>
+                            <v-list-item-title>{{ $t("URLOG_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_timeis_dialog()">
-                            <v-list-item-title>timeis</v-list-item-title>
+                            <v-list-item-title>{{ $t("TIMEIS_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_mi_dialog()">
-                            <v-list-item-title>mi</v-list-item-title>
+                            <v-list-item-title>{{ $t("MI_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_nlog_dialog()">
-                            <v-list-item-title>nlog</v-list-item-title>
+                            <v-list-item-title>{{ $t("NLOG_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_lantana_dialog()">
-                            <v-list-item-title>lantana</v-list-item-title>
+                            <v-list-item-title>{{ $t("LANTANA_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_upload_file_dialog()">
-                            <v-list-item-title>アップロード</v-list-item-title>
+                            <v-list-item-title>{{ $t("UPLOAD_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                     </v-list>
                 </v-menu>
@@ -350,6 +357,9 @@ import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import moment from 'moment'
 import { deepEquals } from '@/classes/deep-equals'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)

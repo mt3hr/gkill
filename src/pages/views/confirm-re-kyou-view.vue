@@ -3,18 +3,18 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>リポスト</span>
+                    <span>{{ $t("REPOST_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="rekyou()">リポスト</v-btn>
+                <v-btn dark color="primary" @click="rekyou()">{{ $t('REPOST_TITLE') }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
