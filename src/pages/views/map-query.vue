@@ -2,11 +2,11 @@
     <v-row class="pa-0 ma-0">
         <v-col cols="auto" class="pa-0 ma-0">
             <v-checkbox v-model="query.use_map" @change=" emits('request_update_use_map_query', query.use_map)"
-                label="場所" hide-details class="pb-0 mb-0" />
+                :label="$t('MAP_QUERY_TITLE')" hide-details class="pb-0 mb-0" />
         </v-col>
         <v-spacer class="pa-0 ma-0" />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
-            <v-btn dark color="secondary" @click="emits('request_clear_map_query')">クリア</v-btn>
+            <v-btn dark color="secondary" @click="emits('request_clear_map_query')">{{ $t("CLEAR_TITLE") }}</v-btn>
         </v-col>
     </v-row>
     <v-sheet v-show="query.use_map">
@@ -32,6 +32,9 @@ import type { MapQueryEmits } from './map-query-emits'
 import type { MapQueryProps } from './map-query-props'
 import { computed, ref, watch, type Ref } from 'vue';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<MapQueryProps>()
 const emits = defineEmits<MapQueryEmits>()

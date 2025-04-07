@@ -1,19 +1,19 @@
 <template>
     <v-card>
         <v-card-title>
-            記録保管場所編集
+            {{ $t("EDIT_REP_STRUCT_TITLE") }}
         </v-card-title>
         <p>{{ struct_obj.rep_name }}</p>
-        <v-checkbox v-model="check_when_inited" hide-detail label="初期化時チェック" />
-        <v-checkbox v-model="ignore_check_rep_rykv" hide-detail label="サマリチェック無効" />
+        <v-checkbox v-model="check_when_inited" hide-detail :label="$t('CHECK_WHEN_INITED_TITLE')" />
+        <v-checkbox v-model="ignore_check_rep_rykv" hide-detail :label="$t('IGNORE_CHECK_REP_RYKV_TITLE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="apply" color="primary">適用</v-btn>
+                    <v-btn dark @click="apply" color="primary">{{ $t("APPLY_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

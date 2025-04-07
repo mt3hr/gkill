@@ -2,10 +2,10 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item @click="emits('requested_edit_rep', id)">
-                <v-list-item-title>編集</v-list-item-title>
+                <v-list-item-title>{{ $t("EDIT_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="emits('requested_delete_rep', id)">
-                <v-list-item-title>削除</v-list-item-title>
+                <v-list-item-title>{{ $t("DELETE_TITLE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -14,6 +14,9 @@
 import { computed, ref, type Ref } from 'vue';
 import type { RepStructContextMenuProps } from './rep-struct-context-menu-emits';
 import type { RepStructContextMenuEmits } from './rep-struct-context-menu-props';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<RepStructContextMenuProps>()
 const emits = defineEmits<RepStructContextMenuEmits>()

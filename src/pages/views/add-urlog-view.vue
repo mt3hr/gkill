@@ -3,50 +3,52 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>URLog追加</span>
+                    <span>{{ $t("ADD_URLOG_TITLE") }}</span>
                 </v-col>
             </v-row>
         </v-card-title>
         <table>
             <tr>
                 <td>
-                    <label>URL</label>
+                    <label>{{ $t("URL_TITLE") }}</label>
                 </td>
                 <td>
-                    <input class="input text" type="text" v-model="url" label="URL" autofocus
+                    <input class="input text" type="text" v-model="url" :label="$t('URL_TITLE')" autofocus
                         :readonly="is_requested_submit" />
                 </td>
             </tr>
             <tr>
                 <td>
-                    <label>タイトル</label>
+                    <label>{{ $t("URLOG_TITLE_TITLE") }}</label>
                 </td>
                 <td>
-                    <input class="input text" type="text" v-model="title" label="タイトル"
+                    <input class="input text" type="text" v-model="title" :label="$t('URLOG_TITLE_TITLE')"
                         :readonly="is_requested_submit" />
                 </td>
             </tr>
         </table>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>日時</label>
-                <input class="input date" type="date" v-model="related_date" label="日付"
+                <label>{{ $t("URLOG_DATE_TIME_TITLE") }}</label>
+                <input class="input date" type="date" v-model="related_date" :label="$t('URLOG_DATE_TITLE')"
                     :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="related_time" label="時刻"
+                <input class="input time" type="time" v-model="related_time" :label="$t('URLOG_TIME_TITLE')"
                     :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_related_date_time()"
-                    :disabled="is_requested_submit">リセット</v-btn>
-                <v-btn dark color="primary" @click="now_to_related_date_time()"
-                    :disabled="is_requested_submit">現在日時</v-btn>
+                <v-btn dark color="secondary" @click="reset_related_date_time()" :disabled="is_requested_submit">{{
+                    $t('RESET_TITLE') }}</v-btn>
+                <v-btn dark color="primary" @click="now_to_related_date_time()" :disabled="is_requested_submit">{{
+                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">リセット</v-btn>
+                <v-btn dark color="secondary" @click="reset()"
+                    :disabled="is_requested_submit">{{ $t("RESET_TITLE") }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                    }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -61,6 +63,9 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import type { KyouViewEmits } from './kyou-view-emits'
 import { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const is_requested_submit = ref(false)
 
@@ -91,7 +96,7 @@ async function save(): Promise<void> {
         if (!urlog.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_urlog_is_null
-            error.error_message = "クライアントのデータが変です"
+            error.error_message = t("CLIENT_URLOG_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -102,7 +107,7 @@ async function save(): Promise<void> {
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.urlog_related_time_is_blank
-            error.error_message = "日時が入力されていません"
+            error.error_message = t("URLOG_DATE_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -113,7 +118,7 @@ async function save(): Promise<void> {
         if (url.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.urlog_url_is_blank
-            error.error_message = "URLが入力されていません"
+            error.error_message = t("URLOG_URL_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

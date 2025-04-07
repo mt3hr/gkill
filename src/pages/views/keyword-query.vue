@@ -2,12 +2,13 @@
     <v-row class="pa-0 ma-0">
         <v-col cols="auto" class="pa-0 ma-0">
             <v-checkbox v-model="cloned_find_query.use_words"
-                @change="emits('request_update_use_keyword_query', cloned_find_query.use_words)" label="キーワード"
-                hide-details class="pa-0 ma-0" />
+                @change="emits('request_update_use_keyword_query', cloned_find_query.use_words)"
+                :label="$t('WORD_QUERY_TITLE')" hide-details class="pa-0 ma-0" />
         </v-col>
         <v-spacer />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
-            <v-btn dark color="secondary" @click="emits('request_clear_keyword_query')" hide-details>クリア</v-btn>
+            <v-btn dark color="secondary" @click="emits('request_clear_keyword_query')" hide-details>{{
+                $t("CLEAR_TITLE") }}</v-btn>
         </v-col>
     </v-row>
 
@@ -19,7 +20,7 @@
                 @click="cloned_find_query.words_and = !cloned_find_query.words_and; emits('request_update_and_search', cloned_find_query.words_and)" />
         </v-col>
         <v-col cols="10" class="pa-0 ma-0">
-            <v-text-field v-model="cloned_find_query.keywords" label="キーワード" hide-details
+            <v-text-field v-model="cloned_find_query.keywords" :label="$t('WORD_QUERY_TITLE')" hide-details
                 @change="emits('request_update_keywords', cloned_find_query.keywords)" />
         </v-col>
     </v-row>

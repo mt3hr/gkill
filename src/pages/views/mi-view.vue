@@ -5,14 +5,20 @@
             <v-toolbar-title>
                 <div>
                     <span>
-                        mi
+                        {{ $t("MI_APP_TITLE") }}
                     </span>
                     <v-menu activator="parent">
                         <v-list>
-                            <v-list-item v-for="page, index in ['rykv', 'mi', 'kftl', 'plaing', 'mkfl', 'saihate']"
-                                :key="index" :value="index">
-                                <v-list-item-title @click="router.replace('/' + page)">{{ page
-                                }}</v-list-item-title>
+                            <v-list-item :key="index" :value="index" v-for="page, index in [
+                                { app_name: $t('RYKV_APP_NAME'), page_name: 'rykv' },
+                                { app_name: $t('MI_APP_NAME'), page_name: 'mi' },
+                                { app_name: $t('KFTL_APP_NAME'), page_name: 'kftl' },
+                                { app_name: $t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
+                                { app_name: $t('MKFL_APP_NAME'), page_name: 'mkfl' },
+                                { app_name: $t('SAIHATE_APP_NAME'), page_name: 'saihate' },
+                            ]">
+                                <v-list-item-title @click="router.replace('/' + page.page_name)">
+                                    {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
                     </v-menu>
@@ -70,7 +76,7 @@
                     <td valign="top" v-for="query, index in querys" :key="query.query_id">
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
-                            <v-card-title v-if="!query.use_mi_board_name">すべて</v-card-title>
+                            <v-card-title v-if="!query.use_mi_board_name">{{ $t("MI_ALL_TITLE") }}</v-card-title>
                             <KyouListView :kyou_height="56 + 35" :width="400"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
@@ -255,28 +261,28 @@
                     </template>
                     <v-list>
                         <v-list-item @click="show_kftl_dialog()">
-                            <v-list-item-title>kftl</v-list-item-title>
+                            <v-list-item-title>{{ $t("KFTL_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_mkfl_dialog()">
-                            <v-list-item-title>mkfl</v-list-item-title>
+                            <v-list-item-title>{{ $t("MKFL_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_urlog_dialog()">
-                            <v-list-item-title>urlog</v-list-item-title>
+                            <v-list-item-title>{{ $t("URLOG_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_timeis_dialog()">
-                            <v-list-item-title>timeis</v-list-item-title>
+                            <v-list-item-title>{{ $t("TIMEIS_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_mi_dialog()">
-                            <v-list-item-title>mi</v-list-item-title>
+                            <v-list-item-title>{{ $t("MI_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_nlog_dialog()">
-                            <v-list-item-title>nlog</v-list-item-title>
+                            <v-list-item-title>{{ $t("NLOG_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_lantana_dialog()">
-                            <v-list-item-title>lantana</v-list-item-title>
+                            <v-list-item-title>{{ $t("LANTANA_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_upload_file_dialog()">
-                            <v-list-item-title>アップロード</v-list-item-title>
+                            <v-list-item-title>{{ $t("UPLOAD_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                     </v-list>
                 </v-menu>
@@ -307,6 +313,9 @@ import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import moment from 'moment'
 import { deepEquals } from '@/classes/deep-equals'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
@@ -654,7 +663,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
 
 function open_or_focus_board(board_name: string): void {
     if (board_name === "") {
-        board_name = "すべて"
+        board_name = t("MI_ALL_TITLE")
     }
 
     let opened = false
@@ -679,7 +688,7 @@ function open_or_focus_board(board_name: string): void {
     let query = query_editor_sidebar.value!.get_default_query()!.clone()
     query.query_id = props.gkill_api.generate_uuid()
     query.mi_board_name = board_name
-    if (query.mi_board_name !== "すべて") {
+    if (query.mi_board_name !== t("MI_ALL_TITLE")) {
         query.use_mi_board_name = true
     } else {
         query.use_mi_board_name = false

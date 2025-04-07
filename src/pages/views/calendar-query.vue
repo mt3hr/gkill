@@ -1,12 +1,13 @@
 <template>
     <v-row class="pa-0 ma-0">
         <v-col cols="auto" class="pa-0 ma-0">
-            <v-checkbox v-model="query.use_calendar" @change="clicked_use_calendar_checkbox" label="日付" hide-details
-                class="pb-0 mb-0" />
+            <v-checkbox v-model="query.use_calendar" @change="clicked_use_calendar_checkbox"
+                :label="$t('CALENDAR_QUERY_TITLE')" hide-details class="pb-0 mb-0" />
         </v-col>
         <v-spacer class="pa-0 ma-0" />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
-            <v-btn dark color="secondary" @click="clicked_clear_calendar_button" hide-details>クリア</v-btn>
+            <v-btn dark color="secondary" @click="clicked_clear_calendar_button"
+                hide-details>{{ $t("CLEAR_TITLE") }}</v-btn>
         </v-col>
     </v-row>
     <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates"

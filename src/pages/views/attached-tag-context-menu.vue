@@ -2,16 +2,16 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item @click="show_edit_tag_dialog()">
-                <v-list-item-title>タグ編集</v-list-item-title>
+                <v-list-item-title>{{ $t("TAG_CONTEXTMENU_EDIT_TAG") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_tag_histories_dialog()">
-                <v-list-item-title>タグ履歴</v-list-item-title>
+                <v-list-item-title>{{ $t("TAG_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="copy_id()">
-                <v-list-item-title>タグIDコピー</v-list-item-title>
+                <v-list-item-title>{{ $t("TAG_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_confirm_delete_tag_dialog()">
-                <v-list-item-title>タグ削除</v-list-item-title>
+                <v-list-item-title>{{ $t("TAG_CONTEXTMENU_DELETE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -87,6 +87,9 @@ import ConfirmDeleteTagDialog from '../dialogs/confirm-delete-tag-dialog.vue'
 import TagHistoriesDialog from '../dialogs/tag-histories-dialog.vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const edit_tag_dialog = ref<InstanceType<typeof EditTagDialog> | null>(null);
 const confirm_delete_tag_dialog = ref<InstanceType<typeof ConfirmDeleteTagDialog> | null>(null);
@@ -123,7 +126,7 @@ async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.tag.id)
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_tag_id
-    message.message = "タグIDをコピーしました"
+    message.message = t("COPIED_ID_MESSAGE")
     const messages = new Array<GkillMessage>()
     messages.push(message)
     emits('received_messages', messages)

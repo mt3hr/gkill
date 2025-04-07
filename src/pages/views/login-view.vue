@@ -3,27 +3,26 @@
         <v-container class="pa-0 ma-0">
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto">
-                    <div class="welcome">ようこそ</div>
+                    <div class="welcome">{{ $t("WELCOME_TITLE") }}</div>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" label="ユーザID" v-model="user_id"
-                        autofocus />
+                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" :label="$t('USER_ID_TITLE')"
+                        v-model="user_id" autofocus />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" label="パスワード" :type="'password'"
-                        v-model="password" />
+                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" :label="$t('PASSWORD_TITLE')"
+                        :type="'password'" v-model="password" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto">
                     <v-btn dark class="login_button" color="primary" @click="try_login(user_id, password_sha256)">
-                        ログイン
-                    </v-btn>
+                        {{ $t("LOGIN_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-container>
@@ -37,6 +36,9 @@ import { LoginRequest } from '@/classes/api/req_res/login-request';
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const user_id: Ref<string> = ref("")
 const password: Ref<string> = ref("")
@@ -72,7 +74,7 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
     if (user_id === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.user_id_is_blank
-        error.error_message = "ユーザIDを入力してください"
+        error.error_message = t("REQUEST_INPUT_USER_ID_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -81,7 +83,7 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
     if (password.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.password_is_blank
-        error.error_message = "パスワードを入力してください"
+        error.error_message = t("REQUEST_INPUT_PASSWORD_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

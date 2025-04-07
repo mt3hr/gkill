@@ -33,7 +33,9 @@ import MiView from './views/mi-view.vue'
 import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { useTheme } from 'vuetify'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const theme = useTheme()
 
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);

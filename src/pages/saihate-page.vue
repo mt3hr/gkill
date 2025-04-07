@@ -2,7 +2,7 @@
     <div class="saihate_view_wrap">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
-            <v-toolbar-title>さいはて</v-toolbar-title>
+            <v-toolbar-title>{{ $t("SAIHATE_PAGE_TITLE") }}</v-toolbar-title>
         </v-app-bar>
         <v-main class="main">
             <div class="overlay_target">
@@ -17,28 +17,28 @@
                     </template>
                     <v-list>
                         <v-list-item @click="show_kftl_dialog()">
-                            <v-list-item-title>kftl</v-list-item-title>
+                            <v-list-item-title>{{ $t("KFTL_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_mkfl_dialog()">
-                            <v-list-item-title>mkfl</v-list-item-title>
+                            <v-list-item-title>{{ $t("MKFL_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_urlog_dialog()">
-                            <v-list-item-title>urlog</v-list-item-title>
+                            <v-list-item-title>{{ $t("URLOG_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_timeis_dialog()">
-                            <v-list-item-title>timeis</v-list-item-title>
+                            <v-list-item-title>{{ $t("TIMEIS_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_mi_dialog()">
-                            <v-list-item-title>mi</v-list-item-title>
+                            <v-list-item-title>{{ $t("MI_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_nlog_dialog()">
-                            <v-list-item-title>nlog</v-list-item-title>
+                            <v-list-item-title>{{ $t("NLOG_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_lantana_dialog()">
-                            <v-list-item-title>lantana</v-list-item-title>
+                            <v-list-item-title>{{ $t("LANTANA_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_upload_file_dialog()">
-                            <v-list-item-title>アップロード</v-list-item-title>
+                            <v-list-item-title>{{ $t("UPLOAD_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                     </v-list>
                 </v-menu>
@@ -106,7 +106,9 @@ import kftlDialog from './dialogs/kftl-dialog.vue'
 import mkflDialog from './dialogs/mkfl-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import { useTheme } from 'vuetify'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const theme = useTheme()
 
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
