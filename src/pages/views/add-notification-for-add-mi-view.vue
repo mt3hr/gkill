@@ -1,12 +1,14 @@
 <template>
     <v-card class="pa-0 ma-0">
-        <v-textarea v-model="content_value" label="通知内容" />
+        <v-textarea v-model="content_value" :label="$t('NOTIFICATION_CONTENT_TITLE')" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>通知日時</label>
-                <input class="input date" type="date" v-model="notification_date" label="日付" />
-                <input class="input time" type="time" v-model="notification_time" label="時刻" />
-                <v-btn dark color="secondary" @click="reset_notification_date_time()">リセット</v-btn>
+                <label>{{ $t("NOTIFICATION_DATE_TIME_TITLE") }}</label>
+                <input class="input date" type="date" v-model="notification_date"
+                    :label="$t('NOTIFICATION_DATE_TITLE')" />
+                <input class="input time" type="time" v-model="notification_time"
+                    :label="$t('NOTIFICATION_TIME_TITLE')" />
+                <v-btn dark color="secondary" @click="reset_notification_date_time()">{{ $t("RESET_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -20,6 +22,9 @@ import { Notification } from '@/classes/datas/notification'
 import moment from 'moment'
 import type { AddNotificationForAddMiViewProps } from './add-notification-for-add-mi-view-props'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<AddNotificationForAddMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -34,7 +39,7 @@ async function get_notification(): Promise<Notification | null> {
     if (content_value.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.notification_content_is_blank
-        error.error_message = "通知内容が未入力です"
+        error.error_message = t("NOTIFICATION_CONTENT_IS_BLANK_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -44,7 +49,7 @@ async function get_notification(): Promise<Notification | null> {
     if (notification_date.value === "" || notification_time.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.notification_time_is_blank
-        error.error_message = "通知日付付または通知時刻が入力されていません"
+        error.error_message = t("NOTIFICATION_DATE_TIME_IS_BLANK_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

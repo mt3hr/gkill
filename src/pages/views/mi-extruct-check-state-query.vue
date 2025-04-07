@@ -2,15 +2,17 @@
     <div>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-checkbox v-model="use_mi_check_state" readonly hide-details class="pa-0 ma-0" label="チェック状態" />
+                <v-checkbox v-model="use_mi_check_state" readonly hide-details class="pa-0 ma-0"
+                    :label="$t('CHECK_STATE_TITLE')" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0">
-                <v-btn dark color="secondary" @click="emits('request_clear_check_state')" hide-details>クリア</v-btn>
+                <v-btn dark color="secondary" @click="emits('request_clear_check_state')" hide-details>{{
+                    $t("CLEAR_TITLE") }}</v-btn>
             </v-col>
         </v-row>
-        <v-select class="select" v-model="check_state" :items="check_states" :label="'チェック状態'" item-title="name"
-            item-value="value" />
+        <v-select class="select" v-model="check_state" :items="check_states" :label="$t('CHECK_STATE_TITLE')"
+            item-title="name" item-value="value" />
     </div>
 </template>
 <script lang="ts" setup>
@@ -18,6 +20,9 @@ import { nextTick, type Ref, ref, watch } from 'vue'
 import { MiCheckState } from '@/classes/api/find_query/mi-check-state'
 import type { miExtructCheckStateQueryEmits } from './mi-extruct-check-state-query-emits'
 import type { miExtructCheckStateQueryProps } from './mi-extruct-check-state-query-props'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const props = defineProps<miExtructCheckStateQueryProps>()
 const emits = defineEmits<miExtructCheckStateQueryEmits>()
 const query = ref(props.find_kyou_query.clone())
@@ -50,15 +55,15 @@ function load_check_state(): void {
 
 const check_states: Ref<Array<{ name: string, value: MiCheckState }>> = ref([
     {
-        name: "すべて",
+        name: t("MI_CHECK_STATE_ALL_TITLE"),
         value: MiCheckState.all,
     },
     {
-        name: "チェック済み",
+        name: t("MI_CHECK_STATE_CHECKED_TITLE"),
         value: MiCheckState.checked,
     },
     {
-        name: "未チェック",
+        name: t("MI_CHECK_STATE_UNCHECKED_TITLE"),
         value: MiCheckState.uncheck,
     }
 ])

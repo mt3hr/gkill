@@ -1,19 +1,19 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            タグ追加
+            {{ $t("ADD_TAG_STRUCT_TITLE") }}
         </v-card-title>
-        <v-text-field class="input" type="text" v-model="tag_name" label="タグ名" />
-        <v-checkbox v-model="check_when_inited" hide-detail label="初期化時チェック" />
-        <v-checkbox v-model="is_force_hide" hide-detail label="非表示優先" />
+        <v-text-field class="input" type="text" v-model="tag_name" :label="$t('TAG_TITLE')" />
+        <v-checkbox v-model="check_when_inited" hide-detail :label="$t('CHECK_WHEN_INITED_TITLE')" />
+        <v-checkbox v-model="is_force_hide" hide-detail :label="$t('IS_FORCE_HIDE_TITLE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="emits_tag_name">追加</v-btn>
+                    <v-btn dark color="primary" @click="emits_tag_name">{{ $t('ADD_TITLE') }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t('CANCEL_TITLE') }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -26,6 +26,9 @@ import type { AddNewTagStructElementViewEmits } from './add-new-tag-struct-eleme
 import type { AddNewTagStructElementViewProps } from './add-new-tag-struct-element-view-props'
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<AddNewTagStructElementViewProps>()
 const emits = defineEmits<AddNewTagStructElementViewEmits>()
@@ -40,7 +43,7 @@ function emits_tag_name(): void {
     if (tag_name.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.tag_struct_title_is_blank
-        error.error_message = "タグ名が入力されていません"
+        error.error_message = t("TAG_IS_BLANK_MESSAGE")
         emits('received_errors', [error])
         return
     }

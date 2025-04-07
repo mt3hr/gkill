@@ -3,29 +3,30 @@
         <v-container class="pa-0 ma-0">
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto">
-                    <div class="welcome">ようこそ</div>
+                    <div class="welcome">{{ $t("WELCOME_TITLE") }}</div>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field label="ユーザID" v-model="user_id" autofocus :readonly="!(!useRoute().query.user_id)" />
+                    <v-text-field :label="$t('USER_ID_TITLE')" v-model="user_id" autofocus
+                        :readonly="!(!useRoute().query.user_id)" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field label="パスワード" :type="'password'" v-model="password" />
+                    <v-text-field :label="$t('PASSWORD_TITLE')" :type="'password'" v-model="password" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field label="パスワード（再）" :type="'password'" v-model="password_retype" />
+                    <v-text-field :label="$t('PASSWORD_RETYPE_TITLE')" :type="'password'" v-model="password_retype" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto">
                     <v-btn dark class="login_button" color="primary" @click="try_set_new_password()">
-                        パスワード再設定
+                        {{ $t("RESET_PASSWORD_TITLE") }}
                     </v-btn>
                 </v-col>
             </v-row>
@@ -43,6 +44,9 @@ import { SetNewPasswordRequest } from '@/classes/api/req_res/set-new-password-re
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const password_reset_token: Ref<string> = ref(useRoute().query.reset_token ? useRoute().query.reset_token!.toString() : "")
 const user_id: Ref<string> = ref(useRoute().query.user_id ? useRoute().query.user_id!.toString() : "")
@@ -70,7 +74,7 @@ nextTick(() => {
     if (user_id.value === "admin") {
         const message = new GkillMessage()
         message.message_code = GkillMessageCodes.set_admin_password_request
-        message.message = "管理アカウントのパスワードを設定してください"
+        message.message = t("RESET_SET_ADMIN_PASSWORD_MESSAGE")
         emits('received_messages', [message])
     }
 })
@@ -82,7 +86,7 @@ async function try_set_new_password(): Promise<boolean> {
     if (user_id.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.user_id_is_blank
-        error.error_message = "ユーザIDを入力してください"
+        error.error_message = t("REQUEST_INPUT_USER_ID_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -91,7 +95,7 @@ async function try_set_new_password(): Promise<boolean> {
     if (password.value === "" || password_retype.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.password_is_blank
-        error.error_message = "パスワードを入力してください"
+        error.error_message = t("REQUEST_INPUT_PASSWORD_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -100,7 +104,7 @@ async function try_set_new_password(): Promise<boolean> {
     if (password.value !== password_retype.value) {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.password_retype_is_blank
-        error.error_message = "再入力されたパスワードが一致しません"
+        error.error_message = t("INVALID_RETYPED_PASSWORD_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

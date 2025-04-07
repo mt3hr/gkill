@@ -6,7 +6,6 @@
 <script setup lang="ts">
 import type { RepStructElementEmits } from './rep-struct-element-emits'
 import type { RepStructElementProps } from './rep-struct-element-props'
-import ApplicationConfigStructContextMenu from './application-config-struct-context-menu.vue'
 
 defineProps<RepStructElementProps>()
 defineEmits<RepStructElementEmits>()

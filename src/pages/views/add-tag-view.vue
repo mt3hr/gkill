@@ -3,19 +3,21 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>タグ追加</span>
+                    <span>{{ $t("ADD_TAG_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                        color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-model="tag_name" label="タグ" autofocus :readonly="is_requested_submit" />
+        <v-text-field v-model="tag_name" :label="$t('TAG_TITLE')" autofocus :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">保存</v-btn>
+                <v-btn dark color="primary" @click="() => save()"
+                    :disabled="is_requested_submit">{{ $t('SAVE_TITLE') }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -56,6 +58,9 @@ import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const is_requested_submit = ref(false)
 
@@ -72,7 +77,7 @@ async function save(): Promise<void> {
         if (tag_name.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.tag_is_blank
-            error.error_message = "タグが未入力です"
+            error.error_message = t("TAG_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

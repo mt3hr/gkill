@@ -2,16 +2,16 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item @click="show_edit_text_dialog()">
-                <v-list-item-title>テキスト編集</v-list-item-title>
+                <v-list-item-title>{{ $t("TEXT_CONTEXTMENU_EDIT_TEXT") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_text_histories_dialog()">
-                <v-list-item-title>テキスト履歴</v-list-item-title>
+                <v-list-item-title>{{ $t("TEXT_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="copy_id()">
-                <v-list-item-title>テキストIDコピー</v-list-item-title>
+                <v-list-item-title>{{ $t("TEXT_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_confirm_delete_text_dialog()">
-                <v-list-item-title>テキスト削除</v-list-item-title>
+                <v-list-item-title>{{ $t("TEXT_CONTEXTMENU_DELETE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -89,6 +89,9 @@ import TextHistoriesDialog from '../dialogs/text-histories-dialog.vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const edit_text_dialog = ref<InstanceType<typeof EditTextDialog> | null>(null);
 const confirm_delete_text_dialog = ref<InstanceType<typeof ConfirmDeleteTextDialog> | null>(null);
@@ -125,7 +128,7 @@ async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.text.id)
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_text_id
-    message.message = "テキストIDをコピーしました"
+    message.message = t("COPIED_ID_MESSAGE")
     const messages = new Array<GkillMessage>()
     messages.push(message)
     emits('received_messages', messages)

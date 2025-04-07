@@ -1,14 +1,14 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            KFTLテンプレート削除
+            {{ $t("DELETE_KFTL_TEMPLATE_TITLE") }}
         </v-card-title>
         {{ kftl_template_struct.title }}
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary"
-                    @click="emits('requested_delete_kftl_template', kftl_template_struct.id)">削除</v-btn>
+                <v-btn dark color="primary" @click="emits('requested_delete_kftl_template', kftl_template_struct.id)">{{
+                    $t("DELETE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>

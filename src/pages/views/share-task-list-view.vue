@@ -1,15 +1,15 @@
 <template>
     <v-card>
         <v-card-title>
-            タスク一覧共有
+            {{ $t("SHARE_MI_TASK_TITLE") }}
         </v-card-title>
-        <div>現在の検索条件でタスク一覧を共有します。</div>
-        <v-text-field v-model="share_title" label="タイトル" />
-        <v-checkbox v-model="share_time_only" label="タスク有無と時刻のみ共有" />
+        <div>{{ $t("SHARE_MI_TASK_MESSAGE") }}</div>
+        <v-text-field v-model="share_title" :label="$t('SHARE_MI_TASK_TITLE_TITLE')" />
+        <v-checkbox v-model="share_time_only" :label="$t('SHARE_MI_TASK_TIME_ONLY_TITLE')" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col class="pa-0 ma-0" cols="auto">
-                <v-btn dark color="primary" @click="share()">OK</v-btn>
+                <v-btn dark color="primary" @click="share()">{{ $t("OK_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -21,6 +21,9 @@ import type { ShareTaskListViewProps } from './share-task-list-view-props'
 import { AddShareMiTaskListInfoRequest } from '@/classes/api/req_res/add-share-mi-task-list-info-request';
 import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const props = defineProps<ShareTaskListViewProps>()
 const emits = defineEmits<ShareTaskListViewEmits>()
 

@@ -3,15 +3,16 @@
         <v-card-title :height="title_height">
             <v-row>
                 <v-col cols="auto">
-                    記録追加
+                    {{ $t("KFTL_ADD_KYOU_TITLE") }}
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto">
-                    <v-btn dark color="primary" @click="show_kftl_template_dialog"
-                        :disabled="is_requested_submit">テンプレート</v-btn>
+                    <v-btn dark color="primary" @click="show_kftl_template_dialog" :disabled="is_requested_submit">{{
+                        $t("KFTL_TEMPLATE_TITLE") }}</v-btn>
                 </v-col>
                 <v-col cols="auto">
-                    <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">保存</v-btn>
+                    <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -57,6 +58,9 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const kftl_template_dialog = ref<InstanceType<typeof KFTLTemplateDialog> | null>(null);
 
 const text_area_content: Ref<string> = ref("")
@@ -187,7 +191,7 @@ async function submit(): Promise<void> {
         if (invalid_line_numbers.value.length != 0) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kftl_has_invalid_line
-            error.error_message = "おかしな行があります"
+            error.error_message = t("KFTL_FOUND_INVALID_LINE_MESSAGE")
             emits('received_errors', [error])
             return
         }
@@ -210,7 +214,7 @@ async function submit(): Promise<void> {
         clear()
         const message = new GkillMessage()
         message.message_code = GkillMessageCodes.saved_kftls
-        message.message = "保存しました"
+        message.message = t("SAVED_MESSAGE")
         emits('received_messages', [message])
         emits('saved_kyou_by_kftl', last_added_request_time)
     } finally {

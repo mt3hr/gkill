@@ -1,10 +1,10 @@
 <template>
     <v-card>
         <v-card-title>
-            タグ構造
+            {{ $t("TAG_STRUCT_TITLE") }}
         </v-card-title>
         <div class="tag_struct_root">
-            <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="'タグ'"
+            <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="$t('TAG_TITLE')"
                 :is_open="true" :struct_obj="cloned_application_config.parsed_tag_struct" :is_editable="true"
                 :is_root="true" :is_show_checkbox="false"
                 @dblclicked_item="(e: MouseEvent, id: string | null) => { if (id) show_edit_tag_struct_dialog(id) }"
@@ -13,19 +13,19 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_add_new_tag_struct_element_dialog">タグ追加</v-btn>
+                    <v-btn dark color="primary" @click="show_add_new_tag_struct_element_dialog">{{ $t("ADD_TAG_TITLE") }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_add_new_folder_dialog">フォルダ追加</v-btn>
+                    <v-btn dark color="primary" @click="show_add_new_folder_dialog">{{ $t("ADD_FOLDER_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="apply" color="primary">適用</v-btn>
+                    <v-btn dark @click="apply" color="primary">{{ $t("APPLY_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">キャンセル</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

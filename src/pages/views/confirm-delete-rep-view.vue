@@ -1,15 +1,16 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            Rep削除
+            {{ $t("DELETE_REP_TITLE") }}
         </v-card-title>
-        <div>削除しますか？</div>
+        <div>{{ $t("CONFIRM_DELETE_MESSAGE") }}</div>
         <div>{{ props.repository.file }}</div>
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary"
-                    @click="emits('requested_delete_rep', repository); emits('requested_close_dialog')">削除</v-btn>
+                    @click="emits('requested_delete_rep', repository); emits('requested_close_dialog')">{{
+                        $t("DELETE_MESSAGE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>

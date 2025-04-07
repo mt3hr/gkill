@@ -1,9 +1,9 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            削除
+            {{ $t("DELETE_SHARE_MI_TITLE") }}
         </v-card-title>
-        <div>削除しますか？</div>
+        <div>{{ $t("CONFIRM_DELETE_MESSAGE") }}</div>
         <div>{{ share_mi_task_list_info.share_title }}</div>
         <v-row class="pa-0 ma-0">
             <v-spacer />
