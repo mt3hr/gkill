@@ -4,6 +4,7 @@ import { RouterView } from 'vue-router'
 import { VLocaleProvider } from 'vuetify/components';
 import { useTheme } from 'vuetify'
 import { GkillAPI } from './classes/api/gkill-api';
+import SaihateStarsOverlay from './pages/views/saihate-stars-overlay.vue'
 
 const theme = useTheme()
 const use_dark_theme = GkillAPI.get_gkill_api().get_use_dark_theme()
@@ -16,21 +17,25 @@ if (use_dark_theme) {
 const locale: Ref<string> = ref(window.navigator.language)
 </script>
 
+
 <template>
-  <table>
-    <tr>
-      <td>
-        <div id="control-height"></div>
-      </td>
-      <td>
-        <v-app>
-          <VLocaleProvider :locale="locale">
-            <RouterView />
-          </VLocaleProvider>
-        </v-app>
-      </td>
-    </tr>
-  </table>
+  <div>
+    <SaihateStarsOverlay v-if="theme.global.name.value === 'gkill_dark_theme'" />
+    <table>
+      <tr>
+        <td>
+          <div id="control-height"></div>
+        </td>
+        <td>
+          <v-app>
+            <VLocaleProvider :locale="locale">
+              <RouterView />
+            </VLocaleProvider>
+          </v-app>
+        </td>
+      </tr>
+    </table>
+  </div>
 </template>
 
 <style scoped></style>

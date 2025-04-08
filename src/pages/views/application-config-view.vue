@@ -53,7 +53,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("URLOG_BOOKMARKLET_ADDRESS_TITLE") }}
+                        {{ $t("RYKV_IMAGE_LIST_COLUMN_NUMBER_TITLE") }}
                     </td>
                     <td>
                         <v-text-field type="number" min="1" max="10" width="400"
@@ -99,11 +99,11 @@
                 <tr>
                     <td>
                         <v-btn dark color="primary" @click="show_edit_tag_dialog">{{ $t("EDIT_TAG_STRUCT_TITLE")
-                            }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{ $t("EDIT_REP_STRUCT_TITLE")
-                            }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{ $t("EDIT_DEVICE_STRUCT_TITLE")
                         }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{ $t("EDIT_REP_STRUCT_TITLE")
+                        }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{ $t("EDIT_DEVICE_STRUCT_TITLE")
+                            }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                             $t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_kftl_template_dialog">{{
@@ -119,8 +119,8 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary"
-                        @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE") }}</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
