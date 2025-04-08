@@ -26,7 +26,7 @@
                 <v-window-item key="gps_log_file" :eager="true">
                     <v-card>
                         <v-card-title>
-                            {{ $t("FILE_NAME_COLLITION_TITLE") }}
+                            {{ $t("FILE_NAME_COLLISION_TITLE") }}
                         </v-card-title>
                         <v-radio-group v-model="conflict_behavior_gps_file">
                             <v-radio :label="$t('MERGE_TITLE')" :value="'merge'" />
