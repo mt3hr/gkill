@@ -148,14 +148,15 @@
                             @updated_notification="(updated_notification) => { }" />
                     </td>
                     <td valign="top">
-                        <v-btn class="rounded-sm mx-auto" :height="app_content_height.valueOf()" :width="30"
-                            :color="'primary'" @click="async () => {
+                        <v-btn class="rykv_add_column_button rounded-sm mx-auto" :height="app_content_height.valueOf()"
+                            :width="30" :color="'primary'" @click="async () => {
                                 add_list_view()
                                 skip_search_this_tick = true
                                 if (application_config.rykv_hot_reload) {
                                     search(querys.length - 1, querys[querys.length - 1], true)
                                 }
-                            }" icon="mdi-plus" variant="text" />
+                            }" icon="mdi-plus" variant="text"
+                            :style="{ background: 'rgb(var(--v-theme-background))' }" />
                     </td>
 
                     <td valign="top" v-if="is_show_kyou_detail_view">
