@@ -67,7 +67,7 @@ import { UpdateIDFKyouRequest } from '@/classes/api/req_res/update-idf-kyou-requ
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const is_requested_submit = ref(false)
 
@@ -100,7 +100,7 @@ async function save(): Promise<void> {
         if (!idf_kyou) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_idf_kyou_is_null
-            error.error_message = t("CLIENT_IDF_KYOU_IS_NULL_MESSAGE")
+            error.error_message = i18n.global.t("CLIENT_IDF_KYOU_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -111,7 +111,7 @@ async function save(): Promise<void> {
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.idf_kyou_related_time_is_blank
-            error.error_message = t("IDF_KYOU_DATE_TIME_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("IDF_KYOU_DATE_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -123,7 +123,7 @@ async function save(): Promise<void> {
             moment(idf_kyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.idf_kyou_is_no_update
-            error.error_message = t("IDF_KYOU_IS_NO_UPDATE_MESSAGE")
+            error.error_message = i18n.global.t("IDF_KYOU_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

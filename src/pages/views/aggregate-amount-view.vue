@@ -21,7 +21,7 @@ import type { AggregateAmountViewProps } from './aggregate-amount-view-props';
 import type { KyouViewEmits } from './kyou-view-emits';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 defineProps<AggregateAmountViewProps>()
 defineEmits<KyouViewEmits>()
@@ -33,7 +33,7 @@ function format_time(time: Date) {
     let hour: string | number = time.getHours()
     let minute: string | number = time.getMinutes()
     let second: string | number = time.getSeconds()
-    const day_of_week = [t("SUNDAY_TITLE"), t("MONDAY_TITLE"), t("TUESDAY_TITLE"), t("WEDNESDAY_TITLE"), t("THURSDAY_TITLE"), t("FRIDAY_TITLE"), t("SATURDAY_TITLE")][time.getDay()]
+    const day_of_week = [i18n.global.t("SUNDAY_TITLE"), i18n.global.t("MONDAY_TITLE"), i18n.global.t("TUESDAY_TITLE"), i18n.global.t("WEDNESDAY_TITLE"), i18n.global.t("THURSDAY_TITLE"), i18n.global.t("FRIDAY_TITLE"), i18n.global.t("SATURDAY_TITLE")][time.getDay()]
     month = ('0' + month).slice(-2)
     date = ('0' + date).slice(-2)
     hour = ('0' + hour).slice(-2)

@@ -32,7 +32,7 @@ import type { KFTLTemplateViewProps } from './kftl-template-view-props';
 import type { KFTLTemplateViewEmits } from './kftl-template-view-emits';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const child_template_dialogs: Ref<Array<any>> = ref(new Array<any>())
 

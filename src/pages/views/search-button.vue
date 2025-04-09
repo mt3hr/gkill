@@ -6,7 +6,7 @@
 import type { SearchButtonEmits } from './search-button-emits'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const emits = defineEmits<SearchButtonEmits>()
 </script>

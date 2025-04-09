@@ -18,6 +18,7 @@ import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-r
 import { MiBoardStructElementData } from './mi-board-struct-element-data'
 import { MiBoardStruct } from './mi-board-struct'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
+import { generate_rep_type_map } from './rep-type-map'
 
 export class ApplicationConfig {
     is_loaded: boolean
@@ -357,6 +358,7 @@ export class ApplicationConfig {
                 const struct_element = new KFTLTemplateElementData()
                 struct_element.id = item.id
                 struct_element.title = item.title
+                struct_element.name = item.title
                 struct_element.key = item.title
                 struct_element.is_dir = item.is_dir
                 struct_element.is_open_default = item.is_open_default
@@ -399,6 +401,7 @@ export class ApplicationConfig {
                 if (parent_struct) {
                     const struct_element = new KFTLTemplateElementData()
                     struct_element.id = item.id
+                    struct_element.name = item.title
                     struct_element.title = item.title
                     struct_element.key = item.title
                     struct_element.is_dir = item.is_dir
@@ -437,6 +440,7 @@ export class ApplicationConfig {
                 struct_element.indeterminate = false
                 struct_element.is_checked = item.check_when_inited
                 struct_element.is_force_hide = item.is_force_hide
+                struct_element.name = item.tag_name
                 struct_element.key = item.tag_name
                 struct_element.tag_name = item.tag_name
                 struct_element.is_dir = item.is_dir
@@ -482,6 +486,7 @@ export class ApplicationConfig {
                     struct_element.indeterminate = false
                     struct_element.is_checked = item.check_when_inited
                     struct_element.is_force_hide = item.is_force_hide
+                    struct_element.name = item.tag_name
                     struct_element.key = item.tag_name
                     struct_element.tag_name = item.tag_name
                     struct_element.is_dir = item.is_dir
@@ -527,6 +532,7 @@ export class ApplicationConfig {
                 struct_element.indeterminate = false
                 struct_element.is_checked = item.check_when_inited
                 struct_element.ignore_check_rep_rykv = item.ignore_check_rep_rykv
+                struct_element.name = item.rep_name
                 struct_element.key = item.rep_name
                 struct_element.rep_name = item.rep_name
                 struct_element.is_dir = item.is_dir
@@ -572,6 +578,7 @@ export class ApplicationConfig {
                     struct_element.indeterminate = false
                     struct_element.is_checked = item.check_when_inited
                     struct_element.ignore_check_rep_rykv = item.ignore_check_rep_rykv
+                    struct_element.name = item.rep_name
                     struct_element.key = item.rep_name
                     struct_element.rep_name = item.rep_name
                     struct_element.is_dir = item.is_dir
@@ -616,6 +623,7 @@ export class ApplicationConfig {
                 struct_element.id = item.id
                 struct_element.indeterminate = false
                 struct_element.is_checked = item.check_when_inited
+                struct_element.name = item.device_name
                 struct_element.key = item.device_name
                 struct_element.device_name = item.device_name
                 struct_element.is_dir = item.is_dir
@@ -660,6 +668,7 @@ export class ApplicationConfig {
                     struct_element.id = item.id
                     struct_element.indeterminate = false
                     struct_element.is_checked = item.check_when_inited
+                    struct_element.name = item.device_name
                     struct_element.key = item.device_name
                     struct_element.device_name = item.device_name
                     struct_element.is_dir = item.is_dir
@@ -704,10 +713,17 @@ export class ApplicationConfig {
                 struct_element.id = item.id
                 struct_element.indeterminate = false
                 struct_element.is_checked = item.check_when_inited
+                struct_element.name = item.rep_type_name
                 struct_element.key = item.rep_type_name
                 struct_element.rep_type_name = item.rep_type_name
                 struct_element.is_dir = item.is_dir
                 struct_element.is_open_default = item.is_open_default
+
+                // 訳
+                const rep_type_name_in_locale = (await generate_rep_type_map()).get(item.rep_type_name)
+                if (rep_type_name_in_locale && "" !== rep_type_name_in_locale) {
+                    struct_element.name = rep_type_name_in_locale
+                }
 
                 struct.children.push(struct_element)
                 added_list.push(item)
@@ -748,10 +764,17 @@ export class ApplicationConfig {
                     struct_element.id = item.id
                     struct_element.indeterminate = false
                     struct_element.is_checked = item.check_when_inited
+                    struct_element.name = item.rep_type_name
                     struct_element.key = item.rep_type_name
                     struct_element.rep_type_name = item.rep_type_name
                     struct_element.is_dir = item.is_dir
                     struct_element.is_open_default = item.is_open_default
+
+                    // 訳
+                    const rep_type_name_in_locale = (await generate_rep_type_map()).get(item.rep_type_name)
+                    if (rep_type_name_in_locale && "" !== rep_type_name_in_locale) {
+                        struct_element.name = rep_type_name_in_locale
+                    }
 
                     if (!parent_struct.children) {
                         parent_struct.children = new Array<RepTypeStructElementData>()
@@ -794,6 +817,7 @@ export class ApplicationConfig {
                 struct_element.id = item.id
                 struct_element.indeterminate = false
                 struct_element.is_checked = item.check_when_inited
+                struct_element.name = item.board_name
                 struct_element.key = item.board_name
 
                 struct.children.push(struct_element)
@@ -835,6 +859,7 @@ export class ApplicationConfig {
                     struct_element.id = item.id
                     struct_element.indeterminate = false
                     struct_element.is_checked = item.check_when_inited
+                    struct_element.name = item.board_name
                     struct_element.key = item.board_name
                     struct_element.board_name = item.board_name
 

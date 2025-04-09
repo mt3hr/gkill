@@ -84,7 +84,7 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const allocate_rep_dialog = ref<InstanceType<typeof AllocateRepDialog> | null>(null);
 const confirm_reset_password_dialog = ref<InstanceType<typeof ConfirmResetPasswordDialog> | null>(null);
@@ -111,7 +111,7 @@ async function update_is_enable_account(account: Account, is_enable: boolean): P
         account.is_enable = true
         const error = new GkillError()
         error.error_code = GkillErrorCodes.can_not_disable_self_account
-        error.error_message = t("CAN_NOT_DISABLE_SELF_ACCOUNT_MESSAGE")
+        error.error_message = i18n.global.t("CAN_NOT_DISABLE_SELF_ACCOUNT_MESSAGE")
         emits('received_errors', [error])
         return
     }
