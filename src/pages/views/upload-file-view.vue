@@ -63,7 +63,7 @@ import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-r
 import type { Repository } from '@/classes/datas/config/repository'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const decide_related_time_uploaded_file_dialog = ref<InstanceType<typeof DecideRelatedTimeUploadedFileDialog> | null>(null);
 

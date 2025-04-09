@@ -3,6 +3,7 @@
 import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
 
 export class RepTypeStructElementData implements FoldableStructModel {
+    name: string
 
     seq_in_parent: number
 
@@ -25,6 +26,7 @@ export class RepTypeStructElementData implements FoldableStructModel {
     is_open_default: boolean
 
     constructor() {
+        this.name = ""
         this.seq_in_parent = 0
         this.id = ""
         this.rep_type_name = ""

@@ -51,7 +51,7 @@ import { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const is_requested_submit = ref(false)
 
@@ -77,7 +77,7 @@ async function save(): Promise<void> {
         if (!nlog.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_nlog_is_null
-            error.error_message = t("CLIENT_NLOG_IS_NULL_MESSAGE")
+            error.error_message = i18n.global.t("CLIENT_NLOG_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -88,7 +88,7 @@ async function save(): Promise<void> {
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.nlog_related_time_is_blank
-            error.error_message = t("NLOG_DATE_TIME_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("NLOG_DATE_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -99,7 +99,7 @@ async function save(): Promise<void> {
         if (Number.isNaN(nlog_amount_value.value) || nlog_amount_value.value.toString() === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.nlog_amount_is_blank
-            error.error_message = t("NLOG_AMOUNT_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("NLOG_AMOUNT_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -110,7 +110,7 @@ async function save(): Promise<void> {
         if (nlog_shop_value.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.nlog_shop_name_is_blank
-            error.error_message = t("NLOG_SHOP_NAME_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("NLOG_SHOP_NAME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -121,7 +121,7 @@ async function save(): Promise<void> {
         if (nlog_title_value.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.nlog_title_is_blank
-            error.error_message = t("NLOG_TITLE_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("NLOG_TITLE_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

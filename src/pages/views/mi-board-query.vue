@@ -21,7 +21,7 @@ import { CheckState } from './check-state'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 
@@ -31,7 +31,7 @@ defineExpose({ get_board_name })
 
 const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
-const board_name: Ref<string> = ref(t("MI_ALL_TITLE"))
+const board_name: Ref<string> = ref(i18n.global.t("MI_ALL_TITLE"))
 
 const use_board = ref(true)
 

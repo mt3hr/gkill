@@ -60,7 +60,7 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const is_requested_submit = ref(false)
 
@@ -77,7 +77,7 @@ async function save(): Promise<void> {
         if (tag_name.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.tag_is_blank
-            error.error_message = t("TAG_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("TAG_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

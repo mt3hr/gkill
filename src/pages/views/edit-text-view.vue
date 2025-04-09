@@ -60,7 +60,7 @@ import type { Text } from '@/classes/datas/text';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const is_requested_submit = ref(false)
 
@@ -86,7 +86,7 @@ async function save(): Promise<void> {
         if (text_value.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.text_is_blank
-            error.error_message = t("TEXT_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("TEXT_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -97,7 +97,7 @@ async function save(): Promise<void> {
         if (cloned_text.value.text === text_value.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.text_is_no_update
-            error.error_message = t("TEXT_IS_NO_UPDATE_MESSAGE")
+            error.error_message = i18n.global.t("TEXT_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

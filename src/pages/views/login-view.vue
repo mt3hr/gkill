@@ -38,7 +38,7 @@ import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const user_id: Ref<string> = ref("")
 const password: Ref<string> = ref("")
@@ -74,7 +74,7 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
     if (user_id === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.user_id_is_blank
-        error.error_message = t("REQUEST_INPUT_USER_ID_MESSAGE")
+        error.error_message = i18n.global.t("REQUEST_INPUT_USER_ID_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -83,7 +83,7 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
     if (password.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.password_is_blank
-        error.error_message = t("REQUEST_INPUT_PASSWORD_MESSAGE")
+        error.error_message = i18n.global.t("REQUEST_INPUT_PASSWORD_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

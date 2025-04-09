@@ -24,7 +24,7 @@ import type { AddNotificationForAddMiViewProps } from './add-notification-for-ad
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const props = defineProps<AddNotificationForAddMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -39,7 +39,7 @@ async function get_notification(): Promise<Notification | null> {
     if (content_value.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.notification_content_is_blank
-        error.error_message = t("NOTIFICATION_CONTENT_IS_BLANK_MESSAGE")
+        error.error_message = i18n.global.t("NOTIFICATION_CONTENT_IS_BLANK_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -49,7 +49,7 @@ async function get_notification(): Promise<Notification | null> {
     if (notification_date.value === "" || notification_time.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.notification_time_is_blank
-        error.error_message = t("NOTIFICATION_DATE_TIME_IS_BLANK_MESSAGE")
+        error.error_message = i18n.global.t("NOTIFICATION_DATE_TIME_IS_BLANK_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
