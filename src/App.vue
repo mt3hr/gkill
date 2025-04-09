@@ -5,6 +5,7 @@ import { VLocaleProvider } from 'vuetify/components';
 import { useTheme } from 'vuetify'
 import { GkillAPI } from './classes/api/gkill-api';
 import SaihateStarsOverlay from './pages/views/saihate-stars-overlay.vue'
+import SnowFallOverlay from './pages/views/snow-fall-overlay.vue';
 
 const theme = useTheme()
 const use_dark_theme = GkillAPI.get_gkill_api().get_use_dark_theme()
@@ -21,6 +22,7 @@ const locale: Ref<string> = ref(window.navigator.language)
 <template>
   <div>
     <SaihateStarsOverlay v-if="theme.global.name.value === 'gkill_dark_theme'" />
+    <SnowFallOverlay v-if="theme.global.name.value === 'gkill_theme'" />
     <table>
       <tr>
         <td>
