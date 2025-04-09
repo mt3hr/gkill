@@ -28,7 +28,7 @@ import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const props = defineProps<AddNewKFTLTemplateStructElementViewProps>()
 const emits = defineEmits<AddNewKFTLTemplateStructElementViewEmits>()
@@ -42,7 +42,7 @@ function emits_kftl_template_name(): void {
     if (title.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.kftl_template_title_is_blank
-        error.error_message = t("KFTL_TEMPLATE_NAME_IS_BLANK_MESSAGE")
+        error.error_message = i18n.global.t("KFTL_TEMPLATE_NAME_IS_BLANK_MESSAGE")
         emits('received_errors', [error])
         return
     }
@@ -50,7 +50,7 @@ function emits_kftl_template_name(): void {
     if (template.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.kftl_template_content_is_blank
-        error.error_message = t("KFTL_TEMPLATE_CONTENT_IS_BLANK_MESSAGE")
+        error.error_message = i18n.global.t("KFTL_TEMPLATE_CONTENT_IS_BLANK_MESSAGE")
         emits('received_errors', [error])
         return
     }

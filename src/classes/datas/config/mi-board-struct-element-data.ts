@@ -5,6 +5,8 @@ import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
 
 export class MiBoardStructElementData implements FoldableStructModel {
 
+    name: string
+
     seq_in_parent: number
 
     id: string | null
@@ -28,6 +30,7 @@ export class MiBoardStructElementData implements FoldableStructModel {
     seq: number
 
     constructor() {
+        this.name = ""
         this.seq_in_parent = 0
         this.id = ""
         this.board_name = ""

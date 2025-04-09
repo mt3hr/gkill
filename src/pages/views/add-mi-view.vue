@@ -150,7 +150,7 @@ import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-r
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 const add_notification_views = ref<any>(null);
@@ -284,7 +284,7 @@ async function save(): Promise<void> {
         if (!mi.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_mi_is_null
-            error.error_message = t("CLIENT_MI_IS_NULL_MESSAGE")
+            error.error_message = i18n.global.t("CLIENT_MI_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -295,7 +295,7 @@ async function save(): Promise<void> {
         if (mi_title.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.mi_title_is_blank
-            error.error_message = t("MI_TITLE_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("MI_TITLE_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -308,7 +308,7 @@ async function save(): Promise<void> {
                 (mi_estimate_start_date.value !== "" && mi_estimate_start_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.mi_estimate_start_time_is_blank
-                error.error_message = t("MI_START_DATE_TIME_IS_BLANK_MESSAGE")
+                error.error_message = i18n.global.t("MI_START_DATE_TIME_IS_BLANK_MESSAGE")
                 const errors = new Array<GkillError>()
                 errors.push(error)
                 emits('received_errors', errors)
@@ -322,7 +322,7 @@ async function save(): Promise<void> {
                 (mi_estimate_end_date.value !== "" && mi_estimate_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.mi_estimate_end_time_is_blank
-                error.error_message = t("MI_END_DATE_TIME_IS_BLANK_MESSAGE")
+                error.error_message = i18n.global.t("MI_END_DATE_TIME_IS_BLANK_MESSAGE")
                 const errors = new Array<GkillError>()
                 errors.push(error)
                 emits('received_errors', errors)
@@ -336,7 +336,7 @@ async function save(): Promise<void> {
                 (mi_limit_date.value !== "" && mi_limit_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.mi_limit_time_is_blank
-                error.error_message = t("MI_LIMIT_DATE_TIME_IS_BLANK_MESSAGE")
+                error.error_message = i18n.global.t("MI_LIMIT_DATE_TIME_IS_BLANK_MESSAGE")
                 const errors = new Array<GkillError>()
                 errors.push(error)
                 emits('received_errors', errors)
@@ -352,7 +352,7 @@ async function save(): Promise<void> {
         ) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.mi_is_no_update
-            error.error_message = t("MI_IS_NO_UPDATE_MESSAGE")
+            error.error_message = i18n.global.t("MI_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

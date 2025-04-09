@@ -34,7 +34,7 @@ import { computed, ref, watch, type Ref } from 'vue';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const props = defineProps<MapQueryProps>()
 const emits = defineEmits<MapQueryEmits>()

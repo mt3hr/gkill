@@ -90,7 +90,7 @@ import type { AttachedNotificationContextMenuProps } from './attached-notificati
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const edit_notification_dialog = ref<InstanceType<typeof EditNotificationDialog> | null>(null);
 const confirm_delete_notification_dialog = ref<InstanceType<typeof ConfirmDeleteNotificationDialog> | null>(null);
@@ -127,7 +127,7 @@ async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.notification.id)
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_notification_id
-    message.message = t("COPIED_ID_MESSAGE")
+    message.message = i18n.global.t("COPIED_ID_MESSAGE")
     const messages = new Array<GkillMessage>()
     messages.push(message)
     emits('received_messages', messages)

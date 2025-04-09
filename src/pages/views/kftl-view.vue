@@ -60,7 +60,7 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 const kftl_template_dialog = ref<InstanceType<typeof KFTLTemplateDialog> | null>(null);
 
 const text_area_content: Ref<string> = ref("")
@@ -191,7 +191,7 @@ async function submit(): Promise<void> {
         if (invalid_line_numbers.value.length != 0) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kftl_has_invalid_line
-            error.error_message = t("KFTL_FOUND_INVALID_LINE_MESSAGE")
+            error.error_message = i18n.global.t("KFTL_FOUND_INVALID_LINE_MESSAGE")
             emits('received_errors', [error])
             return
         }
@@ -214,7 +214,7 @@ async function submit(): Promise<void> {
         clear()
         const message = new GkillMessage()
         message.message_code = GkillMessageCodes.saved_kftls
-        message.message = t("SAVED_MESSAGE")
+        message.message = i18n.global.t("SAVED_MESSAGE")
         emits('received_messages', [message])
         emits('saved_kyou_by_kftl', last_added_request_time)
     } finally {

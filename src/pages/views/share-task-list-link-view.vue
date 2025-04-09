@@ -28,7 +28,7 @@ import { UpdateShareMiTaskListInfoRequest } from '@/classes/api/req_res/update-s
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const props = defineProps<ShareTaskListLinkViewProps>()
 const emits = defineEmits<ShareTaskListLinkViewEmits>()

@@ -45,7 +45,7 @@ import { AddLantanaRequest } from '@/classes/api/req_res/add-lantana-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const edit_lantana_flowers = ref<InstanceType<typeof LantanaFlowersView> | null>(null);
 
@@ -70,7 +70,7 @@ async function save(): Promise<void> {
         if (!lantana.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_lantana_is_null
-            error.error_message = t("CLIENT_LANTANA_IS_NULL_MESSAGE")
+            error.error_message = i18n.global.t("CLIENT_LANTANA_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -81,7 +81,7 @@ async function save(): Promise<void> {
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.lantana_related_time_is_blank
-            error.error_message = t("LANTANA_DATE_TIME_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("LANTANA_DATE_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -92,7 +92,7 @@ async function save(): Promise<void> {
         if (lantana.value.mood === await edit_lantana_flowers.value?.get_mood()) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.lantana_is_no_update
-            error.error_message = t("LANTANA_IS_NO_UPDATE_MESSAGE")
+            error.error_message = i18n.global.t("LANTANA_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

@@ -78,7 +78,7 @@ import moment from 'moment'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const is_requested_submit = ref(false)
 
@@ -113,7 +113,7 @@ async function save(): Promise<void> {
         if (!kmemo) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_kmemo_is_null
-            error.error_message = t("CLIENT_KMEMO_IS_NULL_MESSAGE")
+            error.error_message = i18n.global.t("CLIENT_KMEMO_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -124,7 +124,7 @@ async function save(): Promise<void> {
         if (kmemo_value.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kmemo_content_is_blank
-            error.error_message = t("KMEMO_CONTENT_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("KMEMO_CONTENT_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -135,7 +135,7 @@ async function save(): Promise<void> {
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kmemo_related_time_is_blank
-            error.error_message = t("KMEMO_CONTENT_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("KMEMO_CONTENT_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -146,7 +146,7 @@ async function save(): Promise<void> {
         if (kmemo.content === kmemo_value.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kmemo_is_no_update
-            error.error_message = t("KMEMO_IS_NO_UPDATE_MESSAGE")
+            error.error_message = i18n.global.t("KMEMO_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

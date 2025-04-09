@@ -16,7 +16,7 @@ import type { RepTypeStructContextMenuEmits } from './rep-type-struct-context-me
 import type { RepTypeStructContextMenuProps } from './rep-type-struct-context-menu-props';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 defineProps<RepTypeStructContextMenuProps>()
 const emits = defineEmits<RepTypeStructContextMenuEmits>()

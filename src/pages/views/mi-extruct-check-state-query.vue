@@ -22,7 +22,7 @@ import type { miExtructCheckStateQueryEmits } from './mi-extruct-check-state-que
 import type { miExtructCheckStateQueryProps } from './mi-extruct-check-state-query-props'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 const props = defineProps<miExtructCheckStateQueryProps>()
 const emits = defineEmits<miExtructCheckStateQueryEmits>()
 const query = ref(props.find_kyou_query.clone())
@@ -55,15 +55,15 @@ function load_check_state(): void {
 
 const check_states: Ref<Array<{ name: string, value: MiCheckState }>> = ref([
     {
-        name: t("MI_CHECK_STATE_ALL_TITLE"),
+        name: i18n.global.t("MI_CHECK_STATE_ALL_TITLE"),
         value: MiCheckState.all,
     },
     {
-        name: t("MI_CHECK_STATE_CHECKED_TITLE"),
+        name: i18n.global.t("MI_CHECK_STATE_CHECKED_TITLE"),
         value: MiCheckState.checked,
     },
     {
-        name: t("MI_CHECK_STATE_UNCHECKED_TITLE"),
+        name: i18n.global.t("MI_CHECK_STATE_UNCHECKED_TITLE"),
         value: MiCheckState.uncheck,
     }
 ])
