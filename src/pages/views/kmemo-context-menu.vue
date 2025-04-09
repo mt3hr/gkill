@@ -193,7 +193,7 @@ import { Tag } from '@/classes/datas/tag'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const props = defineProps<KmemoContextMenuProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -222,7 +222,7 @@ async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.kyou.id)
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_kmemo_id
-    message.message = t("COPIED_ID")
+    message.message = i18n.global.t("COPIED_ID")
     const messages = new Array<GkillMessage>()
     messages.push(message)
     emits('received_messages', messages)

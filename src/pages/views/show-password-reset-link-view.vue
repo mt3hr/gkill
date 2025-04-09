@@ -35,7 +35,7 @@ import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const props = defineProps<ShowPasswordResetLinkViewProps>()
 const emits = defineEmits<ShowPasswordResetLinkViewEmits>()
@@ -59,14 +59,14 @@ function copy_lan_password_reset_url(): void {
     navigator.clipboard.writeText(lan_password_reset_url.value);
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_lan_set_password_link
-    message.message = t("COPIED_MESSAGE")
+    message.message = i18n.global.t("COPIED_MESSAGE")
     emits('received_messages', [message])
 }
 function copy_over_lan_password_reset_url(): void {
     navigator.clipboard.writeText(over_lan_password_reset_url.value);
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_over_lan_set_password_link
-    message.message = t("COPIED_MESSAGE")
+    message.message = i18n.global.t("COPIED_MESSAGE")
     emits('received_messages', [message])
 }
 </script>

@@ -70,7 +70,7 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const context_menu = ref<InstanceType<typeof MiContextMenu> | null>(null);
 

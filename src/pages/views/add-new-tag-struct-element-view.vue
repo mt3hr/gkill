@@ -28,7 +28,7 @@ import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const props = defineProps<AddNewTagStructElementViewProps>()
 const emits = defineEmits<AddNewTagStructElementViewEmits>()
@@ -43,7 +43,7 @@ function emits_tag_name(): void {
     if (tag_name.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.tag_struct_title_is_blank
-        error.error_message = t("TAG_IS_BLANK_MESSAGE")
+        error.error_message = i18n.global.t("TAG_IS_BLANK_MESSAGE")
         emits('received_errors', [error])
         return
     }

@@ -155,7 +155,7 @@ import type { PlaingTimeIsViewEmits } from './plaing-timeis-emits'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)

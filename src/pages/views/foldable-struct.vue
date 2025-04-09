@@ -10,7 +10,7 @@
                             @change="update_check_item_by_user" :indeterminate.prop="(struct_obj).indeterminate" />
                     </td>
                     <td class="tree_item ml-1" @dblclick="dblclick_item_by_user"
-                        @click.prevent.stop="click_item_by_user">{{ struct_obj.key }}</td>
+                        @click.prevent.stop="click_item_by_user">{{ struct_obj.name }}</td>
                 </tr>
             </table>
         </td>

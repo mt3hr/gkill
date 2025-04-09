@@ -28,7 +28,7 @@ import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const props = defineProps<AddNewRepTypeStructElementViewProps>()
 const emits = defineEmits<AddNewRepTypeStructElementViewEmits>()
@@ -42,7 +42,7 @@ function emits_rep_type_name(): void {
     if (rep_type_name.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.rep_type_struct_title_is_blank
-        error.error_message = t("REP_TYPE_IS_BLANK_MESSAGE")
+        error.error_message = i18n.global.t("REP_TYPE_IS_BLANK_MESSAGE")
         emits('received_errors', [error])
         return
     }

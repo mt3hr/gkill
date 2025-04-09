@@ -89,7 +89,7 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const edit_tag_dialog = ref<InstanceType<typeof EditTagDialog> | null>(null);
 const confirm_delete_tag_dialog = ref<InstanceType<typeof ConfirmDeleteTagDialog> | null>(null);
@@ -126,7 +126,7 @@ async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.tag.id)
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_tag_id
-    message.message = t("COPIED_ID_MESSAGE")
+    message.message = i18n.global.t("COPIED_ID_MESSAGE")
     const messages = new Array<GkillMessage>()
     messages.push(message)
     emits('received_messages', messages)
