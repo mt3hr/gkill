@@ -16,7 +16,7 @@ import type { KyouViewEmits } from './kyou-view-emits';
 import type { AggregateLocationViewProps } from './aggregate-location-view-props';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 defineProps<AggregateLocationViewProps>()
 defineEmits<KyouViewEmits>()
@@ -33,34 +33,34 @@ function format_duration(duration_milli_second: number): string {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += diff_date.getFullYear() - 1970 + t("YEAR_SUFFIX")
+        diff_str += diff_date.getFullYear() - 1970 + i18n.global.t("YEAR_SUFFIX")
     }
     if (diff_date.getMonth() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += (diff_date.getMonth() + 1) + t("MONTH_SUFFIX")
+        diff_str += (diff_date.getMonth() + 1) + i18n.global.t("MONTH_SUFFIX")
     }
     if ((diff_date.getDate() - 1) !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += (diff_date.getDate() - 1) + t("DAY_SUFFIX")
+        diff_str += (diff_date.getDate() - 1) + i18n.global.t("DAY_SUFFIX")
     }
     if (diff_date.getHours() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += (diff_date.getHours()) + t("HOUR_SUFFIX")
+        diff_str += (diff_date.getHours()) + i18n.global.t("HOUR_SUFFIX")
     }
     if (diff_date.getMinutes() !== 0) {
         if (diff_str !== "") {
             diff_str += " "
         }
-        diff_str += diff_date.getMinutes() + t("MINUTE_SUFFIX")
+        diff_str += diff_date.getMinutes() + i18n.global.t("MINUTE_SUFFIX")
     }
     if (diff_str === "") {
-        diff_str += diff_date.getSeconds() + t("SECOND_SUFFIX")
+        diff_str += diff_date.getSeconds() + i18n.global.t("SECOND_SUFFIX")
     }
     return diff_str
 }

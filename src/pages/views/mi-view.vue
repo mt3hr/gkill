@@ -315,7 +315,7 @@ import moment from 'moment'
 import { deepEquals } from '@/classes/deep-equals'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
@@ -663,7 +663,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
 
 function open_or_focus_board(board_name: string): void {
     if (board_name === "") {
-        board_name = t("MI_ALL_TITLE")
+        board_name = i18n.global.t("MI_ALL_TITLE")
     }
 
     let opened = false
@@ -688,7 +688,7 @@ function open_or_focus_board(board_name: string): void {
     let query = query_editor_sidebar.value!.get_default_query()!.clone()
     query.query_id = props.gkill_api.generate_uuid()
     query.mi_board_name = board_name
-    if (query.mi_board_name !== t("MI_ALL_TITLE")) {
+    if (query.mi_board_name !== i18n.global.t("MI_ALL_TITLE")) {
         query.use_mi_board_name = true
     } else {
         query.use_mi_board_name = false

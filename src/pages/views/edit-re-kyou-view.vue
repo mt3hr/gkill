@@ -66,7 +66,7 @@ import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-reques
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const is_requested_submit = ref(false)
 
@@ -99,7 +99,7 @@ async function save(): Promise<void> {
         if (!rekyou) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_rekyou_is_null
-            error.error_message = t("CLIENT_REKYOU_IS_NULL_MESSAGE")
+            error.error_message = i18n.global.t("CLIENT_REKYOU_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -110,7 +110,7 @@ async function save(): Promise<void> {
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.rekyou_related_time_is_blank
-            error.error_message = t("REKYOU_DATE_TIME_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("REKYOU_DATE_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -122,7 +122,7 @@ async function save(): Promise<void> {
             moment(rekyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.rekyou_is_no_update
-            error.error_message = t("REKYOU_IS_NO_UPDATE_MESSAGE")
+            error.error_message = i18n.global.t("REKYOU_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

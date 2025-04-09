@@ -78,7 +78,7 @@ import { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const is_requested_submit = ref(false)
 
@@ -137,7 +137,7 @@ async function save(): Promise<void> {
         if (!timeis.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_timeis_is_null
-            error.error_message = t("CLIENT_TIMEIS_IS_NULL_MESSAGE")
+            error.error_message = i18n.global.t("CLIENT_TIMEIS_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -148,7 +148,7 @@ async function save(): Promise<void> {
         if (timeis_start_date.value === "" || timeis_start_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.timeis_start_time_is_blank
-            error.error_message = t("TIMEIS_START_TIME_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("TIMEIS_START_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -161,7 +161,7 @@ async function save(): Promise<void> {
                 (timeis_end_date.value !== "" && timeis_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.timeis_end_time_is_blank
-                error.error_message = t("TIMEIS_END_TIME_IS_BLANK_MESSAGE")
+                error.error_message = i18n.global.t("TIMEIS_END_TIME_IS_BLANK_MESSAGE")
                 const errors = new Array<GkillError>()
                 errors.push(error)
                 emits('received_errors', errors)
@@ -173,7 +173,7 @@ async function save(): Promise<void> {
         if (timeis_title.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.timeis_title_is_blank
-            error.error_message = t("TIMEIS_TITLE_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("TIMEIS_TITLE_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

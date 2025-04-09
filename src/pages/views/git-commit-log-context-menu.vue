@@ -127,7 +127,7 @@ import { Tag } from '@/classes/datas/tag'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const add_tag_dialog = ref<InstanceType<typeof AddTagDialog> | null>(null);
 const add_text_dialog = ref<InstanceType<typeof AddTextDialog> | null>(null);
@@ -153,7 +153,7 @@ async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.kyou.id)
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_git_commit_log_id
-    message.message = t("COPIED_ID_MESSAGE")
+    message.message = i18n.global.t("COPIED_ID_MESSAGE")
     const messages = new Array<GkillMessage>()
     messages.push(message)
     emits('received_messages', messages)

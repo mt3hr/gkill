@@ -65,7 +65,7 @@ import type { FoldableStructModel } from './foldable-struct-model'
 import { deepEquals } from '@/classes/deep-equals'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const foldable_struct_reps = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const foldable_struct_devices = ref<InstanceType<typeof FoldableStruct> | null>(null)

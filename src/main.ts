@@ -4,20 +4,7 @@ import router from "./router"
 import vuetify from "./plugins/vuetify"
 import '@mdi/font/css/materialdesignicons.css'
 import { registerSW } from 'virtual:pwa-register'
-import { createI18n } from "vue-i18n"
-
-import ja from './locales/ja.json'
-import original from './locales/original.json'
-
-const i18n = createI18n({
-    legacy: false,
-    locale: 'ja',
-    fallbackLocale: 'original',
-    messages: {
-        original,
-        ja,
-    }
-})
+import { i18n } from "./i18n"
 
 registerSW()
 const app = createApp(App)

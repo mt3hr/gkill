@@ -46,7 +46,7 @@ import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const password_reset_token: Ref<string> = ref(useRoute().query.reset_token ? useRoute().query.reset_token!.toString() : "")
 const user_id: Ref<string> = ref(useRoute().query.user_id ? useRoute().query.user_id!.toString() : "")
@@ -74,7 +74,7 @@ nextTick(() => {
     if (user_id.value === "admin") {
         const message = new GkillMessage()
         message.message_code = GkillMessageCodes.set_admin_password_request
-        message.message = t("RESET_SET_ADMIN_PASSWORD_MESSAGE")
+        message.message = i18n.global.t("RESET_SET_ADMIN_PASSWORD_MESSAGE")
         emits('received_messages', [message])
     }
 })
@@ -86,7 +86,7 @@ async function try_set_new_password(): Promise<boolean> {
     if (user_id.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.user_id_is_blank
-        error.error_message = t("REQUEST_INPUT_USER_ID_MESSAGE")
+        error.error_message = i18n.global.t("REQUEST_INPUT_USER_ID_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -95,7 +95,7 @@ async function try_set_new_password(): Promise<boolean> {
     if (password.value === "" || password_retype.value === "") {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.password_is_blank
-        error.error_message = t("REQUEST_INPUT_PASSWORD_MESSAGE")
+        error.error_message = i18n.global.t("REQUEST_INPUT_PASSWORD_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -104,7 +104,7 @@ async function try_set_new_password(): Promise<boolean> {
     if (password.value !== password_retype.value) {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.password_retype_is_blank
-        error.error_message = t("INVALID_RETYPED_PASSWORD_MESSAGE")
+        error.error_message = i18n.global.t("INVALID_RETYPED_PASSWORD_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

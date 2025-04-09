@@ -99,7 +99,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 
 const is_requested_submit = ref(false)
 
@@ -145,7 +145,7 @@ async function save(): Promise<void> {
         if (!urlog) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_urlog_is_null
-            error.error_message = t("CLIENT_URLOG_IS_NULL_MASSAGE")
+            error.error_message = i18n.global.t("CLIENT_URLOG_IS_NULL_MASSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -156,7 +156,7 @@ async function save(): Promise<void> {
         if (related_date.value === "" || related_time.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.urlog_related_time_is_blank
-            error.error_message = t("URLOG_DATE_TIME_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("URLOG_DATE_TIME_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -167,7 +167,7 @@ async function save(): Promise<void> {
         if (url.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.urlog_url_is_blank
-            error.error_message = t("URLOG_URL_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("URLOG_URL_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -181,7 +181,7 @@ async function save(): Promise<void> {
             moment(urlog.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.urlog_is_no_update
-            error.error_message = t("URLOG_IS_NO_UPDATE_MESSAGE")
+            error.error_message = i18n.global.t("URLOG_IS_NO_UPDATE_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

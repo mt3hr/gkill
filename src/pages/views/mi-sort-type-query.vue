@@ -21,7 +21,7 @@ import type { miSortTypeQueryEmits } from './mi-sort-type-query-emits'
 import type { miSortTypeQueryProps } from './mi-sort-type-query-props'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 const props = defineProps<miSortTypeQueryProps>()
 const emits = defineEmits<miSortTypeQueryEmits>()
 
@@ -56,19 +56,19 @@ function load_sort_type(): void {
 
 const sort_types: Ref<Array<{ name: string, value: MiSortType }>> = ref([
     {
-        name: t("MI_CREATE_DATE_TIME_TITLE"),
+        name: i18n.global.t("MI_CREATE_DATE_TIME_TITLE"),
         value: MiSortType.create_time,
     },
     {
-        name: t("MI_CREATE_DATE_TIME_TITLE"),
+        name: i18n.global.t("MI_CREATE_DATE_TIME_TITLE"),
         value: MiSortType.estimate_start_time,
     },
     {
-        name: t("MI_END_DATE_TIME_TITLE"),
+        name: i18n.global.t("MI_END_DATE_TIME_TITLE"),
         value: MiSortType.estimate_end_time,
     },
     {
-        name: t("MI_LIMIT_DATE_TIME_TITLE"),
+        name: i18n.global.t("MI_LIMIT_DATE_TIME_TITLE"),
         value: MiSortType.limit_time,
     }
 ])

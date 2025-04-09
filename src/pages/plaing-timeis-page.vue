@@ -67,7 +67,7 @@ import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register
 import { useTheme } from 'vuetify'
 import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
+import { i18n } from '@/i18n'
 const theme = useTheme()
 
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);
