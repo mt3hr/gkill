@@ -211,6 +211,7 @@ async function add_rep_struct_element(rep_struct_element: RepStructElementData):
 
     cloned_application_config.value.rep_struct.push(rep_struct)
     cloned_application_config.value.parsed_rep_struct.children?.push(rep_struct_element)
+    await cloned_application_config.value.parse_rep_struct()
 }
 function show_confirm_delete_rep_struct_dialog(id: string): void {
     if (!foldable_struct.value) {
