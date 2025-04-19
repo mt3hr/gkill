@@ -257,6 +257,7 @@ async function add_tag_struct_element(tag_struct_element: TagStructElementData):
 
     cloned_application_config.value.tag_struct.push(tag_struct)
     cloned_application_config.value.parsed_tag_struct.children?.push(tag_struct_element)
+    await cloned_application_config.value.parse_tag_struct()
 }
 function show_confirm_delete_tag_struct_dialog(id: string): void {
     if (!foldable_struct.value) {
