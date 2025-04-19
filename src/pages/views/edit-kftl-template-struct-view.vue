@@ -261,6 +261,7 @@ async function add_kftl_template_struct_element(kftl_template_struct_element: KF
 
     cloned_application_config.value.kftl_template_struct.push(kftl_template_struct)
     cloned_application_config.value.parsed_kftl_template.children?.push(kftl_template_struct_element)
+    await cloned_application_config.value.parse_kftl_template_struct()
 }
 function show_confirm_delete_kftl_template_struct_dialog(id: string): void {
     if (!foldable_struct.value) {
