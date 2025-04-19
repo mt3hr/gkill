@@ -256,6 +256,7 @@ async function add_device_struct_element(device_struct_element: DeviceStructElem
 
     cloned_application_config.value.device_struct.push(device_struct)
     cloned_application_config.value.parsed_device_struct.children?.push(device_struct_element)
+    await cloned_application_config.value.parse_device_struct()
 }
 function show_confirm_delete_device_struct_dialog(id: string): void {
     if (!foldable_struct.value) {
