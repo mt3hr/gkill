@@ -76,7 +76,7 @@
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
                 ref="query_editor_sidebar" />
         </v-navigation-drawer>
-        <v-main class="main">
+        <v-main class="main" :class="(drawer_mode_is_mobile) ? 'scroll_snap_container' : ''">
             <div class="overlay_target">
                 <v-overlay v-model="is_loading" class="align-center justify-center" persistent contained>
                     <v-progress-circular indeterminate color="primary" />
@@ -84,7 +84,8 @@
             </div>
             <table class="rykv_view_table" v-show="inited">
                 <tr>
-                    <td valign="top" v-for="query, index in querys" :key="query.query_id">
+                    <td valign="top" v-for="query, index in querys" :key="query.query_id"
+                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <KyouListView :kyou_height="180" :width="400" :list_height="kyou_list_view_height"
                             :application_config="application_config" :gkill_api="gkill_api"
                             :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
@@ -159,7 +160,8 @@
                             :style="{ background: 'rgb(var(--v-theme-background))' }" />
                     </td>
 
-                    <td valign="top" v-if="is_show_kyou_detail_view">
+                    <td valign="top" v-if="is_show_kyou_detail_view"
+                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <div class="kyou_detail_view dummy">
                             <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
                                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
@@ -183,19 +185,19 @@
                                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
                         </div>
                     </td>
-                    <td valign="top" v-if="is_show_dnote">
+                    <td valign="top" v-if="is_show_dnote" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
                             :application_config="application_config" :gkill_api="gkill_api" :query="focused_query"
                             :checked_kyous="focused_column_checked_kyous" :last_added_tag="last_added_tag"
                             @received_messages="(messages) => emits('received_messages', messages)"
                             @received_errors="(errors) => emits('received_errors', errors)" ref="dnote_view" />
                     </td>
-                    <td valign="top">
+                    <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
                             :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="false"
                             @requested_focus_time="(time) => { focused_time = time; gps_log_map_start_time = time; gps_log_map_end_time = time; gps_log_map_marker_time = time }" />
                     </td>
-                    <td valign="top">
+                    <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <GPSLogMap v-show="is_show_gps_log_map" :application_config="application_config"
                             :gkill_api="gkill_api" :start_date="gps_log_map_start_time" :end_date="gps_log_map_end_time"
                             :marker_time="gps_log_map_marker_time"
@@ -796,6 +798,17 @@ function show_upload_file_dialog(): void {
     overflow-y: scroll;
     height: calc(v-bind('app_content_height.toString().concat("px")'));
     width: 400px;
+}
+
+.scroll_snap_container {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    width: 100vw;
+}
+
+.scroll_snap_area {
+    scroll-snap-align: start;
+    width: 100vw;
 }
 </style>
 <style lang="css">

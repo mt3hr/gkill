@@ -65,7 +65,7 @@
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)" ref="query_editor_sidebar" />
         </v-navigation-drawer>
-        <v-main class="main">
+        <v-main class="main" :class="(drawer_mode_is_mobile) ? 'scroll_snap_container' : ''">
             <div class="overlay_target">
                 <v-overlay v-model="is_loading" class="align-center justify-center" persistent contained>
                     <v-progress-circular indeterminate color="primary" />
@@ -73,7 +73,8 @@
             </div>
             <table class="mi_view_table" v-show="inited">
                 <tr>
-                    <td valign="top" v-for="query, index in querys" :key="query.query_id">
+                    <td valign="top" v-for="query, index in querys" :key="query.query_id"
+                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ $t("MI_ALL_TITLE") }}</v-card-title>
@@ -138,7 +139,8 @@
                                 @updated_notification="(updated_notification) => { }" />
                         </v-card>
                     </td>
-                    <td valign="top" v-if="is_show_kyou_detail_view">
+                    <td valign="top" v-if="is_show_kyou_detail_view"
+                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <div class="kyou_detail_view dummy">
                             <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
                                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
@@ -155,7 +157,7 @@
                                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
                         </div>
                     </td>
-                    <td valign="top">
+                    <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
                             :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="true"
                             @requested_focus_time="(time) => { focused_time = time }" />
@@ -741,6 +743,17 @@ function show_upload_file_dialog(): void {
     overflow-y: scroll;
     height: calc(v-bind('app_content_height.toString().concat("px")'));
     width: 408px;
+}
+
+.scroll_snap_container {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    width: 100vw;
+}
+
+.scroll_snap_area {
+    scroll-snap-align: start;
+    width: 100vw;
 }
 </style>
 <style lang="css">
