@@ -25,8 +25,6 @@ func NewApplicationConfigDAOSQLite3Impl(ctx context.Context, filename string) (A
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
-	db.SetMaxOpenConns(1)
-	db.SetMaxIdleConns(1)
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (

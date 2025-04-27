@@ -23,8 +23,6 @@ func NewDeviceStructDAOSQLite3Impl(ctx context.Context, filename string) (Device
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
-	db.SetMaxOpenConns(1)
-	db.SetMaxIdleConns(1)
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "DEVICE_STRUCT" (

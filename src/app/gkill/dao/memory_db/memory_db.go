@@ -21,4 +21,5 @@ func init() {
 	}
 
 	MemoryDB.SetMaxOpenConns(1)
+	MemoryDB.SetMaxIdleConns(1)
 }
