@@ -33,7 +33,8 @@
             </tr>
             <tr>
                 <td>
-                    <v-checkbox v-model="re_get_urlog_content" :label="$t('URLOG_REGET_TITLE')" hide-details color="primary" />
+                    <v-checkbox v-model="re_get_urlog_content" :label="$t('URLOG_REGET_TITLE')" hide-details
+                        color="primary" />
                 </td>
             </tr>
         </table>
@@ -44,19 +45,21 @@
                     :readonly="is_requested_submit" />
                 <input class="input time" type="time" v-model="related_time" :label="$t('URLOG_TIME_TITLE')"
                     :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_related_date_time()"
-                    :disabled="is_requested_submit">{{ $t("RESET_TITLE") }}}</v-btn>
-                <v-btn dark color="primary" @click="now_to_related_date_time()"
-                    :disabled="is_requested_submit">{{ $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                <v-btn dark color="secondary" @click="reset_related_date_time()" :disabled="is_requested_submit">{{
+                    $t("RESET_TITLE") }}}</v-btn>
+                <v-btn dark color="primary" @click="now_to_related_date_time()" :disabled="is_requested_submit">{{
+                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                    }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -139,6 +142,7 @@ async function save(): Promise<void> {
     try {
         is_requested_submit.value = true
         cloned_kyou.value.abort_controller.abort()
+        cloned_kyou.value.abort_controller = new AbortController()
 
         // データがちゃんとあるか確認。なければエラーメッセージを出力する
         const urlog = cloned_kyou.value.typed_urlog

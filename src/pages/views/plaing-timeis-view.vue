@@ -255,6 +255,7 @@ async function search(update_cache: boolean): Promise<void> {
     try {
         if (abort_controller.value) {
             abort_controller.value.abort()
+            abort_controller.value = new AbortController()
         }
 
         if (match_kyous_list.value) {

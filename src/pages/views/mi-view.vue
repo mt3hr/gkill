@@ -492,6 +492,7 @@ async function close_list_view(column_index: number): Promise<void> {
 
         if (abort_controllers.value[column_index]) {
             abort_controllers.value[column_index].abort()
+            abort_controllers.value[column_index] = new AbortController()
         }
 
         match_kyous_list.value.splice(column_index, 1)
@@ -589,6 +590,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         // 前の検索処理を中断する
         if (abort_controllers.value[column_index]) {
             abort_controllers.value[column_index].abort()
+            abort_controllers.value[column_index] = new AbortController()
         }
 
         if (match_kyous_list.value[column_index]) {
