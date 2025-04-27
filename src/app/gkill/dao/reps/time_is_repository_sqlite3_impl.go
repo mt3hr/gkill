@@ -29,8 +29,6 @@ func NewTimeIsRepositorySQLite3Impl(ctx context.Context, filename string) (TimeI
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
-	db.SetMaxOpenConns(5)
-	db.SetMaxIdleConns(5)
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "TIMEIS" (
