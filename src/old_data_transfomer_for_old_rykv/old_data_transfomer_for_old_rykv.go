@@ -618,6 +618,8 @@ func getNlogsFromOldDB(filename string) ([]*Nlog, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	statement := `SELECT ID, Time, Amount, ShopName, Memo FROM "nlog";`
@@ -654,6 +656,8 @@ func getKmemosFromOldDB(filename string) ([]*Kmemo, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	statement := `
@@ -696,6 +700,8 @@ func getURLogsFromOldDB(filename string) ([]*URLog, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	statement := `
@@ -741,6 +747,8 @@ func getLantanasFromOldDB(filename string) ([]*Lantana, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	lantanas := []*Lantana{}
@@ -827,6 +835,8 @@ func getTagsFromOldDB(filename string) ([]*Tag, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	tags := []*Tag{}
@@ -864,6 +874,8 @@ func getTextsFromOldDB(filename string) ([]*Text, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	texts := []*Text{}
@@ -901,6 +913,8 @@ func getTimeisStartsFromOldDB(filename string) ([]*TimeIsStart, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	rows, err := db.Query(`
@@ -937,6 +951,8 @@ func getTimeisEndsFromOldDB(filename string) ([]*TimeIsEnd, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	rows, err := db.Query(`
@@ -981,6 +997,8 @@ func getMiTasksFromOldDB(filename string) ([]*MiTask, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	tasks := []*MiTask{}
@@ -1023,6 +1041,8 @@ func getMiCheckStatesFromOldDB(filename string) ([]*MiCheckStateInfo, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	statement := `
@@ -1077,6 +1097,8 @@ func getMiTaskTitlesFromOldDB(filename string) ([]*MiTaskTitleInfo, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	statement := `
@@ -1125,6 +1147,8 @@ func getMiLimitsFromOldDB(filename string) ([]*MiLimitInfo, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	statement := `
@@ -1182,6 +1206,8 @@ func getMiStartsFromOldDB(filename string) ([]*MiStartInfo, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	statement := `
@@ -1240,6 +1266,8 @@ func getMiEndsFromOldDB(filename string) ([]*MiEndInfo, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	statement := `
@@ -1298,6 +1326,8 @@ func getMiBoardsFromOldDB(filename string) ([]*MiBoardInfo, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 	defer db.Close()
 
 	statement := `
