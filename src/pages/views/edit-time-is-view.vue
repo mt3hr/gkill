@@ -60,12 +60,12 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -174,6 +174,7 @@ async function save(): Promise<void> {
     try {
         is_requested_submit.value = true
         cloned_kyou.value.abort_controller.abort()
+        cloned_kyou.value.abort_controller = new AbortController()
 
         // データがちゃんとあるか確認。なければエラーメッセージを出力する
         const timeis = cloned_kyou.value.typed_timeis
