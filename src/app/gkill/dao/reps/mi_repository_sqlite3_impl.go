@@ -29,8 +29,6 @@ func NewMiRepositorySQLite3Impl(ctx context.Context, filename string) (MiReposit
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
-	db.SetMaxOpenConns(5)
-	db.SetMaxIdleConns(5)
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "MI" (
