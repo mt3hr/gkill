@@ -59,8 +59,6 @@ func NewIDFDirRep(ctx context.Context, dir, dbFilename string, r *mux.Router, au
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
-	db.SetMaxOpenConns(5)
-	db.SetMaxIdleConns(5)
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "IDF" (
