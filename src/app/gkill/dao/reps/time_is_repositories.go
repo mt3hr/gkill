@@ -14,113 +14,34 @@ import (
 type TimeIsRepositories []TimeIsRepository
 
 func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
-	var err error
-	// plaingだった場合、TimeIs型で最新を判定する
-	latestPlaingTimeIss := []*TimeIs{}
-	latestPlaingTimeIssWg := &sync.WaitGroup{}
-	latestPlaingTimeIssErrCh := make(chan error, 1)
-	defer close(latestPlaingTimeIssErrCh)
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-		latestPlaingTimeIssWg.Add(1)
-		go func() {
-			defer latestPlaingTimeIssWg.Done()
-			latestPlaingTimeIss, err = t.FindTimeIs(ctx, query)
-			latestPlaingTimeIssErrCh <- err
-		}()
-	}
-
-	matchKyous := map[string]*Kyou{}
-	existErr := false
-	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(t))
-	errch := make(chan error, len(t))
-	defer close(ch)
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range t {
-		wg.Add(1)
-
-		go func(rep TimeIsRepository) {
-			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
-	}
-	wg.Wait()
-
-	// エラー集約
-errloop:
-	for {
-		select {
-		case e := <-errch:
-			err = fmt.Errorf("error at find kyous: %w", e)
-			existErr = true
-		default:
-			break errloop
-		}
-	}
-	if existErr {
+	timeiss, err := t.FindTimeIs(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at find kyous: %w", err)
 		return nil, err
 	}
 
-	// Kyou集約。UpdateTimeが最新のものを収める
-loop:
-	for {
-		select {
-		case matchKyousInRep := <-ch:
-			if matchKyousInRep == nil {
-				continue loop
-			}
-			for _, kyou := range matchKyousInRep {
-				if existKyou, exist := matchKyous[kyou.ID]; exist {
-					if kyou.UpdateTime.After(existKyou.UpdateTime) {
-						matchKyous[kyou.ID] = kyou
-					}
-				} else {
-					matchKyous[kyou.ID] = kyou
-				}
-			}
-		default:
-			break loop
+	kyous := []*Kyou{}
+	for _, timeis := range timeiss {
+		kyou := &Kyou{}
+		kyou.IsDeleted = timeis.IsDeleted
+		kyou.ID = timeis.ID
+		kyou.RepName = timeis.RepName
+		kyou.RelatedTime = timeis.StartTime
+		if timeis.EndTime != nil {
+			kyou.RelatedTime = *timeis.EndTime
 		}
+		kyou.DataType = timeis.DataType
+		kyou.CreateTime = timeis.CreateTime
+		kyou.CreateApp = timeis.CreateApp
+		kyou.CreateDevice = timeis.CreateDevice
+		kyou.CreateUser = timeis.CreateUser
+		kyou.UpdateTime = timeis.UpdateTime
+		kyou.UpdateApp = timeis.UpdateApp
+		kyou.UpdateDevice = timeis.UpdateDevice
+		kyou.IsImage = false
+		kyous = append(kyous, kyou)
 	}
-
-	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-		latestPlaingTimeIssWg.Wait()
-		if err := <-latestPlaingTimeIssErrCh; err != nil {
-			return nil, err
-		}
-	}
-
-	matchKyousList := []*Kyou{}
-	for _, kyou := range matchKyous {
-		if kyou == nil {
-			continue
-		}
-		if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-			exist := false
-			for _, latestPlaingTimeIs := range latestPlaingTimeIss {
-				if kyou.ID == latestPlaingTimeIs.ID {
-					exist = true
-					break
-				}
-			}
-			if !exist {
-				continue
-			}
-		}
-		matchKyousList = append(matchKyousList, kyou)
-	}
-
-	sort.Slice(matchKyousList, func(i, j int) bool {
-		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
-	})
-	return matchKyousList, nil
+	return kyous, nil
 }
 
 func (t TimeIsRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
