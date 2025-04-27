@@ -352,7 +352,6 @@ loop:
 		} else {
 			matchTimeIssList = append(matchTimeIssList, timeis)
 		}
-		matchTimeIssList = append(matchTimeIssList, timeis)
 	}
 
 	sort.Slice(matchTimeIssList, func(i, j int) bool {

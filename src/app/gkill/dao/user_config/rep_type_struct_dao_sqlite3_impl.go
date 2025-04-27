@@ -18,7 +18,7 @@ type repTypeStructDAOSQLite3Impl struct {
 
 func NewRepTypeStructDAOSQLite3Impl(ctx context.Context, filename string) (RepTypeStructDAO, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=2&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
