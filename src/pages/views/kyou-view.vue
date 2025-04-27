@@ -381,10 +381,12 @@ const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 
 onUnmounted(() => {
     cloned_kyou.value.abort_controller.abort()
+    cloned_kyou.value.abort_controller = new AbortController()
 })
 
 watch(() => props.kyou, () => {
     cloned_kyou.value.abort_controller.abort()
+    cloned_kyou.value.abort_controller = new AbortController()
     cloned_kyou.value = props.kyou.clone();
     (() => load_attached_infos())(); //非同期で実行してほしい
 });
