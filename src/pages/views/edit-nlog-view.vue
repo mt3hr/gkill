@@ -117,6 +117,7 @@ async function save(): Promise<void> {
     try {
         is_requested_submit.value = true
         cloned_kyou.value.abort_controller.abort()
+        cloned_kyou.value.abort_controller = new AbortController()
 
         // データがちゃんとあるか確認。なければエラーメッセージを出力する
         const nlog = props.kyou.typed_nlog
