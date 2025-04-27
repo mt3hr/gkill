@@ -613,7 +613,7 @@ type TimeIsEnd struct {
 }
 
 func getNlogsFromOldDB(filename string) ([]*Nlog, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -649,7 +649,7 @@ func getNlogsFromOldDB(filename string) ([]*Nlog, error) {
 }
 
 func getKmemosFromOldDB(filename string) ([]*Kmemo, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -691,7 +691,7 @@ FROM "kmemo";`
 }
 
 func getURLogsFromOldDB(filename string) ([]*URLog, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -736,7 +736,7 @@ FROM "urlog";`
 }
 
 func getLantanasFromOldDB(filename string) ([]*Lantana, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -822,7 +822,7 @@ func getIDFKyousFromOldDB(filename string) ([]*IDFKyou, error) {
 }
 
 func getTagsFromOldDB(filename string) ([]*Tag, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -859,7 +859,7 @@ func getTagsFromOldDB(filename string) ([]*Tag, error) {
 }
 
 func getTextsFromOldDB(filename string) ([]*Text, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -896,7 +896,7 @@ func getTextsFromOldDB(filename string) ([]*Text, error) {
 }
 
 func getTimeisStartsFromOldDB(filename string) ([]*TimeIsStart, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -932,7 +932,7 @@ FROM start;`)
 }
 
 func getTimeisEndsFromOldDB(filename string) ([]*TimeIsEnd, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -976,7 +976,7 @@ FROM end;`)
 }
 
 func getMiTasksFromOldDB(filename string) ([]*MiTask, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1018,7 +1018,7 @@ FROM
 }
 
 func getMiCheckStatesFromOldDB(filename string) ([]*MiCheckStateInfo, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1072,7 +1072,7 @@ FROM
 }
 
 func getMiTaskTitlesFromOldDB(filename string) ([]*MiTaskTitleInfo, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1120,7 +1120,7 @@ FROM
 }
 
 func getMiLimitsFromOldDB(filename string) ([]*MiLimitInfo, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1177,7 +1177,7 @@ FROM
 }
 
 func getMiStartsFromOldDB(filename string) ([]*MiStartInfo, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1235,7 +1235,7 @@ FROM
 }
 
 func getMiEndsFromOldDB(filename string) ([]*MiEndInfo, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -1293,7 +1293,7 @@ FROM
 }
 
 func getMiBoardsFromOldDB(filename string) ([]*MiBoardInfo, error) {
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
