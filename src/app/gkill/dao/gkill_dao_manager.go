@@ -151,14 +151,14 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		gkillDAOManager.debugLogFile = debugLogFile
 		gkill_log.Debug.SetOutput(debugLogFile)
 
-		trageLogFileName := filepath.Join(logRootDir, "gkill_trage.log")
-		traceLogFile, err := os.OpenFile(trageLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
+		traceLogFileName := filepath.Join(logRootDir, "gkill_trage.log")
+		traceLogFile, err := os.OpenFile(traceLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
 		if err != nil {
 			err = fmt.Errorf("error at create trage log file %s: %w", traceLogFile, err)
 			return nil, err
 		}
 		gkillDAOManager.traceLogFile = traceLogFile
-		gkill_log.TraceSQL.SetOutput(traceLogFile)
+		gkill_log.Trace.SetOutput(traceLogFile)
 
 		traceSQLLogFileName := filepath.Join(logRootDir, "gkill_traceSQL.log")
 		traceSQLLogFile, err := os.OpenFile(traceSQLLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
