@@ -20,7 +20,7 @@ type fileUploadHistoryDAOSQLite3Impl struct {
 
 func NewFileUploadHistoryDAOSQLite3Impl(ctx context.Context, filename string) (FileUploadHistoryDAO, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
