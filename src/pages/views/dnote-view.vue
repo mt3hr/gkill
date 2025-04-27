@@ -243,6 +243,7 @@ async function recalc_all(): Promise<void> {
 
 async function abort(): Promise<void> {
     abort_controller.value.abort()
+    abort_controller.value = new AbortController()
 }
 
 async function load_query(): Promise<void> {
