@@ -22,11 +22,13 @@ type lantanaRepositorySQLite3Impl struct {
 
 func NewLantanaRepositorySQLite3Impl(ctx context.Context, filename string) (LantanaRepository, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=60000&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
+	db.SetMaxOpenConns(5)
+	db.SetMaxIdleConns(5)
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "LANTANA" (
