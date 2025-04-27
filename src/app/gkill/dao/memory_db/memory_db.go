@@ -14,12 +14,11 @@ var (
 
 func init() {
 	var err error
-	MemoryDB, err = sql.Open("sqlite3", "file::memory:?_timeout=60000&_synchronous=1&_mutex=full&_locking_mode=EXCLUSIVE&_journal=MEMORY&mode=memory&_txlock=deferred")
+	MemoryDB, err = sql.Open("sqlite3", "file::memory:?_timeout=60000&_journal=MEMORY&mode=memory&_txlock=deferred")
 	if err != nil {
 		err = fmt.Errorf("error at open memory database: %w", err)
 		gkill_log.Debug.Fatal(err)
 	}
 
 	MemoryDB.SetMaxOpenConns(1)
-	MemoryDB.SetMaxIdleConns(1)
 }
