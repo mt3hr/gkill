@@ -53,6 +53,23 @@ CREATE TABLE IF NOT EXISTS "LOGIN_SESSION" (
 		return nil, err
 	}
 
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_LOGIN_SESSION ON LOGIN_SESSION (SESSION_ID);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create LOGIN_SESSION index statement %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = indexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create LOGIN_SESSION index to %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
 	return &loginSessionDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
