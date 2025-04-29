@@ -82,14 +82,14 @@ type GkillRepositories struct {
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
 func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	if userID == "" {
-		err := fmt.Errorf("error at new gkill repositories. userID is blank.")
+		err := fmt.Errorf("error at new gkill repositories. userID is blank")
 		return nil, err
 	}
 
 	configDBRootDir := os.ExpandEnv(gkill_options.CacheDir)
 	err := os.MkdirAll(configDBRootDir, fs.ModePerm)
 	if err != nil {
-		err = fmt.Errorf("error at create directory %s: %w", err)
+		err = fmt.Errorf("error at create directory: %w", err)
 		return nil, err
 	}
 
@@ -336,8 +336,7 @@ loop:
 }
 
 func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	matchKyou := &Kyou{}
-	matchKyou = nil
+	var matchKyou *Kyou
 	matchKyousInRep := []*Kyou{}
 	var err error
 	ch := make(chan *Kyou, len(g.Reps))
@@ -930,8 +929,7 @@ loop:
 }
 
 func (g *GkillRepositories) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
-	matchTag := &Tag{}
-	matchTag = nil
+	var matchTag *Tag
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -1376,8 +1374,7 @@ loop:
 }
 
 func (g *GkillRepositories) GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error) {
-	matchText := &Text{}
-	matchText = nil
+	var matchText *Text
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -1441,8 +1438,7 @@ loop:
 }
 
 func (g *GkillRepositories) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
-	matchNotification := &Notification{}
-	matchNotification = nil
+	var matchNotification *Notification
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

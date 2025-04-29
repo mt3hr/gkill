@@ -24,7 +24,6 @@ import type { AddNewFoloderViewProps } from './add-new-foloder-view-props'
 import { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data';
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

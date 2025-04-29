@@ -19,7 +19,6 @@ import FoldableStruct from './foldable-struct.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { CheckState } from './check-state'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

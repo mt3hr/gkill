@@ -1,6 +1,5 @@
 'use strict'
 
-import moment from "moment"
 import { GkillAPI } from "../api/gkill-api"
 import { GetGkillInfoRequest } from "../api/req_res/get-gkill-info-request"
 

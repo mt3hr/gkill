@@ -51,7 +51,7 @@
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import type { ConfirmDeleteTextViewProps } from './confirm-delete-text-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { computed, nextTick, type Ref, ref } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import { UpdateTextRequest } from '@/classes/api/req_res/update-text-request';
 import KyouView from './kyou-view.vue'
 import type { InfoIdentifier } from '@/classes/datas/info-identifier';

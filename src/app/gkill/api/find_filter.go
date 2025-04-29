@@ -376,7 +376,7 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 	for range len(findCtx.MatchReps) {
 		e := <-errch
 		if e != nil {
-			err = fmt.Errorf("error at update cache: %w: %w:", e, err)
+			err = fmt.Errorf("error at update cache: %w: %w", e, err)
 			existErr = true
 		}
 	}
@@ -423,7 +423,7 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 	for range lenOfTagReps {
 		e := <-errch
 		if e != nil {
-			err = fmt.Errorf("error at get all tags: %w: %w:", e, err)
+			err = fmt.Errorf("error at get all tags: %w: %w", e, err)
 			existErr = true
 		}
 	}
@@ -1134,7 +1134,7 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 	for range lenOfReps {
 		e := <-errch
 		if e != nil {
-			err = fmt.Errorf("error at find timeiss: %w: %w:", e, err)
+			err = fmt.Errorf("error at find timeiss: %w: %w", e, err)
 			existErr = true
 		}
 	}
@@ -1203,7 +1203,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 		isAllDays = true
 	}
 	// GPSLogを取得する
-	gpsLogs := []*reps.GPSLog{}
+	matchGPSLogs := []*reps.GPSLog{}
 	lenOfReps := len(findCtx.Repositories.GPSLogReps)
 
 	existErr := false
@@ -1227,7 +1227,6 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 			}
 			if err != nil {
 				errch <- err
-				panic(err)
 				return
 			}
 			gpsLogsCh <- gpsLogs
@@ -1239,7 +1238,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	for range lenOfReps {
 		e := <-errch
 		if e != nil {
-			err = fmt.Errorf("error at filter gpslogs: %w: %w:", e, err)
+			err = fmt.Errorf("error at filter gpslogs: %w: %w", e, err)
 			existErr = true
 		}
 	}
@@ -1249,25 +1248,25 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 
 	// GPSLog集約
 	for range lenOfReps {
-		gpsLogs = append(gpsLogs, <-gpsLogsCh...)
+		matchGPSLogs = append(matchGPSLogs, <-gpsLogsCh...)
 	}
 
 	// 並び替え
-	sort.Slice(gpsLogs, func(i, j int) bool { return gpsLogs[i].RelatedTime.Before(gpsLogs[j].RelatedTime) })
+	sort.Slice(matchGPSLogs, func(i, j int) bool { return matchGPSLogs[i].RelatedTime.Before(matchGPSLogs[j].RelatedTime) })
 
 	// 該当する時間を出す
 	matchGPSLogSetList := [][]*reps.GPSLog{}
 
 	preTrue := false // 一つ前の時間でtrueだった
-	for i := range gpsLogs {
+	for i := range matchGPSLogs {
 		if preTrue {
 			matchGPSLogSetList = append(matchGPSLogSetList, []*reps.GPSLog{
-				gpsLogs[i-1],
-				gpsLogs[i],
+				matchGPSLogs[i-1],
+				matchGPSLogs[i],
 			})
 		}
 
-		if calcDistance(latitude, longitude, gpsLogs[i].Latitude, gpsLogs[i].Longitude) <= radius {
+		if calcDistance(latitude, longitude, matchGPSLogs[i].Latitude, matchGPSLogs[i].Longitude) <= radius {
 			preTrue = true
 		} else {
 			preTrue = false
@@ -1287,8 +1286,8 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	findCtx.MatchKyousCurrent = matchKyous
 	return nil, nil
 }
-func (f *FindFilter) overrideKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.ForMi == nil || (*findCtx.ParsedFindQuery.ForMi) == false || findCtx.ParsedFindQuery.MiSortType == nil {
+func (f *FindFilter) overrideKyous(_ context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	if findCtx.ParsedFindQuery.ForMi == nil || findCtx.ParsedFindQuery.MiSortType == nil || !*findCtx.ParsedFindQuery.ForMi {
 		// kyou検索の場合は何もしない
 		return nil, nil
 	}
@@ -1320,8 +1319,8 @@ func (f *FindFilter) overrideKyous(ctx context.Context, findCtx *FindKyouContext
 	return nil, nil
 }
 
-func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.ForMi == nil || (*findCtx.ParsedFindQuery.ForMi) == false || findCtx.ParsedFindQuery.MiSortType == nil {
+func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+	if findCtx.ParsedFindQuery.ForMi == nil || findCtx.ParsedFindQuery.MiSortType == nil || !*findCtx.ParsedFindQuery.ForMi {
 		// kyouとしてソート
 		sort.Slice(findCtx.ResultKyous, func(i, j int) bool {
 			return findCtx.ResultKyous[i].RelatedTime.After(findCtx.ResultKyous[j].RelatedTime)
@@ -1413,8 +1412,6 @@ func (f *FindFilter) sortResultKyous(ctx context.Context, findCtx *FindKyouConte
 }
 
 func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.UseWords == nil || !(*findCtx.ParsedFindQuery.UseWords) || (len(*findCtx.ParsedFindQuery.Words) == 0 && (len(*findCtx.ParsedFindQuery.NotWords) == 0)) {
-	}
 	var err error
 
 	lenOfTextReps := 0
@@ -1470,7 +1467,7 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 	for range lenOfTextReps {
 		e := <-errch
 		if e != nil {
-			err = fmt.Errorf("error at find  texts: %w: %w:", e, err)
+			err = fmt.Errorf("error at find  texts: %w: %w", e, err)
 			existErr = true
 		}
 	}
@@ -1570,7 +1567,7 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	for range lenOfTextReps {
 		e := <-errch
 		if e != nil {
-			err = fmt.Errorf("error at find  texts: %w: %w:", e, err)
+			err = fmt.Errorf("error at find  texts: %w: %w", e, err)
 			existErr = true
 		}
 	}

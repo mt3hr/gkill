@@ -26,9 +26,6 @@ import { GkillMessage } from '@/classes/api/gkill-message';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import { UpdateShareMiTaskListInfoRequest } from '@/classes/api/req_res/update-share-mi-task-list-info-request';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
-import { useI18n } from 'vue-i18n'
-
-import { i18n } from '@/i18n'
 
 const props = defineProps<ShareTaskListLinkViewProps>()
 const emits = defineEmits<ShareTaskListLinkViewEmits>()

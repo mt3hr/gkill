@@ -106,6 +106,11 @@ FROM FILE_UPLOAD_HISTORY
 				&uploadTimeStr,
 			)
 
+			if err != nil {
+				err = fmt.Errorf("error at scan file upload history: %w", err)
+				return nil, err
+			}
+
 			fileUploadHistory.UploadTime, err = time.Parse(sqlite3impl.TimeLayout, uploadTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse file upload time %s at %s in FILE_UPLOAD_HISTORY: %w", uploadTimeStr, fileUploadHistory.ID, err)
@@ -170,7 +175,10 @@ WHERE USER_ID = ? AND DEVICE = ?
 				&fileUploadHistory.SourceAddress,
 				&uploadTimeStr,
 			)
-
+			if err != nil {
+				err = fmt.Errorf("error at scan file upload history: %w", err)
+				return nil, err
+			}
 			fileUploadHistory.UploadTime, err = time.Parse(sqlite3impl.TimeLayout, uploadTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse file upload time %s at %s in FILE_UPLOAD_HISTORY: %w", uploadTimeStr, fileUploadHistory.ID, err)

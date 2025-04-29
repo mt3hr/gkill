@@ -135,6 +135,10 @@ FROM %s
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
 				&dataUpdateTimeStr,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan latest data repository address: %w", err)
+				return nil, err
+			}
 
 			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
 			if err != nil {
@@ -193,6 +197,10 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
 				&dataUpdateTimeStr,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan latest data repository address: %w", err)
+				return nil, err
+			}
 
 			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
 			if err != nil {
@@ -251,6 +259,10 @@ WHERE TARGET_ID = ?
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
 				&dataUpdateTimeStr,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan latest data repository address: %w", err)
+				return nil, err
+			}
 
 			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
 			if err != nil {
@@ -352,7 +364,7 @@ INSERT INTO %s (
 
 	tx, err := l.db.Begin()
 	if err != nil {
-		fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 

@@ -161,7 +161,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from TAG %s: %w", err)
+		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -192,6 +192,10 @@ WHERE
 				&tag.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at read rows at find tags: %w", err)
+				return nil, err
+			}
 
 			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -313,7 +317,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from TAG %s: %w", err)
+		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -344,6 +348,10 @@ WHERE
 				&tag.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at read rows at get tag by name %s: %w", tagname, err)
+				return nil, err
+			}
 
 			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -435,7 +443,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from TAG %s: %w", err)
+		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -466,6 +474,10 @@ WHERE
 				&tag.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at read rows at get target id %s: %w", target_id, err)
+				return nil, err
+			}
 
 			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -576,7 +588,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from TAG %s: %w", err)
+		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -607,6 +619,11 @@ WHERE
 				&tag.RepName,
 				&dataType,
 			)
+
+			if err != nil {
+				err = fmt.Errorf("error at read rows at get tag histories: %w", err)
+				return nil, err
+			}
 
 			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -713,7 +730,7 @@ WHERE IS_DELETED = FALSE
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at select all tag names from TAG %s: %w", err)
+		err = fmt.Errorf("error at select all tag names from TAG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -802,7 +819,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from TAG %s: %w", err)
+		err = fmt.Errorf("error at select from TAG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -833,6 +850,10 @@ WHERE
 				&tag.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at read rows at get all tags: %w", err)
+				return nil, err
+			}
 
 			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {

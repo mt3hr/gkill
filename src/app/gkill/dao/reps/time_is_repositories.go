@@ -45,8 +45,7 @@ func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 }
 
 func (t TimeIsRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	matchKyou := &Kyou{}
-	matchKyou = nil
+	var matchKyou *Kyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -361,8 +360,7 @@ loop:
 }
 
 func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error) {
-	matchTimeIs := &TimeIs{}
-	matchTimeIs = nil
+	var matchTimeIs *TimeIs
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

@@ -38,18 +38,22 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
         runtimeCaching: [
           {
+            // eslint-disable-next-line no-useless-escape
             urlPattern: "^.*\/api\/get_gkill_info$",
             handler: 'StaleWhileRevalidate',
           },
           {
+            // eslint-disable-next-line no-useless-escape
             urlPattern: "^.*\/api\/get_all_rep_names$",
             handler: 'StaleWhileRevalidate',
           },
           {
+            // eslint-disable-next-line no-useless-escape
             urlPattern: "^.*\/api\/get_all_tag_names$",
             handler: 'StaleWhileRevalidate',
           },
           {
+            // eslint-disable-next-line no-useless-escape
             urlPattern: "^.*\/api\/get_mi_board_list$",
             handler: 'StaleWhileRevalidate',
           }

@@ -91,8 +91,7 @@ loop:
 }
 
 func (l LantanaRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	matchKyou := &Kyou{}
-	matchKyou = nil
+	var matchKyou *Kyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -400,8 +399,7 @@ loop:
 }
 
 func (l LantanaRepositories) GetLantana(ctx context.Context, id string, updateTime *time.Time) (*Lantana, error) {
-	matchLantana := &Lantana{}
-	matchLantana = nil
+	var matchLantana *Lantana
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

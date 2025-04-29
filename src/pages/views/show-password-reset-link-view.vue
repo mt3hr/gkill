@@ -33,7 +33,6 @@ import type { ShowPasswordResetLinkViewEmits } from './show-password-reset-link-
 import type { ShowPasswordResetLinkViewProps } from './show-password-reset-link-view-props'
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

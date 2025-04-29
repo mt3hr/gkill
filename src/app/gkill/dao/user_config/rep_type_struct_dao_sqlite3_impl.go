@@ -130,6 +130,10 @@ FROM REP_TYPE
 				&repTypeStruct.IsDir,
 				&repTypeStruct.IsOpenDefault,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan rep type struct: %w", err)
+				return nil, err
+			}
 			repTypeStructs = append(repTypeStructs, repTypeStruct)
 		}
 	}
@@ -189,6 +193,10 @@ WHERE USER_ID = ?
 				&repTypeStruct.IsDir,
 				&repTypeStruct.IsOpenDefault,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan rep type struct: %w", err)
+				return nil, err
+			}
 			repTypeStructs = append(repTypeStructs, repTypeStruct)
 		}
 	}
@@ -251,7 +259,7 @@ INSERT INTO REP_TYPE_STRUCT (
 func (r *repTypeStructDAOSQLite3Impl) AddRepTypeStructs(ctx context.Context, repTypeStructs []*RepTypeStruct) (bool, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
-		fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 	for _, repTypeStruct := range repTypeStructs {
@@ -315,7 +323,7 @@ INSERT INTO REP_TYPE_STRUCT (
 	}
 	err = tx.Commit()
 	if err != nil {
-		fmt.Errorf("error at commit: %w", err)
+		err = fmt.Errorf("error at commit: %w", err)
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			err = fmt.Errorf("%w: %w", err, rollbackErr)

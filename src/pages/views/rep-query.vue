@@ -63,9 +63,6 @@ import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-
 import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
 import { deepEquals } from '@/classes/deep-equals'
-import { useI18n } from 'vue-i18n'
-
-import { i18n } from '@/i18n'
 
 const foldable_struct_reps = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const foldable_struct_devices = ref<InstanceType<typeof FoldableStruct> | null>(null)
@@ -102,7 +99,7 @@ watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
 })
 
 const skip_emits_this_tick = ref(false)
-watch(() => props.application_config, async (_new_application_config: ApplicationConfig, old_application_config: ApplicationConfig) => {
+watch(() => props.application_config, async (_new_application_config: ApplicationConfig, _old_application_config: ApplicationConfig) => {
     cloned_application_config.value = props.application_config.clone()
     const errors = await cloned_application_config.value.load_all()
     if (errors !== null && errors.length !== 0) {

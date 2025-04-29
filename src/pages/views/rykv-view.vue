@@ -360,9 +360,6 @@ import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import moment from 'moment'
 import { deepEquals } from '@/classes/deep-equals'
-import { useI18n } from 'vue-i18n'
-
-import { i18n } from '@/i18n'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)

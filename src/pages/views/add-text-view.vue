@@ -48,7 +48,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { nextTick, type Ref, ref } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { AddTextViewProps } from './add-text-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { Text } from '@/classes/datas/text'
@@ -57,7 +57,6 @@ import { AddTextRequest } from '@/classes/api/req_res/add-text-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

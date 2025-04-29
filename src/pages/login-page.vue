@@ -26,9 +26,7 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import LoginView from './views/login-view.vue'
 import package_json from '../../package.json'
 import router from '@/router'
-import { useI18n } from 'vue-i18n'
 
-import { i18n } from '@/i18n'
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
 const browser_url_bar_height: Ref<Number> = ref(0)

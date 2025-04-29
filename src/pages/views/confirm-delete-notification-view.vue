@@ -49,7 +49,7 @@
 <script lang="ts" setup>
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import type { KyouViewEmits } from './kyou-view-emits'
-import { computed, nextTick, type Ref, ref } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import KyouView from './kyou-view.vue'
 import type { InfoIdentifier } from '@/classes/datas/info-identifier';
 import type { ConfirmDeleteNotificationViewProps } from './confirm-delete-notification-view-props';

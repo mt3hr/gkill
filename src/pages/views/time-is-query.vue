@@ -57,10 +57,6 @@ import FoldableStruct from './foldable-struct.vue'
 import { CheckState } from './check-state'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { FoldableStructModel } from './foldable-struct-model'
-import { deepEquals } from '@/classes/deep-equals'
-import { useI18n } from 'vue-i18n'
-
-import { i18n } from '@/i18n'
 
 const props = defineProps<TimeIsQueryProps>()
 const emits = defineEmits<TimeIsQueryEmits>()

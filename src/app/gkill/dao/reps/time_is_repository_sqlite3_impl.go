@@ -2,7 +2,6 @@ package reps
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"path/filepath"
 	"sync"
@@ -18,13 +17,13 @@ import (
 
 type timeIsRepositorySQLite3Impl struct {
 	filename string
-	db       *sql.DB
+	db       *sqllib.DB
 	m        *sync.Mutex
 }
 
 func NewTimeIsRepositorySQLite3Impl(ctx context.Context, filename string) (TimeIsRepository, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=2&_journal=DELETE")
+	db, err := sqllib.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=2&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -170,7 +169,7 @@ FROM TIMEIS
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, append(queryArgsForStart, queryArgsForPlaingStart...))
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, queryArgsForPlaingStart...)...)
 	if err != nil {
-		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
+		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -200,6 +199,10 @@ FROM TIMEIS
 				&kyou.RepName,
 				&kyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan kyou: %w", err)
+				return nil, err
+			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -344,6 +347,11 @@ WHERE
 				&kyou.DataType,
 			)
 
+			if err != nil {
+				err = fmt.Errorf("error at scan kyou: %w", err)
+				return nil, err
+			}
+
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
 				err = fmt.Errorf("error at parse related time %s at %s in TIMEIS: %w", relatedTimeStr, id, err)
@@ -469,7 +477,7 @@ FROM TIMEIS
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, append(queryArgs, queryArgsForPlaingStart...))
 	rows, err := stmt.QueryContext(ctx, append(queryArgs, queryArgsForPlaingStart...)...)
 	if err != nil {
-		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
+		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -503,6 +511,10 @@ FROM TIMEIS
 				&timeis.RepName,
 				&timeis.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan timeis: %w", err)
+				return nil, err
+			}
 
 			timeis.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
@@ -636,7 +648,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from TIMEIS%s: %w", err)
+		err = fmt.Errorf("error at select from TIMEIS: %w", err)
 		return nil, err
 	}
 	defer rows.Close()

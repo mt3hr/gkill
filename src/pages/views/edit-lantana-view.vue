@@ -67,7 +67,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { nextTick, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { EditLantanaViewProps } from './edit-lantana-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
@@ -78,7 +78,6 @@ import moment from 'moment'
 import LantanaFlowersView from './lantana-flowers-view.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

@@ -14,7 +14,6 @@
 import moment from 'moment';
 import type { KyouViewEmits } from './kyou-view-emits';
 import type { AggregateLocationViewProps } from './aggregate-location-view-props';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 
