@@ -73,9 +73,7 @@ import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 import { useTheme } from 'vuetify'
-import { useI18n } from 'vue-i18n'
 
-import { i18n } from '@/i18n'
 const theme = useTheme()
 
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);

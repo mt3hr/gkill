@@ -130,6 +130,9 @@ FROM DEVICE_STRUCT
 				&deviceStruct.IsDir,
 				&deviceStruct.IsOpenDefault,
 			)
+			if err != nil {
+				return nil, err
+			}
 			deviceStructs = append(deviceStructs, deviceStruct)
 		}
 	}
@@ -189,6 +192,9 @@ WHERE USER_ID = ?
 				&deviceStruct.IsDir,
 				&deviceStruct.IsOpenDefault,
 			)
+			if err != nil {
+				return nil, err
+			}
 			deviceStructs = append(deviceStructs, deviceStruct)
 		}
 	}
@@ -251,7 +257,7 @@ INSERT INTO DEVICE_STRUCT (
 func (d *deviceStructDAOSQLite3Impl) AddDeviceStructs(ctx context.Context, deviceStructs []*DeviceStruct) (bool, error) {
 	tx, err := d.db.Begin()
 	if err != nil {
-		fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 	for _, deviceStruct := range deviceStructs {
@@ -315,7 +321,7 @@ INSERT INTO DEVICE_STRUCT (
 	}
 	err = tx.Commit()
 	if err != nil {
-		fmt.Errorf("error at commit: %w", err)
+		err = fmt.Errorf("error at commit: %w", err)
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			err = fmt.Errorf("%w: %w", err, rollbackErr)

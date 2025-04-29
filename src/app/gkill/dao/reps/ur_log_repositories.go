@@ -91,8 +91,7 @@ loop:
 }
 
 func (u URLogRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	matchKyou := &Kyou{}
-	matchKyou = nil
+	var matchKyou *Kyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -400,8 +399,7 @@ loop:
 }
 
 func (u URLogRepositories) GetURLog(ctx context.Context, id string, updateTime *time.Time) (*URLog, error) {
-	matchURLog := &URLog{}
-	matchURLog = nil
+	var matchURLog *URLog
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

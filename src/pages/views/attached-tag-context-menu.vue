@@ -87,7 +87,6 @@ import ConfirmDeleteTagDialog from '../dialogs/confirm-delete-tag-dialog.vue'
 import TagHistoriesDialog from '../dialogs/tag-histories-dialog.vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

@@ -19,7 +19,6 @@
 <script lang="ts" setup>
 import type { AggregateAmountViewProps } from './aggregate-amount-view-props';
 import type { KyouViewEmits } from './kyou-view-emits';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

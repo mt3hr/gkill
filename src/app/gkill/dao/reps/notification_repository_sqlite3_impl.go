@@ -164,7 +164,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from NOTIFICATION %s: %w", err)
+		err = fmt.Errorf("error at select from NOTIFICATION: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -197,6 +197,10 @@ WHERE
 				&notification.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from NOTIFICATION: %w", err)
+				return nil, err
+			}
 
 			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
 			if err != nil {
@@ -320,7 +324,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from NOTIFICATION %s: %w", err)
+		err = fmt.Errorf("error at select from NOTIFICATION: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -353,6 +357,10 @@ WHERE
 				&notification.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from NOTIFICATION: %w", err)
+				return nil, err
+			}
 
 			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
 			if err != nil {
@@ -444,7 +452,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from NOTIFICATION %s: %w", err)
+		err = fmt.Errorf("error at select from NOTIFICATION: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -477,6 +485,10 @@ WHERE
 				&notification.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from NOTIFICATION: %w", err)
+				return nil, err
+			}
 
 			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
 			if err != nil {
@@ -589,7 +601,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from NOTIFICATION %s: %w", err)
+		err = fmt.Errorf("error at select from NOTIFICATION: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -622,6 +634,10 @@ WHERE
 				&notification.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from NOTIFICATION: %w", err)
+				return nil, err
+			}
 
 			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
 			if err != nil {

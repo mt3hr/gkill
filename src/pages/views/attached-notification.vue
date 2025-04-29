@@ -32,7 +32,6 @@ import AttachedNotificationContextMenu from './attached-notification-context-men
 import { computed, ref } from 'vue'
 import type { AttachedNotificationProps } from './attached-notification-props';
 import type { KyouViewEmits } from './kyou-view-emits';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

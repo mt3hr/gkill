@@ -93,7 +93,7 @@ loop:
 					ids = *query.IDs
 				}
 				for _, id := range ids {
-					match = id == fmt.Sprintf("%s", commit.Hash)
+					match = id == commit.Hash.String()
 					if match {
 						break
 					}
@@ -173,18 +173,18 @@ loop:
 
 			kyou := &Kyou{}
 			kyou.IsDeleted = false
-			kyou.ID = fmt.Sprintf("%s", commit.Hash)
+			kyou.ID = commit.Hash.String()
 			kyou.RepName = repName
 			kyou.RelatedTime = commit.Committer.When
 			kyou.DataType = "git_commit_log"
 			kyou.CreateTime = commit.Committer.When
 			kyou.CreateApp = "git"
 			kyou.CreateDevice = ""
-			kyou.CreateUser = fmt.Sprintf("%s", commit.Author)
+			kyou.CreateUser = commit.Author.Name
 			kyou.UpdateTime = commit.Committer.When
 			kyou.UpdateApp = "git"
 			kyou.UpdateDevice = ""
-			kyou.UpdateUser = fmt.Sprintf("%s", commit.Author)
+			kyou.UpdateUser = commit.Author.Name
 
 			kyous = append(kyous, kyou)
 
@@ -208,8 +208,7 @@ func (g *gitCommitLogRepositoryLocalImpl) GetKyou(ctx context.Context, id string
 	}
 
 	// 判定OKであればKyouを作る
-	matchKyou := &Kyou{}
-	matchKyou = nil
+	var matchKyou *Kyou
 	logs, err := g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash(id)})
 	if err != nil {
 		return nil, nil
@@ -227,7 +226,7 @@ loop:
 		default:
 			// 判定
 			match := true
-			if id == fmt.Sprintf("%s", commit.Hash) {
+			if id == commit.Hash.String() {
 				match = true
 			}
 			if !match {
@@ -236,7 +235,7 @@ loop:
 
 			kyou := &Kyou{}
 			kyou.IsDeleted = false
-			kyou.ID = fmt.Sprintf("%s", commit.Hash)
+			kyou.ID = commit.Hash.String()
 			kyou.RepName = repName
 			kyou.RelatedTime = commit.Committer.When
 			kyou.DataType = "git_commit_log"
@@ -334,7 +333,7 @@ loop:
 					ids = *query.IDs
 				}
 				for _, id := range ids {
-					match = id == fmt.Sprintf("%s", commit.Hash)
+					match = id == commit.Hash.String()
 					if match {
 						break
 					}
@@ -404,19 +403,19 @@ loop:
 
 			gitCommitLog := &GitCommitLog{}
 			gitCommitLog.IsDeleted = false
-			gitCommitLog.ID = fmt.Sprintf("%s", commit.Hash)
+			gitCommitLog.ID = commit.Hash.String()
 			gitCommitLog.RepName = repName
 			gitCommitLog.RelatedTime = commit.Committer.When
 			gitCommitLog.DataType = "git_commit_log"
 			gitCommitLog.CreateTime = commit.Committer.When
 			gitCommitLog.CreateApp = "git"
 			gitCommitLog.CreateDevice = ""
-			gitCommitLog.CreateUser = fmt.Sprintf("%s", commit.Author)
+			gitCommitLog.CreateUser = commit.Author.Name
 			gitCommitLog.UpdateTime = commit.Committer.When
 			gitCommitLog.UpdateApp = "git"
 			gitCommitLog.UpdateDevice = ""
-			gitCommitLog.UpdateUser = fmt.Sprintf("%s", commit.Author)
-			gitCommitLog.CommitMessage = fmt.Sprintf("%s", commit.Message)
+			gitCommitLog.UpdateUser = commit.Author.Name
+			gitCommitLog.CommitMessage = commit.Message
 			gitCommitLog.Addition = addition
 			gitCommitLog.Deletion = deletion
 
@@ -442,8 +441,7 @@ func (g *gitCommitLogRepositoryLocalImpl) GetGitCommitLog(ctx context.Context, i
 	}
 
 	// 判定OKであればKyouを作る
-	matchGitCommitLog := &GitCommitLog{}
-	matchGitCommitLog = nil
+	var matchGitCommitLog *GitCommitLog
 	logs, err := g.gitrep.Log(&git.LogOptions{From: plumbing.NewHash(id)})
 	if err != nil {
 		return nil, nil
@@ -462,7 +460,7 @@ loop:
 		default:
 			// 判定
 			match := false
-			if id == fmt.Sprintf("%s", commit.Hash) {
+			if id == commit.Hash.String() {
 				match = true
 			}
 			if updateTime != nil && updateTime.Format(sqlite3impl.TimeLayout) != commit.Committer.When.Format(sqlite3impl.TimeLayout) {
@@ -486,19 +484,19 @@ loop:
 
 			gitCommitLog := &GitCommitLog{}
 			gitCommitLog.IsDeleted = false
-			gitCommitLog.ID = fmt.Sprintf("%s", commit.Hash)
+			gitCommitLog.ID = commit.Hash.String()
 			gitCommitLog.RepName = repName
 			gitCommitLog.RelatedTime = commit.Committer.When
 			gitCommitLog.DataType = "git_commit_log"
 			gitCommitLog.CreateTime = commit.Committer.When
 			gitCommitLog.CreateApp = "git"
 			gitCommitLog.CreateDevice = ""
-			gitCommitLog.CreateUser = fmt.Sprintf("%s", commit.Author.Name)
+			gitCommitLog.CreateUser = commit.Author.Name
 			gitCommitLog.UpdateTime = commit.Committer.When
 			gitCommitLog.UpdateApp = "git"
 			gitCommitLog.UpdateDevice = ""
-			gitCommitLog.UpdateUser = fmt.Sprintf("%s", commit.Author.Name)
-			gitCommitLog.CommitMessage = fmt.Sprintf("%s", commit.Message)
+			gitCommitLog.UpdateUser = commit.Author.Name
+			gitCommitLog.CommitMessage = commit.Message
 			gitCommitLog.Addition = addition
 			gitCommitLog.Deletion = deletion
 

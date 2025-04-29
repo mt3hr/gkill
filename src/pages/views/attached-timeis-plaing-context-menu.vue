@@ -89,7 +89,6 @@ import KyouHistoriesDialog from '../dialogs/kyou-histories-dialog.vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 const edit_timeis_dialog = ref<InstanceType<typeof EditTimeIsDialog> | null>(null);

@@ -87,7 +87,7 @@
 </template>
 <script lang="ts" setup>
 import type { EndTimeIsPlaingViewProps } from './end-time-is-plaing-view-props'
-import { nextTick, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { Kyou } from '@/classes/datas/kyou'
 import KyouView from './kyou-view.vue'
@@ -96,7 +96,6 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

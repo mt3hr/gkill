@@ -43,7 +43,6 @@ import { Lantana } from '@/classes/datas/lantana'
 import type { AddLantanaViewProps } from './add-lantana-view-props'
 import { AddLantanaRequest } from '@/classes/api/req_res/add-lantana-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

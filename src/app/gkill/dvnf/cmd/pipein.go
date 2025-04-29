@@ -23,8 +23,8 @@ func pipeInFormatted() (string, error) {
 	return formatPipein(b), nil
 }
 
-//stdinがterminalでなければ読み取ります？
-//パイプから渡されたっぽければ、受け取ったデータを渡します。
+// stdinがterminalでなければ読み取ります？
+// パイプから渡されたっぽければ、受け取ったデータを渡します。
 func pipeIn() ([]byte, error) {
 	//標準入力がパイプじゃなければ返す
 	if stdinIsTerminal() {
@@ -41,10 +41,10 @@ func pipeIn() ([]byte, error) {
 	return b, nil
 }
 
-//文字列から改行文字を除去します。
+// 文字列から改行文字を除去します。
 func removeNewlineCodes(str string) string {
 	for _, nlcode := range newlineCodes {
-		str = strings.Replace(str, nlcode, "", -1)
+		str = strings.ReplaceAll(str, nlcode, "")
 	}
 	return str
 }
@@ -57,28 +57,28 @@ func formatPipein(pipein []byte) string {
 	return pipeStr
 }
 
-//標準入力がTerminalであればtrueを返します
+// 標準入力がTerminalであればtrueを返します
 func stdinIsTerminal() bool {
 	fd := int(os.Stdin.Fd())
 	return terminal.IsTerminal(fd)
 }
 
-//改行文字
+// 改行文字
 var newlineCodes = []string{
 	"\r\n",
 	"\r",
 	"\n",
 }
 
-//改行文字を\nに揃えます
+// 改行文字を\nに揃えます
 func replaceNewlineCodes(str, new string) string {
 	for _, nlcode := range newlineCodes {
-		str = strings.Replace(str, nlcode, new, -1)
+		str = strings.ReplaceAll(str, nlcode, new)
 	}
 	return str
 }
 
-//BOMのマップ
+// BOMのマップ
 var boms = [][]byte{
 	{0xEF, 0xBB, 0xBF},       //UTF-8
 	{0xFE, 0xFF},             //UTF-16 BE
@@ -91,7 +91,7 @@ var boms = [][]byte{
 	{0x2B, 0x2F, 0x76, 0x2F}, //UTF-7
 }
 
-//頭にBOMがついていたら除去します。
+// 頭にBOMがついていたら除去します。
 func removeBOM(str string) string {
 	b := []byte(str)
 	for _, bom := range boms {

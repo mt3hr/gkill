@@ -11,7 +11,7 @@ var (
 )
 
 func (m *MiCheckState) UnmarshalJSON(b []byte) error {
-	var checkStateStr string = ""
+	var checkStateStr string
 	err := json.Unmarshal(b, &checkStateStr)
 	if err != nil {
 		return err
@@ -21,6 +21,6 @@ func (m *MiCheckState) UnmarshalJSON(b []byte) error {
 }
 
 func (m MiCheckState) MarshalJSON() ([]byte, error) {
-	var checkStateStr string = string(m)
+	var checkStateStr = string(m)
 	return json.Marshal([]byte(checkStateStr))
 }

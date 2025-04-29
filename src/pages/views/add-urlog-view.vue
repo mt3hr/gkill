@@ -63,7 +63,6 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import type { KyouViewEmits } from './kyou-view-emits'
 import { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 
