@@ -47,6 +47,23 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
 	}
 	defer stmt.Close()
 
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_APPLICATION_CONFIG ON APPLICATION_CONFIG (USER_ID);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create APPLICATION_CONFIG index statement %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = indexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create APPLICATION_CONFIG index to %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 

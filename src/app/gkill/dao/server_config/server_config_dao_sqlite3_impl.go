@@ -59,6 +59,23 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 		return nil, err
 	}
 
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_SERVER_CONFIG ON SERVER_CONFIG (DEVICE);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create SERVER_CONFIG index statement %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = indexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create SERVER_CONFIG index to %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
 	return &serverConfigDAOSQLite3Impl{
 		filename: filename,
 		db:       db,

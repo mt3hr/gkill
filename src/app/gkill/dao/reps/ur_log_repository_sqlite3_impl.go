@@ -62,6 +62,31 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 		return nil, err
 	}
 
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_URLOG ON URLOG (ID, RELATED_TIME, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create URLOG index statement %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = indexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create URLOG index to %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
+
+	if err != nil {
+		err = fmt.Errorf("error at create URLOG table to %s: %w", filename, err)
+		return nil, err
+	}
+
 	return &urlogRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
