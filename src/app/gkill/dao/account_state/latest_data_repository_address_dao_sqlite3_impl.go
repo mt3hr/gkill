@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS %s (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := latestDataRepositoryAddress.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at CREATE TABLE LATEST_DATA_REPOSITORY_ADDRESS statement %s: %w", err)
+		err = fmt.Errorf("error at CREATE TABLE LATEST_DATA_REPOSITORY_ADDRESS statement: %w", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -63,9 +63,33 @@ CREATE TABLE IF NOT EXISTS %s (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create LATEST_DATA_REPOSITORY_ADDRESS table to %s: %w", err)
+		err = fmt.Errorf("error at create LATEST_DATA_REPOSITORY_ADDRESS table: %w", err)
 		return nil, err
 	}
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create %s table: %w", latestDataRepositoryAddress.tableName, err)
+		return nil, err
+	}
+
+	indexSQL := fmt.Sprintf("CREATE INDEX IF NOT EXISTS INDEX_%s ON %s (TARGET_ID);", latestDataRepositoryAddress.tableName, latestDataRepositoryAddress.tableName)
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := latestDataRepositoryAddress.db.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create %s index statement: %w", latestDataRepositoryAddress.tableName, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = indexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create %s index: %w", latestDataRepositoryAddress.tableName, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
 
 	return latestDataRepositoryAddress, nil
 }

@@ -59,6 +59,31 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		return nil, err
 	}
 
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG ON TAG (ID, RELATED_TIME, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG index statement %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = indexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG index to %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
+
+	if err != nil {
+		err = fmt.Errorf("error at create TAG table to %s: %w", filename, err)
+		return nil, err
+	}
+
 	return &tagRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
