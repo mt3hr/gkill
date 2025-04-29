@@ -20,6 +20,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	dvnf_cmd "github.com/mt3hr/gkill/src/app/gkill/dvnf/cmd"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/spf13/cobra"
 )
@@ -27,8 +28,7 @@ import (
 var (
 	gkillServerAPI *api.GkillServerAPI
 
-	idfTargetForIDFCmd string
-	IDFCmd             = &cobra.Command{
+	IDFCmd = &cobra.Command{
 		Use: "idf",
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
@@ -62,6 +62,7 @@ var (
 					idfKyouRep, err := reps.NewIDFDirRep(context.TODO(), filename, idDBFilename, router, &autoIDF, &idfIgnore, nil)
 					if err != nil {
 						err = fmt.Errorf("error at new idf dir rep: %w", err)
+						gkill_log.Debug.Println(err.Error())
 						fmt.Printf("skip idf: %s\n", filename)
 						continue
 					}
@@ -75,7 +76,7 @@ var (
 )
 
 func init() {
-	if "" == os.Getenv("HOME") {
+	if os.Getenv("HOME") == "" {
 		os.Setenv("HOME", os.Getenv("HOMEPATH"))
 	}
 	fixTimezone()
@@ -125,7 +126,7 @@ func LaunchGkillServerAPI() error {
 	var err error
 
 	defer gkillServerAPI.Close()
-	interceptCh := make(chan os.Signal)
+	interceptCh := make(chan os.Signal, 1)
 	signal.Notify(interceptCh, os.Interrupt)
 	go func() {
 		<-interceptCh

@@ -66,7 +66,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { nextTick, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { EditKmemoViewProps } from './edit-kmemo-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
@@ -76,7 +76,6 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { UpdateKmemoRequest } from '@/classes/api/req_res/update-kmemo-request'
 import moment from 'moment'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

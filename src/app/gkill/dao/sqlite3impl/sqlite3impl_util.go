@@ -267,6 +267,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 				*queryArgs = append(*queryArgs, false)
 			}
 		*/
+		_, _ = groupByCounter, havingCount
 	}
 
 	// ORDER BY

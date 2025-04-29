@@ -44,7 +44,7 @@ func runMove(_ *cobra.Command, _ []string) {
 	// createNewならcreateする
 	opt := newDVNFOption(dvnfdir, moveOpt.ext)
 	if rootOpt.createNew {
-		dvnfdir, err = dvnf.CreateNewDVNF(opt, true)
+		_, err = dvnf.CreateNewDVNF(opt, true)
 		if err != nil {
 			err = fmt.Errorf("error at create new dvnf %s_%s: %w", opt.Device, opt.Directory, err)
 			log.Fatal(err)

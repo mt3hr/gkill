@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/SherClockHolmes/webpush-go"
@@ -39,7 +38,7 @@ func (n *notificator) waitAndNotify() {
 	// その後、通知を更新済みに更新し、通知対象から削除する
 	if time.Now().Before(n.notification.NotificationTime) {
 		// まだだったら時刻まで待機する
-		diff := n.notification.NotificationTime.Sub(time.Now())
+		diff := time.Until(n.notification.NotificationTime)
 
 		select {
 		case <-n.ctx.Done():
@@ -76,7 +75,7 @@ func (n *notificator) waitAndNotify() {
 		}
 	}
 	if currentServerConfig == nil {
-		err = fmt.Errorf("current server config is not found. in gkill notificator.")
+		err = fmt.Errorf("current server config is not found. in gkill notificator")
 		gkill_log.Debug.Print(err)
 		return
 	}
@@ -84,7 +83,7 @@ func (n *notificator) waitAndNotify() {
 	// 送信対象を取得する
 	userID, err := n.gkillReps.GetUserID(notificationCtx)
 	if err != nil {
-		err = fmt.Errorf("get user id from gkill reps. in gkill notificator.")
+		err = fmt.Errorf("get user id from gkill reps. in gkill notificator")
 		gkill_log.Debug.Print(err)
 		return
 	}
@@ -114,7 +113,7 @@ func (n *notificator) waitAndNotify() {
 
 		subscription := string(notificationTarget.Subscription)
 		s := &webpush.Subscription{}
-		json.Unmarshal([]byte(subscription), s)
+		_ = json.Unmarshal([]byte(subscription), s)
 		resp, err := webpush.SendNotification(contentJSONb, s, &webpush.Options{
 			Subscriber:      "example@example.com",
 			VAPIDPublicKey:  currentServerConfig.GkillNotificationPublicKey,
@@ -123,6 +122,7 @@ func (n *notificator) waitAndNotify() {
 		})
 		if err != nil {
 			err = fmt.Errorf("error at send gkill notification: %w", err)
+			gkill_log.Debug.Println(err.Error())
 		}
 		if resp.Body == nil {
 			return
@@ -135,7 +135,6 @@ type GkillNotificator struct {
 	gkillDAOManager        *GkillDAOManager
 	gkillReps              *reps.GkillRepositories
 	notificators           map[string]*notificator
-	m                      sync.Mutex
 	notificationServiceCtx context.Context
 	notificationCtx        context.Context
 	cancelFunc             context.CancelFunc
@@ -192,10 +191,6 @@ func (g *GkillNotificator) UpdateNotificationTargets(ctx context.Context) error 
 			continue
 		}
 		notificator := newNotificator(g.notificationCtx, g.gkillDAOManager, g.gkillReps, notification)
-		if err != nil {
-			err = fmt.Errorf("error at new notificator: %w", err)
-			return err
-		}
 		g.notificators[notification.ID] = notificator
 	}
 	return nil

@@ -136,7 +136,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { nextTick, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { EditMiViewProps } from './edit-mi-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
@@ -148,7 +148,6 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

@@ -99,6 +99,10 @@ FROM MI_SHARE_INFO
 				&miShareInfo.ShareID,
 				&miShareInfo.FindQueryJSON,
 			)
+			err = fmt.Errorf("error at scan mi share info: %w", err)
+			if err != nil {
+				return nil, err
+			}
 			miShareInfos = append(miShareInfos, miShareInfo)
 		}
 	}
@@ -154,6 +158,10 @@ WHERE USER_ID = ? AND DEVICE = ?
 				&miShareInfo.ShareID,
 				&miShareInfo.FindQueryJSON,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan mi share info: %w", err)
+				return nil, err
+			}
 			miShareInfos = append(miShareInfos, miShareInfo)
 		}
 	}
@@ -208,6 +216,10 @@ WHERE SHARE_ID = ?
 				&miShareInfo.ShareID,
 				&miShareInfo.FindQueryJSON,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan mi share info: %w", err)
+				return nil, err
+			}
 			miShareInfos = append(miShareInfos, miShareInfo)
 		}
 	}

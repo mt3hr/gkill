@@ -285,6 +285,10 @@ WHERE
 				&kyou.RepName,
 				&kyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from REKYOU %s: %w", id, err)
+				return nil, err
+			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -468,7 +472,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from REKYOU %s: %w", err)
+		err = fmt.Errorf("error at select from REKYOU: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -497,6 +501,10 @@ WHERE
 				&reKyou.RepName,
 				&reKyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from REKYOU %s: %w", id, err)
+				return nil, err
+			}
 
 			reKyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -642,7 +650,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from REKYOU %s: %w", err)
+		err = fmt.Errorf("error at select from REKYOU: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -671,6 +679,10 @@ WHERE
 				&reKyou.RepName,
 				&reKyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from REKYOU: %w", err)
+				return nil, err
+			}
 
 			reKyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {

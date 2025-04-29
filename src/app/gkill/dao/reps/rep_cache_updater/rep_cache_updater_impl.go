@@ -100,7 +100,7 @@ func (f *fileRepCacheUpdaterImpl) Close() error {
 		err = watchTarget.watcher.Close()
 		if err != nil {
 			targetFileName, _ := watchTarget.GetTargetFileName()
-			err = fmt.Errorf("error at close file rep cache updater impl. targetfilename = %s: %w: %w", targetFileName, err)
+			err = fmt.Errorf("error at close file rep cache updater impl. targetfilename = %s: %w", targetFileName, err)
 		}
 	}
 

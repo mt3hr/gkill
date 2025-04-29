@@ -133,6 +133,10 @@ FROM REP_STRUCT
 				&repStruct.IsDir,
 				&repStruct.IsOpenDefault,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan rep struct: %w", err)
+				return nil, err
+			}
 			repStructs = append(repStructs, repStruct)
 		}
 	}
@@ -194,6 +198,10 @@ WHERE USER_ID = ?
 				&repStruct.IsDir,
 				&repStruct.IsOpenDefault,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan rep struct: %w", err)
+				return nil, err
+			}
 			repStructs = append(repStructs, repStruct)
 		}
 	}
@@ -259,7 +267,7 @@ INSERT INTO REP_STRUCT (
 func (r *repStructDAOSQLite3Impl) AddRepStructs(ctx context.Context, repStructs []*RepStruct) (bool, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
-		fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 	for _, repStruct := range repStructs {

@@ -12,7 +12,7 @@ const (
 )
 
 func (m *MiSortType) UnmarshalJSON(b []byte) error {
-	var sortTypeStr string = ""
+	var sortTypeStr string
 	err := json.Unmarshal(b, &sortTypeStr)
 	if err != nil {
 		return err
@@ -22,6 +22,6 @@ func (m *MiSortType) UnmarshalJSON(b []byte) error {
 }
 
 func (m MiSortType) MarshalJSON() ([]byte, error) {
-	var sortTypeStr string = string(m)
+	var sortTypeStr = string(m)
 	return json.Marshal([]byte(sortTypeStr))
 }

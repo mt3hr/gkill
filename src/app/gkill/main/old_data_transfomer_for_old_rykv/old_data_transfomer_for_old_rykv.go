@@ -973,7 +973,7 @@ FROM end;`)
 				e.EndTime = &time.Time{}
 				*e.EndTime, err = time.Parse(TimeLayout, strings.ReplaceAll(endTimeStr.String, " ", "T"))
 				if err != nil {
-					err = fmt.Errorf("error at parse end time %s: %w", endTimeStr, err)
+					err = fmt.Errorf("error at parse end time %s: %w", endTimeStr.String, err)
 					return nil, err
 				}
 			}
@@ -1567,8 +1567,7 @@ func (a *allDataDB) insertKmemosFromOldDB(kmemos []*Kmemo) error {
 		return err
 	}
 
-	sql := fmt.Sprintf(
-		`INSERT INTO kmemo(
+	sql := `INSERT INTO kmemo(
 			ID,
 			Content,
 			Time,
@@ -1578,8 +1577,7 @@ func (a *allDataDB) insertKmemosFromOldDB(kmemos []*Kmemo) error {
 			  ?,
 			  ?,
 			  ?
-		  )`,
-	)
+		  )`
 	for _, kmemo := range kmemos {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -1607,8 +1605,7 @@ func (a *allDataDB) insertURLogsFromOldDB(urlogs []*URLog) error {
 		return err
 	}
 
-	sql := fmt.Sprintf(
-		`INSERT INTO urlog (
+	sql := `INSERT INTO urlog (
 			ID,
 			URL,
 			Title,
@@ -1626,8 +1623,7 @@ func (a *allDataDB) insertURLogsFromOldDB(urlogs []*URLog) error {
 		    ?,
 		    ?,
 		    ?
-		  )`,
-	)
+		  )`
 	for _, urlog := range urlogs {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -1659,8 +1655,7 @@ func (a *allDataDB) insertLantanasFromOldDB(lantanas []*Lantana) error {
 		return err
 	}
 
-	sql := fmt.Sprintf(
-		`INSERT INTO lantana (
+	sql := `INSERT INTO lantana (
 		  LantanaID,
 		  Time,
 		  Mood,
@@ -1670,8 +1665,7 @@ func (a *allDataDB) insertLantanasFromOldDB(lantanas []*Lantana) error {
 		  ?,
 		  ?,
 		  ?
-		)`,
-	)
+		)`
 	for _, lantana := range lantanas {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -1699,7 +1693,7 @@ func (a *allDataDB) insertIDFKyousFromOldDB(idfKyous []*IDFKyou) error {
 		return err
 	}
 
-	sql := fmt.Sprintf(
+	sql :=
 		`INSERT INTO id (
 			Target,
 			ID,
@@ -1712,8 +1706,7 @@ func (a *allDataDB) insertIDFKyousFromOldDB(idfKyous []*IDFKyou) error {
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, idfKyou := range idfKyous {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -1742,7 +1735,7 @@ func (a *allDataDB) insertTagsFromOldDB(tags []*Tag) error {
 		return err
 	}
 
-	sql := fmt.Sprintf(
+	sql :=
 		`INSERT INTO tag (
 			ID,
 			Target,
@@ -1755,8 +1748,7 @@ func (a *allDataDB) insertTagsFromOldDB(tags []*Tag) error {
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, tag := range tags {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -1785,8 +1777,7 @@ func (a *allDataDB) insertTextsFromOldDB(texts []*Text) error {
 		return err
 	}
 
-	sql := fmt.Sprintf(
-		`INSERT INTO "text" (
+	sql := `INSERT INTO "text" (
 			ID,
 			Target,
 			Text,
@@ -1798,8 +1789,7 @@ func (a *allDataDB) insertTextsFromOldDB(texts []*Text) error {
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, text := range texts {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -1828,7 +1818,7 @@ func (a *allDataDB) insertTimeisStartsFromOldDB(timeisStarts []*TimeIsStart) err
 		return err
 	}
 
-	sql := fmt.Sprintf(
+	sql :=
 		`INSERT INTO timeis_start (
 			ID,
 			Title,
@@ -1839,8 +1829,7 @@ func (a *allDataDB) insertTimeisStartsFromOldDB(timeisStarts []*TimeIsStart) err
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, timeisStart := range timeisStarts {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -1868,7 +1857,7 @@ func (a *allDataDB) insertTimeisEndsFromOldDB(timeisEnds []*TimeIsEnd) error {
 		return err
 	}
 
-	sql_ := fmt.Sprintf(
+	sql_ :=
 		`INSERT INTO timeis_end (
 			ID,
 			StartID,
@@ -1879,8 +1868,7 @@ func (a *allDataDB) insertTimeisEndsFromOldDB(timeisEnds []*TimeIsEnd) error {
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, timeisEnd := range timeisEnds {
 		end := sql.NullString{}
 		if timeisEnd.EndTime != nil {
@@ -1914,7 +1902,7 @@ func (a *allDataDB) insertMiTasksFromOldDB(miTasks []*MiTask) error {
 		return err
 	}
 
-	sql := fmt.Sprintf(
+	sql :=
 		`INSERT INTO Task (
 			TaskID,
 			CreatedTime,
@@ -1923,8 +1911,7 @@ func (a *allDataDB) insertMiTasksFromOldDB(miTasks []*MiTask) error {
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, miTask := range miTasks {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -1951,7 +1938,7 @@ func (a *allDataDB) insertMiCheckStatesFromOldDB(miCheckStateInfos []*MiCheckSta
 		return err
 	}
 
-	sql := fmt.Sprintf(
+	sql :=
 		`INSERT INTO CheckStateInfo (
 			CheckStateID,
 			TaskID,
@@ -1964,8 +1951,7 @@ func (a *allDataDB) insertMiCheckStatesFromOldDB(miCheckStateInfos []*MiCheckSta
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, miCheckStateInfo := range miCheckStateInfos {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -1994,7 +1980,7 @@ func (a *allDataDB) insertMiTaskTitlesFromOldDB(miTaskTitleInfos []*MiTaskTitleI
 		return err
 	}
 
-	sql := fmt.Sprintf(
+	sql :=
 		`INSERT INTO TaskTitleInfo (
 			TaskTitleID,
 			TaskID,
@@ -2007,8 +1993,7 @@ func (a *allDataDB) insertMiTaskTitlesFromOldDB(miTaskTitleInfos []*MiTaskTitleI
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, miTaskTitleInfo := range miTaskTitleInfos {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -2037,7 +2022,7 @@ func (a *allDataDB) insertMiLimitsFromOldDB(miLimitInfos []*MiLimitInfo) error {
 		return err
 	}
 
-	sql_ := fmt.Sprintf(
+	sql_ :=
 		`INSERT INTO LimitInfo (
 			LimitID,
 			TaskID,
@@ -2050,8 +2035,7 @@ func (a *allDataDB) insertMiLimitsFromOldDB(miLimitInfos []*MiLimitInfo) error {
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, miLimitInfo := range miLimitInfos {
 		limit := sql.NullString{}
 		if miLimitInfo.Limit != nil {
@@ -2086,7 +2070,7 @@ func (a *allDataDB) insertMiStartsFromOldDB(miStartInfos []*MiStartInfo) error {
 		return err
 	}
 
-	sql_ := fmt.Sprintf(
+	sql_ :=
 		`INSERT INTO MiStartInfo (
 			StartID,
 			TaskID,
@@ -2099,8 +2083,7 @@ func (a *allDataDB) insertMiStartsFromOldDB(miStartInfos []*MiStartInfo) error {
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, miStartInfo := range miStartInfos {
 		start := sql.NullString{}
 		if miStartInfo.Start != nil {
@@ -2135,7 +2118,7 @@ func (a *allDataDB) insertMiEndsFromOldDB(miEndInfos []*MiEndInfo) error {
 		return err
 	}
 
-	sql_ := fmt.Sprintf(
+	sql_ :=
 		`INSERT INTO MiEndInfo (
 			EndID,
 			TaskID,
@@ -2148,8 +2131,7 @@ func (a *allDataDB) insertMiEndsFromOldDB(miEndInfos []*MiEndInfo) error {
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, miEndInfo := range miEndInfos {
 		end := sql.NullString{}
 		if miEndInfo.End != nil {
@@ -2184,7 +2166,7 @@ func (a *allDataDB) insertMiBoardsFromOldDB(miBoardInfos []*MiBoardInfo) error {
 		return err
 	}
 
-	sql := fmt.Sprintf(
+	sql :=
 		`INSERT INTO BoardInfo (
 			BoardInfoID,
 			TaskID,
@@ -2197,8 +2179,7 @@ func (a *allDataDB) insertMiBoardsFromOldDB(miBoardInfos []*MiBoardInfo) error {
 			?,
 			?,
 			?
-		)`,
-	)
+		)`
 	for _, miBoardInfo := range miBoardInfos {
 		_, err = tx.Exec(sql, []interface {
 		}{
@@ -2432,7 +2413,7 @@ func (a *allDataDB) getGkillIDFKyous() ([]*reps.IDFKyou, error) {
 		}
 		fileMetadata.RelatedTime, err = time.Parse(TimeLayout, lastmodStr)
 		if err != nil {
-			err = fmt.Errorf("error at parse lastmod time '%s' at %s: %w", lastmodStr, fileMetadata, err)
+			err = fmt.Errorf("error at parse lastmod time '%s' at %#v: %w", lastmodStr, fileMetadata, err)
 			return nil, err
 		}
 		time, err := time.Parse(TimeLayout, timestr)
@@ -2585,7 +2566,10 @@ LEFT OUTER JOIN timeis_end ON timeis_start.ID = timeis_end.StartID
 		timeis.UpdateDevice = strings.Split(timeis.RepName, "_")[1]
 		timeis.UpdateUser = a.UserName
 		timeis.CreateTime = timeis.StartTime
-		timeis.UpdateTime = timeis.UpdateTime
+		timeis.UpdateTime = timeis.StartTime
+		if timeis.EndTime != nil {
+			timeis.UpdateTime = *timeis.EndTime
+		}
 		timeiss = append(timeiss, timeis)
 	}
 	return timeiss, nil
@@ -2752,8 +2736,6 @@ OR UpdateTime = MAX(datetime(CheckStateInfo.UpdatedTime, 'localtime'))
 		mi.UpdateApp = "mi"
 		mi.UpdateDevice = strings.Split(mi.RepName, "_")[1]
 		mi.UpdateUser = a.UserName
-		mi.CreateTime = mi.CreateTime
-		mi.UpdateTime = mi.UpdateTime
 		mis = append(mis, mi)
 	}
 	return mis, nil

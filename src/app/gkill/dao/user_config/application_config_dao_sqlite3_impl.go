@@ -129,6 +129,9 @@ FROM APPLICATION_CONFIG
 				&rykvDefaultPeriod,
 				&miDefaultPeriod,
 			)
+			if err != nil {
+				return nil, err
+			}
 
 			applicationConfig.RykvDefaultPeriod = json.Number(strconv.Itoa(rykvDefaultPeriod))
 			applicationConfig.MiDefaultPeriod = json.Number(strconv.Itoa(miDefaultPeriod))
@@ -209,7 +212,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	} else if len(applicationConfigs) == 1 {
 		return applicationConfigs[0], nil
 	}
-	return nil, fmt.Errorf("複数のアプリケーションコンフィグが見つかりました。%s: %w", err)
+	return nil, fmt.Errorf("複数のアプリケーションコンフィグが見つかりました。: %w", err)
 }
 
 func (a *applicationConfigDAOSQLite3Impl) AddApplicationConfig(ctx context.Context, applicationConfig *ApplicationConfig) (bool, error) {

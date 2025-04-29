@@ -40,7 +40,7 @@ func GPSLogFileAsGPSLogs(repDir string, sourceFileName string, behavior req_res.
 			location.Time, err = time.Parse(time.RFC3339Nano, location.Timestamp)
 			location.Time = location.Time.In(time.Local)
 			if err != nil {
-				err = fmt.Errorf("error at parse time %s: %w")
+				err = fmt.Errorf("error at parse time %s: %w", location.Timestamp, err)
 				return nil, err
 			}
 			notDuplicationPointMap[location.Time] = &reps.GPSLog{

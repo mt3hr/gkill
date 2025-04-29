@@ -133,8 +133,7 @@ errloop:
 }
 
 func (r Repositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	matchKyou := &Kyou{}
-	matchKyou = nil
+	var matchKyou *Kyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

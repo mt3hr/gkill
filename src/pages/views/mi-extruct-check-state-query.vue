@@ -20,7 +20,6 @@ import { nextTick, type Ref, ref, watch } from 'vue'
 import { MiCheckState } from '@/classes/api/find_query/mi-check-state'
 import type { miExtructCheckStateQueryEmits } from './mi-extruct-check-state-query-emits'
 import type { miExtructCheckStateQueryProps } from './mi-extruct-check-state-query-props'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 const props = defineProps<miExtructCheckStateQueryProps>()

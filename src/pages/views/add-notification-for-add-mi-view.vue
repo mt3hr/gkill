@@ -22,7 +22,6 @@ import { Notification } from '@/classes/datas/notification'
 import moment from 'moment'
 import type { AddNotificationForAddMiViewProps } from './add-notification-for-add-mi-view-props'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

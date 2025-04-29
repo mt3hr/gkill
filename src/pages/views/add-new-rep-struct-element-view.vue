@@ -27,7 +27,6 @@ import type { AddNewRepStructElementViewEmits } from './add-new-rep-struct-eleme
 import type { AddNewRepStructElementViewProps } from './add-new-rep-struct-element-view-props'
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

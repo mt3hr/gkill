@@ -20,7 +20,6 @@
 import moment from 'moment';
 import type { AggregatePeopleViewProps } from './aggregate-people-view-props';
 import type { KyouViewEmits } from './kyou-view-emits';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

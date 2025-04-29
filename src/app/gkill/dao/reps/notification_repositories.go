@@ -134,8 +134,7 @@ errloop:
 }
 
 func (t NotificationRepositories) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
-	matchNotification := &Notification{}
-	matchNotification = nil
+	var matchNotification *Notification
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

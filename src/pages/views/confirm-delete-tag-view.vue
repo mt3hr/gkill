@@ -50,7 +50,7 @@
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import type { ConfirmDeleteTagViewProps } from './confirm-delete-tag-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { nextTick, type Ref, ref } from 'vue'
+import { type Ref, ref } from 'vue'
 import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request';
 import KyouView from './kyou-view.vue'
 

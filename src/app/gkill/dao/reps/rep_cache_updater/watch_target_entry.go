@@ -43,7 +43,7 @@ func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes
 				// 誰も見なくなったときにファイルの監視を終了する
 				err := watcher.Close()
 				if err != nil {
-					fmt.Errorf("error at close watcher: %w", err)
+					err = fmt.Errorf("error at close watcher: %w", err)
 					gkill_log.Debug.Fatal(err)
 					return
 				}

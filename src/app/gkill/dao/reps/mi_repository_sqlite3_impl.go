@@ -2,7 +2,6 @@ package reps
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"path/filepath"
 	"sync"
@@ -18,13 +17,13 @@ import (
 
 type miRepositorySQLite3Impl struct {
 	filename string
-	db       *sql.DB
+	db       *sqllib.DB
 	m        *sync.Mutex
 }
 
 func NewMiRepositorySQLite3Impl(ctx context.Context, filename string) (MiRepository, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=2&_journal=DELETE")
+	db, err := sqllib.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=2&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -669,7 +668,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgsForCreate)
 	rows, err := stmt.QueryContext(ctx, queryArgsForCreate...)
 	if err != nil {
-		err = fmt.Errorf("error at select from MI %s: %w", err)
+		err = fmt.Errorf("error at select from MI: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -846,7 +845,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from MI %s: %w", err)
+		err = fmt.Errorf("error at select from MI: %w", err)
 		return nil, err
 	}
 	defer rows.Close()

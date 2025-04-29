@@ -125,7 +125,6 @@ import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { Tag } from '@/classes/datas/tag'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

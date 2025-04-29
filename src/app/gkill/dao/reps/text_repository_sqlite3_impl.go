@@ -167,7 +167,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from TEXT %s: %w", err)
+		err = fmt.Errorf("error at select from TEXT: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -198,6 +198,10 @@ WHERE
 				&text.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan TEXT: %w", err)
+				return nil, err
+			}
 
 			text.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -320,7 +324,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from TEXT %s: %w", err)
+		err = fmt.Errorf("error at select from TEXT: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -351,6 +355,10 @@ WHERE
 				&text.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan TEXT: %w", err)
+				return nil, err
+			}
 
 			text.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -462,7 +470,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from TEXT %s: %w", err)
+		err = fmt.Errorf("error at select from TEXT: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -493,6 +501,10 @@ WHERE
 				&text.RepName,
 				&dataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan TEXT: %w", err)
+				return nil, err
+			}
 
 			text.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {

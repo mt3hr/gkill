@@ -21,9 +21,7 @@ import type { ShareTaskListViewProps } from './share-task-list-view-props'
 import { AddShareMiTaskListInfoRequest } from '@/classes/api/req_res/add-share-mi-task-list-info-request';
 import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
-import { useI18n } from 'vue-i18n'
 
-import { i18n } from '@/i18n'
 const props = defineProps<ShareTaskListViewProps>()
 const emits = defineEmits<ShareTaskListViewEmits>()
 

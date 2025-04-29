@@ -26,7 +26,6 @@ import type { AddNewTagStructElementViewEmits } from './add-new-tag-struct-eleme
 import type { AddNewTagStructElementViewProps } from './add-new-tag-struct-element-view-props'
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

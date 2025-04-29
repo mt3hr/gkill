@@ -359,7 +359,6 @@ import type MiKyouView from './mi-kyou-view.vue'
 import type UrLogView from './ur-log-view.vue'
 import type IdfKyouView from './idf-kyou-view.vue'
 import moment from 'moment'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

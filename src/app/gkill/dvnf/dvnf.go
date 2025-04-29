@@ -33,6 +33,7 @@ func GetOrCreateLatestDVNFDir(opt *Option) (string, error) {
 		}
 		if file.IsDir() {
 			err = fmt.Errorf("%s is not directory", dvnf)
+			_ = err
 			return dvnf, nil
 		}
 	}

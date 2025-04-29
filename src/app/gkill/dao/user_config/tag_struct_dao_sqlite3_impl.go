@@ -133,6 +133,10 @@ FROM TAG_STRUCT
 				&tagStruct.IsDir,
 				&tagStruct.IsOpenDefault,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan tag struct: %w", err)
+				return nil, err
+			}
 			tagStructs = append(tagStructs, tagStruct)
 		}
 	}
@@ -193,6 +197,10 @@ WHERE USER_ID = ?
 				&tagStruct.IsDir,
 				&tagStruct.IsOpenDefault,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan tag struct: %w", err)
+				return nil, err
+			}
 			tagStructs = append(tagStructs, tagStruct)
 		}
 	}
@@ -257,7 +265,7 @@ INSERT INTO TAG_STRUCT (
 func (t *tagStructDAOSQLite3Impl) AddTagStructs(ctx context.Context, tagStructs []*TagStruct) (bool, error) {
 	tx, err := t.db.Begin()
 	if err != nil {
-		fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 	for _, tagStruct := range tagStructs {
@@ -319,7 +327,7 @@ INSERT INTO TAG_STRUCT (
 	}
 	err = tx.Commit()
 	if err != nil {
-		fmt.Errorf("error at commit: %w", err)
+		err = fmt.Errorf("error at commit: %w", err)
 		return false, err
 	}
 
