@@ -48,6 +48,23 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 	}
 	defer stmt.Close()
 
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_ACCOUNT ON ACCOUNT (USER_ID);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create ACCOUNT index statement %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = indexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create ACCOUNT index to %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
 	accountDAO := &accountDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
