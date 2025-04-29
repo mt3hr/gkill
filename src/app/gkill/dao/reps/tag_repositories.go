@@ -134,8 +134,7 @@ errloop:
 }
 
 func (t TagRepositories) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
-	matchTag := &Tag{}
-	matchTag = nil
+	var matchTag *Tag
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

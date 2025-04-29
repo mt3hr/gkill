@@ -130,6 +130,10 @@ FROM KFTL_TEMPLATE
 				&kftlTemplate.IsDir,
 				&kftlTemplate.IsOpenDefault,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan kftl template: %w", err)
+				return nil, err
+			}
 			kftlTemplates = append(kftlTemplates, kftlTemplate)
 		}
 	}
@@ -189,6 +193,10 @@ WHERE USER_ID = ?
 				&kftlTemplate.IsDir,
 				&kftlTemplate.IsOpenDefault,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan kftl template: %w", err)
+				return nil, err
+			}
 			kftlTemplates = append(kftlTemplates, kftlTemplate)
 		}
 	}
@@ -251,7 +259,7 @@ INSERT INTO KFTL_TEMPLATE (
 func (k *kftlTemplateDAOSQLite3Impl) AddKFTLTemplates(ctx context.Context, kftlTemplates []*KFTLTemplate) (bool, error) {
 	tx, err := k.db.Begin()
 	if err != nil {
-		fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 	for _, kftlTemplate := range kftlTemplates {
@@ -315,7 +323,7 @@ INSERT INTO KFTL_TEMPLATE (
 	}
 	err = tx.Commit()
 	if err != nil {
-		fmt.Errorf("error at commit: %w", err)
+		err = fmt.Errorf("error at commit: %w", err)
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			err = fmt.Errorf("%w: %w", err, rollbackErr)

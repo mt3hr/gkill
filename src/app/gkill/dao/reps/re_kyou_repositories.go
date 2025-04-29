@@ -77,8 +77,7 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 }
 
 func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	matchKyou := &Kyou{}
-	matchKyou = nil
+	var matchKyou *Kyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -354,8 +353,7 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQue
 }
 
 func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string, updateTime *time.Time) (*ReKyou, error) {
-	matchReKyou := &ReKyou{}
-	matchReKyou = nil
+	var matchReKyou *ReKyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

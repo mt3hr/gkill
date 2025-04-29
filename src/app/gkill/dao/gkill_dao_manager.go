@@ -67,7 +67,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	configDBRootDir := os.ExpandEnv(gkill_options.ConfigDir)
 	err = os.MkdirAll(os.ExpandEnv(configDBRootDir), fs.ModePerm)
 	if err != nil {
-		err = fmt.Errorf("error at create directory %s: %w", err)
+		err = fmt.Errorf("error at create directory %s: %w", os.ExpandEnv(configDBRootDir), err)
 		return nil, err
 	}
 
@@ -132,11 +132,12 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		err := os.MkdirAll(logRootDir, os.ModePerm)
 		if err != nil {
 			err = fmt.Errorf("error at mkdir %s: %w", logRootDir, err)
+			return nil, err
 		}
 		infoLogFileName := filepath.Join(logRootDir, "gkill_info.log")
 		infoLogFile, err := os.OpenFile(infoLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
 		if err != nil {
-			err = fmt.Errorf("error at create info log file %s: %w", infoLogFile, err)
+			err = fmt.Errorf("error at create info log file %s: %w", infoLogFile.Name(), err)
 			return nil, err
 		}
 		gkillDAOManager.infoLogFile = infoLogFile
@@ -145,7 +146,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		debugLogFileName := filepath.Join(logRootDir, "gkill_debug.log")
 		debugLogFile, err := os.OpenFile(debugLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
 		if err != nil {
-			err = fmt.Errorf("error at create debug log file %s: %w", debugLogFile, err)
+			err = fmt.Errorf("error at create debug log file %s: %w", debugLogFile.Name(), err)
 			return nil, err
 		}
 		gkillDAOManager.debugLogFile = debugLogFile
@@ -154,7 +155,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		traceLogFileName := filepath.Join(logRootDir, "gkill_trage.log")
 		traceLogFile, err := os.OpenFile(traceLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
 		if err != nil {
-			err = fmt.Errorf("error at create trage log file %s: %w", traceLogFile, err)
+			err = fmt.Errorf("error at create trage log file %s: %w", traceLogFile.Name(), err)
 			return nil, err
 		}
 		gkillDAOManager.traceLogFile = traceLogFile
@@ -163,7 +164,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		traceSQLLogFileName := filepath.Join(logRootDir, "gkill_traceSQL.log")
 		traceSQLLogFile, err := os.OpenFile(traceSQLLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
 		if err != nil {
-			err = fmt.Errorf("error at create traceSQL log file %s: %w", traceSQLLogFile, err)
+			err = fmt.Errorf("error at create traceSQL log file %s: %w", traceSQLLogFile.Name(), err)
 			return nil, err
 		}
 		gkillDAOManager.traceSQLLogFile = traceSQLLogFile
@@ -247,7 +248,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				parentDir := filepath.Dir(filename)
 				err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
 				if err != nil {
-					err = fmt.Errorf("error at make directory %s: %w", parentDir)
+					err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
 					return nil, err
 				}
 
@@ -263,7 +264,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := kmemoRep.GetPath(ctx, "")
 						if repositories.WriteKmemoRep != nil {
 							existPath, _ := repositories.WriteKmemoRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write kmemo rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write kmemo rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteKmemoRep = kmemoRep
@@ -286,7 +287,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -302,7 +303,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := urlogRep.GetPath(ctx, "")
 						if repositories.WriteURLogRep != nil {
 							existPath, _ := repositories.WriteURLogRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write urlog rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write urlog rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteURLogRep = urlogRep
@@ -325,7 +326,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -341,7 +342,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := timeisRep.GetPath(ctx, "")
 						if repositories.WriteTimeIsRep != nil {
 							existPath, _ := repositories.WriteTimeIsRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write timeis rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write timeis rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteTimeIsRep = timeisRep
@@ -364,7 +365,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -380,7 +381,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := miRep.GetPath(ctx, "")
 						if repositories.WriteMiRep != nil {
 							existPath, _ := repositories.WriteMiRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write mi rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write mi rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteMiRep = miRep
@@ -403,7 +404,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -419,7 +420,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := nlogRep.GetPath(ctx, "")
 						if repositories.WriteNlogRep != nil {
 							existPath, _ := repositories.WriteNlogRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write nlog rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write nlog rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteNlogRep = nlogRep
@@ -442,7 +443,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -458,7 +459,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := lantanaRep.GetPath(ctx, "")
 						if repositories.WriteLantanaRep != nil {
 							existPath, _ := repositories.WriteLantanaRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write lantana rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write lantana rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteLantanaRep = lantanaRep
@@ -481,7 +482,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -496,7 +497,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := tagRep.GetPath(ctx, "")
 						if repositories.WriteTagRep != nil {
 							existPath, _ := repositories.WriteTagRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write tag rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write tag rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteTagRep = tagRep
@@ -519,7 +520,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -534,7 +535,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := textRep.GetPath(ctx, "")
 						if repositories.WriteTextRep != nil {
 							existPath, _ := repositories.WriteTextRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write text rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write text rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteTextRep = textRep
@@ -557,7 +558,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -572,7 +573,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := notificationRep.GetPath(ctx, "")
 						if repositories.WriteNotificationRep != nil {
 							existPath, _ := repositories.WriteNotificationRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write notification rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write notification rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteNotificationRep = notificationRep
@@ -595,7 +596,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -611,7 +612,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := reKyouRep.GetPath(ctx, "")
 						if repositories.WriteReKyouRep != nil {
 							existPath, _ := repositories.WriteReKyouRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write reKyou rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write reKyou rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteReKyouRep = reKyouRep
@@ -634,7 +635,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -659,7 +660,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						newPath, _ := idfKyouRep.GetPath(ctx, "")
 						if repositories.WriteIDFKyouRep != nil {
 							existPath, _ := repositories.WriteIDFKyouRep.GetPath(ctx, "")
-							err := fmt.Errorf("error conflict write idf kyou rep %s %s: %w", existPath, newPath)
+							err := fmt.Errorf("error conflict write idf kyou rep %s %s", existPath, newPath)
 							return nil, err
 						}
 						repositories.WriteIDFKyouRep = idfKyouRep
@@ -672,17 +673,11 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						enableUpdateLatestDataRepositoryCache := true
 						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
 						ignoreFileNamePrefixes := []string{}
-						repFilename, err := rep.GetPath(ctx, "")
-						if err != nil {
-							repName, _ := rep.GetRepName(ctx)
-							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
-							return nil, err
-						}
-						repFilename = idDBFilename
+						repFilename := idDBFilename
 
 						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
 						if err != nil {
-							fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
 							return nil, err
 						}
 					}
@@ -712,7 +707,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		}
 		repositories.UpdateCache(ctx)
 		g.gkillRepositories[userID][device] = repositories
-		repositories, _ = repositoriesInUser[device]
+		repositories = repositoriesInUser[device]
 
 		_, _ = g.GetNotificator(userID, device)
 	}
@@ -921,25 +916,24 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 		filename, err := rep.GetPath(ctx, "")
 		if err != nil {
 			repName, _ := rep.GetRepName(ctx)
-			fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+			err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+			return false, err
 		}
 		filename = filepath.ToSlash(filename)
 
 		err = g.fileRepWatchCacheUpdater.RemoveWatchFileRep(filename, userID)
 		if err != nil {
-			fmt.Errorf("error at remove watch file rep. filename = %s userID = %s: %w", filename, userID, err)
+			err = fmt.Errorf("error at remove watch file rep. filename = %s userID = %s: %w", filename, userID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
 	}
 
 	// 全Repを閉じる
 	err = reps.Close(ctx)
 	if err != nil {
-		fmt.Errorf("error at close repositories: %w", err)
+		err = fmt.Errorf("error at close repositories: %w", err)
+		gkill_log.Debug.Println(err.Error())
 	}
 	delete(g.gkillRepositories, userID)
 	return true, nil
-}
-
-type closable interface {
-	Close(ctx context.Context) error
 }

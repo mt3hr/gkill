@@ -163,7 +163,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from NLOG %s: %w", err)
+		err = fmt.Errorf("error at select from NLOG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -192,6 +192,10 @@ WHERE
 				&kyou.RepName,
 				&kyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan NLOG: %w", err)
+				return nil, err
+			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -335,6 +339,10 @@ WHERE
 				&kyou.RepName,
 				&kyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan NLOG %s: %w", id, err)
+				return nil, err
+			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -451,7 +459,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from NLOG %s: %w", err)
+		err = fmt.Errorf("error at select from NLOG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -484,6 +492,11 @@ WHERE
 				&nlog.RepName,
 				&nlog.DataType,
 			)
+
+			if err != nil {
+				err = fmt.Errorf("error at scan NLOG: %w", err)
+				return nil, err
+			}
 
 			nlog.Amount = json.Number(strconv.Itoa(amount))
 
@@ -635,6 +648,10 @@ WHERE
 				&nlog.RepName,
 				&nlog.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan NLOG %s: %w", id, err)
+				return nil, err
+			}
 
 			nlog.Amount = json.Number(strconv.Itoa(amount))
 

@@ -19,9 +19,8 @@ import { nextTick, type Ref, ref, watch } from 'vue'
 import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 import type { miSortTypeQueryEmits } from './mi-sort-type-query-emits'
 import type { miSortTypeQueryProps } from './mi-sort-type-query-props'
-import { useI18n } from 'vue-i18n'
+import { i18n } from '@/i18n';
 
-import { i18n } from '@/i18n'
 const props = defineProps<miSortTypeQueryProps>()
 const emits = defineEmits<miSortTypeQueryEmits>()
 

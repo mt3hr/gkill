@@ -77,7 +77,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import type { miSharedTaskViewEmits } from './mi-shared-task-view-emits'
 import type { miSharedTaskViewProps } from './mi-shared-task-view-props'
 
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
@@ -91,7 +90,6 @@ import { GetSharedMiTasksRequest } from '@/classes/api/req_res/get-shared-mi-tas
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 const kyou_list_view = ref();

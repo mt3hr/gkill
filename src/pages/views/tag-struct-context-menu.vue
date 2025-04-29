@@ -14,9 +14,6 @@
 import { computed, ref, type Ref } from 'vue';
 import type { TagStructContextMenuEmits } from './tag-struct-context-menu-emits';
 import type { TagStructContextMenuProps } from './tag-struct-context-menu-props';
-import { useI18n } from 'vue-i18n'
-
-import { i18n } from '@/i18n'
 
 const props = defineProps<TagStructContextMenuProps>()
 const emits = defineEmits<TagStructContextMenuEmits>()

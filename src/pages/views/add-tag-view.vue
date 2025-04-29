@@ -52,13 +52,12 @@
 import type { AddTagViewProps } from './add-tag-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { Tag } from '@/classes/datas/tag'
-import { nextTick, type Ref, ref } from 'vue'
+import { type Ref, ref } from 'vue'
 import KyouView from './kyou-view.vue'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

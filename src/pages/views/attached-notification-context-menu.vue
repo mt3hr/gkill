@@ -88,7 +88,6 @@ import { computed, type Ref, ref } from 'vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import type { AttachedNotificationContextMenuProps } from './attached-notification-context-menu-props';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

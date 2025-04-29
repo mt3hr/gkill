@@ -92,6 +92,10 @@ FROM NOTIFICATION
 				&gkillNotificateTarget.PublicKey,
 				&gkillNotificateTarget.Subscription,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan mi notificate target: %w", err)
+				return nil, err
+			}
 			gkillNotificateTargets = append(gkillNotificateTargets, gkillNotificateTarget)
 		}
 	}
@@ -141,6 +145,10 @@ WHERE USER_ID = ? AND PUBLIC_KEY = ?
 				&gkillNotificateTarget.PublicKey,
 				&gkillNotificateTarget.Subscription,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan mi notificate target: %w", err)
+				return nil, err
+			}
 			gkillNotificateTargets = append(gkillNotificateTargets, gkillNotificateTarget)
 		}
 	}

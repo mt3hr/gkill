@@ -131,6 +131,9 @@ FROM REPOSITORY
 				&repository.IsWatchTargetForUpdateRep,
 				&repository.IsEnable,
 			)
+			if err != nil {
+				return nil, err
+			}
 			base := filepath.Base(repository.File)
 			ext := filepath.Ext(base)
 			withoutExt := base[:len(base)-len(ext)]
@@ -195,6 +198,10 @@ WHERE USER_ID = ? AND DEVICE = ?
 				&repository.IsWatchTargetForUpdateRep,
 				&repository.IsEnable,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan repository: %w", err)
+				return nil, err
+			}
 			base := filepath.Base(repository.File)
 			ext := filepath.Ext(base)
 			withoutExt := base[:len(base)-len(ext)]
@@ -309,7 +316,7 @@ INSERT INTO REPOSITORY (
 
 	err = tx.Commit()
 	if err != nil {
-		fmt.Errorf("error at commit: %w", err)
+		err = fmt.Errorf("error at commit: %w", err)
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			err = fmt.Errorf("%w: %w", err, rollbackErr)
@@ -394,7 +401,7 @@ INSERT INTO REPOSITORY (
 func (r *repositoryDAOSQLite3Impl) AddRepositories(ctx context.Context, repositories []*Repository) (bool, error) {
 	tx, err := r.db.Begin()
 	if err != nil {
-		fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 
@@ -471,7 +478,7 @@ INSERT INTO REPOSITORY (
 
 	err = tx.Commit()
 	if err != nil {
-		fmt.Errorf("error at commit: %w", err)
+		err = fmt.Errorf("error at commit: %w", err)
 		rollbackErr := tx.Rollback()
 		if rollbackErr != nil {
 			err = fmt.Errorf("%w: %w", err, rollbackErr)

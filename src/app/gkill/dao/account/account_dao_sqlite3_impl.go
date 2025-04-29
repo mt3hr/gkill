@@ -112,6 +112,10 @@ FROM ACCOUNT
 				&account.IsEnable,
 				&account.PasswordResetToken,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan account: %w", err)
+				return nil, err
+			}
 			accounts = append(accounts, account)
 		}
 	}
@@ -170,7 +174,7 @@ WHERE USER_ID = ?
 	} else if len(accounts) == 1 {
 		return accounts[0], nil
 	}
-	return nil, fmt.Errorf("複数のアカウントが見つかりました。%s: %w", err)
+	return nil, fmt.Errorf("複数のアカウントが見つかりました。%s: %w", userID, err)
 }
 func (a *accountDAOSQLite3Impl) AddAccount(ctx context.Context, account *Account) (bool, error) {
 	sql := `

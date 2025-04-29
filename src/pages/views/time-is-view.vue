@@ -65,7 +65,6 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import TimeIsContextMenu from './time-is-context-menu.vue'
 import moment from 'moment';
 import EndTimeIsPlaingDialog from '../dialogs/end-time-is-plaing-dialog.vue';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

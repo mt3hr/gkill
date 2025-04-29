@@ -147,6 +147,9 @@ FROM SERVER_CONFIG
 				&serverConfig.UseGkillNotification,
 				&serverConfig.GoogleMapAPIKey,
 			)
+			if err != nil {
+				return nil, err
+			}
 			serverConfigs = append(serverConfigs, serverConfig)
 		}
 	}
@@ -230,7 +233,7 @@ WHERE DEVICE = ?
 	} else if len(serverConfigs) == 1 {
 		return serverConfigs[0], nil
 	}
-	return nil, fmt.Errorf("複数のサーバコンフィグが見つかりました。%s: %w", err)
+	return nil, fmt.Errorf("複数のサーバコンフィグが見つかりました。: %w", err)
 }
 
 func (s *serverConfigDAOSQLite3Impl) AddServerConfig(ctx context.Context, serverConfig *ServerConfig) (bool, error) {
@@ -313,7 +316,7 @@ INSERT INTO SERVER_CONFIG (
 func (s *serverConfigDAOSQLite3Impl) UpdateServerConfigs(ctx context.Context, serverConfigs []*ServerConfig) (bool, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
-		fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 	for _, serverConfig := range serverConfigs {
@@ -426,25 +429,29 @@ WHERE ENABLE_THIS_DEVICE = ?
 			err = rows.Scan(
 				&enableCount,
 			)
+			if err != nil {
+				gkill_log.Debug.Println(err.Error())
+				break
+			}
 			enableDeviceCount += enableCount
 		}
 	}
 	if enableDeviceCount != 1 {
 		errAtRollBack := tx.Rollback()
-		err := fmt.Errorf("enable device count is not 1.")
+		err = fmt.Errorf("enable device count is not 1")
 		if errAtRollBack != nil {
 			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			fmt.Errorf("error at commit: %w", err)
+			err = fmt.Errorf("error at commit: %w", err)
 		}
 		return false, err
 	}
 	err = tx.Commit()
 	if err != nil {
-		fmt.Errorf("error at commit: %w", err)
+		err = fmt.Errorf("error at commit: %w", err)
 		errAtRollBack := tx.Rollback()
 		if errAtRollBack != nil {
 			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			fmt.Errorf("error at commit: %w", err)
+			err = fmt.Errorf("error at commit: %w", err)
 			return false, err
 		}
 		return false, err
@@ -455,7 +462,7 @@ WHERE ENABLE_THIS_DEVICE = ?
 func (s *serverConfigDAOSQLite3Impl) UpdateServerConfig(ctx context.Context, serverConfig *ServerConfig) (bool, error) {
 	tx, err := s.db.Begin()
 	if err != nil {
-		fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 
@@ -569,15 +576,19 @@ WHERE ENABLE_THIS_DEVICE = ?
 			err = rows.Scan(
 				&enableCount,
 			)
+			if err != nil {
+				gkill_log.Debug.Println(err.Error())
+				break
+			}
 			enableDeviceCount += enableCount
 		}
 	}
 	if enableDeviceCount != 1 {
 		errAtRollBack := tx.Rollback()
-		err := fmt.Errorf("enable device count is not 1.")
+		err = fmt.Errorf("enable device count is not 1")
 		if errAtRollBack != nil {
 			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			fmt.Errorf("error at commit: %w", err)
+			err = fmt.Errorf("error at commit: %w", err)
 		}
 		return false, err
 	}
@@ -586,11 +597,11 @@ WHERE ENABLE_THIS_DEVICE = ?
 		errAtRollBack := tx.Rollback()
 		if errAtRollBack != nil {
 			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			fmt.Errorf("error at commit: %w", err)
+			err = fmt.Errorf("error at commit: %w", err)
 			return false, err
 		}
 
-		fmt.Errorf("error at commit: %w", err)
+		err = fmt.Errorf("error at commit: %w", err)
 		return false, err
 	}
 	return true, nil
@@ -628,7 +639,7 @@ func (s *serverConfigDAOSQLite3Impl) DeleteWriteServerConfigs(ctx context.Contex
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 
@@ -774,25 +785,29 @@ WHERE ENABLE_THIS_DEVICE = ?
 			err = rows.Scan(
 				&enableCount,
 			)
+			if err == nil {
+				err = fmt.Errorf("error at query :%w", err)
+				return false, err
+			}
 			enableDeviceCount += enableCount
 		}
 	}
 	if enableDeviceCount != 1 {
 		errAtRollBack := tx.Rollback()
-		err := fmt.Errorf("enable device count is not 1.")
+		err = fmt.Errorf("enable device count is not 1")
 		if errAtRollBack != nil {
 			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			fmt.Errorf("error at commit: %w", err)
+			err = fmt.Errorf("error at commit: %w", err)
 		}
 		return false, err
 	}
 	err = tx.Commit()
 	if err != nil {
-		fmt.Errorf("error at commit: %w", err)
+		err = fmt.Errorf("error at commit: %w", err)
 		errAtRollBack := tx.Rollback()
 		if errAtRollBack != nil {
 			err = fmt.Errorf("%w: %w", err, errAtRollBack)
-			fmt.Errorf("error at commit: %w", err)
+			err = fmt.Errorf("error at commit: %w", err)
 			return false, err
 		}
 		return false, err
