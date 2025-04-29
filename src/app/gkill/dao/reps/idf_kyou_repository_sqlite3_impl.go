@@ -93,6 +93,31 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		return nil, err
 	}
 
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_IDF ON IDF (ID, RELATED_TIME, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create IDF index statement %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = indexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create IDF index to %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
+
+	if err != nil {
+		err = fmt.Errorf("error at create IDF table to %s: %w", filename, err)
+		return nil, err
+	}
+
 	rep := &idfKyouRepositorySQLite3Impl{
 		repositoriesRef: repositoriesRef,
 		idDBFile:        dbFilename,

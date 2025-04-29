@@ -51,6 +51,31 @@ CREATE TABLE IF NOT EXISTS "KFTL_TEMPLATE" (
 		return nil, err
 	}
 
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_KFTL_TEMPLATE ON KFTL_TEMPLATE (USER_ID);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create KFTL_TEMPLATE index statement %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = indexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create KFTL_TEMPLATE index to %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
+
+	if err != nil {
+		err = fmt.Errorf("error at create KFTL_TEMPLATE table to %s: %w", filename, err)
+		return nil, err
+	}
+
 	return &kftlTemplateDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
