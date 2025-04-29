@@ -148,7 +148,6 @@ import { Kyou } from '@/classes/datas/kyou'
 import { Notification } from '@/classes/datas/notification'
 import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

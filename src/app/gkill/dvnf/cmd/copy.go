@@ -46,7 +46,7 @@ func runCopy(_ *cobra.Command, _ []string) {
 	// createNewならcreateする
 	opt := newDVNFOption(dvnfdir, copyOpt.ext)
 	if rootOpt.createNew {
-		dvnfdir, err = dvnf.CreateNewDVNF(opt, true)
+		_, err = dvnf.CreateNewDVNF(opt, true)
 		if err != nil {
 			err = fmt.Errorf("error create new dvnf %s_%s: %w", opt.Device, opt.Directory, err)
 			log.Fatal(err)
@@ -256,7 +256,11 @@ func copyFile(src, target string) error {
 			err = fmt.Errorf("error at get stat %s: %w", src, err)
 			return err
 		}
-		os.Chtimes(target, srcInfo.ModTime(), srcInfo.ModTime())
+		err = os.Chtimes(target, srcInfo.ModTime(), srcInfo.ModTime())
+		if err != nil {
+			err = fmt.Errorf("error at change times %s: %w", target, err)
+			return err
+		}
 	}
 	return err
 }

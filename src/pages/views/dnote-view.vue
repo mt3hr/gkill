@@ -183,7 +183,7 @@
 import type { DnoteEmits } from './dnote-emits'
 import type { DnoteViewProps } from './dnote-view-props'
 
-import { computed, nextTick, ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 
 import moment from 'moment'
 import type { Kyou } from '@/classes/datas/kyou'

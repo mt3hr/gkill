@@ -92,8 +92,7 @@ loop:
 }
 
 func (i IDFKyouRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	matchKyou := &Kyou{}
-	matchKyou = nil
+	var matchKyou *Kyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -401,8 +400,7 @@ loop:
 }
 
 func (i IDFKyouRepositories) GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error) {
-	matchIDFKyou := &IDFKyou{}
-	matchIDFKyou = nil
+	var matchIDFKyou *IDFKyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

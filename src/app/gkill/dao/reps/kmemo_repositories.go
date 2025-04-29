@@ -91,8 +91,7 @@ loop:
 }
 
 func (k KmemoRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	matchKyou := &Kyou{}
-	matchKyou = nil
+	var matchKyou *Kyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -400,8 +399,7 @@ loop:
 }
 
 func (k KmemoRepositories) GetKmemo(ctx context.Context, id string, updateTime *time.Time) (*Kmemo, error) {
-	matchKmemo := &Kmemo{}
-	matchKmemo = nil
+	var matchKmemo *Kmemo
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

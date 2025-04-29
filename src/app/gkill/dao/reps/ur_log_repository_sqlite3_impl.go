@@ -165,7 +165,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from URLOG%s: %w", err)
+		err = fmt.Errorf("error at select from URLOG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -195,6 +195,10 @@ WHERE
 				&kyou.RepName,
 				&kyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from URLOG: %w", err)
+				return nil, err
+			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -339,6 +343,10 @@ WHERE
 				&kyou.RepName,
 				&kyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from URLOG %s: %w", id, err)
+				return nil, err
+			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -462,7 +470,7 @@ WHERE
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at select from URLOG %s: %w", err)
+		err = fmt.Errorf("error at select from URLOG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -497,6 +505,10 @@ WHERE
 				&urlog.RepName,
 				&urlog.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from URLOG: %w", err)
+				return nil, err
+			}
 
 			urlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -651,6 +663,11 @@ WHERE
 				&urlog.RepName,
 				&urlog.DataType,
 			)
+
+			if err != nil {
+				err = fmt.Errorf("error at scan from URLOG %s: %w", id, err)
+				return nil, err
+			}
 
 			urlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {

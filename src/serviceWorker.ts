@@ -1,9 +1,8 @@
 /// <reference lib="webworker" />
-import moment from 'moment';
 import { precacheAndRoute } from 'workbox-precaching'
 export default null
 declare let self: ServiceWorkerGlobalScope
-declare var clients: Clients;
+declare let clients: Clients;
 
 precacheAndRoute(self.__WB_MANIFEST)
 

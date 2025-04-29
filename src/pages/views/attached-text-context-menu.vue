@@ -87,9 +87,7 @@ import EditTextDialog from '../dialogs/edit-text-dialog.vue'
 import ConfirmDeleteTextDialog from '../dialogs/confirm-delete-text-dialog.vue'
 import TextHistoriesDialog from '../dialogs/text-histories-dialog.vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
-import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

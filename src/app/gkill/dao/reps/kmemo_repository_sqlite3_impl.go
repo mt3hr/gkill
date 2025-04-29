@@ -158,7 +158,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
+		err = fmt.Errorf("error at select from KMEMO: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -187,6 +187,10 @@ WHERE
 				&kyou.RepName,
 				&kyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan kmemo: %w", err)
+				return nil, err
+			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -329,6 +333,10 @@ WHERE
 				&kyou.RepName,
 				&kyou.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan kmemo %s: %w", id, err)
+				return nil, err
+			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -447,7 +455,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from KMEMO %s: %w", err)
+		err = fmt.Errorf("error at select from KMEMO: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -477,6 +485,10 @@ WHERE
 				&kmemo.RepName,
 				&kmemo.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan kmemo: %w", err)
+				return nil, err
+			}
 
 			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -621,6 +633,10 @@ WHERE
 				&kmemo.RepName,
 				&kmemo.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan kmemo %s: %w", id, err)
+				return nil, err
+			}
 
 			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {

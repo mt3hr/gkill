@@ -49,7 +49,6 @@ import moment from 'moment'
 import { Nlog } from '@/classes/datas/nlog'
 import { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

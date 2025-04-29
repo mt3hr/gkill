@@ -58,7 +58,6 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 const kftl_template_dialog = ref<InstanceType<typeof KFTLTemplateDialog> | null>(null);
@@ -250,8 +249,6 @@ window.addEventListener("resize", () => {
     update_line_labels()
 })
 onMounted(() => resize())
-
-const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
 </script>
 

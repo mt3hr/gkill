@@ -205,7 +205,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from idf %s: %w", err)
+		err = fmt.Errorf("error at select from idf: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -238,6 +238,10 @@ WHERE
 				&idf.RepName,
 				&idf.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from idf: %w", err)
+				return nil, err
+			}
 
 			// 対象IDFRepsからファイルURLを取得
 			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
@@ -461,6 +465,10 @@ WHERE
 	appendGroupBy := false
 	findWordUseLike := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	if err != nil {
+		err = fmt.Errorf("error at generate find sql common: %w", err)
+		return nil, err
+	}
 	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	sql += commonWhereSQL
@@ -476,7 +484,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from idf %s: %w", err)
+		err = fmt.Errorf("error at select from idf: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -509,6 +517,10 @@ WHERE
 				&idf.RepName,
 				&idf.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from idf: %w", err)
+				return nil, err
+			}
 
 			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
 
@@ -628,7 +640,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from idf %s: %w", err)
+		err = fmt.Errorf("error at select from idf: %w", err)
 		return "", err
 	}
 	defer rows.Close()
@@ -660,6 +672,11 @@ WHERE
 				&idf.RepName,
 				&idf.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from idf: %w", err)
+				_ = err
+				return "", nil
+			}
 
 			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
 
@@ -792,7 +809,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from idf %s: %w", err)
+		err = fmt.Errorf("error at select from idf: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -825,6 +842,10 @@ WHERE
 				&idf.RepName,
 				&idf.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from idf: %w", err)
+				return nil, err
+			}
 
 			// 対象IDFRepsからファイルURLを取得
 			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
@@ -852,7 +873,7 @@ WHERE
 
 			// 判定OKであれば追加する
 			// ファイルの内容を取得する
-			if !(idf.RepName == repName || idf.RepName == "") {
+			if idf.RepName != repName && idf.RepName != "" {
 				continue
 			}
 			fileContentText := ""
@@ -895,7 +916,7 @@ WHERE
 				if query.WordsAnd != nil && *query.WordsAnd {
 					match = true
 					for _, word := range words {
-						match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
+						match = strings.Contains(fileContentText, word)
 						if !match {
 							break
 						}
@@ -907,7 +928,7 @@ WHERE
 					// ワードor検索である場合の判定
 					match = false
 					for _, word := range words {
-						match = strings.Contains(fmt.Sprintf("%s", fileContentText), word)
+						match = strings.Contains(fileContentText, word)
 						if match {
 							break
 						}
@@ -915,7 +936,7 @@ WHERE
 				}
 				// notワードを除外する場合の判定
 				for _, notWord := range notWords {
-					match = strings.Contains(fmt.Sprintf("%s", fileContentText), notWord)
+					match = strings.Contains(fileContentText, notWord)
 					if match {
 						match = false
 						break
@@ -1029,7 +1050,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from idf %s: %w", err)
+		err = fmt.Errorf("error at select from idf: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -1062,6 +1083,10 @@ WHERE
 				&idf.RepName,
 				&idf.DataType,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan from idf: %w", err)
+				return nil, err
+			}
 
 			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
 
@@ -1112,6 +1137,9 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 	// 対象内のファイルfullPath
 	existFileInfos := map[string]*fileinfo{}
 	err = filepath.WalkDir(contentDirAbs, fs.WalkDirFunc(func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 		if d.IsDir() {
 			return nil
 		}

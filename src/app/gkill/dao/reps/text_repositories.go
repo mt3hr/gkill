@@ -134,8 +134,7 @@ errloop:
 }
 
 func (t TextRepositories) GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error) {
-	matchText := &Text{}
-	matchText = nil
+	var matchText *Text
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}

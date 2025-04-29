@@ -54,12 +54,12 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -90,7 +90,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { nextTick, type Ref, ref, watch } from 'vue'
+import { type Ref, ref, watch } from 'vue'
 import type { EditURLogViewProps } from './edit-ur-log-view-props'
 import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -100,7 +100,6 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

@@ -26,7 +26,6 @@ import type { AddNewKFTLTemplateStructElementViewEmits } from './add-new-kftl-te
 import type { AddNewKFTLTemplateStructElementViewProps } from './add-new-kftl-template-struct-element-view-props'
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 

@@ -91,8 +91,7 @@ loop:
 }
 
 func (m MiRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	matchKyou := &Kyou{}
-	matchKyou = nil
+	var matchKyou *Kyou
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -400,8 +399,7 @@ loop:
 }
 
 func (m MiRepositories) GetMi(ctx context.Context, id string, updateTime *time.Time) (*Mi, error) {
-	matchMi := &Mi{}
-	matchMi = nil
+	var matchMi *Mi
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
@@ -554,6 +552,7 @@ func (m MiRepositories) GetBoardNames(ctx context.Context) ([]string, error) {
 	mis, err := m.FindMi(ctx, findMiQuery)
 	if err != nil {
 		err = fmt.Errorf("error at find mi: %w", err)
+		return nil, err
 	}
 	for _, mi := range mis {
 		if mi.IsDeleted {

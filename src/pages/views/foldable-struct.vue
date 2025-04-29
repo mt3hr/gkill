@@ -146,7 +146,7 @@ function updated_struct() {
 function is_item() {
     return props.struct_obj.children === null
 }
-function get_group_open(index: number) {
+function get_group_open(_index: number) {
     return false
     /*
     let group_name = struct_list.value[index].key

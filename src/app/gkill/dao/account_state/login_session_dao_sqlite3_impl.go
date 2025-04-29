@@ -127,6 +127,10 @@ FROM LOGIN_SESSION
 				&expriationTimeStr,
 				&loginSession.IsLocalAppUser,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan login session %s: %w", loginSession.ID, err)
+				return nil, err
+			}
 
 			loginSession.LoginTime, err = time.Parse(sqlite3impl.TimeLayout, loginTimeStr)
 			if err != nil {
@@ -201,6 +205,10 @@ WHERE USER_ID = ? AND DEVICE = ?
 				&expriationTimeStr,
 				&loginSession.IsLocalAppUser,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan login session %s: %w", userID, err)
+				return nil, err
+			}
 
 			loginSession.LoginTime, err = time.Parse(sqlite3impl.TimeLayout, loginTimeStr)
 			if err != nil {
@@ -274,6 +282,10 @@ WHERE SESSION_ID = ?
 				&expriationTimeStr,
 				&loginSession.IsLocalAppUser,
 			)
+			if err != nil {
+				err = fmt.Errorf("error at scan login session %s: %w", sessionID, err)
+				return nil, err
+			}
 
 			loginSession.LoginTime, err = time.Parse(sqlite3impl.TimeLayout, loginTimeStr)
 			if err != nil {

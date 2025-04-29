@@ -37,9 +37,6 @@ import FoldableStruct from './foldable-struct.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
-import { useI18n } from 'vue-i18n'
-
-import { i18n } from '@/i18n'
 
 const props = defineProps<TagQueryProps>()
 const emits = defineEmits<TagQueryEmits>()

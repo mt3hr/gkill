@@ -36,7 +36,6 @@ import { LoginRequest } from '@/classes/api/req_res/login-request';
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
-import { useI18n } from 'vue-i18n'
 
 import { i18n } from '@/i18n'
 
@@ -48,9 +47,11 @@ const emits = defineEmits<LoginViewEmits>()
 
 const app_content_height_px = computed(() => props.app_content_height + 'px')
 const app_content_width_px = computed(() => props.app_content_width + 'px')
+// eslint-disable-next-line vue/no-async-in-computed-properties
 const password_sha256 = computed(async () => {
     const encoder = new TextEncoder();
     const msgUint8 = encoder.encode(password.value);
+    // eslint-disable-next-line vue/no-async-in-computed-properties
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
 
     const hashArray = Array.from(new Uint8Array(hashBuffer));
