@@ -87,8 +87,8 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
 		select {
 		case <-ctx.Done():
-			return
-		case errCh <- err:
+		default:
+			errCh <- err
 			latestDatasCh <- latestDatas
 		}
 	}()
@@ -1603,8 +1603,8 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		if !exist {
 			continue
 		}
-		// すでに最新が入っていそうだったらそのままいれる
-		if currentKyou.RepName == latestData.LatestDataRepositoryName && currentKyou.UpdateTime.Equal(latestData.DataUpdateTime) {
+		// すでに最新が入っていそうだったらそのままいれる RepNameは運用都合でチェックしない
+		if currentKyou.UpdateTime.Equal(latestData.DataUpdateTime) {
 			latestKyousMap[currentKyou.ID] = currentKyou
 			continue
 		}
