@@ -1,0 +1,1 @@
+export default interface DnoteSelectItem { label: string, value: string }
