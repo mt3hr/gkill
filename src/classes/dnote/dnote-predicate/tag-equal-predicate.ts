@@ -21,7 +21,7 @@ export default class TagPredicate implements DnotePredicate {
     }
     to_json(): any {
         return {
-            type: "TagPredicate",
+            type: "TagEqualPredicate",
             tag: this.tag,
         }
     }
