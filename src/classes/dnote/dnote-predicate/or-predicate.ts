@@ -19,10 +19,10 @@ export default class OrPredicate implements DnotePredicate {
         }
         return false
     }
-    to_json(): any {
+    predicate_struct_to_json(): any {
         return {
             type: "OrPredicate",
-            predicates: this.predicates.map(p => (p as unknown as DnotePredicate).to_json())
+            predicates: this.predicates.map(p => (p as unknown as DnotePredicate).predicate_struct_to_json())
         }
     }
 }

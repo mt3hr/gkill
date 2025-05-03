@@ -1,9 +1,10 @@
 import type { FindKyouQuery } from "../api/find_query/find-kyou-query";
 import type { Kyou } from "../datas/kyou";
-import type AggregateGroupingListResultRecord from "./aggregate-grouping-list-result-record";
+import type AggregatedItem from "./aggregate-grouping-list-result-record";
 import type DnoteAggregateTarget from "./dnote-aggregate-target";
 import type DnoteKeyGetter from "./dnote-key-getter";
 import type DnotePredicate from "./dnote-predicate";
+import load_kyous from "./kyou-loader";
 
 export class DnoteListAggregator {
     private dnote_key_getter: DnoteKeyGetter
@@ -16,16 +17,9 @@ export class DnoteListAggregator {
         this.dnote_aggregate_target = dnote_aggregate_target
     }
 
-    public async aggregate_grouping_list(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery): Promise<Array<AggregateGroupingListResultRecord>> {
+    public async aggregate_grouping_list(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<Array<AggregatedItem>> {
         // 渡されたデータの全項目を取得
-        const cloned_kyous = new Array<Kyou>()
-        for (let i = 0; i < kyous.length; i++) {
-            const kyou = kyous[i].clone()
-            kyou.abort_controller = abort_controller
-            await kyou.load_typed_datas()
-            await kyou.load_attached_tags()
-            cloned_kyous.push(kyou)
-        }
+        const cloned_kyous = await load_kyous(abort_controller, kyous, !kyou_is_loaded)
 
         // predicateにマッチしたKyouを抽出
         const match_kyous = new Array<Kyou>()
@@ -35,7 +29,7 @@ export class DnoteListAggregator {
             }
         }
 
-        const aggregated_result_list = new Array<AggregateGroupingListResultRecord>()
+        const aggregated_result_list = new Array<AggregatedItem>()
         for (let i = 0; i < match_kyous.length; i++) {
             const kyou = match_kyous[i]
             const keys = this.dnote_key_getter.get_keys(kyou)
@@ -52,6 +46,9 @@ export class DnoteListAggregator {
                     aggregated_result_list.push({ title: key, value: aggregated_value, match_kyous: [kyou.clone()] })
                 }
             }
+        }
+        for (let i = 0; i < aggregated_result_list.length; i++) {
+            aggregated_result_list[i].value = await this.dnote_aggregate_target.result_to_string(aggregated_result_list[i].value)
         }
         aggregated_result_list.sort((a, b) => b.value - a.value)
         return aggregated_result_list
