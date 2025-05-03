@@ -12,7 +12,7 @@ export class DnoteAggregator {
         this.dnote_aggregate_target = aggregate_target
     }
 
-    public async aggregate(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery): Promise<string> {
+    public async aggregate(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery): Promise<{ result_string: string, match_kyous: Array<Kyou> }> {
         // 渡されたデータの全項目を取得
         const cloned_kyous = new Array<Kyou>()
         for (let i = 0; i < kyous.length; i++) {
@@ -38,7 +38,14 @@ export class DnoteAggregator {
             aggregated_value = await this.dnote_aggregate_target.append_aggregate_element_value(aggregated_value, kyou, find_kyou_query)
         }
 
+        const cloned_match_kyous = new Array<Kyou>()
+        for (let i = 0; i < match_kyous.length; i++) {
+            const kyou = match_kyous[i]
+            cloned_kyous.push(kyou.clone())
+        }
+
         // 集計結果を返却
-        return await this.dnote_aggregate_target.result_to_string(aggregated_value)
+        const result_string = await this.dnote_aggregate_target.result_to_string(aggregated_value)
+        return { result_string: result_string, match_kyous: cloned_match_kyous }
     }
 }
