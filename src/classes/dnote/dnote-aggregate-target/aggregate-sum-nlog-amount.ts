@@ -2,9 +2,10 @@ import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteAggregateTarget from "../dnote-aggregate-target";
 import { i18n } from "@/i18n";
+import AggregateTargetDictionary from "../serialize/dnote-aggregate-target-dictionary";
 
 export default class AggregateSumNlogAmount implements DnoteAggregateTarget {
-    from_json(_json: any): DnoteAggregateTarget {
+    static from_json(_json: any): DnoteAggregateTarget {
         return new AggregateSumNlogAmount()
     }
     async append_aggregate_element_value(aggregated_value_nlog_amount: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
@@ -16,7 +17,7 @@ export default class AggregateSumNlogAmount implements DnoteAggregateTarget {
         return typed_aggregated_value_nlog_amount + amount
     }
     async result_to_string(nlog_amount: any | null): Promise<string> {
-        return (nlog_amount === null ? 0 : nlog_amount) + i18n.global.t("YEN_TITLE")
+        return (nlog_amount === null ? 0 : nlog_amount).toString()
     }
     to_json(): any {
         return {

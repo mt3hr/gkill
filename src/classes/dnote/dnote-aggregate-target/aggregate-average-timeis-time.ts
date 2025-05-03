@@ -4,9 +4,10 @@ import type DnoteAggregateTarget from "../dnote-aggregate-target";
 import moment from "moment";
 import { i18n } from "@/i18n";
 import AverageInfo from "./average-info";
+import AggregateTargetDictionary from "../serialize/dnote-aggregate-target-dictionary";
 
 export default class AggregateAverageTimeisTime implements DnoteAggregateTarget {
-    from_json(_json: any): DnoteAggregateTarget {
+    static from_json(_json: any): DnoteAggregateTarget {
         return new AggregateAverageTimeisTime()
     }
     async append_aggregate_element_value(average_value_timeis: any | null, kyou: Kyou, find_kyou_query: FindKyouQuery): Promise<any> {

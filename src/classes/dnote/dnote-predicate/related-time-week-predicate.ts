@@ -1,6 +1,7 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
 import moment from "moment";
+import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class RelatedTimeWeekPredicate implements DnotePredicate {
     private week: number
@@ -18,7 +19,7 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
         }
         return false
     }
-    to_json(): any {
+    predicate_struct_to_json(): any {
         return {
             type: "RelatedTimeWeekPredicate",
             week: this.week,
