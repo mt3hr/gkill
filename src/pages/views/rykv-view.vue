@@ -118,7 +118,6 @@
                             @received_messages="(messages) => emits('received_messages', messages)"
                             @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
                             @requested_reload_list="() => nextTick(() => reload_list(index))"
-                            @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                             @requested_change_focus_kyou="(is_focus_kyou) => {
                                 skip_search_this_tick = true
                                 focused_column_index = index
@@ -181,15 +180,15 @@
                                 @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)"
                                 @updated_tag="(updated_tag) => { }" @updated_text="(updated_text) => { }"
                                 @updated_notification="(updated_notification) => { }"
-                                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+                                @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
+                                @requested_reload_list="() => { }" />
                         </div>
                     </td>
                     <td valign="top" v-if="is_show_dnote" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
                             :application_config="application_config" :gkill_api="gkill_api" :query="focused_query"
                             :checked_kyous="focused_column_checked_kyous" :last_added_tag="last_added_tag"
-                            @received_messages="(messages) => emits('received_messages', messages)"
+                            :editable="true" @received_messages="(messages) => emits('received_messages', messages)"
                             @received_errors="(errors) => emits('received_errors', errors)" ref="dnote_view" />
                     </td>
                     <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
@@ -218,7 +217,6 @@
                 @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
@@ -231,7 +229,6 @@
                 @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="add_lantana_dialog" />
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
@@ -244,7 +241,6 @@
                 @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="add_urlog_dialog" />
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
@@ -257,7 +253,6 @@
                 @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="add_mi_dialog" />
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
@@ -270,7 +265,6 @@
                 @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="add_nlog_dialog" />
             <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
@@ -279,7 +273,6 @@
                 @registered_tag="(registered_tag) => { }" @registered_text="(registered_text) => { }"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
@@ -287,7 +280,6 @@
                 :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
@@ -431,7 +423,7 @@ watch(() => is_show_dnote.value, () => {
     if (is_show_dnote.value) {
         update_focused_kyous_list(focused_column_index.value)
         nextTick(() => {
-            dnote_view.value?.recalc_all()
+            dnote_view.value?.reload(focused_kyous_list.value, focused_query.value)
         })
     } else {
         dnote_view.value?.abort()
@@ -500,6 +492,9 @@ async function init(): Promise<void> {
 }
 
 function update_focused_kyous_list(column_index: number): void {
+    if (!match_kyous_list.value || match_kyous_list.value.length === 0) {
+        return
+    }
     focused_kyous_list.value.splice(0)
     for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
         focused_kyous_list.value.push(match_kyous_list.value[column_index][i])
@@ -600,41 +595,6 @@ async function reload_list(column_index: number): Promise<void> {
     return search(column_index, querys.value[column_index], true)
 }
 
-async function update_check_kyous(kyous: Array<Kyou>, is_checked: boolean): Promise<void> {
-    for (let k = 0; k < kyous.length; k++) {
-        const kyou = kyous[k]
-        for (let i = 0; i < match_kyous_list.value.length; i++) {
-            const kyous_list = match_kyous_list.value[focused_column_index.value]
-            for (let j = 0; j < kyous_list.length; j++) {
-                const kyou_in_list = kyous_list[j]
-                if (kyou.id === kyou_in_list.id) {
-                    const updated_kyou = kyou.clone()
-                    await updated_kyou.reload()
-                    await updated_kyou.load_all()
-                    updated_kyou.is_checked_kyou = is_checked
-                    kyous_list.splice(j, 1, updated_kyou)
-
-                    if (is_checked) {
-                        focused_column_checked_kyous.value.push(updated_kyou)
-                    } else {
-                        let remove_index = -1;
-                        for (let l = 0; l < focused_column_checked_kyous.value.length; l++) {
-                            if (focused_column_checked_kyous.value[l].id === kyou.id) {
-                                remove_index = l
-                                break
-                            }
-                        }
-                        if (remove_index !== -1) {
-                            focused_column_checked_kyous.value.splice(remove_index, 1)
-                        }
-                    }
-                }
-            }
-        }
-    }
-    dnote_view.value?.recalc_checked_aggregate()
-}
-
 async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Promise<void> {
     focused_kyou.value = kyou
     focused_column_index.value = column_index
@@ -671,7 +631,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
 
         focused_column_checked_kyous.value = []
-        nextTick(() => dnote_view.value?.recalc_all())
+        nextTick(() => dnote_view.value?.reload(focused_kyous_list.value, focused_query.value))
 
         // 前の検索処理を中断する
         if (abort_controllers.value[column_index]) {

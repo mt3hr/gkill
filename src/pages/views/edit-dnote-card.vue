@@ -4,9 +4,9 @@
         <v-select v-model="predicate_type" :items="predicate_types" :label="$t('DNOTE_PREDICATE_TITLE')"
             @update:modelValue="onTypeChange" item-title="label" item-value="value" />
         <v-text-field v-model="model_value!.value" :label="$t('DNOTE_PREDICATE_VALUE_TITLE')" />
-        <v-row>
+        <v-row class="pa-0 ma-0">
             <v-spacer />
-            <v-col cols="auto">
+            <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn :color="'secondary'" @click="emits('remove')" class="mt-2">{{ $t('DELETE_TITLE') }}</v-btn>
             </v-col>
         </v-row>

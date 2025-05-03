@@ -1,14 +1,15 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
+import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
-export default class TagPredicate implements DnotePredicate {
+export default class TagEqualPredicate implements DnotePredicate {
     private tag: string
     constructor(tag: string) {
         this.tag = tag
     }
     static from_json(json: any): DnotePredicate {
         const tag = json.tag as string
-        return new TagPredicate(tag)
+        return new TagEqualPredicate(tag)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
         for (let i = 0; i < loaded_kyou.attached_tags.length; i++) {
@@ -19,7 +20,7 @@ export default class TagPredicate implements DnotePredicate {
         }
         return false
     }
-    to_json(): any {
+    predicate_struct_to_json(): any {
         return {
             type: "TagEqualPredicate",
             tag: this.tag,

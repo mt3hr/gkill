@@ -1,5 +1,6 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
+import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class NlogAmountGreaterThanPredicate implements DnotePredicate {
     private nlog_amount: number
@@ -19,7 +20,7 @@ export default class NlogAmountGreaterThanPredicate implements DnotePredicate {
         }
         return false
     }
-    to_json(): any {
+    predicate_struct_to_json(): any {
         return {
             type: "NlogAmountGreaterThanPredicate",
             nlog_amount: this.nlog_amount,
