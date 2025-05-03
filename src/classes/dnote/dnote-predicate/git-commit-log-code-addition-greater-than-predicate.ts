@@ -1,19 +1,18 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
 
-export default class GitCommitLogCodeLessThanPredicate implements DnotePredicate {
+export default class GitCommitLogCodeAdditionGreaterThanPredicate implements DnotePredicate {
     private git_commit_log_code_count: number
     constructor(git_commit_log_code_count: number) {
         this.git_commit_log_code_count = git_commit_log_code_count
     }
     static from_json(json: any): DnotePredicate {
         const git_commit_log_code_count = json.git_commit_log_code_count as number
-        return new GitCommitLogCodeLessThanPredicate(git_commit_log_code_count)
+        return new GitCommitLogCodeAdditionGreaterThanPredicate(git_commit_log_code_count)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
-
         if (loaded_kyou.typed_git_commit_log) {
-            const git_commit_log_code_count = loaded_kyou.typed_git_commit_log.addition + loaded_kyou.typed_git_commit_log.deletion
+            const git_commit_log_code_count = loaded_kyou.typed_git_commit_log.addition
             if (git_commit_log_code_count) {
                 if (git_commit_log_code_count <= this.git_commit_log_code_count) {
                     return true
@@ -24,7 +23,7 @@ export default class GitCommitLogCodeLessThanPredicate implements DnotePredicate
     }
     to_json(): any {
         return {
-            type: "GitCommitLogCodeLessThanPredicate",
+            type: "GitCommitLogCodeAdditionGreaterThanPredicate",
             git_commit_log_code_count: this.git_commit_log_code_count,
         }
     }

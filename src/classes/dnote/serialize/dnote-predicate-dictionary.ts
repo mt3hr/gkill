@@ -1,5 +1,9 @@
 import AndPredicate from "../dnote-predicate/and-predicate"
 import DataTypePrefixPredicate from "../dnote-predicate/data-type-prefix-predicate"
+import GitCommitLogCodeAdditionGreaterThanPredicate from "../dnote-predicate/git-commit-log-code-addition-greater-than-predicate"
+import GitCommitLogCodeAdditionLessThanPredicate from "../dnote-predicate/git-commit-log-code-addition-less-than-predicate"
+import GitCommitLogCodeDeletionGreaterThanPredicate from "../dnote-predicate/git-commit-log-code-deletion-greater-than-predicate"
+import GitCommitLogCodeDeletionLessThanPredicate from "../dnote-predicate/git-commit-log-code-deletion-less-than-predicate"
 import GitCommitLogCodeGreaterThanPredicate from "../dnote-predicate/git-commit-log-code-greater-than-predicate"
 import GitCommitLogCodeLessThanPredicate from "../dnote-predicate/git-commit-log-code-less-than-predicate"
 import KmemoContentContainsPredicate from "../dnote-predicate/kmemo-content-contains-predicate"
@@ -46,5 +50,8 @@ PredicateDictonary.set("GitCommitLogCodeGreaterThanPredicate", GitCommitLogCodeG
 PredicateDictonary.set("MiTitleContainsPredicate", MiTitleContainsPredicate)
 PredicateDictonary.set("MiTitleEqualPredicate", MiTitleEqualPredicate)
 PredicateDictonary.set("RelatedTimeWeekPredicate", RelatedTimeWeekPredicate)
-
+PredicateDictonary.set("GitCommitLogCodeAdditionLessThanPredicate", GitCommitLogCodeAdditionLessThanPredicate)
+PredicateDictonary.set("GitCommitLogCodeDeletionLessThanPredicate", GitCommitLogCodeDeletionLessThanPredicate)
+PredicateDictonary.set("GitCommitLogCodeAdditionGreaterThanPredicate", GitCommitLogCodeAdditionGreaterThanPredicate)
+PredicateDictonary.set("GitCommitLogCodeDeletionGreaterThanPredicate", GitCommitLogCodeDeletionGreaterThanPredicate)
 export default PredicateDictonary
