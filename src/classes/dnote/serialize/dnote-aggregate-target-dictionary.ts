@@ -1,10 +1,14 @@
+import AggregateAverageGitCommitLogAdditionCodeCount from "../dnote-aggregate-target/aggregate-average-git-commit-log-code-addition-count"
 import AggregateAverageGitCommitLogCodeCount from "../dnote-aggregate-target/aggregate-average-git-commit-log-code-count"
+import AggregateAverageGitCommitLogDeletionCodeCount from "../dnote-aggregate-target/aggregate-average-git-commit-log-code-deletion-count"
 import AggregateAverageLantanaMood from "../dnote-aggregate-target/aggregate-average-lantana-mood"
 import AggregateAverageNlogAmount from "../dnote-aggregate-target/aggregate-average-nlog-amount"
 import AggregateAverageTimeIsStartTime from "../dnote-aggregate-target/aggregate-average-timeis-start-time"
 import AggregateAverageTimeisTime from "../dnote-aggregate-target/aggregate-average-timeis-time"
 import AggregateCountKyou from "../dnote-aggregate-target/aggregate-count-kyou"
+import AggregateSumGitCommitLogAdditionCodeCount from "../dnote-aggregate-target/aggregate-sum-git-commit-log-code-addition-count"
 import AggregateSumGitCommitLogCodeCount from "../dnote-aggregate-target/aggregate-sum-git-commit-log-code-count"
+import AggregateSumGitCommitLogDeletionCodeCount from "../dnote-aggregate-target/aggregate-sum-git-commit-log-code-deletion-count"
 import AggregateSumLantanaMood from "../dnote-aggregate-target/aggregate-sum-lantana-mood"
 import AggregateSumNlogAmount from "../dnote-aggregate-target/aggregate-sum-nlog-amount"
 import AggregateSumTimeisTime from "../dnote-aggregate-target/aggregate-sum-timeis-time"
@@ -14,10 +18,14 @@ AggregateTargetDictionary.set("AggregateAverageTimeIsTime", AggregateAverageTime
 AggregateTargetDictionary.set("AggregateAverageTimeIsStartTime", AggregateAverageTimeIsStartTime)
 AggregateTargetDictionary.set("AggregateAverageTimeIsEndTime", AggregateAverageTimeIsStartTime)
 AggregateTargetDictionary.set("AgregateAverageGitCommitLogCode", AggregateAverageGitCommitLogCodeCount)
+AggregateTargetDictionary.set("AgregateAverageGitCommitLogAdditionCode", AggregateAverageGitCommitLogAdditionCodeCount)
+AggregateTargetDictionary.set("AgregateAverageGitCommitLogDeletionCode", AggregateAverageGitCommitLogDeletionCodeCount)
 AggregateTargetDictionary.set("AggregateAverageLantanaMood", AggregateAverageLantanaMood)
 AggregateTargetDictionary.set("AggregateAverageNlogAmount", AggregateAverageNlogAmount)
 AggregateTargetDictionary.set("AggregateCountKyou", AggregateCountKyou)
 AggregateTargetDictionary.set("AgregateSumGitCommitLogCode", AggregateSumGitCommitLogCodeCount)
+AggregateTargetDictionary.set("AgregateSumGitCommitLogAdditionCode", AggregateSumGitCommitLogAdditionCodeCount)
+AggregateTargetDictionary.set("AgregateSumGitCommitLogDeletionCode", AggregateSumGitCommitLogDeletionCodeCount)
 AggregateTargetDictionary.set("AggregateSumLantanaMood", AggregateSumLantanaMood)
 AggregateTargetDictionary.set("AggregateSumNlogAmount", AggregateSumNlogAmount)
 AggregateTargetDictionary.set("AggregateSumTimeIsTime", AggregateSumTimeisTime)
