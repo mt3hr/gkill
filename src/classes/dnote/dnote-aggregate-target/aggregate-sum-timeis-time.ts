@@ -3,9 +3,10 @@ import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteAggregateTarget from "../dnote-aggregate-target";
 import moment from "moment";
 import { i18n } from "@/i18n";
+import AggregateTargetDictionary from "../serialize/dnote-aggregate-target-dictionary";
 
 export default class AggregateSumTimeisTime implements DnoteAggregateTarget{
-    from_json(_json: any): DnoteAggregateTarget {
+    static from_json(_json: any): DnoteAggregateTarget {
         return new AggregateSumTimeisTime()
     }
     async append_aggregate_element_value(aggregated_value_unix_time_milli_second: any | null, kyou: Kyou, find_kyou_query: FindKyouQuery): Promise<any> {

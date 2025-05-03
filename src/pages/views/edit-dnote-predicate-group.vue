@@ -4,9 +4,8 @@
 
         <div v-for="(predicate, index) in group!.predicates" :key="index" class="predicate-entry">
             <PredicateGroup v-if="is_group(predicate)" v-model="group!.predicates[index] as PredicateGroupType"
-                class="my-2" @remove="remove_predicate(index)" />
-            <PredicateCard v-else v-model="group!.predicates[index] as Predicate" class="my-2"
                 @remove="remove_predicate(index)" />
+            <PredicateCard v-else v-model="group!.predicates[index] as Predicate" @remove="remove_predicate(index)" />
         </div>
         <v-btn @click="add_predicate" :color="'primary'" class="ma-1">{{ $t('DNOTE_ADD_PREDICATE_TITLE') }}</v-btn>
         <v-btn @click="add_group" :color="'primary'" class="ma-1">{{ $t('DNOTE_ADD_GROUP_TITLE') }}</v-btn>
@@ -30,7 +29,7 @@ function is_group(p: Predicate | PredicateGroupType): p is PredicateGroupType {
 }
 
 function add_predicate() {
-    group.value!.predicates.push({ type: i18n.global.t("DNOTE_DATA_TYPE_PREFIX_PREDICATE"), value: "" })
+    group.value!.predicates.push({ type: i18n.global.t("DNOTE_DATA_TYPE_PREFIX_PREDICATE"), value: "DataTypePrefixPredicate" })
 }
 
 function add_group() {

@@ -10,4 +10,5 @@ export interface DnoteViewProps extends GkillPropsBase {
     app_content_height: Number
     app_content_width: Number
     last_added_tag: string
+    editable: boolean
 }

@@ -1,5 +1,6 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
+import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class LantanaMoodLessThanPredicate implements DnotePredicate {
     private lantana_mood_less_than_target: number
@@ -19,7 +20,7 @@ export default class LantanaMoodLessThanPredicate implements DnotePredicate {
         }
         return false
     }
-    to_json(): any {
+    predicate_struct_to_json(): any {
         return {
             type: "LantanaMoodLessThanPredicate",
             lantana_mood_less_than_target: this.lantana_mood_less_than_target,

@@ -1,9 +1,10 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteAggregateTarget from "../dnote-aggregate-target";
+import AggregateTargetDictionary from "../serialize/dnote-aggregate-target-dictionary";
 
 export default class AggregateCountKyou implements DnoteAggregateTarget {
-    from_json(_json: any): DnoteAggregateTarget {
+    static from_json(_json: any): DnoteAggregateTarget {
         return new AggregateCountKyou()
     }
     async append_aggregate_element_value(kyou_count: any | null, _kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
@@ -17,4 +18,11 @@ export default class AggregateCountKyou implements DnoteAggregateTarget {
             type: "AggregateCountKyou",
         }
     }
+}
+
+// 循環参照解決のためにここで定義
+export function build_dnote_aggretgate_target_from_json(json: any): DnoteAggregateTarget {
+    const ctor = AggregateTargetDictionary.get(json.type)
+    if (!ctor) throw new Error(`Unknown predicate type: ${json.type}`)
+    return ctor(json.value)
 }
