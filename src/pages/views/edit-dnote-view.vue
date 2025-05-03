@@ -21,17 +21,21 @@ const rootPredicate = ref<PredicateGroupType>({
 })
 
 const aggregate_targets: Ref<Array<DnoteSelectItem>> = ref([
-    { label: i18n.global.t("DNOTE_AVERAGE_GIT_COMMIT_LOG_CODE_COUNT"), value: "AgregateAverageGitCommitLogCode" },
     { label: i18n.global.t("DNOTE_AVERAGE_LANTANA_MOOD"), value: "AggregateAverageLantanaMood" },
     { label: i18n.global.t("DNOTE_AVERAGE_NLOG_AMOUNT"), value: "AggregateAverageNlogAmount" },
     { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_END_TIME"), value: "AggregateAverageTimeIsEndTime" },
     { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_START_TIME"), value: "AggregateAverageTimeIsStartTime" },
     { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_TIME"), value: "AggregateAverageTimeIsTime" },
     { label: i18n.global.t("DNOTE_COUNT_KYOU"), value: "AggregateCountKyou" },
-    { label: i18n.global.t("DNOTE_SUM_GIT_COMMIT_LOG_CODE_COUNT"), value: "AgregateSumGitCommitLogCode" },
     { label: i18n.global.t("DNOTE_SUM_LANTANA_MOOD"), value: "AggregateSumLantanaMood" },
     { label: i18n.global.t("DNOTE_SUM_NLOG_AMOUNT"), value: "AggregateSumNlogAmount" },
     { label: i18n.global.t("DNOTE_SUM_TIMEIS_TIME"), value: "AggregateSumTimeIsTime" },
+    { label: i18n.global.t("DNOTE_AVERAGE_GIT_COMMIT_LOG_CODE_COUNT"), value: "AgregateAverageGitCommitLogCode" },
+    { label: i18n.global.t("DNOTE_AVERAGE_GIT_COMMIT_LOG_ADDITION_CODE_COUNT"), value: "AgregateAverageGitCommitLogAdditionCode" },
+    { label: i18n.global.t("DNOTE_AVERAGE_GIT_COMMIT_LOG_DELETION_CODE_COUNT"), value: "AgregateAverageGitCommitLogDeletionCode" },
+    { label: i18n.global.t("DNOTE_SUM_GIT_COMMIT_LOG_CODE_COUNT"), value: "AgregateSumGitCommitLogCode" },
+    { label: i18n.global.t("DNOTE_SUM_GIT_COMMIT_LOG_CODE_ADDITION_COUNT"), value: "AgregateSumGitCommitLogAdditionCode" },
+    { label: i18n.global.t("DNOTE_SUM_GIT_COMMIT_LOG_CODE_DELETION_COUNT"), value: "AgregateSumGitCommitLogDeletionCode" },
 ])
 const aggregate_target: Ref<DnoteSelectItem> = ref(aggregate_targets.value[0])
 
