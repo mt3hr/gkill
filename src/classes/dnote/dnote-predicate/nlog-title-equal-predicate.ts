@@ -1,5 +1,6 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
+import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class NlogTitleEqualPredicate implements DnotePredicate {
     private nlog_title_equal_target: string
@@ -19,7 +20,7 @@ export default class NlogTitleEqualPredicate implements DnotePredicate {
         }
         return false
     }
-    to_json(): any {
+    predicate_struct_to_json(): any {
         return {
             type: "NlogTitleEqualPredicate",
             nlog_title_equal_target: this.nlog_title_equal_target,

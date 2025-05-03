@@ -2,6 +2,7 @@ import type { FindKyouQuery } from "../api/find_query/find-kyou-query";
 import type { Kyou } from "../datas/kyou";
 import type DnoteAggregateTarget from "./dnote-aggregate-target";
 import type DnotePredicate from "./dnote-predicate";
+import load_kyous from "./kyou-loader";
 
 export class DnoteAggregator {
     private dnote_predicate: DnotePredicate
@@ -12,16 +13,9 @@ export class DnoteAggregator {
         this.dnote_aggregate_target = aggregate_target
     }
 
-    public async aggregate(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery): Promise<{ result_string: string, match_kyous: Array<Kyou> }> {
+    public async aggregate(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<{ result_string: string, match_kyous: Array<Kyou> }> {
         // 渡されたデータの全項目を取得
-        const cloned_kyous = new Array<Kyou>()
-        for (let i = 0; i < kyous.length; i++) {
-            const kyou = kyous[i].clone()
-            kyou.abort_controller = abort_controller
-            await kyou.load_typed_datas()
-            await kyou.load_attached_tags()
-            cloned_kyous.push(kyou)
-        }
+        const cloned_kyous = await load_kyous(abort_controller, kyous, !kyou_is_loaded)
 
         // predicateにマッチしたKyouを抽出
         const match_kyous = new Array<Kyou>()

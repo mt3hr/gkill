@@ -382,6 +382,9 @@ watch(() => focused_time.value, () => {
 })
 
 function update_focused_kyous_list(column_index: number): void {
+    if (!match_kyous_list.value || match_kyous_list.value.length === 0) {
+        return
+    }
     focused_kyous_list.value.splice(0)
     for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
         focused_kyous_list.value.push(match_kyous_list.value[column_index][i])

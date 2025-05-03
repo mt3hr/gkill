@@ -1,5 +1,6 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
+import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class TimeIsTitleContainsPredicate implements DnotePredicate {
     private timeis_title_contains_target: string
@@ -19,7 +20,7 @@ export default class TimeIsTitleContainsPredicate implements DnotePredicate {
         }
         return false
     }
-    to_json(): any {
+    predicate_struct_to_json(): any {
         return {
             type: "TimeIsTitleContainsPredicate",
             timeis_title_contains_target: this.timeis_title_contains_target,

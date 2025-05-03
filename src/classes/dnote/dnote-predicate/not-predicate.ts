@@ -14,10 +14,10 @@ export default class NotPredicate implements DnotePredicate {
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
         return await !(this.predicate.is_match(loaded_kyou))
     }
-    to_json(): any {
+    predicate_struct_to_json(): any {
         return {
             type: "NotPredicate",
-            predicate: (this.predicate as unknown as DnotePredicate).to_json()
+            predicate: (this.predicate as unknown as DnotePredicate).predicate_struct_to_json()
         }
     }
 }
