@@ -5,6 +5,5 @@ import type DnoteItem from "../../classes/dnote/dnote-item"
 export default interface DnoteItemProps {
     gkill_api: GkillAPI
     application_config: ApplicationConfig
-    dnote_item: DnoteItem
     editable: boolean
 }

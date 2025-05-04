@@ -1,6 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
-import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class KmemoContentEqualPredicate implements DnotePredicate {
     private kmemo_content_equal_target: string
@@ -8,7 +7,7 @@ export default class KmemoContentEqualPredicate implements DnotePredicate {
         this.kmemo_content_equal_target = kmemo_content_equal_target
     }
     static from_json(json: any): DnotePredicate {
-        const kmemo_content_equal_target = json.kmemo_content_equal_target as string
+        const kmemo_content_equal_target = json.value as string
         return new KmemoContentEqualPredicate(kmemo_content_equal_target)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
@@ -23,7 +22,7 @@ export default class KmemoContentEqualPredicate implements DnotePredicate {
     predicate_struct_to_json(): any {
         return {
             type: "KmemoContentEqualPredicate",
-            kmemo_content_equal_target: this.kmemo_content_equal_target,
+            value: this.kmemo_content_equal_target,
         }
     }
 }

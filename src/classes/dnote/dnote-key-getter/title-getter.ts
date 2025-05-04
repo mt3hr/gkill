@@ -13,6 +13,8 @@ export default class TitleGetter implements DnoteKeyGetter {
             return [loaded_kyou.typed_kmemo.content]
         } else if (loaded_kyou.data_type.startsWith("timeis") && loaded_kyou.typed_timeis) {
             return [loaded_kyou.typed_timeis.title]
+        } else if (loaded_kyou.data_type.startsWith("nlog") && loaded_kyou.typed_nlog) {
+            return [loaded_kyou.typed_nlog.title]
         } else if (loaded_kyou.data_type.startsWith("mi") && loaded_kyou.typed_mi) {
             return [loaded_kyou.typed_mi.title]
         } else if (loaded_kyou.data_type.startsWith("git") && loaded_kyou.typed_git_commit_log) {

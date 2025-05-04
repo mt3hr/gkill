@@ -26,19 +26,23 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_add_dnote_list_query="(dnote_list_query) => dnote_list_item_table_view_data.push(dnote_list_query)"
-            ref="add_dnote_list_dialog" />
+            @received_messages="(messages) => emits('received_messages', messages)" @requested_add_dnote_list_query="(dnote_list_query) => {
+                dnote_list_item_table_view_data.push(dnote_list_query)
+                load_aggregated_value(abort_controller, [], new FindKyouQuery(), true);
+                load_aggregate_grouping_list(abort_controller, [], new FindKyouQuery(), true)
+            }" ref="add_dnote_list_dialog" />
         <AddDnoteItemDialog :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_add_dnote_item="(dnote_item) => dnote_item_table_view_data[0].push(dnote_item)"
-            ref="add_dnote_item_dialog" />
+            @received_messages="(messages) => emits('received_messages', messages)" @requested_add_dnote_item="(dnote_item) => {
+                dnote_item_table_view_data[0].push(dnote_item);
+                load_aggregated_value(abort_controller, [], new FindKyouQuery(), true);
+                load_aggregate_grouping_list(abort_controller, [], new FindKyouQuery(), true)
+            }" ref="add_dnote_item_dialog" />
     </div>
 </template>
 <script lang="ts" setup>
@@ -46,7 +50,7 @@ import { type DnoteViewProps } from '@/pages/views/dnote-view-props';
 import DnoteItemTableView from './dnote-item-table-view.vue';
 import DnoteListTableView from './dnote-list-table-view.vue';
 import { nextTick, ref, watch, type Ref } from 'vue';
-import type { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
+import { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
 import type { Kyou } from '../../classes/datas/kyou';
 import load_kyous from '../../classes/dnote/kyou-loader';
 import DnoteItem from '../../classes/dnote/dnote-item';
@@ -54,7 +58,7 @@ import DnoteListQuery from './dnote-list-query';
 import AddDnoteListDialog from '../../pages/dialogs/add-dnote-list-dialog.vue';
 import AddDnoteItemDialog from '../../pages/dialogs/add-dnote-item-dialog.vue';
 import { type DnoteEmits } from '@/pages/views/dnote-emits';
-import regist_dictionary from '@/classes/dnote/serialize/regist-dictionary';
+import regist_dictionary, { build_dnote_aggregate_target_from_json, build_dnote_key_getter_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary';
 import { UpdateDnoteJSONDataRequest } from '@/classes/api/req_res/update-dnote-json-data-request';
 
 const dnote_item_table_view = ref<InstanceType<typeof DnoteItemTableView> | null>(null);
@@ -62,7 +66,6 @@ const dnote_list_table_view = ref<InstanceType<typeof DnoteListTableView> | null
 const add_dnote_list_dialog = ref<InstanceType<typeof AddDnoteListDialog> | null>(null);
 const add_dnote_item_dialog = ref<InstanceType<typeof AddDnoteItemDialog> | null>(null);
 
-regist_dictionary()
 const props = defineProps<DnoteViewProps>()
 defineExpose({ reload, abort })
 const emits = defineEmits<DnoteEmits>()
@@ -105,15 +108,77 @@ async function load_aggregate_grouping_list(abort_controller: AbortController, k
 }
 
 function to_json(): any {
+    const dnote_item_table_view_data_seliarized = []
+    for (let i = 0; i < dnote_item_table_view_data.value.length; i++) {
+        const list = []
+        const dnote_item_col = dnote_item_table_view_data.value[i]
+        for (let j = 0; j < dnote_item_col.length; j++) {
+            const dnote_item = dnote_item_col[j]
+            const record = {
+                id: dnote_item.id,
+                prefix: dnote_item.prefix,
+                suffix: dnote_item.suffix,
+                title: dnote_item.title,
+                aggregate_target: dnote_item.agregate_target.to_json(),
+                predicate: dnote_item.predicate.predicate_struct_to_json(),
+            }
+            list.push(record)
+        }
+        dnote_item_table_view_data_seliarized.push(list)
+    }
+
+    const dnote_list_item_table_view_data_seliarized = []
+    for (let i = 0; i < dnote_list_item_table_view_data.value.length; i++) {
+        const list_find_query = dnote_list_item_table_view_data.value[i]
+        const record = {
+            id: list_find_query.id,
+            prefix: list_find_query.prefix,
+            suffix: list_find_query.suffix,
+            title: list_find_query.title,
+            aggregate_target: list_find_query.aggregate_target.to_json(),
+            predicate: list_find_query.predicate.predicate_struct_to_json(),
+            key_getter: list_find_query.key_getter.to_json(),
+        }
+        dnote_list_item_table_view_data_seliarized.push(record)
+    }
+
     return {
-        dnote_item_table_view_data: dnote_item_table_view_data.value,
-        dnote_list_item_tabel_view_data: dnote_list_item_table_view_data.value,
+        dnote_item_table_view_data: dnote_item_table_view_data_seliarized,
+        dnote_list_item_table_view_data: dnote_list_item_table_view_data_seliarized,
     }
 }
 
 function from_json(json: any): void {
-    dnote_item_table_view_data.value = json.dnote_item_table_view_data
-    dnote_list_item_table_view_data.value = json.dnote_list_item_table_view_data
+    regist_dictionary()
+    const items: Array<Array<DnoteItem>> = ((json && json.dnote_item_table_view_data ? json.dnote_item_table_view_data : []) || []).map((col: any[]) =>
+        col.map((itemJson: any) => {
+            const item = new DnoteItem()
+            item.id = itemJson.id
+            item.prefix = itemJson.prefix
+            item.suffix = itemJson.suffix
+            item.title = itemJson.title
+            item.agregate_target = build_dnote_aggregate_target_from_json(itemJson.aggregate_target)
+            item.predicate = build_dnote_predicate_from_json(itemJson.predicate)
+            return item
+        })
+    )
+    dnote_item_table_view_data.value = items
+
+    const queries: Array<DnoteListQuery> = ((json && json.dnote_list_item_table_view_data ? json.dnote_list_item_table_view_data : []) || []).map((queryJson: any) => {
+        const query = new DnoteListQuery()
+        query.id = queryJson.id
+        query.prefix = queryJson.prefix
+        query.suffix = queryJson.suffix
+        query.title = queryJson.title
+        query.aggregate_target = build_dnote_aggregate_target_from_json(queryJson.aggregate_target)
+        query.predicate = build_dnote_predicate_from_json(queryJson.predicate)
+        query.key_getter = build_dnote_key_getter_from_json(queryJson.key_getter)
+        return query
+    })
+    dnote_list_item_table_view_data.value = queries
+    if (dnote_item_table_view_data.value.length === 0) {
+        dnote_item_table_view_data.value.push(new Array<DnoteItem>())
+    }
 }
 
 function load_from_application_config(): void {
@@ -140,13 +205,12 @@ async function apply(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
-    emits('requested_reload_application_config', res.application_config)
     emits('requested_close_dialog')
 }
 
 </script>
 <style lang="css" scoped>
 .position-fixed {
-    position: static !important
+    position: relative; 
 }
 </style>

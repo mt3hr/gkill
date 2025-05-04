@@ -8,7 +8,7 @@ export default class TimeIsTitleEqualPredicate implements DnotePredicate {
         this.timeis_title_equal_target = timeis_title_equal_target
     }
     static from_json(json: any): DnotePredicate {
-        const timeis_title_equal_target = json.timeis_title_equal_target as string
+        const timeis_title_equal_target = json.value as string
         return new TimeIsTitleEqualPredicate(timeis_title_equal_target)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
@@ -23,7 +23,7 @@ export default class TimeIsTitleEqualPredicate implements DnotePredicate {
     predicate_struct_to_json(): any {
         return {
             type: "TimeIsTitleEqualPredicate",
-            timeis_title_equal_target: this.timeis_title_equal_target,
+            value: this.timeis_title_equal_target,
         }
     }
 }

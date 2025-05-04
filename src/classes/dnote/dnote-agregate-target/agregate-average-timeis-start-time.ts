@@ -1,36 +1,25 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
-import type DnoteAggregateTarget from "../dnote-aggregate-target";
+import type DnoteAgregateTarget from "../dnote-agregate-target";
 import moment from "moment";
 import { i18n } from "@/i18n";
-import AggregateTargetDictionary from "../serialize/dnote-aggregate-target-dictionary";
+import AverageInfo from "./average-info";
 
-export default class AggregateSumTimeisTime implements DnoteAggregateTarget{
-    static from_json(_json: any): DnoteAggregateTarget {
-        return new AggregateSumTimeisTime()
+export default class AgregateAverageTimeIsStartTime implements DnoteAgregateTarget {
+    static from_json(_json: any): DnoteAgregateTarget {
+        return new AgregateAverageTimeIsStartTime()
     }
-    async append_aggregate_element_value(aggregated_value_unix_time_milli_second: any | null, kyou: Kyou, find_kyou_query: FindKyouQuery): Promise<any> {
-        const typed_aggregated_value_unix_time_milli_second = aggregated_value_unix_time_milli_second === null ? 0 : aggregated_value_unix_time_milli_second as number
+    async append_agregate_element_value(average_value_timeis: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
+        const cloned_typed_average_info_timeis = average_value_timeis === null ? new AverageInfo() : (average_value_timeis as AverageInfo).clone()
+        cloned_typed_average_info_timeis.total_value = cloned_typed_average_info_timeis.total_value === null ? 0 : cloned_typed_average_info_timeis.total_value as number
 
-        let duration_milli_second = 0
         if (kyou.typed_timeis) {
-            let start_time_trimed = kyou.typed_timeis!.start_time
-            if (find_kyou_query.calendar_start_date) {
-                start_time_trimed = start_time_trimed.getTime() <= find_kyou_query.calendar_start_date.getTime() ? find_kyou_query.calendar_start_date : start_time_trimed
-            }
-
-            let end_time_trimed = kyou.typed_timeis?.end_time ? kyou.typed_timeis!.end_time : new Date(Date.now())
-            if (find_kyou_query.calendar_end_date) {
-                end_time_trimed = end_time_trimed.getTime() >= find_kyou_query.calendar_end_date.getTime() ? find_kyou_query.calendar_end_date : end_time_trimed
-            }
-
-            if ((start_time_trimed.getTime() < end_time_trimed.getTime())) {
-                duration_milli_second = Math.abs(moment.duration(moment(start_time_trimed).diff(moment(end_time_trimed))).asMilliseconds())
-            } else {
-                duration_milli_second = 0
-            }
+            const start_time = moment((moment(0).format("YYYY-MM-DD ")) + moment(kyou.typed_timeis.start_time).format("HH:mm:ss")).toDate().getTime()
+            cloned_typed_average_info_timeis.total_value += start_time
+            cloned_typed_average_info_timeis.total_count++
         }
-        return typed_aggregated_value_unix_time_milli_second + duration_milli_second
+
+        return cloned_typed_average_info_timeis
     }
     async result_to_string(duration_milli_second: any | null): Promise<string> {
         if (duration_milli_second === 0) {
@@ -77,7 +66,7 @@ export default class AggregateSumTimeisTime implements DnoteAggregateTarget{
     }
     to_json(): any {
         return {
-            type: "AggregateSumTimeisTime",
+            type: "AgregateAverageTimeIsStartTime",
         }
     }
 }

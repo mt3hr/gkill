@@ -8,7 +8,7 @@ export default class NlogTitleEqualPredicate implements DnotePredicate {
         this.nlog_title_equal_target = nlog_title_equal_target
     }
     static from_json(json: any): DnotePredicate {
-        const nlog_title_equal_target = json.nlog_title_equal_target as string
+        const nlog_title_equal_target = json.value as string
         return new NlogTitleEqualPredicate(nlog_title_equal_target)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
@@ -23,7 +23,7 @@ export default class NlogTitleEqualPredicate implements DnotePredicate {
     predicate_struct_to_json(): any {
         return {
             type: "NlogTitleEqualPredicate",
-            nlog_title_equal_target: this.nlog_title_equal_target,
+            value: this.nlog_title_equal_target,
         }
     }
 }
