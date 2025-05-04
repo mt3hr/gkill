@@ -1,8 +1,8 @@
 <!-- PredicateCard.vue -->
 <template>
     <v-card class="predicate-card">
-        <v-select v-model="predicate_type" :items="predicate_types" :label="$t('DNOTE_PREDICATE_TITLE')"
-            @update:modelValue="onTypeChange" item-title="label" item-value="value" />
+        <v-select v-model="model_value!.type" :items="predicate_types" :label="$t('DNOTE_PREDICATE_TITLE')"
+            item-title="label" item-value="value" />
         <v-text-field v-model="model_value!.value" :label="$t('DNOTE_PREDICATE_VALUE_TITLE')" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
@@ -14,7 +14,7 @@
 </template>
 <script setup lang="ts">
 const emits = defineEmits(['remove'])
-import { ref, watch, type Ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { defineModel } from 'vue'
 import type Predicate from '../../classes/dnote/predicate'
 import { i18n } from '@/i18n'
@@ -50,12 +50,4 @@ const predicate_types: Ref<Array<DnoteSelectItem>> = ref([
 ])
 
 const predicate_type = ref(model_value.value?.type)
-
-watch(predicate_type, () => {
-    onTypeChange()
-})
-
-function onTypeChange(): void {
-    model_value.value!.value = ''
-}
 </script>

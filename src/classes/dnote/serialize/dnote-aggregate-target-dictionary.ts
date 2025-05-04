@@ -1,2 +1,2 @@
-const AggregateTargetDictionary = new Map<String, any>()
-export default AggregateTargetDictionary
+const AgregateTargetDictionary = new Map<String, any>()
+export default AgregateTargetDictionary

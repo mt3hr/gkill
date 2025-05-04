@@ -78,6 +78,7 @@ export class ApplicationConfig {
         application_config.rep_type_struct = this.rep_type_struct
         application_config.kftl_template_struct = this.kftl_template_struct
         application_config.account_is_admin = this.account_is_admin
+        application_config.dnote_json_data = this.dnote_json_data
         application_config.mi_board_struct = this.mi_board_struct
         application_config.session_is_local = this.session_is_local
         application_config.rykv_default_period = this.rykv_default_period

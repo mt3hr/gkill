@@ -1,7 +1,7 @@
 <template>
     <div>
-        <DnoteItemView v-for="dnote_item in model_value" :dnote_item="dnote_item" :key="dnote_item.id"
-            :editable="editable" :application_config="application_config" :gkill_api="gkill_api"
+        <DnoteItemView v-for="dnote_item in model_value" v-model="dnote_item!" :key="dnote_item.id" :editable="editable"
+            :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_delete_dnote_item="(id) => delete_dnote_item(id)"

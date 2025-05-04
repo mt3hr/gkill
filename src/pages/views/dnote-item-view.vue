@@ -1,5 +1,6 @@
 <template>
-    <div @contextmenu.prevent.stop="(e: any) => contextmenu?.show(e, dnote_item.id)">
+    <div @contextmenu.prevent.stop="(e: any) => { if (editable) { contextmenu?.show(e, model_value!.id) } }"
+        @dblclick="kyou_list_view_dialog?.show()">
         <span class="title">
             <span>{{ title }}</span>
             <span>:</span>
@@ -15,18 +16,18 @@
             :enable_dialog="true" :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="true"
             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true" :show_content_only="false"
             :show_timeis_plaing_end_button="false" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" />
+            @received_messages="(messages) => emits('received_messages', messages)" ref="kyou_list_view_dialog" />
         <DnoteItemListContextMenu :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_delete_dnote_item_list="confirm_delete_dnote_item_list_dialog?.show(dnote_item)"
+            @requested_delete_dnote_item_list="confirm_delete_dnote_item_list_dialog?.show(model_value!)"
             @requested_edit_dnote_item_list="edit_dnote_item_dialog?.show()" ref="contextmenu" />
         <ConfirmDeleteDnoteItemListDialog :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_delete_dnote_list_item="(id) => emits('requested_delete_dnote_item', id)"
             ref="confirm_delete_dnote_item_list_dialog" />
-        <EditDnoteItemDialog :application_config="application_config" :gkill_api="gkill_api"
+        <EditDnoteItemDialog :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_update_dnote_item="(dnote_item) => emits('requested_update_dnote_item', dnote_item)"
@@ -37,31 +38,34 @@
 import { computed, ref, type Ref } from 'vue'
 import type DnoteItemProps from './dnote-item-props'
 import type { Kyou } from '../../classes/datas/kyou';
-import { DnoteAggregator } from '../../classes/dnote/dnote-aggregator';
+import { DnoteAgregator } from '../../classes/dnote/dnote-aggregator';
 import type { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
 import DnoteItemListContextMenu from './dnote-item-list-context-menu.vue';
 import ConfirmDeleteDnoteItemListDialog from '../dialogs/confirm-delete-dnote-item-list-dialog.vue';
 import EditDnoteItemDialog from '../dialogs/edit-dnote-item-dialog.vue';
 import type DnoteItemViewEmits from './dnote-item-view-emits';
 import KyouListViewDialog from '../dialogs/kyou-list-view-dialog.vue';
+import type DnoteItem from '@/classes/dnote/dnote-item';
 const contextmenu = ref<InstanceType<typeof DnoteItemListContextMenu> | null>(null);
 const confirm_delete_dnote_item_list_dialog = ref<InstanceType<typeof ConfirmDeleteDnoteItemListDialog> | null>(null);
 const edit_dnote_item_dialog = ref<InstanceType<typeof EditDnoteItemDialog> | null>(null);
+const kyou_list_view_dialog = ref<InstanceType<typeof KyouListViewDialog> | null>(null);
 
-const props = defineProps<DnoteItemProps>()
+defineProps<DnoteItemProps>()
 const emits = defineEmits<DnoteItemViewEmits>()
+const model_value = defineModel<DnoteItem>()
 defineExpose({ load_aggregated_value })
 
-const title: Ref<string> = ref(props.dnote_item.title)
-const prefix: Ref<string> = ref(props.dnote_item.prefix)
-const suffix: Ref<string> = ref(props.dnote_item.suffix)
+const title: Ref<string> = ref(model_value.value!.title)
+const prefix: Ref<string> = ref(model_value.value!.prefix)
+const suffix: Ref<string> = ref(model_value.value!.suffix)
 const value: Ref<string> = ref("")
 const related_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const list_height = computed(() => window.screen.height * 7 / 10)
 
 async function load_aggregated_value(abort_controller: AbortController, kyous: Array<Kyou>, query: FindKyouQuery, kyou_is_loaded: boolean) {
-    const dnote_aggregator = new DnoteAggregator(props.dnote_item.predicate, props.dnote_item.aggregate_target)
-    const aggregate_result = await dnote_aggregator.aggregate(abort_controller, kyous, query, kyou_is_loaded)
+    const dnote_aggregator = new DnoteAgregator(model_value.value!.predicate, model_value.value!.agregate_target)
+    const aggregate_result = await dnote_aggregator.agregate(abort_controller, kyous, query, kyou_is_loaded)
     value.value = aggregate_result.result_string
     related_kyous.value = aggregate_result.match_kyous
 }

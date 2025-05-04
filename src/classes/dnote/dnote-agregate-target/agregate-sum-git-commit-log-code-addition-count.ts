@@ -1,13 +1,12 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
-import type DnoteAggregateTarget from "../dnote-aggregate-target";
-import AggregateTargetDictionary from "../serialize/dnote-aggregate-target-dictionary";
+import type DnoteAgregateTarget from "../dnote-agregate-target";
 
-export default class AggregateSumGitCommitLogAdditionCodeCount implements DnoteAggregateTarget {
-    static from_json(_json: any): DnoteAggregateTarget {
-        return new AggregateSumGitCommitLogAdditionCodeCount()
+export default class AgregateSumGitCommitLogAdditionCodeCount implements DnoteAgregateTarget {
+    static from_json(_json: any): DnoteAgregateTarget {
+        return new AgregateSumGitCommitLogAdditionCodeCount()
     }
-    async append_aggregate_element_value(git_commit_log_code_count: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
+    async append_agregate_element_value(git_commit_log_code_count: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
         const typed_git_commit_log_code_count = git_commit_log_code_count === null ? 0 : (git_commit_log_code_count as number)
         let code_count = 0
         if (kyou.typed_git_commit_log) {
@@ -20,7 +19,7 @@ export default class AggregateSumGitCommitLogAdditionCodeCount implements DnoteA
     }
     to_json(): any {
         return {
-            type: "AggregateSumGitCommitLogAdditionCodeCount",
+            type: "AgregateSumGitCommitLogAdditionCodeCount",
         }
     }
 }
