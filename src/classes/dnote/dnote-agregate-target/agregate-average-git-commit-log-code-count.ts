@@ -1,15 +1,13 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
-import type DnoteAggregateTarget from "../dnote-aggregate-target";
+import type DnoteAgregateTarget from "../dnote-agregate-target";
 import AverageInfo from "./average-info";
-import { i18n } from "@/i18n";
-import AggregateTargetDictionary from "../serialize/dnote-aggregate-target-dictionary";
 
-export default class AggregateAverageGitCommitLogCodeCount implements DnoteAggregateTarget {
-    static from_json(_json: any): DnoteAggregateTarget {
-        return new AggregateAverageGitCommitLogCodeCount()
+export default class AgregateAverageGitCommitLogCodeCount implements DnoteAgregateTarget {
+    static from_json(_json: any): DnoteAgregateTarget {
+        return new AgregateAverageGitCommitLogCodeCount()
     }
-    async append_aggregate_element_value(typed_average_info_git_commit_log_amount: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
+    async append_agregate_element_value(typed_average_info_git_commit_log_amount: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
         const cloned_typed_average_info_git_commit_log_amount = typed_average_info_git_commit_log_amount === null ? new AverageInfo() : (typed_average_info_git_commit_log_amount as AverageInfo).clone()
         cloned_typed_average_info_git_commit_log_amount.total_value = cloned_typed_average_info_git_commit_log_amount.total_value === null ? 0 : cloned_typed_average_info_git_commit_log_amount.total_value as number
 
@@ -30,7 +28,7 @@ export default class AggregateAverageGitCommitLogCodeCount implements DnoteAggre
 
     to_json(): any {
         return {
-            type: "AggregateAverageGitCommitLogCodeCount",
+            type: "AgregateAverageGitCommitLogCodeCount",
         }
     }
 }

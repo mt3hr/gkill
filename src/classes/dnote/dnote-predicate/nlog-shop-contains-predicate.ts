@@ -1,6 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
-import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class NlogShopContainsPredicate implements DnotePredicate {
     private nlog_shop_contains_target: string
@@ -8,7 +7,7 @@ export default class NlogShopContainsPredicate implements DnotePredicate {
         this.nlog_shop_contains_target = nlog_shop_contains_target
     }
     static from_json(json: any): DnotePredicate {
-        const nlog_shop_contains_target = json.nlog_shop_contains_target as string
+        const nlog_shop_contains_target = json.value as string
         return new NlogShopContainsPredicate(nlog_shop_contains_target)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
@@ -23,7 +22,7 @@ export default class NlogShopContainsPredicate implements DnotePredicate {
     predicate_struct_to_json(): any {
         return {
             type: "NlogShopContainsPredicate",
-            nlog_shop_contains_target: this.nlog_shop_contains_target,
+            value: this.nlog_shop_contains_target,
         }
     }
 }

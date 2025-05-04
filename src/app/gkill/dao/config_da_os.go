@@ -26,6 +26,8 @@ type ConfigDAOs struct {
 
 	KFTLTemplateDAO user_config.KFTLTemplateDAO
 
+	DnoteDataDAO user_config.DnoteDataDAO
+
 	TagStructDAO user_config.TagStructDAO
 
 	RepStructDAO user_config.RepStructDAO

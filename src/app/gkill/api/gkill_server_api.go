@@ -478,6 +478,13 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		g.HandleUpdateTagStruct(w, r)
 	}).Methods(g.APIAddress.UpdateTagStructMethod)
+	router.HandleFunc(g.APIAddress.UpdateDnoteJSONDataAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
+		g.HandleUpdateDnoteJSONData(w, r)
+	}).Methods(g.APIAddress.UpdateDnoteJSONDataMethod)
+
 	router.HandleFunc(g.APIAddress.UpdateRepStructAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
@@ -6532,6 +6539,18 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		return
 	}
 
+	dnoteJSONData, err := g.GkillDAOManager.ConfigDAOs.DnoteDataDAO.GetDnoteData(r.Context(), userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get dnote json data user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDnoteJSONDataError,
+			ErrorMessage: "集計条件情報取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
 	if err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", request.SessionID, err)
@@ -6544,11 +6563,17 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		return
 	}
 
+	var dnoteJSONDataValue json.RawMessage
+	if len(dnoteJSONData) != 0 {
+		dnoteJSONDataValue = dnoteJSONData[0].DnoteJSONData
+	}
+
 	applicationConfig.KFTLTemplate = kftlTemplates
 	applicationConfig.TagStruct = tagStructs
 	applicationConfig.RepStruct = repStructs
 	applicationConfig.DeviceStruct = deviceStructs
 	applicationConfig.RepTypeStruct = repTypeStructs
+	applicationConfig.DnoteJSONData = dnoteJSONDataValue
 	applicationConfig.AccountIsAdmin = account.IsAdmin
 	applicationConfig.SessionIsLocal = session.IsLocalAppUser
 	response.ApplicationConfig = applicationConfig
@@ -7360,6 +7385,110 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateTagStructSuccessMessage,
 		Message:     "タグ構造を更新しました",
+	})
+}
+
+func (g *GkillServerAPI) HandleUpdateDnoteJSONData(w http.ResponseWriter, r *http.Request) {
+	defer func() { runtime.GC() }()
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.UpdateDnoteJSONDataRequest{}
+	response := &req_res.UpdateDnoteJSONDataResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse update dnote json data response to json: %w", err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidUpdateDnoteJSONDataResponseDataError,
+				ErrorMessage: "集計ビュー条件情報更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse update dnote json data request to json: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateDnoteJSONDataRequestDataError,
+			ErrorMessage: "集計ビュー条件情報更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// 一回全部消して全部いれる
+	ok, err := g.GkillDAOManager.ConfigDAOs.DnoteDataDAO.DeleteUsersDnoteData(r.Context(), userID)
+	if !ok || err != nil {
+		if err != nil {
+			err = fmt.Errorf("error at delete users dnote json data user user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Print(err.Error())
+		}
+		gkillError := &message.GkillError{
+			ErrorCode:    message.DeleteUsersDnoteDataError,
+			ErrorMessage: "集計ビュー条件情報更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	ok, err = g.GkillDAOManager.ConfigDAOs.DnoteDataDAO.AddDnoteData(r.Context(), &user_config.DnoteData{
+		ID:            uuid.NewString(),
+		UserID:        userID,
+		Device:        device,
+		DnoteJSONData: request.DnoteJSONData,
+	})
+	if !ok || err != nil {
+		if err != nil {
+			err = fmt.Errorf("error at add dnote json data user user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Println(err.Error())
+		}
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddUsersDnoteDataError,
+			ErrorMessage: "集計ビュー条件情報更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.ApplicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetApplicationConfigError,
+			ErrorMessage: "集計ビュー条件情報更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.UpdateTagStructSuccessMessage,
+		Message:     "集計ビュー条件情報を更新しました",
 	})
 }
 

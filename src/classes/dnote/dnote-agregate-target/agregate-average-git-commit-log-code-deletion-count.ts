@@ -1,21 +1,19 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
-import type DnoteAggregateTarget from "../dnote-aggregate-target";
+import type DnoteAgregateTarget from "../dnote-agregate-target";
 import AverageInfo from "./average-info";
-import { i18n } from "@/i18n";
-import AggregateTargetDictionary from "../serialize/dnote-aggregate-target-dictionary";
 
-export default class AggregateAverageGitCommitLogAdditionCodeCount implements DnoteAggregateTarget {
-    static from_json(_json: any): DnoteAggregateTarget {
-        return new AggregateAverageGitCommitLogAdditionCodeCount()
+export default class AgregateAverageGitCommitLogDeletionCodeCount implements DnoteAgregateTarget {
+    static from_json(_json: any): DnoteAgregateTarget {
+        return new AgregateAverageGitCommitLogDeletionCodeCount()
     }
-    async append_aggregate_element_value(typed_average_info_git_commit_log_amount: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
+    async append_agregate_element_value(typed_average_info_git_commit_log_amount: any | null, kyou: Kyou, _find_kyou_query: FindKyouQuery): Promise<any> {
         const cloned_typed_average_info_git_commit_log_amount = typed_average_info_git_commit_log_amount === null ? new AverageInfo() : (typed_average_info_git_commit_log_amount as AverageInfo).clone()
         cloned_typed_average_info_git_commit_log_amount.total_value = cloned_typed_average_info_git_commit_log_amount.total_value === null ? 0 : cloned_typed_average_info_git_commit_log_amount.total_value as number
 
         let code_count = 0
         if (kyou.typed_git_commit_log) {
-            code_count += kyou.typed_git_commit_log.addition
+            code_count += kyou.typed_git_commit_log.deletion
 
             cloned_typed_average_info_git_commit_log_amount.total_value += code_count
             cloned_typed_average_info_git_commit_log_amount.total_count++
@@ -30,7 +28,7 @@ export default class AggregateAverageGitCommitLogAdditionCodeCount implements Dn
 
     to_json(): any {
         return {
-            type: "AggregateAverageGitCommitLogAdditionCodeCount",
+            type: "AgregateAverageGitCommitLogDeletionCodeCount",
         }
     }
 }

@@ -8,7 +8,7 @@ export default class NlogTitleContainsPredicate implements DnotePredicate {
         this.nlog_title_contains_target = nlog_title_contains_target
     }
     static from_json(json: any): DnotePredicate {
-        const nlog_title_contains_target = json.nlog_title_contains_target as string
+        const nlog_title_contains_target = json.value as string
         return new NlogTitleContainsPredicate(nlog_title_contains_target)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
@@ -23,7 +23,7 @@ export default class NlogTitleContainsPredicate implements DnotePredicate {
     predicate_struct_to_json(): any {
         return {
             type: "NlogTitleContainsPredicate",
-            nlog_title_contains_target: this.nlog_title_contains_target,
+            value: this.nlog_title_contains_target,
         }
     }
 }

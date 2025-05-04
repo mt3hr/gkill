@@ -5,7 +5,6 @@
             @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
             @requested_add_dnote_list_query="(dnote_list_query) => emits('requested_add_dnote_list_query', dnote_list_query)"
             @requested_close_dialog="hide()" />
-
     </v-dialog>
 </template>
 
