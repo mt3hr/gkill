@@ -32,6 +32,7 @@ export class ApplicationConfig {
     rykv_default_period: number
     mi_default_period: number
     account_is_admin: boolean
+    dnote_json_data: any
     parsed_kftl_template: KFTLTemplateElementData
     parsed_tag_struct: TagStructElementData
     parsed_rep_struct: RepStructElementData

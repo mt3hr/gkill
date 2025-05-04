@@ -1,6 +1,6 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
-        <EditDnoteItemView :application_config="application_config" :gkill_api="gkill_api" :dnote_item="dnote_item"
+        <EditDnoteItemView :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
             @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
             @requested_update_dnote_item="(dnote_item) => emits('requested_update_dnote_item', dnote_item)"
@@ -15,10 +15,12 @@ import type { GkillError } from '../../classes/api/gkill-error';
 import type { GkillMessage } from '../../classes/api/gkill-message';
 import type EditDnoteItemDialogEmits from './edit-dnote-item-dialog-emits';
 import type EditDnoteItemDialogProps from './edit-dnote-item-dialog-props';
+import DnoteItem from '@/classes/dnote/dnote-item';
 const is_show_dialog: Ref<boolean> = ref(false)
 
 defineExpose({ show, hide })
 defineProps<EditDnoteItemDialogProps>()
+const model_value = defineModel<DnoteItem>()
 const emits = defineEmits<EditDnoteItemDialogEmits>()
 
 async function show(): Promise<void> {

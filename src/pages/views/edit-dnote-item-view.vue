@@ -33,16 +33,17 @@ import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regis
 
 const props = defineProps<EditDnoteItemViewProps>()
 const emits = defineEmits<EditDnoteItemViewEmits>()
+const model_value = defineModel<DnoteItem>()
 
 load_props()
 
 async function load_props(): Promise<void> {
-    id.value = props.dnote_item.id
-    title.value = props.dnote_item.title
-    prefix.value = props.dnote_item.prefix
-    suffix.value = props.dnote_item.suffix
-    root_predicate.value = predicate_struct_from_json(props.dnote_item.predicate.predicate_struct_to_json()) as PredicateGroupType
-    aggregate_target.value = aggregate_targets.value.find((aggregate_target) => aggregate_target.value === props.dnote_item.aggregate_target.to_json().type)!.value
+    id.value = model_value.value!.id
+    title.value = model_value.value!.title
+    prefix.value = model_value.value!.prefix
+    suffix.value = model_value.value!.suffix
+    root_predicate.value = predicate_struct_from_json(model_value.value!.predicate.predicate_struct_to_json()) as PredicateGroupType
+    aggregate_target.value = aggregate_targets.value.find((aggregate_target) => aggregate_target.value === model_value.value!.aggregate_target.to_json().type)!.value
 }
 
 async function reset(): Promise<void> {
