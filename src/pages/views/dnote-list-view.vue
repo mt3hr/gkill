@@ -4,7 +4,10 @@
         <v-virtual-scroll :items="aggregated_items" :height="'50vh'" :width="200 + 8" ref="list_view">
             <template v-slot:default="{ item }">
                 <AggregatedListItem :application_config="application_config" :gkill_api="gkill_api"
-                    :aggregated_item="item" />
+                    :dnote_list_query="model_value!" @received_errors="(errors) => emits('received_errors', errors)"
+                    @received_messages="(messages) => emits('received_messages', messages)" :aggregated_item="item"
+                    @requested_delete_dnote_list_query="(id) => emits('requested_delete_dnote_list_query', id)"
+                    @requested_update_dnote_list_query="(dnote_list_query) => emits('requested_update_dnote_list_query', dnote_list_query)" />
             </template>
         </v-virtual-scroll>
     </div>
@@ -18,9 +21,11 @@ import AggregatedListItem from './aggregated-list-item.vue';
 import { DnoteListAggregator } from '../../classes/dnote/dnote-list-aggregator';
 import type DnoteListViewProps from './dnote-list-view-props';
 import type DnoteListQuery from './dnote-list-query';
+import type DnoteListViewEmits from './dnote-list-view-emits';
 
 defineProps<DnoteListViewProps>()
 defineExpose({ load_aggregate_grouping_list })
+const emits = defineEmits<DnoteListViewEmits>()
 const model_value = defineModel<DnoteListQuery>()
 const aggregated_items: Ref<Array<AggregatedItem>> = ref(new Array<AggregatedItem>())
 

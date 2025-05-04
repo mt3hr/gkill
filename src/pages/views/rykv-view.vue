@@ -188,7 +188,7 @@
                         <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
                             :application_config="application_config" :gkill_api="gkill_api" :query="focused_query"
                             :checked_kyous="focused_column_checked_kyous" :last_added_tag="last_added_tag"
-                            :editable="true" @received_messages="(messages) => emits('received_messages', messages)"
+                            :editable="false" @received_messages="(messages) => emits('received_messages', messages)"
                             @received_errors="(errors) => emits('received_errors', errors)" ref="dnote_view" />
                     </td>
                     <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">

@@ -99,15 +99,17 @@
                 <tr>
                     <td>
                         <v-btn dark color="primary" @click="show_edit_tag_dialog">{{ $t("EDIT_TAG_STRUCT_TITLE")
-                        }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{ $t("EDIT_REP_STRUCT_TITLE")
-                        }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{ $t("EDIT_DEVICE_STRUCT_TITLE")
                             }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{ $t("EDIT_REP_STRUCT_TITLE")
+                            }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{ $t("EDIT_DEVICE_STRUCT_TITLE")
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                             $t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_kftl_template_dialog">{{
                             $t("EDIT_KFTL_TEMPLATE_STRUCT_TITLE") }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_dnote_dialog">{{
+                            $t("EDIT_DNOTE_TITLE") }}</v-btn>
                     </td>
                 </tr>
             </table>
@@ -120,7 +122,7 @@
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -153,6 +155,12 @@
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_application_config="emits('requested_reload_application_config')"
             ref="edit_tag_struct_dialog" />
+        <EditDnoteDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :application_config="application_config" :gkill_api="gkill_api"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_application_config="emits('requested_reload_application_config')"
+            ref="edit_dnote_dialog" />
         <NewBoardNameDialog :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
@@ -171,6 +179,7 @@ import EditKFTLTemplateDialog from '../dialogs/edit-kftl-template-struct-dialog.
 import EditRepStructDialog from '../dialogs/edit-rep-struct-dialog.vue'
 import EditRepTypeStructDialog from '../dialogs/edit-rep-type-struct-dialog.vue'
 import EditTagStructDialog from '../dialogs/edit-tag-struct-dialog.vue'
+import EditDnoteDialog from '../dialogs/edit-dnote-dialog.vue'
 import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 
 import type { ApplicationConfigViewEmits } from './application-config-view-emits'
@@ -192,6 +201,7 @@ const edit_rep_struct_dialog = ref<InstanceType<typeof EditRepStructDialog> | nu
 const edit_rep_type_struct_dialog = ref<InstanceType<typeof EditRepTypeStructDialog> | null>(null);
 const edit_tag_struct_dialog = ref<InstanceType<typeof EditTagStructDialog> | null>(null);
 const edit_kftl_template_dialog = ref<InstanceType<typeof EditKFTLTemplateDialog> | null>(null);
+const edit_dnote_dialog = ref<InstanceType<typeof EditDnoteDialog> | null>(null);
 const server_config_dialog = ref<InstanceType<typeof ServerConfigDialog> | null>(null);
 
 const props = defineProps<ApplicationConfigViewProps>()
@@ -324,6 +334,9 @@ function show_edit_rep_type_dialog() {
 }
 function show_edit_kftl_template_dialog() {
     edit_kftl_template_dialog.value?.show()
+}
+function show_edit_dnote_dialog() {
+    edit_dnote_dialog.value?.show()
 }
 function show_new_board_name_dialog(): void {
     new_board_name_dialog.value?.show()

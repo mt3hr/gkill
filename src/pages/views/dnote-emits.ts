@@ -2,6 +2,7 @@
 
 import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
+import type { ApplicationConfig } from "@/classes/datas/config/application-config"
 import type { Kmemo } from "@/classes/datas/kmemo"
 import type { Kyou } from "@/classes/datas/kyou"
 import type { Lantana } from "@/classes/datas/lantana"
@@ -47,4 +48,6 @@ export interface DnoteEmits {
     (e: 'requested_reload_kyou', kyou: Kyou): void
     (e: 'requested_reload_list'): void
     (e: 'requested_update_check_kyous', kyou: Array<Kyou>, is_checked: boolean): void
+    (e: 'requested_close_dialog'): void
+    (e: 'requested_reload_application_config', application_config: ApplicationConfig): void
 }

@@ -1,9 +1,7 @@
 import type { GkillAPI } from "@/classes/api/gkill-api";
 import type { ApplicationConfig } from "@/classes/datas/config/application-config";
-import type DnoteItem from "@/classes/dnote/dnote-item";
 
 export default interface EditDnoteItemViewProps {
     gkill_api: GkillAPI
     application_config: ApplicationConfig
-    dnote_item: DnoteItem
 }
