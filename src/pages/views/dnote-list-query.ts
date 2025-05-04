@@ -1,5 +1,5 @@
-import type DnoteAggregateTarget from "../../classes/dnote/dnote-aggregate-target"
-import AggregateCountKyou from "../../classes/dnote/dnote-aggregate-target/aggregate-count-kyou"
+import type DnoteAgregateTarget from "../../classes/dnote/dnote-agregate-target"
+import AgregateCountKyou from "../../classes/dnote/dnote-agregate-target/agregate-count-kyou"
 import type DnoteKeyGetter from "../../classes/dnote/dnote-key-getter"
 import TitleGetter from "../../classes/dnote/dnote-key-getter/title-getter"
 import type DnotePredicate from "../../classes/dnote/dnote-predicate"
@@ -12,5 +12,5 @@ export default class DnoteListQuery {
     suffix: string = ""
     predicate: DnotePredicate = new AndPredicate([])
     key_getter: DnoteKeyGetter = new TitleGetter()
-    aggregate_target: DnoteAggregateTarget = new AggregateCountKyou()
+    aggregate_target: DnoteAgregateTarget = new AgregateCountKyou()
 }

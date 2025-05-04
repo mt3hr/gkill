@@ -1,6 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
-import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class NlogAmountLessThanPredicate implements DnotePredicate {
     private nlog_amount: number
@@ -8,7 +7,7 @@ export default class NlogAmountLessThanPredicate implements DnotePredicate {
         this.nlog_amount = nlog_amount
     }
     static from_json(json: any): DnotePredicate {
-        const nlog_amount = json.nlog_amount as number
+        const nlog_amount = json.value as number
         return new NlogAmountLessThanPredicate(nlog_amount)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
@@ -23,7 +22,7 @@ export default class NlogAmountLessThanPredicate implements DnotePredicate {
     predicate_struct_to_json(): any {
         return {
             type: "NlogAmountLessThanPredicate",
-            nlog_amount: this.nlog_amount,
+            value: this.nlog_amount,
         }
     }
 }

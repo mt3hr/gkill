@@ -1,6 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
-import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class GitCommitLogCodeAdditionGreaterThanPredicate implements DnotePredicate {
     private git_commit_log_code_count: number
@@ -25,7 +24,7 @@ export default class GitCommitLogCodeAdditionGreaterThanPredicate implements Dno
     predicate_struct_to_json(): any {
         return {
             type: "GitCommitLogCodeAdditionGreaterThanPredicate",
-            git_commit_log_code_count: this.git_commit_log_code_count,
+            value: this.git_commit_log_code_count,
         }
     }
 }

@@ -31,6 +31,8 @@ type ApplicationConfig struct {
 
 	RepTypeStruct []*RepTypeStruct `json:"rep_type_struct"`
 
+	DnoteJSONData json.RawMessage `json:"dnote_json_data"`
+
 	AccountIsAdmin bool `json:"account_is_admin"`
 
 	SessionIsLocal bool `json:"session_is_local"`

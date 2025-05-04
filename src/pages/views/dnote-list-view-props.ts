@@ -4,4 +4,5 @@ import type { ApplicationConfig } from "../../classes/datas/config/application-c
 export default interface DnoteListViewProps {
     gkill_api: GkillAPI
     application_config: ApplicationConfig
+    editable: boolean
 }

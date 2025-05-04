@@ -29,7 +29,7 @@ function is_group(p: Predicate | PredicateGroupType): p is PredicateGroupType {
 }
 
 function add_predicate() {
-    group.value!.predicates.push({ type: i18n.global.t("DNOTE_DATA_TYPE_PREFIX_PREDICATE"), value: "DataTypePrefixPredicate" })
+    group.value!.predicates.push({ type: i18n.global.t("DataTypePrefixPredicate"), value: "" })
 }
 
 function add_group() {

@@ -9,7 +9,7 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
         this.week = week
     }
     static from_json(json: any): DnotePredicate {
-        const week = json.week as number
+        const week = json.value as number
         return new RelatedTimeWeekPredicate(week)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
@@ -22,7 +22,7 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
     predicate_struct_to_json(): any {
         return {
             type: "RelatedTimeWeekPredicate",
-            week: this.week,
+            value: this.week,
         }
     }
 }

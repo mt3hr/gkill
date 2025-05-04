@@ -14,11 +14,9 @@ import { ref } from 'vue';
 import type { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
 import type { Kyou } from '../../classes/datas/kyou';
 import type DnoteItem from '../../classes/dnote/dnote-item';
-import AddDnoteItemDialog from '../../pages/dialogs/add-dnote-item-dialog.vue';
 import { type KyouViewEmits } from './kyou-view-emits';
 
 const dnote_item_list_views = ref()
-const add_dnote_item_dialog = ref<InstanceType<typeof AddDnoteItemDialog> | null>(null);
 
 const model_value = defineModel<Array<Array<DnoteItem>>>()
 defineProps<DnoteItemTableProps>()
