@@ -1,6 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
-import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class MiTitleEqualPredicate implements DnotePredicate {
     private mi_title_equal_target: string
@@ -8,7 +7,7 @@ export default class MiTitleEqualPredicate implements DnotePredicate {
         this.mi_title_equal_target = mi_title_equal_target
     }
     static from_json(json: any): DnotePredicate {
-        const mi_title_equal_target = json.mi_title_equal_target as string
+        const mi_title_equal_target = json.value as string
         return new MiTitleEqualPredicate(mi_title_equal_target)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
@@ -23,7 +22,7 @@ export default class MiTitleEqualPredicate implements DnotePredicate {
     predicate_struct_to_json(): any {
         return {
             type: "MiTitleEqualPredicate",
-            mi_title_equal_target: this.mi_title_equal_target,
+            value: this.mi_title_equal_target,
         }
     }
 }

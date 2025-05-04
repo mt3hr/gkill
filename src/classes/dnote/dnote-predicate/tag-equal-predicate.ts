@@ -8,7 +8,7 @@ export default class TagEqualPredicate implements DnotePredicate {
         this.tag = tag
     }
     static from_json(json: any): DnotePredicate {
-        const tag = json.tag as string
+        const tag = json.value as string
         return new TagEqualPredicate(tag)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
@@ -23,7 +23,7 @@ export default class TagEqualPredicate implements DnotePredicate {
     predicate_struct_to_json(): any {
         return {
             type: "TagEqualPredicate",
-            tag: this.tag,
+            value: this.tag,
         }
     }
 }

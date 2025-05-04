@@ -302,4 +302,9 @@ const (
 	InvalidReloadRepositoriesResponse                                = "ERR000297"
 	IDFError                                                         = "ERR000298"
 	UpdateRepositoryAddressError                                     = "ERR000299"
+	GetDnoteJSONDataError                                            = "ERR000300"
+	InvalidUpdateDnoteJSONDataResponseDataError                      = "ERR000301"
+	InvalidUpdateDnoteJSONDataRequestDataError                       = "ERR000302"
+	DeleteUsersDnoteDataError                                        = "ERR000303"
+	AddUsersDnoteDataError                                           = "ERR000304"
 )

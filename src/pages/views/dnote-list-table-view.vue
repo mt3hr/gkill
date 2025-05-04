@@ -4,7 +4,7 @@
             <tr>
                 <td v-for="dnote_list_item in model_value" :key="dnote_list_item.id">
                     <DnoteListView :application_config="application_config" :gkill_api="gkill_api"
-                        v-model="dnote_list_item!"
+                        v-model="dnote_list_item!" :editable="editable"
                         @requested_delete_dnote_list_query="(id) => delete_dnote_list_query(id)"
                         @requested_update_dnote_list_query="(dnote_item) => update_dnote_list_query(dnote_item)"
                         ref="dnote_list_views" />

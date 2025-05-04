@@ -120,6 +120,10 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	if err != nil {
 		return nil, err
 	}
+	gkillDAOManager.ConfigDAOs.DnoteDataDAO, err = user_config.NewDnoteDataDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
+	if err != nil {
+		return nil, err
+	}
 	gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO, err = gkill_notification.NewGkillNotificateTargetDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "gkill_notification_target.db"))
 	if err != nil {
 		return nil, err

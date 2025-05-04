@@ -1,6 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
-import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class DataTypePrefixPredicate implements DnotePredicate {
     private data_type_prefix: string
@@ -21,7 +20,7 @@ export default class DataTypePrefixPredicate implements DnotePredicate {
     predicate_struct_to_json(): any {
         return {
             type: "DataTypePrefixPredicate",
-            data_type_prefix: this.data_type_prefix,
+            value: this.data_type_prefix,
         }
     }
 }

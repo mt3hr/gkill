@@ -54,7 +54,7 @@ async function save(): Promise<void> {
     new_dnote_item.prefix = prefix.value
     new_dnote_item.suffix = suffix.value
     new_dnote_item.title = title.value
-    new_dnote_item.aggregate_target = build_dnote_aggregate_target_from_json({ type: aggregate_target.value })
+    new_dnote_item.agregate_target = build_dnote_aggregate_target_from_json({ type: aggregate_target.value })
     new_dnote_item.predicate = build_dnote_predicate_from_json(predicate_struct_to_json(root_predicate.value))
 
     emits('requested_add_dnote_item', new_dnote_item)
@@ -72,15 +72,15 @@ const root_predicate = ref<PredicateGroupType>({
 })
 
 const aggregate_targets: Ref<Array<DnoteSelectItem>> = ref([
-    { label: i18n.global.t("DNOTE_AVERAGE_LANTANA_MOOD"), value: "AggregateAverageLantanaMood" },
-    { label: i18n.global.t("DNOTE_AVERAGE_NLOG_AMOUNT"), value: "AggregateAverageNlogAmount" },
-    { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_END_TIME"), value: "AggregateAverageTimeIsEndTime" },
-    { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_START_TIME"), value: "AggregateAverageTimeIsStartTime" },
-    { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_TIME"), value: "AggregateAverageTimeIsTime" },
-    { label: i18n.global.t("DNOTE_COUNT_KYOU"), value: "AggregateCountKyou" },
-    { label: i18n.global.t("DNOTE_SUM_LANTANA_MOOD"), value: "AggregateSumLantanaMood" },
-    { label: i18n.global.t("DNOTE_SUM_NLOG_AMOUNT"), value: "AggregateSumNlogAmount" },
-    { label: i18n.global.t("DNOTE_SUM_TIMEIS_TIME"), value: "AggregateSumTimeIsTime" },
+    { label: i18n.global.t("DNOTE_AVERAGE_LANTANA_MOOD"), value: "AgregateAverageLantanaMood" },
+    { label: i18n.global.t("DNOTE_AVERAGE_NLOG_AMOUNT"), value: "AgregateAverageNlogAmount" },
+    { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_END_TIME"), value: "AgregateAverageTimeIsEndTime" },
+    { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_START_TIME"), value: "AgregateAverageTimeIsStartTime" },
+    { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_TIME"), value: "AgregateAverageTimeIsTime" },
+    { label: i18n.global.t("DNOTE_COUNT_KYOU"), value: "AgregateCountKyou" },
+    { label: i18n.global.t("DNOTE_SUM_LANTANA_MOOD"), value: "AgregateSumLantanaMood" },
+    { label: i18n.global.t("DNOTE_SUM_NLOG_AMOUNT"), value: "AgregateSumNlogAmount" },
+    { label: i18n.global.t("DNOTE_SUM_TIMEIS_TIME"), value: "AgregateSumTimeIsTime" },
     { label: i18n.global.t("DNOTE_AVERAGE_GIT_COMMIT_LOG_CODE_COUNT"), value: "AgregateAverageGitCommitLogCode" },
     { label: i18n.global.t("DNOTE_AVERAGE_GIT_COMMIT_LOG_ADDITION_CODE_COUNT"), value: "AgregateAverageGitCommitLogAdditionCode" },
     { label: i18n.global.t("DNOTE_AVERAGE_GIT_COMMIT_LOG_DELETION_CODE_COUNT"), value: "AgregateAverageGitCommitLogDeletionCode" },
