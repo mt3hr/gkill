@@ -170,6 +170,8 @@ import type { OpenDirectoryRequest } from "./req_res/open-directory-request"
 import type { OpenDirectoryResponse } from "./req_res/open-directory-response"
 import type { ReloadRepositoriesRequest } from "./req_res/reload-repositories-request"
 import type { ReloadRepositoriesResponse } from "./req_res/reload-repositories-response"
+import type { UpdateDnoteJSONDataRequest } from "./req_res/update-dnote-json-data-request"
+import type { UpdateDnoteJSONDataResponse } from "./req_res/update-dnote-json-data-response"
 
 export class GkillAPI {
         // 画面以外から参照されるやつ
@@ -242,6 +244,7 @@ export class GkillAPI {
         upload_files_address: string
         upload_gpslog_files_address: string
         update_tag_struct_address: string
+        update_dnote_json_data_address: string
         update_rep_struct_address: string
         update_device_struct_address: string
         update_rep_type_struct_address: string
@@ -322,6 +325,7 @@ export class GkillAPI {
         upload_files_method: string
         upload_gpslog_files_method: string
         update_tag_struct_method: string
+        update_dnote_json_data_method: string
         update_rep_struct_method: string
         update_device_struct_method: string
         update_rep_type_struct_method: string
@@ -401,6 +405,7 @@ export class GkillAPI {
                 this.upload_gpslog_files_address = "/api/upload_gpslog_files"
                 this.update_application_config_address = "/api/update_application_config"
                 this.update_tag_struct_address = "/api/update_tag_struct"
+                this.update_dnote_json_data_address = "/api/update_dnote_json_data"
                 this.update_rep_struct_address = "/api/update_rep_struct"
                 this.update_device_struct_address = "/api/update_device_struct"
                 this.update_rep_type_struct_address = "/api/update_rep_type_struct"
@@ -480,6 +485,7 @@ export class GkillAPI {
                 this.upload_gpslog_files_method = "POST"
                 this.update_application_config_method = "POST"
                 this.update_tag_struct_method = "POST"
+                this.update_dnote_json_data_method = "POST"
                 this.update_rep_struct_method = "POST"
                 this.update_device_struct_method = "POST"
                 this.update_rep_type_struct_method = "POST"
@@ -1812,6 +1818,21 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateKFTLTemplateResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async update_dnote_json_data(req: UpdateDnoteJSONDataRequest): Promise<UpdateDnoteJSONDataResponse> {
+                const res = await fetch(this.update_dnote_json_data_address, {
+                        'method': this.update_dnote_json_data_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: UpdateDnoteJSONDataResponse = json
                 this.check_auth(response)
                 return response
         }
