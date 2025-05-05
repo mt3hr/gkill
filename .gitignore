@@ -6,6 +6,8 @@ node_modules
 *.asta.lock
 m_plus.conf
 
+**/assets/*
+
 # Logs
 logs
 *.log
