@@ -23,7 +23,7 @@ type miRepositorySQLite3Impl struct {
 
 func NewMiRepositorySQLite3Impl(ctx context.Context, filename string) (MiRepository, error) {
 	var err error
-	db, err := sqllib.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=2&_journal=DELETE")
+	db, err := sqllib.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
