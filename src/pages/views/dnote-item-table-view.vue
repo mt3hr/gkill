@@ -23,16 +23,18 @@ defineProps<DnoteItemTableProps>()
 defineExpose({ load_aggregated_value })
 const emits = defineEmits<KyouViewEmits>()
 
-async function load_aggregated_value(abort_controller: AbortController, kyous: Array<Kyou>, query: FindKyouQuery, kyou_is_loaded: boolean) {
+async function load_aggregated_value(abort_controller: AbortController, kyous: Array<Kyou>, query: FindKyouQuery, kyou_is_loaded: boolean): Promise<any> {
     if (!dnote_item_list_views.value || !model_value.value) {
         return
     }
+    const waitPromises = new Array<Promise<void>>()
     for (let i = 0; i < dnote_item_list_views.value.length; i++) {
         if (!(dnote_item_list_views.value as any)[i]) {
             continue
         }
         const dnote_item_list_view = (dnote_item_list_views.value as any)[i]
-        await dnote_item_list_view.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded)
+        waitPromises.push(dnote_item_list_view.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded))
     }
+    return await Promise.all(waitPromises)
 }
 </script>

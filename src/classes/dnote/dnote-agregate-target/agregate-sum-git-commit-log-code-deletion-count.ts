@@ -10,7 +10,7 @@ export default class AgregateSumGitCommitLogDeletionCodeCount implements DnoteAg
         const typed_git_commit_log_code_count = git_commit_log_code_count === null ? 0 : (git_commit_log_code_count as number)
         let code_count = 0
         if (kyou.typed_git_commit_log) {
-            code_count = kyou.typed_git_commit_log.deletion
+            code_count -= kyou.typed_git_commit_log.deletion
         }
         return typed_git_commit_log_code_count + code_count
     }

@@ -13,7 +13,7 @@ export default class AgregateAverageGitCommitLogCodeCount implements DnoteAgrega
 
         let code_count = 0
         if (kyou.typed_git_commit_log) {
-            code_count += kyou.typed_git_commit_log.addition + kyou.typed_git_commit_log.deletion
+            code_count += kyou.typed_git_commit_log.addition - kyou.typed_git_commit_log.deletion
 
             cloned_typed_average_info_git_commit_log_amount.total_value += code_count
             cloned_typed_average_info_git_commit_log_amount.total_count++

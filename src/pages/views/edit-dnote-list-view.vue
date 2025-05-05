@@ -25,7 +25,8 @@ import { nextTick, ref, type Ref } from 'vue'
 import PredicateGroup from './edit-dnote-predicate-group.vue'
 import type PredicateGroupType from '../../classes/dnote/predicate-group-type'
 import type Predicate from '../../classes/dnote/predicate'
-import { i18n } from '@/i18n'
+import aggregate_target_menu_items from '@/classes/dnote/pulldown-menu/aggregate-target-menu-items'
+import kyou_getter_menu_items from '@/classes/dnote/pulldown-menu/kyou-getter-menu-items'
 import type DnoteSelectItem from '../../classes/dnote/dnote-select-item'
 import DnoteListQuery from '@/pages/views/dnote-list-query'
 import type EditDnoteListViewEmits from './edit-dnote-list-view-emits'
@@ -75,36 +76,10 @@ const root_predicate = ref<PredicateGroupType>({
     predicates: []
 })
 
-const aggregate_targets: Ref<Array<DnoteSelectItem>> = ref([
-    { label: i18n.global.t("DNOTE_AVERAGE_LANTANA_MOOD"), value: "AgregateAverageLantanaMood" },
-    { label: i18n.global.t("DNOTE_AVERAGE_NLOG_AMOUNT"), value: "AgregateAverageNlogAmount" },
-    { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_END_TIME"), value: "AgregateAverageTimeIsEndTime" },
-    { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_START_TIME"), value: "AgregateAverageTimeIsStartTime" },
-    { label: i18n.global.t("DNOTE_AVERAGE_TIMEIS_TIME"), value: "AgregateAverageTimeIsTime" },
-    { label: i18n.global.t("DNOTE_COUNT_KYOU"), value: "AgregateCountKyou" },
-    { label: i18n.global.t("DNOTE_SUM_LANTANA_MOOD"), value: "AgregateSumLantanaMood" },
-    { label: i18n.global.t("DNOTE_SUM_NLOG_AMOUNT"), value: "AgregateSumNlogAmount" },
-    { label: i18n.global.t("DNOTE_SUM_TIMEIS_TIME"), value: "AgregateSumTimeIsTime" },
-    { label: i18n.global.t("DNOTE_AVERAGE_GIT_COMMIT_LOG_CODE_COUNT"), value: "AgregateAverageGitCommitLogCode" },
-    { label: i18n.global.t("DNOTE_AVERAGE_GIT_COMMIT_LOG_ADDITION_CODE_COUNT"), value: "AgregateAverageGitCommitLogAdditionCode" },
-    { label: i18n.global.t("DNOTE_AVERAGE_GIT_COMMIT_LOG_DELETION_CODE_COUNT"), value: "AgregateAverageGitCommitLogDeletionCode" },
-    { label: i18n.global.t("DNOTE_SUM_GIT_COMMIT_LOG_CODE_COUNT"), value: "AgregateSumGitCommitLogCode" },
-    { label: i18n.global.t("DNOTE_SUM_GIT_COMMIT_LOG_CODE_ADDITION_COUNT"), value: "AgregateSumGitCommitLogAdditionCode" },
-    { label: i18n.global.t("DNOTE_SUM_GIT_COMMIT_LOG_CODE_DELETION_COUNT"), value: "AgregateSumGitCommitLogDeletionCode" },
-])
+const aggregate_targets: Ref<Array<DnoteSelectItem>> = ref(aggregate_target_menu_items)
 const aggregate_target: Ref<string> = ref(aggregate_targets.value[0].value)
 
-const key_getters: Ref<Array<DnoteSelectItem>> = ref([
-    { label: i18n.global.t("DNOTE_DATA_TYPE_GETTER"), value: "DataTypeGetter" },
-    { label: i18n.global.t("DNOTE_LANTANA_MOOD_GETTER"), value: "LantanaMoodGetter" },
-    { label: i18n.global.t("DNOTE_NLOG_SHOP_NAME_GETTER"), value: "NlogShopNameGetter" },
-    { label: i18n.global.t("DNOTE_RELATED_MONTH_GETTER"), value: "RelatedMonthGetter" },
-    { label: i18n.global.t("DNOTE_RELATED_WEEK_DAY_GETTER"), value: "RelatedWeekDayGetter" },
-    { label: i18n.global.t("DNOTE_RELATED_WEEK_GETTER"), value: "RelatedWeekGetter" },
-    { label: i18n.global.t("DNOTE_RELATED_DATE_GETTER"), value: "RelatedDateGetter" },
-    { label: i18n.global.t("DNOTE_TAG_GETTER"), value: "TagGetter" },
-    { label: i18n.global.t("DNOTE_TITLE_GETTER"), value: "TitleGetter" },
-])
+const key_getters: Ref<Array<DnoteSelectItem>> = ref(kyou_getter_menu_items )
 const key_getter: Ref<string> = ref(key_getters.value[0].value)
 
 function predicate_struct_to_json(group: PredicateGroupType | Predicate): any {
