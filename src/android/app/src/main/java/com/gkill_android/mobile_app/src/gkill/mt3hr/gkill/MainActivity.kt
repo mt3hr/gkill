@@ -10,8 +10,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.InetSocketAddress
 import java.net.Socket
+import java.net.URL
 
 class MainActivity : AppCompatActivity() {
     private fun copyServerBinary(): File {
@@ -69,29 +71,18 @@ class MainActivity : AppCompatActivity() {
             setContentView(R.layout.activity_main)
             val webView = findViewById<WebView>(R.id.webview)
             webView.settings.javaScriptEnabled = true
-            webView.loadUrl("http://localhost:9999")
             webView.webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
                     view?.loadUrl(url ?: "")
                     return true  // 外部に飛ばさずWebView内で処理
                 }
-                override fun onReceivedError(
-                    view: WebView,
-                    request: WebResourceRequest,
-                    error: WebResourceError
-                ) {
-                    val url = request.url.toString()
-                    if (url.startsWith("http://")) {
-                        val httpsUrl = url.replaceFirst("http://", "https://")
-                        view.loadUrl(httpsUrl)
-                    } else {
-                        // 通常のエラー処理（ネットワーク切断など）
-                        super.onReceivedError(view, request, error)
-                    }
-                }
             }
+
+            val gkillURL = "http://localhost:9999"
+            webView.loadUrl(gkillURL)
         }
     }
+
 
     private fun killExistingGkillServer() {
         try {
