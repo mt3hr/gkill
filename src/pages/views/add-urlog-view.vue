@@ -32,6 +32,7 @@
                 <label>{{ $t("URLOG_DATE_TIME_TITLE") }}</label>
                 <input class="input date" type="date" v-model="related_date" :label="$t('URLOG_DATE_TITLE')"
                     :readonly="is_requested_submit" />
+
                 <input class="input time" type="time" v-model="related_time" :label="$t('URLOG_TIME_TITLE')"
                     :readonly="is_requested_submit" />
                 <v-btn dark color="secondary" @click="reset_related_date_time()" :disabled="is_requested_submit">{{
@@ -42,8 +43,8 @@
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()"
-                    :disabled="is_requested_submit">{{ $t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
