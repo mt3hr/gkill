@@ -47,6 +47,14 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
 	}
 	defer stmt.Close()
 
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
+
+	if err != nil {
+		err = fmt.Errorf("error at create APPLICATION_CONFIG table to %s: %w", filename, err)
+		return nil, err
+	}
+
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_APPLICATION_CONFIG ON APPLICATION_CONFIG (USER_ID);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
@@ -63,14 +71,6 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
 		return nil, err
 	}
 	defer indexStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create APPLICATION_CONFIG table to %s: %w", filename, err)
-		return nil, err
-	}
 
 	return &applicationConfigDAOSQLite3Impl{
 		filename: filename,
