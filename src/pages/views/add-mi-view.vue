@@ -12,31 +12,37 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
-                <label>{{ $t("MI_TITLE_TITLE") }}</label>
-            </v-col>
-            <v-col cols="auto">
-                <input class="input text" type="text" v-model="mi_title" :label="$t('MI_TITLE_TITLE')" autofocus
-                    :readonly="is_requested_submit" />
-            </v-col>
-        </v-row>
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
-                <label>{{ $t("MI_BOARD_NAME_TITLE") }}</label>
-            </v-col>
-            <v-col cols="auto">
-                <span>
+        <table>
+            <tr>
+                <td>
+                    <label>{{ $t("MI_TITLE_TITLE") }}</label>
+                </td>
+                <td>
+                    <input class="input text" type="text" v-model="mi_title" :label="$t('MI_TITLE_TITLE')" autofocus
+                        :readonly="is_requested_submit" />
+
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>{{ $t("MI_BOARD_NAME_TITLE") }}</label>
+                </td>
+                <td>
                     <select class="select" v-model="mi_board_name" :readonly="is_requested_submit">
                         <option class="mi_board_option" v-for="board_name, index in mi_board_names" :key="index">{{
                             board_name }}</option>
                     </select>
-                </span>
+                </td>
+                <td>
+                    <v-btn color="secondary" class="pt-1" @click="show_new_board_name_dialog()" icon="mdi-plus" dark
+                        size="small" :disabled="is_requested_submit"></v-btn>
+                </td>
+            </tr>
+        </table>
+        <v-row class="pa-0 ma-0">
+            <v-col cols="auto">
             </v-col>
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn color="secondary" class="pt-1" @click="show_new_board_name_dialog()" icon="mdi-plus" dark
-                    size="small" :disabled="is_requested_submit"></v-btn>
-            </v-col>
+            <v-col cols="auto"></v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto">
@@ -45,8 +51,8 @@
             <v-col cols="auto">
                 <input class="input date" type="date" v-model="mi_estimate_start_date"
                     :label="$t('MI_START_DATE_TITLE')" :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="mi_estimate_start_time" :label="$t('MI_START_TIME_TITLE')"
-                    :readonly="is_requested_submit" />
+                <input class="input time" type="time" v-model="mi_estimate_start_time"
+                    :label="$t('MI_START_TIME_TITLE')" :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
                 <v-btn dark color="secondary" @click="clear_estimate_start_date_time()"
@@ -117,12 +123,12 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <NewBoardNameDialog v-if="mi" :application_config="application_config" :gkill_api="gkill_api"

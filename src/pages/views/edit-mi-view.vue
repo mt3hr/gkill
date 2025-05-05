@@ -7,36 +7,38 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU')" hide-details color="primary" />
+                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                        color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
-                <label>{{ $t("MI_TITLE_TITLE") }}</label>
-            </v-col>
-            <v-col cols="auto">
-                <input class="input text" type="text" v-model="mi_title" :label="$t('MI_TITLE_TITLE')" autofocus
-                    :readonly="is_requested_submit" />
-            </v-col>
-        </v-row>
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
-                <label>{{ $t('MI_BOARD_NAME_TITLE') }}</label>
-            </v-col>
-            <v-col cols="auto">
-                <span>
-                    <select class="select" v-model="mi_board_name">
-                        <option class="mi_board_option" v-for="board_name in mi_board_names" :key="board_name">{{
+        <table>
+            <tr>
+                <td>
+                    <label>{{ $t("MI_TITLE_TITLE") }}</label>
+                </td>
+                <td>
+                    <input class="input text" type="text" v-model="mi_title" :label="$t('MI_TITLE_TITLE')" autofocus
+                        :readonly="is_requested_submit" />
+
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>{{ $t("MI_BOARD_NAME_TITLE") }}</label>
+                </td>
+                <td>
+                    <select class="select" v-model="mi_board_name" :readonly="is_requested_submit">
+                        <option class="mi_board_option" v-for="board_name, index in mi_board_names" :key="index">{{
                             board_name }}</option>
                     </select>
-                </span>
-            </v-col>
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn class="pt-1" @click="show_new_board_name_dialog()" icon="mdi-plus" dark size="small"
-                    :disabled="is_requested_submit"></v-btn>
-            </v-col>
-        </v-row>
+                </td>
+                <td>
+                    <v-btn color="secondary" class="pt-1" @click="show_new_board_name_dialog()" icon="mdi-plus" dark
+                        size="small" :disabled="is_requested_submit"></v-btn>
+                </td>
+            </tr>
+        </table>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto">
                 <label>{{ $t("MI_START_DATE_TIME_TITLE") }}</label>
@@ -86,21 +88,23 @@
                     :readonly="is_requested_submit" />
             </v-col>
             <v-col cols="auto">
-                <v-btn dark color="secondary" @click="clear_limit_date_time()"
-                    :disabled="is_requested_submit">{{ $t("CLEAR_TITLE") }}</v-btn>
-                <v-btn dark color="secondary" @click="reset_limit_date_time()"
-                    :disabled="is_requested_submit">{{ $t("RESET_TITLE") }}</v-btn>
-                <v-btn dark color="primary" @click="now_to_limit_date_time()"
-                    :disabled="is_requested_submit">{{ $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                <v-btn dark color="secondary" @click="clear_limit_date_time()" :disabled="is_requested_submit">{{
+                    $t("CLEAR_TITLE") }}</v-btn>
+                <v-btn dark color="secondary" @click="reset_limit_date_time()" :disabled="is_requested_submit">{{
+                    $t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="now_to_limit_date_time()" :disabled="is_requested_submit">{{
+                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                    }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
