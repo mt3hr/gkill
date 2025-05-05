@@ -730,6 +730,14 @@ func (g *GkillServerAPI) Serve() error {
 			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
+
+	router.PathPrefix("/regist_first_account").Handler(http.StripPrefix("/regist_first_account",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
 	router.Path("/").HandlerFunc(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
@@ -10621,7 +10629,8 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 			return false
 		}
 
-		http.Redirect(w, r, fmt.Sprintf("/set_new_password?reset_token=%s&user_id=%s", *accounts[0].PasswordResetToken, accounts[0].UserID), http.StatusTemporaryRedirect)
+		http.Redirect(w, r, fmt.Sprintf("/regist_first_account?reset_token=%s", *accounts[0].PasswordResetToken), http.StatusTemporaryRedirect)
+		// http.Redirect(w, r, fmt.Sprintf("/set_new_password?reset_token=%s&user_id=%s", *accounts[0].PasswordResetToken, accounts[0].UserID), http.StatusTemporaryRedirect)
 		return true
 	}
 	return false
