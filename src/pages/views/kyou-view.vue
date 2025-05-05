@@ -49,12 +49,6 @@
             </div>
             <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: any) => show_context_menu(e as PointerEvent)"
                 :class="kyou_class">
-                <!--
-                <v-col v-if="show_checkbox" class="kyou_check_box pa-0 ma-0" cols="auto">
-                    <input type="checkbox" class="pa-0 ma-0" v-model="kyou.is_checked_kyou"
-                        @click="emits('requested_update_check_kyous', [kyou], !kyou.is_checked_kyou)" />
-                </v-col>
-                -->
                 <v-col class="kyou_related_time pa-0 ma-0" cols="auto">
                     {{ format_time(cloned_kyou.related_time) }}
                 </v-col>
