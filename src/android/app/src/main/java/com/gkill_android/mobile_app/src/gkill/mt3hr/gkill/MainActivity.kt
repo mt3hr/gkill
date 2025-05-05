@@ -2,6 +2,8 @@ package com.gkill_android.mobile_app.src.gkill.mt3hr.gkill
 
 import android.os.Bundle
 import android.util.Log
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -36,7 +38,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 Thread.sleep(1000) // 応急措置
                 val homeDir = filesDir.parentFile?.absolutePath ?: filesDir.absolutePath
-                val pb = ProcessBuilder(gkillBinary.absolutePath, "--log=true")
+                val pb = ProcessBuilder(gkillBinary.absolutePath)
 
                 pb.environment()["HOME"] = homeDir
                 pb.redirectErrorStream(true)
@@ -73,6 +75,20 @@ class MainActivity : AppCompatActivity() {
                     view?.loadUrl(url ?: "")
                     return true  // 外部に飛ばさずWebView内で処理
                 }
+                override fun onReceivedError(
+                    view: WebView,
+                    request: WebResourceRequest,
+                    error: WebResourceError
+                ) {
+                    val url = request.url.toString()
+                    if (url.startsWith("http://")) {
+                        val httpsUrl = url.replaceFirst("http://", "https://")
+                        view.loadUrl(httpsUrl)
+                    } else {
+                        // 通常のエラー処理（ネットワーク切断など）
+                        super.onReceivedError(view, request, error)
+                    }
+                }
             }
         }
     }
@@ -95,7 +111,7 @@ class MainActivity : AppCompatActivity() {
     fun waitUntilServerStarts(onReady: () -> Unit) {
         Thread {
             var connected = false
-            for (i in 1..20) { // 最大10秒待つ（500ms * 20）
+            while(true) { // 最大10秒待つ（500ms * 20）
                 try {
                     val socket = Socket()
                     socket.connect(InetSocketAddress("localhost", 9999), 500)
