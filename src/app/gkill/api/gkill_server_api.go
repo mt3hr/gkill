@@ -94,8 +94,8 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 			RykvImageListColumnNumber: 3,
 			RykvHotReload:             false,
 			MiDefaultBoard:            "Inbox",
-			RykvDefaultPeriod:         json.Number(-1),
-			MiDefaultPeriod:           json.Number(-1),
+			RykvDefaultPeriod:         json.Number("-1"),
+			MiDefaultPeriod:           json.Number("-1"),
 		}
 		_, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
 		if err != nil {
@@ -3531,8 +3531,8 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 				RykvImageListColumnNumber: 3,
 				RykvHotReload:             false,
 				MiDefaultBoard:            "Inbox",
-				RykvDefaultPeriod:         json.Number(-1),
-				MiDefaultPeriod:           json.Number(-1),
+				RykvDefaultPeriod:         json.Number("-1"),
+				MiDefaultPeriod:           json.Number("-1"),
 			}
 			_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), newApplicationConfig)
 			if err != nil {
@@ -6462,8 +6462,8 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 			RykvImageListColumnNumber: 3,
 			RykvHotReload:             false,
 			MiDefaultBoard:            "Inbox",
-			RykvDefaultPeriod:         json.Number(-1),
-			MiDefaultPeriod:           json.Number(-1),
+			RykvDefaultPeriod:         json.Number("-1"),
+			MiDefaultPeriod:           json.Number("-1"),
 		}
 		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), newApplicationConfig)
 		if err != nil {
@@ -8505,8 +8505,8 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		RykvImageListColumnNumber: 3,
 		RykvHotReload:             false,
 		MiDefaultBoard:            "Inbox",
-		RykvDefaultPeriod:         json.Number(-1),
-		MiDefaultPeriod:           json.Number(-1),
+		RykvDefaultPeriod:         json.Number("-1"),
+		MiDefaultPeriod:           json.Number("-1"),
 	}
 	_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
 	if err != nil {
