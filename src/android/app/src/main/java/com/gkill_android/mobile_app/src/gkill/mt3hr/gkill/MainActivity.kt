@@ -8,20 +8,23 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 import java.io.IOException
+import java.net.InetSocketAddress
+import java.net.Socket
 
 class MainActivity : AppCompatActivity() {
     private fun copyServerBinary(): File {
         val input = assets.open("gkill_server")
-        val outputFile = File(filesDir, "gkill_server")  // ← 修正ポイント
+        val outputFile = File(filesDir, "gkill_server")
 
-        input.use { inStream ->
-            outputFile.outputStream().use { outStream ->
-                inStream.copyTo(outStream)
+        if (!outputFile.exists()) {
+            input.use { inStream ->
+                outputFile.outputStream().use { outStream ->
+                    inStream.copyTo(outStream)
+                }
             }
+            outputFile.setReadable(true, true)
+            outputFile.setExecutable(true, true)
         }
-
-        outputFile.setReadable(true, true)
-        outputFile.setExecutable(true, true)
 
         return outputFile
     }
@@ -58,18 +61,59 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        startGkillServer()
-        Thread.sleep(10000) // 応急措置：1秒待ってからWebViewロード（改善可能）
-
-        setContentView(R.layout.activity_main)
-        val webView = findViewById<WebView>(R.id.webview)
-        webView.settings.javaScriptEnabled = true
-        webView.loadUrl("http://127.0.0.1:9999")
-        webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                view?.loadUrl(url ?: "")
-                return true  // 外部に飛ばさずWebView内で処理
+        // killExistingGkillServer()
+        startGkillServer() // アプリ再起動時も呼ばれるように
+        waitUntilServerStarts {
+            setContentView(R.layout.activity_main)
+            val webView = findViewById<WebView>(R.id.webview)
+            webView.settings.javaScriptEnabled = true
+            webView.loadUrl("http://localhost:9999")
+            webView.webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                    view?.loadUrl(url ?: "")
+                    return true  // 外部に飛ばさずWebView内で処理
+                }
             }
         }
+    }
+
+    private fun killExistingGkillServer() {
+        try {
+            val process = Runtime.getRuntime().exec("ps")
+            process.inputStream.bufferedReader().useLines { lines ->
+                lines.filter { it.contains("gkill_server") }.forEach { line ->
+                    val pid = line.split(Regex("\\s+"))[1] // PIDは2番目の列にある
+                    Runtime.getRuntime().exec("kill $pid")
+                    Log.d("gkill", "Killed existing gkill_server with pid $pid")
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("gkill", "既存プロセスkill失敗", e)
+        }
+    }
+
+    fun waitUntilServerStarts(onReady: () -> Unit) {
+        Thread {
+            var connected = false
+            for (i in 1..20) { // 最大10秒待つ（500ms * 20）
+                try {
+                    val socket = Socket()
+                    socket.connect(InetSocketAddress("localhost", 9999), 500)
+                    socket.close()
+                    connected = true
+                    break
+                } catch (_: Exception) {
+                    Thread.sleep(500)
+                }
+            }
+
+            if (connected) {
+                runOnUiThread { onReady() }
+            } else {
+                runOnUiThread {
+                    Toast.makeText(this, "gkill_server 起動に失敗", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
     }
 }
