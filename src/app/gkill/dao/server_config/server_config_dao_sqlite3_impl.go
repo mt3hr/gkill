@@ -18,7 +18,7 @@ type serverConfigDAOSQLite3Impl struct {
 
 func NewServerConfigDAOSQLite3Impl(ctx context.Context, filename string) (ServerConfigDAO, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=2&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -647,7 +647,6 @@ func (s *serverConfigDAOSQLite3Impl) DeleteWriteServerConfigs(ctx context.Contex
 	deleteSQL := `
 DELETE FROM SERVER_CONFIG 
 `
-	queryArgs := []interface{}{}
 	gkill_log.TraceSQL.Printf("sql: %s", deleteSQL)
 
 	stmt, err := tx.PrepareContext(ctx, deleteSQL)
@@ -657,8 +656,8 @@ DELETE FROM SERVER_CONFIG
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", deleteSQL, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	gkill_log.TraceSQL.Printf("sql: %s", deleteSQL)
+	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
 		return false, err
@@ -785,7 +784,7 @@ WHERE ENABLE_THIS_DEVICE = ?
 			err = rows.Scan(
 				&enableCount,
 			)
-			if err == nil {
+			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
 				return false, err
 			}
