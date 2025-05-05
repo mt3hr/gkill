@@ -27,16 +27,18 @@ defineProps<DnoteListTableViewProps>()
 defineExpose({ load_aggregate_grouping_list })
 const model_value = defineModel<Array<DnoteListQuery>>()
 
-async function load_aggregate_grouping_list(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<void> {
+async function load_aggregate_grouping_list(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<any> {
     if (!dnote_list_views.value || !model_value.value) {
         return
     }
+    const waitPromises = new Array<Promise<any>>()
     for (let i = 0; i < dnote_list_views.value.length; i++) {
         if (!dnote_list_views.value[i]) {
             continue
         }
-        await dnote_list_views.value[i].load_aggregate_grouping_list(abort_controller, kyous, find_kyou_query, kyou_is_loaded)
+        waitPromises.push(dnote_list_views.value[i].load_aggregate_grouping_list(abort_controller, kyous, find_kyou_query, kyou_is_loaded))
     }
+    return Promise.all(waitPromises)
 }
 
 

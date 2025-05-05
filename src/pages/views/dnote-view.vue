@@ -1,5 +1,15 @@
 <template>
-    <div>
+    <v-card class="dnote_view">
+        <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
+            <v-progress-circular indeterminate color="primary" />
+        </v-overlay>
+        <h1>
+            <span>{{ start_date_str }}</span>
+            <span v-if="end_date_str !== '' && start_date_str != end_date_str">～</span>
+            <span v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span>
+            <span v-if="start_date_str === '' && !(end_date_str !== '' && start_date_str != end_date_str)">{{
+                $t("DNOTE_WHOLE_PERIOD_TITLE") }}</span>
+        </h1>
         <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
             v-model="dnote_item_table_view_data" ref="dnote_item_table_view" />
         <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
@@ -26,7 +36,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -43,13 +53,13 @@
                 load_aggregated_value(abort_controller, [], new FindKyouQuery(), true);
                 load_aggregate_grouping_list(abort_controller, [], new FindKyouQuery(), true)
             }" ref="add_dnote_item_dialog" />
-    </div>
+    </v-card>
 </template>
 <script lang="ts" setup>
 import { type DnoteViewProps } from '@/pages/views/dnote-view-props';
 import DnoteItemTableView from './dnote-item-table-view.vue';
 import DnoteListTableView from './dnote-list-table-view.vue';
-import { nextTick, ref, watch, type Ref } from 'vue';
+import { computed, nextTick, ref, watch, type Ref } from 'vue';
 import { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
 import type { Kyou } from '../../classes/datas/kyou';
 import load_kyous from '../../classes/dnote/kyou-loader';
@@ -60,6 +70,7 @@ import AddDnoteItemDialog from '../../pages/dialogs/add-dnote-item-dialog.vue';
 import { type DnoteEmits } from '@/pages/views/dnote-emits';
 import regist_dictionary, { build_dnote_aggregate_target_from_json, build_dnote_key_getter_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary';
 import { UpdateDnoteJSONDataRequest } from '@/classes/api/req_res/update-dnote-json-data-request';
+import moment from 'moment';
 
 const dnote_item_table_view = ref<InstanceType<typeof DnoteItemTableView> | null>(null);
 const dnote_list_table_view = ref<InstanceType<typeof DnoteListTableView> | null>(null);
@@ -81,8 +92,15 @@ nextTick(() => {
 const dnote_item_table_view_data: Ref<Array<Array<DnoteItem>>> = ref(new Array<Array<DnoteItem>>())
 const dnote_list_item_table_view_data: Ref<Array<DnoteListQuery>> = ref(new Array<DnoteListQuery>())
 const abort_controller = ref(new AbortController())
+const is_loading = ref(true)
+
+const start_date_str: Ref<string> = computed(() => !props.query.calendar_start_date ? "" : (moment(props.query.calendar_start_date ? props.query.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")))
+const end_date_str: Ref<string> = computed(() => !props.query.calendar_end_date ? "" : (moment(props.query.calendar_end_date ? props.query.calendar_end_date : moment().toDate()).format("YYYY-MM-DD")))
 
 async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
+    is_loading.value = true
+    reset_view()
+
     if (dnote_item_table_view_data.value.length === 0) {
         dnote_item_table_view_data.value.push(new Array<DnoteItem>())
     }
@@ -91,8 +109,15 @@ async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
     abort_controller.value = new AbortController()
     const cloned_kyou = await load_kyous(abort_controller.value, kyous, true)
     const kyou_is_loaded = true
-    await load_aggregated_value(abort_controller.value, cloned_kyou, query, kyou_is_loaded)
-    await load_aggregate_grouping_list(abort_controller.value, cloned_kyou, query, kyou_is_loaded)
+    const waitPromises = new Array<Promise<any>>()
+    waitPromises.push(load_aggregated_value(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
+    waitPromises.push(load_aggregate_grouping_list(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
+    await Promise.all(waitPromises)
+    is_loading.value = false
+}
+
+function reset_view(): void {
+    load_from_application_config()
 }
 
 function abort(): void {
@@ -211,6 +236,114 @@ async function apply(): Promise<void> {
 </script>
 <style lang="css" scoped>
 .position-fixed {
-    position: relative; 
+    position: relative;
+}
+</style>
+<style lang="css">
+.git_commit_log_message {
+    white-space: pre-line;
+}
+
+.plus_value {
+    color: limegreen;
+}
+
+.minus_value {
+    color: crimson;
+}
+
+.dnote_view {
+    position: relative;
+    width: 625px;
+    min-width: 625px;
+}
+
+.dnote_view .lantana_icon {
+    position: relative;
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    min-width: 20px !important;
+    max-height: 20px !important;
+    min-height: 20px !important;
+    display: inline-block;
+}
+
+.dnote_view .lantana_icon_fill {
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    min-width: 20px !important;
+    max-height: 20px !important;
+    min-height: 20px !important;
+    display: inline-block;
+    z-index: 10;
+}
+
+.dnote_view .lantana_icon_harf_left {
+    position: absolute;
+    left: 0px;
+    width: 10px !important;
+    height: 20px !important;
+    max-width: 10px !important;
+    min-width: 10px !important;
+    max-height: 20px !important;
+    min-height: 20px !important;
+    object-fit: cover;
+    object-position: 0 0;
+    display: inline-block;
+    z-index: 10;
+}
+
+.dnote_view .lantana_icon_harf_right {
+    position: absolute;
+    left: 0px;
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    min-width: 20px !important;
+    max-height: 20px !important;
+    min-height: 20px !important;
+    display: inline-block;
+    z-index: 9;
+}
+
+.dnote_view .lantana_icon_none {
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    min-width: 20px !important;
+    max-height: 20px !important;
+    min-height: 20px !important;
+    display: inline-block;
+    z-index: 10;
+}
+
+.dnote_view .gray {
+    filter: grayscale(100%);
+}
+
+.dnote_view .lantana_icon_tr {
+    width: calc(20px * 5);
+    max-width: calc(20px * 5);
+    min-width: calc(20px * 5);
+}
+
+.dnote_view .lantana_icon_td {
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    min-width: 20px !important;
+    max-height: 20px !important;
+    min-height: 20px !important;
+    display: inline-block;
+}
+</style>
+<style lang="css" scoped>
+.overlay_target {
+    z-index: -10000;
+    position: absolute;
+    min-height: calc(v-bind('app_content_height.toString().concat("px")'));
+    min-width: calc(100vw);
 }
 </style>

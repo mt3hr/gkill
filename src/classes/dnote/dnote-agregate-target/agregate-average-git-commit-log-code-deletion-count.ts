@@ -15,7 +15,7 @@ export default class AgregateAverageGitCommitLogDeletionCodeCount implements Dno
         if (kyou.typed_git_commit_log) {
             code_count += kyou.typed_git_commit_log.deletion
 
-            cloned_typed_average_info_git_commit_log_amount.total_value += code_count
+            cloned_typed_average_info_git_commit_log_amount.total_value -= code_count
             cloned_typed_average_info_git_commit_log_amount.total_count++
         }
         return cloned_typed_average_info_git_commit_log_amount
