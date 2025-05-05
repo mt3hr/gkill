@@ -15,4 +15,6 @@ export enum GkillMessageCodes {
     copied_lan_set_password_link = "MSG900014",
     copied_over_lan_set_password_link = "MSG900015",
     copied_urlog_id = "MSG900016",
+    added_account = "MSG900017",
+
 }
