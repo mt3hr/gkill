@@ -12,11 +12,12 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { nextTick, type Ref, ref } from 'vue'
 import Dnote from '../views/dnote-view.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { type EditDnoteDialogProps } from './edit-dnote-dialog-props'
 import { type EditDnoteDialogEmits } from './edit-dnote-dialog-emits'
+const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
 
 defineProps<EditDnoteDialogProps>()
 const emits = defineEmits<EditDnoteDialogEmits>()
@@ -26,6 +27,7 @@ const is_show_dialog: Ref<boolean> = ref(false)
 
 async function show(): Promise<void> {
     is_show_dialog.value = true
+    nextTick(() => dnote_view.value?.reload([], new FindKyouQuery()))
 }
 async function hide(): Promise<void> {
     is_show_dialog.value = false

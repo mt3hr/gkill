@@ -20,7 +20,7 @@ import PredicateCard from './edit-dnote-card.vue'
 import PredicateGroup from './edit-dnote-predicate-group.vue'
 import type Predicate from '../../classes/dnote/predicate'
 import type PredicateGroupType from '../../classes/dnote/predicate-group-type'
-import { i18n } from '@/i18n'
+import predicate_menu_items from '@/classes/dnote/pulldown-menu/predicate-menu-items'
 
 const group = defineModel<PredicateGroupType>()!
 
@@ -29,7 +29,7 @@ function is_group(p: Predicate | PredicateGroupType): p is PredicateGroupType {
 }
 
 function add_predicate() {
-    group.value!.predicates.push({ type: i18n.global.t("DataTypePrefixPredicate"), value: "" })
+    group.value!.predicates.push({ type: predicate_menu_items[0].value, value: "" })
 }
 
 function add_group() {
