@@ -9,7 +9,19 @@
                     :dnote_list_query="model_value!" @received_errors="(errors) => emits('received_errors', errors)"
                     @received_messages="(messages) => emits('received_messages', messages)" :aggregated_item="item"
                     @requested_delete_dnote_list_query="(id) => emits('requested_delete_dnote_list_query', id)"
-                    @requested_update_dnote_list_query="(dnote_list_query) => emits('requested_update_dnote_list_query', dnote_list_query)" />
+                    @requested_update_dnote_list_query="(dnote_list_query) => emits('requested_update_dnote_list_query', dnote_list_query)"
+                    @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)"
+                    @deleted_tag="(tag) => emits('deleted_tag', tag)"
+                    @deleted_text="(text) => emits('deleted_text', text)"
+                    @deleted_notification="(notification) => emits('deleted_notification', notification)"
+                    @registered_kyou="(kyou) => emits('registered_kyou', kyou)"
+                    @registered_tag="(tag) => emits('registered_tag', tag)"
+                    @registered_text="(text) => emits('registered_text', text)"
+                    @registered_notification="(notification) => emits('registered_notification', notification)"
+                    @updated_kyou="(kyou) => emits('updated_kyou', kyou)"
+                    @updated_tag="(tag) => emits('updated_tag', tag)"
+                    @updated_text="(text) => emits('updated_text', text)"
+                    @updated_notification="(notification) => emits('updated_notification', notification)" />
             </template>
         </v-virtual-scroll>
         <DnoteListQueryContextMenu :application_config="application_config" :gkill_api="gkill_api"
@@ -30,7 +42,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue';
+import { nextTick, type Ref, ref } from 'vue';
 import type { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
 import type { Kyou } from '../../classes/datas/kyou';
 import type AgregatedItem from '../../classes/dnote/aggregate-grouping-list-result-record';
@@ -49,7 +61,7 @@ const edit_dnote_list_query = ref<InstanceType<typeof EditDnoteListDialog> | nul
 
 
 defineProps<DnoteListViewProps>()
-defineExpose({ load_aggregate_grouping_list })
+defineExpose({ load_aggregate_grouping_list, reset })
 const emits = defineEmits<DnoteListViewEmits>()
 const model_value = defineModel<DnoteListQuery>()
 const aggregated_items: Ref<Array<AgregatedItem>> = ref(new Array<AgregatedItem>())
@@ -65,5 +77,11 @@ async function load_aggregate_grouping_list(abort_controller: AbortController, k
     for (let i = 0; i < aggregated_result.length; i++) {
         aggregated_items.value.push(aggregated_result[i])
     }
+}
+
+async function reset(): Promise<void> {
+    return nextTick(async () => {
+        aggregated_items.value.splice(0)
+    })
 }
 </script>

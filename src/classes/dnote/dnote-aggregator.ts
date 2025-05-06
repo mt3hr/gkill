@@ -35,7 +35,7 @@ export class DnoteAgregator {
         const cloned_match_kyous = new Array<Kyou>()
         for (let i = 0; i < match_kyous.length; i++) {
             const kyou = match_kyous[i]
-            cloned_kyous.push(kyou.clone())
+            cloned_match_kyous.push(kyou.clone())
         }
 
         // 集計結果を返却
