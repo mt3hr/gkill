@@ -10,7 +10,7 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary"
                     @click="emits('requested_delete_rep', repository); emits('requested_close_dialog')">{{
-                        $t("DELETE_MESSAGE") }}</v-btn>
+                        $t("DELETE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>

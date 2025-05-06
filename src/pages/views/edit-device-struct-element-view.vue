@@ -4,7 +4,7 @@
             {{ $t("EDIT_DEVICE_TITLE") }}
         </v-card-title>
         <p>{{ struct_obj.device_name }}</p>
-        <v-checkbox v-model="check_when_inited" hide-detail :label="$t('CHECK_WHEN_INITED')" />
+        <v-checkbox v-model="check_when_inited" hide-detail :label="$t('CHECK_WHEN_INITED_TITLE')" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
