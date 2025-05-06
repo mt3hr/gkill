@@ -3,7 +3,7 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("REPOST_TITLE") }}</span>
+                    <span>{{ $t("REKYOU_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -14,7 +14,7 @@
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="rekyou()">{{ $t('REPOST_TITLE') }}</v-btn>
+                <v-btn dark color="primary" @click="rekyou()">{{ $t('REKYOU_TITLE') }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">

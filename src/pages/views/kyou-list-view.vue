@@ -134,7 +134,7 @@ const kyou_list_image_view = ref<InstanceType<typeof VVirtualScroll> | null>(nul
 
 const props = defineProps<KyouListViewProps>()
 const emits = defineEmits<KyouListViewEmits>()
-defineExpose({ scroll_to_kyou, scroll_to_time, set_loading, scroll_to })
+defineExpose({ scroll_to_kyou, scroll_to_time, set_loading, scroll_to, get_is_loading })
 
 const match_kyous_for_image: Ref<Array<Array<Kyou>>> = ref(new Array<Array<Kyou>>())
 const is_loading: Ref<boolean> = ref(false)
@@ -228,6 +228,10 @@ async function scroll_to_time(time: Date): Promise<boolean> {
 
 function set_loading(loading: boolean): void {
     is_loading.value = loading
+}
+
+function get_is_loading(): boolean {
+    return is_loading.value
 }
 
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
