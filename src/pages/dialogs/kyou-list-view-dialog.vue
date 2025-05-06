@@ -5,7 +5,7 @@
                 :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="model_value!"
                 :query="new FindKyouQuery()" :last_added_tag="last_added_tag" :is_focused_list="true" :closable="false"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="true"
-                :show_checkbox="true" :show_footer="true" :is_show_doc_image_toggle_button="true"
+                :show_checkbox="true" :show_footer="false" :is_show_doc_image_toggle_button="true"
                 :is_show_arrow_button="true" :show_content_only="false" :show_timeis_plaing_end_button="false"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"

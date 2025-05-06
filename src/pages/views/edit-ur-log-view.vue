@@ -3,7 +3,7 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("EDIT_URLOPG_TITLE") }}</span>
+                    <span>{{ $t("EDIT_URLOG_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -148,7 +148,7 @@ async function save(): Promise<void> {
         if (!urlog) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.client_urlog_is_null
-            error.error_message = i18n.global.t("CLIENT_URLOG_IS_NULL_MASSAGE")
+            error.error_message = i18n.global.t("CLIENT_URLOG_IS_NULL_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)

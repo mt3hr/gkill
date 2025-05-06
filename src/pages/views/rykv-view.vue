@@ -28,7 +28,7 @@
             <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
                 <v-icon>mdi-file-document</v-icon>
             </v-btn>
-            <v-btn icon @click="() => { is_show_dnote = !is_show_dnote }">
+            <v-btn icon @click="async () => { await dnote_view?.abort(); is_show_dnote = !is_show_dnote }">
                 <v-icon>mdi-file-chart-outline</v-icon>
             </v-btn>
             <v-btn icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
@@ -189,7 +189,17 @@
                             :application_config="application_config" :gkill_api="gkill_api" :query="focused_query"
                             :checked_kyous="focused_column_checked_kyous" :last_added_tag="last_added_tag"
                             :editable="false" @received_messages="(messages) => emits('received_messages', messages)"
-                            @received_errors="(errors) => emits('received_errors', errors)" ref="dnote_view" />
+                            @received_errors="(errors) => emits('received_errors', errors)"
+                            @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
+                            @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
+                            @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
+                            @registered_text="(registered_text) => { }"
+                            @registered_notification="(registered_notification) => { }"
+                            @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)"
+                            @updated_tag="(updated_tag) => { }" @updated_text="(updated_text) => { }"
+                            @updated_notification="(updated_notification) => { }"
+                            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
+                            ref="dnote_view" />
                     </td>
                     <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
@@ -418,10 +428,19 @@ watch(() => is_show_kyou_count_calendar.value, () => {
     }
 })
 
-watch(() => is_show_dnote.value, () => {
+watch(() => is_show_dnote.value, async () => {
+    dnote_view.value?.abort()
     focused_kyous_list.value.splice(0)
     if (is_show_dnote.value) {
         update_focused_kyous_list(focused_column_index.value)
+
+        const kyou_list_view = kyou_list_views.value[focused_column_index.value] as any
+        if (!kyou_list_view) {
+            return
+        }
+        while (kyou_list_view.get_is_loading()) {
+            await sleep(500)
+        }
         nextTick(() => {
             dnote_view.value?.reload(focused_kyous_list.value, focused_query.value)
         })
@@ -617,6 +636,7 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Prom
 const abort_controllers: Ref<Array<AbortController>> = ref([])
 async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
     const query_id = query.query_id
+    await dnote_view.value?.abort()
     // 検索する。Tickでまとめる
     try {
         if (!force_search) {
@@ -631,7 +651,6 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         props.gkill_api.set_saved_rykv_find_kyou_querys(querys.value)
 
         focused_column_checked_kyous.value = []
-        nextTick(() => dnote_view.value?.reload(focused_kyous_list.value, focused_query.value))
 
         // 前の検索処理を中断する
         if (abort_controllers.value[column_index]) {
@@ -701,6 +720,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
                 kyou_list_view.set_loading(false)
                 skip_search_this_tick.value = false
             }
+            dnote_view.value?.reload(focused_kyous_list.value, focused_query.value)
         })
     } catch (err: any) {
         // abortは握りつぶす
@@ -749,6 +769,8 @@ function show_urlog_dialog(): void {
 function show_upload_file_dialog(): void {
     upload_file_dialog.value?.show()
 }
+
+const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 </script>
 <style lang="css" scoped>
 .kyou_detail_view.dummy {

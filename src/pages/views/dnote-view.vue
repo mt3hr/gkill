@@ -11,9 +11,29 @@
                 $t("DNOTE_WHOLE_PERIOD_TITLE") }}</span>
         </h1>
         <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-            v-model="dnote_item_table_view_data" ref="dnote_item_table_view" />
+            v-model="dnote_item_table_view_data" @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)"
+            @deleted_tag="(tag) => emits('deleted_tag', tag)" @deleted_text="(text) => emits('deleted_text', text)"
+            @deleted_notification="(notification) => emits('deleted_notification', notification)"
+            @registered_kyou="(kyou) => emits('registered_kyou', kyou)"
+            @registered_tag="(tag) => emits('registered_tag', tag)"
+            @registered_text="(text) => emits('registered_text', text)"
+            @registered_notification="(notification) => emits('registered_notification', notification)"
+            @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
+            @updated_text="(text) => emits('updated_text', text)"
+            @updated_notification="(notification) => emits('updated_notification', notification)"
+            ref="dnote_item_table_view" />
         <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-            v-model="dnote_list_item_table_view_data" ref="dnote_list_table_view" />
+            v-model="dnote_list_item_table_view_data" @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)"
+            @deleted_tag="(tag) => emits('deleted_tag', tag)" @deleted_text="(text) => emits('deleted_text', text)"
+            @deleted_notification="(notification) => emits('deleted_notification', notification)"
+            @registered_kyou="(kyou) => emits('registered_kyou', kyou)"
+            @registered_tag="(tag) => emits('registered_tag', tag)"
+            @registered_text="(text) => emits('registered_text', text)"
+            @registered_notification="(notification) => emits('registered_notification', notification)"
+            @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
+            @updated_text="(text) => emits('updated_text', text)"
+            @updated_notification="(notification) => emits('updated_notification', notification)"
+            ref="dnote_list_table_view" />
         <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
             <v-menu transition="slide-x-transition">
                 <template v-slot:activator="{ props }">
@@ -36,7 +56,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -105,8 +125,7 @@ async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
         dnote_item_table_view_data.value.push(new Array<DnoteItem>())
     }
 
-    abort_controller.value.abort()
-    abort_controller.value = new AbortController()
+    await abort()
     const cloned_kyou = await load_kyous(abort_controller.value, kyous, true)
     const kyou_is_loaded = true
     const waitPromises = new Array<Promise<any>>()
@@ -116,12 +135,20 @@ async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
     is_loading.value = false
 }
 
-function reset_view(): void {
-    load_from_application_config()
+async function reset_view(): Promise<void> {
+    return nextTick(async () => {
+        dnote_item_table_view_data.value = new Array<Array<DnoteItem>>()
+        dnote_list_item_table_view_data.value = new Array<DnoteListQuery>()
+        load_from_application_config()
+        await dnote_item_table_view.value?.reset()
+        await dnote_list_table_view.value?.reset()
+    })
 }
 
-function abort(): void {
+async function abort(): Promise<any> {
     abort_controller.value.abort()
+    abort_controller.value = new AbortController()
+    return reset_view()
 }
 
 async function load_aggregated_value(abort_controller: AbortController, kyous: Array<Kyou>, query: FindKyouQuery, kyou_is_loaded: boolean) {
