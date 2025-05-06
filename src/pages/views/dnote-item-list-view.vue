@@ -29,13 +29,15 @@ async function load_aggregated_value(abort_controller: AbortController, kyous: A
     if (!dnote_item_views.value || !model_value.value) {
         return
     }
+    const waitPromises = new Array<Promise<void>>()
     for (let i = 0; i < dnote_item_views.value.length; i++) {
         if (!(dnote_item_views.value as any)[i]) {
             continue
         }
         const dnote_item_view = (dnote_item_views.value as any)[i]
-        await dnote_item_view.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded)
+        waitPromises.push(dnote_item_view.load_aggregated_value(abort_controller, kyous, query, kyou_is_loaded))
     }
+    return Promise.all(waitPromises)
 }
 
 function delete_dnote_item(dnote_item_id: string): void {

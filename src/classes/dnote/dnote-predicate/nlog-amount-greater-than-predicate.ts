@@ -13,7 +13,7 @@ export default class NlogAmountGreaterThanPredicate implements DnotePredicate {
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
         const nlog_amount = loaded_kyou.typed_nlog?.amount
         if (nlog_amount) {
-            if (nlog_amount <= this.nlog_amount) {
+            if (nlog_amount >= this.nlog_amount) {
                 return true
             }
         }
