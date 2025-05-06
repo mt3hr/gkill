@@ -92,7 +92,7 @@ async function reset(): Promise<void> {
     }
     return nextTick(async () => {
         for (let i = 0; i < dnote_list_views.value.length; i++) {
-            await dnote_list_views.value[0].reset()
+            await dnote_list_views.value[i].reset()
         }
     })
 }
