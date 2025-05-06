@@ -5,12 +5,12 @@
             <tr>
                 <td>
                     <span class="title">
-                        <span>{{ title }}</span>
+                        <span>{{ model_value!.title }}</span>
                         <span>:</span>
                     </span>
                 </td>
                 <td>
-                    <span>{{ prefix }}</span>
+                    <span>{{ model_value!.prefix }}</span>
                 </td>
                 <td>
                     <span class="value">
@@ -22,7 +22,7 @@
                     </span>
                 </td>
                 <td>
-                    <span>{{ suffix }}</span>
+                    <span>{{ model_value!.suffix }}</span>
                 </td>
             </tr>
         </table>
@@ -31,7 +31,17 @@
             :closable="false" :highlight_targets="[]" :list_height="list_height" :enable_context_menu="true"
             :enable_dialog="true" :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="false"
             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true" :show_content_only="false"
-            :show_timeis_plaing_end_button="false" @received_errors="(errors) => emits('received_errors', errors)"
+            :show_timeis_plaing_end_button="false" @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)"
+            @deleted_tag="(tag) => emits('deleted_tag', tag)" @deleted_text="(text) => emits('deleted_text', text)"
+            @deleted_notification="(notification) => emits('deleted_notification', notification)"
+            @registered_kyou="(kyou) => emits('registered_kyou', kyou)"
+            @registered_tag="(tag) => emits('registered_tag', tag)"
+            @registered_text="(text) => emits('registered_text', text)"
+            @registered_notification="(notification) => emits('registered_notification', notification)"
+            @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
+            @updated_text="(text) => emits('updated_text', text)"
+            @updated_notification="(notification) => emits('updated_notification', notification)"
+            @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)" ref="kyou_list_view_dialog" />
         <DnoteItemListContextMenu :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
@@ -51,7 +61,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { computed, ref, type Ref } from 'vue'
+import { computed, ref, watch, type Ref } from 'vue'
 import type DnoteItemProps from './dnote-item-props'
 import type { Kyou } from '../../classes/datas/kyou';
 import { DnoteAgregator } from '../../classes/dnote/dnote-aggregator';
@@ -71,12 +81,9 @@ const kyou_list_view_dialog = ref<InstanceType<typeof KyouListViewDialog> | null
 defineProps<DnoteItemProps>()
 const emits = defineEmits<DnoteItemViewEmits>()
 const model_value = defineModel<DnoteItem>()
-defineExpose({ load_aggregated_value })
+defineExpose({ load_aggregated_value, reset })
 
-const title: Ref<string> = ref(model_value.value!.title)
-const prefix: Ref<string> = ref(model_value.value!.prefix)
-const suffix: Ref<string> = ref(model_value.value!.suffix)
-const value: Ref<string> = ref("")
+const value = ref("")
 const related_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const list_height = computed(() => window.screen.height * 7 / 10)
 
@@ -110,10 +117,17 @@ const value_class = computed(() => {
 })
 const mood_value = computed(() => Number(value.value).valueOf())
 async function load_aggregated_value(abort_controller: AbortController, kyous: Array<Kyou>, query: FindKyouQuery, kyou_is_loaded: boolean) {
+    related_kyous.value.splice(0)
     const dnote_aggregator = new DnoteAgregator(model_value.value!.predicate, model_value.value!.agregate_target)
     const aggregate_result = await dnote_aggregator.agregate(abort_controller, kyous, query, kyou_is_loaded)
     value.value = aggregate_result.result_string
-    related_kyous.value = aggregate_result.match_kyous
+    for (let i = 0; i < aggregate_result.match_kyous.length; i++) {
+        related_kyous.value.push(aggregate_result.match_kyous[i])
+    }
+}
+
+async function reset(): Promise<void> {
+    value.value = ""
 }
 
 </script>

@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <v-card-title>
-            {{ $t('EDIT_TAG_STRUCT_ELEMENT') }}
+            {{ $t('EDIT_TAG_STRUCT_ELEMENT_TITLE') }}
         </v-card-title>
         <p>{{ struct_obj.tag_name }}</p>
         <v-checkbox v-model="check_when_inited" hide-detail :label="$t('CHECK_WHEN_INITED_TITLE')" />

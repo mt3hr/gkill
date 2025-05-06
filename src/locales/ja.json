@@ -432,5 +432,7 @@
     "ADD_DNOTE_LIST_MENU_TITLE": "集計リスト追加",
     "EDIT_DNOTE_TITLE": "集計ビュー",
     "DELETE_DNOTE_LIST_ITEM_TITLE": "集計項目削除",
-    "DELETE_DNOTE_LIST_QUERY_TITLE": "集計リスト削除"
+    "DELETE_DNOTE_LIST_QUERY_TITLE": "集計リスト削除",
+    "RESET_SET_ADMIN_PASSWORD_MESSAGE": "管理アカウントのパスワードを設定してください",
+    "NOTIFICATION_TIME_IS_BLANK_MESSAGE" : "通知日時が入力されていません"
 }
