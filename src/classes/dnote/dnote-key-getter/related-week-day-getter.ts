@@ -1,7 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteKeyGetter from "../dnote-key-getter";
-import moment from "moment";
-import DnoteKeyGetterDictionary from "../serialize/dnote-key-getter-dictionary";
 
 export default class RelatedWeekDayGetter implements DnoteKeyGetter {
 
@@ -10,7 +8,7 @@ export default class RelatedWeekDayGetter implements DnoteKeyGetter {
     }
 
     get_keys(loaded_kyou: Kyou): Array<string> {
-        return [moment(loaded_kyou.related_time).weekday().toString()]
+        return [((loaded_kyou.related_time.getDay() + 6) % 7).toString()]
     }
 
     to_json() {

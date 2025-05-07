@@ -1,7 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteKeyGetter from "../dnote-key-getter";
-import moment from "moment";
-import DnoteKeyGetterDictionary from "../serialize/dnote-key-getter-dictionary";
 
 export default class RelatedWeekGetter implements DnoteKeyGetter {
 
@@ -10,7 +8,7 @@ export default class RelatedWeekGetter implements DnoteKeyGetter {
     }
 
     get_keys(loaded_kyou: Kyou): Array<string> {
-        return [moment(loaded_kyou.related_time).week().toString()]
+        return [this.getISOWeek(loaded_kyou.related_time).toString()]
     }
 
     to_json() {
@@ -18,4 +16,14 @@ export default class RelatedWeekGetter implements DnoteKeyGetter {
             type: "RelatedWeekGetter",
         }
     }
+
+    getISOWeek(date: Date): number {
+        const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+        const day = tempDate.getUTCDay() || 7
+        tempDate.setUTCDate(tempDate.getUTCDate() + 4 - day)
+        const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1))
+        const weekNo = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+        return weekNo
+    }
+
 }
