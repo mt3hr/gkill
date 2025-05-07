@@ -22,7 +22,6 @@ import { GetMiRequest } from '../api/req_res/get-mi-request'
 import { GetLantanaRequest } from '../api/req_res/get-lantana-request'
 import { GetGitCommitLogRequest } from '../api/req_res/get-git-commit-log-request'
 import { GetReKyouRequest } from '../api/req_res/get-re-kyou-request'
-import moment from 'moment'
 import { GetIDFKyouRequest } from '../api/req_res/get-idf-kyou-request'
 import { GkillErrorCodes } from '../api/message/gkill_error'
 
@@ -187,7 +186,7 @@ export class Kyou extends InfoBase {
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (kmemo as any)[key]) {
-                    (kmemo as any)[key] = moment((kmemo as any)[key]).toDate()
+                    (kmemo as any)[key] = new Date((kmemo as any)[key])
                 }
             }
             res.kmemo_histories[i] = kmemo
@@ -195,7 +194,7 @@ export class Kyou extends InfoBase {
 
         let match_kmemo: Kmemo | null = null
         res.kmemo_histories.forEach(kmemo => {
-            if (moment(kmemo.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+            if (Math.floor(kmemo.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
                 match_kmemo = kmemo
             }
         })
@@ -229,7 +228,7 @@ export class Kyou extends InfoBase {
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (urlog as any)[key]) {
-                    (urlog as any)[key] = moment((urlog as any)[key]).toDate()
+                    (urlog as any)[key] = new Date((urlog as any)[key])
                 }
             }
             res.urlog_histories[i] = urlog
@@ -237,7 +236,7 @@ export class Kyou extends InfoBase {
 
         let match_urlog: URLog | null = null
         res.urlog_histories.forEach(urlog => {
-            if (moment(urlog.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+            if (Math.floor(urlog.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
                 match_urlog = urlog
             }
         })
@@ -271,7 +270,7 @@ export class Kyou extends InfoBase {
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (nlog as any)[key]) {
-                    (nlog as any)[key] = moment((nlog as any)[key]).toDate()
+                    (nlog as any)[key] = new Date((nlog as any)[key])
                 }
             }
             res.nlog_histories[i] = nlog
@@ -279,7 +278,7 @@ export class Kyou extends InfoBase {
 
         let match_nlog: Nlog | null = null
         res.nlog_histories.forEach(nlog => {
-            if (moment(nlog.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+            if (Math.floor(nlog.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
                 match_nlog = nlog
             }
         })
@@ -313,7 +312,7 @@ export class Kyou extends InfoBase {
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (timeis as any)[key]) {
-                    (timeis as any)[key] = moment((timeis as any)[key]).toDate()
+                    (timeis as any)[key] = new Date((timeis as any)[key])
                 }
             }
             res.timeis_histories[i] = timeis
@@ -321,7 +320,7 @@ export class Kyou extends InfoBase {
 
         let match_timeis: TimeIs | null = null
         res.timeis_histories.forEach(timeis => {
-            if (moment(timeis.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+            if (Math.floor(timeis.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
                 match_timeis = timeis
             }
         })
@@ -355,7 +354,7 @@ export class Kyou extends InfoBase {
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (mi as any)[key]) {
-                    (mi as any)[key] = moment((mi as any)[key]).toDate()
+                    (mi as any)[key] = new Date((mi as any)[key])
                 }
             }
             res.mi_histories[i] = mi
@@ -363,7 +362,7 @@ export class Kyou extends InfoBase {
 
         let match_mi: Mi | null = null
         res.mi_histories.forEach(mi => {
-            if (moment(mi.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+            if (Math.floor(mi.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
                 match_mi = mi
             }
         })
@@ -397,7 +396,7 @@ export class Kyou extends InfoBase {
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (lantana as any)[key]) {
-                    (lantana as any)[key] = moment((lantana as any)[key]).toDate()
+                    (lantana as any)[key] = new Date((lantana as any)[key])
                 }
             }
             res.lantana_histories[i] = lantana
@@ -405,7 +404,7 @@ export class Kyou extends InfoBase {
 
         let match_lantana: Lantana | null = null
         res.lantana_histories.forEach(lantana => {
-            if (moment(lantana.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+            if (Math.floor(lantana.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
                 match_lantana = lantana
             }
         })
@@ -439,7 +438,7 @@ export class Kyou extends InfoBase {
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (idf_kyou as any)[key]) {
-                    (idf_kyou as any)[key] = moment((idf_kyou as any)[key]).toDate()
+                    (idf_kyou as any)[key] = new Date((idf_kyou as any)[key])
                 }
             }
             res.idf_kyou_histories[i] = idf_kyou
@@ -447,7 +446,7 @@ export class Kyou extends InfoBase {
 
         let match_idf_kyou: IDFKyou | null = null
         res.idf_kyou_histories.forEach(idf_kyou => {
-            if (moment(idf_kyou.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+            if (Math.floor(idf_kyou.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
                 match_idf_kyou = idf_kyou
             }
         })
@@ -481,7 +480,7 @@ export class Kyou extends InfoBase {
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (git_commit_log as any)[key]) {
-                    (git_commit_log as any)[key] = moment((git_commit_log as any)[key]).toDate()
+                    (git_commit_log as any)[key] = new Date((git_commit_log as any)[key])
                 }
             }
             res.git_commit_log_histories[i] = git_commit_log
@@ -517,7 +516,7 @@ export class Kyou extends InfoBase {
 
                 // 時刻はDate型に変換
                 if (key.endsWith("time") && (rekyou as any)[key]) {
-                    (rekyou as any)[key] = moment((rekyou as any)[key]).toDate()
+                    (rekyou as any)[key] = new Date((rekyou as any)[key])
                 }
             }
             res.rekyou_histories[i] = rekyou
@@ -525,7 +524,7 @@ export class Kyou extends InfoBase {
 
         let match_rekyou: ReKyou | null = null
         res.rekyou_histories.forEach(rekyou => {
-            if (moment(rekyou.update_time).format("yyyy-MM-dd hh:mm:ss") === moment(this.update_time).format("yyyy-MM-dd hh:mm:ss")) {
+            if (Math.floor(rekyou.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
                 match_rekyou = rekyou
             }
         })
@@ -617,6 +616,7 @@ export class Kyou extends InfoBase {
         this.typed_git_commit_log = null
         this.typed_rekyou = null
     }
+
 }
 
 

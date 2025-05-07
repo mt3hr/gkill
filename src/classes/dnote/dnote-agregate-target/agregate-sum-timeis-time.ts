@@ -1,7 +1,6 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteAgregateTarget from "../dnote-agregate-target";
-import moment from "moment";
 import { i18n } from "@/i18n";
 
 export default class AgregateSumTimeIsTime implements DnoteAgregateTarget{
@@ -24,7 +23,8 @@ export default class AgregateSumTimeIsTime implements DnoteAgregateTarget{
             }
 
             if ((start_time_trimed.getTime() < end_time_trimed.getTime())) {
-                duration_milli_second = Math.abs(moment.duration(moment(start_time_trimed).diff(moment(end_time_trimed))).asMilliseconds())
+                duration_milli_second = Math.abs(end_time_trimed.getTime() - start_time_trimed.getTime())
+
             } else {
                 duration_milli_second = 0
             }
@@ -38,7 +38,7 @@ export default class AgregateSumTimeIsTime implements DnoteAgregateTarget{
         let diff_str = ""
         const offset_in_locale_milli_second = new Date().getTimezoneOffset().valueOf() * 60000
         const diff = duration_milli_second
-        const diff_date = moment(diff + offset_in_locale_milli_second).toDate()
+        const diff_date = new Date(diff + offset_in_locale_milli_second)
         if (diff_date.getFullYear() - 1970 !== 0) {
             if (diff_str !== "") {
                 diff_str += " "
