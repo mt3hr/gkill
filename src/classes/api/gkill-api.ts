@@ -128,7 +128,6 @@ import type { GetRepositoriesRequest } from "./req_res/get-repositories-request"
 import type { GetAllRepNamesRequest } from "./req_res/get-all-rep-names-request"
 import type { GetAllRepNamesResponse } from "./req_res/get-all-rep-names-response"
 import { Kyou } from "../datas/kyou"
-import moment from "moment"
 import { Tag } from "../datas/tag"
 import { Text } from "../datas/text"
 import { Notification } from "../datas/notification"
@@ -920,7 +919,7 @@ export class GkillAPI {
 
                                                 // 時刻はDate型に変換
                                                 if (key.endsWith("time") && (kyou as any)[key]) {
-                                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                                        (kyou as any)[key] = new Date((kyou as any)[key])
                                                 }
                                         }
                                         response.kyous[j] = kyou
@@ -956,7 +955,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (kyou as any)[key]) {
-                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                        (kyou as any)[key] = new Date((kyou as any)[key])
                                 }
                         }
                         response.kyou_histories[i] = kyou
@@ -993,7 +992,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (kmemo as any)[key]) {
-                                        (kmemo as any)[key] = moment((kmemo as any)[key]).toDate()
+                                        (kmemo as any)[key] = new Date((kmemo as any)[key])
                                 }
                         }
                         response.kmemo_histories[i] = kmemo
@@ -1031,7 +1030,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (urlog as any)[key]) {
-                                        (urlog as any)[key] = moment((urlog as any)[key]).toDate()
+                                        (urlog as any)[key] = new Date((urlog as any)[key])
                                 }
                         }
                         response.urlog_histories[i] = urlog
@@ -1069,7 +1068,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (nlog as any)[key]) {
-                                        (nlog as any)[key] = moment((nlog as any)[key]).toDate()
+                                        (nlog as any)[key] = new Date((nlog as any)[key])
                                 }
                         }
                         response.nlog_histories[i] = nlog
@@ -1107,7 +1106,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (timeis as any)[key]) {
-                                        (timeis as any)[key] = moment((timeis as any)[key]).toDate()
+                                        (timeis as any)[key] = new Date((timeis as any)[key])
                                 }
                         }
                         response.timeis_histories[i] = timeis
@@ -1145,7 +1144,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (mis as any)[key]) {
-                                        (mis as any)[key] = moment((mis as any)[key]).toDate()
+                                        (mis as any)[key] = new Date((mis as any)[key])
                                 }
                         }
                         response.mi_histories[i] = mis
@@ -1183,7 +1182,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (lantanas as any)[key]) {
-                                        (lantanas as any)[key] = moment((lantanas as any)[key]).toDate()
+                                        (lantanas as any)[key] = new Date((lantanas as any)[key])
                                 }
                         }
                         response.lantana_histories[i] = lantanas
@@ -1221,7 +1220,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (rekyou as any)[key]) {
-                                        (rekyou as any)[key] = moment((rekyou as any)[key]).toDate()
+                                        (rekyou as any)[key] = new Date((rekyou as any)[key])
                                 }
                         }
                         response.rekyou_histories[i] = rekyou
@@ -1259,7 +1258,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (git_commit_log as any)[key]) {
-                                        (git_commit_log as any)[key] = moment((git_commit_log as any)[key]).toDate()
+                                        (git_commit_log as any)[key] = new Date((git_commit_log as any)[key])
                                 }
                         }
                         response.git_commit_log_histories[i] = git_commit_log
@@ -1297,7 +1296,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (idf_kyou as any)[key]) {
-                                        (idf_kyou as any)[key] = moment((idf_kyou as any)[key]).toDate()
+                                        (idf_kyou as any)[key] = new Date((idf_kyou as any)[key])
                                 }
                         }
                         response.idf_kyou_histories[i] = idf_kyou
@@ -1351,7 +1350,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (kyou as any)[key]) {
-                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                        (kyou as any)[key] = new Date((kyou as any)[key])
                                 }
                         }
                         response.plaing_timeis_kyous[i] = kyou
@@ -1417,7 +1416,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (tag as any)[key]) {
-                                        (tag as any)[key] = moment((tag as any)[key]).toDate()
+                                        (tag as any)[key] = new Date((tag as any)[key])
                                 }
                         }
                         response.tags[i] = tag
@@ -1454,7 +1453,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (tag as any)[key]) {
-                                        (tag as any)[key] = moment((tag as any)[key]).toDate()
+                                        (tag as any)[key] = new Date((tag as any)[key])
                                 }
                         }
                         response.tag_histories[i] = tag
@@ -1491,7 +1490,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (text as any)[key]) {
-                                        (text as any)[key] = moment((text as any)[key]).toDate()
+                                        (text as any)[key] = new Date((text as any)[key])
                                 }
                         }
                         response.texts[i] = text
@@ -1528,7 +1527,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (notification as any)[key]) {
-                                        (notification as any)[key] = moment((notification as any)[key]).toDate()
+                                        (notification as any)[key] = new Date((notification as any)[key])
                                 }
                         }
                         response.notifications[i] = notification
@@ -1565,7 +1564,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (text as any)[key]) {
-                                        (text as any)[key] = moment((text as any)[key]).toDate()
+                                        (text as any)[key] = new Date((text as any)[key])
                                 }
                         }
                         response.text_histories[i] = text
@@ -1602,7 +1601,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (notification as any)[key]) {
-                                        (notification as any)[key] = moment((notification as any)[key]).toDate()
+                                        (notification as any)[key] = new Date((notification as any)[key])
                                 }
                         }
                         response.notification_histories[i] = notification
@@ -1708,7 +1707,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (kyou as any)[key]) {
-                                        (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                        (kyou as any)[key] = new Date((kyou as any)[key])
                                 }
                         }
                         response.uploaded_kyous[i] = kyou
@@ -1942,7 +1941,7 @@ export class GkillAPI {
 
                                 // 時刻はDate型に変換
                                 if (key.endsWith("time") && (gpslog as any)[key]) {
-                                        (gpslog as any)[key] = moment((gpslog as any)[key]).toDate()
+                                        (gpslog as any)[key] = new Date((gpslog as any)[key])
                                 }
                         }
                         response.gps_logs[i] = gpslog
@@ -2096,7 +2095,7 @@ export class GkillAPI {
 
                                         // 時刻はDate型に変換
                                         if (key.endsWith("time") && (kyou as any)[key]) {
-                                                (kyou as any)[key] = moment((kyou as any)[key]).toDate()
+                                                (kyou as any)[key] = new Date((kyou as any)[key])
                                         }
                                 }
                                 response.mi_kyous[i] = kyou
@@ -2110,7 +2109,7 @@ export class GkillAPI {
 
                                         // 時刻はDate型に変換
                                         if (key.endsWith("time") && (mi as any)[key]) {
-                                                (mi as any)[key] = moment((mi as any)[key]).toDate()
+                                                (mi as any)[key] = new Date((mi as any)[key])
                                         }
                                 }
                                 response.mis[i] = mi
@@ -2124,7 +2123,7 @@ export class GkillAPI {
 
                                         // 時刻はDate型に変換
                                         if (key.endsWith("time") && (tag as any)[key]) {
-                                                (tag as any)[key] = moment((tag as any)[key]).toDate()
+                                                (tag as any)[key] = new Date((tag as any)[key])
                                         }
                                 }
                                 response.tags[i] = tag
@@ -2138,7 +2137,7 @@ export class GkillAPI {
 
                                         // 時刻はDate型に変換
                                         if (key.endsWith("time") && (text as any)[key]) {
-                                                (text as any)[key] = moment((text as any)[key]).toDate()
+                                                (text as any)[key] = new Date((text as any)[key])
                                         }
                                 }
                                 response.texts[i] = text
@@ -2152,7 +2151,7 @@ export class GkillAPI {
 
                                         // 時刻はDate型に変換
                                         if (key.endsWith("time") && (timeis as any)[key]) {
-                                                (timeis as any)[key] = moment((timeis as any)[key]).toDate()
+                                                (timeis as any)[key] = new Date((timeis as any)[key])
                                         }
                                 }
                                 response.timeiss[i] = timeis
@@ -2363,7 +2362,7 @@ export class GkillAPI {
                         for (const key in querys_json[i]) {
                                 (query as any)[key] = querys_json[i][key]
                                 if ((key.endsWith("time") || key.endsWith("date")) && (query as any)[key]) {
-                                        (query as any)[key] = moment((query as any)[key]).toDate()
+                                        (query as any)[key] = new Date((query as any)[key])
                                 }
                         }
                         querys.push(query)
@@ -2391,7 +2390,7 @@ export class GkillAPI {
                         for (const key in querys_json[i]) {
                                 (query as any)[key] = querys_json[i][key]
                                 if ((key.endsWith("time") || key.endsWith("date")) && (query as any)[key]) {
-                                        (query as any)[key] = moment((query as any)[key]).toDate()
+                                        (query as any)[key] = new Date((query as any)[key])
                                 }
                         }
                         querys.push(query)

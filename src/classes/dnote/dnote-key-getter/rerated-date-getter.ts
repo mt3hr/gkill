@@ -1,7 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteKeyGetter from "../dnote-key-getter";
-import moment from "moment";
-import DnoteKeyGetterDictionary from "../serialize/dnote-key-getter-dictionary";
 
 export default class RelatedDateGetter implements DnoteKeyGetter {
 
@@ -10,7 +8,8 @@ export default class RelatedDateGetter implements DnoteKeyGetter {
     }
 
     get_keys(loaded_kyou: Kyou): Array<string> {
-        return [moment(loaded_kyou.related_time).format("YYYY/MM/DD")]
+        return [`${loaded_kyou.related_time.getFullYear()}/${(loaded_kyou.related_time.getMonth() + 1).toString().padStart(2, '0')}/${loaded_kyou.related_time.getDate().toString().padStart(2, '0')}`
+        ]
     }
 
     to_json() {
