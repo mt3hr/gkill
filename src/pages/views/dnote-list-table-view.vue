@@ -19,7 +19,7 @@
                         @updated_tag="(tag) => emits('updated_tag', tag)"
                         @updated_text="(text) => emits('updated_text', text)"
                         @updated_notification="(notification) => emits('updated_notification', notification)"
-                        ref="dnote_list_views" />
+                        @finish_a_aggregate_task="emits('finish_a_aggregate_task')" ref="dnote_list_views" />
                 </td>
             </tr>
         </table>
@@ -32,13 +32,13 @@ import DnoteListView from './dnote-list-view.vue';
 import type { Kyou } from '../../classes/datas/kyou';
 import type { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
 import type DnoteListQuery from './dnote-list-query';
-import { type KyouViewEmits } from './kyou-view-emits';
+import type DnoteListTableViewEmits from './dnote-list-table-view-emits';
 
 const dnote_list_views = ref()
 
 defineProps<DnoteListTableViewProps>()
 defineExpose({ load_aggregate_grouping_list, reset })
-const emits = defineEmits<KyouViewEmits>()
+const emits = defineEmits<DnoteListTableViewEmits>()
 const model_value = defineModel<Array<DnoteListQuery>>()
 
 async function load_aggregate_grouping_list(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<any> {

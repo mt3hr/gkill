@@ -13,7 +13,7 @@
             @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
             @updated_text="(text) => emits('updated_text', text)"
             @updated_notification="(notification) => emits('updated_notification', notification)"
-            ref="dnote_item_list_views" />
+            @finish_a_aggregate_task="emits('finish_a_aggregate_task')" ref="dnote_item_list_views" />
     </div>
 </template>
 
@@ -24,14 +24,14 @@ import { nextTick, ref } from 'vue';
 import type { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
 import type { Kyou } from '../../classes/datas/kyou';
 import type DnoteItem from '../../classes/dnote/dnote-item';
-import { type KyouViewEmits } from './kyou-view-emits';
+import type DnoteItemTableViewEmits from './dnote-item-table-view-emits';
 
 const dnote_item_list_views = ref()
 
 const model_value = defineModel<Array<Array<DnoteItem>>>()
 defineProps<DnoteItemTableProps>()
 defineExpose({ load_aggregated_value, reset })
-const emits = defineEmits<KyouViewEmits>()
+const emits = defineEmits<DnoteItemTableViewEmits>()
 
 async function load_aggregated_value(abort_controller: AbortController, kyous: Array<Kyou>, query: FindKyouQuery, kyou_is_loaded: boolean): Promise<any> {
     if (!dnote_item_list_views.value || !model_value.value) {

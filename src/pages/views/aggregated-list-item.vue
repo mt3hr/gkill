@@ -31,22 +31,17 @@
             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true" :show_content_only="false"
             :show_timeis_plaing_end_button="false" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-@deleted_kyou="(kyou) => emits('deleted_kyou', kyou)"
-@deleted_tag="(tag) => emits('deleted_tag', tag)"
-@deleted_text="(text)=>emits('deleted_text', text)"
-@deleted_notification="(notification)=> emits('deleted_notification', notification)"
-@registered_kyou="(kyou)=>emits('registered_kyou', kyou)"
-@registered_tag="(tag)=> emits('registered_tag',tag)"
-@registered_text="(text)=>emits('registered_text',text)"
-@registered_notification="(notification)=>emits('registered_notification', notification)"
-@updated_kyou="(kyou)=>emits('updated_kyou', kyou)"
-@updated_tag="(tag)=> emits('updated_tag',tag)"
-@updated_text="(text)=>emits('updated_text',text)"
-@updated_notification="(notification)=>emits('updated_notification', notification)"
-
-
-
-             ref="kyou_list_view_dialog" />
+            @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)" @deleted_tag="(tag) => emits('deleted_tag', tag)"
+            @deleted_text="(text) => emits('deleted_text', text)"
+            @deleted_notification="(notification) => emits('deleted_notification', notification)"
+            @registered_kyou="(kyou) => emits('registered_kyou', kyou)"
+            @registered_tag="(tag) => emits('registered_tag', tag)"
+            @registered_text="(text) => emits('registered_text', text)"
+            @registered_notification="(notification) => emits('registered_notification', notification)"
+            @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
+            @updated_text="(text) => emits('updated_text', text)"
+            @updated_notification="(notification) => emits('updated_notification', notification)"
+            ref="kyou_list_view_dialog" />
     </v-card>
 </template>
 <script lang="ts" setup>
