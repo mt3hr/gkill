@@ -6,10 +6,10 @@ export default async function load_kyous(abort_controller: AbortController, kyou
         let kyou: Kyou = kyous[i]
         if (clone) {
             kyou = kyous[i].clone()
+            kyou.abort_controller = abort_controller
+            await kyou.load_typed_datas()
+            await kyou.load_attached_tags()
         }
-        kyou.abort_controller = abort_controller
-        await kyou.load_typed_datas()
-        await kyou.load_attached_tags()
         cloned_kyous.push(kyou)
     }
     return cloned_kyous

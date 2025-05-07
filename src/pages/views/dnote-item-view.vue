@@ -121,9 +121,7 @@ async function load_aggregated_value(abort_controller: AbortController, kyous: A
     const dnote_aggregator = new DnoteAgregator(model_value.value!.predicate, model_value.value!.agregate_target)
     const aggregate_result = await dnote_aggregator.agregate(abort_controller, kyous, query, kyou_is_loaded)
     value.value = aggregate_result.result_string
-    for (let i = 0; i < aggregate_result.match_kyous.length; i++) {
-        related_kyous.value.push(aggregate_result.match_kyous[i])
-    }
+    related_kyous.value.splice(0, Infinity, ...aggregate_result.match_kyous)
     emits('finish_a_aggregate_task')
 }
 
