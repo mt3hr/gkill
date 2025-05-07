@@ -1,6 +1,6 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog" class="kyou_dialog">
-        <v-card class="pa-2" :width="'fit-content'">
+        <v-card v-if="is_show_dialog" class="pa-2" :width="'fit-content'">
             <KyouListView :kyou_height="180" :width="400" :list_height="list_height"
                 :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="model_value!"
                 :query="new FindKyouQuery()" :last_added_tag="last_added_tag" :is_focused_list="true" :closable="false"
