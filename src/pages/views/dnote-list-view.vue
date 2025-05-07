@@ -77,6 +77,7 @@ async function load_aggregate_grouping_list(abort_controller: AbortController, k
     for (let i = 0; i < aggregated_result.length; i++) {
         aggregated_items.value.push(aggregated_result[i])
     }
+    emits('finish_a_aggregate_task')
 }
 
 async function reset(): Promise<void> {
