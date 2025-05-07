@@ -1,7 +1,25 @@
 <template>
     <v-card class="dnote_view">
-        <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
-            <v-progress-circular indeterminate color="primary" />
+        <v-overlay v-model="is_loading" :content-class="'dnote_progress_overlay'" class="align-center justify-center"
+            contained persistent>
+            <v-progress-circular indeterminate color="primary" class="align-center justify-center" />
+            <div v-if="getted_kyous_count !== target_kyous_count" class="align-center justify-center">
+                <div class="align-center justify-center overlay_message">
+                    {{ $t('DNOTE_GETTING_DATA') }}
+                </div>
+                <div class="align-center justify-center overlay_message">
+                    {{ getted_kyous_count }}/{{ target_kyous_count }}
+                </div>
+            </div>
+            <div v-if="getted_kyous_count === target_kyous_count" class="align-center justify-center">
+                <div class="align-center justify-center overlay_message">
+                    {{ $t('DNOTE_CALCURATING') }}
+                </div>
+                <div class="align-center justify-center overlay_message">
+                    {{ finished_aggregate_task }}/{{ estimate_aggregate_task }}
+                </div>
+                <div class="align-center justify-center overlay_message">{{ $t('DNOTE_PLEASE_WAIT_MESSAGE') }}</div>
+            </div>
         </v-overlay>
         <h1>
             <span>{{ start_date_str }}</span>
@@ -21,7 +39,7 @@
             @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
             @updated_text="(text) => emits('updated_text', text)"
             @updated_notification="(notification) => emits('updated_notification', notification)"
-            ref="dnote_item_table_view" />
+            @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_item_table_view" />
         <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
             v-model="dnote_list_item_table_view_data" @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)"
             @deleted_tag="(tag) => emits('deleted_tag', tag)" @deleted_text="(text) => emits('deleted_text', text)"
@@ -33,7 +51,7 @@
             @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
             @updated_text="(text) => emits('updated_text', text)"
             @updated_notification="(notification) => emits('updated_notification', notification)"
-            ref="dnote_list_table_view" />
+            @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_list_table_view" />
         <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
             <v-menu transition="slide-x-transition">
                 <template v-slot:activator="{ props }">
@@ -82,7 +100,6 @@ import DnoteListTableView from './dnote-list-table-view.vue';
 import { computed, nextTick, ref, watch, type Ref } from 'vue';
 import { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
 import type { Kyou } from '../../classes/datas/kyou';
-import load_kyous from '../../classes/dnote/kyou-loader';
 import DnoteItem from '../../classes/dnote/dnote-item';
 import DnoteListQuery from './dnote-list-query';
 import AddDnoteListDialog from '../../pages/dialogs/add-dnote-list-dialog.vue';
@@ -114,18 +131,31 @@ const dnote_list_item_table_view_data: Ref<Array<DnoteListQuery>> = ref(new Arra
 const abort_controller = ref(new AbortController())
 const is_loading = ref(true)
 
+const target_kyous_count = ref(0)
+const getted_kyous_count = ref(0)
+const estimate_aggregate_task = ref(0)
+const finished_aggregate_task = ref(0)
+
 const start_date_str: Ref<string> = computed(() => !props.query.calendar_start_date ? "" : (moment(props.query.calendar_start_date ? props.query.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")))
 const end_date_str: Ref<string> = computed(() => !props.query.calendar_end_date ? "" : (moment(props.query.calendar_end_date ? props.query.calendar_end_date : moment().toDate()).format("YYYY-MM-DD")))
 
 async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
     is_loading.value = true
     reset_view()
-
     if (dnote_item_table_view_data.value.length === 0) {
         dnote_item_table_view_data.value.push(new Array<DnoteItem>())
     }
-
     await abort()
+
+    target_kyous_count.value = kyous.length
+    getted_kyous_count.value = 0
+    finished_aggregate_task.value = 0
+    estimate_aggregate_task.value = 0
+    for (let i = 0; i < dnote_item_table_view_data.value.length; i++) {
+        estimate_aggregate_task.value += dnote_item_table_view_data.value[i].length
+    }
+    estimate_aggregate_task.value += dnote_list_item_table_view_data.value.length
+
     const cloned_kyou = await load_kyous(abort_controller.value, kyous, true)
     const kyou_is_loaded = true
     const waitPromises = new Array<Promise<any>>()
@@ -260,6 +290,22 @@ async function apply(): Promise<void> {
     emits('requested_close_dialog')
 }
 
+async function load_kyous(abort_controller: AbortController, kyous: Array<Kyou>, clone: boolean): Promise<Array<Kyou>> {
+    const cloned_kyous = new Array<Kyou>()
+    for (let i = 0; i < kyous.length; i++) {
+        let kyou: Kyou = kyous[i]
+        if (clone) {
+            kyou = kyous[i].clone()
+        }
+        kyou.abort_controller = abort_controller
+        await kyou.load_typed_datas()
+        await kyou.load_attached_tags()
+        cloned_kyous.push(kyou)
+        getted_kyous_count.value++
+    }
+    return cloned_kyous
+}
+
 </script>
 <style lang="css" scoped>
 .position-fixed {
@@ -372,5 +418,19 @@ async function apply(): Promise<void> {
     position: absolute;
     min-height: calc(v-bind('app_content_height.toString().concat("px")'));
     min-width: calc(100vw);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.overlay_message {
+    text-align: center;
+}
+</style>
+<style lang="css">
+.dnote_progress_overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 </style>
