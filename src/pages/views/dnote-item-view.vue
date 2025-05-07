@@ -116,7 +116,7 @@ const value_class = computed(() => {
     return ""
 })
 const mood_value = computed(() => Number(value.value).valueOf())
-async function load_aggregated_value(abort_controller: AbortController, kyous: Array<Kyou>, query: FindKyouQuery, kyou_is_loaded: boolean) {
+async function load_aggregated_value(abort_controller: AbortController, kyous: Array<Kyou>, query: FindKyouQuery, kyou_is_loaded: boolean): Promise<any> {
     related_kyous.value.splice(0)
     const dnote_aggregator = new DnoteAgregator(model_value.value!.predicate, model_value.value!.agregate_target)
     const aggregate_result = await dnote_aggregator.agregate(abort_controller, kyous, query, kyou_is_loaded)
@@ -124,6 +124,7 @@ async function load_aggregated_value(abort_controller: AbortController, kyous: A
     for (let i = 0; i < aggregate_result.match_kyous.length; i++) {
         related_kyous.value.push(aggregate_result.match_kyous[i])
     }
+    emits('finish_a_aggregate_task')
 }
 
 async function reset(): Promise<void> {
