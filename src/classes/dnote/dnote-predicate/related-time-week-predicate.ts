@@ -1,7 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnotePredicate from "../dnote-predicate";
-import moment from "moment";
-import PredicateDictonary from "../serialize/dnote-predicate-dictionary";
 
 export default class RelatedTimeWeekPredicate implements DnotePredicate {
     private week: number
@@ -13,7 +11,7 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
         return new RelatedTimeWeekPredicate(week)
     }
     async is_match(loaded_kyou: Kyou): Promise<boolean> {
-        const week = moment(loaded_kyou.related_time).week()
+        const week = this.getISOWeek(loaded_kyou.related_time)
         if (week === this.week) {
             return true
         }
@@ -24,5 +22,13 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
             type: "RelatedTimeWeekPredicate",
             value: this.week,
         }
+    }
+    getISOWeek(date: Date): number {
+        const tempDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+        const day = tempDate.getUTCDay() || 7
+        tempDate.setUTCDate(tempDate.getUTCDate() + 4 - day)
+        const yearStart = new Date(Date.UTC(tempDate.getUTCFullYear(), 0, 1))
+        const weekNo = Math.ceil(((tempDate.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+        return weekNo
     }
 }
