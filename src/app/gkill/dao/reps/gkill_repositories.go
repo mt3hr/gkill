@@ -207,12 +207,12 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 	return nil
 }
 
-func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
-	matchKyous := map[string]*Kyou{}
+func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	matchKyous := map[string][]*Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(g.Reps))
+	ch := make(chan map[string][]*Kyou, len(g.Reps))
 	errch := make(chan error, len(g.Reps))
 	defer close(ch)
 	defer close(errch)
@@ -304,13 +304,12 @@ loop:
 			if matchKyousInRep == nil {
 				continue loop
 			}
-			for _, kyou := range matchKyousInRep {
-				if existKyou, exist := matchKyous[kyou.ID]; exist {
-					if kyou.UpdateTime.After(existKyou.UpdateTime) {
-						matchKyous[kyou.ID] = kyou
+			for _, kyous := range matchKyousInRep {
+				for _, kyou := range kyous {
+					if _, exist := matchKyous[kyou.ID]; !exist {
+						matchKyous[kyou.ID] = []*Kyou{}
 					}
-				} else {
-					matchKyous[kyou.ID] = kyou
+					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
 				}
 			}
 		default:
@@ -318,21 +317,7 @@ loop:
 		}
 	}
 
-	matchKyousList := []*Kyou{}
-	for _, kyou := range matchKyous {
-		if kyou == nil {
-			continue
-		}
-		if kyou.IsDeleted {
-			continue
-		}
-		matchKyousList = append(matchKyousList, kyou)
-	}
-
-	sort.Slice(matchKyousList, func(i, j int) bool {
-		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
-	})
-	return matchKyousList, nil
+	return matchKyous, nil
 }
 
 func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
@@ -396,7 +381,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	kyousCh := make(chan []*Kyou, len(g.Reps))
+	kyousCh := make(chan map[string][]*Kyou, len(g.Reps))
 	tagsCh := make(chan []*Tag, len(g.TagReps))
 	textsCh := make(chan []*Text, len(g.TextReps))
 	notificationsCh := make(chan []*Notification, len(g.NotificationReps))
@@ -411,7 +396,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	defer close(rekyousCh)
 	defer close(rekyouErrch)
 
-	allKyous := []*Kyou{}
+	allKyousMap := map[string][]*Kyou{}
 	allTags := []*Tag{}
 	allTexts := []*Text{}
 	allNotifications := []*Notification{}
@@ -585,8 +570,13 @@ errloop:
 kyousloop:
 	for {
 		select {
-		case kyous := <-kyousCh:
-			allKyous = append(allKyous, kyous...)
+		case kyouMaps := <-kyousCh:
+			for id, kyouMap := range kyouMaps {
+				if _, exist := allKyousMap[id]; !exist {
+					allKyousMap[id] = []*Kyou{}
+				}
+				allKyousMap[id] = append(allKyousMap[id], kyouMap...)
+			}
 		default:
 			break kyousloop
 		}
@@ -627,13 +617,15 @@ notificationsloop:
 
 	// 最新のKyou, tag, textのみにする
 	latestKyousMap := map[string]*Kyou{}
-	for _, kyou := range allKyous {
-		if existKyou, exist := latestKyousMap[kyou.ID]; exist {
-			if kyou.UpdateTime.After(existKyou.UpdateTime) {
+	for id, kyousMap := range allKyousMap {
+		for _, kyou := range kyousMap {
+			if existKyou, exist := latestKyousMap[id]; exist {
+				if kyou.UpdateTime.After(existKyou.UpdateTime) {
+					latestKyousMap[kyou.ID] = kyou
+				}
+			} else {
 				latestKyousMap[kyou.ID] = kyou
 			}
-		} else {
-			latestKyousMap[kyou.ID] = kyou
 		}
 	}
 	latestTagsMap := map[string]*Tag{}

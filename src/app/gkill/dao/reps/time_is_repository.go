@@ -8,7 +8,7 @@ import (
 )
 
 type TimeIsRepository interface {
-	FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error)
+	FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error)
 
 	GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error)
 

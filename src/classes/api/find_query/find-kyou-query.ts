@@ -61,8 +61,6 @@ export class FindKyouQuery {
     include_end_mi: boolean
     include_end_timeis: boolean
 
-    for_dnote_timeis_plaing_between_start_time_and_end_time: boolean
-
     clone(): FindKyouQuery {
         const cloned = new FindKyouQuery()
         cloned.query_id = this.query_id
@@ -115,7 +113,6 @@ export class FindKyouQuery {
         cloned.include_start_mi = this.include_start_mi
         cloned.include_end_mi = this.include_end_mi
         cloned.include_end_timeis = this.include_end_timeis
-        cloned.for_dnote_timeis_plaing_between_start_time_and_end_time = this.for_dnote_timeis_plaing_between_start_time_and_end_time
         return cloned
     }
 
@@ -170,8 +167,7 @@ export class FindKyouQuery {
         this.include_limit_mi = false
         this.include_start_mi = false
         this.include_end_mi = false
-        this.include_end_timeis = false
-        this.for_dnote_timeis_plaing_between_start_time_and_end_time = false
+        this.include_end_timeis = true
     }
 
     parse_words_and_not_words() {

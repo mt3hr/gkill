@@ -32,7 +32,7 @@ func NewGitRep(reppath string) (GitCommitLogRepository, error) {
 		filename: reppath,
 	}, nil
 }
-func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
+func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	g.m.Lock()
 	defer g.m.Unlock()
 
@@ -53,7 +53,7 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 	}
 
 	// 判定OKであればKyouを作る
-	kyous := []*Kyou{}
+	kyous := map[string][]*Kyou{}
 
 	var logs object.CommitIter
 	if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
@@ -186,7 +186,10 @@ loop:
 			kyou.UpdateDevice = ""
 			kyou.UpdateUser = commit.Author.Name
 
-			kyous = append(kyous, kyou)
+			if _, exist := kyous[kyou.ID]; !exist {
+				kyous[kyou.ID] = []*Kyou{}
+			}
+			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 
 			if query.UseIDs != nil && *query.UseIDs && len(*query.IDs) == 1 {
 				break loop
