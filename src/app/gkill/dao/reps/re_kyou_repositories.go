@@ -17,8 +17,8 @@ type ReKyouRepositories struct {
 	GkillRepositories  *GkillRepositories
 }
 
-func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
-	matchKyous := []*Kyou{}
+func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	matchKyous := map[string][]*Kyou{}
 
 	// 未削除ReKyouを抽出
 	notDeletedAllReKyous := []*ReKyou{}
@@ -70,7 +70,10 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 			kyou.UpdateApp = rekyou.UpdateApp
 			kyou.UpdateUser = rekyou.UpdateUser
 			kyou.UpdateDevice = rekyou.UpdateDevice
-			matchKyous = append(matchKyous, kyou)
+			if _, exist := matchKyous[kyou.ID]; !exist {
+				matchKyous[kyou.ID] = []*Kyou{}
+			}
+			matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
 		}
 	}
 	return matchKyous, nil

@@ -13,35 +13,81 @@ import (
 
 type TimeIsRepositories []TimeIsRepository
 
-func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
-	timeiss, err := t.FindTimeIs(ctx, query)
-	if err != nil {
-		err = fmt.Errorf("error at find kyous: %w", err)
+func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	matchKyous := map[string][]*Kyou{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan map[string][]*Kyou, len(t))
+	errch := make(chan error, len(t))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range t {
+		wg.Add(1)
+
+		go func(rep TimeIsRepository) {
+			defer wg.Done()
+			matchKyousInRep, err := rep.FindKyous(ctx, query)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKyousInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find kyous: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
 		return nil, err
 	}
 
-	kyous := []*Kyou{}
-	for _, timeis := range timeiss {
-		kyou := &Kyou{}
-		kyou.IsDeleted = timeis.IsDeleted
-		kyou.ID = timeis.ID
-		kyou.RepName = timeis.RepName
-		kyou.RelatedTime = timeis.StartTime
-		if timeis.EndTime != nil {
-			kyou.RelatedTime = *timeis.EndTime
+	// TimeIs集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchKyousInRep := <-ch:
+			if matchKyousInRep == nil {
+				continue loop
+			}
+
+			for _, kyous := range matchKyousInRep {
+				for _, kyou := range kyous {
+					if _, exist := matchKyous[kyou.ID]; !exist {
+						matchKyous[kyou.ID] = []*Kyou{}
+					}
+					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
+				}
+			}
+		default:
+			break loop
 		}
-		kyou.DataType = timeis.DataType
-		kyou.CreateTime = timeis.CreateTime
-		kyou.CreateApp = timeis.CreateApp
-		kyou.CreateDevice = timeis.CreateDevice
-		kyou.CreateUser = timeis.CreateUser
-		kyou.UpdateTime = timeis.UpdateTime
-		kyou.UpdateApp = timeis.UpdateApp
-		kyou.UpdateDevice = timeis.UpdateDevice
-		kyou.IsImage = false
-		kyous = append(kyous, kyou)
 	}
-	return kyous, nil
+
+	matchTimeIssList, err := t.FindTimeIs(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at find timeis: %w", err)
+		return nil, err
+	}
+
+	resultKyous := map[string][]*Kyou{}
+	for _, matchTimeIs := range matchTimeIssList {
+		resultKyous[matchTimeIs.ID] = matchKyous[matchTimeIs.ID]
+	}
+
+	return resultKyous, nil
 }
 
 func (t TimeIsRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {

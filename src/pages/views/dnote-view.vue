@@ -74,7 +74,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -141,13 +141,21 @@ const end_date_str: Ref<string> = computed(() => !props.query.calendar_end_date 
 
 async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
     is_loading.value = true
+
     reset_view()
     if (dnote_item_table_view_data.value.length === 0) {
         dnote_item_table_view_data.value.push(new Array<DnoteItem>())
     }
     await abort()
 
-    target_kyous_count.value = kyous.length
+    const trimed_kyous_map = new Map<string, Kyou>()
+    for (let i = 0; i < kyous.length; i++) {
+        trimed_kyous_map.set(kyous[i].id, kyous[i])
+    }
+    const trimed_kyous = new Array<Kyou>()
+    trimed_kyous_map.forEach((kyou) => trimed_kyous.push(kyou))
+
+    target_kyous_count.value = trimed_kyous.length
     getted_kyous_count.value = 0
     finished_aggregate_task.value = 0
     estimate_aggregate_task.value = 0
@@ -156,7 +164,7 @@ async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
     }
     estimate_aggregate_task.value += dnote_list_item_table_view_data.value.length
 
-    const cloned_kyou = await load_kyous(abort_controller.value, kyous, true)
+    const cloned_kyou = await load_kyous(abort_controller.value, trimed_kyous, true)
     const kyou_is_loaded = true
     const waitPromises = new Array<Promise<any>>()
     waitPromises.push(load_aggregated_value(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
