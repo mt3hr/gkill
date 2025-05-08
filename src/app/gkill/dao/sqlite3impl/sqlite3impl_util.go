@@ -235,7 +235,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 		if groupByCounter != 0 {
 			sql += ", "
 		}
-		sql += " ID "
+		sql += " ID, DATA_TYPE "
 		groupByCounter++
 
 		// HAVING

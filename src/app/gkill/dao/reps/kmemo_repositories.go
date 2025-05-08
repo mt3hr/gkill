@@ -13,12 +13,12 @@ import (
 
 type KmemoRepositories []KmemoRepository
 
-func (k KmemoRepositories) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
-	matchKyous := map[string]*Kyou{}
+func (k KmemoRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	matchKyous := map[string][]*Kyou{}
 	existErr := false
 	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan []*Kyou, len(k))
+	ch := make(chan map[string][]*Kyou, len(k))
 	errch := make(chan error, len(k))
 	defer close(ch)
 	defer close(errch)
@@ -62,32 +62,19 @@ loop:
 			if matchKyousInRep == nil {
 				continue loop
 			}
-			for _, kyou := range matchKyousInRep {
-				if existKyou, exist := matchKyous[kyou.ID]; exist {
-					if kyou.UpdateTime.After(existKyou.UpdateTime) {
-						matchKyous[kyou.ID] = kyou
+			for _, kyous := range matchKyousInRep {
+				for _, kyou := range kyous {
+					if _, exist := matchKyous[kyou.ID]; !exist {
+						matchKyous[kyou.ID] = []*Kyou{}
 					}
-				} else {
-					matchKyous[kyou.ID] = kyou
+					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
 				}
 			}
 		default:
 			break loop
 		}
 	}
-
-	matchKyousList := []*Kyou{}
-	for _, kyou := range matchKyous {
-		if kyou == nil {
-			continue
-		}
-		matchKyousList = append(matchKyousList, kyou)
-	}
-
-	sort.Slice(matchKyousList, func(i, j int) bool {
-		return matchKyousList[i].RelatedTime.After(matchKyousList[j].RelatedTime)
-	})
-	return matchKyousList, nil
+	return matchKyous, nil
 }
 
 func (k KmemoRepositories) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {

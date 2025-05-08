@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 	}, nil
 }
 
-func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
+func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -163,7 +163,7 @@ WHERE
 	}
 	defer rows.Close()
 
-	kyous := []*Kyou{}
+	kyous := map[string][]*Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
@@ -207,7 +207,11 @@ WHERE
 				err = fmt.Errorf("error at parse update time %s in KMEMO: %w", updateTimeStr, err)
 				return nil, err
 			}
-			kyous = append(kyous, kyou)
+
+			if _, exist := kyous[kyou.ID]; !exist {
+				kyous[kyou.ID] = []*Kyou{}
+			}
+			kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 		}
 	}
 	return kyous, nil

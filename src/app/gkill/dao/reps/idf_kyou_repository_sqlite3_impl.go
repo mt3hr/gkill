@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	return rep, nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) ([]*Kyou, error) {
+func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -210,7 +210,7 @@ WHERE
 	}
 	defer rows.Close()
 
-	kyous := []*Kyou{}
+	kyous := map[string][]*Kyou{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
@@ -378,13 +378,13 @@ WHERE
 				kyou.UpdateDevice = idf.UpdateDevice
 				kyou.IsImage = idf.IsImage
 
-				kyous = append(kyous, kyou)
+				if _, exist := kyous[kyou.ID]; !exist {
+					kyous[kyou.ID] = []*Kyou{}
+				}
+				kyous[kyou.ID] = append(kyous[kyou.ID], kyou)
 			}
 		}
 	}
-	sort.Slice(kyous, func(i, j int) bool {
-		return kyous[i].RelatedTime.After(kyous[j].RelatedTime)
-	})
 	return kyous, nil
 }
 
