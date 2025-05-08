@@ -5684,7 +5684,7 @@ func (g *GkillServerAPI) HandleGetPlaingTimeis(w http.ResponseWriter, r *http.Re
 		*findQuery.Reps = append(*findQuery.Reps, repName)
 	}
 
-	kyous, err := repositories.TimeIsReps.FindKyous(r.Context(), findQuery)
+	kyousMap, err := repositories.TimeIsReps.FindKyous(r.Context(), findQuery)
 	if err != nil {
 		err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5696,7 +5696,29 @@ func (g *GkillServerAPI) HandleGetPlaingTimeis(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	response.PlaingTimeIsKyous = kyous
+	resultKyous := []*reps.Kyou{}
+	for _, kyous := range kyousMap {
+		if len(kyous) == 0 {
+			continue
+		}
+
+		trimedKyousMap := map[int64]*reps.Kyou{}
+		for _, kyou := range kyous {
+			trimedKyousMap[kyou.UpdateTime.Unix()] = kyou
+		}
+
+		sortedKyous := []*reps.Kyou{}
+		for _, kyou := range trimedKyousMap {
+			sortedKyous = append(sortedKyous, kyou)
+		}
+		sort.Slice(sortedKyous, func(i int, j int) bool {
+			return sortedKyous[i].RelatedTime.After(sortedKyous[j].RelatedTime)
+		})
+
+		resultKyous = append(resultKyous, sortedKyous[0])
+	}
+
+	response.PlaingTimeIsKyous = resultKyous
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetPlaingTimeIsSuccessMessage,
 		Message:     "取得完了",
