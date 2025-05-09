@@ -59,7 +59,7 @@ const sort_types: Ref<Array<{ name: string, value: MiSortType }>> = ref([
         value: MiSortType.create_time,
     },
     {
-        name: i18n.global.t("MI_CREATE_DATE_TIME_TITLE"),
+        name: i18n.global.t("MI_START_DATE_TIME_TITLE"),
         value: MiSortType.estimate_start_time,
     },
     {
