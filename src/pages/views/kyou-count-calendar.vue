@@ -1,7 +1,7 @@
 <template>
     <v-sheet>
-        <v-calendar :width="350" :weeks-in-month="'static'" :v-model="new Date(Date.now())" ref="kyou_counter_calendar"
-            :events="events" @wheel.prevent.stop="on_wheel">
+        <v-calendar :width="350" :weeks-in-month="'static'" :v-model="date" ref="kyou_counter_calendar" :events="events"
+            @wheel.prevent.stop="on_wheel">
             <template v-slot:event="{ event }">
                 <div class="kyou_count">
                     {{ event["title"] }}
@@ -22,11 +22,15 @@ const kyou_counter_calendar = ref<InstanceType<typeof VCalendar> | null>(null)
 const props = defineProps<KyouCountCalendarProps>()
 const emits = defineEmits<KyouCountCalendarEmits>()
 
+const date = ref(new Date(Date.now()))
 const slider_model: Ref<number> = ref(props.for_mi ? 0 : 86399)
 const events: Ref<Array<any>> = ref(new Array<any>())
 
 watch(props.kyous, () => {
     update_events()
+})
+watch(() => slider_model.value, () => {
+    clicked_date(date.value)
 })
 
 update_events()
