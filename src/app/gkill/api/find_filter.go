@@ -665,7 +665,7 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 		delete(resultKyous, deleteTargetKyouID)
 	}
 
-	if findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing {
+	if (findCtx.ParsedFindQuery.UsePlaing != nil && *findCtx.ParsedFindQuery.UsePlaing) || (findCtx.ParsedFindQuery.ForMi != nil && *findCtx.ParsedFindQuery.ForMi) {
 		for id := range resultKyous {
 			resultKyous[id] = []*reps.Kyou{resultKyous[id][0]}
 		}
