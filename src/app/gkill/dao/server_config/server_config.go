@@ -34,10 +34,6 @@ type ServerConfig struct {
 
 	UserDataDirectory string `json:"user_data_directory"`
 
-	Repositories []*user_config.Repository `json:"repositories"`
-
-	Accounts []*account.Account `json:"accounts"`
-
 	GkillNotificationPublicKey string `json:"gkill_notification_public_key"`
 
 	GkillNotificationPrivateKey string `json:"gkill_notification_private_key"`
@@ -45,4 +41,8 @@ type ServerConfig struct {
 	UseGkillNotification bool `json:"use_gkill_notification"`
 
 	GoogleMapAPIKey string `json:"google_map_api_key"`
+
+	Repositories []*user_config.Repository `json:"repositories"`
+
+	Accounts []*account.Account `json:"accounts"`
 }
