@@ -8,6 +8,7 @@ export interface KyouViewProps extends KyouViewPropsBase {
     kyou: Kyou
     is_image_view: boolean
     show_content_only: boolean
+    show_related_time: boolean
     show_checkbox: boolean
     show_mi_create_time: boolean
     show_mi_limit_time: boolean
