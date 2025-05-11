@@ -52,6 +52,7 @@ const devices: Ref<Array<string>> = ref((() => {
 
 const rep_types: Ref<Array<string>> = ref([
     "kmemo",
+    "kc",
     "urlog",
     "timeis",
     "mi",

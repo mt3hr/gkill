@@ -16,4 +16,8 @@ export default [
     { label: i18n.global.t("DNOTE_SUM_GIT_COMMIT_LOG_CODE_COUNT"), value: "AgregateSumGitCommitLogCodeCount" },
     { label: i18n.global.t("DNOTE_SUM_GIT_COMMIT_LOG_CODE_ADDITION_COUNT"), value: "AgregateSumGitCommitLogAdditionCodeCount" },
     { label: i18n.global.t("DNOTE_SUM_GIT_COMMIT_LOG_CODE_DELETION_COUNT"), value: "AgregateSumGitCommitLogDeletionCodeCount" },
+    { label: i18n.global.t("DNOTE_AVERATE_AVERAGE_KC_NUM_VALUE"), value: "AgregateAverageKCNumValue" },
+    { label: i18n.global.t("DNOTE_AVERATE_MAX_KC_NUM_VALUE"), value: "AgregateMaxKCNumValue" },
+    { label: i18n.global.t("DNOTE_AVERATE_MIN_KC_NUM_VALUE"), value: "AgregateMinKCNumValue" },
+    { label: i18n.global.t("DNOTE_AVERATE_SUM_KC_NUM_VALUE"), value: "AgregateSumKCNumValue" },
 ]

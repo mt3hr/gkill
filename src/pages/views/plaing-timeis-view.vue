@@ -15,6 +15,10 @@
             @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
             @updated_tag="(updated_tag) => { }" @updated_text="(updated_text) => { }"
             @updated_notification="(updated_notification) => { }" ref="kyou_list_views" />
+        <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
+            :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
+            :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)" ref="add_kc_dialog" />
         <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
             :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
@@ -112,6 +116,9 @@
                     <v-list-item @click="show_mkfl_dialog()">
                         <v-list-item-title>{{ $t("MKFL_APP_NAME") }}</v-list-item-title>
                     </v-list-item>
+                    <v-list-item @click="show_add_kc_dialog()">
+                        <v-list-item-title>{{ $t("KC_APP_NAME") }}</v-list-item-title>
+                    </v-list-item>
                     <v-list-item @click="show_urlog_dialog()">
                         <v-list-item-title>{{ $t("URLOG_APP_NAME") }}</v-list-item-title>
                     </v-list-item>
@@ -139,6 +146,7 @@
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { Kyou } from '@/classes/datas/kyou'
+import AddKCDialog from '../dialogs/add-kc-dialog.vue'
 import AddMiDialog from '../dialogs/add-mi-dialog.vue'
 import AddNlogDialog from '../dialogs/add-nlog-dialog.vue'
 import KyouListView from './kyou-list-view.vue'
@@ -163,6 +171,7 @@ const add_lantana_dialog = ref<InstanceType<typeof AddLantanaDialog> | null>(nul
 const add_timeis_dialog = ref<InstanceType<typeof AddTimeisDialog> | null>(null);
 const add_urlog_dialog = ref<InstanceType<typeof AddUrlogDialog> | null>(null);
 const kftl_dialog = ref<InstanceType<typeof KftlDialog> | null>(null);
+const add_kc_dialog = ref<InstanceType<typeof AddKCDialog> | null>(null);
 const mkfl_dialog = ref<InstanceType<typeof mkflDialog> | null>(null);
 const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
 const kyou_list_views = ref();
@@ -333,6 +342,10 @@ const add_kyou_menu_style = computed(() => `{ position: absolute; left: ${positi
 
 function show_kftl_dialog(): void {
     kftl_dialog.value?.show()
+}
+
+function show_add_kc_dialog(): void {
+    add_kc_dialog.value?.show()
 }
 
 function show_mkfl_dialog(): void {

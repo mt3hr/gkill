@@ -216,6 +216,12 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		g.HandleAddKmemo(w, r)
 	}).Methods(g.APIAddress.AddKmemoMethod)
+	router.HandleFunc(g.APIAddress.AddKCAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
+		g.HandleAddKC(w, r)
+	}).Methods(g.APIAddress.AddKCMethod)
 	router.HandleFunc(g.APIAddress.AddURLogAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
@@ -276,6 +282,12 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		g.HandleUpdateKmemo(w, r)
 	}).Methods(g.APIAddress.UpdateKmemoMethod)
+	router.HandleFunc(g.APIAddress.UpdateKCAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
+		g.HandleUpdateKC(w, r)
+	}).Methods(g.APIAddress.UpdateKCMethod)
 	router.HandleFunc(g.APIAddress.UpdateURLogAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
@@ -336,6 +348,12 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		g.HandleGetKmemo(w, r)
 	}).Methods(g.APIAddress.GetKmemoMethod)
+	router.HandleFunc(g.APIAddress.GetKCAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
+		g.HandleGetKC(w, r)
+	}).Methods(g.APIAddress.GetKCMethod)
 	router.HandleFunc(g.APIAddress.GetURLogAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
@@ -1837,6 +1855,153 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddKmemoSuccessMessage,
 		Message:     "kmemoを追加しました",
+	})
+}
+
+func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
+	defer func() { runtime.GC() }()
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.AddKCRequest{}
+	response := &req_res.AddKCResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse add kc response to json: %w", err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AccountInvalidAddKCResponseDataError,
+				ErrorMessage: "kc追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse add kc request to json: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidAddKCRequestDataError,
+			ErrorMessage: "kc追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "kc追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// 対象が存在する場合はエラー
+	existKC, err := repositories.KCReps.GetKC(r.Context(), request.KC.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetKCError,
+			ErrorMessage: "KC追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if existKC != nil {
+		err = fmt.Errorf("exist kc id = %s", request.KC.ID)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AleadyExistKCError,
+			ErrorMessage: "KC追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	err = repositories.WriteKCRep.AddKCInfo(r.Context(), request.KC)
+	if err != nil {
+		err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddKCError,
+			ErrorMessage: "KC追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repName, err := repositories.WriteKCRep.GetRepName(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetKCError,
+			ErrorMessage: "KC追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		IsDeleted:                request.KC.IsDeleted,
+		TargetID:                 request.KC.ID,
+		DataUpdateTime:           request.KC.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
+	if err != nil {
+		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetKCError,
+			ErrorMessage: "KC追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	kc, err := repositories.KCReps.GetKC(r.Context(), request.KC.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetKCError,
+			ErrorMessage: "kc追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.AddedKC = kc
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.AddKCSuccessMessage,
+		Message:     "kcを追加しました",
 	})
 }
 
@@ -3418,6 +3583,166 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 	})
 }
 
+func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) {
+	defer func() { runtime.GC() }()
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.UpdateKCRequest{}
+	response := &req_res.UpdateKCResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse update kc response to json: %w", err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidUpdateKCResponseDataError,
+				ErrorMessage: "KC更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse update kc request to json: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidUpdateKCRequestDataError,
+			ErrorMessage: "KC更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "KC更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// すでに存在する場合はエラー
+	_, err = repositories.KCReps.GetKC(r.Context(), request.KC.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetKCError,
+			ErrorMessage: "KC更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	err = repositories.WriteKCRep.AddKCInfo(r.Context(), request.KC)
+	if err != nil {
+		err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddKCError,
+			ErrorMessage: "KC更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repName, err := repositories.WriteKCRep.GetRepName(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetKCError,
+			ErrorMessage: "KC更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		IsDeleted:                request.KC.IsDeleted,
+		TargetID:                 request.KC.ID,
+		DataUpdateTime:           request.KC.UpdateTime,
+		LatestDataRepositoryName: repName,
+	})
+	if err != nil {
+		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetKCError,
+			ErrorMessage: "KC更新後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	kc, err := repositories.KCReps.GetKC(r.Context(), request.KC.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetKCError,
+			ErrorMessage: "KC追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// 対象が存在しない場合はエラー
+	existKC, err := repositories.KCReps.GetKC(r.Context(), request.KC.ID, nil)
+	if err != nil {
+		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetKCError,
+			ErrorMessage: "KC更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	if existKC == nil {
+		err = fmt.Errorf("not exist kc id = %s", request.KC.ID)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.NotFoundKCError,
+			ErrorMessage: "KC更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.UpdatedKC = kc
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.UpdateKCSuccessMessage,
+		Message:     "KCを更新しました",
+	})
+}
+
 func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
 	w.Header().Set("Content-Type", "application/json")
@@ -4840,6 +5165,90 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 	response.KmemoHistories = kmemoHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetKmemoSuccessMessage,
+		Message:     "取得完了",
+	})
+}
+
+func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
+	defer func() { runtime.GC() }()
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.GetKCRequest{}
+	response := &req_res.GetKCResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse get kc response to json: %w", err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.InvalidGetKCResponseDataError,
+				ErrorMessage: "KC取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse get kc request to json: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.InvalidGetKCRequestDataError,
+			ErrorMessage: "KC取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "KC取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	kcHistories, err := repositories.KCReps.GetKCHistories(r.Context(), request.ID)
+	if err != nil {
+		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetKCError,
+			ErrorMessage: "KC取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.KCHistories = kcHistories
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.GetKCSuccessMessage,
 		Message:     "取得完了",
 	})
 }
@@ -9946,6 +10355,7 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 
 	repTypeFileNameMap := map[string]string{}
 	repTypeFileNameMap["kmemo"] = "Kmemo.db"
+	repTypeFileNameMap["kc"] = "KC.db"
 	repTypeFileNameMap["urlog"] = "URLog.db"
 	repTypeFileNameMap["timeis"] = "TimeIs.db"
 	repTypeFileNameMap["mi"] = "Mi.db"
