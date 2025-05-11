@@ -6,7 +6,7 @@
             :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
             :show_timeis_plaing_end_button="true" :height="height" :width="width" :is_readonly_mi_check="false"
             :enable_context_menu="enable_context_menu" :show_attached_timeis="false" :enable_dialog="enable_dialog"
-            @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
+            :show_related_time="true" @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
             @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
             @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
             @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
