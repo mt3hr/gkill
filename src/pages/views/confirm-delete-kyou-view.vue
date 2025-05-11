@@ -54,6 +54,7 @@ import KyouView from './kyou-view.vue'
 import type { Kyou } from '@/classes/datas/kyou';
 import type { GkillError } from '@/classes/api/gkill-error';
 import { UpdateKmemoRequest } from '@/classes/api/req_res/update-kmemo-request';
+import { UpdateKCRequest } from '@/classes/api/req_res/update-kc-request';
 import { UpdateURLogRequest } from '@/classes/api/req_res/update-ur-log-request';
 import { UpdateNlogRequest } from '@/classes/api/req_res/update-nlog-request';
 import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request';
@@ -76,6 +77,10 @@ async function delete_kyou(): Promise<void> {
     await cloned_kyou.value.load_typed_datas()
     if (cloned_kyou.value.data_type.startsWith("kmemo")) {
         const e = await delete_kmemo()
+        errors = errors.concat(e)
+    }
+    if (cloned_kyou.value.data_type.startsWith("kc")) {
+        const e = await delete_kc()
         errors = errors.concat(e)
     }
     if (cloned_kyou.value.data_type.startsWith("urlog")) {
@@ -131,6 +136,22 @@ async function delete_kmemo(): Promise<Array<GkillError>> {
     req.kmemo.update_user = gkill_info_res.user_id
 
     const res = await props.gkill_api.update_kmemo(req)
+    return res.errors
+}
+async function delete_kc(): Promise<Array<GkillError>> {
+    const gkill_info_req = new GetGkillInfoRequest()
+    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
+
+    const req = new UpdateKCRequest()
+    req.kc = cloned_kyou.value.typed_kc!!.clone()
+    req.kc.is_deleted = true
+
+    req.kc.update_app = "gkill"
+    req.kc.update_device = gkill_info_res.device
+    req.kc.update_time = new Date(Date.now())
+    req.kc.update_user = gkill_info_res.user_id
+
+    const res = await props.gkill_api.update_kc(req)
     return res.errors
 }
 async function delete_urlog(): Promise<Array<GkillError>> {

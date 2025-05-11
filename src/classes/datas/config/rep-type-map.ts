@@ -3,6 +3,7 @@ import { i18n } from "@/i18n"
 export async function generate_rep_type_map(): Promise<Map<string, string>> {
     const map = new Map<string, string>()
     map.set("Kmemo", i18n.global.t("KFTL_APP_NAME"))
+    map.set("KC", i18n.global.t("KC_APP_NAME"))
     map.set("URLog", i18n.global.t("URLOG_APP_NAME"))
     map.set("Nlog", i18n.global.t("NLOG_APP_NAME"))
     map.set("TimeIs", i18n.global.t("TIMEIS_APP_NAME"))

@@ -20,18 +20,6 @@ export class IDFKyou extends InfoBase {
 
     async load_attached_histories(): Promise<Array<GkillError>> {
         throw new Error('Not implemented')
-        /*
-        const req = new GetIDFKyouRequest()
-        req.abort_controller = this.abort_controller
-        
-        req.id = this.id
-        const res = await GkillAPI.get_gkill_api().get_idf_kyou(req)
-        if (res.errors && res.errors.length !== 0) {
-            return res.errors
-        }
-        this.attached_histories = res.kmemo_histories
-        return new Array<GkillError>()
-        */
     }
 
     async load_attached_datas(): Promise<Array<GkillError>> {
