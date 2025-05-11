@@ -290,6 +290,10 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 				for _, rep := range repositories.KmemoReps {
 					typeMatchReps = append(typeMatchReps, rep)
 				}
+			case "kc":
+				for _, rep := range repositories.KCReps {
+					typeMatchReps = append(typeMatchReps, rep)
+				}
 			case "urlog":
 				for _, rep := range repositories.URLogReps {
 					typeMatchReps = append(typeMatchReps, rep)

@@ -17,6 +17,8 @@ type GkillServerAPIAddress struct {
 
 	AddKmemoAddress string
 
+	AddKCAddress string
+
 	AddURLogAddress string
 
 	AddNlogAddress string
@@ -37,6 +39,8 @@ type GkillServerAPIAddress struct {
 
 	UpdateKmemoAddress string
 
+	UpdateKCAddress string
+
 	UpdateURLogAddress string
 
 	UpdateNlogAddress string
@@ -56,6 +60,8 @@ type GkillServerAPIAddress struct {
 	GetKyouAddress string
 
 	GetKmemoAddress string
+
+	GetKCAddress string
 
 	GetURLogAddress string
 
@@ -173,6 +179,8 @@ type GkillServerAPIAddress struct {
 
 	AddKmemoMethod string
 
+	AddKCMethod string
+
 	AddURLogMethod string
 
 	AddNlogMethod string
@@ -193,6 +201,8 @@ type GkillServerAPIAddress struct {
 
 	UpdateKmemoMethod string
 
+	UpdateKCMethod string
+
 	UpdateNlogMethod string
 
 	UpdateURLogMethod string
@@ -210,6 +220,8 @@ type GkillServerAPIAddress struct {
 	GetKyousMethod string
 
 	GetKmemoMethod string
+
+	GetKCMethod string
 
 	GetURLogMethod string
 
@@ -323,6 +335,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.AddTextAddress = "/api/add_text"
 	gkillAPIAddress.AddNotificationAddress = "/api/add_gkill_notification"
 	gkillAPIAddress.AddKmemoAddress = "/api/add_kmemo"
+	gkillAPIAddress.AddKCAddress = "/api/add_kc"
 	gkillAPIAddress.AddURLogAddress = "/api/add_urlog"
 	gkillAPIAddress.AddNlogAddress = "/api/add_nlog"
 	gkillAPIAddress.AddTimeisAddress = "/api/add_timeis"
@@ -333,6 +346,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateTextAddress = "/api/update_text"
 	gkillAPIAddress.UpdateNotificationAddress = "/api/update_gkill_notification"
 	gkillAPIAddress.UpdateKmemoAddress = "/api/update_kmemo"
+	gkillAPIAddress.UpdateKCAddress = "/api/update_kc"
 	gkillAPIAddress.UpdateURLogAddress = "/api/update_urlog"
 	gkillAPIAddress.UpdateNlogAddress = "/api/update_nlog"
 	gkillAPIAddress.UpdateTimeisAddress = "/api/update_timeis"
@@ -343,6 +357,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetKyousAddress = "/api/get_kyous"
 	gkillAPIAddress.GetKyouAddress = "/api/get_kyou"
 	gkillAPIAddress.GetKmemoAddress = "/api/get_kmemo"
+	gkillAPIAddress.GetKCAddress = "/api/get_kc"
 	gkillAPIAddress.GetURLogAddress = "/api/get_urlog"
 	gkillAPIAddress.GetNlogAddress = "/api/get_nlog"
 	gkillAPIAddress.GetTimeisAddress = "/api/get_timeis"
@@ -401,6 +416,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.AddTextMethod = "POST"
 	gkillAPIAddress.AddNotificationMethod = "POST"
 	gkillAPIAddress.AddKmemoMethod = "POST"
+	gkillAPIAddress.AddKCMethod = "POST"
 	gkillAPIAddress.AddURLogMethod = "POST"
 	gkillAPIAddress.AddNlogMethod = "POST"
 	gkillAPIAddress.AddTimeisMethod = "POST"
@@ -411,6 +427,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateTextMethod = "POST"
 	gkillAPIAddress.UpdateNotificationMethod = "POST"
 	gkillAPIAddress.UpdateKmemoMethod = "POST"
+	gkillAPIAddress.UpdateKCMethod = "POST"
 	gkillAPIAddress.UpdateNlogMethod = "POST"
 	gkillAPIAddress.UpdateURLogMethod = "POST"
 	gkillAPIAddress.UpdateTimeisMethod = "POST"
@@ -420,6 +437,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UpdateRekyouMethod = "POST"
 	gkillAPIAddress.GetKyousMethod = "POST"
 	gkillAPIAddress.GetKmemoMethod = "POST"
+	gkillAPIAddress.GetKCMethod = "POST"
 	gkillAPIAddress.GetURLogMethod = "POST"
 	gkillAPIAddress.GetNlogMethod = "POST"
 	gkillAPIAddress.GetTimeisMethod = "POST"

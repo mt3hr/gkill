@@ -11,6 +11,8 @@ export default class TitleGetter implements DnoteKeyGetter {
     get_keys(loaded_kyou: Kyou): Array<string> {
         if (loaded_kyou.data_type.startsWith("kmemo") && loaded_kyou.typed_kmemo) {
             return [loaded_kyou.typed_kmemo.content]
+        } else if (loaded_kyou.data_type.startsWith("kc") && loaded_kyou.typed_kc) {
+            return [loaded_kyou.typed_kc.title]
         } else if (loaded_kyou.data_type.startsWith("timeis") && loaded_kyou.typed_timeis) {
             return [loaded_kyou.typed_timeis.title]
         } else if (loaded_kyou.data_type.startsWith("nlog") && loaded_kyou.typed_nlog) {

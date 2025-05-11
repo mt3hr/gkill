@@ -14,6 +14,7 @@ import AgregateSumGitCommitLogDeletionCodeCount from "../dnote-agregate-target/a
 import AgregateSumLantanaMood from "../dnote-agregate-target/agregate-sum-lantana-mood"
 import AgregateSumNlogAmount from "../dnote-agregate-target/agregate-sum-nlog-amount"
 import AgregateSumTimeIsTime from "../dnote-agregate-target/agregate-sum-timeis-time"
+import AgregateSumKCNumValue from "../dnote-agregate-target/agregate-sum-kc-num-value"
 import type DnoteKeyGetter from "../dnote-key-getter"
 import DataTypeGetter from "../dnote-key-getter/data-type-getter"
 import LantanaMoodGetter from "../dnote-key-getter/lantana-mood-getter"
@@ -108,6 +109,10 @@ export default function regist_dictionary(): void {
     AgregateTargetDictionary.set("AgregateSumLantanaMood", AgregateSumLantanaMood)
     AgregateTargetDictionary.set("AgregateSumNlogAmount", AgregateSumNlogAmount)
     AgregateTargetDictionary.set("AgregateSumTimeIsTime", AgregateSumTimeIsTime)
+    AgregateTargetDictionary.set("AgregateAverageKCNumValue", AgregateSumKCNumValue)
+    AgregateTargetDictionary.set("AgregateMaxKCNumValue", AgregateSumKCNumValue)
+    AgregateTargetDictionary.set("AgregateMinKCNumValue", AgregateSumKCNumValue)
+    AgregateTargetDictionary.set("AgregateSumKCNumValue", AgregateSumKCNumValue)
 }
 
 export function build_dnote_aggregate_target_from_json(json: any): DnoteAgregateTarget {

@@ -86,6 +86,7 @@ const delete_target_rep: Ref<Repository | null> = ref(null)
 const repositories: Ref<Array<Repository>> = ref(new Array<Repository>())
 const rep_types: Ref<Array<string>> = ref([
     "kmemo",
+    "kc",
     "urlog",
     "timeis",
     "mi",

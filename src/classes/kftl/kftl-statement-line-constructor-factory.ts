@@ -3,6 +3,7 @@
 import type { KFTLStatementLine } from "./kftl-statement-line"
 import type { KFTLStatementLineContext } from "./kftl-statement-line-context"
 import { KFTLKmemoStatementLine } from "./kftl_kmemo/kftl-kmemo-statement-line"
+import { KFTLStartKCStatementLine } from "./kftl_kc/kftl-start-kc-statement-line"
 import { KFTLStartLantanaStatementLine } from "./kftl_lantana/kftl-start-lantana-statement-line"
 import { KFTLStartMiStatementLine } from "./kftl_mi/kftl-start-mi-statement-line"
 import { KFTLNlogTitleStatementLine } from "./kftl_nlog/kftl-nlog-title-statement-line"
@@ -80,6 +81,12 @@ export class KFTLStatementLineConstructorFactory {
             return (line_text: string, context: KFTLStatementLineContext) => {
                 this.prev_line_is_meta_info = true
                 return new KFTLSplitAndNextSecondStatementLine(line_text, context)
+            }
+        }
+        if (KFTLStartKCStatementLine.is_this_type(line_text)) {
+            return (line_text: string, context: KFTLStatementLineContext) => {
+                this.prev_line_is_meta_info = false
+                return new KFTLStartKCStatementLine(line_text, context)
             }
         }
         if (KFTLStartMiStatementLine.is_this_type(line_text)) {

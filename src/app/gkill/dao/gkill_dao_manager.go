@@ -296,6 +296,45 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						}
 					}
 
+				case "kc":
+					kcRep, err := reps.NewKCRepositorySQLite3Impl(ctx, filename)
+					if err != nil {
+						return nil, err
+					}
+					repositories.KCReps = append(repositories.KCReps, kcRep)
+					repositories.Reps = append(repositories.Reps, kcRep)
+					if rep.UseToWrite {
+						newPath, _ := kcRep.GetPath(ctx, "")
+						if repositories.WriteKCRep != nil {
+							existPath, _ := repositories.WriteKCRep.GetPath(ctx, "")
+							err := fmt.Errorf("error conflict write kc rep %s %s", existPath, newPath)
+							return nil, err
+						}
+						repositories.WriteKCRep = kcRep
+					}
+
+					// ファイル更新があったときにキャッシュを更新する
+					if rep.IsWatchTargetForUpdateRep {
+						rep := kcRep
+						enableUpdateRepsCache := false
+						enableUpdateLatestDataRepositoryCache := true
+						cacheUpdater := rep_cache_updater.NewLatestRepositoryAddressCacheUpdater(rep, repositories, enableUpdateRepsCache, enableUpdateLatestDataRepositoryCache)
+						ignoreFileNamePrefixes := []string{}
+						repFilename, err := rep.GetPath(ctx, "")
+						if err != nil {
+							repName, _ := rep.GetRepName(ctx)
+							err = fmt.Errorf("error at get path. repname = %s: %w", repName, err)
+							return nil, err
+						}
+						repFilename = filepath.ToSlash(repFilename)
+
+						err = g.fileRepWatchCacheUpdater.RegisterWatchFileRep(cacheUpdater, repFilename, ignoreFileNamePrefixes, userID)
+						if err != nil {
+							err = fmt.Errorf("error at register watch file rep. repfilename = %s userID = %s: %w", repFilename, userID, err)
+							return nil, err
+						}
+					}
+
 				case "urlog":
 					urlogRep, err := reps.NewURLogRepositorySQLite3Impl(ctx, filename)
 					if err != nil {

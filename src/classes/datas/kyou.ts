@@ -5,6 +5,7 @@ import { GkillError } from '../api/gkill-error'
 import { GitCommitLog } from './git-commit-log'
 import { IDFKyou } from './idf-kyou'
 import { Kmemo } from './kmemo'
+import { KC } from './kc'
 import { Lantana } from './lantana'
 import { Mi } from './mi'
 import { Nlog } from './nlog'
@@ -15,6 +16,7 @@ import { InfoIdentifier } from './info-identifier'
 import { GkillAPI } from '../api/gkill-api'
 import { GetKyouRequest } from '../api/req_res/get-kyou-request'
 import { GetKmemoRequest } from '../api/req_res/get-kmemo-request'
+import { GetKCRequest } from '../api/req_res/get-kc-request'
 import { GetURLogRequest } from '../api/req_res/get-ur-log-request'
 import { GetNlogRequest } from '../api/req_res/get-nlog-request'
 import { GetTimeisRequest } from '../api/req_res/get-timeis-request'
@@ -30,6 +32,7 @@ export class Kyou extends InfoBase {
     image_source: string
     attached_histories: Array<Kyou>
     typed_kmemo: Kmemo | null
+    typed_kc: KC | null
     typed_urlog: URLog | null
     typed_nlog: Nlog | null
     typed_timeis: TimeIs | null
@@ -90,6 +93,10 @@ export class Kyou extends InfoBase {
         let errors = new Array<GkillError>()
         if (this.data_type.startsWith("kmemo")) {
             const e = await this.load_typed_kmemo()
+            errors = errors.concat(e)
+        }
+        if (this.data_type.startsWith("kc")) {
+            const e = await this.load_typed_kc()
             errors = errors.concat(e)
         }
         if (this.data_type.startsWith("urlog")) {
@@ -199,6 +206,48 @@ export class Kyou extends InfoBase {
             }
         })
         this.typed_kmemo = match_kmemo
+
+        return new Array<GkillError>()
+    }
+
+    async load_typed_kc(): Promise<Array<GkillError>> {
+        const req = new GetKCRequest()
+        req.abort_controller = this.abort_controller
+
+        req.id = this.id
+        const res = await GkillAPI.get_gkill_api().get_kc(req)
+        if (res.errors && res.errors.length != 0) {
+            return res.errors
+        }
+
+        if (!res.kc_histories || res.kc_histories.length < 1) {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.not_found_kc
+            error.error_message = "KCが見つかりませんでした"
+            return [error]
+        }
+
+        // 取得したデータリストの型変換（そのままキャストするとメソッドが生えないため）
+        for (let i = 0; i < res.kc_histories.length; i++) {
+            const kc = new KC()
+            for (const key in res.kc_histories[i]) {
+                (kc as any)[key] = (res.kc_histories[i] as any)[key]
+
+                // 時刻はDate型に変換
+                if (key.endsWith("time") && (kc as any)[key]) {
+                    (kc as any)[key] = new Date((kc as any)[key])
+                }
+            }
+            res.kc_histories[i] = kc
+        }
+
+        let match_kc: KC | null = null
+        res.kc_histories.forEach(kc => {
+            if (Math.floor(kc.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
+                match_kc = kc
+            }
+        })
+        this.typed_kc = match_kc
 
         return new Array<GkillError>()
     }
@@ -535,6 +584,7 @@ export class Kyou extends InfoBase {
 
     async clear_typed_datas(): Promise<Array<GkillError>> {
         this.typed_kmemo = null
+        this.typed_kc = null
         this.typed_urlog = null
         this.typed_nlog = null
         this.typed_timeis = null
@@ -607,6 +657,7 @@ export class Kyou extends InfoBase {
         this.image_source = ""
         this.attached_histories = new Array<Kyou>()
         this.typed_kmemo = null
+        this.typed_kc = null
         this.typed_urlog = null
         this.typed_nlog = null
         this.typed_timeis = null
