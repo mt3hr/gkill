@@ -5,6 +5,8 @@ import type { AddAccountRequest } from "./req_res/add-account-request"
 import type { AddAccountResponse } from "./req_res/add-account-response"
 import type { AddKmemoRequest } from "./req_res/add-kmemo-request"
 import type { AddKmemoResponse } from "./req_res/add-kmemo-response"
+import type { AddKCRequest } from "./req_res/add-kc-request"
+import type { AddKCResponse } from "./req_res/add-kc-response"
 import type { AddLantanaRequest } from "./req_res/add-lantana-request"
 import type { AddLantanaResponse } from "./req_res/add-lantana-response"
 import type { AddMiRequest } from "./req_res/add-mi-request"
@@ -41,6 +43,8 @@ import type { GetKFTLTemplatesRequest } from "./req_res/get-kftl-templates-reque
 import type { GetKFTLTemplatesResponse } from "./req_res/get-kftl-templates-response"
 import type { GetKmemoRequest } from "./req_res/get-kmemo-request"
 import type { GetKmemoResponse } from "./req_res/get-kmemo-response"
+import type { GetKCRequest } from "./req_res/get-kc-request"
+import type { GetKCResponse } from "./req_res/get-kc-response"
 import type { GetKyouRequest } from "./req_res/get-kyou-request"
 import { GetKyouResponse } from "./req_res/get-kyou-response"
 import type { GetKyousRequest } from "./req_res/get-kyous-request"
@@ -89,6 +93,8 @@ import type { UpdateDeviceStructRequest } from "./req_res/update-device-struct-r
 import type { UpdateDeviceStructResponse } from "./req_res/update-device-struct-response"
 import type { UpdateKmemoRequest } from "./req_res/update-kmemo-request"
 import type { UpdateKmemoResponse } from "./req_res/update-kmemo-response"
+import type { UpdateKCRequest } from "./req_res/update-kc-request"
+import type { UpdateKCResponse } from "./req_res/update-kc-response"
 import type { UpdateLantanaRequest } from "./req_res/update-lantana-request"
 import type { UpdateLantanaResponse } from "./req_res/update-lantana-response"
 import type { UpdateMiRequest } from "./req_res/update-mi-request"
@@ -132,6 +138,7 @@ import { Tag } from "../datas/tag"
 import { Text } from "../datas/text"
 import { Notification } from "../datas/notification"
 import { Kmemo } from "../datas/kmemo"
+import { KC } from "../datas/kc"
 import { URLog } from "../datas/ur-log"
 import { Nlog } from "../datas/nlog"
 import { TimeIs } from "../datas/time-is"
@@ -199,6 +206,7 @@ export class GkillAPI {
         add_text_address: string
         add_notification_address: string
         add_kmemo_address: string
+        add_kc_address: string
         add_urlog_address: string
         add_nlog_address: string
         add_timeis_address: string
@@ -209,6 +217,7 @@ export class GkillAPI {
         update_text_address: string
         update_notification_address: string
         update_kmemo_address: string
+        update_kc_address: string
         update_urlog_address: string
         update_nlog_address: string
         update_timeis_address: string
@@ -219,6 +228,7 @@ export class GkillAPI {
         get_kyous_address: string
         get_kyou_address: string
         get_kmemo_address: string
+        get_kc_address: string
         get_urlog_address: string
         get_nlog_address: string
         get_timeis_address: string
@@ -278,6 +288,7 @@ export class GkillAPI {
         add_text_method: string
         add_notification_method: string
         add_kmemo_method: string
+        add_kc_method: string
         add_urlog_method: string
         add_nlog_method: string
         add_timeis_method: string
@@ -288,6 +299,7 @@ export class GkillAPI {
         update_text_method: string
         update_notification_method: string
         update_kmemo_method: string
+        update_kc_method: string
         update_nlog_method: string
         update_urlog_method: string
         update_timeis_method: string
@@ -298,6 +310,7 @@ export class GkillAPI {
         get_kyous_method: string
         get_kyou_method: string
         get_kmemo_method: string
+        get_kc_method: string
         get_urlog_method: string
         get_nlog_method: string
         get_timeis_method: string
@@ -360,6 +373,7 @@ export class GkillAPI {
                 this.add_text_address = "/api/add_text"
                 this.add_notification_address = "/api/add_gkill_notification"
                 this.add_kmemo_address = "/api/add_kmemo"
+                this.add_kc_address = "/api/add_kc"
                 this.add_urlog_address = "/api/add_urlog"
                 this.add_nlog_address = "/api/add_nlog"
                 this.add_timeis_address = "/api/add_timeis"
@@ -370,6 +384,7 @@ export class GkillAPI {
                 this.update_text_address = "/api/update_text"
                 this.update_notification_address = "/api/update_gkill_notification"
                 this.update_kmemo_address = "/api/update_kmemo"
+                this.update_kc_address = "/api/update_kc"
                 this.update_urlog_address = "/api/update_urlog"
                 this.update_nlog_address = "/api/update_nlog"
                 this.update_timeis_address = "/api/update_timeis"
@@ -380,6 +395,7 @@ export class GkillAPI {
                 this.get_kyous_address = "/api/get_kyous"
                 this.get_kyou_address = "/api/get_kyou"
                 this.get_kmemo_address = "/api/get_kmemo"
+                this.get_kc_address = "/api/get_kc"
                 this.get_urlog_address = "/api/get_urlog"
                 this.get_nlog_address = "/api/get_nlog"
                 this.get_timeis_address = "/api/get_timeis"
@@ -438,6 +454,7 @@ export class GkillAPI {
                 this.add_text_method = "POST"
                 this.add_notification_method = "POST"
                 this.add_kmemo_method = "POST"
+                this.add_kc_method = "POST"
                 this.add_urlog_method = "POST"
                 this.add_nlog_method = "POST"
                 this.add_timeis_method = "POST"
@@ -448,6 +465,7 @@ export class GkillAPI {
                 this.update_text_method = "POST"
                 this.update_notification_method = "POST"
                 this.update_kmemo_method = "POST"
+                this.update_kc_method = "POST"
                 this.update_nlog_method = "POST"
                 this.update_urlog_method = "POST"
                 this.update_timeis_method = "POST"
@@ -458,6 +476,7 @@ export class GkillAPI {
                 this.get_kyous_method = "POST"
                 this.get_kyou_method = "POST"
                 this.get_kmemo_method = "POST"
+                this.get_kc_method = "POST"
                 this.get_urlog_method = "POST"
                 this.get_nlog_method = "POST"
                 this.get_timeis_method = "POST"
@@ -629,6 +648,21 @@ export class GkillAPI {
                 return response
         }
 
+        async add_kc(req: AddKCRequest): Promise<AddKCResponse> {
+                const res = await fetch(this.add_kc_address, {
+                        'method': this.add_kc_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: AddKCResponse = json
+                this.check_auth(response)
+                return response
+        }
+
         async add_urlog(req: AddURLogRequest): Promise<AddURLogResponse> {
                 const res = await fetch(this.add_urlog_address, {
                         'method': this.add_urlog_method,
@@ -775,6 +809,21 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateKmemoResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async update_kc(req: UpdateKCRequest): Promise<UpdateKCResponse> {
+                const res = await fetch(this.update_kc_address, {
+                        'method': this.update_kc_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: UpdateKCResponse = json
                 this.check_auth(response)
                 return response
         }
@@ -996,6 +1045,44 @@ export class GkillAPI {
                                 }
                         }
                         response.kmemo_histories[i] = kmemo
+                }
+
+                this.check_auth(response)
+                return response
+        }
+
+        async get_kc(req: GetKCRequest): Promise<GetKCResponse> {
+                const res = await fetch(this.get_kc_address, {
+                        'method': this.get_kc_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+
+                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
+                const response: GetKCResponse = json
+                if (!response.kc_histories) {
+                        response.kc_histories = new Array<KC>()
+                }
+
+                for (const key in json) {
+                        (response as any)[key] = json[key]
+                }
+                // 取得したリストの型変換（そのままキャストするとメソッドが生えないため）
+                for (let i = 0; i < response.kc_histories.length; i++) {
+                        const kc = new KC()
+                        for (const key in response.kc_histories[i]) {
+                                (kc as any)[key] = (response.kc_histories[i] as any)[key]
+
+                                // 時刻はDate型に変換
+                                if (key.endsWith("time") && (kc as any)[key]) {
+                                        (kc as any)[key] = new Date((kc as any)[key])
+                                }
+                        }
+                        response.kc_histories[i] = kc
                 }
 
                 this.check_auth(response)
@@ -2512,6 +2599,10 @@ export class GkillAPIForSharedMi extends GkillAPI {
                 throw new Error("not implements")
         }
 
+        async add_kc(_req: AddKCRequest): Promise<AddKCResponse> {
+                throw new Error("not implements")
+        }
+
         async add_urlog(_req: AddURLogRequest): Promise<AddURLogResponse> {
                 throw new Error("not implements")
         }
@@ -2545,6 +2636,10 @@ export class GkillAPIForSharedMi extends GkillAPI {
         }
 
         async update_kmemo(_req: UpdateKmemoRequest): Promise<UpdateKmemoResponse> {
+                throw new Error("not implements")
+        }
+
+        async update_kc(_req: UpdateKCRequest): Promise<UpdateKCResponse> {
                 throw new Error("not implements")
         }
 
@@ -2594,6 +2689,11 @@ export class GkillAPIForSharedMi extends GkillAPI {
         async get_kmemo(_req: GetKmemoRequest): Promise<GetKmemoResponse> {
                 throw new Error("not implements")
         }
+
+        async get_kc(_req: GetKCRequest): Promise<GetKCResponse> {
+                throw new Error("not implements")
+        }
+
 
         async get_urlog(_req: GetURLogRequest): Promise<GetURLogResponse> {
                 throw new Error("not implements")

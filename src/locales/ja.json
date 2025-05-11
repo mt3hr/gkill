@@ -437,5 +437,17 @@
     "NOTIFICATION_TIME_IS_BLANK_MESSAGE": "通知日時が入力されていません",
     "DNOTE_GETTING_DATA": "データ取得中",
     "DNOTE_CALCURATING": "集計中",
-    "DNOTE_PLEASE_WAIT_MESSAGE": "しばらくお待ち下さい・・・"
+    "DNOTE_PLEASE_WAIT_MESSAGE": "しばらくお待ち下さい・・・",
+    "KC_APP_NAME": "数値記録",
+    "ADD_KC_TITLE": "数値記録追加",
+    "EDIT_KC_TITLE": "数値記録編集",
+    "KC_DATE_TIME_TITLE": "日時",
+    "KC_DATE_TITLE": "日付",
+    "KC_TIME_TITLE": "時刻",
+    "KC_TITLE_TITLE": "タイトル",
+    "KC_NUM_VALUE_TITLE": "数値記録",
+    "DNOTE_AVERATE_AVERAGE_KC_NUM_VALUE": "数値記録平均",
+    "DNOTE_AVERATE_MAX_KC_NUM_VALUE": "数値記録最大値",
+    "DNOTE_AVERATE_MIN_KC_NUM_VALUE": "数値記録最小値",
+    "DNOTE_AVERATE_SUM_KC_NUM_VALUE": "数値記録合計値"
 }

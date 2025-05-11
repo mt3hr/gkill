@@ -30,6 +30,8 @@ type GkillRepositories struct {
 
 	KmemoReps KmemoRepositories
 
+	KCReps KCRepositories
+
 	URLogReps URLogRepositories
 
 	NlogReps NlogRepositories
@@ -55,6 +57,8 @@ type GkillRepositories struct {
 	WriteNotificationRep NotificationRepository
 
 	WriteKmemoRep KmemoRepository
+
+	WriteKCRep KCRepository
 
 	WriteURLogRep URLogRepository
 
@@ -135,6 +139,12 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 		}
 	}
 	for _, rep := range g.KmemoReps {
+		err := rep.Close(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	for _, rep := range g.KCReps {
 		err := rep.Close(ctx)
 		if err != nil {
 			return err

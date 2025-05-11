@@ -77,6 +77,13 @@ export enum GkillErrorCodes {
     kmemo_content_is_blank = "ERR900076",
     can_not_disable_self_account = "ERR900077",
     idf_kyou_is_no_update = "ERR900078",
+    not_found_kc = "ERR900079",
+    skiped_no_content_kc = "ERR900080",
+    client_kc_is_null = "ERR900081",
+    kc_related_time_is_blank = "ERR900082",
+    kc_is_no_update = "ERR900083",
+    kc_title_is_blank = "ERR900084",
+    kc_num_value_is_blank = "ERR900085",
 }
 
 

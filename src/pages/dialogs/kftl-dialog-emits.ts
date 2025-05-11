@@ -2,6 +2,7 @@
 
 import type { GkillError } from "@/classes/api/gkill-error"
 import type { GkillMessage } from "@/classes/api/gkill-message"
+import type { KC } from "@/classes/datas/kc"
 import type { Kmemo } from "@/classes/datas/kmemo"
 import type { Lantana } from "@/classes/datas/lantana"
 import type { Mi } from "@/classes/datas/mi"
@@ -14,6 +15,7 @@ export interface KFTLDialogEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'registered_kmemo', kmemo: Kmemo): void
+    (e: 'registered_kc', kc: KC): void
     (e: 'registered_lantana', lantana: Lantana): void
     (e: 'registered_mi', mi: Mi): void
     (e: 'registered_nlog', nlog: Nlog): void

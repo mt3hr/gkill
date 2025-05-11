@@ -74,4 +74,7 @@ const (
 	ReloadRepositoriesSuccessMessage         = "MSG000069"
 	RebootingMessage                         = "MSG000070"
 	TLSFileCreateSuccessMessage              = "MSG000071"
+	AddKCSuccessMessage                      = "MSG000072"
+	UpdateKCSuccessMessage                   = "MSG000073"
+	GetKCSuccessMessage                      = "MSG000074"
 )
