@@ -171,6 +171,7 @@
                                 :show_timeis_plaing_end_button="true" :height="'auto'" :is_readonly_mi_check="false"
                                 :width="'auto'" :enable_context_menu="enable_context_menu"
                                 :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
+                                :show_related_time="true"
                                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                                 @deleted_text="(deleted_text) => { }"
                                 @deleted_notification="(deleted_notification) => { }"

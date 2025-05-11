@@ -49,7 +49,7 @@
             </div>
             <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: any) => show_context_menu(e as PointerEvent)"
                 :class="kyou_class">
-                <v-col class="kyou_related_time pa-0 ma-0" cols="auto">
+                <v-col v-if="show_related_time" class="kyou_related_time pa-0 ma-0" cols="auto">
                     {{ format_time(cloned_kyou.related_time) }}
                 </v-col>
                 <v-spacer />
