@@ -5,9 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"sync"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type serverConfigDAOSQLite3Impl struct {
@@ -26,23 +28,10 @@ func NewServerConfigDAOSQLite3Impl(ctx context.Context, filename string) (Server
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
-  ENABLE_THIS_DEVICE NOT NULL,
-  DEVICE PRIMARY KEY NOT NULL,
-  IS_LOCAL_ONLY_ACCESS NOT NULL,
-  ADDRESS NOT NULL,
-  ENABLE_TLS NOT NULL,
-  TLS_CERT_FILE NOT NULL,
-  TLS_KEY_FILE NOT NULL,
-  OPEN_DIRECTORY_COMMAND,
-  OPEN_FILE_COMMAND,
-  URLOG_TIMEOUT NOT NULL,
-  URLOG_USERAGENT NOT NULL,
-  UPLOAD_SIZE_LIMIT_MONTH,
-  USER_DATA_DIRECTORY NOT NULL,
-  GKILL_NOTIFICATION_PUBLIC_KEY NOT NULL,
-  GKILL_NOTIFICATION_PRIVATE_KEY NOT NULL,
-  USE_GKILL_NOTIFICATION NOT NULL,
-  GOOGLE_MAP_API_KEY NOT NULL
+  DEVICE NOT NULL,
+  KEY NOT NULL,
+  VALUE,
+  PRIMARY KEY(DEVICE, KEY)
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
@@ -59,7 +48,7 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_SERVER_CONFIG ON SERVER_CONFIG (DEVICE);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_SERVER_CONFIG ON SERVER_CONFIG (DEVICE, KEY);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -83,28 +72,227 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 	}, nil
 }
 
+var serverConfigDefaultValue = map[string]interface{}{
+	"DEVICE":                         "",
+	"ENABLE_THIS_DEVICE":             false,
+	"IS_LOCAL_ONLY_ACCESS":           true,
+	"ADDRESS":                        ":9999",
+	"ENABLE_TLS":                     false,
+	"TLS_CERT_FILE":                  gkill_options.TLSCertFileDefault,
+	"TLS_KEY_FILE":                   gkill_options.TLSKeyFileDefault,
+	"OPEN_DIRECTORY_COMMAND":         "explorer /select,$filename",
+	"OPEN_FILE_COMMAND":              "rundll32 url.dll,FileProtocolHandler $filename",
+	"URLOG_TIMEOUT":                  1 * time.Minute,
+	"URLOG_USERAGENT":                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36",
+	"UPLOAD_SIZE_LIMIT_MONTH":        -1,
+	"USER_DATA_DIRECTORY":            gkill_options.DataDirectoryDefault,
+	"GKILL_NOTIFICATION_PUBLIC_KEY":  "",
+	"GKILL_NOTIFICATION_PRIVATE_KEY": "",
+	"USE_GKILL_NOTIFICATION":         true,
+	"GOOGLE_MAP_API_KEY":             "",
+}
+
 func (s *serverConfigDAOSQLite3Impl) GetAllServerConfigs(ctx context.Context) ([]*ServerConfig, error) {
-	sql := `
+	sql := fmt.Sprintf(`
 SELECT 
-  ENABLE_THIS_DEVICE,
-  DEVICE,
-  IS_LOCAL_ONLY_ACCESS,
-  ADDRESS,
-  ENABLE_TLS,
-  TLS_CERT_FILE,
-  TLS_KEY_FILE,
-  OPEN_DIRECTORY_COMMAND,
-  OPEN_FILE_COMMAND,
-  URLOG_TIMEOUT,
-  URLOG_USERAGENT,
-  UPLOAD_SIZE_LIMIT_MONTH,
-  USER_DATA_DIRECTORY,
-  GKILL_NOTIFICATION_PUBLIC_KEY,
-  GKILL_NOTIFICATION_PRIVATE_KEY,
-  USE_GKILL_NOTIFICATION,
-  GOOGLE_MAP_API_KEY
-FROM SERVER_CONFIG
-`
+  /* ENABLE_THIS_DEVICE */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'ENABLE_THIS_DEVICE'
+  ) AS ENABLE_THIS_DEVICE,
+  /* DEVICE */
+  DEVICE AS DEVICE,
+  /* IS_LOCAL_ONLY_ACCESS */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'IS_LOCAL_ONLY_ACCESS'
+  ) AS IS_LOCAL_ONLY_ACCESS,
+  /* ADDRESS */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'ADDRESS'
+  ) AS ADDRESS,
+  /* ENABLE_TLS */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'ENABLE_TLS'
+  ) AS ENABLE_TLS,
+  /* TLS_CERT_FILE */(
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'TLS_CERT_FILE'
+  ) AS TLS_CERT_FILE,
+  /* TLS_KEY_FILE */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'TLS_KEY_FILE'
+  ) AS TLS_KEY_FILE,
+  /* OPEN_DIRECTORY_COMMAND */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'OPEN_DIRECTORY_COMMAND'
+  ) AS OPEN_DIRECTORY_COMMAND,
+  /* OPEN_FILE_COMMAND */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'OPEN_FILE_COMMAND'
+  ) AS OPEN_FILE_COMMAND,
+  /* URLOG_TIMEOUT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'URLOG_TIMEOUT'
+  ) AS URLOG_TIMEOUT,
+  /* URLOG_USERAGENT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'URLOG_USERAGENT'
+  ) AS URLOG_USERAGENT,
+  /* UPLOAD_SIZE_LIMIT_MONTH */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'UPLOAD_SIZE_LIMIT_MONTH'
+  ) AS UPLOAD_SIZE_LIMIT_MONTH,
+  /* USER_DATA_DIRECTORY */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'USER_DATA_DIRECTORY'
+  ) AS USER_DATA_DIRECTORY,
+  /* GKILL_NOTIFICATION_PUBLIC_KEY */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'GKILL_NOTIFICATION_PUBLIC_KEY'
+  ) AS GKILL_NOTIFICATION_PUBLIC_KEY,
+  /* GKILL_NOTIFICATION_PRIVATE_KEY */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'GKILL_NOTIFICATION_PRIVATE_KEY'
+  ) AS GKILL_NOTIFICATION_PRIVATE_KEY,
+  /* USE_GKILL_NOTIFICATION */ (
+      SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'USE_GKILL_NOTIFICATION'
+  ) AS USE_GKILL_NOTIFICATION,
+  /* GOOGLE_MAP_API_KEY */ (
+      SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'GOOGLE_MAP_API_KEY'
+  ) AS GOOGLE_MAP_API_KEY
+FROM SERVER_CONFIG AS GROUPED_SERVER_CONFIG
+GROUP BY DEVICE
+`,
+		serverConfigDefaultValue["ENABLE_THIS_DEVICE"],
+		serverConfigDefaultValue["IS_LOCAL_ONLY_ACCESS"],
+		serverConfigDefaultValue["ADDRESS"],
+		serverConfigDefaultValue["ENABLE_TLS"],
+		serverConfigDefaultValue["TLS_CERT_FILE"],
+		serverConfigDefaultValue["TLS_KEY_FILE"],
+		serverConfigDefaultValue["OPEN_DIRECTORY_COMMAND"],
+		serverConfigDefaultValue["OPEN_FILE_COMMAND"],
+		serverConfigDefaultValue["URLOG_TIMEOUT"],
+		serverConfigDefaultValue["URLOG_USERAGENT"],
+		serverConfigDefaultValue["UPLOAD_SIZE_LIMIT_MONTH"],
+		serverConfigDefaultValue["USER_DATA_DIRECTORY"],
+		serverConfigDefaultValue["GKILL_NOTIFICATION_PUBLIC_KEY"],
+		serverConfigDefaultValue["GKILL_NOTIFICATION_PRIVATE_KEY"],
+		serverConfigDefaultValue["USE_GKILL_NOTIFICATION"],
+		serverConfigDefaultValue["GOOGLE_MAP_API_KEY"],
+	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -157,28 +345,207 @@ FROM SERVER_CONFIG
 }
 
 func (s *serverConfigDAOSQLite3Impl) GetServerConfig(ctx context.Context, device string) (*ServerConfig, error) {
-	sql := `
+	sql := fmt.Sprintf(`
 SELECT 
-  ENABLE_THIS_DEVICE,
-  DEVICE,
-  IS_LOCAL_ONLY_ACCESS,
-  ADDRESS,
-  ENABLE_TLS,
-  TLS_CERT_FILE,
-  TLS_KEY_FILE,
-  OPEN_DIRECTORY_COMMAND,
-  OPEN_FILE_COMMAND,
-  URLOG_TIMEOUT,
-  URLOG_USERAGENT,
-  UPLOAD_SIZE_LIMIT_MONTH,
-  USER_DATA_DIRECTORY,
-  GKILL_NOTIFICATION_PUBLIC_KEY,
-  GKILL_NOTIFICATION_PRIVATE_KEY,
-  USE_GKILL_NOTIFICATION,
-  GOOGLE_MAP_API_KEY
-FROM SERVER_CONFIG
-WHERE DEVICE = ?
-`
+  /* ENABLE_THIS_DEVICE */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'ENABLE_THIS_DEVICE'
+  ) AS ENABLE_THIS_DEVICE,
+  /* DEVICE */
+  DEVICE AS DEVICE,
+  /* IS_LOCAL_ONLY_ACCESS */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'IS_LOCAL_ONLY_ACCESS'
+  ) AS IS_LOCAL_ONLY_ACCESS,
+  /* ADDRESS */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'ADDRESS'
+  ) AS ADDRESS,
+  /* ENABLE_TLS */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'ENABLE_TLS'
+  ) AS ENABLE_TLS,
+  /* TLS_CERT_FILE */(
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'TLS_CERT_FILE'
+  ) AS TLS_CERT_FILE,
+  /* TLS_KEY_FILE */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'TLS_KEY_FILE'
+  ) AS TLS_KEY_FILE,
+  /* OPEN_DIRECTORY_COMMAND */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'OPEN_DIRECTORY_COMMAND'
+  ) AS OPEN_DIRECTORY_COMMAND,
+  /* OPEN_FILE_COMMAND */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'OPEN_FILE_COMMAND'
+  ) AS OPEN_FILE_COMMAND,
+  /* URLOG_TIMEOUT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'URLOG_TIMEOUT'
+  ) AS URLOG_TIMEOUT,
+  /* URLOG_USERAGENT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'URLOG_USERAGENT'
+  ) AS URLOG_USERAGENT,
+  /* UPLOAD_SIZE_LIMIT_MONTH */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'UPLOAD_SIZE_LIMIT_MONTH'
+  ) AS UPLOAD_SIZE_LIMIT_MONTH,
+  /* USER_DATA_DIRECTORY */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'USER_DATA_DIRECTORY'
+  ) AS USER_DATA_DIRECTORY,
+  /* GKILL_NOTIFICATION_PUBLIC_KEY */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'GKILL_NOTIFICATION_PUBLIC_KEY'
+  ) AS GKILL_NOTIFICATION_PUBLIC_KEY,
+  /* GKILL_NOTIFICATION_PRIVATE_KEY */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'GKILL_NOTIFICATION_PRIVATE_KEY'
+  ) AS GKILL_NOTIFICATION_PRIVATE_KEY,
+  /* USE_GKILL_NOTIFICATION */ (
+      SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'USE_GKILL_NOTIFICATION'
+  ) AS USE_GKILL_NOTIFICATION,
+  /* GOOGLE_MAP_API_KEY */ (
+      SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM SERVER_CONFIG
+	WHERE DEVICE = GROUPED_SERVER_CONFIG.DEVICE
+	AND KEY = 'GOOGLE_MAP_API_KEY'
+  ) AS GOOGLE_MAP_API_KEY
+FROM SERVER_CONFIG AS GROUPED_SERVER_CONFIG
+GROUP BY DEVICE
+HAVING DEVICE = ?
+`,
+		serverConfigDefaultValue["ENABLE_THIS_DEVICE"],
+		serverConfigDefaultValue["IS_LOCAL_ONLY_ACCESS"],
+		serverConfigDefaultValue["ADDRESS"],
+		serverConfigDefaultValue["ENABLE_TLS"],
+		serverConfigDefaultValue["TLS_CERT_FILE"],
+		serverConfigDefaultValue["TLS_KEY_FILE"],
+		serverConfigDefaultValue["OPEN_DIRECTORY_COMMAND"],
+		serverConfigDefaultValue["OPEN_FILE_COMMAND"],
+		serverConfigDefaultValue["URLOG_TIMEOUT"],
+		serverConfigDefaultValue["URLOG_USERAGENT"],
+		serverConfigDefaultValue["UPLOAD_SIZE_LIMIT_MONTH"],
+		serverConfigDefaultValue["USER_DATA_DIRECTORY"],
+		serverConfigDefaultValue["GKILL_NOTIFICATION_PUBLIC_KEY"],
+		serverConfigDefaultValue["GKILL_NOTIFICATION_PRIVATE_KEY"],
+		serverConfigDefaultValue["USE_GKILL_NOTIFICATION"],
+		serverConfigDefaultValue["GOOGLE_MAP_API_KEY"],
+	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := s.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -239,76 +606,70 @@ WHERE DEVICE = ?
 func (s *serverConfigDAOSQLite3Impl) AddServerConfig(ctx context.Context, serverConfig *ServerConfig) (bool, error) {
 	sql := `
 INSERT INTO SERVER_CONFIG (
-  ENABLE_THIS_DEVICE,
   DEVICE,
-  IS_LOCAL_ONLY_ACCESS,
-  ADDRESS,
-  ENABLE_TLS,
-  TLS_CERT_FILE,
-  TLS_KEY_FILE,
-  OPEN_DIRECTORY_COMMAND,
-  OPEN_FILE_COMMAND,
-  URLOG_TIMEOUT,
-  URLOG_USERAGENT,
-  UPLOAD_SIZE_LIMIT_MONTH,
-  USER_DATA_DIRECTORY,
-  GKILL_NOTIFICATION_PUBLIC_KEY,
-  GKILL_NOTIFICATION_PRIVATE_KEY,
-  USE_GKILL_NOTIFICATION,
-  GOOGLE_MAP_API_KEY
+  KEY,
+  VALUE
 ) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?
 )
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := s.db.PrepareContext(ctx, sql)
+	tx, err := s.db.Begin()
 	if err != nil {
-		err = fmt.Errorf("error at add server config sql: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
-
-	queryArgs := []interface{}{
-		serverConfig.EnableThisDevice,
-		serverConfig.Device,
-		serverConfig.IsLocalOnlyAccess,
-		serverConfig.Address,
-		serverConfig.EnableTLS,
-		serverConfig.TLSCertFile,
-		serverConfig.TLSKeyFile,
-		serverConfig.OpenDirectoryCommand,
-		serverConfig.OpenFileCommand,
-		serverConfig.URLogTimeout,
-		serverConfig.URLogUserAgent,
-		serverConfig.UploadSizeLimitMonth,
-		serverConfig.UserDataDirectory,
-		serverConfig.GkillNotificationPublicKey,
-		serverConfig.GkillNotificationPrivateKey,
-		serverConfig.UseGkillNotification,
-		serverConfig.GoogleMapAPIKey,
+	insertValuesMap := map[string]interface{}{
+		"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
+		"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
+		"ADDRESS":                        serverConfig.Address,
+		"ENABLE_TLS":                     serverConfig.EnableTLS,
+		"TLS_CERT_FILE":                  serverConfig.TLSCertFile,
+		"TLS_KEY_FILE":                   serverConfig.TLSKeyFile,
+		"OPEN_DIRECTORY_COMMAND":         serverConfig.OpenDirectoryCommand,
+		"OPEN_FILE_COMMAND":              serverConfig.OpenFileCommand,
+		"URLOG_TIMEOUT":                  serverConfig.URLogTimeout,
+		"URLOG_USERAGENT":                serverConfig.URLogUserAgent,
+		"UPLOAD_SIZE_LIMIT_MONTH":        serverConfig.UploadSizeLimitMonth,
+		"USER_DATA_DIRECTORY":            serverConfig.UserDataDirectory,
+		"GKILL_NOTIFICATION_PUBLIC_KEY":  serverConfig.GkillNotificationPublicKey,
+		"GKILL_NOTIFICATION_PRIVATE_KEY": serverConfig.GkillNotificationPrivateKey,
+		"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
+		"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
 
-	if err != nil {
-		err = fmt.Errorf("error at query :%w", err)
-		return false, err
+	for key, value := range insertValuesMap {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		stmt, err := s.db.PrepareContext(ctx, sql)
+		if err != nil {
+			err = fmt.Errorf("error at add server config sql: %w", err)
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+		defer stmt.Close()
+
+		queryArgs := []interface{}{
+			serverConfig.Device,
+			key,
+			value,
+		}
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+
+		if err != nil {
+			err = fmt.Errorf("error at add server config sql: %w", err)
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
 	}
 	return true, nil
 }
@@ -322,74 +683,66 @@ func (s *serverConfigDAOSQLite3Impl) UpdateServerConfigs(ctx context.Context, se
 	for _, serverConfig := range serverConfigs {
 		sql := `
 UPDATE SERVER_CONFIG SET
-  ENABLE_THIS_DEVICE = ?,
-  DEVICE = ?,
-  IS_LOCAL_ONLY_ACCESS = ?,
-  ADDRESS = ?,
-  ENABLE_TLS = ?,
-  TLS_CERT_FILE = ?,
-  TLS_KEY_FILE = ?,
-  OPEN_DIRECTORY_COMMAND = ?,
-  OPEN_FILE_COMMAND = ?,
-  URLOG_TIMEOUT = ?,
-  URLOG_USERAGENT = ?,
-  UPLOAD_SIZE_LIMIT_MONTH = ?,
-  USER_DATA_DIRECTORY = ?,
-  GKILL_NOTIFICATION_PUBLIC_KEY = ?,
-  GKILL_NOTIFICATION_PRIVATE_KEY = ?,
-  USE_GKILL_NOTIFICATION = ?,
-  GOOGLE_MAP_API_KEY = ?
+VALUE = ?
 WHERE DEVICE = ?
+AND KEY = ?
 `
-		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at update server config sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
+		updateValuesMap := map[string]interface{}{
+			"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
+			"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
+			"ADDRESS":                        serverConfig.Address,
+			"ENABLE_TLS":                     serverConfig.EnableTLS,
+			"TLS_CERT_FILE":                  serverConfig.TLSCertFile,
+			"TLS_KEY_FILE":                   serverConfig.TLSKeyFile,
+			"OPEN_DIRECTORY_COMMAND":         serverConfig.OpenDirectoryCommand,
+			"OPEN_FILE_COMMAND":              serverConfig.OpenFileCommand,
+			"URLOG_TIMEOUT":                  serverConfig.URLogTimeout,
+			"URLOG_USERAGENT":                serverConfig.URLogUserAgent,
+			"UPLOAD_SIZE_LIMIT_MONTH":        serverConfig.UploadSizeLimitMonth,
+			"USER_DATA_DIRECTORY":            serverConfig.UserDataDirectory,
+			"GKILL_NOTIFICATION_PUBLIC_KEY":  serverConfig.GkillNotificationPublicKey,
+			"GKILL_NOTIFICATION_PRIVATE_KEY": serverConfig.GkillNotificationPrivateKey,
+			"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
+			"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
 		}
-		defer stmt.Close()
-
-		queryArgs := []interface{}{
-			serverConfig.EnableThisDevice,
-			serverConfig.Device,
-			serverConfig.IsLocalOnlyAccess,
-			serverConfig.Address,
-			serverConfig.EnableTLS,
-			serverConfig.TLSCertFile,
-			serverConfig.TLSKeyFile,
-			serverConfig.OpenDirectoryCommand,
-			serverConfig.OpenFileCommand,
-			serverConfig.URLogTimeout,
-			serverConfig.URLogUserAgent,
-			serverConfig.UploadSizeLimitMonth,
-			serverConfig.UserDataDirectory,
-			serverConfig.GkillNotificationPublicKey,
-			serverConfig.GkillNotificationPrivateKey,
-			serverConfig.UseGkillNotification,
-			serverConfig.GoogleMapAPIKey,
-			serverConfig.Device,
-		}
-		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-		_, err = stmt.ExecContext(ctx, queryArgs...)
-
-		if err != nil {
-			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
+		for key, value := range updateValuesMap {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			stmt, err := tx.PrepareContext(ctx, sql)
+			if err != nil {
+				err = fmt.Errorf("error at update server config sql: %w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
+				}
+				return false, err
 			}
-			return false, err
+			defer stmt.Close()
+
+			queryArgs := []interface{}{
+				value,
+				serverConfig.Device,
+				key,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+			_, err = stmt.ExecContext(ctx, queryArgs...)
+
+			if err != nil {
+				err = fmt.Errorf("error at query :%w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
+				}
+				return false, err
+			}
 		}
 	}
 	// 有効なDEVICEが存在しなければエラーで戻す
 	checkEnableDeviceCountSQL := `
 SELECT COUNT(*) AS COUNT
 FROM SERVER_CONFIG
-WHERE ENABLE_THIS_DEVICE = ?
+WHERE KEY = 'ENABLE_THIS_DEVICE'
+AND VALUE = ?
+GROUP BY DEVICE
 `
 	gkill_log.TraceSQL.Printf("sql: %s", checkEnableDeviceCountSQL)
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
@@ -465,78 +818,68 @@ func (s *serverConfigDAOSQLite3Impl) UpdateServerConfig(ctx context.Context, ser
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
-
 	sql := `
 UPDATE SERVER_CONFIG SET
-  ENABLE_THIS_DEVICE = ?,
-  DEVICE = ?,
-  IS_LOCAL_ONLY_ACCESS = ?,
-  ADDRESS = ?,
-  ENABLE_TLS = ?,
-  TLS_CERT_FILE = ?,
-  TLS_KEY_FILE = ?,
-  OPEN_DIRECTORY_COMMAND = ?,
-  OPEN_FILE_COMMAND = ?,
-  URLOG_TIMEOUT = ?,
-  URLOG_USERAGENT = ?,
-  UPLOAD_SIZE_LIMIT_MONTH = ?,
-  USER_DATA_DIRECTORY = ?,
-  GKILL_NOTIFICATION_PUBLIC_KEY = ?,
-  GKILL_NOTIFICATION_PRIVATE_KEY = ?
-  USE_GKILL_NOTIFICATION = ?,
-  GOOGLE_MAP_API_KEY = ?
+VALUE = ?
 WHERE DEVICE = ?
+AND KEY = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := tx.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at update server config sql: %w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
+	updateValuesMap := map[string]interface{}{
+		"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
+		"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
+		"ADDRESS":                        serverConfig.Address,
+		"ENABLE_TLS":                     serverConfig.EnableTLS,
+		"TLS_CERT_FILE":                  serverConfig.TLSCertFile,
+		"TLS_KEY_FILE":                   serverConfig.TLSKeyFile,
+		"OPEN_DIRECTORY_COMMAND":         serverConfig.OpenDirectoryCommand,
+		"OPEN_FILE_COMMAND":              serverConfig.OpenFileCommand,
+		"URLOG_TIMEOUT":                  serverConfig.URLogTimeout,
+		"URLOG_USERAGENT":                serverConfig.URLogUserAgent,
+		"UPLOAD_SIZE_LIMIT_MONTH":        serverConfig.UploadSizeLimitMonth,
+		"USER_DATA_DIRECTORY":            serverConfig.UserDataDirectory,
+		"GKILL_NOTIFICATION_PUBLIC_KEY":  serverConfig.GkillNotificationPublicKey,
+		"GKILL_NOTIFICATION_PRIVATE_KEY": serverConfig.GkillNotificationPrivateKey,
+		"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
+		"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
+	}
+	for key, value := range updateValuesMap {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		stmt, err := tx.PrepareContext(ctx, sql)
+		if err != nil {
+			err = fmt.Errorf("error at update server config sql: %w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
 		}
-		return false, err
-	}
-	defer stmt.Close()
+		defer stmt.Close()
 
-	queryArgs := []interface{}{
-		serverConfig.EnableThisDevice,
-		serverConfig.Device,
-		serverConfig.IsLocalOnlyAccess,
-		serverConfig.Address,
-		serverConfig.EnableTLS,
-		serverConfig.TLSCertFile,
-		serverConfig.TLSKeyFile,
-		serverConfig.OpenDirectoryCommand,
-		serverConfig.OpenFileCommand,
-		serverConfig.URLogTimeout,
-		serverConfig.URLogUserAgent,
-		serverConfig.UploadSizeLimitMonth,
-		serverConfig.UserDataDirectory,
-		serverConfig.GkillNotificationPublicKey,
-		serverConfig.GkillNotificationPrivateKey,
-		serverConfig.UseGkillNotification,
-		serverConfig.GoogleMapAPIKey,
-		serverConfig.Device,
-	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-	rows, err := stmt.QueryContext(ctx, queryArgs...)
-
-	if err != nil {
-		err = fmt.Errorf("error at query :%w", err)
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		queryArgs := []interface{}{
+			value,
+			serverConfig.Device,
+			key,
 		}
-		return false, err
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+
+		if err != nil {
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
 	}
-	defer rows.Close()
 
 	// 有効なDEVICEが存在しなければエラーで戻す
 	checkEnableDeviceCountSQL := `
-SELECT COUNT(*) 
+SELECT COUNT(*) AS COUNT
 FROM SERVER_CONFIG
-WHERE ENABLE_THIS_DEVICE = ?
+WHERE KEY = 'ENABLE_THIS_DEVICE'
+AND VALUE = ?
+GROUP BY DEVICE
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
@@ -550,11 +893,11 @@ WHERE ENABLE_THIS_DEVICE = ?
 	}
 	defer checkEnableDeviceStmt.Close()
 
-	queryArgs = []interface{}{
+	queryArgs := []interface{}{
 		true,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-	rows, err = stmt.QueryContext(ctx, queryArgs...)
+	rows, err := checkEnableDeviceStmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -666,38 +1009,10 @@ DELETE FROM SERVER_CONFIG
 	// 渡された値を登録
 	insertSQL := `
 INSERT INTO SERVER_CONFIG (
-  ENABLE_THIS_DEVICE,
   DEVICE,
-  IS_LOCAL_ONLY_ACCESS,
-  ADDRESS,
-  ENABLE_TLS,
-  TLS_CERT_FILE,
-  TLS_KEY_FILE,
-  OPEN_DIRECTORY_COMMAND,
-  OPEN_FILE_COMMAND,
-  URLOG_TIMEOUT,
-  URLOG_USERAGENT,
-  UPLOAD_SIZE_LIMIT_MONTH,
-  USER_DATA_DIRECTORY,
-  GKILL_NOTIFICATION_PUBLIC_KEY,
-  GKILL_NOTIFICATION_PRIVATE_KEY,
-  USE_GKILL_NOTIFICATION,
-  GOOGLE_MAP_API_KEY
+  KEY,
+  VALUE
 ) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?
@@ -705,39 +1020,46 @@ INSERT INTO SERVER_CONFIG (
 `
 
 	for _, serverConfig := range serverConfigs {
-		queryArgs := []interface{}{
-			serverConfig.EnableThisDevice,
-			serverConfig.Device,
-			serverConfig.IsLocalOnlyAccess,
-			serverConfig.Address,
-			serverConfig.EnableTLS,
-			serverConfig.TLSCertFile,
-			serverConfig.TLSKeyFile,
-			serverConfig.OpenDirectoryCommand,
-			serverConfig.OpenFileCommand,
-			serverConfig.URLogTimeout,
-			serverConfig.URLogUserAgent,
-			serverConfig.UploadSizeLimitMonth,
-			serverConfig.UserDataDirectory,
-			serverConfig.GkillNotificationPublicKey,
-			serverConfig.GkillNotificationPrivateKey,
-			serverConfig.UseGkillNotification,
-			serverConfig.GoogleMapAPIKey,
+		insertValuesMap := map[string]interface{}{
+			"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
+			"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
+			"ADDRESS":                        serverConfig.Address,
+			"ENABLE_TLS":                     serverConfig.EnableTLS,
+			"TLS_CERT_FILE":                  serverConfig.TLSCertFile,
+			"TLS_KEY_FILE":                   serverConfig.TLSKeyFile,
+			"OPEN_DIRECTORY_COMMAND":         serverConfig.OpenDirectoryCommand,
+			"OPEN_FILE_COMMAND":              serverConfig.OpenFileCommand,
+			"URLOG_TIMEOUT":                  serverConfig.URLogTimeout,
+			"URLOG_USERAGENT":                serverConfig.URLogUserAgent,
+			"UPLOAD_SIZE_LIMIT_MONTH":        serverConfig.UploadSizeLimitMonth,
+			"USER_DATA_DIRECTORY":            serverConfig.UserDataDirectory,
+			"GKILL_NOTIFICATION_PUBLIC_KEY":  serverConfig.GkillNotificationPublicKey,
+			"GKILL_NOTIFICATION_PRIVATE_KEY": serverConfig.GkillNotificationPrivateKey,
+			"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
+			"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
 		}
-		gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
 
-		stmt, err := tx.PrepareContext(ctx, insertSQL)
-		if err != nil {
-			err = fmt.Errorf("error at add server config sql: %w", err)
-			return false, err
-		}
-		defer stmt.Close()
+		for key, value := range insertValuesMap {
+			queryArgs := []interface{}{
+				serverConfig.Device,
+				key,
+				value,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
 
-		gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
-		_, err = stmt.ExecContext(ctx, queryArgs...)
-		if err != nil {
-			err = fmt.Errorf("error at query :%w", err)
-			return false, err
+			stmt, err := tx.PrepareContext(ctx, insertSQL)
+			if err != nil {
+				err = fmt.Errorf("error at add server config sql: %w", err)
+				return false, err
+			}
+			defer stmt.Close()
+
+			gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
+			_, err = stmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at query :%w", err)
+				return false, err
+			}
 		}
 	}
 
@@ -745,7 +1067,9 @@ INSERT INTO SERVER_CONFIG (
 	checkEnableDeviceCountSQL := `
 SELECT COUNT(*) AS COUNT
 FROM SERVER_CONFIG
-WHERE ENABLE_THIS_DEVICE = ?
+WHERE KEY = 'ENABLE_THIS_DEVICE'
+AND VALUE = ?
+GROUP BY DEVICE
 `
 	gkill_log.TraceSQL.Printf("sql: %s", checkEnableDeviceCountSQL)
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)

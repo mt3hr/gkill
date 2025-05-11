@@ -27,18 +27,14 @@ func NewApplicationConfigDAOSQLite3Impl(ctx context.Context, filename string) (A
 	}
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
+CREATE TABLE IF NOT EXISTS APPLICATION_CONFIG (
   USER_ID NOT NULL,
   DEVICE NOT NULL,
-  USE_DARK_THEME NOT NULL,
-  GOOGLE_MAP_API_KEY NOT NULL,
-  RYKV_IMAGE_LIST_COLUMN_NUMBER NOT NULL,
-  RYKV_HOT_RELOAD NOT NULL,
-  MI_DEFAULT_BOARD NOT NULL,
-  RYKV_DEFAULT_PERIOD NOT NULL,
-  MI_DEFAULT_PERIOD NOT NULL,
-  PRIMARY KEY(USER_ID, DEVICE)
-);`
+  KEY NOT NULL,
+  VALUE NOT NULL,
+  PRIMARY KEY(USER_ID, DEVICE, KEY)
+);
+`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -55,7 +51,7 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_APPLICATION_CONFIG ON APPLICATION_CONFIG (USER_ID);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_APPLICATION_CONFIG ON APPLICATION_CONFIG (USER_ID, DEVICE, KEY);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -78,20 +74,121 @@ CREATE TABLE IF NOT EXISTS "APPLICATION_CONFIG" (
 		m:        &sync.Mutex{},
 	}, nil
 }
+
+var applicationConfigDefaultValue = map[string]interface{}{
+	"USER_ID":                       "",
+	"DEVICE":                        "",
+	"USE_DARK_THEME":                false,
+	"GOOGLE_MAP_API_KEY":            "",
+	"RYKV_IMAGE_LIST_COLUMN_NUMBER": 3,
+	"RYKV_HOT_RELOAD":               true,
+	"RYKV_DEFAULT_PERIOD":           31,
+	"MI_DEFAULT_BOARD":              "Inbox",
+	"MI_DEFAULT_PERIOD":             -1,
+}
+
 func (a *applicationConfigDAOSQLite3Impl) GetAllApplicationConfigs(ctx context.Context) ([]*ApplicationConfig, error) {
-	sql := `
+	sql := fmt.Sprintf(`
 SELECT 
-  USER_ID,
-  DEVICE,
-  USE_DARK_THEME,
-  GOOGLE_MAP_API_KEY,
-  RYKV_IMAGE_LIST_COLUMN_NUMBER,
-  RYKV_HOT_RELOAD,
-  MI_DEFAULT_BOARD,
-  RYKV_DEFAULT_PERIOD,
-  MI_DEFAULT_PERIOD
-FROM APPLICATION_CONFIG
-`
+  /* USER_ID */
+  USER_ID AS USER_ID,
+  /* DEVICE */ 
+  DEVICE AS DEVICE,
+  /* USE_DARK_THEME */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'USE_DARK_THEME'
+  ) AS USE_DARK_THEME,
+  /* GOOGLE_MAP_API_KEY */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'GOOGLE_MAP_API_KEY'
+  ) AS GOOGLE_MAP_API_KEY,
+  /* RYKV_IMAGE_LIST_COLUMN_NUMBER */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'RYKV_IMAGE_LIST_COLUMN_NUMBER'
+  ) AS RYKV_IMAGE_LIST_COLUMN_NUMBER,
+  /* RYKV_HOT_RELOAD */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'RYKV_HOT_RELOAD'
+  ) AS RYKV_HOT_RELOAD,
+  /* MI_DEFAULT_BOARD */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'MI_DEFAULT_BOARD'
+  ) AS MI_DEFAULT_BOARD,
+  /* RYKV_DEFAULT_PERIOD */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'RYKV_DEFAULT_PERIOD'
+  ) AS RYKV_DEFAULT_PERIOD,
+  /* MI_DEFAULT_PERIOD */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'MI_DEFAULT_PERIOD'
+  ) AS MI_DEFAULT_PERIOD
+FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
+GROUP BY USER_ID, DEVICE
+`,
+		applicationConfigDefaultValue["USE_DARK_THEME"],
+		applicationConfigDefaultValue["GOOGLE_MAP_API_KEY"],
+		applicationConfigDefaultValue["RYKV_IMAGE_LIST_COLUMN_NUMBER"],
+		applicationConfigDefaultValue["RYKV_HOT_RELOAD"],
+		applicationConfigDefaultValue["MI_DEFAULT_BOARD"],
+		applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"],
+		applicationConfigDefaultValue["MI_DEFAULT_PERIOD"],
+	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -143,20 +240,108 @@ FROM APPLICATION_CONFIG
 }
 
 func (a *applicationConfigDAOSQLite3Impl) GetApplicationConfig(ctx context.Context, userID string, device string) (*ApplicationConfig, error) {
-	sql := `
+	sql := fmt.Sprintf(`
 SELECT 
-  USER_ID,
-  DEVICE,
-  USE_DARK_THEME,
-  GOOGLE_MAP_API_KEY,
-  RYKV_IMAGE_LIST_COLUMN_NUMBER,
-  RYKV_HOT_RELOAD,
-  MI_DEFAULT_BOARD,
-  RYKV_DEFAULT_PERIOD,
-  MI_DEFAULT_PERIOD
-FROM APPLICATION_CONFIG
-WHERE USER_ID = ? AND DEVICE = ?
-`
+  /* USER_ID */
+  USER_ID AS USER_ID,
+  /* DEVICE */ 
+  DEVICE AS DEVICE,
+  /* USE_DARK_THEME */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'USE_DARK_THEME'
+  ) AS USE_DARK_THEME,
+  /* GOOGLE_MAP_API_KEY */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'GOOGLE_MAP_API_KEY'
+  ) AS GOOGLE_MAP_API_KEY,
+  /* RYKV_IMAGE_LIST_COLUMN_NUMBER */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'RYKV_IMAGE_LIST_COLUMN_NUMBER'
+  ) AS RYKV_IMAGE_LIST_COLUMN_NUMBER,
+  /* RYKV_HOT_RELOAD */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'RYKV_HOT_RELOAD'
+  ) AS RYKV_HOT_RELOAD,
+  /* MI_DEFAULT_BOARD */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'MI_DEFAULT_BOARD'
+  ) AS MI_DEFAULT_BOARD,
+  /* RYKV_DEFAULT_PERIOD */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'RYKV_DEFAULT_PERIOD'
+  ) AS RYKV_DEFAULT_PERIOD,
+  /* MI_DEFAULT_PERIOD */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'MI_DEFAULT_PERIOD'
+  ) AS MI_DEFAULT_PERIOD
+FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
+GROUP BY USER_ID, DEVICE
+HAVING USER_ID = ? AND DEVICE = ?
+`,
+		applicationConfigDefaultValue["USE_DARK_THEME"],
+		applicationConfigDefaultValue["GOOGLE_MAP_API_KEY"],
+		applicationConfigDefaultValue["RYKV_IMAGE_LIST_COLUMN_NUMBER"],
+		applicationConfigDefaultValue["RYKV_HOT_RELOAD"],
+		applicationConfigDefaultValue["MI_DEFAULT_BOARD"],
+		applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"],
+		applicationConfigDefaultValue["MI_DEFAULT_PERIOD"],
+	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -220,94 +405,136 @@ func (a *applicationConfigDAOSQLite3Impl) AddApplicationConfig(ctx context.Conte
 INSERT INTO APPLICATION_CONFIG (
   USER_ID,
   DEVICE,
-  USE_DARK_THEME,
-  GOOGLE_MAP_API_KEY,
-  RYKV_IMAGE_LIST_COLUMN_NUMBER,
-  RYKV_HOT_RELOAD,
-  MI_DEFAULT_BOARD,
-  RYKV_DEFAULT_PERIOD,
-  MI_DEFAULT_PERIOD
+  KEY,
+  VALUE
 ) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
   ?
 )
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := a.db.PrepareContext(ctx, sql)
+	tx, err := a.db.Begin()
 	if err != nil {
-		err = fmt.Errorf("error at add application config sql: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
-
-	queryArgs := []interface{}{
-		applicationConfig.UserID,
-		applicationConfig.Device,
-		applicationConfig.UseDarkTheme,
-		applicationConfig.GoogleMapAPIKey,
-		applicationConfig.RykvImageListColumnNumber,
-		applicationConfig.RykvHotReload,
-		applicationConfig.MiDefaultBoard,
-		applicationConfig.RykvDefaultPeriod.String(),
-		applicationConfig.MiDefaultPeriod.String(),
+	insertValuesMap := map[string]interface{}{
+		"USE_DARK_THEME":                applicationConfig.UseDarkTheme,
+		"GOOGLE_MAP_API_KEY":            applicationConfig.GoogleMapAPIKey,
+		"RYKV_IMAGE_LIST_COLUMN_NUMBER": applicationConfig.RykvImageListColumnNumber,
+		"RYKV_HOT_RELOAD":               applicationConfig.RykvHotReload,
+		"MI_DEFAULT_BOARD":              applicationConfig.MiDefaultBoard,
+		"RYKV_DEFAULT_PERIOD":           applicationConfig.RykvDefaultPeriod,
+		"MI_DEFAULT_PERIOD":             applicationConfig.MiDefaultPeriod,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	for key, value := range insertValuesMap {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		stmt, err := tx.PrepareContext(ctx, sql)
+		if err != nil {
+			err = fmt.Errorf("error at add application config sql: %w", err)
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+		defer stmt.Close()
 
+		queryArgs := []interface{}{
+			applicationConfig.UserID,
+			applicationConfig.Device,
+			key,
+			value,
+		}
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+		if err != nil {
+			err = fmt.Errorf("error at add application config sql: %w", err)
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+	}
+
+	err = tx.Commit()
 	if err != nil {
-		err = fmt.Errorf("error at query :%w", err)
+		err = fmt.Errorf("error at commit: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
 		return false, err
 	}
+
 	return true, nil
 }
 
 func (a *applicationConfigDAOSQLite3Impl) UpdateApplicationConfig(ctx context.Context, applicationConfig *ApplicationConfig) (bool, error) {
 	sql := `
 UPDATE APPLICATION_CONFIG SET
-  USER_ID = ?,
-  DEVICE = ?,
-  USE_DARK_THEME = ?,
-  GOOGLE_MAP_API_KEY = ?,
-  RYKV_IMAGE_LIST_COLUMN_NUMBER = ?,
-  RYKV_HOT_RELOAD = ?,
-  MI_DEFAULT_BOARD = ?,
-  RYKV_DEFAULT_PERIOD = ?,
-  MI_DEFAULT_PERIOD = ?
-WHERE USER_ID = ? AND DEVICE = ?
+VALUE = ?
+WHERE USER_ID = ?
+AND DEVICE = ?
+AND KEY = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := a.db.PrepareContext(ctx, sql)
+
+	tx, err := a.db.Begin()
 	if err != nil {
-		err = fmt.Errorf("error at update application config sql: %w", err)
+		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
-
-	queryArgs := []interface{}{
-		applicationConfig.UserID,
-		applicationConfig.Device,
-		applicationConfig.UseDarkTheme,
-		applicationConfig.GoogleMapAPIKey,
-		applicationConfig.RykvImageListColumnNumber,
-		applicationConfig.RykvHotReload,
-		applicationConfig.MiDefaultBoard,
-		applicationConfig.RykvDefaultPeriod.String(),
-		applicationConfig.MiDefaultPeriod.String(),
-		applicationConfig.UserID,
-		applicationConfig.Device,
+	updateValuesMap := map[string]interface{}{
+		"USE_DARK_THEME":                applicationConfig.UseDarkTheme,
+		"GOOGLE_MAP_API_KEY":            applicationConfig.GoogleMapAPIKey,
+		"RYKV_IMAGE_LIST_COLUMN_NUMBER": applicationConfig.RykvImageListColumnNumber,
+		"RYKV_HOT_RELOAD":               applicationConfig.RykvHotReload,
+		"MI_DEFAULT_BOARD":              applicationConfig.MiDefaultBoard,
+		"RYKV_DEFAULT_PERIOD":           applicationConfig.RykvDefaultPeriod,
+		"MI_DEFAULT_PERIOD":             applicationConfig.MiDefaultPeriod,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-	_, err = stmt.ExecContext(ctx, queryArgs...)
+	for key, value := range updateValuesMap {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		stmt, err := tx.PrepareContext(ctx, sql)
+		if err != nil {
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+		defer stmt.Close()
 
+		queryArgs := []interface{}{
+			value,
+			applicationConfig.UserID,
+			applicationConfig.Device,
+			key,
+		}
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = stmt.ExecContext(ctx, queryArgs...)
+		if err != nil {
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+	}
+
+	err = tx.Commit()
 	if err != nil {
-		err = fmt.Errorf("error at query :%w", err)
+		err = fmt.Errorf("error at commit: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
 		return false, err
 	}
 	return true, nil
@@ -327,6 +554,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 	defer stmt.Close()
 
 	queryArgs := []interface{}{
+		userID,
 		device,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
