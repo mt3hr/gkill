@@ -1,5 +1,5 @@
 package req_res
 
-type GetShareMiTaskListInfosRequest struct {
+type GetShareKyouListInfosRequest struct {
 	SessionID string `json:"session_id"`
 }

@@ -1,7 +1,7 @@
 <template>
     <div>
-        <miSharedTaskView :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :app_title_bar_height="app_title_bar_height" :share_id="share_mi_id"
+        <sharedMiTaskView :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :app_title_bar_height="app_title_bar_height" :share_id="share_kyou_id"
             :application_config="new ApplicationConfig()" :gkill_api="gkill_api" @received_errors="write_errors"
             @received_messages="write_messages" />
         <div class="alert_container">
@@ -17,11 +17,11 @@
 <script lang="ts" setup>
 'use strict'
 import { computed, ref, type Ref } from 'vue'
-import { GkillAPI, GkillAPIForSharedMi } from '@/classes/api/gkill-api'
+import { GkillAPI, GkillAPIForSharedKyou } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
-import miSharedTaskView from './views/mi-shared-task-view.vue'
+import sharedMiTaskView from './views/shared-mi-task-view.vue'
 import { useRoute } from 'vue-router'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 
@@ -29,12 +29,12 @@ const actual_height: Ref<number> = ref(0)
 const element_height: Ref<number> = ref(0)
 const browser_url_bar_height: Ref<number> = ref(0)
 const app_title_bar_height: Ref<number> = ref(50)
-const gkill_api: Ref<GkillAPI> = computed(() => GkillAPIForSharedMi.get_instance_for_share_mi())
+const gkill_api: Ref<GkillAPI> = computed(() => GkillAPIForSharedKyou.get_instance_for_share_kyou())
 const app_content_height: Ref<number> = ref(0)
 const app_content_width: Ref<number> = ref(0)
-const share_mi_id = computed(() => useRoute().query.share_id!.toString())
+const share_kyou_id = computed(() => useRoute().query.share_id!.toString())
 
-GkillAPI.set_gkill_api(GkillAPIForSharedMi.get_instance())
+GkillAPI.set_gkill_api(GkillAPIForSharedKyou.get_instance())
 
 async function resize_content(): Promise<void> {
     const inner_element = document.querySelector('#control-height')

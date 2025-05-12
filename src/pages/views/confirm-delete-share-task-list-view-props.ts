@@ -1,8 +1,8 @@
 'use strict'
 
-import type { ShareMiTaskListInfo } from "@/classes/datas/share-mi-task-list-info"
+import type { ShareKyouListInfo } from "@/classes/datas/share-kyou-list-info"
 import type { GkillPropsBase } from "./gkill-props-base"
 
-export interface ConfirmDeleteShareTaskListViewProps extends GkillPropsBase {
-    share_mi_task_list_info: ShareMiTaskListInfo
+export interface ConfirmDeleteShareKyousListViewProps extends GkillPropsBase {
+    share_kyou_list_info: ShareKyouListInfo
 }

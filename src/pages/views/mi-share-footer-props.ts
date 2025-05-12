@@ -3,5 +3,5 @@
 import type { GkillPropsBase } from "./gkill-props-base"
 import type { miSidebarProps } from "./mi-sidebar-props"
 
-export interface miShareFooterProps extends GkillPropsBase, miSidebarProps {
+export interface MiShareFooterProps extends GkillPropsBase, miSidebarProps {
 }

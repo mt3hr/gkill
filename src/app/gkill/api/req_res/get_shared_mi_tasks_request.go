@@ -1,5 +1,5 @@
 package req_res
 
-type GetSharedMiTasksRequest struct {
+type GetSharedKyousRequest struct {
 	SharedID string `json:"shared_id"`
 }

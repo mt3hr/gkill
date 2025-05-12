@@ -1,8 +1,8 @@
 'use strict'
 
-import type { ShareMiTaskListInfo } from "@/classes/datas/share-mi-task-list-info"
+import type { ShareKyouListInfo } from "@/classes/datas/share-kyou-list-info"
 
-export interface ManageShareTaskListViewEmits {
-    (e: 'requested_show_share_task_link_dialog', share_mi_task_list_info: ShareMiTaskListInfo): void
-    (e: 'requested_show_confirm_delete_share_task_list_dialog', share_mi_task_list_info: ShareMiTaskListInfo): void
+export interface ManageShareKyousListViewEmits {
+    (e: 'requested_show_share_kyou_link_dialog', share_kyou_list_info: ShareKyouListInfo): void
+    (e: 'requested_show_confirm_delete_share_kyou_list_dialog', share_kyou_list_info: ShareKyouListInfo): void
 }
