@@ -1,9 +1,9 @@
 <template>
     <div>
         <v-card class="sidebar_header_wrap background-white pa-0 ma-0" :height="header_height">
-            <miShareFooter class="sidebar_footer" :application_config="application_config" :gkill_api="gkill_api"
-                :find_kyou_query="query" @request_open_manage_share_mi_dialog="show_manage_share_mi_dialog()"
-                @request_open_share_mi_dialog="show_share_mi_dialog()"
+            <ShareMiFooter class="sidebar_footer" :application_config="application_config" :gkill_api="gkill_api"
+                :find_kyou_query="query" @request_open_manage_share_kyou_dialog="show_manage_share_kyou_dialog()"
+                @request_open_share_kyou_dialog="show_share_kyou_dialog()"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @received_errors="(errors) => emits('received_errors', errors)" />
             <SidebarHeader class="sidebar_header" :application_config="application_config" :gkill_api="gkill_api"
@@ -75,7 +75,7 @@ import MapQuery from './map-query.vue'
 import SidebarHeader from './sidebar-header.vue'
 import TimeIsQuery from './time-is-query.vue'
 import TagQuery from './tag-query.vue'
-import miShareFooter from './mi-share-footer.vue'
+import ShareMiFooter from './mi-share-footer.vue'
 import miSortTypeQuery from './mi-sort-type-query.vue'
 import type { miQueryEditorSidebarEmits } from './mi-query-editor-sidebar-emits'
 import type { miQueryEditorSidebarProps } from './mi-query-editor-sidebar-props'
@@ -342,11 +342,11 @@ async function emits_default_query(): Promise<void> {
     emits('updated_query_clear', find_query)
 }
 
-async function show_manage_share_mi_dialog(): Promise<void> {
+async function show_manage_share_kyou_dialog(): Promise<void> {
     throw new Error('Not implemented')
 }
 
-async function show_share_mi_dialog(): Promise<void> {
+async function show_share_kyou_dialog(): Promise<void> {
     throw new Error('Not implemented')
 }
 </script>

@@ -2,5 +2,5 @@
 
 import type { GkillPropsBase } from "../views/gkill-props-base"
 
-export interface ManageShareTaskLinkDialogProps extends GkillPropsBase {
+export interface ManageShareKyousLinkDialogProps extends GkillPropsBase {
 }

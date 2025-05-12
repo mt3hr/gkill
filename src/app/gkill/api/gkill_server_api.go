@@ -41,9 +41,9 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/mi_share_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
@@ -577,36 +577,36 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		g.HandleGetGkillInfo(w, r)
 	}).Methods(g.APIAddress.GetGkillInfoMethod)
-	router.HandleFunc(g.APIAddress.GetShareMiTaskListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc(g.APIAddress.GetShareKyouListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
 		}
-		g.HandleGetShareMiTaskListInfos(w, r)
-	}).Methods(g.APIAddress.GetShareMiTaskListInfosMethod)
-	router.HandleFunc(g.APIAddress.AddShareMiTaskListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleGetShareKyouListInfos(w, r)
+	}).Methods(g.APIAddress.GetShareKyouListInfosMethod)
+	router.HandleFunc(g.APIAddress.AddShareKyouListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
 		}
-		g.HandleAddShareMiTaskListInfo(w, r)
-	}).Methods(g.APIAddress.AddShareMiTaskListInfoMethod)
-	router.HandleFunc(g.APIAddress.UpdateShareMiTaskListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleAddShareKyouListInfo(w, r)
+	}).Methods(g.APIAddress.AddShareKyouListInfoMethod)
+	router.HandleFunc(g.APIAddress.UpdateShareKyouListInfoAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
 		}
-		g.HandleUpdateShareMiTaskListInfo(w, r)
-	}).Methods(g.APIAddress.UpdateShareMiTaskListInfoMethod)
-	router.HandleFunc(g.APIAddress.DeleteShareMiTaskListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleUpdateShareKyouListInfo(w, r)
+	}).Methods(g.APIAddress.UpdateShareKyouListInfoMethod)
+	router.HandleFunc(g.APIAddress.DeleteShareKyouListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
 		}
-		g.HandleDeleteShareMiTaskListInfos(w, r)
-	}).Methods(g.APIAddress.DeleteShareMiTaskListInfosMethod)
-	router.HandleFunc(g.APIAddress.GetMiSharedTasksAddress, func(w http.ResponseWriter, r *http.Request) {
+		g.HandleDeleteShareKyouListInfos(w, r)
+	}).Methods(g.APIAddress.DeleteShareKyouListInfosMethod)
+	router.HandleFunc(g.APIAddress.GetSharedKyousAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
 		}
-		g.HandleGetMiSharedTask(w, r)
-	}).Methods(g.APIAddress.GetMiSharedTasksMethod)
+		g.HandleGetSharedKyousTask(w, r)
+	}).Methods(g.APIAddress.GetSharedKyousMethod)
 	router.HandleFunc(g.APIAddress.GetRepositoriesAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
@@ -732,6 +732,16 @@ func (g *GkillServerAPI) Serve() error {
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
 	router.PathPrefix("/shared_mi").Handler(http.StripPrefix("/shared_mi",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
+	router.PathPrefix("/shared_kyou").Handler(http.StripPrefix("/shared_kyou",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ok := g.filterLocalOnly(w, r); !ok {
 				return
@@ -3829,7 +3839,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetServerConfigError,
-				ErrorMessage: "Miタスク通知登録に失敗しました",
+				ErrorMessage: "Kyouタスク通知登録に失敗しました",
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9595,21 +9605,21 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 	})
 }
 
-func (g *GkillServerAPI) HandleAddShareMiTaskListInfo(w http.ResponseWriter, r *http.Request) {
+func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
 	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.AddShareMiTaskListInfoRequest{}
-	response := &req_res.AddShareMiTaskListInfoResponse{}
+	request := &req_res.AddShareKyouListInfoRequest{}
+	response := &req_res.AddShareKyouListInfoResponse{}
 
 	defer r.Body.Close()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
-			err = fmt.Errorf("error at parse add shareMiTaskListInfo response to json: %w", err)
+			err = fmt.Errorf("error at parse add ShareKyouListInfo response to json: %w", err)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidAddShareMiTaskListInfoResponseDataError,
-				ErrorMessage: "shareMiTaskListInfo追加に失敗しました",
+				ErrorCode:    message.InvalidAddShareKyouListInfoResponseDataError,
+				ErrorMessage: "ShareKyouListInfo追加に失敗しました",
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9618,11 +9628,11 @@ func (g *GkillServerAPI) HandleAddShareMiTaskListInfo(w http.ResponseWriter, r *
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err = fmt.Errorf("error at parse add shareMiTaskListInfo request to json: %w", err)
+		err = fmt.Errorf("error at parse add ShareKyouListInfo request to json: %w", err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidAddShareMiTaskListInfoRequestDataError,
-			ErrorMessage: "shareMiTaskListInfo追加に失敗しました",
+			ErrorCode:    message.InvalidAddShareKyouListInfoRequestDataError,
+			ErrorMessage: "ShareKyouListInfo追加に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9649,86 +9659,86 @@ func (g *GkillServerAPI) HandleAddShareMiTaskListInfo(w http.ResponseWriter, r *
 	}
 
 	// 対象が存在する場合はエラー
-	existShareMiTaskListInfo, err := g.GkillDAOManager.ConfigDAOs.MiShareInfoDAO.GetMiShareInfo(r.Context(), request.ShareMiTaskListInfo.ShareID)
+	existShareKyouListInfo, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfo(r.Context(), request.ShareKyouListInfo.ShareID)
 	if err != nil {
-		err = fmt.Errorf("error at get shareMiTaskListInfo user id = %s device = %s id = %s: %w", userID, device, request.ShareMiTaskListInfo.ShareID, err)
+		err = fmt.Errorf("error at get ShareKyouListInfo user id = %s device = %s id = %s: %w", userID, device, request.ShareKyouListInfo.ShareID, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.GetShareMiTaskListInfoError,
-			ErrorMessage: "ShareMiTaskListInfo追加に失敗しました",
+			ErrorCode:    message.GetShareKyouListInfoError,
+			ErrorMessage: "ShareKyouListInfo追加に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	if existShareMiTaskListInfo != nil {
-		err = fmt.Errorf("not exist shareMiTaskListInfo id = %s", request.ShareMiTaskListInfo.ShareID)
+	if existShareKyouListInfo != nil {
+		err = fmt.Errorf("not exist ShareKyouListInfo id = %s", request.ShareKyouListInfo.ShareID)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AleadyExistShareMiTaskListInfoError,
-			ErrorMessage: "ShareMiTaskListInfo追加に失敗しました",
+			ErrorCode:    message.AleadyExistShareKyouListInfoError,
+			ErrorMessage: "ShareKyouListInfo追加に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	miShareInfo := &mi_share_info.MiShareInfo{
+	shareKyouInfo := &share_kyou_info.ShareKyouInfo{
 		ID:            GenerateNewID(),
-		UserID:        request.ShareMiTaskListInfo.UserID,
-		Device:        request.ShareMiTaskListInfo.Device,
-		ShareTitle:    request.ShareMiTaskListInfo.ShareTitle,
-		IsShareDetail: request.ShareMiTaskListInfo.IsShareDetail,
-		ShareID:       request.ShareMiTaskListInfo.ShareID,
-		FindQueryJSON: request.ShareMiTaskListInfo.FindQueryJSON,
+		UserID:        request.ShareKyouListInfo.UserID,
+		Device:        request.ShareKyouListInfo.Device,
+		ShareTitle:    request.ShareKyouListInfo.ShareTitle,
+		IsShareDetail: request.ShareKyouListInfo.IsShareDetail,
+		ShareID:       request.ShareKyouListInfo.ShareID,
+		FindQueryJSON: request.ShareKyouListInfo.FindQueryJSON,
 	}
 
-	ok, err := g.GkillDAOManager.ConfigDAOs.MiShareInfoDAO.AddMiShareInfo(r.Context(), miShareInfo)
+	ok, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.AddKyouShareInfo(r.Context(), shareKyouInfo)
 	if !ok || err != nil {
 		if err != nil {
-			err = fmt.Errorf("error at add shareMiTaskListInfo user id = %s device = %s shareMiTaskListInfo = %#v: %w", userID, device, request.ShareMiTaskListInfo, err)
+			err = fmt.Errorf("error at add ShareKyouListInfo user id = %s device = %s ShareKyouListInfo = %#v: %w", userID, device, request.ShareKyouListInfo, err)
 			gkill_log.Debug.Println(err.Error())
 		}
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AddShareMiTaskListInfoError,
-			ErrorMessage: "ShareMiTaskListInfo追加に失敗しました",
+			ErrorCode:    message.AddShareKyouListInfoError,
+			ErrorMessage: "ShareKyouListInfo追加に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	shareMiTaskListInfo, err := g.GkillDAOManager.ConfigDAOs.MiShareInfoDAO.GetMiShareInfo(r.Context(), request.ShareMiTaskListInfo.ShareID)
+	ShareKyouListInfo, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfo(r.Context(), request.ShareKyouListInfo.ShareID)
 	if err != nil {
-		err = fmt.Errorf("error at get shareMiTaskListInfo user id = %s device = %s id = %s: %w", userID, device, request.ShareMiTaskListInfo.ShareID, err)
+		err = fmt.Errorf("error at get ShareKyouListInfo user id = %s device = %s id = %s: %w", userID, device, request.ShareKyouListInfo.ShareID, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.GetShareMiTaskListInfoError,
-			ErrorMessage: "shareMiTaskListInfo追加後取得に失敗しました",
+			ErrorCode:    message.GetShareKyouListInfoError,
+			ErrorMessage: "ShareKyouListInfo追加後取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	response.ShareMiTaskListInfo = shareMiTaskListInfo
+	response.ShareKyouListInfo = ShareKyouListInfo
 	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.AddShareMiTaskListInfoSuccessMessage,
-		Message:     "shareMiTaskListInfoを追加しました",
+		MessageCode: message.AddShareKyouListInfoSuccessMessage,
+		Message:     "ShareKyouListInfoを追加しました",
 	})
 }
 
-func (g *GkillServerAPI) HandleUpdateShareMiTaskListInfo(w http.ResponseWriter, r *http.Request) {
+func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
 	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.UpdateShareMiTaskListInfoRequest{}
-	response := &req_res.UpdateShareMiTaskListInfoResponse{}
+	request := &req_res.UpdateShareKyouListInfoRequest{}
+	response := &req_res.UpdateShareKyouListInfoResponse{}
 
 	defer r.Body.Close()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
-			err = fmt.Errorf("error at parse add shareMiTaskListInfo response to json: %w", err)
+			err = fmt.Errorf("error at parse add ShareKyouListInfo response to json: %w", err)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateShareMiTaskListInfoResponseDataError,
-				ErrorMessage: "shareMiTaskListInfo更新に失敗しました",
+				ErrorCode:    message.InvalidUpdateShareKyouListInfoResponseDataError,
+				ErrorMessage: "ShareKyouListInfo更新に失敗しました",
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9737,11 +9747,11 @@ func (g *GkillServerAPI) HandleUpdateShareMiTaskListInfo(w http.ResponseWriter, 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err = fmt.Errorf("error at parse add shareMiTaskListInfo request to json: %w", err)
+		err = fmt.Errorf("error at parse add ShareKyouListInfo request to json: %w", err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidUpdateShareMiTaskListInfoRequestDataError,
-			ErrorMessage: "shareMiTaskListInfo更新に失敗しました",
+			ErrorCode:    message.InvalidUpdateShareKyouListInfoRequestDataError,
+			ErrorMessage: "ShareKyouListInfo更新に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9768,86 +9778,86 @@ func (g *GkillServerAPI) HandleUpdateShareMiTaskListInfo(w http.ResponseWriter, 
 	}
 
 	// 対象が存在しない
-	existShareMiTaskListInfo, err := g.GkillDAOManager.ConfigDAOs.MiShareInfoDAO.GetMiShareInfo(r.Context(), request.ShareMiTaskListInfo.ShareID)
+	existShareKyouListInfo, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfo(r.Context(), request.ShareKyouListInfo.ShareID)
 	if err != nil {
-		err = fmt.Errorf("error at get shareMiTaskListInfo user id = %s device = %s id = %s: %w", userID, device, request.ShareMiTaskListInfo.ShareID, err)
+		err = fmt.Errorf("error at get ShareKyouListInfo user id = %s device = %s id = %s: %w", userID, device, request.ShareKyouListInfo.ShareID, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.GetShareMiTaskListInfoError,
-			ErrorMessage: "ShareMiTaskListInfo更新に失敗しました",
+			ErrorCode:    message.GetShareKyouListInfoError,
+			ErrorMessage: "ShareKyouListInfo更新に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	if existShareMiTaskListInfo == nil {
-		err = fmt.Errorf("not exist shareMiTaskListInfo id = %s", request.ShareMiTaskListInfo.ShareID)
+	if existShareKyouListInfo == nil {
+		err = fmt.Errorf("not exist ShareKyouListInfo id = %s", request.ShareKyouListInfo.ShareID)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.NotExistShareMiTaskListInfoError,
-			ErrorMessage: "ShareMiTaskListInfo更新に失敗しました",
+			ErrorCode:    message.NotExistShareKyouListInfoError,
+			ErrorMessage: "ShareKyouListInfo更新に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	miShareInfo := &mi_share_info.MiShareInfo{
+	shareKyouInfo := &share_kyou_info.ShareKyouInfo{
 		ID:            GenerateNewID(),
-		UserID:        request.ShareMiTaskListInfo.UserID,
-		Device:        request.ShareMiTaskListInfo.Device,
-		ShareTitle:    request.ShareMiTaskListInfo.ShareTitle,
-		IsShareDetail: request.ShareMiTaskListInfo.IsShareDetail,
-		ShareID:       request.ShareMiTaskListInfo.ShareID,
-		FindQueryJSON: request.ShareMiTaskListInfo.FindQueryJSON,
+		UserID:        request.ShareKyouListInfo.UserID,
+		Device:        request.ShareKyouListInfo.Device,
+		ShareTitle:    request.ShareKyouListInfo.ShareTitle,
+		IsShareDetail: request.ShareKyouListInfo.IsShareDetail,
+		ShareID:       request.ShareKyouListInfo.ShareID,
+		FindQueryJSON: request.ShareKyouListInfo.FindQueryJSON,
 	}
 
-	ok, err := g.GkillDAOManager.ConfigDAOs.MiShareInfoDAO.UpdateMiShareInfo(r.Context(), miShareInfo)
+	ok, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.UpdateKyouShareInfo(r.Context(), shareKyouInfo)
 	if !ok || err != nil {
 		if err != nil {
-			err = fmt.Errorf("error at add shareMiTaskListInfo user id = %s device = %s shareMiTaskListInfo = %#v: %w", userID, device, request.ShareMiTaskListInfo, err)
+			err = fmt.Errorf("error at add ShareKyouListInfo user id = %s device = %s ShareKyouListInfo = %#v: %w", userID, device, request.ShareKyouListInfo, err)
 			gkill_log.Debug.Println(err.Error())
 		}
 		gkillError := &message.GkillError{
-			ErrorCode:    message.UpdateShareMiTaskListInfoError,
-			ErrorMessage: "ShareMiTaskListInfo更新に失敗しました",
+			ErrorCode:    message.UpdateShareKyouListInfoError,
+			ErrorMessage: "ShareKyouListInfo更新に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	shareMiTaskListInfo, err := g.GkillDAOManager.ConfigDAOs.MiShareInfoDAO.GetMiShareInfo(r.Context(), request.ShareMiTaskListInfo.ShareID)
+	ShareKyouListInfo, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfo(r.Context(), request.ShareKyouListInfo.ShareID)
 	if err != nil {
-		err = fmt.Errorf("error at get shareMiTaskListInfo user id = %s device = %s id = %s: %w", userID, device, request.ShareMiTaskListInfo.ShareID, err)
+		err = fmt.Errorf("error at get ShareKyouListInfo user id = %s device = %s id = %s: %w", userID, device, request.ShareKyouListInfo.ShareID, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.GetShareMiTaskListInfoError,
-			ErrorMessage: "shareMiTaskListInfo更新後取得に失敗しました",
+			ErrorCode:    message.GetShareKyouListInfoError,
+			ErrorMessage: "ShareKyouListInfo更新後取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	response.ShareMiTaskListInfo = shareMiTaskListInfo
+	response.ShareKyouListInfo = ShareKyouListInfo
 	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.UpdateShareMiTaskListInfoSuccessMessage,
-		Message:     "shareMiTaskListInfoを更新しました",
+		MessageCode: message.UpdateShareKyouListInfoSuccessMessage,
+		Message:     "ShareKyouListInfoを更新しました",
 	})
 }
 
-func (g *GkillServerAPI) HandleGetShareMiTaskListInfos(w http.ResponseWriter, r *http.Request) {
+func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
 	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.GetShareMiTaskListInfosRequest{}
-	response := &req_res.GetShareMiTaskListInfosResponse{}
+	request := &req_res.GetShareKyouListInfosRequest{}
+	response := &req_res.GetShareKyouListInfosResponse{}
 
 	defer r.Body.Close()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
-			err = fmt.Errorf("error at parse get shareMiTaskListInfos response to json: %w", err)
+			err = fmt.Errorf("error at parse get ShareKyouListInfos response to json: %w", err)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetShareMiTaskListInfosResponseDataError,
-				ErrorMessage: "ShareMiTaskListInfos取得に失敗しました",
+				ErrorCode:    message.InvalidGetShareKyouListInfosResponseDataError,
+				ErrorMessage: "ShareKyouListInfos取得に失敗しました",
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9856,11 +9866,11 @@ func (g *GkillServerAPI) HandleGetShareMiTaskListInfos(w http.ResponseWriter, r 
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err = fmt.Errorf("error at parse get shareMiTaskListInfos request to json: %w", err)
+		err = fmt.Errorf("error at parse get ShareKyouListInfos request to json: %w", err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidGetShareMiTaskListInfosRequestDataError,
-			ErrorMessage: "ShareMiTaskListInfos取得に失敗しました",
+			ErrorCode:    message.InvalidGetShareKyouListInfosRequestDataError,
+			ErrorMessage: "ShareKyouListInfos取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9886,40 +9896,40 @@ func (g *GkillServerAPI) HandleGetShareMiTaskListInfos(w http.ResponseWriter, r 
 		return
 	}
 
-	shareMiTaskList, err := g.GkillDAOManager.ConfigDAOs.MiShareInfoDAO.GetMiShareInfos(r.Context(), userID, device)
+	ShareKyouList, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfos(r.Context(), userID, device)
 	if err != nil {
-		err = fmt.Errorf("error at get shareMiTaskListInfos user id = %s device = %s: %w", userID, device, err)
+		err = fmt.Errorf("error at get ShareKyouListInfos user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.GetShareMiTaskListInfosError,
-			ErrorMessage: "ShareMiTaskListInfos取得に失敗しました",
+			ErrorCode:    message.GetShareKyouListInfosError,
+			ErrorMessage: "ShareKyouListInfos取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	response.ShareMiTaskListInfos = shareMiTaskList
+	response.ShareKyouListInfos = ShareKyouList
 	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.GetShareMiTaskListInfosSuccessMessage,
+		MessageCode: message.GetShareKyouListInfosSuccessMessage,
 		Message:     "取得完了",
 	})
 }
 
-func (g *GkillServerAPI) HandleDeleteShareMiTaskListInfos(w http.ResponseWriter, r *http.Request) {
+func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
 	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.DeleteShareMiTaskListInfoRequest{}
-	response := &req_res.DeleteShareMiTaskListInfosResponse{}
+	request := &req_res.DeleteShareKyouListInfoRequest{}
+	response := &req_res.DeleteShareKyouListInfosResponse{}
 
 	defer r.Body.Close()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
-			err = fmt.Errorf("error at parse delete shareMiTaskListInfos response to json: %w", err)
+			err = fmt.Errorf("error at parse delete ShareKyouListInfos response to json: %w", err)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidDeleteShareMiTaskListInfosResponseDataError,
-				ErrorMessage: "ShareMiTaskListInfos削除に失敗しました",
+				ErrorCode:    message.InvalidDeleteShareKyouListInfosResponseDataError,
+				ErrorMessage: "ShareKyouListInfos削除に失敗しました",
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9928,11 +9938,11 @@ func (g *GkillServerAPI) HandleDeleteShareMiTaskListInfos(w http.ResponseWriter,
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err = fmt.Errorf("error at parse delete shareMiTaskListInfos request to json: %w", err)
+		err = fmt.Errorf("error at parse delete ShareKyouListInfos request to json: %w", err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidDeleteShareMiTaskListInfosRequestDataError,
-			ErrorMessage: "ShareMiTaskListInfos削除に失敗しました",
+			ErrorCode:    message.InvalidDeleteShareKyouListInfosRequestDataError,
+			ErrorMessage: "ShareKyouListInfos削除に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9958,41 +9968,41 @@ func (g *GkillServerAPI) HandleDeleteShareMiTaskListInfos(w http.ResponseWriter,
 		return
 	}
 
-	ok, err := g.GkillDAOManager.ConfigDAOs.MiShareInfoDAO.DeleteMiShareInfo(r.Context(), request.ShareMiTaskListInfo.ShareID)
+	ok, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.DeleteKyouShareInfo(r.Context(), request.ShareKyouListInfo.ShareID)
 	if !ok || err != nil {
 		if err != nil {
-			err = fmt.Errorf("error at delete shareMiTaskListInfos user id = %s device = %s: %w", userID, device, err)
+			err = fmt.Errorf("error at delete ShareKyouListInfos user id = %s device = %s: %w", userID, device, err)
 			gkill_log.Debug.Println(err.Error())
 		}
 		gkillError := &message.GkillError{
-			ErrorCode:    message.DeleteShareMiTaskListInfosError,
-			ErrorMessage: "ShareMiTaskListInfos削除に失敗しました",
+			ErrorCode:    message.DeleteShareKyouListInfosError,
+			ErrorMessage: "ShareKyouListInfos削除に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.DeleteShareMiTaskListInfosSuccessMessage,
+		MessageCode: message.DeleteShareKyouListInfosSuccessMessage,
 		Message:     "削除完了",
 	})
 }
 
-func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Request) {
+func (g *GkillServerAPI) HandleGetSharedKyousTask(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
 	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.GetSharedMiTasksRequest{}
-	response := &req_res.GetSharedMiTasksResponse{}
+	request := &req_res.GetSharedKyousRequest{}
+	response := &req_res.GetSharedKyousResponse{}
 
 	defer r.Body.Close()
 	defer func() {
 		err := json.NewEncoder(w).Encode(response)
 		if err != nil {
-			err = fmt.Errorf("error at parse delete shareMiTaskListInfos response to json: %w", err)
+			err = fmt.Errorf("error at parse delete ShareKyouListInfos response to json: %w", err)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetMiSharedTasksResponseDataError,
-				ErrorMessage: "ShareMiTaskListInfos取得に失敗しました",
+				ErrorMessage: "ShareKyouListInfos取得に失敗しました",
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10001,30 +10011,30 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 
 	err := json.NewDecoder(r.Body).Decode(request)
 	if err != nil {
-		err = fmt.Errorf("error at parse delete shareMiTaskListInfos request to json: %w", err)
+		err = fmt.Errorf("error at parse delete ShareKyouListInfos request to json: %w", err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiSharedTasksRequestDataError,
-			ErrorMessage: "ShareMiTaskListInfos取得に失敗しました",
+			ErrorMessage: "ShareKyouListInfos取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	sharedMiInfo, err := g.GkillDAOManager.ConfigDAOs.MiShareInfoDAO.GetMiShareInfo(r.Context(), request.SharedID)
+	sharedKyouInfo, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfo(r.Context(), request.SharedID)
 	if err != nil {
-		err = fmt.Errorf("error at get shareMiTaskListInfos shared id = %s: %w", request.SharedID, err)
+		err = fmt.Errorf("error at get ShareKyouListInfos shared id = %s: %w", request.SharedID, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiSharedTasksError,
-			ErrorMessage: "ShareMiTaskListInfos取得に失敗しました",
+			ErrorMessage: "ShareKyouListInfos取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
-	userID := sharedMiInfo.UserID
-	device := sharedMiInfo.Device
+	userID := sharedKyouInfo.UserID
+	device := sharedKyouInfo.Device
 
 	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
@@ -10032,20 +10042,20 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Mi取得に失敗しました",
+			ErrorMessage: "Kyou取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	findQuery := &find.FindQuery{}
-	err = json.Unmarshal([]byte(sharedMiInfo.FindQueryJSON), findQuery)
+	err = json.Unmarshal([]byte(sharedKyouInfo.FindQueryJSON), findQuery)
 	if err != nil {
 		err = fmt.Errorf("error at parse query json at find kyous %#v: %w", findQuery, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiSharedTaskRequest,
-			ErrorMessage: "Mi取得に失敗しました",
+			ErrorMessage: "Kyou取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10058,7 +10068,7 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 		err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.FindKyousShareMiError,
+			ErrorCode:    message.FindKyousShareKyouError,
 			ErrorMessage: "Kyou取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
@@ -10068,11 +10078,11 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 	// Mi
 	mis, err := repositories.MiReps.FindMi(r.Context(), findQuery)
 	if err != nil {
-		err = fmt.Errorf("error at find Mis user id = %s device = %s: %w", userID, device, err)
+		err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.FindMisShareMiError,
-			ErrorMessage: "Mi取得に失敗しました",
+			ErrorCode:    message.FindKyousShareKyouError,
+			ErrorMessage: "Kyou取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10086,7 +10096,7 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 			err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
-				ErrorCode:    message.FindTagsShareMiError,
+				ErrorCode:    message.FindTagsShareKyouError,
 				ErrorMessage: "タグ取得に失敗しました",
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -10103,7 +10113,7 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 			err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
-				ErrorCode:    message.FindTextsShareMiError,
+				ErrorCode:    message.FindTextsShareKyouError,
 				ErrorMessage: "テキスト取得に失敗しました",
 			}
 			response.Errors = append(response.Errors, gkillError)
@@ -10121,7 +10131,7 @@ func (g *GkillServerAPI) HandleGetMiSharedTask(w http.ResponseWriter, r *http.Re
 	response.Tags = tags
 	response.Texts = texts
 	response.TimeIss = timeiss
-	response.Title = sharedMiInfo.ShareTitle
+	response.Title = sharedKyouInfo.ShareTitle
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetMiSharedTasksSuccessMessage,
 		Message:     "取得完了",
