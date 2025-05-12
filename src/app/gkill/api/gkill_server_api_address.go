@@ -137,15 +137,15 @@ type GkillServerAPIAddress struct {
 
 	GetGkillInfoAddress string
 
-	GetShareMiTaskListInfosAddress string
+	GetShareKyouListInfosAddress string
 
-	AddShareMiTaskListInfoAddress string
+	AddShareKyouListInfoAddress string
 
-	UpdateShareMiTaskListInfoAddress string
+	UpdateShareKyouListInfoAddress string
 
-	DeleteShareMiTaskListInfosAddress string
+	DeleteShareKyouListInfosAddress string
 
-	GetMiSharedTasksAddress string
+	GetSharedKyousAddress string
 
 	GetRepositoriesAddress string
 
@@ -299,15 +299,15 @@ type GkillServerAPIAddress struct {
 
 	GetGkillInfoMethod string
 
-	GetShareMiTaskListInfosMethod string
+	GetShareKyouListInfosMethod string
 
-	AddShareMiTaskListInfoMethod string
+	AddShareKyouListInfoMethod string
 
-	UpdateShareMiTaskListInfoMethod string
+	UpdateShareKyouListInfoMethod string
 
-	DeleteShareMiTaskListInfosMethod string
+	DeleteShareKyouListInfosMethod string
 
-	GetMiSharedTasksMethod string
+	GetSharedKyousMethod string
 
 	GetRepositoriesMethod string
 
@@ -395,11 +395,11 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetGPSLogAddress = "/api/get_gps_log"
 	gkillAPIAddress.GetKFTLTemplateAddress = "/api/get_kftl_template"
 	gkillAPIAddress.GetGkillInfoAddress = "/api/get_gkill_info"
-	gkillAPIAddress.GetShareMiTaskListInfosAddress = "/api/get_share_mi_task_list_infos"
-	gkillAPIAddress.AddShareMiTaskListInfoAddress = "/api/add_share_mi_task_list_info"
-	gkillAPIAddress.UpdateShareMiTaskListInfoAddress = "/api/update_share_mi_task_list_info"
-	gkillAPIAddress.DeleteShareMiTaskListInfosAddress = "/api/delete_share_mi_task_list_infos"
-	gkillAPIAddress.GetMiSharedTasksAddress = "/api/get_mi_shared_tasks"
+	gkillAPIAddress.GetShareKyouListInfosAddress = "/api/get_share_kyou_list_infos"
+	gkillAPIAddress.AddShareKyouListInfoAddress = "/api/add_share_kyou_list_info"
+	gkillAPIAddress.UpdateShareKyouListInfoAddress = "/api/update_share_kyou_list_info"
+	gkillAPIAddress.DeleteShareKyouListInfosAddress = "/api/delete_share_kyou_list_infos"
+	gkillAPIAddress.GetSharedKyousAddress = "/api/get_shared_kyous"
 	gkillAPIAddress.GetRepositoriesAddress = "/api/get_repositories"
 	gkillAPIAddress.GetGkillNotificationPublicKeyAddress = "/api/get_gkill_notification_public_key"
 	gkillAPIAddress.RegisterGkillNotificationAddress = "/api/register_gkill_notification"
@@ -476,11 +476,11 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetGPSLogMethod = "POST"
 	gkillAPIAddress.GetKFTLTemplateMethod = "POST"
 	gkillAPIAddress.GetGkillInfoMethod = "POST"
-	gkillAPIAddress.GetShareMiTaskListInfosMethod = "POST"
-	gkillAPIAddress.AddShareMiTaskListInfoMethod = "POST"
-	gkillAPIAddress.UpdateShareMiTaskListInfoMethod = "POST"
-	gkillAPIAddress.DeleteShareMiTaskListInfosMethod = "POST"
-	gkillAPIAddress.GetMiSharedTasksMethod = "POST"
+	gkillAPIAddress.GetShareKyouListInfosMethod = "POST"
+	gkillAPIAddress.AddShareKyouListInfoMethod = "POST"
+	gkillAPIAddress.UpdateShareKyouListInfoMethod = "POST"
+	gkillAPIAddress.DeleteShareKyouListInfosMethod = "POST"
+	gkillAPIAddress.GetSharedKyousMethod = "POST"
 	gkillAPIAddress.GetRepositoriesMethod = "POST"
 	gkillAPIAddress.GetGkillNotificationPublicKeyMethod = "POST"
 	gkillAPIAddress.RegisterGkillNotificationMethod = "POST"

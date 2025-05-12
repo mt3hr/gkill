@@ -47,7 +47,7 @@
                                 <td valign="top">
                                     <KyouCountCalendar v-show="is_show_kyou_count_calendar"
                                         :application_config="application_config" :gkill_api="gkill_api"
-                                        :kyous="match_kyous" :for_mi="true"
+                                        :kyous="match_kyous" :for_mi="true" class="kyou_list_calendar_in_share_mi_view"
                                         @requested_focus_time="(time) => { focused_time = time }" />
                                 </td>
                             </tr>
@@ -77,16 +77,16 @@
     </div>
 </template>
 <script setup lang="ts">
-import type { miSharedTaskViewProps } from './mi-shared-task-view-props'
+import type { SharedMiTaskViewProps } from './shared-mi-task-view-props'
 
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
-import { GkillAPI, GkillAPIForSharedMi } from '@/classes/api/gkill-api'
+import { GkillAPI, GkillAPIForSharedKyou } from '@/classes/api/gkill-api'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import KyouCountCalendar from './kyou-count-calendar.vue'
 import type { Kyou } from '@/classes/datas/kyou'
-import { GetSharedMiTasksRequest } from '@/classes/api/req_res/get-shared-mi-tasks-request'
+import { GetSharedKyousRequest } from '@/classes/api/req_res/get-shared-kyous-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { KyouViewEmits } from './kyou-view-emits'
@@ -94,7 +94,7 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import { i18n } from '@/i18n'
 const kyou_list_view = ref();
 
-const props = defineProps<miSharedTaskViewProps>()
+const props = defineProps<SharedMiTaskViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const match_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
@@ -112,9 +112,9 @@ const focused_kyou: Ref<Kyou | null> = ref(null)
 
 async function load_content(): Promise<void> {
     try {
-        const req = new GetSharedMiTasksRequest()
+        const req = new GetSharedKyousRequest()
         req.shared_id = props.share_id
-        const res = await props.gkill_api.get_mi_shared_tasks(req)
+        const res = await props.gkill_api.get_shared_kyous(req)
         if (res.errors && res.errors.length !== 0) {
             emits('received_errors', res.errors)
             return
@@ -126,15 +126,15 @@ async function load_content(): Promise<void> {
         inited.value = true
         is_loading.value = false
 
-        // GkillAPIForSharedMiを設定ここから
-        const gkill_api_for_shared_mi = GkillAPIForSharedMi.get_instance_for_share_mi()
-        gkill_api_for_shared_mi.kyous = res.mi_kyous
-        gkill_api_for_shared_mi.mis = res.mis
-        gkill_api_for_shared_mi.tags = res.tags
-        gkill_api_for_shared_mi.texts = res.texts
-        gkill_api_for_shared_mi.timeiss = res.timeiss
-        GkillAPI.set_gkill_api(gkill_api_for_shared_mi)
-        // GkillAPIForSharedMiを設定ここまで
+        // GkillAPIForSharedKyouを設定ここから
+        const gkill_api_for_shared_kyou = GkillAPIForSharedKyou.get_instance_for_share_kyou()
+        gkill_api_for_shared_kyou.kyous = res.mi_kyous
+        gkill_api_for_shared_kyou.mis = res.mis
+        gkill_api_for_shared_kyou.tags = res.tags
+        gkill_api_for_shared_kyou.texts = res.texts
+        gkill_api_for_shared_kyou.timeiss = res.timeiss
+        GkillAPI.set_gkill_api(gkill_api_for_shared_kyou)
+        // GkillAPIForSharedKyouを設定ここまで
 
         share_title.value = res.title
         match_kyous.value.splice(0)
@@ -146,7 +146,7 @@ async function load_content(): Promise<void> {
     } catch (e) {
         console.error(e)
         const error = new GkillError()
-        error.error_code = GkillErrorCodes.failed_shared_mi_tasks
+        error.error_code = GkillErrorCodes.failed_shared_kyou_tasks
         error.error_message = i18n.global.t("FAILED_LOAD_MESSAGE")
         emits('received_errors', [error])
         inited.value = true
@@ -215,6 +215,10 @@ nextTick(() => load_content())
 
 .mi_view_wrap {
     position: relative;
+}
+
+.kyou_list_calendar_in_share_mi_view {
+    width: 416px;
 }
 </style>
 <style lang="css" scoped>

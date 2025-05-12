@@ -1,6 +1,6 @@
-package mi_share_info
+package share_kyou_info
 
-type MiShareInfo struct {
+type ShareKyouInfo struct {
 	ID string `json:"id"`
 
 	UserID string `json:"user_id"`

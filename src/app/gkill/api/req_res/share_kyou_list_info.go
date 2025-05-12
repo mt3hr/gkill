@@ -1,8 +1,8 @@
 package req_res
 
-import "github.com/mt3hr/gkill/src/app/gkill/dao/mi_share_info"
+import "github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
 
-type ShareMiTaskListInfo struct {
+type ShareKyouListInfo struct {
 	UserID string `json:"user_id"`
 
 	Device string `json:"device"`
@@ -13,5 +13,5 @@ type ShareMiTaskListInfo struct {
 
 	ShareID string `json:"share_id"`
 
-	FindQueryJSON mi_share_info.JSONString `json:"find_query_json"`
+	FindQueryJSON share_kyou_info.JSONString `json:"find_query_json"`
 }

@@ -14,10 +14,10 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/mi_share_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps/rep_cache_updater"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -88,7 +88,7 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	gkillDAOManager.ConfigDAOs.MiShareInfoDAO, err = mi_share_info.NewMiShareInfoDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "mi_share_info.db"))
+	gkillDAOManager.ConfigDAOs.ShareKyouInfoDAO, err = share_kyou_info.NewShareKyouInfoDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "share_kyou_info.db"))
 	if err != nil {
 		return nil, err
 	}
@@ -842,7 +842,7 @@ func (g *GkillDAOManager) Close() error {
 		if err != nil {
 			return err
 		}
-		err = g.ConfigDAOs.MiShareInfoDAO.Close(ctx)
+		err = g.ConfigDAOs.ShareKyouInfoDAO.Close(ctx)
 		if err != nil {
 			return err
 		}
@@ -882,7 +882,7 @@ func (g *GkillDAOManager) Close() error {
 		g.ConfigDAOs.AccountDAO = nil
 		g.ConfigDAOs.LoginSessionDAO = nil
 		g.ConfigDAOs.FileUploadHistoryDAO = nil
-		g.ConfigDAOs.MiShareInfoDAO = nil
+		g.ConfigDAOs.ShareKyouInfoDAO = nil
 		g.ConfigDAOs.ServerConfigDAO = nil
 		g.ConfigDAOs.AppllicationConfigDAO = nil
 		g.ConfigDAOs.RepositoryDAO = nil

@@ -2,7 +2,7 @@
 
 import { GkillAPIResponse } from '../gkill-api-response'
 
-export class DeleteShareMiTaskListInfosResponse extends GkillAPIResponse {
+export class DeleteShareKyouListInfosResponse extends GkillAPIResponse {
 
     constructor() {
         super()

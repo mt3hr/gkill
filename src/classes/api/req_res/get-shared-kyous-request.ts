@@ -2,7 +2,7 @@
 
 import { GkillAPIRequest } from "../gkill-api-request"
 
-export class GetSharedMiTasksRequest extends GkillAPIRequest {
+export class GetSharedKyousRequest extends GkillAPIRequest {
 
     shared_id: string
 
