@@ -4,8 +4,8 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/mi_share_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 )
 
@@ -16,7 +16,7 @@ type ConfigDAOs struct {
 
 	FileUploadHistoryDAO account_state.FileUploadHistoryDAO
 
-	MiShareInfoDAO mi_share_info.MiShareInfoDAO
+	ShareKyouInfoDAO share_kyou_info.ShareKyouInfoDAO
 
 	ServerConfigDAO server_config.ServerConfigDAO
 

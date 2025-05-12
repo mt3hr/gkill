@@ -1,21 +1,21 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
-        <ShareTaskListView :application_config="application_config" :gkill_api="gkill_api"
+        <ShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
             :find_kyou_query="find_kyou_query" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" @regestered_share_mi_task_list_info="(share_mi_task_info) => {
-                emits('regestered_share_mi_task_list_info', share_mi_task_info)
-                emits('requested_show_share_task_link_dialog', share_mi_task_info)
+            @received_messages="(messages) => emits('received_messages', messages)" @regestered_share_kyou_list_info="(share_kyou_info) => {
+                emits('regestered_share_kyou_list_info', share_kyou_info)
+                emits('requested_show_share_kyou_link_dialog', share_kyou_info)
             }" @requested_close_dialog="hide()" />
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import type { ShareTaskListDialogEmits } from './share-task-list-dialog-emits'
-import type { ShareTaskListDialogProps } from './share-task-list-dialog-props'
-import ShareTaskListView from '../views/share-task-list-view.vue'
+import type { ShareKyousListDialogEmits } from './share-task-list-dialog-emits'
+import type { ShareKyousListDialogProps } from './share-task-list-dialog-props'
+import ShareKyousListView from '../views/share-task-list-view.vue'
 import { ref, type Ref } from 'vue'
 
-defineProps<ShareTaskListDialogProps>()
-const emits = defineEmits<ShareTaskListDialogEmits>()
+defineProps<ShareKyousListDialogProps>()
+const emits = defineEmits<ShareKyousListDialogEmits>()
 defineExpose({ show, hide })
 
 const is_show_dialog: Ref<boolean> = ref(false)

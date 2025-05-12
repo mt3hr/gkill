@@ -1,67 +1,67 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
-        <ManageShareTaskListView :application_config="application_config" :gkill_api="gkill_api"
-            :share_mi_task_list_infos="share_mi_task_list_infos"
-            @requested_show_confirm_delete_share_task_list_dialog="show_confirm_delete_share_task_list_dialog"
-            @requested_show_share_task_link_dialog="show_share_task_list_link_dialog" />
-        <ShareTaskListLinkDialog :share_mi_task_list_info="share_task_list" :application_config="application_config"
+        <ManageShareKyousListView :application_config="application_config" :gkill_api="gkill_api"
+            :share_kyou_list_infos="share_kyou_list_infos"
+            @requested_show_confirm_delete_share_kyou_list_dialog="show_confirm_delete_share_kyou_list_dialog"
+            @requested_show_share_kyou_link_dialog="show_share_kyou_list_link_dialog" />
+        <ShareKyousListLinkDialog :share_kyou_list_info="share_kyou_list" :application_config="application_config"
             :gkill_api="gkill_api" @received_errors="(errors) => emits('received_errors', errors)"
-            @updated_share_mi_task_list_info="reload_share_mi_task_list_infos()"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="share_task_list_link_dialog" />
-        <ConfirmDeleteShareTaskListDialog :share_mi_task_list_info="share_task_link"
+            @updated_share_kyou_list_info="reload_share_kyou_list_infos()"
+            @received_messages="(messages) => emits('received_messages', messages)" ref="share_kyou_list_link_dialog" />
+        <ConfirmDeleteShareKyousListDialog :share_kyou_list_info="share_kyou_link"
             :application_config="application_config" :gkill_api="gkill_api"
-            @requested_delete_share_task_link_info="(share_mi_task_list_infos: ShareMiTaskListInfo) => delete_share_task_link_info(share_mi_task_list_infos)"
+            @requested_delete_share_kyou_link_info="(share_kyou_list_infos: ShareKyouListInfo) => delete_share_kyou_link_info(share_kyou_list_infos)"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            ref="confirm_delete_share_task_list_dialog" />
+            ref="confirm_delete_share_kyou_list_dialog" />
     </v-dialog>
 </template>
 <script lang="ts" setup>
 import { type Ref, ref } from 'vue'
-import type { ManageShareTaskLinkDialogEmits } from './manage-share-task-link-dialog-emits'
-import type { ManageShareTaskLinkDialogProps } from './manage-share-task-link-dialog-props'
-import ManageShareTaskListView from '../views/manage-share-task-list-view.vue'
-import ShareTaskListLinkDialog from './share-task-list-link-dialog.vue'
-import ConfirmDeleteShareTaskListDialog from './confirm-delete-share-task-list-dialog.vue'
-import { ShareMiTaskListInfo } from '@/classes/datas/share-mi-task-list-info'
-import { DeleteShareMiTaskListInfosRequest } from '@/classes/api/req_res/delete-share-mi-task-list-infos-request'
-import { GetShareMiTaskListInfosRequest } from '@/classes/api/req_res/get-share-mi-task-list-infos-request'
+import type { ManageShareKyousLinkDialogEmits } from './manage-share-task-link-dialog-emits'
+import type { ManageShareKyousLinkDialogProps } from './manage-share-task-link-dialog-props'
+import ManageShareKyousListView from '../views/manage-share-task-list-view.vue'
+import ShareKyousListLinkDialog from './share-task-list-link-dialog.vue'
+import ConfirmDeleteShareKyousListDialog from './confirm-delete-share-kyou-list-dialog.vue'
+import { ShareKyouListInfo } from '@/classes/datas/share-kyou-list-info'
+import { DeleteShareKyouListInfosRequest } from '@/classes/api/req_res/delete-share-kyou-list-infos-request'
+import { GetShareKyouListInfosRequest } from '@/classes/api/req_res/get-share-kyou-list-infos-request'
 
-const share_task_list_link_dialog = ref<InstanceType<typeof ShareTaskListLinkDialog> | null>(null)
-const confirm_delete_share_task_list_dialog = ref<InstanceType<typeof ConfirmDeleteShareTaskListDialog> | null>(null)
+const share_kyou_list_link_dialog = ref<InstanceType<typeof ShareKyousListLinkDialog> | null>(null)
+const confirm_delete_share_kyou_list_dialog = ref<InstanceType<typeof ConfirmDeleteShareKyousListDialog> | null>(null)
 
-const share_mi_task_list_infos: Ref<Array<ShareMiTaskListInfo>> = ref(new Array<ShareMiTaskListInfo>())
+const share_kyou_list_infos: Ref<Array<ShareKyouListInfo>> = ref(new Array<ShareKyouListInfo>())
 
-const props = defineProps<ManageShareTaskLinkDialogProps>()
-const emits = defineEmits<ManageShareTaskLinkDialogEmits>()
+const props = defineProps<ManageShareKyousLinkDialogProps>()
+const emits = defineEmits<ManageShareKyousLinkDialogEmits>()
 defineExpose({ show, hide })
 
-const share_task_list: Ref<ShareMiTaskListInfo> = ref(new ShareMiTaskListInfo())
-const share_task_link: Ref<ShareMiTaskListInfo> = ref(new ShareMiTaskListInfo())
+const share_kyou_list: Ref<ShareKyouListInfo> = ref(new ShareKyouListInfo())
+const share_kyou_link: Ref<ShareKyouListInfo> = ref(new ShareKyouListInfo())
 
 const is_show_dialog: Ref<boolean> = ref(false)
 
 async function show(): Promise<void> {
-    reload_share_mi_task_list_infos()
+    reload_share_kyou_list_infos()
     is_show_dialog.value = true
 }
 async function hide(): Promise<void> {
-    share_mi_task_list_infos.value.splice(0)
+    share_kyou_list_infos.value.splice(0)
     is_show_dialog.value = false
 }
-async function show_confirm_delete_share_task_list_dialog(share_mi_task_list_info: ShareMiTaskListInfo): Promise<void> {
-    share_task_list.value = share_mi_task_list_info
-    confirm_delete_share_task_list_dialog.value?.show(share_mi_task_list_info)
+async function show_confirm_delete_share_kyou_list_dialog(share_kyou_list_info: ShareKyouListInfo): Promise<void> {
+    share_kyou_list.value = share_kyou_list_info
+    confirm_delete_share_kyou_list_dialog.value?.show(share_kyou_list_info)
 }
-async function show_share_task_list_link_dialog(share_mi_task_list_info: ShareMiTaskListInfo): Promise<void> {
-    share_task_link.value = share_mi_task_list_info
-    share_task_list_link_dialog.value?.show(share_mi_task_list_info)
+async function show_share_kyou_list_link_dialog(share_kyou_list_info: ShareKyouListInfo): Promise<void> {
+    share_kyou_link.value = share_kyou_list_info
+    share_kyou_list_link_dialog.value?.show(share_kyou_list_info)
 }
 
-async function delete_share_task_link_info(share_mi_task_list_info: ShareMiTaskListInfo): Promise<void> {
-    const req = new DeleteShareMiTaskListInfosRequest()
-    req.share_mi_task_list_info = share_mi_task_list_info
-    const res = await props.gkill_api.delete_share_mi_task_list_infos(req)
+async function delete_share_kyou_link_info(share_kyou_list_info: ShareKyouListInfo): Promise<void> {
+    const req = new DeleteShareKyouListInfosRequest()
+    req.share_kyou_list_info = share_kyou_list_info
+    const res = await props.gkill_api.delete_share_kyou_list_infos(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -70,12 +70,12 @@ async function delete_share_task_link_info(share_mi_task_list_info: ShareMiTaskL
         emits('received_messages', res.messages)
     }
 
-    await reload_share_mi_task_list_infos()
+    await reload_share_kyou_list_infos()
 }
 
-async function reload_share_mi_task_list_infos(): Promise<void> {
-    const req = new GetShareMiTaskListInfosRequest()
-    const res = await props.gkill_api.get_share_mi_task_list_infos(req)
+async function reload_share_kyou_list_infos(): Promise<void> {
+    const req = new GetShareKyouListInfosRequest()
+    const res = await props.gkill_api.get_share_kyou_list_infos(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return
@@ -84,7 +84,7 @@ async function reload_share_mi_task_list_infos(): Promise<void> {
         emits('received_messages', res.messages)
     }
 
-    share_mi_task_list_infos.value = res.share_mi_task_list_infos
+    share_kyou_list_infos.value = res.share_kyou_list_infos
 }
 
 </script>

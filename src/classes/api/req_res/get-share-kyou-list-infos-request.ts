@@ -2,7 +2,7 @@
 
 import { GkillAPIRequest } from '../gkill-api-request'
 
-export class GetShareMiTaskListInfosRequest extends GkillAPIRequest {
+export class GetShareKyouListInfosRequest extends GkillAPIRequest {
 
     constructor() {
         super()

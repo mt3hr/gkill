@@ -1,5 +1,5 @@
 'use strict'
 
 export interface ShareButtonEmits {
-    (e: 'request_open_share_mi_dialog'): void
+    (e: 'request_open_share_kyou_dialog'): void
 }

@@ -7,7 +7,7 @@ import type { Mi } from '@/classes/datas/mi'
 import type { Tag } from '@/classes/datas/tag'
 import { TimeIs } from '@/classes/datas/time-is'
 
-export class GetSharedMiTasksResponse extends GkillAPIResponse {
+export class GetSharedKyousResponse extends GkillAPIResponse {
     title: string
     mi_kyous: Array<Kyou>
     mis: Array<Mi>
