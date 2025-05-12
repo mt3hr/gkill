@@ -5,6 +5,8 @@ export default [
     { label: i18n.global.t("DNOTE_TAG_EQUAL_PREDICATE"), value: "TagEqualPredicate" },
     { label: i18n.global.t("DNOTE_KMEMO_CONTENT_CONTAINS_PREDICATE"), value: "KmemoContentContainsPredicate" },
     { label: i18n.global.t("DNOTE_KMEMO_CONTENT_EQUAL_PREDICATE"), value: "KmemoContentEqualPredicate" },
+    { label: i18n.global.t("DNOTE_TEXT_CONTENT_CONTAINS_PREDICATE"), value: "KmemoContentContainsPredicate" },
+    { label: i18n.global.t("DNOTE_TEXT_CONTENT_EQUAL_PREDICATE"), value: "KmemoContentEqualPredicate" },
     { label: i18n.global.t("DNOTE_TIMEIS_TITLE_CONTAINS_PREDICATE"), value: "TimeIsTitleContainsPredicate" },
     { label: i18n.global.t("DNOTE_TIMEIS_TITLE_EQUAL_PREDICATE"), value: "TimeIsTitleEqualPredicate" },
     { label: i18n.global.t("DNOTE_MI_TITLE_CONTAINS_PREDICATE"), value: "MiTitleEqualPredicate" },
