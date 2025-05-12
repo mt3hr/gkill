@@ -7,8 +7,11 @@ export default async function load_kyous(abort_controller: AbortController, kyou
         if (clone) {
             kyou = kyous[i].clone()
             kyou.abort_controller = abort_controller
-            await kyou.load_typed_datas()
-            await kyou.load_attached_tags()
+            const waitPromises = []
+            waitPromises.push(kyou.load_typed_datas())
+            waitPromises.push(kyou.load_attached_tags())
+            waitPromises.push(kyou.load_attached_texts())
+            await Promise.all(waitPromises)
         }
         cloned_kyous.push(kyou)
     }
