@@ -68,6 +68,8 @@ export default function regist_dictionary(): void {
     PredicateDictonary.set("GitCommitLogCodeLessThanPredicate", GitCommitLogCodeLessThanPredicate)
     PredicateDictonary.set("KmemoContentContainsPredicate", KmemoContentContainsPredicate)
     PredicateDictonary.set("KmemoContentEqualPredicate", KmemoContentEqualPredicate)
+    PredicateDictonary.set("TextContentContainsPredicate", KmemoContentContainsPredicate)
+    PredicateDictonary.set("TextContentEqualPredicate", KmemoContentEqualPredicate)
     PredicateDictonary.set("LantanaMoodEqualPredicate", LantanaMoodEqualPredicate)
     PredicateDictonary.set("LantanaMoodGreaterThanPredicate", LantanaMoodGreaterThanPredicate)
     PredicateDictonary.set("LantanaMoodLessThanPredicate", LantanaMoodLessThanPredicate)
