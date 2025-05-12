@@ -4,19 +4,19 @@
             {{ $t("SHARE_MI_TASK_LINK_TITLE") }}
         </v-card-title>
         <table>
-            <tr v-for="share_mi_task_list_info in share_mi_task_list_infos" :key="share_mi_task_list_info.share_id">
+            <tr v-for="share_kyou_list_info in share_kyou_list_infos" :key="share_kyou_list_info.share_id">
                 <td>
-                    {{ share_mi_task_list_info.share_title }}
+                    {{ share_kyou_list_info.share_title }}
                 </td>
                 <td>
                     <v-btn color="primary"
-                        @click="emits('requested_show_share_task_link_dialog', share_mi_task_list_info)">
+                        @click="emits('requested_show_share_kyou_link_dialog', share_kyou_list_info)">
                         {{ $t("LINK_TITLE") }}
                     </v-btn>
                 </td>
                 <td>
                     <v-btn dark color="secondary"
-                        @click="emits('requested_show_confirm_delete_share_task_list_dialog', share_mi_task_list_info)">
+                        @click="emits('requested_show_confirm_delete_share_kyou_list_dialog', share_kyou_list_info)">
                         {{ $t("DELETE_TITLE") }}
                     </v-btn>
                 </td>
@@ -25,9 +25,9 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import type { ManageShareTaskListViewEmits } from './manage-share-task-list-view-emits'
-import type { ManageShareTaskListViewProps } from './manage-share-task-list-view-props'
+import type { ManageShareKyousListViewEmits } from './manage-share-task-list-view-emits'
+import type { ManageShareKyousListViewProps } from './manage-share-task-list-view-props'
 
-defineProps<ManageShareTaskListViewProps>()
-const emits = defineEmits<ManageShareTaskListViewEmits>()
+defineProps<ManageShareKyousListViewProps>()
+const emits = defineEmits<ManageShareKyousListViewEmits>()
 </script>

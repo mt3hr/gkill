@@ -15,8 +15,8 @@ import type { AddNlogRequest } from "./req_res/add-nlog-request"
 import type { AddNlogResponse } from "./req_res/add-nlog-response"
 import type { AddReKyouRequest } from "./req_res/add-re-kyou-request"
 import type { AddReKyouResponse } from "./req_res/add-re-kyou-response"
-import type { AddShareMiTaskListInfoRequest } from "./req_res/add-share-mi-task-list-info-request"
-import { AddShareMiTaskListInfoResponse } from "./req_res/add-share-mi-task-list-info-response"
+import type { AddShareKyouListInfoRequest } from "./req_res/add-share-kyou-list-infos-request"
+import { AddShareKyouListInfoResponse } from "./req_res/add-share-kyou-list-info-response"
 import type { AddTagRequest } from "./req_res/add-tag-request"
 import type { AddTagResponse } from "./req_res/add-tag-response"
 import type { AddTextRequest } from "./req_res/add-text-request"
@@ -25,8 +25,8 @@ import type { AddTimeisRequest } from "./req_res/add-timeis-request"
 import type { AddTimeisResponse } from "./req_res/add-timeis-response"
 import type { AddURLogRequest } from "./req_res/add-ur-log-request"
 import type { AddURLogResponse } from "./req_res/add-ur-log-response"
-import type { DeleteShareMiTaskListInfosRequest } from "./req_res/delete-share-mi-task-list-infos-request"
-import { DeleteShareMiTaskListInfosResponse } from "./req_res/delete-share-mi-task-list-infos-response"
+import type { DeleteShareKyouListInfosRequest } from "./req_res/delete-share-kyou-list-infos-request"
+import { DeleteShareKyouListInfosResponse } from "./req_res/delete-share-kyou-list-infos-response"
 import type { GenerateTLSFileRequest } from "./req_res/generate-tls-file-request"
 import type { GenerateTLSFileResponse } from "./req_res/generate-tls-file-response"
 import type { GetAllTagNamesRequest } from "./req_res/get-all-tag-names-request"
@@ -61,10 +61,9 @@ import type { GetPlaingTimeisRequest } from "./req_res/get-plaing-timeis-request
 import { GetPlaingTimeisResponse } from "./req_res/get-plaing-timeis-response"
 import type { GetReKyouRequest } from "./req_res/get-re-kyou-request"
 import type { GetReKyouResponse } from "./req_res/get-re-kyou-response"
-import type { GetShareMiTaskListInfosRequest } from "./req_res/get-share-mi-task-list-infos-request"
-import { GetShareMiTaskListInfosResponse } from "./req_res/get-share-mi-task-list-infos-response"
-import type { GetSharedMiTasksRequest } from "./req_res/get-shared-mi-tasks-request"
-import { GetSharedMiTasksResponse } from "./req_res/get-shared-mi-tasks-response"
+import type { GetShareKyouListInfosRequest } from "./req_res/get-share-kyou-list-infos-request"
+import type { GetSharedKyousRequest } from "./req_res/get-shared-kyous-request"
+import { GetSharedKyousResponse } from "./req_res/get-shared-kyous-response"
 import type { GetTagHistoryByTagIDRequest } from "./req_res/get-tag-history-by-tag-id-request"
 import { GetTagHistoryByTagIDResponse } from "./req_res/get-tag-history-by-tag-id-response"
 import type { GetTagsByTargetIDRequest } from "./req_res/get-tags-by-target-id-request"
@@ -109,8 +108,8 @@ import type { UpdateRepTypeStructRequest } from "./req_res/update-rep-type-struc
 import type { UpdateRepTypeStructResponse } from "./req_res/update-rep-type-struct-response"
 import type { UpdateKFTLTemplateRequest } from "./req_res/update-kftl-template-request.ts"
 import type { UpdateKFTLTemplateResponse } from "./req_res/update-kftl-template-response.ts"
-import type { UpdateShareMiTaskListInfoRequest } from "./req_res/update-share-mi-task-list-info-request"
-import { UpdateShareMiTaskListInfoResponse } from "./req_res/update-share-mi-task-list-info-response"
+import type { UpdateShareKyouListInfoRequest } from "./req_res/update-share-kyou-list-info-request"
+import { UpdateShareKyouListInfoResponse } from "./req_res/update-share-kyou-list-info-response"
 import type { UpdateTagRequest } from "./req_res/update-tag-request"
 import type { UpdateTagResponse } from "./req_res/update-tag-response"
 import type { UpdateTagStructRequest } from "./req_res/update-tag-struct-request"
@@ -157,7 +156,7 @@ import type { GetServerConfigsRequest } from "./req_res/get-server-configs-reque
 import type { GetServerConfigsResponse } from "./req_res/get-server-configs-response"
 import type { UpdateServerConfigsRequest } from "./req_res/update-server-configs-request"
 import type { UpdateServerConfigsResponse } from "./req_res/update-server-configs-response"
-import { ShareMiTaskListInfo } from "../datas/share-mi-task-list-info"
+import { ShareKyouListInfo } from "../datas/share-kyou-list-info"
 import type { GetGkillNotificationPublicKeyRequest } from "./req_res/get-gkill-notification-public-key-request"
 import type { GetGkillNotificationPublicKeyResponse } from "./req_res/get-gkill-notification-public-key-response"
 import type { RegisterGkillNotificationRequest } from "./req_res/register-gkill-notification-request"
@@ -178,6 +177,7 @@ import type { ReloadRepositoriesRequest } from "./req_res/reload-repositories-re
 import type { ReloadRepositoriesResponse } from "./req_res/reload-repositories-response"
 import type { UpdateDnoteJSONDataRequest } from "./req_res/update-dnote-json-data-request"
 import type { UpdateDnoteJSONDataResponse } from "./req_res/update-dnote-json-data-response"
+import { GetShareKyouListInfosResponse } from "./req_res/get-share-kyou-list-infos-response"
 
 export class GkillAPI {
         // 画面以外から参照されるやつ
@@ -266,11 +266,11 @@ export class GkillAPI {
         get_gps_log_address: string
         get_kftl_template_address: string
         get_gkill_info_address: string
-        get_share_mi_task_list_infos_address: string
-        add_share_mi_task_list_info_address: string
-        update_share_mi_task_list_info_address: string
-        delete_share_mi_task_list_infos_address: string
-        get_mi_shared_tasks_address: string
+        get_share_kyou_list_infos_address: string
+        add_share_kyou_list_info_address: string
+        update_share_kyou_list_info_address: string
+        delete_share_kyou_list_infos_address: string
+        get_shared_kyous_address: string
         get_repositories_address: string
         get_gkill_notification_public_key_address: string
         register_gkill_notification_address: string
@@ -350,11 +350,11 @@ export class GkillAPI {
         get_gps_log_method: string
         get_kftl_template_method: string
         get_gkill_info_method: string
-        get_share_mi_task_list_infos_method: string
-        add_share_mi_task_list_info_method: string
-        update_share_mi_task_list_info_method: string
-        delete_share_mi_task_list_infos_method: string
-        get_mi_shared_tasks_method: string
+        get_share_kyou_list_infos_method: string
+        add_share_kyou_list_info_method: string
+        update_share_kyou_list_info_method: string
+        delete_share_kyou_list_infos_method: string
+        get_shared_kyous_method: string
         get_repositories_method: string
         get_gkill_notification_public_key_method: string
         register_gkill_notification_method: string
@@ -433,11 +433,11 @@ export class GkillAPI {
                 this.get_gps_log_address = "/api/get_gps_log"
                 this.get_kftl_template_address = "/api/get_kftl_template"
                 this.get_gkill_info_address = "/api/get_gkill_info"
-                this.get_share_mi_task_list_infos_address = "/api/get_share_mi_task_list_infos"
-                this.add_share_mi_task_list_info_address = "/api/add_share_mi_task_list_info"
-                this.update_share_mi_task_list_info_address = "/api/update_share_mi_task_list_info"
-                this.delete_share_mi_task_list_infos_address = "/api/delete_share_mi_task_list_infos"
-                this.get_mi_shared_tasks_address = "/api/get_mi_shared_tasks"
+                this.get_share_kyou_list_infos_address = "/api/get_share_kyou_list_infos"
+                this.add_share_kyou_list_info_address = "/api/add_share_kyou_list_info"
+                this.update_share_kyou_list_info_address = "/api/update_share_kyou_list_info"
+                this.delete_share_kyou_list_infos_address = "/api/delete_share_kyou_list_infos"
+                this.get_shared_kyous_address = "/api/get_shared_kyous"
                 this.get_repositories_address = "/api/get_repositories"
                 this.get_gkill_notification_public_key_address = "/api/get_gkill_notification_public_key"
                 this.register_gkill_notification_address = "/api/register_gkill_notification"
@@ -516,11 +516,11 @@ export class GkillAPI {
                 this.get_gps_log_method = "POST"
                 this.get_kftl_template_method = "POST"
                 this.get_gkill_info_method = "POST"
-                this.get_share_mi_task_list_infos_method = "POST"
-                this.add_share_mi_task_list_info_method = "POST"
-                this.update_share_mi_task_list_info_method = "POST"
-                this.delete_share_mi_task_list_infos_method = "POST"
-                this.get_mi_shared_tasks_method = "POST"
+                this.get_share_kyou_list_infos_method = "POST"
+                this.add_share_kyou_list_info_method = "POST"
+                this.update_share_kyou_list_info_method = "POST"
+                this.delete_share_kyou_list_infos_method = "POST"
+                this.get_shared_kyous_method = "POST"
                 this.get_repositories_method = "POST"
                 this.get_gkill_notification_public_key_method = "POST"
                 this.register_gkill_notification_method = "POST"
@@ -2067,9 +2067,9 @@ export class GkillAPI {
                 return response
         }
 
-        async get_share_mi_task_list_infos(req: GetShareMiTaskListInfosRequest): Promise<GetShareMiTaskListInfosResponse> {
-                const res = await fetch(this.get_share_mi_task_list_infos_address, {
-                        'method': this.get_share_mi_task_list_infos_method,
+        async get_share_kyou_list_infos(req: GetShareKyouListInfosRequest): Promise<GetShareKyouListInfosResponse> {
+                const res = await fetch(this.get_share_kyou_list_infos_address, {
+                        'method': this.get_share_kyou_list_infos_method,
                         headers: {
                                 'Content-Type': 'application/json'
                         },
@@ -2078,24 +2078,24 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
-                const response: GetShareMiTaskListInfosResponse = new GetShareMiTaskListInfosResponse()
+                const response: GetShareKyouListInfosResponse = new GetShareKyouListInfosResponse()
                 for (const key in json) {
                         (response as any)[key] = json[key]
                 }
-                for (let i = 0; i < response.share_mi_task_list_infos.length; i++) {
-                        const share_mi_task_list_info = new ShareMiTaskListInfo()
-                        for (const key in json.share_mi_task_list_infos[i]) {
-                                (share_mi_task_list_info as any)[key] = json.share_mi_task_list_infos[i][key]
+                for (let i = 0; i < response.share_kyou_list_infos.length; i++) {
+                        const share_kyou_list_info = new ShareKyouListInfo()
+                        for (const key in json.share_kyou_list_infos[i]) {
+                                (share_kyou_list_info as any)[key] = json.share_kyou_list_infos[i][key]
                         }
-                        response.share_mi_task_list_infos[i] = share_mi_task_list_info
+                        response.share_kyou_list_infos[i] = share_kyou_list_info
                 }
                 this.check_auth(response)
                 return response
         }
 
-        async add_share_mi_task_list_info(req: AddShareMiTaskListInfoRequest): Promise<AddShareMiTaskListInfoResponse> {
-                const res = await fetch(this.add_share_mi_task_list_info_address, {
-                        'method': this.add_share_mi_task_list_info_method,
+        async add_share_kyou_list_info(req: AddShareKyouListInfoRequest): Promise<AddShareKyouListInfoResponse> {
+                const res = await fetch(this.add_share_kyou_list_info_address, {
+                        'method': this.add_share_kyou_list_info_method,
                         headers: {
                                 'Content-Type': 'application/json'
                         },
@@ -2104,22 +2104,22 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
-                const response: AddShareMiTaskListInfoResponse = new AddShareMiTaskListInfoResponse()
+                const response: AddShareKyouListInfoResponse = new AddShareKyouListInfoResponse()
                 for (const key in json) {
                         (response as any)[key] = json[key]
                 }
-                const share_mi_task_list_info = new ShareMiTaskListInfo()
-                for (const key in json.share_mi_task_list_info) {
-                        (share_mi_task_list_info as any)[key] = json.share_mi_task_list_info[key]
+                const share_kyou_list_info = new ShareKyouListInfo()
+                for (const key in json.share_kyou_list_info) {
+                        (share_kyou_list_info as any)[key] = json.share_kyou_list_info[key]
                 }
-                response.share_mi_task_list_info = share_mi_task_list_info
+                response.share_kyou_list_info = share_kyou_list_info
                 this.check_auth(response)
                 return response
         }
 
-        async update_share_mi_task_list_info(req: UpdateShareMiTaskListInfoRequest): Promise<UpdateShareMiTaskListInfoResponse> {
-                const res = await fetch(this.update_share_mi_task_list_info_address, {
-                        'method': this.update_share_mi_task_list_info_method,
+        async update_share_kyou_list_info(req: UpdateShareKyouListInfoRequest): Promise<UpdateShareKyouListInfoResponse> {
+                const res = await fetch(this.update_share_kyou_list_info_address, {
+                        'method': this.update_share_kyou_list_info_method,
                         headers: {
                                 'Content-Type': 'application/json'
                         },
@@ -2128,22 +2128,22 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
-                const response: UpdateShareMiTaskListInfoResponse = new UpdateShareMiTaskListInfoResponse()
+                const response: UpdateShareKyouListInfoResponse = new UpdateShareKyouListInfoResponse()
                 for (const key in json) {
                         (response as any)[key] = json[key]
                 }
-                const share_mi_task_list_info = new ShareMiTaskListInfo()
-                for (const key in json.share_mi_task_list_info) {
-                        (share_mi_task_list_info as any)[key] = json.share_mi_task_list_info[key]
+                const share_kyou_list_info = new ShareKyouListInfo()
+                for (const key in json.share_kyou_list_info) {
+                        (share_kyou_list_info as any)[key] = json.share_kyou_list_info[key]
                 }
-                response.share_mi_task_list_info = share_mi_task_list_info
+                response.share_kyou_list_info = share_kyou_list_info
                 this.check_auth(response)
                 return response
         }
 
-        async delete_share_mi_task_list_infos(req: DeleteShareMiTaskListInfosRequest): Promise<DeleteShareMiTaskListInfosResponse> {
-                const res = await fetch(this.delete_share_mi_task_list_infos_address, {
-                        'method': this.delete_share_mi_task_list_infos_method,
+        async delete_share_kyou_list_infos(req: DeleteShareKyouListInfosRequest): Promise<DeleteShareKyouListInfosResponse> {
+                const res = await fetch(this.delete_share_kyou_list_infos_address, {
+                        'method': this.delete_share_kyou_list_infos_method,
                         headers: {
                                 'Content-Type': 'application/json'
                         },
@@ -2152,7 +2152,7 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
-                const response: DeleteShareMiTaskListInfosResponse = new DeleteShareMiTaskListInfosResponse()
+                const response: DeleteShareKyouListInfosResponse = new DeleteShareKyouListInfosResponse()
                 for (const key in json) {
                         (response as any)[key] = json[key]
                 }
@@ -2160,9 +2160,9 @@ export class GkillAPI {
                 return response
         }
 
-        async get_mi_shared_tasks(req: GetSharedMiTasksRequest): Promise<GetSharedMiTasksResponse> {
-                const res = await fetch(this.get_mi_shared_tasks_address, {
-                        'method': this.get_mi_shared_tasks_method,
+        async get_shared_kyous(req: GetSharedKyousRequest): Promise<GetSharedKyousResponse> {
+                const res = await fetch(this.get_shared_kyous_address, {
+                        'method': this.get_shared_kyous_method,
                         headers: {
                                 'Content-Type': 'application/json'
                         },
@@ -2170,7 +2170,7 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
-                const response: GetSharedMiTasksResponse = new GetSharedMiTasksResponse()
+                const response: GetSharedKyousResponse = new GetSharedKyousResponse()
                 for (const key in json) {
                         (response as any)[key] = json[key]
                 }
@@ -2554,10 +2554,10 @@ export class GkillAPI {
         }
 }
 
-export class GkillAPIForSharedMi extends GkillAPI {
-        private static gkill_api_for_shared_mi: GkillAPIForSharedMi = new GkillAPIForSharedMi()
-        static get_instance_for_share_mi(): GkillAPIForSharedMi {
-                return GkillAPIForSharedMi.gkill_api_for_shared_mi
+export class GkillAPIForSharedKyou extends GkillAPI {
+        private static gkill_api_for_shared_kyou: GkillAPIForSharedKyou = new GkillAPIForSharedKyou()
+        static get_instance_for_share_kyou(): GkillAPIForSharedKyou {
+                return GkillAPIForSharedKyou.gkill_api_for_shared_kyou
         }
 
         // ここのデータから取得する
@@ -2879,24 +2879,24 @@ export class GkillAPIForSharedMi extends GkillAPI {
                 return res
         }
 
-        async get_share_mi_task_list_infos(_req: GetShareMiTaskListInfosRequest): Promise<GetShareMiTaskListInfosResponse> {
+        async get_share_kyou_list_infos(_req: GetShareKyouListInfosRequest): Promise<GetShareKyouListInfosResponse> {
                 throw new Error("not implements")
         }
 
-        async add_share_mi_task_list_info(_req: AddShareMiTaskListInfoRequest): Promise<AddShareMiTaskListInfoResponse> {
+        async add_share_kyou_list_info(_req: AddShareKyouListInfoRequest): Promise<AddShareKyouListInfoResponse> {
                 throw new Error("not implements")
         }
 
-        async update_share_mi_task_list_info(_req: UpdateShareMiTaskListInfoRequest): Promise<UpdateShareMiTaskListInfoResponse> {
+        async update_share_kyou_list_info(_req: UpdateShareKyouListInfoRequest): Promise<UpdateShareKyouListInfoResponse> {
                 throw new Error("not implements")
         }
 
-        async delete_share_mi_task_list_infos(_req: DeleteShareMiTaskListInfosRequest): Promise<DeleteShareMiTaskListInfosResponse> {
+        async delete_share_kyou_list_infos(_req: DeleteShareKyouListInfosRequest): Promise<DeleteShareKyouListInfosResponse> {
                 throw new Error("not implements")
         }
 
-        async get_mi_shared_tasks(req: GetSharedMiTasksRequest): Promise<GetSharedMiTasksResponse> {
-                return super.get_mi_shared_tasks(req)
+        async get_shared_kyous(req: GetSharedKyousRequest): Promise<GetSharedKyousResponse> {
+                return super.get_shared_kyous(req)
         }
 
         async get_repositories(_req: GetRepositoriesRequest): Promise<GetRepositoriesResponse> {

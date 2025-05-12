@@ -1,4 +1,4 @@
-package mi_share_info
+package share_kyou_info
 
 import (
 	"context"
@@ -10,13 +10,13 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
-type miShareInfoDAOSQLite3Impl struct {
+type shareKyouInfoDAOSQLite3Impl struct {
 	filename string
 	db       *sql.DB
 	m        *sync.Mutex
 }
 
-func NewMiShareInfoDAOSQLite3Impl(ctx context.Context, filename string) (MiShareInfoDAO, error) {
+func NewShareKyouInfoDAOSQLite3Impl(ctx context.Context, filename string) (ShareKyouInfoDAO, error) {
 	var err error
 	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
 	if err != nil {
@@ -25,7 +25,7 @@ func NewMiShareInfoDAOSQLite3Impl(ctx context.Context, filename string) (MiShare
 	}
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "MI_SHARE_INFO" (
+CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO" (
   ID PRIMARY KEY NOT NULL,
   USER_ID NOT NULL,
   DEVICE NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS "MI_SHARE_INFO" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create MI_SHARE_INFO table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create SHARE_KYOU_INFO table statement %s: %w", filename, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -45,17 +45,17 @@ CREATE TABLE IF NOT EXISTS "MI_SHARE_INFO" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create MI_SHARE_INFO table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create SHARE_KYOU_INFO table to %s: %w", filename, err)
 		return nil, err
 	}
 
-	return &miShareInfoDAOSQLite3Impl{
+	return &shareKyouInfoDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
 		m:        &sync.Mutex{},
 	}, nil
 }
-func (m *miShareInfoDAOSQLite3Impl) GetAllMiShareInfos(ctx context.Context) ([]*MiShareInfo, error) {
+func (m *shareKyouInfoDAOSQLite3Impl) GetAllKyouShareInfos(ctx context.Context) ([]*ShareKyouInfo, error) {
 	sql := `
 SELECT 
   ID,
@@ -65,12 +65,12 @@ SELECT
   IS_SHARE_DETAIL,
   SHARE_ID,
   FIND_QUERY_JSON
-FROM MI_SHARE_INFO
+FROM SHARE_KYOU_INFO
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get all mi share infos sql: %w", err)
+		err = fmt.Errorf("error at get get all kyou share infos sql: %w", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -83,33 +83,33 @@ FROM MI_SHARE_INFO
 	}
 	defer rows.Close()
 
-	miShareInfos := []*MiShareInfo{}
+	kyouShareInfos := []*ShareKyouInfo{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			miShareInfo := &MiShareInfo{}
+			kyouShareInfo := &ShareKyouInfo{}
 			err = rows.Scan(
-				&miShareInfo.ID,
-				&miShareInfo.UserID,
-				&miShareInfo.Device,
-				&miShareInfo.ShareTitle,
-				&miShareInfo.IsShareDetail,
-				&miShareInfo.ShareID,
-				&miShareInfo.FindQueryJSON,
+				&kyouShareInfo.ID,
+				&kyouShareInfo.UserID,
+				&kyouShareInfo.Device,
+				&kyouShareInfo.ShareTitle,
+				&kyouShareInfo.IsShareDetail,
+				&kyouShareInfo.ShareID,
+				&kyouShareInfo.FindQueryJSON,
 			)
-			err = fmt.Errorf("error at scan mi share info: %w", err)
+			err = fmt.Errorf("error at scan kyou share info: %w", err)
 			if err != nil {
 				return nil, err
 			}
-			miShareInfos = append(miShareInfos, miShareInfo)
+			kyouShareInfos = append(kyouShareInfos, kyouShareInfo)
 		}
 	}
-	return miShareInfos, nil
+	return kyouShareInfos, nil
 }
 
-func (m *miShareInfoDAOSQLite3Impl) GetMiShareInfos(ctx context.Context, userID string, device string) ([]*MiShareInfo, error) {
+func (m *shareKyouInfoDAOSQLite3Impl) GetKyouShareInfos(ctx context.Context, userID string, device string) ([]*ShareKyouInfo, error) {
 	sql := `
 SELECT 
   ID,
@@ -119,13 +119,13 @@ SELECT
   IS_SHARE_DETAIL,
   SHARE_ID,
   FIND_QUERY_JSON
-FROM MI_SHARE_INFO
+FROM SHARE_KYOU_INFO
 WHERE USER_ID = ? AND DEVICE = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get mi share infos sql: %w", err)
+		err = fmt.Errorf("error at get get kyou share infos sql: %w", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -142,33 +142,33 @@ WHERE USER_ID = ? AND DEVICE = ?
 	}
 	defer rows.Close()
 
-	miShareInfos := []*MiShareInfo{}
+	kyouShareInfos := []*ShareKyouInfo{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			miShareInfo := &MiShareInfo{}
+			kyouShareInfo := &ShareKyouInfo{}
 			err = rows.Scan(
-				&miShareInfo.ID,
-				&miShareInfo.UserID,
-				&miShareInfo.Device,
-				&miShareInfo.ShareTitle,
-				&miShareInfo.IsShareDetail,
-				&miShareInfo.ShareID,
-				&miShareInfo.FindQueryJSON,
+				&kyouShareInfo.ID,
+				&kyouShareInfo.UserID,
+				&kyouShareInfo.Device,
+				&kyouShareInfo.ShareTitle,
+				&kyouShareInfo.IsShareDetail,
+				&kyouShareInfo.ShareID,
+				&kyouShareInfo.FindQueryJSON,
 			)
 			if err != nil {
-				err = fmt.Errorf("error at scan mi share info: %w", err)
+				err = fmt.Errorf("error at scan kyou share info: %w", err)
 				return nil, err
 			}
-			miShareInfos = append(miShareInfos, miShareInfo)
+			kyouShareInfos = append(kyouShareInfos, kyouShareInfo)
 		}
 	}
-	return miShareInfos, nil
+	return kyouShareInfos, nil
 }
 
-func (m *miShareInfoDAOSQLite3Impl) GetMiShareInfo(ctx context.Context, sharedID string) (*MiShareInfo, error) {
+func (m *shareKyouInfoDAOSQLite3Impl) GetKyouShareInfo(ctx context.Context, sharedID string) (*ShareKyouInfo, error) {
 	sql := `
 SELECT 
   ID,
@@ -178,13 +178,13 @@ SELECT
   IS_SHARE_DETAIL,
   SHARE_ID,
   FIND_QUERY_JSON
-FROM MI_SHARE_INFO
+FROM SHARE_KYOU_INFO
 WHERE SHARE_ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get get mi share infos sql: %w", err)
+		err = fmt.Errorf("error at get get kyou share infos sql: %w", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -200,38 +200,38 @@ WHERE SHARE_ID = ?
 	}
 	defer rows.Close()
 
-	miShareInfos := []*MiShareInfo{}
+	kyouShareInfos := []*ShareKyouInfo{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			miShareInfo := &MiShareInfo{}
+			kyouShareInfo := &ShareKyouInfo{}
 			err = rows.Scan(
-				&miShareInfo.ID,
-				&miShareInfo.UserID,
-				&miShareInfo.Device,
-				&miShareInfo.ShareTitle,
-				&miShareInfo.IsShareDetail,
-				&miShareInfo.ShareID,
-				&miShareInfo.FindQueryJSON,
+				&kyouShareInfo.ID,
+				&kyouShareInfo.UserID,
+				&kyouShareInfo.Device,
+				&kyouShareInfo.ShareTitle,
+				&kyouShareInfo.IsShareDetail,
+				&kyouShareInfo.ShareID,
+				&kyouShareInfo.FindQueryJSON,
 			)
 			if err != nil {
-				err = fmt.Errorf("error at scan mi share info: %w", err)
+				err = fmt.Errorf("error at scan kyou share info: %w", err)
 				return nil, err
 			}
-			miShareInfos = append(miShareInfos, miShareInfo)
+			kyouShareInfos = append(kyouShareInfos, kyouShareInfo)
 		}
 	}
-	if len(miShareInfos) == 0 {
+	if len(kyouShareInfos) == 0 {
 		return nil, nil
 	}
-	return miShareInfos[0], nil
+	return kyouShareInfos[0], nil
 }
 
-func (m *miShareInfoDAOSQLite3Impl) AddMiShareInfo(ctx context.Context, miShareInfo *MiShareInfo) (bool, error) {
+func (m *shareKyouInfoDAOSQLite3Impl) AddKyouShareInfo(ctx context.Context, kyouShareInfo *ShareKyouInfo) (bool, error) {
 	sql := `
-INSERT INTO MI_SHARE_INFO (
+INSERT INTO SHARE_KYOU_INFO (
   ID,
   USER_ID,
   DEVICE,
@@ -252,19 +252,19 @@ INSERT INTO MI_SHARE_INFO (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at add mi share info sql: %w", err)
+		err = fmt.Errorf("error at add kyou share info sql: %w", err)
 		return false, err
 	}
 	defer stmt.Close()
 
 	queryArgs := []interface{}{
-		miShareInfo.ID,
-		miShareInfo.UserID,
-		miShareInfo.Device,
-		miShareInfo.ShareTitle,
-		miShareInfo.IsShareDetail,
-		miShareInfo.ShareID,
-		miShareInfo.FindQueryJSON,
+		kyouShareInfo.ID,
+		kyouShareInfo.UserID,
+		kyouShareInfo.Device,
+		kyouShareInfo.ShareTitle,
+		kyouShareInfo.IsShareDetail,
+		kyouShareInfo.ShareID,
+		kyouShareInfo.FindQueryJSON,
 	}
 	gkill_log.TraceSQL.Printf("%#v", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -275,9 +275,9 @@ INSERT INTO MI_SHARE_INFO (
 	return true, nil
 }
 
-func (m *miShareInfoDAOSQLite3Impl) UpdateMiShareInfo(ctx context.Context, miShareInfo *MiShareInfo) (bool, error) {
+func (m *shareKyouInfoDAOSQLite3Impl) UpdateKyouShareInfo(ctx context.Context, kyouShareInfo *ShareKyouInfo) (bool, error) {
 	sql := `
-UPDATE MI_SHARE_INFO SET
+UPDATE SHARE_KYOU_INFO SET
   ID = ?,
   USER_ID = ?,
   DEVICE = ?,
@@ -290,20 +290,20 @@ WHERE SHARE_ID = ?
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at update mi share info sql: %w", err)
+		err = fmt.Errorf("error at update kyou share info sql: %w", err)
 		return false, err
 	}
 	defer stmt.Close()
 
 	queryArgs := []interface{}{
-		miShareInfo.ID,
-		miShareInfo.UserID,
-		miShareInfo.Device,
-		miShareInfo.ShareTitle,
-		miShareInfo.IsShareDetail,
-		miShareInfo.ShareID,
-		miShareInfo.FindQueryJSON,
-		miShareInfo.ShareID,
+		kyouShareInfo.ID,
+		kyouShareInfo.UserID,
+		kyouShareInfo.Device,
+		kyouShareInfo.ShareTitle,
+		kyouShareInfo.IsShareDetail,
+		kyouShareInfo.ShareID,
+		kyouShareInfo.FindQueryJSON,
+		kyouShareInfo.ShareID,
 	}
 	gkill_log.TraceSQL.Printf("%#v", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -315,15 +315,15 @@ WHERE SHARE_ID = ?
 	return true, nil
 }
 
-func (m *miShareInfoDAOSQLite3Impl) DeleteMiShareInfo(ctx context.Context, shareID string) (bool, error) {
+func (m *shareKyouInfoDAOSQLite3Impl) DeleteKyouShareInfo(ctx context.Context, shareID string) (bool, error) {
 	sql := `
-DELETE FROM MI_SHARE_INFO
+DELETE FROM SHARE_KYOU_INFO
 WHERE SHARE_ID = ?
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at delete mi share info sql: %w", err)
+		err = fmt.Errorf("error at delete kyou share info sql: %w", err)
 		return false, err
 	}
 	defer stmt.Close()
@@ -340,6 +340,6 @@ WHERE SHARE_ID = ?
 	return true, nil
 }
 
-func (m *miShareInfoDAOSQLite3Impl) Close(ctx context.Context) error {
+func (m *shareKyouInfoDAOSQLite3Impl) Close(ctx context.Context) error {
 	return m.db.Close()
 }

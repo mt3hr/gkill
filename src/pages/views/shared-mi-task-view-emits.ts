@@ -5,7 +5,7 @@ import type { GkillMessage } from "@/classes/api/gkill-message"
 import type { Kyou } from "@/classes/datas/kyou"
 import type { Tag } from "@/classes/datas/tag"
 
-export interface miSharedTaskViewEmits {
+export interface SharedMiTaskViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'registered_kyou', kyou: Kyou): void
