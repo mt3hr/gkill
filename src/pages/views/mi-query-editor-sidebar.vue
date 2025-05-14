@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-card class="sidebar_header_wrap background-white pa-0 ma-0" :height="header_height">
-            <ShareMiFooter class="sidebar_footer" :application_config="application_config" :gkill_api="gkill_api"
+            <ShareKyouFooter class="sidebar_footer" :application_config="application_config" :gkill_api="gkill_api"
                 :find_kyou_query="query" @request_open_manage_share_kyou_dialog="show_manage_share_kyou_dialog()"
                 @request_open_share_kyou_dialog="show_share_kyou_dialog()"
                 @received_messages="(messages) => emits('received_messages', messages)"
@@ -75,7 +75,7 @@ import MapQuery from './map-query.vue'
 import SidebarHeader from './sidebar-header.vue'
 import TimeIsQuery from './time-is-query.vue'
 import TagQuery from './tag-query.vue'
-import ShareMiFooter from './mi-share-footer.vue'
+import ShareKyouFooter from './share-kyou-footer.vue'
 import miSortTypeQuery from './mi-sort-type-query.vue'
 import type { miQueryEditorSidebarEmits } from './mi-query-editor-sidebar-emits'
 import type { miQueryEditorSidebarProps } from './mi-query-editor-sidebar-props'
@@ -361,17 +361,11 @@ async function show_share_kyou_dialog(): Promise<void> {
 
 .sidebar_header {
     position: relative;
-    margin-top: calc(v-bind("(header_margin * 1 / 3).toString().concat('px')")) !important;
-    margin-bottom: calc(v-bind("(header_margin * 1 / 3).toString().concat('px')")) !important;
+    top: calc(v-bind("(header_margin / 2).toString().concat('px')"));
+    margin-bottom: calc(v-bind("(header_margin / 2).toString().concat('px')"));
 }
 
-.sidebar_footer {
-    position: relative;
-    margin-top: calc(v-bind("(header_margin * 1 / 3).toString().concat('px')")) !important;
-    margin-bottom: calc(v-bind("(header_margin * 1 / 3).toString().concat('px')")) !important;
-}
-
-.mi_sidebar {
+.rykv_sidebar {
     min-height: v-bind(sidebar_height);
     top: v-bind(sidebar_top_px);
     position: relative;

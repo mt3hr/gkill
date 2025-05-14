@@ -605,7 +605,7 @@ func (g *GkillServerAPI) Serve() error {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
 		}
-		g.HandleGetSharedKyousTask(w, r)
+		g.HandleGetSharedKyous(w, r)
 	}).Methods(g.APIAddress.GetSharedKyousMethod)
 	router.HandleFunc(g.APIAddress.GetRepositoriesAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
@@ -731,6 +731,16 @@ func (g *GkillServerAPI) Serve() error {
 			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
+	router.PathPrefix("/shared_page").Handler(http.StripPrefix("/shared_page",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok := g.filterLocalOnly(w, r); !ok {
+				return
+			}
+			if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+				return
+			}
+			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
+		})))
 	router.PathPrefix("/shared_mi").Handler(http.StripPrefix("/shared_mi",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ok := g.filterLocalOnly(w, r); !ok {
@@ -741,7 +751,7 @@ func (g *GkillServerAPI) Serve() error {
 			}
 			http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 		})))
-	router.PathPrefix("/shared_kyou").Handler(http.StripPrefix("/shared_kyou",
+	router.PathPrefix("/shared_rykv").Handler(http.StripPrefix("/shared_rykv",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ok := g.filterLocalOnly(w, r); !ok {
 				return
@@ -9682,13 +9692,18 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 	}
 
 	shareKyouInfo := &share_kyou_info.ShareKyouInfo{
-		ID:            GenerateNewID(),
-		UserID:        request.ShareKyouListInfo.UserID,
-		Device:        request.ShareKyouListInfo.Device,
-		ShareTitle:    request.ShareKyouListInfo.ShareTitle,
-		IsShareDetail: request.ShareKyouListInfo.IsShareDetail,
-		ShareID:       request.ShareKyouListInfo.ShareID,
-		FindQueryJSON: request.ShareKyouListInfo.FindQueryJSON,
+		ID:                   GenerateNewID(),
+		ShareID:              request.ShareKyouListInfo.ShareID,
+		UserID:               request.ShareKyouListInfo.UserID,
+		Device:               request.ShareKyouListInfo.Device,
+		ShareTitle:           request.ShareKyouListInfo.ShareTitle,
+		FindQueryJSON:        request.ShareKyouListInfo.FindQueryJSON,
+		ViewType:             request.ShareKyouListInfo.ViewType,
+		IsShareTimeOnly:      request.ShareKyouListInfo.IsShareTimeOnly,
+		IsShareWithTags:      request.ShareKyouListInfo.IsShareWithTags,
+		IsShareWithTexts:     request.ShareKyouListInfo.IsShareWithTexts,
+		IsShareWithTimeIss:   request.ShareKyouListInfo.IsShareWithTimeIss,
+		IsShareWithLocations: request.ShareKyouListInfo.IsShareWithLocations,
 	}
 
 	ok, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.AddKyouShareInfo(r.Context(), shareKyouInfo)
@@ -9801,13 +9816,18 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 	}
 
 	shareKyouInfo := &share_kyou_info.ShareKyouInfo{
-		ID:            GenerateNewID(),
-		UserID:        request.ShareKyouListInfo.UserID,
-		Device:        request.ShareKyouListInfo.Device,
-		ShareTitle:    request.ShareKyouListInfo.ShareTitle,
-		IsShareDetail: request.ShareKyouListInfo.IsShareDetail,
-		ShareID:       request.ShareKyouListInfo.ShareID,
-		FindQueryJSON: request.ShareKyouListInfo.FindQueryJSON,
+		ID:                   GenerateNewID(),
+		ShareID:              request.ShareKyouListInfo.ShareID,
+		UserID:               request.ShareKyouListInfo.UserID,
+		Device:               request.ShareKyouListInfo.Device,
+		ShareTitle:           request.ShareKyouListInfo.ShareTitle,
+		FindQueryJSON:        request.ShareKyouListInfo.FindQueryJSON,
+		ViewType:             request.ShareKyouListInfo.ViewType,
+		IsShareTimeOnly:      request.ShareKyouListInfo.IsShareTimeOnly,
+		IsShareWithTags:      request.ShareKyouListInfo.IsShareWithTags,
+		IsShareWithTexts:     request.ShareKyouListInfo.IsShareWithTexts,
+		IsShareWithTimeIss:   request.ShareKyouListInfo.IsShareWithTimeIss,
+		IsShareWithLocations: request.ShareKyouListInfo.IsShareWithLocations,
 	}
 
 	ok, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.UpdateKyouShareInfo(r.Context(), shareKyouInfo)
@@ -9988,7 +10008,7 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 	})
 }
 
-func (g *GkillServerAPI) HandleGetSharedKyousTask(w http.ResponseWriter, r *http.Request) {
+func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetSharedKyousRequest{}
@@ -10022,7 +10042,7 @@ func (g *GkillServerAPI) HandleGetSharedKyousTask(w http.ResponseWriter, r *http
 	}
 
 	sharedKyouInfo, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfo(r.Context(), request.SharedID)
-	if err != nil {
+	if err != nil || sharedKyouInfo == nil {
 		err = fmt.Errorf("error at get ShareKyouListInfos shared id = %s: %w", request.SharedID, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
@@ -10074,9 +10094,17 @@ func (g *GkillServerAPI) HandleGetSharedKyousTask(w http.ResponseWriter, r *http
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	trueValue := true
+	findQueryValueForKyouInstances := *findQuery
+	findQueryForKyouInstances := &findQueryValueForKyouInstances
+	findQueryForKyouInstances.UseIDs = &trueValue
+	findQueryForKyouInstances.IDs = &[]string{}
+	for _, kyou := range kyous {
+		*findQueryForKyouInstances.IDs = append(*findQueryForKyouInstances.IDs, kyou.ID)
+	}
 
 	// Mi
-	mis, err := repositories.MiReps.FindMi(r.Context(), findQuery)
+	mis, err := repositories.MiReps.FindMi(r.Context(), findQueryForKyouInstances)
 	if err != nil {
 		err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -10088,50 +10116,225 @@ func (g *GkillServerAPI) HandleGetSharedKyousTask(w http.ResponseWriter, r *http
 		return
 	}
 
-	// Tag
+	// GPSLogs
+	gpsLogs := []*reps.GPSLog{}
+	if sharedKyouInfo.IsShareWithLocations {
+		gpsLogs, err = repositories.GPSLogReps.GetGPSLogs(r.Context(), findQuery.CalendarStartDate, findQuery.CalendarEndDate)
+		if err != nil {
+			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.FindKyousShareKyouError,
+				ErrorMessage: "Kyou取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	// AttachedTag
 	tags := []*reps.Tag{}
-	for _, mi := range mis {
-		tagsRelatedID, err := repositories.GetTagsByTargetID(r.Context(), mi.ID)
-		if err != nil {
-			err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.FindTagsShareKyouError,
-				ErrorMessage: "タグ取得に失敗しました",
+	tagSet := map[string]*reps.Tag{}
+	if sharedKyouInfo.IsShareWithTags {
+		for _, kyou := range kyous {
+			tagsRelatedID, err := repositories.GetTagsByTargetID(r.Context(), kyou.ID)
+			if err != nil {
+				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
+				gkill_log.Debug.Println(err.Error())
+				gkillError := &message.GkillError{
+					ErrorCode:    message.FindTagsShareKyouError,
+					ErrorMessage: "タグ取得に失敗しました",
+				}
+				response.Errors = append(response.Errors, gkillError)
+				return
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
+			for _, tag := range tagsRelatedID {
+				tagSet[tag.ID] = tag
+			}
 		}
-		tags = append(tags, tagsRelatedID...)
+		for _, tag := range tagSet {
+			tags = append(tags, tag)
+		}
 	}
 
-	// Text
+	// AttachedText
 	texts := []*reps.Text{}
-	for _, mi := range mis {
-		textsRelatedID, err := repositories.GetTextsByTargetID(r.Context(), mi.ID)
+	textSet := map[string]*reps.Text{}
+	if sharedKyouInfo.IsShareWithTexts {
+		for _, kyou := range kyous {
+			textsRelatedID, err := repositories.GetTextsByTargetID(r.Context(), kyou.ID)
+			if err != nil {
+				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
+				gkill_log.Debug.Println(err.Error())
+				gkillError := &message.GkillError{
+					ErrorCode:    message.FindTextsShareKyouError,
+					ErrorMessage: "テキスト取得に失敗しました",
+				}
+				response.Errors = append(response.Errors, gkillError)
+				return
+			}
+			for _, text := range textsRelatedID {
+				textSet[text.ID] = text
+			}
+		}
+		for _, text := range textSet {
+			texts = append(texts, text)
+		}
+	}
+
+	// AttachedTimeIs
+	timeiss := []*reps.TimeIs{}
+	if sharedKyouInfo.IsShareWithTimeIss {
+		trueValue := true
+		for _, kyou := range kyous {
+			findQueryForPlaingTimeIs := &find.FindQuery{}
+			findQueryForPlaingTimeIs.UsePlaing = &trueValue
+			findQueryForPlaingTimeIs.PlaingTime = &kyou.RelatedTime
+			plaingTimeIss, err := repositories.TimeIsReps.FindTimeIs(r.Context(), findQueryForPlaingTimeIs)
+			if err != nil {
+				err = fmt.Errorf("error at find plaing timeis user id = %s device = %s: %w", userID, device, err)
+				gkill_log.Debug.Println(err.Error())
+				gkillError := &message.GkillError{
+					ErrorCode:    message.FindTextsShareKyouError,
+					ErrorMessage: "TimeIs取得に失敗しました",
+				}
+				response.Errors = append(response.Errors, gkillError)
+				return
+			}
+			timeiss = append(timeiss, plaingTimeIss...)
+		}
+	}
+
+	kmemos := []*reps.Kmemo{}
+	kcs := []*reps.KC{}
+	nlogs := []*reps.Nlog{}
+	lantanas := []*reps.Lantana{}
+	urlogs := []*reps.URLog{}
+	idfKyous := []*reps.IDFKyou{}
+	rekyous := []*reps.ReKyou{}
+	gitCommitLogs := []*reps.GitCommitLog{}
+	if sharedKyouInfo.ViewType != "mi" {
+		// Kmemo
+		kmemos, err = repositories.KmemoReps.FindKmemo(r.Context(), findQueryForKyouInstances)
 		if err != nil {
-			err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
+			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
-				ErrorCode:    message.FindTextsShareKyouError,
-				ErrorMessage: "テキスト取得に失敗しました",
+				ErrorCode:    message.FindKyousShareKyouError,
+				ErrorMessage: "Kyou取得に失敗しました",
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		texts = append(texts, textsRelatedID...)
+
+		// KC
+		kcs, err = repositories.KCReps.FindKC(r.Context(), findQueryForKyouInstances)
+		if err != nil {
+			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.FindKyousShareKyouError,
+				ErrorMessage: "Kyou取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		// Nlog
+		nlogs, err = repositories.NlogReps.FindNlog(r.Context(), findQueryForKyouInstances)
+		if err != nil {
+			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.FindKyousShareKyouError,
+				ErrorMessage: "Kyou取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		// Lantana
+		lantanas, err = repositories.LantanaReps.FindLantana(r.Context(), findQueryForKyouInstances)
+		if err != nil {
+			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.FindKyousShareKyouError,
+				ErrorMessage: "Kyou取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		// URLogs
+		urlogs, err = repositories.URLogReps.FindURLog(r.Context(), findQueryForKyouInstances)
+		if err != nil {
+			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.FindKyousShareKyouError,
+				ErrorMessage: "Kyou取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		// IDFKyou
+		idfKyous, err = repositories.IDFKyouReps.FindIDFKyou(r.Context(), findQueryForKyouInstances)
+		if err != nil {
+			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.FindKyousShareKyouError,
+				ErrorMessage: "Kyou取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		// ReKyou
+		rekyous, err = repositories.ReKyouReps.FindReKyou(r.Context(), findQueryForKyouInstances)
+		if err != nil {
+			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.FindKyousShareKyouError,
+				ErrorMessage: "Kyou取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		// GitCommitLog
+		gitCommitLogs, err = repositories.GitCommitLogReps.FindGitCommitLog(r.Context(), findQueryForKyouInstances)
+		if err != nil {
+			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.FindKyousShareKyouError,
+				ErrorMessage: "Kyou取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 
-	// TimeIs
-	// not implements
-	timeiss := []*reps.TimeIs{}
-
-	response.MiKyous = kyous
+	response.Kyous = kyous
 	response.Mis = mis
-	response.Tags = tags
-	response.Texts = texts
-	response.TimeIss = timeiss
+	response.Kmemos = kmemos
+	response.KCs = kcs
+	response.Nlogs = nlogs
+	response.Lantanas = lantanas
+	response.URLogs = urlogs
+	response.IDFKyous = idfKyous
+	response.ReKyous = rekyous
+	response.GitCommitLogs = gitCommitLogs
+	response.GPSLogs = gpsLogs
+	response.AttachedTags = tags
+	response.AttachedTexts = texts
+	response.AttachedTimeIss = timeiss
 	response.Title = sharedKyouInfo.ShareTitle
+	response.ViewType = sharedKyouInfo.ViewType
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetMiSharedTasksSuccessMessage,
 		Message:     "取得完了",
@@ -10493,27 +10696,52 @@ func (g *GkillServerAPI) getTLSFileNames(device string) (certFileName string, pe
 
 func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
+
+	sessionID := ""
+	sharedID := ""
+
 	// クッキーを見て認証する
 	sessionIDCookie, err := r.Cookie("gkill_session_id")
 	if err != nil {
-		w.WriteHeader(http.StatusForbidden)
-		err = fmt.Errorf("error at handle file serve: %w", err)
-		gkill_log.Trace.Printf("finish %#v", err)
-		return
+		sharedID = r.URL.Query().Get("gkill_shared_id")
+		if sharedID == "" {
+			w.WriteHeader(http.StatusForbidden)
+			err = fmt.Errorf("error at handle file serve: %w", err)
+			gkill_log.Trace.Printf("finish %#v", err)
+			return
+		}
+	} else {
+		sessionID = sessionIDCookie.Value
 	}
-	sessionID := sessionIDCookie.Value
 
 	// アカウントを取得
 	// NGであれば403でreturn
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), sessionID)
-	if account == nil || gkillError != nil || err != nil {
+	userID := ""
+	if sessionID != "" {
+		account, gkillError, err := g.getAccountFromSessionID(r.Context(), sessionID)
+		if account == nil || gkillError != nil || err != nil {
+			w.WriteHeader(http.StatusForbidden)
+			err = fmt.Errorf("error at handle file serve: %w", err)
+			gkill_log.Trace.Printf("finish %#v", err)
+			return
+		}
+		userID = account.UserID
+	} else if sharedID != "" {
+		sharedKyouInfo, err := g.GkillDAOManager.ConfigDAOs.ShareKyouInfoDAO.GetKyouShareInfo(r.Context(), sharedID)
+		if err != nil || sharedKyouInfo == nil {
+			w.WriteHeader(http.StatusForbidden)
+			err = fmt.Errorf("error at handle file serve: %w", err)
+			gkill_log.Trace.Printf("finish %#v", err)
+			return
+		}
+		userID = sharedKyouInfo.UserID
+	} else {
 		w.WriteHeader(http.StatusForbidden)
 		err = fmt.Errorf("error at handle file serve: %w", err)
 		gkill_log.Trace.Printf("finish %#v", err)
 		return
 	}
 
-	userID := account.UserID
 	device, err := g.GetDevice()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

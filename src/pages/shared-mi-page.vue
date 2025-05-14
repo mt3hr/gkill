@@ -1,8 +1,8 @@
 <template>
     <div>
         <sharedMiTaskView :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :app_title_bar_height="app_title_bar_height" :share_id="share_kyou_id"
-            :application_config="new ApplicationConfig()" :gkill_api="gkill_api" @received_errors="write_errors"
+            :app_title_bar_height="app_title_bar_height" :share_id="share_kyou_id" :share_title="share_title"
+            :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
             @received_messages="write_messages" />
         <div class="alert_container">
             <v-slide-y-transition group>
@@ -17,24 +17,22 @@
 <script lang="ts" setup>
 'use strict'
 import { computed, ref, type Ref } from 'vue'
-import { GkillAPI, GkillAPIForSharedKyou } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
-import sharedMiTaskView from './views/shared-mi-task-view.vue'
+import sharedMiTaskView from './views/shared-mi-view.vue'
 import { useRoute } from 'vue-router'
-import { ApplicationConfig } from '@/classes/datas/config/application-config'
+import type { SharedMiPageProps } from './shared-mi-page-props'
+
+const props = defineProps<SharedMiPageProps>()
 
 const actual_height: Ref<number> = ref(0)
 const element_height: Ref<number> = ref(0)
 const browser_url_bar_height: Ref<number> = ref(0)
 const app_title_bar_height: Ref<number> = ref(50)
-const gkill_api: Ref<GkillAPI> = computed(() => GkillAPIForSharedKyou.get_instance_for_share_kyou())
 const app_content_height: Ref<number> = ref(0)
 const app_content_width: Ref<number> = ref(0)
 const share_kyou_id = computed(() => useRoute().query.share_id!.toString())
-
-GkillAPI.set_gkill_api(GkillAPIForSharedKyou.get_instance())
 
 async function resize_content(): Promise<void> {
     const inner_element = document.querySelector('#control-height')
@@ -53,7 +51,7 @@ async function write_errors(errors: Array<GkillError>) {
         if (errors[i] && errors[i].error_message) {
             received_messages.push({
                 message: errors[i].error_message,
-                id: gkill_api.value.generate_uuid(),
+                id: props.gkill_api.generate_uuid(),
                 show_snackbar: true,
             })
         }
@@ -72,7 +70,7 @@ async function write_messages(messages_: Array<GkillMessage>) {
         if (messages_[i] && messages_[i].message) {
             received_messages.push({
                 message: messages_[i].message,
-                id: gkill_api.value.generate_uuid(),
+                id: props.gkill_api.generate_uuid(),
                 show_snackbar: true,
             })
         }
