@@ -1,9 +1,8 @@
 <template>
     <div>
-        <sharedMiTaskView :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :app_title_bar_height="app_title_bar_height" :share_id="share_kyou_id" :share_title="share_title"
-            :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
-            @received_messages="write_messages" />
+        <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
+            :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
+            :is_shared_rykv_view="true" :share_title="share_title" @received_errors="write_errors" @received_messages="write_messages" />
         <div class="alert_container">
             <v-slide-y-transition group>
                 <v-alert v-for="message in messages" theme="dark" :key="message.id">
@@ -16,30 +15,31 @@
 
 <script lang="ts" setup>
 'use strict'
-import { computed, ref, type Ref } from 'vue'
-import type { GkillError } from '@/classes/api/gkill-error'
+import { ref, type Ref } from 'vue'
+import { GkillAPI } from '@/classes/api/gkill-api'
+import { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
-import sharedMiTaskView from './views/shared-mi-view.vue'
-import { useRoute } from 'vue-router'
-import type { SharedMiPageProps } from './shared-mi-page-props'
+import rykvView from './views/rykv-view.vue'
+import type { KyouViewEmits } from './views/kyou-view-emits'
+import type { SharedRYKVPageProps } from './shared-rykv-page-props'
 
-const props = defineProps<SharedMiPageProps>()
+defineProps<SharedRYKVPageProps>()
+defineEmits<KyouViewEmits>()
 
-const actual_height: Ref<number> = ref(0)
-const element_height: Ref<number> = ref(0)
-const browser_url_bar_height: Ref<number> = ref(0)
-const app_title_bar_height: Ref<number> = ref(50)
-const app_content_height: Ref<number> = ref(0)
-const app_content_width: Ref<number> = ref(0)
-const share_kyou_id = computed(() => useRoute().query.share_id!.toString())
+const actual_height: Ref<Number> = ref(0)
+const element_height: Ref<Number> = ref(0)
+const browser_url_bar_height: Ref<Number> = ref(0)
+const app_title_bar_height: Ref<Number> = ref(50)
+const app_content_height: Ref<Number> = ref(0)
+const app_content_width: Ref<Number> = ref(0)
 
 async function resize_content(): Promise<void> {
     const inner_element = document.querySelector('#control-height')
     actual_height.value = window.innerHeight
     element_height.value = inner_element ? inner_element.clientHeight : actual_height.value
-    browser_url_bar_height.value = (Number(element_height.value) - Number(actual_height.value)).valueOf()
-    app_content_height.value = (Number(element_height.value) - (Number(browser_url_bar_height.value) + Number(app_title_bar_height.value))).valueOf()
+    browser_url_bar_height.value = Number(element_height.value) - Number(actual_height.value)
+    app_content_height.value = Number(element_height.value) - (Number(browser_url_bar_height.value) + Number(app_title_bar_height.value))
     app_content_width.value = window.innerWidth
 }
 
@@ -51,7 +51,7 @@ async function write_errors(errors: Array<GkillError>) {
         if (errors[i] && errors[i].error_message) {
             received_messages.push({
                 message: errors[i].error_message,
-                id: props.gkill_api.generate_uuid(),
+                id: GkillAPI.get_instance().generate_uuid(),
                 show_snackbar: true,
             })
         }
@@ -70,7 +70,7 @@ async function write_messages(messages_: Array<GkillMessage>) {
         if (messages_[i] && messages_[i].message) {
             received_messages.push({
                 message: messages_[i].message,
-                id: props.gkill_api.generate_uuid(),
+                id: GkillAPI.get_instance().generate_uuid(),
                 show_snackbar: true,
             })
         }
@@ -92,7 +92,6 @@ window.addEventListener('resize', () => {
 resize_content()
 
 </script>
-
 <style lang="css">
 /* 不要なスクロールバーを消す */
 body,

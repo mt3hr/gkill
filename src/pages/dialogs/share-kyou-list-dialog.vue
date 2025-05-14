@@ -9,9 +9,9 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import type { ShareKyousListDialogEmits } from './share-task-list-dialog-emits'
-import type { ShareKyousListDialogProps } from './share-task-list-dialog-props'
-import ShareKyousListView from '../views/share-task-list-view.vue'
+import type { ShareKyousListDialogEmits } from './share-kyou-list-dialog-emits'
+import type { ShareKyousListDialogProps } from './share-kyou-list-dialog-props'
+import ShareKyousListView from '../views/share-kyou-view.vue'
 import { ref, type Ref } from 'vue'
 
 defineProps<ShareKyousListDialogProps>()
