@@ -1,6 +1,11 @@
 <template>
     <div>
         <v-card class="sidebar_header_wrap background-white pa-0 ma-0" :height="header_height">
+            <ShareKyouFooter class="sidebar_footer" :application_config="application_config" :gkill_api="gkill_api"
+                :find_kyou_query="query" @request_open_manage_share_kyou_dialog="show_manage_share_kyou_dialog()"
+                @request_open_share_kyou_dialog="show_share_kyou_dialog()"
+                @received_messages="(messages) => emits('received_messages', messages)"
+                @received_errors="(errors) => emits('received_errors', errors)" />
             <SidebarHeader class="sidebar_header" :application_config="application_config" :gkill_api="gkill_api"
                 :find_kyou_query="query" @requested_search="emits('requested_search', false)"
                 :inited="inited_sidebar_header_for_query_sidebar"
@@ -58,6 +63,7 @@ import KeywordQuery from './keyword-query.vue'
 import MapQuery from './map-query.vue'
 import RepQuery from './rep-query.vue'
 import SidebarHeader from './sidebar-header.vue'
+import ShareKyouFooter from './share-kyou-footer.vue'
 import TagQuery from './tag-query.vue'
 import TimeIsQuery from './time-is-query.vue'
 import type { rykvQueryEditorSidebarEmits } from './rykv-query-editor-sidebar-emits'
@@ -79,8 +85,8 @@ const props = defineProps<rykvQueryEditorSidebarProps>()
 const emits = defineEmits<rykvQueryEditorSidebarEmits>()
 defineExpose({ generate_query, get_default_query })
 
-const header_margin = ref(8)
-const header_height: Ref<number> = ref(36 + header_margin.value.valueOf())
+const header_margin = ref(12)
+const header_height: Ref<number> = ref(36 * 2 + header_margin.value.valueOf())
 const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
@@ -280,6 +286,14 @@ async function emits_default_query(): Promise<void> {
     await timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
     query.value = find_query
     emits('updated_query_clear', find_query)
+}
+
+async function show_manage_share_kyou_dialog(): Promise<void> {
+    throw new Error('Not implemented')
+}
+
+async function show_share_kyou_dialog(): Promise<void> {
+    throw new Error('Not implemented')
 }
 </script>
 <style lang="css" scoped>

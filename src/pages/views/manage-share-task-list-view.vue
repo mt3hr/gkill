@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <v-card-title>
-            {{ $t("SHARE_MI_TASK_LINK_TITLE") }}
+            {{ $t("SHARE_KYOU_TASK_LINK_TITLE") }}
         </v-card-title>
         <table>
             <tr v-for="share_kyou_list_info in share_kyou_list_infos" :key="share_kyou_list_info.share_id">

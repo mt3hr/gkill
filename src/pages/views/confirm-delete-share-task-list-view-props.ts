@@ -1,8 +1,8 @@
 'use strict'
 
-import type { ShareKyouListInfo } from "@/classes/datas/share-kyou-list-info"
+import type { ShareKyousInfo } from "@/classes/datas/share-kyous-info"
 import type { GkillPropsBase } from "./gkill-props-base"
 
 export interface ConfirmDeleteShareKyousListViewProps extends GkillPropsBase {
-    share_kyou_list_info: ShareKyouListInfo
+    share_kyou_list_info: ShareKyousInfo
 }

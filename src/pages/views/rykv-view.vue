@@ -1,13 +1,16 @@
 <template>
     <div class="rykv_view_wrap">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
-            <v-app-bar-nav-icon @click.stop="() => { if (inited) { drawer = !drawer } }" />
+            <v-app-bar-nav-icon v-if="!is_shared_rykv_view" @click.stop="() => { if (inited) { drawer = !drawer } }" />
             <v-toolbar-title>
                 <div>
-                    <span>
+                    <span v-if="!is_shared_rykv_view">
                         {{ $t("RYKV_APP_TITLE") }}
                     </span>
-                    <v-menu activator="parent">
+                    <span v-if="is_shared_rykv_view">
+                        {{ share_title }}
+                    </span>
+                    <v-menu v-if="!is_shared_rykv_view" activator="parent">
                         <v-list>
                             <v-list-item :key="index" :value="index" v-for="page, index in [
                                 { app_name: $t('RYKV_APP_NAME'), page_name: 'rykv' },
@@ -28,7 +31,8 @@
             <v-btn icon @click="is_show_kyou_detail_view = !is_show_kyou_detail_view">
                 <v-icon>mdi-file-document</v-icon>
             </v-btn>
-            <v-btn icon @click="async () => { await dnote_view?.abort(); is_show_dnote = !is_show_dnote }">
+            <v-btn v-if="!is_shared_rykv_view" icon
+                @click="async () => { await dnote_view?.abort(); is_show_dnote = !is_show_dnote }">
                 <v-icon>mdi-file-chart-outline</v-icon>
             </v-btn>
             <v-btn icon @click="is_show_kyou_count_calendar = !is_show_kyou_count_calendar">
@@ -38,11 +42,11 @@
                 <v-icon>mdi-map</v-icon>
             </v-btn>
             <v-divider vertical />
-            <v-btn icon="mdi-cog" :disabled="!application_config.is_loaded"
+            <v-btn v-if="!is_shared_rykv_view" icon="mdi-cog" :disabled="!application_config.is_loaded"
                 @click="emits('requested_show_application_config_dialog')" />
         </v-app-bar>
-        <v-navigation-drawer v-model="drawer" app :height="app_content_height" :mobile="drawer_mode_is_mobile"
-            :width="312" :touchless="!drawer_mode_is_mobile">
+        <v-navigation-drawer v-if="!is_shared_rykv_view" v-model="drawer" app :height="app_content_height"
+            :mobile="drawer_mode_is_mobile" :width="312" :touchless="!drawer_mode_is_mobile">
             <RykvQueryEditorSideBar v-show="inited" class="rykv_query_editor_sidebar"
                 :application_config="application_config" :gkill_api="gkill_api"
                 :app_title_bar_height="app_title_bar_height" :app_content_height="app_content_height"
@@ -74,7 +78,8 @@
                         gps_log_map_end_time = new_query.calendar_end_date
                     }
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
-                ref="query_editor_sidebar" />
+                @received_errors="(errors) => emits('received_errors', errors)"
+                @received_messages="(messages) => emits('received_messages', messages)" ref="query_editor_sidebar" />
         </v-navigation-drawer>
         <v-main class="main" :class="(drawer_mode_is_mobile) ? 'scroll_snap_container' : ''">
             <div class="overlay_target">
@@ -90,8 +95,8 @@
                             :application_config="application_config" :gkill_api="gkill_api"
                             :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
                             :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
-                            :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                            :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="true"
+                            :enable_context_menu="!is_shared_rykv_view" :enable_dialog="!is_shared_rykv_view"
+                            :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="!is_shared_rykv_view"
                             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true"
                             :show_content_only="false" :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
                                 match_kyous_list_top_list[index] = scroll_top
@@ -99,6 +104,9 @@
                                     props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
                                 }
                             }" @clicked_list_view="() => {
+                                if (is_shared_rykv_view) {
+                                    return
+                                }
                                 skip_search_this_tick = true
                                 focused_query = querys[index]
 
@@ -147,7 +155,7 @@
                             @updated_tag="(updated_tag) => { }" @updated_text="(updated_text) => { }"
                             @updated_notification="(updated_notification) => { }" />
                     </td>
-                    <td valign="top">
+                    <td valign="top" v-if="!is_shared_rykv_view">
                         <v-btn class="rykv_add_column_button rounded-sm mx-auto" :height="app_content_height.valueOf()"
                             :width="30" :color="'primary'" @click="async () => {
                                 add_list_view()
@@ -169,9 +177,9 @@
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
                                 :show_timeis_plaing_end_button="true" :height="'auto'" :is_readonly_mi_check="false"
-                                :width="'auto'" :enable_context_menu="enable_context_menu"
-                                :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
-                                :show_related_time="true"
+                                :width="'auto'" :enable_context_menu="!is_shared_rykv_view"
+                                :enable_dialog="!is_shared_rykv_view" :show_attached_timeis="true"
+                                class="kyou_detail_view" :show_related_time="true"
                                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                                 @deleted_text="(deleted_text) => { }"
                                 @deleted_notification="(deleted_notification) => { }"
@@ -185,7 +193,8 @@
                                 @requested_reload_list="() => { }" />
                         </div>
                     </td>
-                    <td valign="top" v-if="is_show_dnote" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
+                    <td valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
+                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
                             :application_config="application_config" :gkill_api="gkill_api" :query="focused_query"
                             :checked_kyous="focused_column_checked_kyous" :last_added_tag="last_added_tag"
@@ -213,17 +222,19 @@
                             :marker_time="gps_log_map_marker_time"
                             @received_errors="(errors) => emits('received_errors', errors)"
                             @received_messages="(messages) => emits('received_messages', messages)"
-                            @requested_focus_time="(time) => focused_time = time" />
+                            @requested_focus_time="(time) => { focused_time = time }" />
                     </td>
                 </tr>
             </table>
-            <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
+            <AddKCDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+                :highlight_targets="[]" :last_added_tag="''" :kyou="new Kyou()"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)" ref="add_kc_dialog" />
-            <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
+            <AddTimeisDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+                :highlight_targets="[]" :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
@@ -233,9 +244,10 @@
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 ref="add_timeis_dialog" />
-            <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
+            <AddLantanaDialog v-if="!is_shared_rykv_view" :application_config="application_config"
+                :gkill_api="gkill_api" :highlight_targets="[]" :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
@@ -245,9 +257,10 @@
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 ref="add_lantana_dialog" />
-            <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
+            <AddUrlogDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+                :highlight_targets="[]" :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
@@ -257,9 +270,10 @@
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 ref="add_urlog_dialog" />
-            <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
+            <AddMiDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+                :highlight_targets="[]" :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
@@ -269,9 +283,10 @@
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 ref="add_mi_dialog" />
-            <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
+            <AddNlogDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+                :highlight_targets="[]" :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
@@ -281,23 +296,26 @@
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 ref="add_nlog_dialog" />
-            <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
+            <kftlDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+                :highlight_targets="[]" :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" :app_content_width="app_content_width"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @registered_tag="(registered_tag) => { }" @registered_text="(registered_text) => { }"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 ref="kftl_dialog" />
-            <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
+            <mkflDialog v-if="!is_shared_rykv_view" :application_config="application_config" :gkill_api="gkill_api"
+                :highlight_targets="[]" :last_added_tag="last_added_tag" :kyou="new Kyou()"
+                :app_content_height="app_content_height" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" :app_content_width="app_content_width"
+                @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
                 ref="mkfl_dialog" />
-            <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-                :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
+            <UploadFileDialog v-if="!is_shared_rykv_view" :app_content_height="app_content_height"
+                :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
+                :last_added_tag="''"
                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
@@ -306,7 +324,8 @@
                 @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)" ref="upload_file_dialog" />
-            <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
+            <v-avatar v-if="!is_shared_rykv_view" :style="floatingActionButtonStyle()" color="primary"
+                class="position-fixed">
                 <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
                         <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props" />
@@ -459,6 +478,16 @@ watch(() => is_show_dnote.value, async () => {
     }
 })
 
+if (props.is_shared_rykv_view) {
+    nextTick(async () => {
+        is_loading.value = false
+        inited.value = true
+        const kyous = (await props.gkill_api.get_kyous(new GetKyousRequest())).kyous
+        match_kyous_list.value = [kyous]
+        focused_kyous_list.value = kyous
+        focused_column_index.value = 0
+    })
+}
 
 const is_loading: Ref<boolean> = ref(true)
 
@@ -625,6 +654,9 @@ async function reload_list(column_index: number): Promise<void> {
 }
 
 async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Promise<void> {
+    if (props.is_shared_rykv_view) {
+        return
+    }
     focused_kyou.value = kyou
     focused_column_index.value = column_index
 
