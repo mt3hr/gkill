@@ -16,17 +16,17 @@ import type { ConfirmDeleteShareKyousLinkDialogProps } from './confirm-delete-sh
 import ConfirmDeleteShareKyousListView from '../views/confirm-delete-share-task-list-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { ShareKyouListInfo } from '@/classes/datas/share-kyou-list-info'
+import type { ShareKyousInfo } from '@/classes/datas/share-kyous-info'
 
 defineProps<ConfirmDeleteShareKyousLinkDialogProps>()
 const emits = defineEmits<ConfirmDeleteShareKyousLinkDialogEmits>()
 defineExpose({ show, hide })
 
-const share_kyou_list_info: Ref<ShareKyouListInfo | null> = ref(null)
+const share_kyou_list_info: Ref<ShareKyousInfo | null> = ref(null)
 
 const is_show_dialog: Ref<boolean> = ref(false)
 
-async function show(share_kyou_list_info_: ShareKyouListInfo): Promise<void> {
+async function show(share_kyou_list_info_: ShareKyousInfo): Promise<void> {
     share_kyou_list_info.value = share_kyou_list_info_
     is_show_dialog.value = true
 }
