@@ -28,20 +28,20 @@
 <script setup lang="ts">
 import ManageShareButton from './manage-share-button.vue'
 import ShareButton from './share-button.vue'
-import type { MiShareFooterEmits } from './mi-share-footer-emits'
-import type { MiShareFooterProps } from './mi-share-footer-props'
+import type { ShareKyouFooterEmits } from './share-kyou-footer-emits'
+import type { ShareKyouFooterProps } from './share-kyou-footer-props'
 import ManageShareKyousListDialog from '../dialogs/manage-share-task-list-dialog.vue'
-import ShareKyousListDialog from '../dialogs/share-task-list-dialog.vue'
-import ShareKyousListLinkDialog from '../dialogs/share-task-list-link-dialog.vue'
+import ShareKyousListDialog from '../dialogs/share-kyou-list-dialog.vue'
+import ShareKyousListLinkDialog from '../dialogs/share-kyou-list-link-dialog.vue'
 import { ref } from 'vue'
-import type { ShareKyouListInfo } from '@/classes/datas/share-kyou-list-info'
+import type { ShareKyousInfo } from '@/classes/datas/share-kyous-info'
 
 const share_kyou_list_dialog = ref<InstanceType<typeof ShareKyousListDialog> | null>(null);
 const share_kyou_list_link_dialog = ref<InstanceType<typeof ShareKyousListLinkDialog> | null>(null);
 const manage_share_kyou_list_dialog = ref<InstanceType<typeof ManageShareKyousListDialog> | null>(null);
 
-defineProps<MiShareFooterProps>()
-const emits = defineEmits<MiShareFooterEmits>()
+defineProps<ShareKyouFooterProps>()
+const emits = defineEmits<ShareKyouFooterEmits>()
 
 function show_share_kyou_list_dialog() {
     const dialog = share_kyou_list_dialog.value
@@ -50,7 +50,7 @@ function show_share_kyou_list_dialog() {
     }
 }
 
-function show_share_kyou_list_link_dialog(share_kyou_list_info: ShareKyouListInfo) {
+function show_share_kyou_list_link_dialog(share_kyou_list_info: ShareKyousInfo) {
     const dialog = share_kyou_list_link_dialog.value
     if (dialog) {
         dialog.show(share_kyou_list_info)

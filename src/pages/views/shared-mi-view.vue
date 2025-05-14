@@ -77,32 +77,27 @@
     </div>
 </template>
 <script setup lang="ts">
-import type { SharedMiTaskViewProps } from './shared-mi-task-view-props'
+import type { SharedMiViewProps } from './shared-mi-view-props'
 
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import KyouListView from './kyou-list-view.vue'
 import KyouView from './kyou-view.vue'
-import { GkillAPI, GkillAPIForSharedKyou } from '@/classes/api/gkill-api'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import KyouCountCalendar from './kyou-count-calendar.vue'
 import type { Kyou } from '@/classes/datas/kyou'
-import { GetSharedKyousRequest } from '@/classes/api/req_res/get-shared-kyous-request'
-import { GkillError } from '@/classes/api/gkill-error'
-import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { KyouViewEmits } from './kyou-view-emits'
+import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 
-import { i18n } from '@/i18n'
 const kyou_list_view = ref();
 
-const props = defineProps<SharedMiTaskViewProps>()
+const props = defineProps<SharedMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const match_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_time: Ref<Date> = ref(new Date())
 
-const share_title: Ref<string> = ref("")
+const share_title: Ref<string> = ref(props.share_title)
 const is_loading: Ref<boolean> = ref(true)
-const inited = ref(false)
 
 const kyou_list_view_height = computed(() => props.app_content_height)
 const is_show_kyou_detail_view: Ref<boolean> = ref(true)
@@ -111,49 +106,11 @@ const is_show_kyou_count_calendar: Ref<boolean> = ref(true)
 const focused_kyou: Ref<Kyou | null> = ref(null)
 
 async function load_content(): Promise<void> {
-    try {
-        const req = new GetSharedKyousRequest()
-        req.shared_id = props.share_id
-        const res = await props.gkill_api.get_shared_kyous(req)
-        if (res.errors && res.errors.length !== 0) {
-            emits('received_errors', res.errors)
-            return
-        }
-        if (res.messages && res.messages.length !== 0) {
-            emits('received_messages', res.messages)
-        }
-
-        inited.value = true
-        is_loading.value = false
-
-        // GkillAPIForSharedKyouを設定ここから
-        const gkill_api_for_shared_kyou = GkillAPIForSharedKyou.get_instance_for_share_kyou()
-        gkill_api_for_shared_kyou.kyous = res.mi_kyous
-        gkill_api_for_shared_kyou.mis = res.mis
-        gkill_api_for_shared_kyou.tags = res.tags
-        gkill_api_for_shared_kyou.texts = res.texts
-        gkill_api_for_shared_kyou.timeiss = res.timeiss
-        GkillAPI.set_gkill_api(gkill_api_for_shared_kyou)
-        // GkillAPIForSharedKyouを設定ここまで
-
-        share_title.value = res.title
-        match_kyous.value.splice(0)
-        if (res.mi_kyous) {
-            for (let i = 0; i < res.mi_kyous.length; i++) {
-                match_kyous.value.push(res.mi_kyous[i])
-            }
-        }
-    } catch (e) {
-        console.error(e)
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.failed_shared_kyou_tasks
-        error.error_message = i18n.global.t("FAILED_LOAD_MESSAGE")
-        emits('received_errors', [error])
-        inited.value = true
-        is_loading.value = false
-    }
+    const get_kyous_req = new GetKyousRequest()
+    const res = await props.gkill_api.get_kyous(get_kyous_req)
+    match_kyous.value = res.kyous
+    is_loading.value = false
 }
-
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
     const kyous_list = match_kyous.value
@@ -188,7 +145,6 @@ watch(() => focused_time.value, () => {
     }
     (kyou_list_view as any).value.scroll_to_kyou(target_kyou)
 })
-
 
 nextTick(() => load_content())
 </script>

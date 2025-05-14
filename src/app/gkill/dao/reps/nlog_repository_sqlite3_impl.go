@@ -403,8 +403,9 @@ func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.Fi
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
-
 	}
+
+	dataType := "nlog"
 
 	sql := `
 SELECT 
@@ -436,6 +437,7 @@ WHERE
 
 	queryArgs := []interface{}{
 		repName,
+		dataType,
 	}
 	whereCounter := 0
 	onlyLatestData := false

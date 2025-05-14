@@ -1,7 +1,7 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            {{ $t("DELETE_SHARE_MI_TITLE") }}
+            {{ $t("DELETE_SHARE_KYOU_TITLE") }}
         </v-card-title>
         <div>{{ $t("CONFIRM_DELETE_MESSAGE") }}</div>
         <div>{{ share_kyou_list_info.share_title }}</div>

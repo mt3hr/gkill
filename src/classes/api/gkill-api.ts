@@ -30,37 +30,37 @@ import { DeleteShareKyouListInfosResponse } from "./req_res/delete-share-kyou-li
 import type { GenerateTLSFileRequest } from "./req_res/generate-tls-file-request"
 import type { GenerateTLSFileResponse } from "./req_res/generate-tls-file-response"
 import type { GetAllTagNamesRequest } from "./req_res/get-all-tag-names-request"
-import type { GetAllTagNamesResponse } from "./req_res/get-all-tag-names-response"
+import { GetAllTagNamesResponse } from "./req_res/get-all-tag-names-response"
 import type { GetApplicationConfigRequest } from "./req_res/get-application-config-request"
 import { GetApplicationConfigResponse } from "./req_res/get-application-config-response"
 import type { GetGitCommitLogRequest } from "./req_res/get-git-commit-log-request"
-import type { GetGitCommitLogResponse } from "./req_res/get-git-commit-log-response"
+import { GetGitCommitLogResponse } from "./req_res/get-git-commit-log-response"
 import { GetGkillInfoRequest } from "./req_res/get-gkill-info-request"
 import { GetGkillInfoResponse } from "./req_res/get-gkill-info-response"
 import type { GetGPSLogRequest } from "./req_res/get-gps-log-request"
-import type { GetGPSLogResponse } from "./req_res/get-gps-log-response"
+import { GetGPSLogResponse } from "./req_res/get-gps-log-response"
 import type { GetKFTLTemplatesRequest } from "./req_res/get-kftl-templates-request"
 import type { GetKFTLTemplatesResponse } from "./req_res/get-kftl-templates-response"
 import type { GetKmemoRequest } from "./req_res/get-kmemo-request"
-import type { GetKmemoResponse } from "./req_res/get-kmemo-response"
+import { GetKmemoResponse } from "./req_res/get-kmemo-response"
 import type { GetKCRequest } from "./req_res/get-kc-request"
-import type { GetKCResponse } from "./req_res/get-kc-response"
+import { GetKCResponse } from "./req_res/get-kc-response"
 import type { GetKyouRequest } from "./req_res/get-kyou-request"
 import { GetKyouResponse } from "./req_res/get-kyou-response"
 import type { GetKyousRequest } from "./req_res/get-kyous-request"
-import type { GetKyousResponse } from "./req_res/get-kyous-response"
+import { GetKyousResponse } from "./req_res/get-kyous-response"
 import type { GetLantanaRequest } from "./req_res/get-lantana-request"
-import type { GetLantanaResponse } from "./req_res/get-lantana-response"
+import { GetLantanaResponse } from "./req_res/get-lantana-response"
 import type { GetMiBoardRequest } from "./req_res/get-mi-board-request"
 import type { GetMiBoardResponse } from "./req_res/get-mi-board-response"
 import type { GetMiRequest } from "./req_res/get-mi-request"
 import { GetMiResponse } from "./req_res/get-mi-response"
 import type { GetNlogRequest } from "./req_res/get-nlog-request"
-import type { GetNlogResponse } from "./req_res/get-nlog-response"
+import { GetNlogResponse } from "./req_res/get-nlog-response"
 import type { GetPlaingTimeisRequest } from "./req_res/get-plaing-timeis-request"
 import { GetPlaingTimeisResponse } from "./req_res/get-plaing-timeis-response"
 import type { GetReKyouRequest } from "./req_res/get-re-kyou-request"
-import type { GetReKyouResponse } from "./req_res/get-re-kyou-response"
+import { GetReKyouResponse } from "./req_res/get-re-kyou-response"
 import type { GetShareKyouListInfosRequest } from "./req_res/get-share-kyou-list-infos-request"
 import type { GetSharedKyousRequest } from "./req_res/get-shared-kyous-request"
 import { GetSharedKyousResponse } from "./req_res/get-shared-kyous-response"
@@ -75,7 +75,7 @@ import { GetTextsByTargetIDResponse } from "./req_res/get-texts-by-target-id-res
 import type { GetTimeisRequest } from "./req_res/get-timeis-request"
 import { GetTimeisResponse } from "./req_res/get-timeis-response"
 import type { GetURLogRequest } from "./req_res/get-ur-log-request"
-import type { GetURLogResponse } from "./req_res/get-ur-log-response"
+import { GetURLogResponse } from "./req_res/get-ur-log-response"
 import type { LoginRequest } from "./req_res/login-request"
 import type { LoginResponse } from "./req_res/login-response"
 import type { LogoutRequest } from "./req_res/logout-request"
@@ -130,8 +130,8 @@ import type { GkillAPIResponse } from "./gkill-api-response"
 import router from "@/router"
 import type { GetRepositoriesResponse } from "./req_res/get-repositories-response"
 import type { GetRepositoriesRequest } from "./req_res/get-repositories-request"
-import type { GetAllRepNamesRequest } from "./req_res/get-all-rep-names-request"
-import type { GetAllRepNamesResponse } from "./req_res/get-all-rep-names-response"
+import { GetAllRepNamesRequest } from "./req_res/get-all-rep-names-request"
+import { GetAllRepNamesResponse } from "./req_res/get-all-rep-names-response"
 import { Kyou } from "../datas/kyou"
 import { Tag } from "../datas/tag"
 import { Text } from "../datas/text"
@@ -147,7 +147,7 @@ import { ReKyou } from "../datas/re-kyou"
 import { GitCommitLog } from "../datas/git-commit-log"
 import { IDFKyou } from "../datas/idf-kyou"
 import type { GetIDFKyouRequest } from "./req_res/get-idf-kyou-request"
-import type { GetIDFKyouResponse } from "./req_res/get-idf-kyou-response"
+import { GetIDFKyouResponse } from "./req_res/get-idf-kyou-response"
 import { GPSLog } from "../datas/gps-log"
 import { FindKyouQuery } from "./find_query/find-kyou-query"
 import type { UpdateIDFKyouRequest } from "./req_res/update-idf-kyou-request"
@@ -156,7 +156,7 @@ import type { GetServerConfigsRequest } from "./req_res/get-server-configs-reque
 import type { GetServerConfigsResponse } from "./req_res/get-server-configs-response"
 import type { UpdateServerConfigsRequest } from "./req_res/update-server-configs-request"
 import type { UpdateServerConfigsResponse } from "./req_res/update-server-configs-response"
-import { ShareKyouListInfo } from "../datas/share-kyou-list-info"
+import { ShareKyousInfo } from "../datas/share-kyous-info"
 import type { GetGkillNotificationPublicKeyRequest } from "./req_res/get-gkill-notification-public-key-request"
 import type { GetGkillNotificationPublicKeyResponse } from "./req_res/get-gkill-notification-public-key-response"
 import type { RegisterGkillNotificationRequest } from "./req_res/register-gkill-notification-request"
@@ -164,9 +164,9 @@ import type { RegisterGkillNotificationResponse } from "./req_res/register-gkill
 import type { AddNotificationRequest } from "./req_res/add-notification-request"
 import type { AddNotificationResponse } from "./req_res/add-notification-response"
 import type { GetNotificationHistoryByNotificationIDRequest } from "./req_res/get-notification-history-by-notification-id-request copy"
-import type { GetNotificationHistoryByNotificationIDResponse } from "./req_res/get-notification-history-by-notification-id-response"
+import { GetNotificationHistoryByNotificationIDResponse } from "./req_res/get-notification-history-by-notification-id-response"
 import type { GetNotificationsByTargetIDRequest } from "./req_res/get-notifications-by-target-id-request"
-import type { GetNotificationsByTargetIDResponse } from "./req_res/get-notifications-by-target-id-response"
+import { GetNotificationsByTargetIDResponse } from "./req_res/get-notifications-by-target-id-response"
 import type { UpdateNotificationRequest } from "./req_res/update-notification-request"
 import type { UpdateNotificationResponse } from "./req_res/update-notification-response"
 import type { OpenFileRequest } from "./req_res/open-file-request"
@@ -2083,7 +2083,7 @@ export class GkillAPI {
                         (response as any)[key] = json[key]
                 }
                 for (let i = 0; i < response.share_kyou_list_infos.length; i++) {
-                        const share_kyou_list_info = new ShareKyouListInfo()
+                        const share_kyou_list_info = new ShareKyousInfo()
                         for (const key in json.share_kyou_list_infos[i]) {
                                 (share_kyou_list_info as any)[key] = json.share_kyou_list_infos[i][key]
                         }
@@ -2108,7 +2108,7 @@ export class GkillAPI {
                 for (const key in json) {
                         (response as any)[key] = json[key]
                 }
-                const share_kyou_list_info = new ShareKyouListInfo()
+                const share_kyou_list_info = new ShareKyousInfo()
                 for (const key in json.share_kyou_list_info) {
                         (share_kyou_list_info as any)[key] = json.share_kyou_list_info[key]
                 }
@@ -2132,7 +2132,7 @@ export class GkillAPI {
                 for (const key in json) {
                         (response as any)[key] = json[key]
                 }
-                const share_kyou_list_info = new ShareKyouListInfo()
+                const share_kyou_list_info = new ShareKyousInfo()
                 for (const key in json.share_kyou_list_info) {
                         (share_kyou_list_info as any)[key] = json.share_kyou_list_info[key]
                 }
@@ -2174,18 +2174,46 @@ export class GkillAPI {
                 for (const key in json) {
                         (response as any)[key] = json[key]
                 }
-                if (json.mi_kyous) {
-                        for (let i = 0; i < json.mi_kyous.length; i++) {
+                if (json.kyous) {
+                        for (let i = 0; i < json.kyous.length; i++) {
                                 const kyou = new Kyou()
-                                for (const key in json.mi_kyous[i]) {
-                                        (kyou as any)[key] = (json.mi_kyous[i] as any)[key]
+                                for (const key in json.kyous[i]) {
+                                        (kyou as any)[key] = (json.kyous[i] as any)[key]
 
                                         // 時刻はDate型に変換
                                         if (key.endsWith("time") && (kyou as any)[key]) {
                                                 (kyou as any)[key] = new Date((kyou as any)[key])
                                         }
                                 }
-                                response.mi_kyous[i] = kyou
+                                response.kyous[i] = kyou
+                        }
+                }
+                if (json.kmemos) {
+                        for (let i = 0; i < json.kmemos.length; i++) {
+                                const kmemo = new Kmemo()
+                                for (const key in json.kmemos[i]) {
+                                        (kmemo as any)[key] = (json.kmemos[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (kmemo as any)[key]) {
+                                                (kmemo as any)[key] = new Date((kmemo as any)[key])
+                                        }
+                                }
+                                response.kmemos[i] = kmemo
+                        }
+                }
+                if (json.kcs) {
+                        for (let i = 0; i < json.kcs.length; i++) {
+                                const kc = new KC()
+                                for (const key in json.kcs[i]) {
+                                        (kc as any)[key] = (json.kcs[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (kc as any)[key]) {
+                                                (kc as any)[key] = new Date((kc as any)[key])
+                                        }
+                                }
+                                response.kcs[i] = kc
                         }
                 }
                 if (json.mis) {
@@ -2202,46 +2230,144 @@ export class GkillAPI {
                                 response.mis[i] = mi
                         }
                 }
-                if (json.tags) {
-                        for (let i = 0; i < json.tags.length; i++) {
+                if (json.nlogs) {
+                        for (let i = 0; i < json.nlogs.length; i++) {
+                                const nlog = new Nlog()
+                                for (const key in json.nlogs[i]) {
+                                        (nlog as any)[key] = (json.nlogs[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (nlog as any)[key]) {
+                                                (nlog as any)[key] = new Date((nlog as any)[key])
+                                        }
+                                }
+                                response.nlogs[i] = nlog
+                        }
+                }
+                if (json.lantanas) {
+                        for (let i = 0; i < json.lantanas.length; i++) {
+                                const lantana = new Lantana()
+                                for (const key in json.lantanas[i]) {
+                                        (lantana as any)[key] = (json.lantanas[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (lantana as any)[key]) {
+                                                (lantana as any)[key] = new Date((lantana as any)[key])
+                                        }
+                                }
+                                response.lantanas[i] = lantana
+                        }
+                }
+                if (json.urlogs) {
+                        for (let i = 0; i < json.urlogs.length; i++) {
+                                const urlog = new URLog()
+                                for (const key in json.urlogs[i]) {
+                                        (urlog as any)[key] = (json.urlogs[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (urlog as any)[key]) {
+                                                (urlog as any)[key] = new Date((urlog as any)[key])
+                                        }
+                                }
+                                response.urlogs[i] = urlog
+                        }
+                }
+                if (json.idf_kyous) {
+                        for (let i = 0; i < json.idf_kyous.length; i++) {
+                                const idf_kyou = new IDFKyou()
+                                for (const key in json.idf_kyous[i]) {
+                                        (idf_kyou as any)[key] = (json.idf_kyous[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (idf_kyou as any)[key]) {
+                                                (idf_kyou as any)[key] = new Date((idf_kyou as any)[key])
+                                        }
+                                }
+                                response.idf_kyous[i] = idf_kyou
+                        }
+                }
+                if (json.rekyous) {
+                        for (let i = 0; i < json.rekyous.length; i++) {
+                                const rekyou = new ReKyou()
+                                for (const key in json.rekyous[i]) {
+                                        (rekyou as any)[key] = (json.rekyous[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (rekyou as any)[key]) {
+                                                (rekyou as any)[key] = new Date((rekyou as any)[key])
+                                        }
+                                }
+                                response.rekyous[i] = rekyou
+                        }
+                }
+                if (json.git_commit_logs) {
+                        for (let i = 0; i < json.git_commit_logs.length; i++) {
+                                const git_commit_log = new GitCommitLog()
+                                for (const key in json.git_commit_logs[i]) {
+                                        (git_commit_log as any)[key] = (json.git_commit_logs[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (git_commit_log as any)[key]) {
+                                                (git_commit_log as any)[key] = new Date((git_commit_log as any)[key])
+                                        }
+                                }
+                                response.git_commit_logs[i] = git_commit_log
+                        }
+                }
+                if (json.gps_logs) {
+                        for (let i = 0; i < json.gps_logs.length; i++) {
+                                const gps_log = new GPSLog()
+                                for (const key in json.gps_logs[i]) {
+                                        (gps_log as any)[key] = (json.gps_logs[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (gps_log as any)[key]) {
+                                                (gps_log as any)[key] = new Date((gps_log as any)[key])
+                                        }
+                                }
+                                response.gps_logs[i] = gps_log
+                        }
+                }
+                if (json.attached_tags) {
+                        for (let i = 0; i < json.attached_tags.length; i++) {
                                 const tag = new Tag()
-                                for (const key in json.tags[i]) {
-                                        (tag as any)[key] = (json.tags[i] as any)[key]
+                                for (const key in json.attached_tags[i]) {
+                                        (tag as any)[key] = (json.attached_tags[i] as any)[key]
 
                                         // 時刻はDate型に変換
                                         if (key.endsWith("time") && (tag as any)[key]) {
                                                 (tag as any)[key] = new Date((tag as any)[key])
                                         }
                                 }
-                                response.tags[i] = tag
+                                response.attached_tags[i] = tag
                         }
                 }
-                if (json.texts) {
-                        for (let i = 0; i < json.texts.length; i++) {
+                if (json.attached_texts) {
+                        for (let i = 0; i < json.attached_texts.length; i++) {
                                 const text = new Text()
-                                for (const key in json.texts[i]) {
-                                        (text as any)[key] = (json.texts[i] as any)[key]
+                                for (const key in json.attached_texts[i]) {
+                                        (text as any)[key] = (json.attached_texts[i] as any)[key]
 
                                         // 時刻はDate型に変換
                                         if (key.endsWith("time") && (text as any)[key]) {
                                                 (text as any)[key] = new Date((text as any)[key])
                                         }
                                 }
-                                response.texts[i] = text
+                                response.attached_texts[i] = text
                         }
                 }
-                if (json.timeiss) {
-                        for (let i = 0; i < json.timeiss.length; i++) {
+                if (json.attached_timeiss) {
+                        for (let i = 0; i < json.attached_timeiss.length; i++) {
                                 const timeis = new TimeIs()
-                                for (const key in json.timeiss[i]) {
-                                        (timeis as any)[key] = (json.timeiss[i] as any)[key]
+                                for (const key in json.attached_timeiss[i]) {
+                                        (timeis as any)[key] = (json.attached_timeiss[i] as any)[key]
 
                                         // 時刻はDate型に変換
                                         if (key.endsWith("time") && (timeis as any)[key]) {
                                                 (timeis as any)[key] = new Date((timeis as any)[key])
                                         }
                                 }
-                                response.timeiss[i] = timeis
+                                response.attached_timeiss[i] = timeis
                         }
                 }
                 return response
@@ -2552,6 +2678,25 @@ export class GkillAPI {
         set_use_dark_theme(use_dark_theme: boolean): void {
                 document.cookie = this.use_dark_theme_cookie_key + "=" + use_dark_theme + "; max-age=" + 86400 * 400
         }
+
+        private shared_id_cookie_key = "gkill_shared_id"
+
+        set_shared_id_to_cookie(shared_id: string): void {
+                document.cookie = this.shared_id_cookie_key + "=shared_id" + shared_id + "; path=/; max-age=" + 86400 * 400
+        }
+
+        get_shared_id_from_cookie(): string {
+                const cookies = document.cookie.split(';')
+                const shared_id_string = cookies.find(
+                        (cookie) => cookie.split('=')[0].trim() === this.shared_id_cookie_key.trim()
+                )?.replace(this.shared_id_cookie_key + "=shared_id", "").trim()
+                const shared_id = shared_id_string ? shared_id_string : ""
+
+                if (!shared_id || shared_id === "") {
+                        this.set_shared_id_to_cookie("")
+                }
+                return shared_id
+        }
 }
 
 export class GkillAPIForSharedKyou extends GkillAPI {
@@ -2562,10 +2707,20 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         // ここのデータから取得する
         public kyous: Array<Kyou> = []
+        public kmemos: Array<Kmemo> = []
+        public kcs: Array<KC> = []
         public mis: Array<Mi> = []
-        public tags: Array<Tag> = []
-        public texts: Array<Text> = []
+        public nlogs: Array<Nlog> = []
+        public lantanas: Array<Lantana> = []
         public timeiss: Array<TimeIs> = []
+        public urlogs: Array<URLog> = []
+        public idf_kyous: Array<IDFKyou> = []
+        public rekyous: Array<ReKyou> = []
+        public git_commit_logs: Array<GitCommitLog> = []
+        public gps_logs: Array<GPSLog> = []
+        public attached_tags: Array<Tag> = []
+        public attached_texts: Array<Text> = []
+        public attached_timeiss: Array<TimeIs> = []
 
         protected constructor() {
                 super()
@@ -2592,6 +2747,10 @@ export class GkillAPIForSharedKyou extends GkillAPI {
         }
 
         async add_text(_req: AddTextRequest): Promise<AddTextResponse> {
+                throw new Error("not implements")
+        }
+
+        async add_notification(_req: AddNotificationRequest): Promise<AddNotificationResponse> {
                 throw new Error("not implements")
         }
 
@@ -2635,6 +2794,10 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                 throw new Error("not implements")
         }
 
+        async update_notification(_req: UpdateNotificationRequest): Promise<UpdateNotificationResponse> {
+                throw new Error("not implements")
+        }
+
         async update_kmemo(_req: UpdateKmemoRequest): Promise<UpdateKmemoResponse> {
                 throw new Error("not implements")
         }
@@ -2672,7 +2835,9 @@ export class GkillAPIForSharedKyou extends GkillAPI {
         }
 
         async get_kyous(_req: GetKyousRequest): Promise<GetKyousResponse> {
-                throw new Error("not implements")
+                const res = new GetKyousResponse()
+                res.kyous = this.kyous
+                return res
         }
 
         async get_kyou(req: GetKyouRequest): Promise<GetKyouResponse> {
@@ -2686,25 +2851,58 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                 return res
         }
 
-        async get_kmemo(_req: GetKmemoRequest): Promise<GetKmemoResponse> {
-                throw new Error("not implements")
+        async get_kmemo(req: GetKmemoRequest): Promise<GetKmemoResponse> {
+                const res = new GetKmemoResponse()
+                for (let i = 0; i < this.kmemos.length; i++) {
+                        const kmemo = this.kmemos[i]
+                        if (req.id == kmemo.id) {
+                                res.kmemo_histories.push(kmemo)
+                        }
+                }
+                return res
         }
 
-        async get_kc(_req: GetKCRequest): Promise<GetKCResponse> {
-                throw new Error("not implements")
+        async get_kc(req: GetKCRequest): Promise<GetKCResponse> {
+                const res = new GetKCResponse()
+                for (let i = 0; i < this.kcs.length; i++) {
+                        const kc = this.kcs[i]
+                        if (req.id == kc.id) {
+                                res.kc_histories.push(kc)
+                        }
+                }
+                return res
         }
 
-
-        async get_urlog(_req: GetURLogRequest): Promise<GetURLogResponse> {
-                throw new Error("not implements")
+        async get_urlog(req: GetURLogRequest): Promise<GetURLogResponse> {
+                const res = new GetURLogResponse()
+                for (let i = 0; i < this.urlogs.length; i++) {
+                        const urlog = this.urlogs[i]
+                        if (req.id == urlog.id) {
+                                res.urlog_histories.push(urlog)
+                        }
+                }
+                return res
         }
 
-        async get_nlog(_req: GetNlogRequest): Promise<GetNlogResponse> {
-                throw new Error("not implements")
+        async get_nlog(req: GetNlogRequest): Promise<GetNlogResponse> {
+                const res = new GetNlogResponse()
+                for (let i = 0; i < this.nlogs.length; i++) {
+                        const nlog = this.nlogs[i]
+                        if (req.id == nlog.id) {
+                                res.nlog_histories.push(nlog)
+                        }
+                }
+                return res
         }
 
         async get_timeis(req: GetTimeisRequest): Promise<GetTimeisResponse> {
                 const res = new GetTimeisResponse()
+                for (let i = 0; i < this.attached_timeiss.length; i++) {
+                        const timeis = this.attached_timeiss[i]
+                        if (req.id == timeis.id) {
+                                res.timeis_histories.push(timeis)
+                        }
+                }
                 for (let i = 0; i < this.timeiss.length; i++) {
                         const timeis = this.timeiss[i]
                         if (req.id == timeis.id) {
@@ -2725,44 +2923,106 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                 return res
         }
 
-        async get_lantana(_req: GetLantanaRequest): Promise<GetLantanaResponse> {
-                throw new Error("not implements")
+        async get_lantana(req: GetLantanaRequest): Promise<GetLantanaResponse> {
+                const res = new GetLantanaResponse()
+                for (let i = 0; i < this.lantanas.length; i++) {
+                        const lantana = this.lantanas[i]
+                        if (req.id == lantana.id) {
+                                res.lantana_histories.push(lantana)
+                        }
+                }
+                return res
         }
 
-        async get_rekyou(_req: GetReKyouRequest): Promise<GetReKyouResponse> {
-                throw new Error("not implements")
+        async get_rekyou(req: GetReKyouRequest): Promise<GetReKyouResponse> {
+                const res = new GetReKyouResponse()
+                for (let i = 0; i < this.rekyous.length; i++) {
+                        const rekyou = this.rekyous[i]
+                        if (req.id == rekyou.id) {
+                                res.rekyou_histories.push(rekyou)
+                        }
+                }
+                return res
         }
 
-        async get_git_commit_log(_req: GetGitCommitLogRequest): Promise<GetGitCommitLogResponse> {
-                throw new Error("not implements")
+        async get_git_commit_log(req: GetGitCommitLogRequest): Promise<GetGitCommitLogResponse> {
+                const res = new GetGitCommitLogResponse()
+                for (let i = 0; i < this.git_commit_logs.length; i++) {
+                        const git_commit_log = this.git_commit_logs[i]
+                        if (req.id == git_commit_log.id) {
+                                res.git_commit_log_histories.push(git_commit_log)
+                        }
+                }
+                return res
         }
 
-        async get_idf_kyou(_req: GetIDFKyouRequest): Promise<GetIDFKyouResponse> {
-                throw new Error("not implements")
+        async get_idf_kyou(req: GetIDFKyouRequest): Promise<GetIDFKyouResponse> {
+                const res = new GetIDFKyouResponse()
+                for (let i = 0; i < this.idf_kyous.length; i++) {
+                        const idf_kyou = this.idf_kyous[i]
+                        if (req.id == idf_kyou.id) {
+                                res.idf_kyou_histories.push(idf_kyou)
+                        }
+                }
+                return res
         }
 
         async get_mi_board_list(_req: GetMiBoardRequest): Promise<GetMiBoardResponse> {
                 throw new Error("not implements")
         }
 
-        async get_plaing_timeis(_req: GetPlaingTimeisRequest): Promise<GetPlaingTimeisResponse> {
-                // not implements
+        async get_plaing_timeis(req: GetPlaingTimeisRequest): Promise<GetPlaingTimeisResponse> {
                 const res = new GetPlaingTimeisResponse()
+                for (let i = 0; i < this.attached_timeiss.length; i++) {
+                        const timeis = this.attached_timeiss[i]
+                        if (timeis.start_time >= req.time && (timeis.end_time === null || timeis.end_time <= req.time)) {
+                                const plaing_timeis_kyou = new Kyou()
+                                plaing_timeis_kyou.is_deleted = timeis.is_deleted
+                                plaing_timeis_kyou.typed_timeis = timeis
+                                plaing_timeis_kyou.id = timeis.id
+                                plaing_timeis_kyou.rep_name = timeis.rep_name
+                                plaing_timeis_kyou.related_time = timeis.end_time ? timeis.end_time : timeis.start_time
+                                plaing_timeis_kyou.data_type = timeis.end_time ? "timeis_end" : "timeis_start"
+                                plaing_timeis_kyou.create_time = timeis.create_time
+                                plaing_timeis_kyou.create_app = timeis.create_app
+                                plaing_timeis_kyou.create_device = timeis.create_device
+                                plaing_timeis_kyou.create_user = timeis.create_user
+                                plaing_timeis_kyou.update_time = timeis.update_time
+                                plaing_timeis_kyou.update_app = timeis.update_app
+                                plaing_timeis_kyou.update_device = timeis.update_device
+                                plaing_timeis_kyou.update_user = timeis.update_user
+                                res.plaing_timeis_kyous.push(plaing_timeis_kyou)
+                        }
+                }
                 return res
         }
 
         async get_all_tag_names(_req: GetAllTagNamesRequest): Promise<GetAllTagNamesResponse> {
-                throw new Error("not implements")
+                const res = new GetAllTagNamesResponse()
+                const tag_names = new Set<string>()
+                for (let i = 0; i < this.attached_tags.length; i++) {
+                        const tag = this.attached_tags[i]
+                        tag_names.add(tag.tag)
+                }
+                tag_names.forEach((tag_name) => res.tag_names.push(tag_name))
+                return res
         }
 
         async get_all_rep_names(_req: GetAllRepNamesRequest): Promise<GetAllRepNamesResponse> {
-                throw new Error("not implements")
+                const res = new GetAllRepNamesResponse()
+                const rep_names = new Set<string>()
+                for (let i = 0; i < this.kyous.length; i++) {
+                        const kyou = this.kyous[i]
+                        rep_names.add(kyou.rep_name)
+                }
+                rep_names.forEach((rep_name) => res.rep_names.push(rep_name))
+                return res
         }
 
         async get_tags_by_target_id(req: GetTagsByTargetIDRequest): Promise<GetTagsByTargetIDResponse> {
                 const res = new GetTagsByTargetIDResponse()
-                for (let i = 0; i < this.tags.length; i++) {
-                        const tag = this.tags[i]
+                for (let i = 0; i < this.attached_tags.length; i++) {
+                        const tag = this.attached_tags[i]
                         if (req.target_id == tag.target_id) {
                                 res.tags.push(tag)
                         }
@@ -2772,8 +3032,8 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         async get_tag_histories_by_tag_id(req: GetTagHistoryByTagIDRequest): Promise<GetTagHistoryByTagIDResponse> {
                 const res = new GetTagHistoryByTagIDResponse()
-                for (let i = 0; i < this.tags.length; i++) {
-                        const tag = this.tags[i]
+                for (let i = 0; i < this.attached_tags.length; i++) {
+                        const tag = this.attached_tags[i]
                         if (req.id == tag.id) {
                                 res.tag_histories.push(tag)
                         }
@@ -2783,8 +3043,8 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         async get_texts_by_target_id(req: GetTextsByTargetIDRequest): Promise<GetTextsByTargetIDResponse> {
                 const res = new GetTextsByTargetIDResponse()
-                for (let i = 0; i < this.texts.length; i++) {
-                        const text = this.texts[i]
+                for (let i = 0; i < this.attached_texts.length; i++) {
+                        const text = this.attached_texts[i]
                         if (req.target_id == text.target_id) {
                                 res.texts.push(text)
                         }
@@ -2794,8 +3054,8 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         async get_text_history_by_text_id(req: GetTextHistoryByTextIDRequest): Promise<GetTextHistoryByTextIDResponse> {
                 const res = new GetTextHistoryByTextIDResponse()
-                for (let i = 0; i < this.texts.length; i++) {
-                        const text = this.texts[i]
+                for (let i = 0; i < this.attached_texts.length; i++) {
+                        const text = this.attached_texts[i]
                         if (req.id == text.id) {
                                 res.text_histories.push(text)
                         }
@@ -2803,8 +3063,17 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                 return res
         }
 
+        async get_notifications_by_target_id(_req: GetNotificationsByTargetIDRequest): Promise<GetNotificationsByTargetIDResponse> {
+                return new GetNotificationsByTargetIDResponse()
+        }
+
+        async get_notification_history_by_notification_id(_req: GetNotificationHistoryByNotificationIDRequest): Promise<GetNotificationHistoryByNotificationIDResponse> {
+                return new GetNotificationHistoryByNotificationIDResponse()
+        }
+
         async get_application_config(_req: GetApplicationConfigRequest): Promise<GetApplicationConfigResponse> {
-                throw new Error("not implements")
+                const res = new GetApplicationConfigResponse()
+                return res
         }
 
         async get_server_configs(_req: GetServerConfigsRequest): Promise<GetServerConfigsResponse> {
@@ -2863,8 +3132,15 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                 throw new Error("not implements")
         }
 
-        async get_gps_log(_req: GetGPSLogRequest): Promise<GetGPSLogResponse> {
-                throw new Error("not implements")
+        async get_gps_log(req: GetGPSLogRequest): Promise<GetGPSLogResponse> {
+                const res = new GetGPSLogResponse()
+                for (let i = 0; i < this.gps_logs.length; i++) {
+                        const gps_log = this.gps_logs[i]
+                        if (req.start_date.getTime() <= gps_log.related_time.getTime() && req.end_date.getTime() >= gps_log.related_time.getTime()) {
+                                res.gps_logs.push(gps_log)
+                        }
+                }
+                return res
         }
 
         async get_kftl_templates(_req: GetKFTLTemplatesRequest): Promise<GetKFTLTemplatesResponse> {
@@ -2912,7 +3188,7 @@ export class GkillAPIForSharedKyou extends GkillAPI {
         }
 
         get_google_map_api_key(): string {
-                throw new Error("not implements")
+                return ""
         }
 
         set_google_map_api_key(_google_map_api_key: string): void {
@@ -2936,31 +3212,36 @@ export class GkillAPIForSharedKyou extends GkillAPI {
         }
 
         set_saved_rykv_find_kyou_querys(_querys: Array<FindKyouQuery>): void {
-                throw new Error("not implements")
+                return
         }
         get_saved_rykv_find_kyou_querys(): Array<FindKyouQuery> {
-                throw new Error("not implements")
+                return [new FindKyouQuery()]
         }
 
         set_saved_mi_find_kyou_querys(_querys: Array<FindKyouQuery>): void {
-                throw new Error("not implements")
+                return
         }
         get_saved_mi_find_kyou_querys(): Array<FindKyouQuery> {
-                throw new Error("not implements")
+                return [new FindKyouQuery()]
         }
 
         set_saved_rykv_scroll_indexs(_indexs: Array<number>): void {
-                throw new Error("not implements")
+                return
         }
         get_saved_rykv_scroll_indexs(): Array<number> {
-                throw new Error("not implements")
+                return []
         }
 
         set_saved_mi_scroll_indexs(_indexs: Array<number>): void {
-                throw new Error("not implements")
+                return
         }
         get_saved_mi_scroll_indexs(): Array<number> {
-                throw new Error("not implements")
+                return []
+        }
+        set_shared_id_to_cookie(shared_id: string): void {
+                super.set_shared_id_to_cookie(shared_id)
+        }
+        get_shared_id_from_cookie(): string {
+                return super.get_shared_id_from_cookie()
         }
 }
-

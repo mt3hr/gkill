@@ -7,7 +7,8 @@ import rykv_page from '../pages/rykv-page.vue'
 import kyou_page from '../pages/kyou-page.vue'
 import saihate_page from '../pages/saihate-page.vue'
 import set_new_password_page from '../pages/set-new-password-page.vue'
-import shared_mi_page from '../pages/shared-mi-page.vue'
+import shared_page from '../pages/shared-page.vue'
+import old_shared_mi_page from '../pages/old-shared-mi-page.vue'
 import plaing_timeis_page from '@/pages/plaing-timeis-page.vue'
 import mkfl_page from '@/pages/mkfl-page.vue'
 import regist_first_account_page from '@/pages/regist-first-account-page.vue'
@@ -66,9 +67,14 @@ const router = createRouter({
       component: regist_first_account_page
     },
     {
+      path: '/shared_page',
+      name: 'shared_page',
+      component: shared_page,
+    },
+    {
       path: '/shared_mi',
       name: 'shared_mi',
-      component: shared_mi_page,
+      component: old_shared_mi_page,
     },
   ]
 })

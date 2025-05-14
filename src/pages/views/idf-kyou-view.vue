@@ -4,11 +4,14 @@
             :href="kyou.typed_idf_kyou.file_url" @click="open_link">
             {{ kyou.typed_idf_kyou.file_name }}
         </a>
-        <img v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_image" :src="kyou.typed_idf_kyou.file_url"
+        <img v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_image"
+            :src="kyou.typed_idf_kyou.file_url.concat(gkill_api.get_shared_id_from_cookie() !== '' ? '?gkill_shared_id='.concat(gkill_api.get_shared_id_from_cookie()) : '')"
             class="kyou_image" />
-        <video v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_video" :src="kyou.typed_idf_kyou.file_url"
+        <video v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_video"
+            :src="kyou.typed_idf_kyou.file_url.concat(gkill_api.get_shared_id_from_cookie() !== '' ? '?gkill_shared_id='.concat(gkill_api.get_shared_id_from_cookie()) : '')"
             class="kyou_video" controls></video>
-        <audio v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_audio" :src="kyou.typed_idf_kyou.file_url"
+        <audio v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_audio"
+            :src="kyou.typed_idf_kyou.file_url.concat(gkill_api.get_shared_id_from_cookie() !== '' ? '?gkill_shared_id='.concat(gkill_api.get_shared_id_from_cookie()) : '')"
             class="kyou_audio" controls></audio>
         <IDFKyouContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"

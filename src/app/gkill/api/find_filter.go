@@ -1579,7 +1579,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		}
 
 		// すでに最新が入っていそうだったらそのままいれる RepNameは運用都合でチェックしない
-		if currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) { //TODO
+		if currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) {
 			latestKyousMap[id] = currentKyou
 			continue
 		}
