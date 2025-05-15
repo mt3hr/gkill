@@ -1,8 +1,9 @@
 <template>
     <div>
         <v-card class="sidebar_header_wrap background-white pa-0 ma-0" :height="header_height">
-            <ShareKyouFooter class="sidebar_footer" :application_config="application_config" :gkill_api="gkill_api"
-                :find_kyou_query="query" @request_open_manage_share_kyou_dialog="show_manage_share_kyou_dialog()"
+            <ShareKyouFooter v-if="application_config.is_show_share_footer" class="sidebar_footer"
+                :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                @request_open_manage_share_kyou_dialog="show_manage_share_kyou_dialog()"
                 @request_open_share_kyou_dialog="show_share_kyou_dialog()"
                 @received_messages="(messages) => emits('received_messages', messages)"
                 @received_errors="(errors) => emits('received_errors', errors)" />
@@ -85,8 +86,8 @@ const props = defineProps<rykvQueryEditorSidebarProps>()
 const emits = defineEmits<rykvQueryEditorSidebarEmits>()
 defineExpose({ generate_query, get_default_query })
 
-const header_margin = ref(12)
-const header_height: Ref<number> = ref(36 * 2 + header_margin.value.valueOf())
+const header_margin = computed(() => props.application_config.is_show_share_footer ? 12 : 6)
+const header_height: Ref<number> = computed(() => 36 * (props.application_config.is_show_share_footer ? 2 : 1) + header_margin.value.valueOf())
 const sidebar_height = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const header_top_px = computed(() => (props.app_content_height.valueOf() - header_height.value).toString().concat("px"))
 const sidebar_top_px = computed(() => (header_height.value * -1).toString().concat("px"))
@@ -309,6 +310,11 @@ async function show_share_kyou_dialog(): Promise<void> {
     position: relative;
     top: calc(v-bind("(header_margin / 2).toString().concat('px')"));
     margin-bottom: calc(v-bind("(header_margin / 2).toString().concat('px')"));
+}
+
+.sidebar_footer {
+    position: relative;
+    top: calc(v-bind("(header_margin / (2 * 2)).toString().concat('px')"));
 }
 
 .rykv_sidebar {
