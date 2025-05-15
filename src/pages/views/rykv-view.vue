@@ -451,6 +451,9 @@ watch(() => focused_time.value, () => {
 })
 
 watch(() => is_show_kyou_count_calendar.value, () => {
+    if (props.is_shared_rykv_view) {
+        return
+    }
     focused_kyous_list.value.splice(0)
     if (is_show_kyou_count_calendar.value) {
         update_focused_kyous_list(focused_column_index.value)
@@ -654,9 +657,6 @@ async function reload_list(column_index: number): Promise<void> {
 }
 
 async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Promise<void> {
-    if (props.is_shared_rykv_view) {
-        return
-    }
     focused_kyou.value = kyou
     focused_column_index.value = column_index
 

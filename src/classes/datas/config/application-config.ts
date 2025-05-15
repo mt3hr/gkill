@@ -33,6 +33,7 @@ export class ApplicationConfig {
     mi_default_period: number
     account_is_admin: boolean
     dnote_json_data: any
+    is_show_share_footer: boolean
     parsed_kftl_template: KFTLTemplateElementData
     parsed_tag_struct: TagStructElementData
     parsed_rep_struct: RepStructElementData
@@ -83,6 +84,7 @@ export class ApplicationConfig {
         application_config.session_is_local = this.session_is_local
         application_config.rykv_default_period = this.rykv_default_period
         application_config.mi_default_period = this.mi_default_period
+        application_config.is_show_share_footer = this.is_show_share_footer
         return application_config
     }
     async load_all(): Promise<Array<GkillError>> {
@@ -974,6 +976,7 @@ export class ApplicationConfig {
         this.parsed_mi_boad_struct = new MiBoardStructElementData()
         this.mi_board_struct = new Array<MiBoardStruct>()
         this.session_is_local = false
+        this.is_show_share_footer = false
     }
 
 
