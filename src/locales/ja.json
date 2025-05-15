@@ -456,5 +456,6 @@
     "SHARE_KYOU_SHARE_WITH_TAGS": "タグを共有に含める",
     "SHARE_KYOU_SHARE_WITH_TEXTS": "テキストを共有に含める",
     "SHARE_KYOU_SHARE_WITH_TIMEISS": "打刻状況を共有に含める",
-    "SHARE_KYOU_SHARE_WITH_LOCATIONS": "関連位置情報を共有に含める"
+    "SHARE_KYOU_SHARE_WITH_LOCATIONS": "関連位置情報を共有に含める",
+    "SHOW_SHARE_FOOTER": "共有フッターを表示"
 }
