@@ -42,17 +42,11 @@
                         <v-text-field type="number" min="-1" width="400" v-model="rykv_default_period" />
                     </td>
                 </tr>
-                <!-- 
                 <tr>
                     <td>
-                        <v-checkbox v-model="is_checked_use_mi_period" hide-detail
-                            :label="$t('MI_DEFAULT_PERIOD_TITLE')" />
-                    </td>
-                    <td v-show="mi_default_period !== -1">
-                        <v-text-field type="number" min="-1" width="400" v-model="mi_default_period" />
+                        <v-checkbox v-model="is_show_share_footer" hide-detail :label="$t('SHOW_SHARE_FOOTER')" />
                     </td>
                 </tr>
-                -->
                 <tr>
                     <td>
                         {{ $t("RYKV_IMAGE_LIST_COLUMN_NUMBER_TITLE") }}
@@ -101,11 +95,11 @@
                 <tr>
                     <td>
                         <v-btn dark color="primary" @click="show_edit_tag_dialog">{{ $t("EDIT_TAG_STRUCT_TITLE")
-                        }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{ $t("EDIT_REP_STRUCT_TITLE")
-                        }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{ $t("EDIT_DEVICE_STRUCT_TITLE")
                             }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{ $t("EDIT_REP_STRUCT_TITLE")
+                            }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{ $t("EDIT_DEVICE_STRUCT_TITLE")
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                             $t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_kftl_template_dialog">{{
@@ -124,7 +118,7 @@
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -229,6 +223,7 @@ const mi_default_period: Ref<number> = ref(cloned_application_config.value.mi_de
 const is_checked_use_rykv_period: Ref<boolean> = ref(cloned_application_config.value.rykv_default_period !== -1)
 const is_checked_use_mi_period: Ref<boolean> = ref(cloned_application_config.value.mi_default_period !== -1)
 const use_dark_theme: Ref<boolean> = ref(theme.global.name.value === 'gkill_dark_theme')
+const is_show_share_footer: Ref<boolean> = ref(cloned_application_config.value.is_show_share_footer)
 
 watch(() => is_checked_use_rykv_period.value, () => {
     if (is_checked_use_rykv_period.value) {
@@ -263,6 +258,7 @@ async function reload_cloned_application_config(): Promise<void> {
     mi_board_names.value = new Array()
     rykv_default_period.value = cloned_application_config.value.rykv_default_period
     mi_default_period.value = cloned_application_config.value.mi_default_period
+    is_show_share_footer.value = cloned_application_config.value.is_show_share_footer
     load_mi_board_names()
 }
 
@@ -289,6 +285,7 @@ async function update_application_config(): Promise<void> {
     application_config.rykv_default_period = rykv_default_period.value
     application_config.mi_default_period = mi_default_period.value
     application_config.use_dark_theme = use_dark_theme.value
+    application_config.is_show_share_footer = is_show_share_footer.value
 
     const req = new UpdateApplicationConfigRequest()
     req.application_config = application_config

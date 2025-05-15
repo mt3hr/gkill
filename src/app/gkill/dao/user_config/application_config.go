@@ -21,6 +21,8 @@ type ApplicationConfig struct {
 
 	MiDefaultPeriod json.Number `json:"mi_default_period"`
 
+	IsShowShareFooter bool `json:"is_show_share_footer"`
+
 	KFTLTemplate []*KFTLTemplate `json:"kftl_template_struct"`
 
 	TagStruct []*TagStruct `json:"tag_struct"`

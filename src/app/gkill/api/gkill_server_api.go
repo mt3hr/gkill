@@ -96,6 +96,7 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 			MiDefaultBoard:            "Inbox",
 			RykvDefaultPeriod:         json.Number("-1"),
 			MiDefaultPeriod:           json.Number("-1"),
+			IsShowShareFooter:         false,
 		}
 		_, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
 		if err != nil {
@@ -3886,6 +3887,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 				MiDefaultBoard:            "Inbox",
 				RykvDefaultPeriod:         json.Number("-1"),
 				MiDefaultPeriod:           json.Number("-1"),
+				IsShowShareFooter:         false,
 			}
 			_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), newApplicationConfig)
 			if err != nil {
@@ -6923,6 +6925,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 			MiDefaultBoard:            "Inbox",
 			RykvDefaultPeriod:         json.Number("-1"),
 			MiDefaultPeriod:           json.Number("-1"),
+			IsShowShareFooter:         false,
 		}
 		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), newApplicationConfig)
 		if err != nil {
@@ -8966,6 +8969,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		MiDefaultBoard:            "Inbox",
 		RykvDefaultPeriod:         json.Number("-1"),
 		MiDefaultPeriod:           json.Number("-1"),
+		IsShowShareFooter:         false,
 	}
 	_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
 	if err != nil {
@@ -10703,13 +10707,14 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	// クッキーを見て認証する
 	sessionIDCookie, err := r.Cookie("gkill_session_id")
 	if err != nil {
-		sharedID = r.URL.Query().Get("gkill_shared_id")
-		if sharedID == "" {
+		sharedIDCookie, err := r.Cookie("gkill_shared_id")
+		if err != nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
 			gkill_log.Trace.Printf("finish %#v", err)
 			return
 		}
+		sharedID = strings.ReplaceAll(sharedIDCookie.Value, "shared_id", "")
 	} else {
 		sessionID = sessionIDCookie.Value
 	}

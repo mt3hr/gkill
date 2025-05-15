@@ -85,6 +85,7 @@ var applicationConfigDefaultValue = map[string]interface{}{
 	"RYKV_DEFAULT_PERIOD":           31,
 	"MI_DEFAULT_BOARD":              "Inbox",
 	"MI_DEFAULT_PERIOD":             -1,
+	"IS_SHOW_SHARE_FOOTER":          false,
 }
 
 func (a *applicationConfigDAOSQLite3Impl) GetAllApplicationConfigs(ctx context.Context) ([]*ApplicationConfig, error) {
@@ -97,9 +98,9 @@ SELECT
   /* USE_DARK_THEME */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
-		ELSE '%v'
+		ELSE %v
 	  END
 	FROM APPLICATION_CONFIG
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
@@ -109,7 +110,7 @@ SELECT
   /* GOOGLE_MAP_API_KEY */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
 		ELSE '%v'
 	  END
@@ -121,7 +122,7 @@ SELECT
   /* RYKV_IMAGE_LIST_COLUMN_NUMBER */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
 		ELSE '%v'
 	  END
@@ -133,9 +134,9 @@ SELECT
   /* RYKV_HOT_RELOAD */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
-		ELSE '%v'
+		ELSE %v
 	  END
 	FROM APPLICATION_CONFIG
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
@@ -145,7 +146,7 @@ SELECT
   /* MI_DEFAULT_BOARD */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
 		ELSE '%v'
 	  END
@@ -157,7 +158,7 @@ SELECT
   /* RYKV_DEFAULT_PERIOD */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
 		ELSE '%v'
 	  END
@@ -169,7 +170,7 @@ SELECT
   /* MI_DEFAULT_PERIOD */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
 		ELSE '%v'
 	  END
@@ -177,7 +178,19 @@ SELECT
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
 	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
 	AND KEY = 'MI_DEFAULT_PERIOD'
-  ) AS MI_DEFAULT_PERIOD
+  ) AS MI_DEFAULT_PERIOD,
+  /* IS_SHOW_SHARE_FOOTER */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE %v
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'IS_SHOW_SHARE_FOOTER'
+  ) AS IS_SHOW_SHARE_FOOTER
 FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
 GROUP BY USER_ID, DEVICE
 `,
@@ -188,6 +201,7 @@ GROUP BY USER_ID, DEVICE
 		applicationConfigDefaultValue["MI_DEFAULT_BOARD"],
 		applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"],
 		applicationConfigDefaultValue["MI_DEFAULT_PERIOD"],
+		applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"],
 	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
@@ -225,6 +239,7 @@ GROUP BY USER_ID, DEVICE
 				&applicationConfig.MiDefaultBoard,
 				&rykvDefaultPeriod,
 				&miDefaultPeriod,
+				&applicationConfig.IsShowShareFooter,
 			)
 			if err != nil {
 				return nil, err
@@ -249,9 +264,9 @@ SELECT
   /* USE_DARK_THEME */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
-		ELSE '%v'
+		ELSE %v
 	  END
 	FROM APPLICATION_CONFIG
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
@@ -261,7 +276,7 @@ SELECT
   /* GOOGLE_MAP_API_KEY */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
 		ELSE '%v'
 	  END
@@ -273,7 +288,7 @@ SELECT
   /* RYKV_IMAGE_LIST_COLUMN_NUMBER */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
 		ELSE '%v'
 	  END
@@ -285,9 +300,9 @@ SELECT
   /* RYKV_HOT_RELOAD */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
-		ELSE '%v'
+		ELSE %v
 	  END
 	FROM APPLICATION_CONFIG
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
@@ -297,7 +312,7 @@ SELECT
   /* MI_DEFAULT_BOARD */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
 		ELSE '%v'
 	  END
@@ -309,7 +324,7 @@ SELECT
   /* RYKV_DEFAULT_PERIOD */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
 		ELSE '%v'
 	  END
@@ -321,7 +336,7 @@ SELECT
   /* MI_DEFAULT_PERIOD */ (
     SELECT 
 	  CASE 
-	    WHEN VALUE IS NOT NULL 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
 		THEN VALUE
 		ELSE '%v'
 	  END
@@ -329,7 +344,19 @@ SELECT
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
 	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
 	AND KEY = 'MI_DEFAULT_PERIOD'
-  ) AS MI_DEFAULT_PERIOD
+  ) AS MI_DEFAULT_PERIOD,
+  /* IS_SHOW_SHARE_FOOTER */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE %v
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'IS_SHOW_SHARE_FOOTER'
+  ) AS IS_SHOW_SHARE_FOOTER 
 FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
 GROUP BY USER_ID, DEVICE
 HAVING USER_ID = ? AND DEVICE = ?
@@ -341,6 +368,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 		applicationConfigDefaultValue["MI_DEFAULT_BOARD"],
 		applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"],
 		applicationConfigDefaultValue["MI_DEFAULT_PERIOD"],
+		applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"],
 	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
@@ -384,6 +412,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 				&applicationConfig.MiDefaultBoard,
 				&rykvDefaultPeriod,
 				&miDefaultPeriod,
+				&applicationConfig.IsShowShareFooter,
 			)
 
 			applicationConfig.RykvDefaultPeriod = json.Number(strconv.Itoa(rykvDefaultPeriod))
@@ -427,6 +456,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"MI_DEFAULT_BOARD":              applicationConfig.MiDefaultBoard,
 		"RYKV_DEFAULT_PERIOD":           applicationConfig.RykvDefaultPeriod,
 		"MI_DEFAULT_PERIOD":             applicationConfig.MiDefaultPeriod,
+		"IS_SHOW_SHARE_FOOTER":          applicationConfig.IsShowShareFooter,
 	}
 	for key, value := range insertValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -496,6 +526,7 @@ AND KEY = ?
 		"MI_DEFAULT_BOARD":              applicationConfig.MiDefaultBoard,
 		"RYKV_DEFAULT_PERIOD":           applicationConfig.RykvDefaultPeriod,
 		"MI_DEFAULT_PERIOD":             applicationConfig.MiDefaultPeriod,
+		"IS_SHOW_SHARE_FOOTER":          applicationConfig.IsShowShareFooter,
 	}
 	for key, value := range updateValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
