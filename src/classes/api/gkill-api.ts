@@ -57,8 +57,6 @@ import type { GetMiRequest } from "./req_res/get-mi-request"
 import { GetMiResponse } from "./req_res/get-mi-response"
 import type { GetNlogRequest } from "./req_res/get-nlog-request"
 import { GetNlogResponse } from "./req_res/get-nlog-response"
-import type { GetPlaingTimeisRequest } from "./req_res/get-plaing-timeis-request"
-import { GetPlaingTimeisResponse } from "./req_res/get-plaing-timeis-response"
 import type { GetReKyouRequest } from "./req_res/get-re-kyou-request"
 import { GetReKyouResponse } from "./req_res/get-re-kyou-response"
 import type { GetShareKyouListInfosRequest } from "./req_res/get-share-kyou-list-infos-request"
@@ -238,7 +236,6 @@ export class GkillAPI {
         get_git_commit_log_address: string
         get_idf_kyou_address: string
         get_mi_board_list_address: string
-        get_plaing_timeis_address: string
         get_all_tag_names_address: string
         get_all_rep_names_address: string
         get_tags_by_target_id_address: string
@@ -322,7 +319,6 @@ export class GkillAPI {
         get_rekyous_method: string
         get_git_commit_logs_method: string
         get_mi_board_list_method: string
-        get_plaing_timeis_method: string
         get_all_tag_names_method: string
         get_all_rep_names_method: string
         get_tags_by_target_id_method: string
@@ -405,7 +401,6 @@ export class GkillAPI {
                 this.get_git_commit_log_address = "/api/get_git_commit_log"
                 this.get_idf_kyou_address = "/api/get_idf_kyou"
                 this.get_mi_board_list_address = "/api/get_mi_board_list"
-                this.get_plaing_timeis_address = "/api/get_plaing_timeis"
                 this.get_all_tag_names_address = "/api/get_all_tag_names"
                 this.get_all_rep_names_address = "/api/get_all_rep_names"
                 this.get_tags_by_target_id_address = "/api/get_tags_by_id"
@@ -488,7 +483,6 @@ export class GkillAPI {
                 this.get_rekyous_method = "POST"
                 this.get_git_commit_logs_method = "POST"
                 this.get_mi_board_list_method = "POST"
-                this.get_plaing_timeis_method = "POST"
                 this.get_all_tag_names_method = "POST"
                 this.get_all_rep_names_method = "POST"
                 this.get_tags_by_target_id_method = "POST"
@@ -1405,43 +1399,6 @@ export class GkillAPI {
                 const json = await res.json()
                 const response: GetMiBoardResponse = json
                 this.check_auth(response)
-                return response
-        }
-
-        async get_plaing_timeis(req: GetPlaingTimeisRequest): Promise<GetPlaingTimeisResponse> {
-                const res = await fetch(this.get_plaing_timeis_address, {
-                        'method': this.get_plaing_timeis_method,
-                        headers: {
-                                'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(req),
-                        signal: req.abort_controller?.signal,
-                })
-                const json = await res.json()
-                const response: GetPlaingTimeisResponse = json
-                this.check_auth(response)
-                // Response型に合わせる（そのままキャストするとメソッドが生えないため）
-                this.check_auth(response)
-                if (!response.plaing_timeis_kyous) {
-                        response.plaing_timeis_kyous = new Array<Kyou>()
-                }
-
-                for (const key in json) {
-                        (response as any)[key] = json[key]
-                }
-                // 取得したKyouリストの型変換（そのままキャストするとメソッドが生えないため）
-                for (let i = 0; i < response.plaing_timeis_kyous.length; i++) {
-                        const kyou = new Kyou()
-                        for (const key in response.plaing_timeis_kyous[i]) {
-                                (kyou as any)[key] = (response.plaing_timeis_kyous[i] as any)[key]
-
-                                // 時刻はDate型に変換
-                                if (key.endsWith("time") && (kyou as any)[key]) {
-                                        (kyou as any)[key] = new Date((kyou as any)[key])
-                                }
-                        }
-                        response.plaing_timeis_kyous[i] = kyou
-                }
                 return response
         }
 
@@ -2970,32 +2927,6 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         async get_mi_board_list(_req: GetMiBoardRequest): Promise<GetMiBoardResponse> {
                 throw new Error("not implements")
-        }
-
-        async get_plaing_timeis(req: GetPlaingTimeisRequest): Promise<GetPlaingTimeisResponse> {
-                const res = new GetPlaingTimeisResponse()
-                for (let i = 0; i < this.attached_timeiss.length; i++) {
-                        const timeis = this.attached_timeiss[i]
-                        if (timeis.start_time >= req.time && (timeis.end_time === null || timeis.end_time <= req.time)) {
-                                const plaing_timeis_kyou = new Kyou()
-                                plaing_timeis_kyou.is_deleted = timeis.is_deleted
-                                plaing_timeis_kyou.typed_timeis = timeis
-                                plaing_timeis_kyou.id = timeis.id
-                                plaing_timeis_kyou.rep_name = timeis.rep_name
-                                plaing_timeis_kyou.related_time = timeis.end_time ? timeis.end_time : timeis.start_time
-                                plaing_timeis_kyou.data_type = timeis.end_time ? "timeis_end" : "timeis_start"
-                                plaing_timeis_kyou.create_time = timeis.create_time
-                                plaing_timeis_kyou.create_app = timeis.create_app
-                                plaing_timeis_kyou.create_device = timeis.create_device
-                                plaing_timeis_kyou.create_user = timeis.create_user
-                                plaing_timeis_kyou.update_time = timeis.update_time
-                                plaing_timeis_kyou.update_app = timeis.update_app
-                                plaing_timeis_kyou.update_device = timeis.update_device
-                                plaing_timeis_kyou.update_user = timeis.update_user
-                                res.plaing_timeis_kyous.push(plaing_timeis_kyou)
-                        }
-                }
-                return res
         }
 
         async get_all_tag_names(_req: GetAllTagNamesRequest): Promise<GetAllTagNamesResponse> {

@@ -687,6 +687,23 @@ VALUE = ?
 WHERE DEVICE = ?
 AND KEY = ?
 `
+		checkExistSQL := `
+SELECT COUNT(*)
+FROM SERVER_CONFIG
+WHERE DEVICE = ?
+AND KEY = ?
+`
+		insertSQL := `
+INSERT INTO SERVER_CONFIG (
+  DEVICE,
+  KEY,
+  VALUE
+) VALUES (
+  ?,
+  ?,
+  ?
+)
+`
 		updateValuesMap := map[string]interface{}{
 			"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
 			"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
@@ -705,6 +722,84 @@ AND KEY = ?
 			"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
 			"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
 		}
+
+		// レコード自体が存在しなかったらいれる
+		for key, value := range updateValuesMap {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			stmt, err := tx.PrepareContext(ctx, checkExistSQL)
+			if err != nil {
+				err = fmt.Errorf("error at pre get server config sql: %w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
+				}
+				return false, err
+			}
+			defer stmt.Close()
+
+			queryArgs := []interface{}{
+				serverConfig.Device,
+				key,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s query: %#v", checkExistSQL, queryArgs)
+			row := stmt.QueryRowContext(ctx, queryArgs...)
+			err = row.Err()
+			if err != nil {
+				if err != nil {
+					err = fmt.Errorf("error at query :%w", err)
+					rollbackErr := tx.Rollback()
+					if rollbackErr != nil {
+						err = fmt.Errorf("%w: %w", err, rollbackErr)
+					}
+					return false, err
+				}
+			}
+
+			recordCount := 0
+			err = row.Scan(&recordCount)
+			if err != nil {
+				err = fmt.Errorf("error at scan:%w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
+				}
+				return false, err
+			}
+			if recordCount == 0 {
+				gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
+				stmt, err := tx.PrepareContext(ctx, insertSQL)
+				if err != nil {
+					err = fmt.Errorf("error at add server config sql: %w", err)
+					err = fmt.Errorf("error at query :%w", err)
+					rollbackErr := tx.Rollback()
+					if rollbackErr != nil {
+						err = fmt.Errorf("%w: %w", err, rollbackErr)
+					}
+					return false, err
+				}
+				defer stmt.Close()
+
+				queryArgs := []interface{}{
+					serverConfig.Device,
+					key,
+					value,
+				}
+				gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
+				_, err = stmt.ExecContext(ctx, queryArgs...)
+
+				if err != nil {
+					err = fmt.Errorf("error at add server config sql: %w", err)
+					err = fmt.Errorf("error at query :%w", err)
+					rollbackErr := tx.Rollback()
+					if rollbackErr != nil {
+						err = fmt.Errorf("%w: %w", err, rollbackErr)
+					}
+					return false, err
+				}
+			}
+		}
+
+		// 更新する
 		for key, value := range updateValuesMap {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			stmt, err := tx.PrepareContext(ctx, sql)
@@ -824,6 +919,23 @@ VALUE = ?
 WHERE DEVICE = ?
 AND KEY = ?
 `
+	checkExistSQL := `
+SELECT COUNT(*)
+FROM SERVER_CONFIG
+WHERE DEVICE = ?
+AND KEY = ?
+`
+	insertSQL := `
+INSERT INTO SERVER_CONFIG (
+  DEVICE,
+  KEY,
+  VALUE
+) VALUES (
+  ?,
+  ?,
+  ?
+)
+`
 	updateValuesMap := map[string]interface{}{
 		"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
 		"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
@@ -842,6 +954,83 @@ AND KEY = ?
 		"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
 		"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
 	}
+
+	// レコード自体が存在しなかったらいれる
+	for key, value := range updateValuesMap {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		stmt, err := tx.PrepareContext(ctx, checkExistSQL)
+		if err != nil {
+			err = fmt.Errorf("error at pre get server config sql: %w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+		defer stmt.Close()
+
+		queryArgs := []interface{}{
+			serverConfig.Device,
+			key,
+		}
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", checkExistSQL, queryArgs)
+		row := stmt.QueryRowContext(ctx, queryArgs...)
+		err = row.Err()
+		if err != nil {
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+
+		recordCount := 0
+		err = row.Scan(&recordCount)
+		if err != nil {
+			if err != nil {
+				err = fmt.Errorf("error at scan:%w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
+				}
+				return false, err
+			}
+		}
+		if recordCount == 0 {
+			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
+			stmt, err := tx.PrepareContext(ctx, insertSQL)
+			if err != nil {
+				err = fmt.Errorf("error at add server config sql: %w", err)
+				err = fmt.Errorf("error at query :%w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
+				}
+				return false, err
+			}
+			defer stmt.Close()
+
+			queryArgs := []interface{}{
+				serverConfig.Device,
+				key,
+				value,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
+			_, err = stmt.ExecContext(ctx, queryArgs...)
+
+			if err != nil {
+				err = fmt.Errorf("error at add server config sql: %w", err)
+				err = fmt.Errorf("error at query :%w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
+				}
+				return false, err
+			}
+		}
+	}
+
 	for key, value := range updateValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)

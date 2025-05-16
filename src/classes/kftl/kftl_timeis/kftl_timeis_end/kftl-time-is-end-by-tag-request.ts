@@ -5,10 +5,11 @@ import type { KFTLStatementLineContext } from "../../kftl-statement-line-context
 import { GkillError } from "@/classes/api/gkill-error"
 import { UpdateTimeisRequest } from "@/classes/api/req_res/update-timeis-request"
 import { GkillAPI } from "@/classes/api/gkill-api"
-import { GetPlaingTimeisRequest } from "@/classes/api/req_res/get-plaing-timeis-request"
 import type { TimeIs } from "@/classes/datas/time-is"
 import { GetGkillInfoRequest } from "@/classes/api/req_res/get-gkill-info-request"
 import { GkillErrorCodes } from "@/classes/api/message/gkill_error"
+import generate_get_plaing_timeis_kyous_query from "@/classes/api/generate-get-plaing-timeis-kyous-query"
+import { GetKyousRequest } from "@/classes/api/req_res/get-kyous-request"
 
 export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
 
@@ -47,23 +48,25 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
 
         // 対象のtimeisを取得する
         let target_timeis: TimeIs | null = null
-        const get_plaing_timeis_req = new GetPlaingTimeisRequest()
-        const get_plaing_timeis_res = await GkillAPI.get_gkill_api().get_plaing_timeis(get_plaing_timeis_req)
+        const get_plaing_timeis_query = generate_get_plaing_timeis_kyous_query(null)
+        const get_plaing_timeis_req = new GetKyousRequest()
+        get_plaing_timeis_req.query = get_plaing_timeis_query
+        const get_plaing_timeis_res = await GkillAPI.get_gkill_api().get_kyous(get_plaing_timeis_req)
         if (get_plaing_timeis_res.errors && get_plaing_timeis_res.errors.length !== 0) {
             errors = errors.concat(get_plaing_timeis_res.errors)
             return errors
         }
 
         const awaitPromisses = Array<Promise<any>>()
-        for (let i = 0; i < get_plaing_timeis_res.plaing_timeis_kyous.length; i++) {
-            const timeis = get_plaing_timeis_res.plaing_timeis_kyous[i]
+        for (let i = 0; i < get_plaing_timeis_res.kyous.length; i++) {
+            const timeis = get_plaing_timeis_res.kyous[i]
             awaitPromisses.push(timeis.load_typed_timeis())
             awaitPromisses.push(timeis.load_attached_tags())
         }
         await Promise.all(awaitPromisses)
 
-        for (let i = 0; i < get_plaing_timeis_res.plaing_timeis_kyous.length; i++) {
-            const timeis_kyou = get_plaing_timeis_res.plaing_timeis_kyous[i]
+        for (let i = 0; i < get_plaing_timeis_res.kyous.length; i++) {
+            const timeis_kyou = get_plaing_timeis_res.kyous[i]
             const attached_tag_names = Array<string>()
             for (let j = 0; j < timeis_kyou.attached_tags.length; j++) {
                 attached_tag_names.push(timeis_kyou.attached_tags[j].tag)
