@@ -79,7 +79,7 @@ async function reload_focused_kyou(): Promise<void> {
         return
     }
     const updated_kyou = focused_kyou.value.clone()
-    await updated_kyou.reload()
+    await updated_kyou.reload(false)
     await updated_kyou.load_all()
     focused_kyou.value = updated_kyou
 }
