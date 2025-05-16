@@ -67,7 +67,7 @@ export enum GkillErrorCodes {
     kftl_has_invalid_line = "ERR900066",
     user_id_is_blank = "ERR900067",
     password_is_blank = "ERR900068",
-    failed_shared_kyou_tasks = "ERR900069",
+    failed_shared_kyous = "ERR900069",
     device_is_aleady_exist = "ERR900070",
     not_found_enable_device = "ERR900071",
     not_found_delete_target_device = "ERR900072",

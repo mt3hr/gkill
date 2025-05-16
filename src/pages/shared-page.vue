@@ -89,7 +89,7 @@ async function load_gkill_api_and_application_config(): Promise<void> {
     } catch (e) {
         console.error(e)
         const error = new GkillError()
-        error.error_code = GkillErrorCodes.failed_shared_kyou_tasks
+        error.error_code = GkillErrorCodes.failed_shared_kyous
         error.error_message = i18n.global.t("FAILED_LOAD_MESSAGE")
         write_errors([error])
     }
