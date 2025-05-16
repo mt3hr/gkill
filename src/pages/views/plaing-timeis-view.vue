@@ -161,6 +161,7 @@ import moment from 'moment'
 import type { PlaingTimeIsViewProps } from './plaing-timeis-view-props'
 import type { PlaingTimeIsViewEmits } from './plaing-timeis-emits'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
+import generate_get_plaing_timeis_kyous_query from '@/classes/api/generate-get-plaing-timeis-kyous-query'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
@@ -177,23 +178,6 @@ const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(nul
 const kyou_list_views = ref();
 
 const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
-
-function generate_query(): FindKyouQuery {
-    const plaing_timeis_query = new FindKyouQuery()
-    plaing_timeis_query.use_tags = false
-    plaing_timeis_query.use_plaing = true
-    plaing_timeis_query.plaing_time = moment().toDate()
-    if (plaing_timeis_query.plaing_time.getTime() <= (last_added_request_time.value?.getTime() ?? 0)) {
-        plaing_timeis_query.plaing_time = moment(last_added_request_time.value).add(1, 'second').toDate()
-    }
-    props.application_config.rep_struct.forEach(rep_struct => {
-        plaing_timeis_query.reps.push(rep_struct.rep_name)
-    })
-    props.application_config.tag_struct.forEach(tag_struct => {
-        plaing_timeis_query.tags.push(tag_struct.tag_name)
-    })
-    return plaing_timeis_query
-}
 
 const match_kyous_list: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_column_index: Ref<number> = ref(0)
@@ -257,7 +241,7 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
 const abort_controller: Ref<AbortController> = ref(new AbortController())
 async function search(update_cache: boolean): Promise<void> {
     // 検索する。Tickでまとめる
-    query.value = generate_query()
+    query.value = generate_get_plaing_timeis_kyous_query(last_added_request_time.value)
     try {
         if (abort_controller.value) {
             abort_controller.value.abort()
