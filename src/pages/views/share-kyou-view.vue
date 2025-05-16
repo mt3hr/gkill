@@ -1,10 +1,10 @@
 <template>
     <v-card>
         <v-card-title>
-            {{ $t("SHARE_KYOU_TASK_TITLE") }}
+            {{ $t("SHARE_KYOU_TITLE") }}
         </v-card-title>
-        <div>{{ $t("SHARE_KYOU_TASK_MESSAGE") }}</div>
-        <v-text-field v-model="share_title" :label="$t('SHARE_KYOU_TASK_TITLE_TITLE')" item-title="title"
+        <div>{{ $t("SHARE_KYOU_MESSAGE") }}</div>
+        <v-text-field v-model="share_title" :label="$t('SHARE_KYOU_TITLE_TITLE')" item-title="title"
             item-value="value" />
         <v-select v-model="view_type" :items="view_types" :label="$t('SHARE_KYOU_VIEW_TYPE')" />
         <v-checkbox v-model="is_share_time_only" :label="$t('SHARE_KYOU_SHARE_TIME_ONLY')" />
@@ -44,7 +44,7 @@ const view_types = ref([
 ])
 
 const share_title: Ref<string> = ref("")
-const view_type = ref(view_types.value[0])
+const view_type = ref(view_types.value[0].value)
 const is_share_time_only: Ref<boolean> = ref(false)
 const is_share_with_tags: Ref<boolean> = ref(false)
 const is_share_with_texts: Ref<boolean> = ref(false)
@@ -65,7 +65,7 @@ async function share(): Promise<void> {
     share_kyou_list_info.device = gkill_res.device
     share_kyou_list_info.find_query_json = props.find_kyou_query
     share_kyou_list_info.share_title = share_title.value
-    share_kyou_list_info.view_type = view_type.value.value
+    share_kyou_list_info.view_type = view_type.value
     share_kyou_list_info.is_share_time_only = is_share_time_only.value
     share_kyou_list_info.is_share_with_tags = is_share_with_tags.value
     share_kyou_list_info.is_share_with_texts = is_share_with_texts.value
