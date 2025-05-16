@@ -367,12 +367,16 @@ export class Kyou extends InfoBase {
             res.timeis_histories[i] = timeis
         }
 
+        /*
         let match_timeis: TimeIs | null = null
         res.timeis_histories.forEach(timeis => {
             if (Math.floor(timeis.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
                 match_timeis = timeis
             }
         })
+        */
+        // 常に最新のものを取得する
+        const match_timeis = res.timeis_histories.length > 0 ? res.timeis_histories[0] : null
         this.typed_timeis = match_timeis
 
         return new Array<GkillError>()
@@ -409,12 +413,16 @@ export class Kyou extends InfoBase {
             res.mi_histories[i] = mi
         }
 
+        /*
         let match_mi: Mi | null = null
         res.mi_histories.forEach(mi => {
             if (Math.floor(mi.update_time.getTime() / 1000) === Math.floor(this.update_time.getTime() / 1000)) {
                 match_mi = mi
             }
         })
+        */
+        // 常に最新のものを取得する
+        const match_mi = res.mi_histories.length > 0 ? res.mi_histories[0] : null
         this.typed_mi = match_mi
 
         return new Array<GkillError>()
