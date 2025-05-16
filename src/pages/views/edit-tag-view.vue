@@ -17,7 +17,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -28,7 +28,8 @@
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
                 :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :is_readonly_mi_check="true" :show_attached_timeis="true"
-                :show_related_time="true" @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
+                :show_rep_name="true" :force_show_latest_kyou_info="true" :show_related_time="true"
+                @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
                 @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
                 @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"

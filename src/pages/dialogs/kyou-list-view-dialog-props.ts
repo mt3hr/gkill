@@ -9,4 +9,6 @@ export interface KyouListViewDialogProps extends GkillPropsBase {
     last_added_tag: string
     enable_context_menu: boolean
     enable_dialog: boolean
+    force_show_latest_kyou_info: boolean
+    show_rep_name: boolean
 }
