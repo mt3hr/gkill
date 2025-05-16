@@ -22,7 +22,7 @@
                                 :show_checkbox="false" :show_footer="false" :enable_context_menu="false"
                                 :enable_dialog="false" :show_content_only="false"
                                 :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
-                                :show_rep_name="false" :force_show_latest_kyou_info="true"
+                                :show_rep_name="false" :force_show_latest_kyou_info="false"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
                                 @clicked_kyou="(kyou) => { focused_kyou = kyou }"
                                 @received_errors="(errors) => emits('received_errors', errors)"
@@ -120,14 +120,14 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
         const kyou_in_list = kyous_list[j]
         if (kyou.id === kyou_in_list.id) {
             const updated_kyou = kyou.clone()
-            await updated_kyou.reload()
+            await updated_kyou.reload(false)
             await updated_kyou.load_all()
             kyous_list.splice(j, 1, updated_kyou)
         }
     }
     if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
         const updated_kyou = kyou.clone()
-        await updated_kyou.reload()
+        await updated_kyou.reload(false)
         await updated_kyou.load_all()
         focused_kyou.value = updated_kyou
     }

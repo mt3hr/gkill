@@ -408,14 +408,14 @@ watch(() => props.kyou, async () => {
     cloned_kyou.value.abort_controller = new AbortController()
     cloned_kyou.value = props.kyou.clone()
     if (props.force_show_latest_kyou_info) {
-        await cloned_kyou.value.reload();//最新を読み込むためにReload
+        await cloned_kyou.value.reload(true);//最新を読み込むためにReload
     }
     (() => load_attached_infos())(); //非同期で実行してほしい
 });
 
 (async () => {
     if (props.force_show_latest_kyou_info) {
-        await cloned_kyou.value.reload();//最新を読み込むためにReload
+        await cloned_kyou.value.reload(true);//最新を読み込むためにReload
     }
     load_attached_infos()
 })(); //非同期で実行してほしい
