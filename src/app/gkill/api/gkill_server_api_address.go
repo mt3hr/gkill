@@ -81,8 +81,6 @@ type GkillServerAPIAddress struct {
 
 	GetMiBoardListAddress string
 
-	GetPlaingTimeisAddress string
-
 	GetAllTagNamesAddress string
 
 	GetAllRepNamesAddress string
@@ -243,8 +241,6 @@ type GkillServerAPIAddress struct {
 
 	GetMiBoardListMethod string
 
-	GetPlaingTimeisMethod string
-
 	GetAllTagNamesMethod string
 
 	GetAllRepNamesMethod string
@@ -367,7 +363,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetGitCommitLogAddress = "/api/get_git_commit_log"
 	gkillAPIAddress.GetIDFKyouAddress = "/api/get_idf_kyou"
 	gkillAPIAddress.GetMiBoardListAddress = "/api/get_mi_board_list"
-	gkillAPIAddress.GetPlaingTimeisAddress = "/api/get_plaing_timeis"
 	gkillAPIAddress.GetAllTagNamesAddress = "/api/get_all_tag_names"
 	gkillAPIAddress.GetAllRepNamesAddress = "/api/get_all_rep_names"
 	gkillAPIAddress.GetTagsByTargetIDAddress = "/api/get_tags_by_id"
@@ -448,7 +443,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.GetGitCommitLogMethod = "POST"
 	gkillAPIAddress.GetIDFKyouMethod = "POST"
 	gkillAPIAddress.GetMiBoardListMethod = "POST"
-	gkillAPIAddress.GetPlaingTimeisMethod = "POST"
 	gkillAPIAddress.GetAllTagNamesMethod = "POST"
 	gkillAPIAddress.GetAllRepNamesMethod = "POST"
 	gkillAPIAddress.GetTagsByTargetIDMethod = "POST"

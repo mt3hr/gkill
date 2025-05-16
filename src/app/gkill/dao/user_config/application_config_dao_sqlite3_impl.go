@@ -512,6 +512,26 @@ WHERE USER_ID = ?
 AND DEVICE = ?
 AND KEY = ?
 `
+	checkExistSQL := `
+SELECT COUNT(*)
+FROM APPLICATION_CONFIG
+WHERE USER_ID = ?
+AND DEVICE = ?
+AND KEY = ?
+`
+	insertSQL := `
+INSERT INTO APPLICATION_CONFIG (
+  USER_ID,
+  DEVICE,
+  KEY,
+  VALUE
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?
+)
+`
 
 	tx, err := a.db.Begin()
 	if err != nil {
@@ -528,6 +548,86 @@ AND KEY = ?
 		"MI_DEFAULT_PERIOD":             applicationConfig.MiDefaultPeriod,
 		"IS_SHOW_SHARE_FOOTER":          applicationConfig.IsShowShareFooter,
 	}
+
+	// レコード自体が存在しなかったらいれる
+	for key, value := range updateValuesMap {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		stmt, err := tx.PrepareContext(ctx, checkExistSQL)
+		if err != nil {
+			err = fmt.Errorf("error at pre get application config sql: %w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+		defer stmt.Close()
+
+		queryArgs := []interface{}{
+			applicationConfig.UserID,
+			applicationConfig.Device,
+			key,
+		}
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", checkExistSQL, queryArgs)
+		row := stmt.QueryRowContext(ctx, queryArgs...)
+		err = row.Err()
+		if err != nil {
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+
+		recordCount := 0
+		err = row.Scan(&recordCount)
+		if err != nil {
+			if err != nil {
+				err = fmt.Errorf("error at scan:%w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
+				}
+				return false, err
+			}
+		}
+		if recordCount == 0 {
+			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
+			stmt, err := tx.PrepareContext(ctx, insertSQL)
+			if err != nil {
+				err = fmt.Errorf("error at add application config sql: %w", err)
+				err = fmt.Errorf("error at query :%w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
+				}
+				return false, err
+			}
+			defer stmt.Close()
+
+			queryArgs := []interface{}{
+				applicationConfig.UserID,
+				applicationConfig.Device,
+				key,
+				value,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
+			_, err = stmt.ExecContext(ctx, queryArgs...)
+
+			if err != nil {
+				err = fmt.Errorf("error at add application config sql: %w", err)
+				err = fmt.Errorf("error at query :%w", err)
+				rollbackErr := tx.Rollback()
+				if rollbackErr != nil {
+					err = fmt.Errorf("%w: %w", err, rollbackErr)
+				}
+				return false, err
+			}
+		}
+	}
+
+	// 更新する
 	for key, value := range updateValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
 		stmt, err := tx.PrepareContext(ctx, sql)

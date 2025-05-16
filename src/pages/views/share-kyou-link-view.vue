@@ -1,9 +1,9 @@
 <template>
     <v-card>
         <v-card-title>
-            {{ $t("SHARED_KYOU_TASK_LINK_LIST_TITLE") }}
+            {{ $t("SHARED_KYOU_LINK_LIST_TITLE") }}
         </v-card-title>
-        <v-text-field v-model="share_title" :label="$t('SHARE_MI_TASK_TITLE_TITLE')" />
+        <v-text-field v-model="share_title" :label="$t('SHARE_KYOU_TITLE_TITLE')" />
         <v-select v-model="view_type" :items="view_types" :label="$t('SHARE_KYOU_VIEW_TYPE')" />
         <v-checkbox v-model="is_share_time_only" :label="$t('SHARE_KYOU_SHARE_TIME_ONLY')" />
         <v-checkbox v-model="is_share_with_tags" :label="$t('SHARE_KYOU_SHARE_WITH_TAGS')" />
