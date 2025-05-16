@@ -1589,7 +1589,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 			continue
 		}
 
-		latestKyousMap[id] = currentKyou // 一旦様子見してみます
+		latestKyousMap[id] = currentKyou
 
 		// 最新が入っていなかったらもらってくる。
 		for _, rep := range findCtx.Repositories.Reps {
