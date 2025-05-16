@@ -139,7 +139,7 @@ async function upload_files() {
     uploaded_kyous.value.splice(0)
     for (let i = 0; i < res.uploaded_kyous.length; i++) {
         const uploaded_kyou = res.uploaded_kyous[i]
-        await uploaded_kyou.reload()
+        await uploaded_kyou.reload(false)
         uploaded_kyous.value.push(uploaded_kyou)
     }
     files.value = null
@@ -186,7 +186,7 @@ async function reload_kyou(kyou: Kyou) {
         const uploaded_kyou = uploaded_kyous.value[i]
         if (kyou.id === uploaded_kyou.id) {
             const updated_kyou = kyou.clone()
-            await updated_kyou.reload()
+            await updated_kyou.reload(false)
             await updated_kyou.load_all()
             uploaded_kyous.value.splice(i, 1, updated_kyou)
         }
