@@ -98,7 +98,8 @@
                             :enable_context_menu="!is_shared_rykv_view" :enable_dialog="!is_shared_rykv_view"
                             :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="!is_shared_rykv_view"
                             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true"
-                            :show_content_only="false" :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
+                            :show_rep_name="!is_shared_rykv_view" :force_show_latest_kyou_info="true" :show_content_only="false"
+                            :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
                                 match_kyous_list_top_list[index] = scroll_top
                                 if (inited) {
                                     props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
@@ -179,7 +180,7 @@
                                 :show_timeis_plaing_end_button="true" :height="'auto'" :is_readonly_mi_check="false"
                                 :width="'auto'" :enable_context_menu="!is_shared_rykv_view"
                                 :enable_dialog="!is_shared_rykv_view" :show_attached_timeis="true"
-                                class="kyou_detail_view" :show_related_time="true"
+                                :show_rep_name="true" :force_show_latest_kyou_info="true" class="kyou_detail_view" :show_related_time="true"
                                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
                                 @deleted_text="(deleted_text) => { }"
                                 @deleted_notification="(deleted_notification) => { }"

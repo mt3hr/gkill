@@ -22,6 +22,7 @@
                                 :show_checkbox="false" :show_footer="false" :enable_context_menu="false"
                                 :enable_dialog="false" :show_content_only="false"
                                 :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
+                                :show_rep_name="false" :force_show_latest_kyou_info="true"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
                                 @clicked_kyou="(kyou) => { focused_kyou = kyou }"
                                 @received_errors="(errors) => emits('received_errors', errors)"
@@ -63,6 +64,7 @@
                                             :show_attached_timeis="true" :show_timeis_elapsed_time="false"
                                             :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
                                             :is_readonly_mi_check="true" :width="400" :enable_context_menu="false"
+                                            :show_rep_name="true" :force_show_latest_kyou_info="true"
                                             :enable_dialog="false" :show_related_time="true" class="kyou_detail_view"
                                             @received_errors="(errors) => emits('received_errors', errors)"
                                             @received_messages="(messages) => emits('received_messages', messages)" />

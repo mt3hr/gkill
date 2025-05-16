@@ -53,7 +53,7 @@
                     {{ format_time(cloned_kyou.related_time) }}
                 </v-col>
                 <v-spacer />
-                <v-col class="kyou_rep_name pa-0 ma-0" cols="auto">
+                <v-col v-if="show_rep_name" class="kyou_rep_name pa-0 ma-0" cols="auto">
                     <span>{{ cloned_kyou.rep_name }}</span>
                 </v-col>
             </v-row>
@@ -403,13 +403,22 @@ onUnmounted(() => {
     cloned_kyou.value.abort_controller = new AbortController()
 })
 
-watch(() => props.kyou, () => {
+watch(() => props.kyou, async () => {
     cloned_kyou.value.abort_controller.abort()
     cloned_kyou.value.abort_controller = new AbortController()
-    cloned_kyou.value = props.kyou.clone();
+    cloned_kyou.value = props.kyou.clone()
+    if (props.force_show_latest_kyou_info) {
+        await cloned_kyou.value.reload();//最新を読み込むためにReload
+    }
     (() => load_attached_infos())(); //非同期で実行してほしい
 });
-(() => load_attached_infos())(); //非同期で実行してほしい
+
+(async () => {
+    if (props.force_show_latest_kyou_info) {
+        await cloned_kyou.value.reload();//最新を読み込むためにReload
+    }
+    load_attached_infos()
+})(); //非同期で実行してほしい
 
 
 const kyou_class = computed(() => {

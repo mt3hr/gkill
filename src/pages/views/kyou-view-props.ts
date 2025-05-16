@@ -17,10 +17,12 @@ export interface KyouViewProps extends KyouViewPropsBase {
     show_timeis_plaing_end_button: boolean
     show_timeis_elapsed_time: boolean
     show_attached_timeis: boolean
+    show_rep_name: boolean
     is_readonly_mi_check: boolean
     highlight_targets: Array<InfoIdentifier>
     height: number | string
     width: number | string
     enable_context_menu: boolean
     enable_dialog: boolean
+    force_show_latest_kyou_info: boolean
 }
