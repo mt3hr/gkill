@@ -596,7 +596,7 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async reload(): Promise<Array<GkillError>> {
+    async reload(content_only: boolean): Promise<Array<GkillError>> {
         const req = new GetKyouRequest()
         req.abort_controller = this.abort_controller
 
@@ -609,7 +609,9 @@ export class Kyou extends InfoBase {
         this.is_deleted = latest_kyou.is_deleted
         this.id = latest_kyou.id
         this.rep_name = latest_kyou.rep_name
-        this.related_time = latest_kyou.related_time
+        if (!content_only) {
+            this.related_time = latest_kyou.related_time
+        }
         this.data_type = latest_kyou.data_type
         this.create_time = latest_kyou.create_time
         this.create_app = latest_kyou.create_app
