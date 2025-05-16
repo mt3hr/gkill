@@ -86,7 +86,7 @@
                                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                                 :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true"
                                 :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
-                                :show_rep_name="false" :force_show_latest_kyou_info="true" :show_content_only="false"
+                                :show_rep_name="false" :force_show_latest_kyou_info="false" :show_content_only="false"
                                 :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
                                     match_kyous_list_top_list[index] = scroll_top
                                     if (inited) {
@@ -129,7 +129,7 @@
                                     querys[index] = query
                                     search(index, query, true)
                                 }" @requested_close_column="close_list_view(index)"
-                                @deleted_kyou="(deleted_kyou) => { reload_list(index); reload_kyou(deleted_kyou); focused_kyou?.reload() }"
+                                @deleted_kyou="(deleted_kyou) => { reload_list(index); reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                                 @deleted_tag="(deleted_tag) => { }" @deleted_text="(deleted_text) => { }"
                                 @deleted_notification="(deleted_notification) => { }"
                                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
@@ -173,7 +173,7 @@
             <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
+                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
                 @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
@@ -186,7 +186,7 @@
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
+                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
                 @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
@@ -199,7 +199,7 @@
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
+                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
                 @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
@@ -212,7 +212,7 @@
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
+                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
                 @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
@@ -225,7 +225,7 @@
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
+                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
                 @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
@@ -254,7 +254,7 @@
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload() }"
+                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
                 @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
@@ -410,7 +410,7 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
                 const kyou_in_list = kyous_list[j]
                 if (kyou.id === kyou_in_list.id) {
                     const updated_kyou = kyou.clone()
-                    await updated_kyou.reload()
+                    await updated_kyou.reload(false)
                     await updated_kyou.load_all()
                     kyous_list.splice(j, 1, updated_kyou)
                     break
@@ -421,7 +421,7 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
     (async (): Promise<void> => {
         if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
             const updated_kyou = kyou.clone()
-            await updated_kyou.reload()
+            await updated_kyou.reload(false)
             await updated_kyou.load_all()
             focused_kyou.value = updated_kyou
         }
