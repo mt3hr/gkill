@@ -2,24 +2,28 @@
     <div class="login_wrap">
         <v-container class="pa-0 ma-0">
             <v-row class="pa-0 ma-0">
+                <v-spacer />
                 <v-col cols="auto">
-                    <div class="welcome">{{ i18n.global.t("WELCOME_TITLE") }}</div>
+                    <div class="welcome">{{ welcome_emoji + i18n.global.t("WELCOME_TITLE") + welcome_emoji }}</div>
+                </v-col>
+                <v-spacer />
+            </v-row>
+            <v-row class="pa-0 ma-0">
+                <v-col cols="12">
+                    <v-text-field id="username" :label="i18n.global.t('USER_ID_TITLE')" v-model="user_id"
+                        name="username" autocomplete="username" :readonly="!(!useRoute().query.user_id)" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="i18n.global.t('USER_ID_TITLE')" v-model="user_id" autofocus
-                        :readonly="!(!useRoute().query.user_id)" />
+                    <v-text-field id="password" :label="i18n.global.t('PASSWORD_TITLE')" :type="'password'"
+                        v-model="password" name="new-password" autocomplete="new-password" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="i18n.global.t('PASSWORD_TITLE')" :type="'password'" v-model="password" />
-                </v-col>
-            </v-row>
-            <v-row class="pa-0 ma-0">
-                <v-col cols="12">
-                    <v-text-field :label="i18n.global.t('PASSWORD_RETYPE_TITLE')" :type="'password'" v-model="password_retype" />
+                    <v-text-field :label="i18n.global.t('PASSWORD_RETYPE_TITLE')" :type="'password'"
+                        name="retype-password" autocomplete="retype-password" v-model="password_retype" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
@@ -46,6 +50,7 @@ import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
+const welcome_emoji = computed(() => props.gkill_api.get_use_dark_theme() ? "⭐️" : "❄️")
 const password_reset_token: Ref<string> = ref(useRoute().query.reset_token ? useRoute().query.reset_token!.toString() : "")
 const user_id: Ref<string> = ref(useRoute().query.user_id ? useRoute().query.user_id!.toString() : "")
 const password: Ref<string> = ref("")
@@ -53,6 +58,8 @@ const password_retype: Ref<string> = ref("")
 
 const props = defineProps<SetNewPasswordViewProps>()
 const emits = defineEmits<SetNewPasswordViewEmits>()
+
+// nextTick(() => document.getElementById("username")?.focus()).then(() => nextTick(() => document.getElementById("password")?.focus())).then(() => nextTick(() => document.getElementById("username")?.focus()))
 
 const app_content_height_px = computed(() => props.app_content_height + 'px')
 const app_content_width_px = computed(() => props.app_content_width + 'px')
@@ -143,5 +150,9 @@ async function try_set_new_password(): Promise<boolean> {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.welcome {
+    font-size: x-large;
 }
 </style>

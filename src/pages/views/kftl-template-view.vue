@@ -2,7 +2,7 @@
     <v-card :max-width="500" class="help_card pa-3">
         <v-card-title>
             <v-row>
-                <v-col cols="auto">
+                <v-col cols="auto" class="pa-0 ma-0">
                     {{ i18n.global.t("KFTL_TEMPLATE_TITLE") }}
                 </v-col>
                 <v-spacer />
