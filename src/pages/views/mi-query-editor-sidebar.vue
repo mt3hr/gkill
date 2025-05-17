@@ -68,6 +68,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import miBoardQuery from './mi-board-query.vue'
 import miExtructCheckStateQuery from './mi-extruct-check-state-query.vue'
 import KeywordQuery from './keyword-query.vue'

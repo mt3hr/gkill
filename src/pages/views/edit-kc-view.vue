@@ -3,39 +3,75 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("EDIT_KC_TITLE") }}</span>
+                    <span>{{ i18n.global.t("EDIT_KC_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
                         color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-model="title" :label="$t('KC_TITLE_TITLE')" autofocus :readonly="is_requested_submit" />
-        <v-text-field type="number" v-model="num_value" :label="$t('KC_NUM_VALUE_TITLE')"
+        <v-text-field v-model="title" :label="i18n.global.t('KC_TITLE_TITLE')" autofocus
+            :readonly="is_requested_submit" />
+        <v-text-field type="number" v-model="num_value" :label="i18n.global.t('KC_NUM_VALUE_TITLE')"
             :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>{{ $t("KC_DATE_TIME_TITLE") }}</label>
-                <input class="input date" type="date" v-model="related_date" :label="$t('KC_DATE_TITLE')"
-                    :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="related_time" :label="$t('KC_TIME_TITLE')"
-                    :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_related_date_time()" :disabled="is_requested_submit">{{
-                    $t("RESET_TITLE") }}</v-btn>
-                <v-btn dark color="primary" @click="now_to_related_date_time()" :disabled="is_requested_submit">{{
-                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                <table>
+                    <tr>
+                        <td>
+                            <v-menu v-model="show_related_date_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_date_string" :label="i18n.global.t('KC_DATE_TITLE')"
+                                        readonly v-bind="props" min-width="120" />
+                                </template>
+                                <v-date-picker v-model="related_date_typed"
+                                    @update:model-value="show_related_date_menu = false" locale="ja-JP" />
+                            </v-menu>
+                        </td>
+                        <td>
+                            <v-menu v-model="show_related_time_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_time_string" :label="i18n.global.t('KC_TIME_TITLE')"
+                                        readonly min-width="120" v-bind="props" />
+                                </template>
+                                <v-time-picker v-model="related_time_string" format="24hr"
+                                    @update:model-value="show_related_time_menu = false" />
+                            </v-menu>
+                        </td>
+                    </tr>
+                </table>
+            </v-col>
+            <v-col cols="auto" class="pa-0 ma-0">
+                <table>
+                    <tr>
+                        <td>
+                            <v-btn dark color="secondary" @click="reset_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("RESET_TITLE") }}</v-btn>
+                        </td>
+                        <td>
+                            <v-btn dark color="primary" @click="now_to_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                        </td>
+                    </tr>
+                </table>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
+                    i18n.global.t("RESET_TITLE")
                     }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                    i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
             </v-col>
         </v-row>
@@ -47,7 +83,8 @@
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
                 :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :is_readonly_mi_check="true" :show_attached_timeis="true"
-                :show_content_only="false" :show_related_time="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
+                :show_content_only="false" :show_related_time="true" :show_rep_name="true"
+                :force_show_latest_kyou_info="true"
                 @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
                 @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
@@ -69,7 +106,8 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref, watch } from 'vue'
+import { i18n } from '@/i18n'
+import { computed, type Ref, ref, watch } from 'vue'
 import type { EditKCViewProps } from './edit-kc-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
@@ -79,8 +117,8 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { UpdateKCRequest } from '@/classes/api/req_res/update-kc-request'
 import moment from 'moment'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-
-import { i18n } from '@/i18n'
+import { VDatePicker } from 'vuetify/components'
+import { VTimePicker } from 'vuetify/labs/components'
 
 const is_requested_submit = ref(false)
 
@@ -90,9 +128,13 @@ const emits = defineEmits<KyouViewEmits>()
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const title: Ref<string> = ref(cloned_kyou.value.typed_kc ? cloned_kyou.value.typed_kc.title : "")
 const num_value: Ref<number> = ref(cloned_kyou.value.typed_kc ? cloned_kyou.value.typed_kc.num_value : 0)
-const related_date: Ref<string> = ref(moment(cloned_kyou.value.related_time).format("YYYY-MM-DD"))
-const related_time: Ref<string> = ref(moment(cloned_kyou.value.related_time).format("HH:mm:ss"))
+const related_date_typed: Ref<Date> = ref(moment(cloned_kyou.value.related_time).toDate())
+const related_date_string: Ref<string> = computed(() => moment(related_date_typed.value).format("YYYY-MM-DD"))
+const related_time_string: Ref<string> = ref(moment(cloned_kyou.value.related_time).format("HH:mm:ss"))
 const show_kyou: Ref<boolean> = ref(false)
+
+const show_related_date_menu = ref(false)
+const show_related_time_menu = ref(false)
 
 watch(() => props.kyou, () => load())
 load()
@@ -103,8 +145,8 @@ async function load(): Promise<void> {
     cloned_kyou.value.load_all()
     title.value = cloned_kyou.value.typed_kc ? cloned_kyou.value.typed_kc.title : ""
     num_value.value = cloned_kyou.value.typed_kc ? cloned_kyou.value.typed_kc.num_value : 0
-    related_date.value = moment(cloned_kyou.value.related_time).format("YYYY-MM-DD")
-    related_time.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+    related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+    related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
 
 async function save(): Promise<void> {
@@ -148,7 +190,7 @@ async function save(): Promise<void> {
         }
 
         // 日時必須入力チェック
-        if (related_date.value === "" || related_time.value === "") {
+        if (related_date_string.value === "" || related_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kc_related_time_is_blank
             error.error_message = i18n.global.t("KC_title_IS_BLANK_MESSAGE")
@@ -180,7 +222,7 @@ async function save(): Promise<void> {
         // 更新後KC情報を用意する
         const updated_kc = await kc.clone()
         updated_kc.title = title.value
-        updated_kc.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        updated_kc.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         updated_kc.update_app = "gkill"
         updated_kc.update_device = gkill_info_res.device
         updated_kc.update_time = new Date(Date.now())
@@ -208,26 +250,20 @@ async function save(): Promise<void> {
 }
 
 function now_to_related_date_time(): void {
-    related_date.value = moment().format("YYYY-MM-DD")
-    related_time.value = moment().format("HH:mm:ss")
+    related_date_typed.value = moment().toDate()
+    related_time_string.value = moment().format("HH:mm:ss")
 }
 
 function reset_related_date_time(): void {
-    related_date.value = moment(cloned_kyou.value.related_time).format("YYYY-MM-DD")
-    related_time.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+    related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+    related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
 
 function reset(): void {
     title.value = cloned_kyou.value.typed_kc ? cloned_kyou.value.typed_kc.title : ""
-    related_date.value = moment(cloned_kyou.value.related_time).format("YYYY-MM-DD")
-    related_time.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+    related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+    related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
 </script>
 
-<style lang="css" scoped>
-.input.date,
-.input.time,
-.input.text {
-    border: solid 1px silver;
-}
-</style>
+<style lang="css" scoped></style>

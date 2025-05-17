@@ -8,6 +8,7 @@
 
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { ShowPasswordResetLinkDialogEmits } from './show-password-reset-link-dialog-emits'
 import type { ShowPasswordResetLinkDialogProps } from './show-password-reset-link-dialog-props'

@@ -3,58 +3,104 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("END_TIMEIS_TITLE") }}</span>
+                    <span>{{ i18n.global.t("END_TIMEIS_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
                         color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
+        <v-text-field readonly type="text" v-model="timeis_title" :label="i18n.global.t('END_TIMEIS_TITLE_TITLE')"
+            autofocus />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto">
-                <label>{{ $t("END_TIMEIS_TITLE_TITLE") }}</label>
-            </v-col>
-            <v-col cols="auto">
-                <input readonly type="text" v-model="timeis_title" :label="$t('END_TIMEIS_TITLE_TITLE')" autofocus />
+                <table>
+                    <tr>
+                        <td>
+                            <v-menu v-model="show_start_date_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="timeis_start_date_string"
+                                        :label="i18n.global.t('TIMEIS_START_DATE_TITLE')" readonly v-bind="props"
+                                        min-width="120" />
+                                </template>
+                                <!--
+                                <v-date-picker v-model="timeis_start_date_typed"
+                                    @update:model-value="show_start_date_menu = false" locale="ja-JP" />
+                                -->
+                            </v-menu>
+                        </td>
+                        <td>
+                            <v-menu v-model="show_start_time_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="timeis_start_time_string"
+                                        :label="i18n.global.t('TIMEIS_START_TIME_TITLE')" min-width="120" readonly
+                                        v-bind="props" />
+                                </template>
+                                <!--
+                                <v-time-picker v-model="timeis_start_time_string" format="24hr"
+                                    @update:model-value="show_start_time_menu = false" />
+                                -->
+                            </v-menu>
+                        </td>
+                    </tr>
+                </table>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto">
-                <label>{{ $t("START_DATE_TIME_TITLE") }}</label>
+                <table>
+                    <tr>
+                        <td>
+                            <v-menu v-model="show_end_date_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="timeis_end_date_string"
+                                        :label="i18n.global.t('TIMEIS_END_DATE_TITLE')" readonly v-bind="props"
+                                        min-width="120" />
+                                </template>
+                                <v-date-picker v-model="timeis_end_date_typed"
+                                    @update:model-value="show_end_date_menu = false" locale="ja-JP" />
+                            </v-menu>
+                        </td>
+                        <td>
+                            <v-menu v-model="show_end_time_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="timeis_end_time_string"
+                                        :label="i18n.global.t('TIMEIS_END_TIME_TITLE')" min-width="120" readonly
+                                        v-bind="props" />
+                                </template>
+                                <v-time-picker v-model="timeis_end_time_string" format="24hr"
+                                    @update:model-value="show_end_time_menu = false" />
+                            </v-menu>
+                        </td>
+                    </tr>
+                </table>
             </v-col>
-            <v-col cols="auto">
-                <input readonly type="date" v-model="timeis_start_date" :label="$t('START_DATE_TITLE')" />
-                <input readonly type="time" v-model="timeis_start_time" :label="$t('START_TIME_TITLE')" />
-            </v-col>
-        </v-row>
-        <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
-                <label>{{ $t("END_DATE_TIME_TITLE") }}</label>
-            </v-col>
-            <v-col cols="auto">
-                <input class="input date" type="date" v-model="timeis_end_date" :label="$t('END_DATE_TITLE')"
-                    :readonly="is_requested_submit" />
-                <input class="input date" type="time" v-model="timeis_end_time" :label="$t('END_TIME_TITLE')"
-                    :readonly="is_requested_submit" />
-            </v-col>
-            <v-col cols="auto">
-                <v-btn dark color="secondary" @click="clear_end_date_time()" :disabled="is_requested_submit">{{
-                    $t("CLEAR_TITLE") }}</v-btn>
-                <v-btn dark color="primary" @click="now_to_end_date_time()" :disabled="is_requested_submit">{{
-                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
-            </v-col>
-        </v-row>
-        <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
-                }}</v-btn>
-            </v-col>
-            <v-spacer />
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("END_TITLE")
-                }}</v-btn>
+                <table>
+                    <tr>
+                        <td>
+                            <v-btn dark color="secondary" @click="reset_end_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("RESET_TITLE") }}</v-btn>
+                        </td>
+                        <td>
+                            <v-btn dark color="secondary" @click="clear_end_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("CLEAR_TITLE") }}</v-btn>
+                        </td>
+                        <td>
+                            <v-btn dark color="primary" @click="now_to_end_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                        </td>
+                    </tr>
+                </table>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -87,8 +133,9 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import type { EndTimeIsPlaingViewProps } from './end-time-is-plaing-view-props'
-import { type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { Kyou } from '@/classes/datas/kyou'
 import KyouView from './kyou-view.vue'
@@ -97,8 +144,8 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-
-import { i18n } from '@/i18n'
+import { VDatePicker } from 'vuetify/components'
+import { VTimePicker } from 'vuetify/labs/components'
 
 const is_requested_submit = ref(false)
 
@@ -107,10 +154,17 @@ const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const timeis_title: Ref<string> = ref(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : "")
-const timeis_start_date: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.start_time).format("YYYY-MM-DD") : "")
-const timeis_start_time: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.start_time).format("HH:mm:ss") : "")
-const timeis_end_date: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.end_time).format("YYYY-MM-DD") : "")
-const timeis_end_time: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.end_time).format("HH:mm:ss") : "")
+const timeis_start_date_typed: Ref<Date> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.start_time).toDate() : new Date(0))
+const timeis_start_date_string: Ref<string> = computed(() => moment(timeis_start_date_typed.value).format("YYYY-MM-DD"))
+const timeis_start_time_string: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.start_time).format("HH:mm:ss") : "")
+const timeis_end_date_typed: Ref<Date | null> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.end_time).toDate() : null)
+const timeis_end_date_string: Ref<string> = computed(() => timeis_end_date_typed.value ? moment(timeis_end_date_typed.value).format("YYYY-MM-DD") : "")
+const timeis_end_time_string: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.end_time).format("HH:mm:ss") : "")
+
+const show_start_date_menu = ref(false)
+const show_start_time_menu = ref(false)
+const show_end_date_menu = ref(false)
+const show_end_time_menu = ref(false)
 
 const show_kyou: Ref<boolean> = ref(false)
 
@@ -122,10 +176,10 @@ async function load(): Promise<void> {
     await cloned_kyou.value.load_typed_datas()
     cloned_kyou.value.load_all()
     timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
-    timeis_start_date.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("YYYY-MM-DD")
-    timeis_start_time.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
-    timeis_end_date.value = moment().format("YYYY-MM-DD")
-    timeis_end_time.value = moment().format("HH:mm:ss")
+    timeis_start_date_typed.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").toDate()
+    timeis_start_time_string.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
+    timeis_end_date_typed.value = moment().toDate()
+    timeis_end_time_string.value = moment().format("HH:mm:ss")
 }
 
 function reset(): void {
@@ -135,23 +189,23 @@ function reset(): void {
 }
 
 function reset_start_date_time(): void {
-    timeis_start_date.value = cloned_kyou.value.typed_timeis?.start_time ? moment(cloned_kyou.value.typed_timeis.start_time).format("YYYY-MM-DD") : ""
-    timeis_start_time.value = cloned_kyou.value.typed_timeis?.start_time ? moment(cloned_kyou.value.typed_timeis.start_time).format("HH:mm:ss") : ""
+    timeis_start_date_typed.value = cloned_kyou.value.typed_timeis?.start_time ? moment(cloned_kyou.value.typed_timeis.start_time).toDate() : new Date(Date.now())
+    timeis_start_time_string.value = cloned_kyou.value.typed_timeis?.start_time ? moment(cloned_kyou.value.typed_timeis.start_time).format("HH:mm:ss") : ""
 }
 
 function reset_end_date_time(): void {
-    timeis_end_date.value = cloned_kyou.value.typed_timeis?.end_time ? moment(cloned_kyou.value.typed_timeis.end_time).format("YYYY-MM-DD") : ""
-    timeis_end_time.value = cloned_kyou.value.typed_timeis?.end_time ? moment(cloned_kyou.value.typed_timeis.end_time).format("HH:mm:ss") : ""
+    timeis_end_date_typed.value = cloned_kyou.value.typed_timeis?.end_time ? moment(cloned_kyou.value.typed_timeis.end_time).toDate() : null
+    timeis_end_time_string.value = cloned_kyou.value.typed_timeis?.end_time ? moment(cloned_kyou.value.typed_timeis.end_time).format("HH:mm:ss") : ""
 }
 
 function clear_end_date_time(): void {
-    timeis_end_date.value = ""
-    timeis_end_time.value = ""
+    timeis_end_date_typed.value = null
+    timeis_end_time_string.value = ""
 }
 
 function now_to_end_date_time(): void {
-    timeis_end_date.value = moment().format("YYYY-MM-DD")
-    timeis_end_time.value = moment().format("HH:mm:ss")
+    timeis_end_date_typed.value = moment().toDate()
+    timeis_end_time_string.value = moment().format("HH:mm:ss")
 }
 
 async function save(): Promise<void> {
@@ -181,7 +235,7 @@ async function save(): Promise<void> {
         }
 
         // 開始日時必須入力チェック
-        if (timeis_start_date.value === "" || timeis_start_time.value === "") {
+        if (timeis_start_date_string.value === "" || timeis_start_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.timeis_start_time_is_blank
             error.error_message = i18n.global.t("TIMEIS_START_TIME_IS_BLANK_MESSAGE")
@@ -192,8 +246,8 @@ async function save(): Promise<void> {
         }
 
         // 終了日時入力チェック
-        if ((timeis_end_date.value === "" && timeis_end_time.value !== "") ||
-            (timeis_end_date.value !== "" && timeis_end_time.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
+        if ((timeis_end_date_string.value === "" && timeis_end_time_string.value !== "") ||
+            (timeis_end_date_string.value !== "" && timeis_end_time_string.value === "")) { // 片方入力されていなかったらエラーメッセージ出力
             const error = new GkillError()
             error.error_code = GkillErrorCodes.timeis_end_time_is_blank
             error.error_message = i18n.global.t("TIMEIS_END_TIME_IS_BLANK_MESSAGE")
@@ -205,8 +259,8 @@ async function save(): Promise<void> {
 
         // 更新がなかったらエラーメッセージを出力する
         if (timeis.title === timeis_title.value &&
-            (moment(timeis.start_time).toDate().getTime() === moment(timeis_start_date.value + " " + timeis_start_time.value).toDate().getTime()) &&
-            (moment(timeis.end_time).toDate().getTime() === moment(timeis_end_date.value + " " + timeis_end_time.value).toDate().getTime()) || (timeis.end_time === null && timeis_end_date.value === "" && timeis_end_time.value === "")) {
+            (moment(timeis.start_time).toDate().getTime() === moment(timeis_start_date_string.value + " " + timeis_start_time_string.value).toDate().getTime()) &&
+            (moment(timeis.end_time).toDate().getTime() === moment(timeis_end_date_string.value + " " + timeis_end_time_string.value).toDate().getTime()) || (timeis.end_time === null && timeis_end_date_string.value === "" && timeis_end_time_string.value === "")) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.timeis_is_no_update
             error.error_message = i18n.global.t("TIMEIS_IS_NO_UPDATE_MESSAGE")
@@ -226,12 +280,12 @@ async function save(): Promise<void> {
 
         // 更新後TimeIs情報を用意する
         let end_time: Date | null = null
-        if (timeis_end_date.value !== "" && timeis_end_time.value !== "") {
-            end_time = moment(timeis_end_date.value + " " + timeis_end_time.value).toDate()
+        if (timeis_end_date_string.value !== "" && timeis_end_time_string.value !== "") {
+            end_time = moment(timeis_end_date_string.value + " " + timeis_end_time_string.value).toDate()
         }
         const updated_timeis = await timeis.clone()
         updated_timeis.title = timeis_title.value
-        updated_timeis.start_time = moment(timeis_start_date.value + " " + timeis_start_time.value).toDate()
+        updated_timeis.start_time = moment(timeis_start_date_string.value + " " + timeis_start_time_string.value).toDate()
         updated_timeis.end_time = end_time
         updated_timeis.update_app = "gkill"
         updated_timeis.update_device = gkill_info_res.device
@@ -259,10 +313,4 @@ async function save(): Promise<void> {
     }
 }
 </script>
-<style lang="css" scoped>
-.input.date,
-.input.time,
-.input.text {
-    border: solid 1px silver;
-}
-</style>
+<style lang="css" scoped></style>

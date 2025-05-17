@@ -22,15 +22,15 @@
         </v-row>
         <div :style="{ 'padding-top': '30px' }">
             <div v-if="kyou.typed_mi && kyou.typed_mi.estimate_start_time">
-                <span>{{ $t("MI_START_DATE_TIME_TITLE") }}：</span>
+                <span>{{ i18n.global.t("MI_START_DATE_TIME_TITLE") }}：</span>
                 <span>{{ format_time(kyou.typed_mi.estimate_start_time) }}</span>
             </div>
             <div v-if="kyou.typed_mi && kyou.typed_mi.estimate_end_time">
-                <span>{{ $t("MI_END_DATE_TIME_TITLE") }}：</span>
+                <span>{{ i18n.global.t("MI_END_DATE_TIME_TITLE") }}：</span>
                 <span>{{ format_time(kyou.typed_mi.estimate_end_time) }}</span>
             </div>
             <div v-if="kyou.typed_mi && kyou.typed_mi.limit_time">
-                <span>{{ $t("MI_LIMIT_DATE_TIME_TITLE") }}：</span>
+                <span>{{ i18n.global.t("MI_LIMIT_DATE_TIME_TITLE") }}：</span>
                 <span>{{ format_time(kyou.typed_mi.limit_time) }}</span>
             </div>
         </div>
@@ -58,6 +58,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { nextTick, type Ref, ref, watch } from 'vue'
 import MiContextMenu from './mi-context-menu.vue'
 import type { Kyou } from '@/classes/datas/kyou'

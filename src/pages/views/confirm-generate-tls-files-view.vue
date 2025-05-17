@@ -3,18 +3,18 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t('GENERATE_OREORE_TLS_TITLE') }}</span>
+                    <span>{{ i18n.global.t('GENERATE_OREORE_TLS_TITLE') }}</span>
                 </v-col>
             </v-row>
         </v-card-title>
         <v-card>
             <p>
-            <pre>{{ $t("GENERATE_OREORE_TLS_FILE_MESSAGE") }}</pre>
+            <pre>{{ i18n.global.t("GENERATE_OREORE_TLS_FILE_MESSAGE") }}</pre>
             </p>
             <table>
                 <tr>
                     <td>
-                        {{ $t("TLS_CERT_FILE_TITLE") }}：
+                        {{ i18n.global.t("TLS_CERT_FILE_TITLE") }}：
                     </td>
                     <td>
                         {{ server_config.tls_cert_file }}
@@ -22,7 +22,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("TLS_KEY_FILE_TITLE") }}：
+                        {{ i18n.global.t("TLS_KEY_FILE_TITLE") }}：
                     </td>
                     <td>
                         {{ server_config.tls_key_file }}
@@ -33,11 +33,11 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="generate_tls_files" color="primary">{{ $t("CREATE_TITLE") }}</v-btn>
+                    <v-btn dark @click="generate_tls_files" color="primary">{{ i18n.global.t("CREATE_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
                         }}</v-btn>
                 </v-col>
             </v-row>
@@ -45,6 +45,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { GenerateTLSFileRequest } from '@/classes/api/req_res/generate-tls-file-request';
 import type { ConfirmGenerateTLSFilesViewEmits } from './confirm-generate-tls-files-view-emits'
 import type { ConfirmGenerateTLSFilesViewProps } from './confirm-generate-tls-files-view-props'

@@ -5,7 +5,7 @@
             <v-toolbar-title>
                 <div>
                     <span v-if="!is_shared_rykv_view">
-                        {{ $t("RYKV_APP_TITLE") }}
+                        {{ i18n.global.t("RYKV_APP_TITLE") }}
                     </span>
                     <span v-if="is_shared_rykv_view">
                         {{ share_title }}
@@ -13,12 +13,12 @@
                     <v-menu v-if="!is_shared_rykv_view" activator="parent">
                         <v-list>
                             <v-list-item :key="index" :value="index" v-for="page, index in [
-                                { app_name: $t('RYKV_APP_NAME'), page_name: 'rykv' },
-                                { app_name: $t('MI_APP_NAME'), page_name: 'mi' },
-                                { app_name: $t('KFTL_APP_NAME'), page_name: 'kftl' },
-                                { app_name: $t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
-                                { app_name: $t('MKFL_APP_NAME'), page_name: 'mkfl' },
-                                { app_name: $t('SAIHATE_APP_NAME'), page_name: 'saihate' },
+                                { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
+                                { app_name: i18n.global.t('MI_APP_NAME'), page_name: 'mi' },
+                                { app_name: i18n.global.t('KFTL_APP_NAME'), page_name: 'kftl' },
+                                { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
+                                { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
+                                { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
                             ]">
                                 <v-list-item-title @click="router.replace('/' + page.page_name)">
                                     {{ page.app_name }}</v-list-item-title>
@@ -98,8 +98,8 @@
                             :enable_context_menu="!is_shared_rykv_view" :enable_dialog="!is_shared_rykv_view"
                             :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="!is_shared_rykv_view"
                             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true"
-                            :show_rep_name="!is_shared_rykv_view" :force_show_latest_kyou_info="true" :show_content_only="false"
-                            :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
+                            :show_rep_name="!is_shared_rykv_view" :force_show_latest_kyou_info="true"
+                            :show_content_only="false" :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
                                 match_kyous_list_top_list[index] = scroll_top
                                 if (inited) {
                                     props.gkill_api.set_saved_rykv_scroll_indexs(match_kyous_list_top_list)
@@ -179,8 +179,8 @@
                                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
                                 :show_timeis_plaing_end_button="true" :height="'auto'" :is_readonly_mi_check="false"
                                 :width="'auto'" :enable_context_menu="!is_shared_rykv_view"
-                                :enable_dialog="!is_shared_rykv_view" :show_attached_timeis="true"
-                                :show_rep_name="true" :force_show_latest_kyou_info="true" class="kyou_detail_view" :show_related_time="true"
+                                :enable_dialog="!is_shared_rykv_view" :show_attached_timeis="true" :show_rep_name="true"
+                                :force_show_latest_kyou_info="true" class="kyou_detail_view" :show_related_time="true"
                                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                                 @deleted_text="(deleted_text) => { }"
                                 @deleted_notification="(deleted_notification) => { }"
@@ -333,31 +333,31 @@
                     </template>
                     <v-list>
                         <v-list-item @click="show_kftl_dialog()">
-                            <v-list-item-title>{{ $t("KFTL_APP_NAME") }}</v-list-item-title>
-                        </v-list-item>
-                        <v-list-item @click="show_add_kc_dialog()">
-                            <v-list-item-title>{{ $t("KC_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("KFTL_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_mkfl_dialog()">
-                            <v-list-item-title>{{ $t("MKFL_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("MKFL_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_add_kc_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("KC_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_urlog_dialog()">
-                            <v-list-item-title>{{ $t("URLOG_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("URLOG_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_timeis_dialog()">
-                            <v-list-item-title>{{ $t("TIMEIS_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("TIMEIS_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_mi_dialog()">
-                            <v-list-item-title>{{ $t("MI_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("MI_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_nlog_dialog()">
-                            <v-list-item-title>{{ $t("NLOG_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("NLOG_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_lantana_dialog()">
-                            <v-list-item-title>{{ $t("LANTANA_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("LANTANA_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_upload_file_dialog()">
-                            <v-list-item-title>{{ $t("UPLOAD_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("UPLOAD_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                     </v-list>
                 </v-menu>
@@ -366,6 +366,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import router from '@/router'
 import { computed, nextTick, type Ref, ref, watch } from 'vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'

@@ -2,16 +2,16 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item @click="show_edit_timeis_dialog()">
-                <v-list-item-title>{{ $t("TIMEIS_CONTEXTMENU_EDIT_TIMEIS") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TIMEIS_CONTEXTMENU_EDIT_TIMEIS") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_timeis_histories_dialog()">
-                <v-list-item-title>{{ $t("TIMEIS_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TIMEIS_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="copy_id()">
-                <v-list-item-title>{{ $t("TIMEIS_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TIMEIS_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_confirm_delete_timeis_dialog()">
-                <v-list-item-title>{{ $t("TIMEIS_CONTEXTMENU_DELETE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TIMEIS_CONTEXTMENU_DELETE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -80,6 +80,7 @@
         ref="kyou_histories_dialog" />
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import type { AttachedTimeisPlaingContextMenuProps } from './attached-timeis-plaing-context-menu-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { computed, type Ref, ref, watch } from 'vue'
@@ -90,7 +91,6 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 
-import { i18n } from '@/i18n'
 const edit_timeis_dialog = ref<InstanceType<typeof EditTimeIsDialog> | null>(null);
 const confirm_delete_kyou_dialog = ref<InstanceType<typeof ConfirmDeleteKyouDialog> | null>(null);
 const kyou_histories_dialog = ref<InstanceType<typeof KyouHistoriesDialog> | null>(null);

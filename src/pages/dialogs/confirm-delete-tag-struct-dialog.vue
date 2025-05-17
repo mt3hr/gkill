@@ -7,6 +7,7 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import ConfirmDeleteTagStructView from '../views/confirm-delete-tag-struct-view.vue';
 import type { ConfirmDeleteTagStructDialogEmits } from './confirm-delete-tag-struct-dialog-emits';

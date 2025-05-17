@@ -1,9 +1,9 @@
 <template>
     <v-card class="pa-2">
         <v-card-title>
-            {{ $t("DELETE_SHARE_KYOU_TITLE") }}
+            {{ i18n.global.t("DELETE_SHARE_KYOU_TITLE") }}
         </v-card-title>
-        <div>{{ $t("CONFIRM_DELETE_MESSAGE") }}</div>
+        <div>{{ i18n.global.t("CONFIRM_DELETE_MESSAGE") }}</div>
         <div>{{ share_kyou_list_info.share_title }}</div>
         <v-row class="pa-0 ma-0">
             <v-spacer />
@@ -15,6 +15,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import type { ConfirmDeleteShareKyousListViewEmits } from './confirm-delete-share-task-list-view-emits'
 import type { ConfirmDeleteShareKyousListViewProps } from './confirm-delete-share-task-list-view-props'
 

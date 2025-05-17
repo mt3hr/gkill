@@ -10,6 +10,7 @@
 </template>
 
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import { defineProps } from 'vue'
 import type { ApplicationConfigDialogProps } from './application-config-dialog-props'

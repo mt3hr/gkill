@@ -7,6 +7,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { AddNewDeviceStructElementDialogEmits } from './add-new-device-struct-element-dialog-emits'
 import type { AddNewDeviceStructElementDialogProps } from './add-new-device-struct-element-dialog-props'

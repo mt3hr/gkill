@@ -8,6 +8,7 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import ConfirmDeleteKFTLTemplateStructView from '../views/confirm-delete-kftl-template-struct-view.vue';
 import type { ConfirmDeleteKFTLTemplateStructDialogEmits } from './confirm-delete-kftl-template-struct-dialog-emits.ts';

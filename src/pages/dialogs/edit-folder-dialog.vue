@@ -7,6 +7,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { EditFolderDialogEmits } from './edit-folder-dialog-emits'
 import type { EditFolderDialogProps } from './edit-folder-dialog-props'

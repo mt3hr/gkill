@@ -2,16 +2,16 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item @click="show_edit_tag_dialog()">
-                <v-list-item-title>{{ $t("TAG_CONTEXTMENU_EDIT_TAG") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TAG_CONTEXTMENU_EDIT_TAG") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_tag_histories_dialog()">
-                <v-list-item-title>{{ $t("TAG_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TAG_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="copy_id()">
-                <v-list-item-title>{{ $t("TAG_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TAG_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_confirm_delete_tag_dialog()">
-                <v-list-item-title>{{ $t("TAG_CONTEXTMENU_DELETE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TAG_CONTEXTMENU_DELETE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -79,6 +79,7 @@
         ref="tag_histories_dialog" />
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import type { AttachedTagContextMenuProps } from './attached-tag-context-menu-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { computed, type Ref, ref } from 'vue'
@@ -87,8 +88,6 @@ import ConfirmDeleteTagDialog from '../dialogs/confirm-delete-tag-dialog.vue'
 import TagHistoriesDialog from '../dialogs/tag-histories-dialog.vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-
-import { i18n } from '@/i18n'
 
 const edit_tag_dialog = ref<InstanceType<typeof EditTagDialog> | null>(null);
 const confirm_delete_tag_dialog = ref<InstanceType<typeof ConfirmDeleteTagDialog> | null>(null);

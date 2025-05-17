@@ -30,6 +30,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { ref } from 'vue';
 import type { KyouHistoriesViewProps } from './kyou-histories-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
