@@ -2,37 +2,42 @@
     <div class="login_wrap">
         <v-container class="pa-0 ma-0">
             <v-row class="pa-0 ma-0">
+                <v-spacer />
                 <v-col cols="auto">
-                    <div class="welcome">{{ i18n.global.t("WELCOME_TITLE") }}</div>
+                    <div class="welcome">{{ welcome_emoji + i18n.global.t("WELCOME_TITLE") + welcome_emoji }}</div>
                 </v-col>
+                <v-spacer />
             </v-row>
             <v-row class="pa-0 ma-0">
-                <v-col cols="auto">
+                <v-col cols="auto" class="pa-0 ma-0">
                     <div class="welcome_message">{{ i18n.global.t("WELCOME_MESSAGE") }}</div>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="i18n.global.t('USER_ID_TITLE')" v-model="user_id" autofocus
+                    <v-text-field id="username" :label="i18n.global.t('USER_ID_TITLE')" v-model="user_id"
+                        name="new-username" autocomplete="new-username"
                         :readonly="RegistStatus.added_account <= regist_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="i18n.global.t('PASSWORD_TITLE')" :type="'password'" v-model="password"
+                    <v-text-field id="password" :label="i18n.global.t('PASSWORD_TITLE')" :type="'password'"
+                        v-model="password" name="new-password" autocomplete="new-password"
                         :readonly="RegistStatus.reseted_account_password <= regist_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="i18n.global.t('PASSWORD_RETYPE_TITLE')" :type="'password'" v-model="password_retype"
+                    <v-text-field :label="i18n.global.t('PASSWORD_RETYPE_TITLE')" :type="'password'"
+                        name="retype-password" autocomplete="retype-password" v-model="password_retype"
                         :readonly="RegistStatus.reseted_account_password <= regist_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="i18n.global.t('ADMIN_PASSWORD_TITLE')" :type="'password'" v-model="admin_password"
-                        :readonly="RegistStatus.reseted_admin_password <= regist_state" />
+                    <v-text-field :label="i18n.global.t('ADMIN_PASSWORD_TITLE')" :type="'password'"
+                        v-model="admin_password" :readonly="RegistStatus.reseted_admin_password <= regist_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
@@ -57,7 +62,7 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { computed, ref, type Ref } from 'vue'
+import { computed, nextTick, ref, type Ref } from 'vue'
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
 import { useRoute } from 'vue-router';
@@ -73,6 +78,7 @@ import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-config
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 
+const welcome_emoji = computed(() => props.gkill_api.get_use_dark_theme() ? "⭐️" : "❄️")
 const admin_account_password_reset_token: Ref<string> = ref(useRoute().query.reset_token ? useRoute().query.reset_token!.toString() : "")
 const user_id: Ref<string> = ref(useRoute().query.user_id ? useRoute().query.user_id!.toString() : "")
 const password: Ref<string> = ref("")
@@ -82,6 +88,8 @@ const admin_password_retype: Ref<string> = ref("")
 
 const props = defineProps<RegistFirstAccountViewProps>()
 const emits = defineEmits<RegistFirstAccountViewEmits>()
+
+// nextTick(() => document.getElementById("username")?.focus()).then(() => nextTick(() => document.getElementById("password")?.focus())).then(() => nextTick(() => document.getElementById("username")?.focus()))
 
 const app_content_height_px = computed(() => props.app_content_height + 'px')
 const app_content_width_px = computed(() => props.app_content_width + 'px')
@@ -303,5 +311,9 @@ async function try_regist_account(): Promise<boolean> {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.welcome {
+    font-size: x-large;
 }
 </style>
