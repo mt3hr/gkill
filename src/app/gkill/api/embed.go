@@ -4,5 +4,5 @@ import "embed"
 
 var (
 	//go:embed embed
-	htmlFS embed.FS // htmlファイル郡
+	HTMLFS embed.FS // htmlファイル郡
 )

@@ -16,6 +16,7 @@ func main() {
 }
 
 func init() {
+	common.AppName = "gkill_server"
 	cobra.MousetrapHelpText = "" // Windowsでマウスから起動しても怒られないようにする
 	AppCmd.PersistentFlags().StringVar(&gkill_options.GkillHomeDir, "gkill_home_dir", gkill_options.GkillHomeDir, "")
 	AppCmd.PersistentFlags().BoolVar(&gkill_options.IsOutputLog, "log", gkill_options.IsOutputLog, "")
@@ -23,6 +24,7 @@ func init() {
 	AppCmd.PersistentFlags().BoolVar(&gkill_options.IsCacheInMemory, "cache_in_memory", gkill_options.IsCacheInMemory, "")
 	AppCmd.AddCommand(common.IDFCmd)
 	AppCmd.AddCommand(common.DVNFCmd)
+	AppCmd.AddCommand(common.VersionCommand)
 }
 
 var (
