@@ -1,6 +1,6 @@
 {
   "name": "gkill",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,11 +11,12 @@
     "type-check": "vue-tsc --build --force",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "go_mod": "rimraf src/app/go.mod && rimraf src/app/go.sum && cd src/app && go mod init github.com/mt3hr/gkill/src/app && cd main/gkill && go mod tidy",
+    "go_install": "cd src/app/gkill/main/gkill_server && go install",
     "clean_app_embed": "rimraf src/app/gkill/api/embed/html",
     "copy_dist_to_app_embed": "mkdirp src/app/gkill/api/embed/html && copyfiles -u 1 \"dist/**/*\" src/app/gkill/api/embed/html",
     "preparate_install": "npm run clean_app_embed && npm run build && npm run copy_dist_to_app_embed",
     "install_app": "npm run preparate_install && cd src/app/gkill/main/gkill && go install -ldflags \"-H windowsgui\"",
-    "install_server": "npm run preparate_install && cd src/app/gkill/main/gkill_server && go install"
+    "install_server": "npm run preparate_install && npm run go_install"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
