@@ -12,6 +12,7 @@
     </v-sheet>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { VCalendar } from 'vuetify/labs/components';
 import type { KyouCountCalendarEmits } from './kyou-count-calendar-emits'
 import type { KyouCountCalendarProps } from './kyou-count-calendar-props'

@@ -9,6 +9,7 @@
 </template>
 
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import AddDnoteListView from '@/pages/views/add-dnote-list-view.vue';
 import { ref, type Ref } from 'vue'
 import type { GkillError } from '../../classes/api/gkill-error';

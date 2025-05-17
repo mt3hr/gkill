@@ -2,21 +2,21 @@
     <div class="replist">
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-checkbox readonly v-model="use_rep" :label="$t('REP_QUERY_TITLE')" hide-details />
+                <v-checkbox readonly v-model="use_rep" :label="i18n.global.t('REP_QUERY_TITLE')" hide-details />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0">
                 <v-btn dark color="secondary" @click="emits('request_clear_rep_query')" hide-details>{{
-                    $t("CLEAR_TITLE") }}</v-btn>
+                    i18n.global.t("CLEAR_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-tabs v-show="use_rep" v-model="tab">
-            <v-tab key="summary">{{ $t('REP_QUERY_SUMMARY_TITLE') }}</v-tab>
-            <v-tab key="detail">{{ $t('REP_QUERY_DETAIL_TITLE') }}</v-tab>
+            <v-tab key="summary">{{ i18n.global.t('REP_QUERY_SUMMARY_TITLE') }}</v-tab>
+            <v-tab key="detail">{{ i18n.global.t('REP_QUERY_DETAIL_TITLE') }}</v-tab>
         </v-tabs>
         <v-window v-model="tab">
             <v-window-item key="summary" :eager="true">
-                <h2>{{ $t("REP_QUERY_DEVIUCES_TITLE") }}</h2>
+                <h2>{{ i18n.global.t("REP_QUERY_DEVIUCES_TITLE") }}</h2>
                 <table class="devicelist">
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="false"
@@ -26,7 +26,7 @@
                         @received_messages="(messages) => emits('received_messages', messages)"
                         @clicked_items="clicked_devices" ref="foldable_struct_devices" />
                 </table>
-                <h2>{{ $t("REP_QUERY_TYPES_TITLE") }}</h2>
+                <h2>{{ i18n.global.t("REP_QUERY_TYPES_TITLE") }}</h2>
                 <table class="typelist">
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true"
@@ -38,7 +38,7 @@
                 </table>
             </v-window-item>
             <v-window-item key="detail" :eager="true">
-                <h2>{{ $t("REP_QUERY_REPS_TITLE") }}</h2>
+                <h2>{{ i18n.global.t("REP_QUERY_REPS_TITLE") }}</h2>
                 <table>
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true"
@@ -53,6 +53,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { nextTick, type Ref, ref, watch } from 'vue'
 import FoldableStruct from './foldable-struct.vue'

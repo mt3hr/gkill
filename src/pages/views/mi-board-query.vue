@@ -1,6 +1,6 @@
 <template>
     <div>
-        <v-checkbox readonly v-model="use_board" :label="$t('BOARD_TITLE')" hide-details />
+        <v-checkbox readonly v-model="use_board" :label="i18n.global.t('BOARD_TITLE')" hide-details />
         <table v-show="use_board" class="boardlist">
             <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                 :is_open="true" :struct_obj="cloned_application_config.parsed_mi_boad_struct" :is_editable="false"
@@ -12,6 +12,7 @@
     </div>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import type { miBoardQueryEmits } from './mi-board-query-emits'
 import type { miBoardQueryProps } from './mi-board-query-props'
 import { nextTick, type Ref, ref, watch } from 'vue'
@@ -19,8 +20,6 @@ import FoldableStruct from './foldable-struct.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { CheckState } from './check-state'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-
-import { i18n } from '@/i18n'
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 

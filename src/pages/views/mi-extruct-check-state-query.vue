@@ -3,25 +3,25 @@
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-checkbox v-model="use_mi_check_state" readonly hide-details class="pa-0 ma-0"
-                    :label="$t('CHECK_STATE_TITLE')" />
+                    :label="i18n.global.t('CHECK_STATE_TITLE')" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0">
                 <v-btn dark color="secondary" @click="emits('request_clear_check_state')" hide-details>{{
-                    $t("CLEAR_TITLE") }}</v-btn>
+                    i18n.global.t("CLEAR_TITLE") }}</v-btn>
             </v-col>
         </v-row>
-        <v-select class="select" v-model="check_state" :items="check_states" :label="$t('CHECK_STATE_TITLE')"
+        <v-select class="select" v-model="check_state" :items="check_states" :label="i18n.global.t('CHECK_STATE_TITLE')"
             item-title="name" item-value="value" />
     </div>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { nextTick, type Ref, ref, watch } from 'vue'
 import { MiCheckState } from '@/classes/api/find_query/mi-check-state'
 import type { miExtructCheckStateQueryEmits } from './mi-extruct-check-state-query-emits'
 import type { miExtructCheckStateQueryProps } from './mi-extruct-check-state-query-props'
 
-import { i18n } from '@/i18n'
 const props = defineProps<miExtructCheckStateQueryProps>()
 const emits = defineEmits<miExtructCheckStateQueryEmits>()
 const query = ref(props.find_kyou_query.clone())

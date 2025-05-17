@@ -12,6 +12,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { nextTick, type Ref, ref } from 'vue'
 import Dnote from '../views/dnote-view.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'

@@ -21,6 +21,7 @@
 </template>
 
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { nextTick, ref } from 'vue';
 import type DnoteItemListViewProps from './dnote-item-list-view-props';
 import DnoteItemView from './dnote-item-view.vue';

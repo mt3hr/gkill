@@ -5,37 +5,38 @@
                 ファイルアップロード
             </v-card-title>
             <v-tabs v-model="tab">
-                <v-tab key="file">{{ $t("FILE_TITLE") }}</v-tab>
-                <v-tab key="gps_log_file">{{ $t("GPS_LOG_FILE_TITLE") }}</v-tab>
+                <v-tab key="file">{{ i18n.global.t("FILE_TITLE") }}</v-tab>
+                <v-tab key="gps_log_file">{{ i18n.global.t("GPS_LOG_FILE_TITLE") }}</v-tab>
             </v-tabs>
             <v-window v-model="tab">
                 <v-window-item key="file" :eager="true">
                     <v-card>
                         <v-card-title>
-                            {{ $t("FILE_NAME_COLLISION_TITLE") }}
+                            {{ i18n.global.t("FILE_NAME_COLLISION_TITLE") }}
                         </v-card-title>
                         <v-radio-group v-model="conflict_behavior_file">
-                            <v-radio :label="$t('RENAME_TITLE')" :value="'rename'" />
-                            <v-radio :label="$t('OVERRIDE_TITLE')" :value="'override'" />
+                            <v-radio :label="i18n.global.t('RENAME_TITLE')" :value="'rename'" />
+                            <v-radio :label="i18n.global.t('OVERRIDE_TITLE')" :value="'override'" />
                         </v-radio-group>
                         <v-select class="select" v-model="target_rep_name_for_file" :items="target_rep_names_for_file"
-                            :label="$t('UPLOAD_DESTINATION_TITLE')" />
-                        <v-file-input :label="$t('FILE_TITLE')" multiple @change="upload_files" v-model="files" />
+                            :label="i18n.global.t('UPLOAD_DESTINATION_TITLE')" />
+                        <v-file-input :label="i18n.global.t('FILE_TITLE')" multiple @change="upload_files"
+                            v-model="files" />
                     </v-card>
                 </v-window-item>
                 <v-window-item key="gps_log_file" :eager="true">
                     <v-card>
                         <v-card-title>
-                            {{ $t("FILE_NAME_COLLISION_TITLE") }}
+                            {{ i18n.global.t("FILE_NAME_COLLISION_TITLE") }}
                         </v-card-title>
                         <v-radio-group v-model="conflict_behavior_gps_file">
-                            <v-radio :label="$t('MERGE_TITLE')" :value="'merge'" />
-                            <v-radio :label="$t('OVERRIDE_TITLE')" :value="'override'" />
+                            <v-radio :label="i18n.global.t('MERGE_TITLE')" :value="'merge'" />
+                            <v-radio :label="i18n.global.t('OVERRIDE_TITLE')" :value="'override'" />
                         </v-radio-group>
                         <v-select class="select" v-model="target_rep_name_for_gps_file"
-                            :items="target_rep_names_for_gps_file" :label="$t('UPLOAD_DESTINATION_TITLE')" />
-                        <v-file-input :label="$t('GPS_LOG_FILE_TITLE')" multiple @change="upload_gps_log_files"
-                            v-model="gps_log_files" accept=".gpx" />
+                            :items="target_rep_names_for_gps_file" :label="i18n.global.t('UPLOAD_DESTINATION_TITLE')" />
+                        <v-file-input :label="i18n.global.t('GPS_LOG_FILE_TITLE')" multiple
+                            @change="upload_gps_log_files" v-model="gps_log_files" accept=".gpx" />
                     </v-card>
                 </v-window-item>
             </v-window>
@@ -49,6 +50,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { nextTick, type Ref, ref } from 'vue'
 import DecideRelatedTimeUploadedFileDialog from '../dialogs/decide-related-time-uploaded-file-dialog.vue'
 

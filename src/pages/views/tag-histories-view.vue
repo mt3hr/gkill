@@ -20,6 +20,7 @@
         @received_messages="(messages) => emits('received_messages', messages)" />
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { TagHistoriesViewProps } from './tag-histories-view-props'

@@ -3,59 +3,90 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("ADD_URLOG_TITLE") }}</span>
+                    <span>{{ i18n.global.t("ADD_URLOG_TITLE") }}</span>
                 </v-col>
             </v-row>
         </v-card-title>
         <table>
             <tr>
                 <td>
-                    <label>{{ $t("URL_TITLE") }}</label>
-                </td>
-                <td>
-                    <input class="input text" type="text" v-model="url" :label="$t('URL_TITLE')" autofocus
-                        :readonly="is_requested_submit" />
+                    <v-text-field class="input text" type="text" v-model="url" :label="i18n.global.t('URL_TITLE')"
+                        autofocus :readonly="is_requested_submit" />
                 </td>
             </tr>
             <tr>
                 <td>
-                    <label>{{ $t("URLOG_TITLE_TITLE") }}</label>
-                </td>
-                <td>
-                    <input class="input text" type="text" v-model="title" :label="$t('URLOG_TITLE_TITLE')"
-                        :readonly="is_requested_submit" />
+                    <v-text-field class="input text" type="text" v-model="title"
+                        :label="i18n.global.t('URLOG_TITLE_TITLE')" :readonly="is_requested_submit" />
                 </td>
             </tr>
         </table>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>{{ $t("URLOG_DATE_TIME_TITLE") }}</label>
-                <input class="input date" type="date" v-model="related_date" :label="$t('URLOG_DATE_TITLE')"
-                    :readonly="is_requested_submit" />
-
-                <input class="input time" type="time" v-model="related_time" :label="$t('URLOG_TIME_TITLE')"
-                    :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_related_date_time()" :disabled="is_requested_submit">{{
-                    $t('RESET_TITLE') }}</v-btn>
-                <v-btn dark color="primary" @click="now_to_related_date_time()" :disabled="is_requested_submit">{{
-                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                <table>
+                    <tr>
+                        <td>
+                            <v-menu v-model="show_related_date_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_date_string"
+                                        :label="i18n.global.t('URLOG_DATE_TITLE')" readonly v-bind="props"
+                                        min-width="120" />
+                                </template>
+                                <v-date-picker v-model="related_date_typed"
+                                    @update:model-value="show_related_date_menu = false" locale="ja-JP" />
+                            </v-menu>
+                        </td>
+                        <td>
+                            <v-menu v-model="show_related_time_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_time_string"
+                                        :label="i18n.global.t('URLOG_TIME_TITLE')" readonly min-width="120"
+                                        v-bind="props" />
+                                </template>
+                                <v-time-picker v-model="related_time_string" format="24hr"
+                                    @update:model-value="show_related_time_menu = false" />
+                            </v-menu>
+                        </td>
+                    </tr>
+                </table>
+            </v-col>
+            <v-col cols="auto" class="pa-0 ma-0">
+                <table>
+                    <tr>
+                        <td>
+                            <v-btn dark color="secondary" @click="reset_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("RESET_TITLE") }}</v-btn>
+                        </td>
+                        <td>
+                            <v-btn dark color="primary" @click="now_to_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                        </td>
+                    </tr>
+                </table>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
-                }}</v-btn>
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
+                    i18n.global.t("RESET_TITLE")
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                    i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { i18n } from '@/i18n'
+import { computed, type Ref, ref } from 'vue'
 import type { EditURLogViewProps } from './edit-ur-log-view-props'
 import { URLog } from '@/classes/datas/ur-log'
 import moment from 'moment'
@@ -64,8 +95,8 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import type { KyouViewEmits } from './kyou-view-emits'
 import { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-
-import { i18n } from '@/i18n'
+import { VDatePicker } from 'vuetify/components'
+import { VTimePicker } from 'vuetify/labs/components'
 
 const is_requested_submit = ref(false)
 
@@ -79,14 +110,18 @@ const urlog: Ref<URLog> = ref((() => {
 })())
 const title: Ref<string> = ref(urlog.value.title)
 const url: Ref<string> = ref(urlog.value.url)
-const related_date: Ref<string> = ref(moment(urlog.value.related_time).format("YYYY-MM-DD"))
-const related_time: Ref<string> = ref(moment(urlog.value.related_time).format("HH:mm:ss"))
+const related_date_typed: Ref<Date> = ref(moment(urlog.value.related_time).toDate())
+const related_date_string: Ref<string> = computed(() => moment(related_date_typed.value).format("YYYY-MM-DD"))
+const related_time_string: Ref<string> = ref(moment(urlog.value.related_time).format("HH:mm:ss"))
+
+const show_related_date_menu = ref(false)
+const show_related_time_menu = ref(false)
 
 function reset(): void {
     title.value = urlog.value.title
     url.value = urlog.value.url
-    related_date.value = moment(urlog.value.related_time).format("YYYY-MM-DD")
-    related_time.value = moment(urlog.value.related_time).format("HH:mm:ss")
+    related_date_typed.value = moment(urlog.value.related_time).toDate()
+    related_time_string.value = moment(urlog.value.related_time).format("HH:mm:ss")
 }
 
 async function save(): Promise<void> {
@@ -104,7 +139,7 @@ async function save(): Promise<void> {
         }
 
         // 日時必須入力チェック
-        if (related_date.value === "" || related_time.value === "") {
+        if (related_date_string.value === "" || related_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.urlog_related_time_is_blank
             error.error_message = i18n.global.t("URLOG_DATE_TIME_IS_BLANK_MESSAGE")
@@ -138,7 +173,7 @@ async function save(): Promise<void> {
         new_urlog.id = props.gkill_api.generate_uuid()
         new_urlog.title = title.value
         new_urlog.url = url.value
-        new_urlog.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        new_urlog.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         new_urlog.create_app = "gkill"
         new_urlog.create_device = gkill_info_res.device
         new_urlog.create_time = new Date(Date.now())
@@ -169,20 +204,14 @@ async function save(): Promise<void> {
 }
 
 function now_to_related_date_time(): void {
-    related_date.value = moment().format("YYYY-MM-DD")
-    related_time.value = moment().format("HH:mm:ss")
+    related_date_typed.value = moment().toDate()
+    related_time_string.value = moment().format("HH:mm:ss")
 }
 
 function reset_related_date_time(): void {
-    related_date.value = moment(urlog.value.related_time).format("YYYY-MM-DD")
-    related_time.value = moment(urlog.value.related_time).format("HH:mm:ss")
+    related_date_typed.value = moment(urlog.value.related_time).toDate()
+    related_time_string.value = moment(urlog.value.related_time).format("HH:mm:ss")
 }
 </script>
 
-<style lang="css" scoped>
-.input.date,
-.input.time,
-.input.text {
-    border: solid 1px silver;
-}
-</style>
+<style lang="css" scoped></style>

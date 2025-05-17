@@ -5,7 +5,7 @@
             <v-progress-circular indeterminate color="primary" class="align-center justify-center" />
             <div v-if="getted_kyous_count !== target_kyous_count" class="align-center justify-center">
                 <div class="align-center justify-center overlay_message">
-                    {{ $t('DNOTE_GETTING_DATA') }}
+                    {{ i18n.global.t('DNOTE_GETTING_DATA') }}
                 </div>
                 <div class="align-center justify-center overlay_message">
                     {{ getted_kyous_count }}/{{ target_kyous_count }}
@@ -13,12 +13,12 @@
             </div>
             <div v-if="getted_kyous_count === target_kyous_count" class="align-center justify-center">
                 <div class="align-center justify-center overlay_message">
-                    {{ $t('DNOTE_CALCURATING') }}
+                    {{ i18n.global.t('DNOTE_CALCURATING') }}
                 </div>
                 <div class="align-center justify-center overlay_message">
                     {{ finished_aggregate_task }}/{{ estimate_aggregate_task }}
                 </div>
-                <div class="align-center justify-center overlay_message">{{ $t('DNOTE_PLEASE_WAIT_MESSAGE') }}</div>
+                <div class="align-center justify-center overlay_message">{{ i18n.global.t('DNOTE_PLEASE_WAIT_MESSAGE') }}</div>
             </div>
         </v-overlay>
         <h1>
@@ -26,7 +26,7 @@
             <span v-if="end_date_str !== '' && start_date_str != end_date_str">～</span>
             <span v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span>
             <span v-if="start_date_str === '' && !(end_date_str !== '' && start_date_str != end_date_str)">{{
-                $t("DNOTE_WHOLE_PERIOD_TITLE") }}</span>
+                i18n.global.t("DNOTE_WHOLE_PERIOD_TITLE") }}</span>
         </h1>
         <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
             v-model="dnote_item_table_view_data" @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)"
@@ -59,21 +59,21 @@
                 </template>
                 <v-list>
                     <v-list-item @click="add_dnote_item_dialog?.show()">
-                        <v-list-item-title>{{ $t("ADD_DNOTE_ITEM_MENU_TITLE") }}</v-list-item-title>
+                        <v-list-item-title>{{ i18n.global.t("ADD_DNOTE_ITEM_MENU_TITLE") }}</v-list-item-title>
                     </v-list-item>
                     <v-list-item @click="add_dnote_list_dialog?.show()">
-                        <v-list-item-title>{{ $t("ADD_DNOTE_LIST_MENU_TITLE") }}</v-list-item-title>
+                        <v-list-item-title>{{ i18n.global.t("ADD_DNOTE_LIST_MENU_TITLE") }}</v-list-item-title>
                     </v-list-item>
                 </v-list>
             </v-menu>
         </v-avatar>
         <v-row v-if="editable" class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark @click="apply" color="primary">{{ $t("APPLY_TITLE") }}</v-btn>
+                <v-btn dark @click="apply" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
                 }}</v-btn>
             </v-col>
         </v-row>
@@ -94,6 +94,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type DnoteViewProps } from '@/pages/views/dnote-view-props';
 import DnoteItemTableView from './dnote-item-table-view.vue';
 import DnoteListTableView from './dnote-list-table-view.vue';

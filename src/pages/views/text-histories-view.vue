@@ -20,6 +20,7 @@
         @requested_reload_list="emits('requested_reload_list')" />
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, nextTick, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { TextHistoriesViewProps } from './text-histories-view-props'

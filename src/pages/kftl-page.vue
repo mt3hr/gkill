@@ -5,17 +5,17 @@
             <v-toolbar-title>
                 <div>
                     <span>
-                        {{ $t("KFTL_APP_NAME") }}
+                        {{ i18n.global.t("KFTL_APP_NAME") }}
                     </span>
                     <v-menu activator="parent">
                         <v-list>
                             <v-list-item :key="index" :value="index" v-for="page, index in [
-                                { app_name: $t('RYKV_APP_NAME'), page_name: 'rykv' },
-                                { app_name: $t('MI_APP_NAME'), page_name: 'mi' },
-                                { app_name: $t('KFTL_APP_NAME'), page_name: 'kftl' },
-                                { app_name: $t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
-                                { app_name: $t('MKFL_APP_NAME'), page_name: 'mkfl' },
-                                { app_name: $t('SAIHATE_APP_NAME'), page_name: 'saihate' },
+                                { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
+                                { app_name: i18n.global.t('MI_APP_NAME'), page_name: 'mi' },
+                                { app_name: i18n.global.t('KFTL_APP_NAME'), page_name: 'kftl' },
+                                { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
+                                { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
+                                { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
                             ]">
                                 <v-list-item-title @click="router.replace('/' + page.page_name)">
                                     {{ page.app_name }}</v-list-item-title>
@@ -54,6 +54,7 @@
 </template>
 
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 'use strict'
 import router from '@/router'
 import { computed, nextTick, ref, watch, type Ref } from 'vue'

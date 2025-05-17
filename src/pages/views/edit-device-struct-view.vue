@@ -1,10 +1,10 @@
 <template>
     <v-card>
         <v-card-title>
-            {{ $t("EDIT_DEVICE_STRUCT_TITLE") }}
+            {{ i18n.global.t("EDIT_DEVICE_STRUCT_TITLE") }}
         </v-card-title>
         <div class="device_struct_root">
-            <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="$t('DEVICE_TITLE')"
+            <FoldableStruct :application_config="application_config" :gkill_api="gkill_api" :folder_name="i18n.global.t('DEVICE_TITLE')"
                 :is_open="true" :struct_obj="cloned_application_config.parsed_device_struct" :is_editable="true"
                 :is_root="true" :is_show_checkbox="false"
                 @dblclicked_item="(e: MouseEvent, id: string | null) => { if (id) show_edit_device_struct_dialog(id) }"
@@ -13,19 +13,19 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_add_new_device_struct_element_dialog">{{ $t("ADD_DEVICE_TITLE") }}</v-btn>
+                    <v-btn dark color="primary" @click="show_add_new_device_struct_element_dialog">{{ i18n.global.t("ADD_DEVICE_TITLE") }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_add_new_folder_dialog">{{ $t("ADD_FOLDER_TITLE") }}</v-btn>
+                    <v-btn dark color="primary" @click="show_add_new_folder_dialog">{{ i18n.global.t("ADD_FOLDER_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="apply" color="primary">{{ $t("APPLY_TITLE") }}</v-btn>
+                    <v-btn dark @click="apply" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE") }}</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -55,6 +55,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref, watch } from 'vue'
 import type { EditDeviceStructViewEmits } from './edit-device-struct-view-emits'
 import type { EditDeviceStructViewProps } from './edit-device-struct-view-props'

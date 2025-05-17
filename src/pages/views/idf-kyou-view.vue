@@ -33,6 +33,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import IDFKyouContextMenu from './idf-kyou-context-menu.vue'
 import { ref } from 'vue'
 import type { IDFKyouProps } from './idf-kyou-props'

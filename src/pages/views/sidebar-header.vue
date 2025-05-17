@@ -10,6 +10,7 @@
     </v-row>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import ClearQueryButton from './clear-query-button.vue'
 import SearchButton from './search-button.vue'
 import type { SidebarHeaderEmits } from './sidebar-header-emits'

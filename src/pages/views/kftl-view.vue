@@ -3,15 +3,15 @@
         <v-card-title :height="title_height">
             <v-row>
                 <v-col cols="auto">
-                    {{ $t("KFTL_ADD_KYOU_TITLE") }}
+                    {{ i18n.global.t("KFTL_ADD_KYOU_TITLE") }}
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto">
                     <v-btn dark color="primary" @click="show_kftl_template_dialog" :disabled="is_requested_submit">{{
-                        $t("KFTL_TEMPLATE_TITLE") }}</v-btn>
+                        i18n.global.t("KFTL_TEMPLATE_TITLE") }}</v-btn>
                 </v-col>
                 <v-col cols="auto">
-                    <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                    <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{ i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
                 </v-col>
             </v-row>
@@ -43,6 +43,7 @@
 </template>
 
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { computed, nextTick, onMounted, ref, watch, type Ref } from 'vue'
 import { GkillError } from '@/classes/api/gkill-error'
 import { LineLabelData } from '@/classes/kftl/line-label-data'
@@ -59,7 +60,6 @@ import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-elem
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 
-import { i18n } from '@/i18n'
 const kftl_template_dialog = ref<InstanceType<typeof KFTLTemplateDialog> | null>(null);
 
 const text_area_content: Ref<string> = ref("")

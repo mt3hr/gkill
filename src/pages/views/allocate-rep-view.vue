@@ -3,12 +3,12 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("ALLOCATE_REP_TITLE") }}</span>
+                    <span>{{ i18n.global.t("ALLOCATE_REP_TITLE") }}</span>
                     <span>{{ account.user_id }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_add_rep_dialog(account)">{{ $t("ADD_TITLE") }}</v-btn>
+                    <v-btn dark color="primary" @click="show_add_rep_dialog(account)">{{ i18n.global.t("ADD_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -16,31 +16,31 @@
             <table>
                 <tr v-for="repository in repositories" :key="repository.id">
                     <td>
-                        <v-checkbox :label="$t('ENABLE_TITLE')" v-model="repository.is_enable" />
+                        <v-checkbox :label="i18n.global.t('ENABLE_TITLE')" v-model="repository.is_enable" />
                     </td>
                     <td>
-                        <v-checkbox :label="$t('WRITE_TITLE')" v-model="repository.use_to_write" />
+                        <v-checkbox :label="i18n.global.t('WRITE_TITLE')" v-model="repository.use_to_write" />
                     </td>
                     <td>
-                        <v-checkbox :label="$t('AUTO_ALLOCATE_ID_TITLE')"
+                        <v-checkbox :label="i18n.global.t('AUTO_ALLOCATE_ID_TITLE')"
                             v-model="repository.is_execute_idf_when_reload" />
                     </td>
                     <td>
-                        <v-checkbox :label="$t('WATCH_TARGET_FOR_UPDATE_REP_TITLE')"
+                        <v-checkbox :label="i18n.global.t('WATCH_TARGET_FOR_UPDATE_REP_TITLE')"
                             v-model="repository.is_watch_target_for_update_rep" />
                     </td>
                     <td>
-                        <v-select ::label="$t('DEVICE_NAME_TITLE')" v-model="repository.device" :items="devices" />
+                        <v-select ::label="i18n.global.t('DEVICE_NAME_TITLE')" v-model="repository.device" :items="devices" />
                     </td>
                     <td>
-                        <v-select v-model="repository.type" readonly :items="rep_types" :label="$t('REP_TYPE_TITLE')" />
+                        <v-select v-model="repository.type" readonly :items="rep_types" :label="i18n.global.t('REP_TYPE_TITLE')" />
                     </td>
                     <td>
-                        <v-text-field :width="600" :label="$t('FILE_PATH_TITLE')" v-model="repository.file" />
+                        <v-text-field :width="600" :label="i18n.global.t('FILE_PATH_TITLE')" v-model="repository.file" />
                     </td>
                     <td>
                         <v-btn dark color="secondary" @click="show_confirm_delete_rep_dialog(repository)">{{
-                            $t("DELETE_TITLE") }}</v-btn>
+                            i18n.global.t("DELETE_TITLE") }}</v-btn>
                     </td>
                 </tr>
             </table>
@@ -68,6 +68,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { type Ref, ref, watch } from 'vue'
 import type { AllocateRepViewEmits } from './allocate-rep-view-emits'
 import type { AllocateRepViewProps } from './allocate-rep-view-props'

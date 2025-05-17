@@ -37,6 +37,7 @@
     </v-row>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { TagViewProps } from './tag-view-props'
 import moment from 'moment';

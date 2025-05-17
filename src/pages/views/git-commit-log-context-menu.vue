@@ -2,29 +2,29 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item v-if="gkill_api.get_saved_last_added_tag() !== ''" @click="add_last_added_tag()">
-                <v-list-item-title>{{ $t("ADD_TAG_TITLE") }} 「{{ gkill_api.get_saved_last_added_tag()
+                <v-list-item-title>{{ i18n.global.t("ADD_TAG_TITLE") }} 「{{ gkill_api.get_saved_last_added_tag()
                     }}」</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_add_tag_dialog()">
-                <v-list-item-title>{{ $t("ADD_TAG_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("ADD_TAG_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_add_text_dialog()">
-                <v-list-item-title>{{ $t("ADD_TEXT_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("ADD_TEXT_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_confirm_rekyou_dialog()">
-                <v-list-item-title>{{ $t("REKYOU_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("REKYOU_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_add_notification_dialog()">
-                <v-list-item-title>{{ $t("ADD_NOTIFICATION_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("ADD_NOTIFICATION_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="copy_id()">
-                <v-list-item-title>{{ $t("COPY_ID_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("COPY_ID_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item v-if="application_config.session_is_local" @click="open_folder()">
-                <v-list-item-title>{{ $t("OPEN_FOLDER_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("OPEN_FOLDER_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item v-if="application_config.session_is_local" @click="open_file()">
-                <v-list-item-title>{{ $t("OPEN_FILE_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("OPEN_FILE_TITLE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -111,6 +111,7 @@
         @received_messages="(messages) => emits('received_messages', messages)" ref="add_notification_dialog" />
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import type { GitCommitLogContextMenuProps } from './git-commit-log-context-menu-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import AddTagDialog from '../dialogs/add-tag-dialog.vue'
@@ -125,8 +126,6 @@ import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { Tag } from '@/classes/datas/tag'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-
-import { i18n } from '@/i18n'
 
 const add_tag_dialog = ref<InstanceType<typeof AddTagDialog> | null>(null);
 const add_text_dialog = ref<InstanceType<typeof AddTextDialog> | null>(null);

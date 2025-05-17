@@ -6,11 +6,11 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("SERVER_CONFIG_TITLE") }}</span>
+                    <span>{{ i18n.global.t("SERVER_CONFIG_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_manage_account_dialog">{{ $t("MANAGE_ACCOUNT_TITLE")
+                    <v-btn dark color="primary" @click="show_manage_account_dialog">{{ i18n.global.t("MANAGE_ACCOUNT_TITLE")
                     }}</v-btn>
                 </v-col>
             </v-row>
@@ -19,7 +19,7 @@
             <table>
                 <tr>
                     <td>
-                        <v-select v-model="device" :items="devices" :label="$t('PROFILE_TITLE')" />
+                        <v-select v-model="device" :items="devices" :label="i18n.global.t('PROFILE_TITLE')" />
                     </td>
                     <td>
                         <table>
@@ -30,7 +30,7 @@
                                 </td>
                                 <td>
                                     <v-btn color="secondary" v-if="cloned_server_configs.length >= 2"
-                                        @click="delete_current_server_config()" dark>{{ $t("DELETE_TITLE") }}</v-btn>
+                                        @click="delete_current_server_config()" dark>{{ i18n.global.t("DELETE_TITLE") }}</v-btn>
                                 </td>
                             </tr>
                         </table>
@@ -39,19 +39,19 @@
                 <tr>
                     <td>
                         <v-checkbox v-model="server_config.is_local_only_access" hide-detail
-                            :label="$t('USE_LOCAL_ACCSESS_ONLY_TITLE')" />
+                            :label="i18n.global.t('USE_LOCAL_ACCSESS_ONLY_TITLE')" />
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="server_config.enable_tls" hide-detail :label="$t('ENABLE_TLS_TITLE')" />
+                        <v-checkbox v-model="server_config.enable_tls" hide-detail :label="i18n.global.t('ENABLE_TLS_TITLE')" />
                     </td>
                     <v-btn dark color="primary" @click="show_confirm_generate_tls_files_dialog">{{
-                        $t("GENERATE_OREORE_TLS_TITLE") }}</v-btn>
+                        i18n.global.t("GENERATE_OREORE_TLS_TITLE") }}</v-btn>
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("ADDRESS_TITLE") }}
+                        {{ i18n.global.t("ADDRESS_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.address"></v-text-field>
@@ -59,7 +59,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("TLS_CERT_FILE_TITLE") }}
+                        {{ i18n.global.t("TLS_CERT_FILE_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.tls_cert_file"></v-text-field>
@@ -67,7 +67,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("TLS_KEY_FILE_TITLE") }}
+                        {{ i18n.global.t("TLS_KEY_FILE_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.tls_key_file"></v-text-field>
@@ -75,7 +75,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("OPEN_DIRECTORY_COMMAND_TITLE") }}
+                        {{ i18n.global.t("OPEN_DIRECTORY_COMMAND_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.open_directory_command"></v-text-field>
@@ -83,7 +83,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("OPEN_FILE_COMMAND_TITLE") }}
+                        {{ i18n.global.t("OPEN_FILE_COMMAND_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.open_file_command"></v-text-field>
@@ -91,7 +91,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("URLOG_TIMEOUT_TITLE") }}
+                        {{ i18n.global.t("URLOG_TIMEOUT_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" type="number" min="5"
@@ -100,7 +100,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("URLOG_USERAGENT_TITLE") }}
+                        {{ i18n.global.t("URLOG_USERAGENT_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.urlog_useragent"></v-text-field>
@@ -108,7 +108,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("USER_DATA_DIRECTORY_TITLE") }}
+                        {{ i18n.global.t("USER_DATA_DIRECTORY_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="server_config.user_data_directory"></v-text-field>
@@ -119,11 +119,11 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="update_server_config" color="primary">{{ $t("APPLY_TITLE") }}</v-btn>
+                    <v-btn dark @click="update_server_config" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
                     }}</v-btn>
                 </v-col>
             </v-row>
@@ -145,6 +145,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { ServerConfig } from '@/classes/datas/config/server-config'
 import { nextTick, ref, watch, type Ref } from 'vue'
 import ConfirmGenerateTLSFilesDialog from '../dialogs/confirm-generate-tls-files-dialog.vue'
@@ -157,8 +158,6 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { UpdateServerConfigsRequest } from '@/classes/api/req_res/update-server-configs-request'
 import NewDeviceNameDialog from '../dialogs/new-device-name-dialog.vue'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-
-import { i18n } from '@/i18n'
 
 const confirm_generate_tls_files_dialog = ref<InstanceType<typeof ConfirmGenerateTLSFilesDialog> | null>(null);
 const manage_account_dialog = ref<InstanceType<typeof ManageAccountDialog> | null>(null);

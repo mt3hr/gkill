@@ -14,6 +14,7 @@
 </template>
 
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 'use strict'
 import { ref, type Ref } from 'vue'
 import { GkillAPI } from '@/classes/api/gkill-api'
