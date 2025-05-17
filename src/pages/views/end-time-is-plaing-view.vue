@@ -15,7 +15,7 @@
         <v-text-field readonly type="text" v-model="timeis_title" :label="i18n.global.t('END_TIMEIS_TITLE_TITLE')"
             autofocus />
         <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
+            <v-col cols="auto" class="pa-0 ma-0">
                 <table>
                     <tr>
                         <td>
@@ -51,7 +51,7 @@
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
+            <v-col cols="auto" class="pa-0 ma-0">
                 <table>
                     <tr>
                         <td>
@@ -82,7 +82,7 @@
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
-                <table>
+                <table class="pt-2">
                     <tr>
                         <td>
                             <v-btn dark color="secondary" @click="reset_end_date_time()"
