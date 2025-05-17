@@ -2,16 +2,17 @@
     <v-card class="kftl_view">
         <v-card-title :height="title_height">
             <v-row>
-                <v-col cols="auto" class="pa-0 ma-0">
+                <v-col cols="auto">
                     {{ i18n.global.t("KFTL_ADD_KYOU_TITLE") }}
                 </v-col>
                 <v-spacer />
-                <v-col cols="auto" class="pa-0 ma-0">
+                <v-col cols="auto">
                     <v-btn dark color="primary" @click="show_kftl_template_dialog" :disabled="is_requested_submit">{{
                         i18n.global.t("KFTL_TEMPLATE_TITLE") }}</v-btn>
                 </v-col>
-                <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{ i18n.global.t("SAVE_TITLE")
+                <v-col cols="auto">
+                    <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{
+                        i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
                 </v-col>
             </v-row>
