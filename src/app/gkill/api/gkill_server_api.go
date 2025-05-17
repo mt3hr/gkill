@@ -645,7 +645,7 @@ func (g *GkillServerAPI) Serve() error {
 		g.HandleURLogBookmarkletAddress(w, r)
 	}).Methods(g.APIAddress.URLogBookmarkletMethod)
 
-	gkillPage, err := fs.Sub(htmlFS, "embed/html")
+	gkillPage, err := fs.Sub(HTMLFS, "embed/html")
 	if err != nil {
 		return err
 	}
