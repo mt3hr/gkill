@@ -22,6 +22,7 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { ConfirmDeleteTextDialogProps } from './confirm-delete-text-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'

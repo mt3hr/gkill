@@ -3,18 +3,18 @@
         <v-container class="pa-0 ma-0">
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto">
-                    <div class="welcome">{{ $t("WELCOME_TITLE") }}</div>
+                    <div class="welcome">{{ i18n.global.t("WELCOME_TITLE") }}</div>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" :label="$t('USER_ID_TITLE')"
+                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" :label="i18n.global.t('USER_ID_TITLE')"
                         v-model="user_id" autofocus />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" :label="$t('PASSWORD_TITLE')"
+                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" :label="i18n.global.t('PASSWORD_TITLE')"
                         :type="'password'" v-model="password" />
                 </v-col>
             </v-row>
@@ -22,13 +22,14 @@
                 <v-spacer />
                 <v-col cols="auto">
                     <v-btn dark class="login_button" color="primary" @click="try_login(user_id, password_sha256)">
-                        {{ $t("LOGIN_TITLE") }}</v-btn>
+                        {{ i18n.global.t("LOGIN_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-container>
     </div>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { computed, ref, type Ref } from 'vue'
 import { type LoginViewProps } from './login-view-props'
 import type LoginViewEmits from './login-view-emits'
@@ -36,8 +37,6 @@ import { LoginRequest } from '@/classes/api/req_res/login-request';
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
-
-import { i18n } from '@/i18n'
 
 const user_id: Ref<string> = ref("")
 const password: Ref<string> = ref("")

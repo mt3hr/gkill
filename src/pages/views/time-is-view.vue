@@ -3,17 +3,17 @@
         <div>{{ kyou.typed_timeis?.title }}</div>
         <div v-if="kyou.typed_timeis && kyou.typed_timeis.start_time && show_timeis_elapsed_time">{{ duration }}</div>
         <br />
-        <div v-if="kyou.typed_timeis">{{ $t("START_DATE_TIME_TITLE") }}：<span>{{
+        <div v-if="kyou.typed_timeis">{{ i18n.global.t("START_DATE_TIME_TITLE") }}：<span>{{
             format_time(kyou.typed_timeis.start_time) }}</span></div>
-        <div v-if="kyou.typed_timeis && kyou.typed_timeis.end_time">{{ $t("END_DATE_TIME_TITLE") }}：<span>{{
+        <div v-if="kyou.typed_timeis && kyou.typed_timeis.end_time">{{ i18n.global.t("END_DATE_TIME_TITLE") }}：<span>{{
             format_time(kyou.typed_timeis?.end_time) }}</span></div>
-        <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time && show_timeis_elapsed_time">{{ $t("PLAING_TITLE")
+        <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time && show_timeis_elapsed_time">{{ i18n.global.t("PLAING_TITLE")
             }}</div>
         <v-row v-if="show_timeis_plaing_end_button && kyou.typed_timeis && !kyou.typed_timeis.end_time"
             class="pa-0 ma-0">
             <v-spacer cols="auto" />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="show_end_timeis_dialog()">{{ $t("END_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="show_end_timeis_dialog()">{{ i18n.global.t("END_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <TimeIsContextMenu :application_config="application_config" :gkill_api="gkill_api"
@@ -59,14 +59,13 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { computed, ref } from 'vue'
 import type { TimeIsViewProps } from './time-is-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import TimeIsContextMenu from './time-is-context-menu.vue'
 import moment from 'moment';
 import EndTimeIsPlaingDialog from '../dialogs/end-time-is-plaing-dialog.vue';
-
-import { i18n } from '@/i18n'
 
 const context_menu = ref<InstanceType<typeof TimeIsContextMenu> | null>(null);
 const end_timeis_plaing_dialog = ref<InstanceType<typeof EndTimeIsPlaingDialog> | null>(null);

@@ -22,6 +22,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import AddNlogView from '../views/add-nlog-view.vue'
 import type { AddNlogDialogProps } from './add-nlog-dialog-props'

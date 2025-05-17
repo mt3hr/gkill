@@ -17,6 +17,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { NewDeviceNameDialogEmits } from './new-device-name-dialog-emits';
 import type { NewDeviceNameDialogProps } from './new-device-name-dialog-props';

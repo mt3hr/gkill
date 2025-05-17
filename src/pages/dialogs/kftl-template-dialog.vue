@@ -7,6 +7,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import type { KFTLTemplateDialogEmits } from './kftl-template-dialog-emits'

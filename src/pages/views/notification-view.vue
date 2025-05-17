@@ -37,6 +37,7 @@
     </v-row>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import AttachedNotification from './attached-notification.vue';
 import type { KyouViewEmits } from './kyou-view-emits'
 import moment from 'moment';

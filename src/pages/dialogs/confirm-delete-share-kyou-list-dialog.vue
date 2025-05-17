@@ -10,6 +10,7 @@
 </template>
 
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { ConfirmDeleteShareKyousLinkDialogEmits } from './confirm-delete-share-kyou-link-dialog-emits'
 import type { ConfirmDeleteShareKyousLinkDialogProps } from './confirm-delete-share-kyou-link-dialog-props'

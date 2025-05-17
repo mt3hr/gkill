@@ -6,18 +6,18 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("APPLICATION_CONFIG_TITLE") }}</span>
+                    <span>{{ i18n.global.t("APPLICATION_CONFIG_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" v-if="cloned_application_config.account_is_admin"
-                        @click="show_server_config_dialog()">{{ $t("SERVER_CONFIG_TITLE") }}</v-btn>
+                        @click="show_server_config_dialog()">{{ i18n.global.t("SERVER_CONFIG_TITLE") }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="reload_repositories()">{{ $t("RELOAD_TITLE") }}</v-btn>
+                    <v-btn dark color="primary" @click="reload_repositories()">{{ i18n.global.t("RELOAD_TITLE") }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="logout()" color="primary">{{ $t("LOGOUT_TITLE") }}</v-btn>
+                    <v-btn dark @click="logout()" color="primary">{{ i18n.global.t("LOGOUT_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -25,18 +25,18 @@
             <table>
                 <tr>
                     <td>
-                        <v-checkbox v-model="use_dark_theme" hide-detail :label="$t('DARK_THEME_TITLE')" />
+                        <v-checkbox v-model="use_dark_theme" hide-detail :label="i18n.global.t('DARK_THEME_TITLE')" />
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="rykv_hot_reload" hide-detail :label="$t('HOT_RELOAD_TITLE')" />
+                        <v-checkbox v-model="rykv_hot_reload" hide-detail :label="i18n.global.t('HOT_RELOAD_TITLE')" />
                     </td>
                 </tr>
                 <tr>
                     <td>
                         <v-checkbox v-model="is_checked_use_rykv_period" hide-detail
-                            :label="$t('RYKV_DEFAULT_PERIOD_TITLE')" />
+                            :label="i18n.global.t('RYKV_DEFAULT_PERIOD_TITLE')" />
                     </td>
                     <td v-show="rykv_default_period !== -1">
                         <v-text-field type="number" min="-1" width="400" v-model="rykv_default_period" />
@@ -44,12 +44,12 @@
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="is_show_share_footer" hide-detail :label="$t('SHOW_SHARE_FOOTER')" />
+                        <v-checkbox v-model="is_show_share_footer" hide-detail :label="i18n.global.t('SHOW_SHARE_FOOTER')" />
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("RYKV_IMAGE_LIST_COLUMN_NUMBER_TITLE") }}
+                        {{ i18n.global.t("RYKV_IMAGE_LIST_COLUMN_NUMBER_TITLE") }}
                     </td>
                     <td>
                         <v-text-field type="number" min="1" max="10" width="400"
@@ -58,7 +58,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("MI_DEFAULT_BOARD_NAME_TITLE") }}
+                        {{ i18n.global.t("MI_DEFAULT_BOARD_NAME_TITLE") }}
                     </td>
                     <td>
                         <v-row class="pa-0 ma-0">
@@ -75,7 +75,7 @@
 
                 <tr>
                     <td>
-                        {{ $t("URLOG_BOOKMARKLET_ADDRESS_TITLE") }}
+                        {{ i18n.global.t("URLOG_BOOKMARKLET_ADDRESS_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="urlog_bookmarklet" readonly
@@ -84,7 +84,7 @@
                 </tr>
                 <tr>
                     <td>
-                        {{ $t("GOOGLE_MAP_API_KEY_TITLE") }}
+                        {{ i18n.global.t("GOOGLE_MAP_API_KEY_TITLE") }}
                     </td>
                     <td>
                         <v-text-field width="400" v-model="google_map_api_key"></v-text-field>
@@ -94,18 +94,18 @@
             <table>
                 <tr>
                     <td>
-                        <v-btn dark color="primary" @click="show_edit_tag_dialog">{{ $t("EDIT_TAG_STRUCT_TITLE")
+                        <v-btn dark color="primary" @click="show_edit_tag_dialog">{{ i18n.global.t("EDIT_TAG_STRUCT_TITLE")
                             }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{ $t("EDIT_REP_STRUCT_TITLE")
+                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{ i18n.global.t("EDIT_REP_STRUCT_TITLE")
                             }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{ $t("EDIT_DEVICE_STRUCT_TITLE")
+                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{ i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
                         }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
-                            $t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
+                            i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_kftl_template_dialog">{{
-                            $t("EDIT_KFTL_TEMPLATE_STRUCT_TITLE") }}</v-btn>
+                            i18n.global.t("EDIT_KFTL_TEMPLATE_STRUCT_TITLE") }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_dnote_dialog">{{
-                            $t("EDIT_DNOTE_TITLE") }}</v-btn>
+                            i18n.global.t("EDIT_DNOTE_TITLE") }}</v-btn>
                     </td>
                 </tr>
             </table>
@@ -113,11 +113,11 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="update_application_config" color="primary">{{ $t("APPLY_TITLE") }}</v-btn>
+                    <v-btn dark @click="update_application_config" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CANCEL_TITLE")
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
                     }}</v-btn>
                 </v-col>
             </v-row>
@@ -168,6 +168,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { type Ref, ref, watch } from 'vue'
 
 import EditDeviceStructDialog from '../dialogs/edit-device-struct-dialog.vue'

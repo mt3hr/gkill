@@ -353,6 +353,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { computed, watch, type Ref, ref, nextTick, onUnmounted } from 'vue'
 
 import AttachedTag from './attached-tag.vue'
@@ -378,8 +379,6 @@ import type MiKyouView from './mi-kyou-view.vue'
 import type UrLogView from './ur-log-view.vue'
 import type IdfKyouView from './idf-kyou-view.vue'
 import moment from 'moment'
-
-import { i18n } from '@/i18n'
 
 const kyou_dialog = ref<InstanceType<typeof kyouDialog> | null>(null);
 const kmemo_view = ref<InstanceType<typeof KmemoView> | null>(null);

@@ -8,6 +8,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { EditTagStructDialogEmits } from './edit-tag-struct-dialog-emits'
 import type { EditTagStructDialogProps } from './edit-tag-struct-dialog-props'

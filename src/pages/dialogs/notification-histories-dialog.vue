@@ -63,6 +63,7 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import NotificationHistoriesView from '../views/notification-histories-view.vue'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'
 import { computed, type Ref, ref } from 'vue'

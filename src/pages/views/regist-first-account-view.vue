@@ -3,41 +3,41 @@
         <v-container class="pa-0 ma-0">
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto">
-                    <div class="welcome">{{ $t("WELCOME_TITLE") }}</div>
+                    <div class="welcome">{{ i18n.global.t("WELCOME_TITLE") }}</div>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto">
-                    <div class="welcome_message">{{ $t("WELCOME_MESSAGE") }}</div>
+                    <div class="welcome_message">{{ i18n.global.t("WELCOME_MESSAGE") }}</div>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="$t('USER_ID_TITLE')" v-model="user_id" autofocus
+                    <v-text-field :label="i18n.global.t('USER_ID_TITLE')" v-model="user_id" autofocus
                         :readonly="RegistStatus.added_account <= regist_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="$t('PASSWORD_TITLE')" :type="'password'" v-model="password"
+                    <v-text-field :label="i18n.global.t('PASSWORD_TITLE')" :type="'password'" v-model="password"
                         :readonly="RegistStatus.reseted_account_password <= regist_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="$t('PASSWORD_RETYPE_TITLE')" :type="'password'" v-model="password_retype"
+                    <v-text-field :label="i18n.global.t('PASSWORD_RETYPE_TITLE')" :type="'password'" v-model="password_retype"
                         :readonly="RegistStatus.reseted_account_password <= regist_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="$t('ADMIN_PASSWORD_TITLE')" :type="'password'" v-model="admin_password"
+                    <v-text-field :label="i18n.global.t('ADMIN_PASSWORD_TITLE')" :type="'password'" v-model="admin_password"
                         :readonly="RegistStatus.reseted_admin_password <= regist_state" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="$t('ADMIN_PASSWORD_RETYPE_TITLE')" :type="'password'"
+                    <v-text-field :label="i18n.global.t('ADMIN_PASSWORD_RETYPE_TITLE')" :type="'password'"
                         v-model="admin_password_retype"
                         :readonly="RegistStatus.reseted_admin_password <= regist_state" />
                 </v-col>
@@ -48,7 +48,7 @@
                 <v-col cols="auto">
                     <v-btn dark class="login_button" color="primary" @click="try_regist_account()"
                         :disable="is_submiting">
-                        {{ $t("REGIST_ACCOUNT_TITLE") }}
+                        {{ i18n.global.t("REGIST_ACCOUNT_TITLE") }}
                     </v-btn>
                 </v-col>
             </v-row>
@@ -56,6 +56,7 @@
     </div>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { computed, ref, type Ref } from 'vue'
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
@@ -63,7 +64,6 @@ import { useRoute } from 'vue-router';
 import { SetNewPasswordRequest } from '@/classes/api/req_res/set-new-password-request';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
-import { i18n } from '@/i18n'
 import type { RegistFirstAccountViewProps } from './regist-first-account-view-props';
 import type { RegistFirstAccountViewEmits } from './regist-first-account-view-emits';
 import { AddAccountRequest } from '@/classes/api/req_res/add-account-request';

@@ -3,11 +3,11 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("MANAGE_ACCOUNT_TITLE") }}</span>
+                    <span>{{ i18n.global.t("MANAGE_ACCOUNT_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_create_account_dialog">{{ $t("ADD_ACCOUNT_TITLE")
+                    <v-btn dark color="primary" @click="show_create_account_dialog">{{ i18n.global.t("ADD_ACCOUNT_TITLE")
                         }}</v-btn>
                 </v-col>
             </v-row>
@@ -24,14 +24,14 @@
                     </td>
                     <td>
                         <v-btn dark color="primary" @click="show_allocate_rep_dialog(account)">{{
-                            $t("ALLOCATE_REP_TITLE") }}</v-btn>
+                            i18n.global.t("ALLOCATE_REP_TITLE") }}</v-btn>
                     </td>
                     <td>
                         <v-btn dark color="primary" v-if="!account.password_reset_token"
-                            @click="show_confirm_reset_password_dialog(account)">{{ $t("RESETED_PASSWORD_TITLE")
+                            @click="show_confirm_reset_password_dialog(account)">{{ i18n.global.t("RESETED_PASSWORD_TITLE")
                             }}</v-btn>
                         <v-btn dark color="primary" v-if="account.password_reset_token"
-                            @click="show_show_password_reset_link_dialog(account)">{{ $t("RESETTING_PASSWORD_TITLE")
+                            @click="show_show_password_reset_link_dialog(account)">{{ i18n.global.t("RESETTING_PASSWORD_TITLE")
                             }}</v-btn>
                     </td>
                 </tr>
@@ -41,7 +41,7 @@
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CLOSE_TITLE")
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CLOSE_TITLE")
                         }}</v-btn>
                 </v-col>
             </v-row>
@@ -69,6 +69,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { type Ref, ref, watch } from 'vue'
 import type { ManageAccountViewEmits } from './manage-account-view-emits'
 import type { ManageAccountViewProps } from './manage-account-view-props'
@@ -82,8 +83,6 @@ import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-config
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-
-import { i18n } from '@/i18n'
 
 const allocate_rep_dialog = ref<InstanceType<typeof AllocateRepDialog> | null>(null);
 const confirm_reset_password_dialog = ref<InstanceType<typeof ConfirmResetPasswordDialog> | null>(null);
