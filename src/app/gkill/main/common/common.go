@@ -3,10 +3,13 @@ package common
 import (
 	"context"
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -26,6 +29,8 @@ import (
 )
 
 var (
+	AppName = "gkill_server"
+
 	gkillServerAPI *api.GkillServerAPI
 
 	IDFCmd = &cobra.Command{
@@ -73,6 +78,18 @@ var (
 		},
 	}
 	DVNFCmd = dvnf_cmd.DVNFCmd
+
+	VersionCommand = &cobra.Command{
+		Use: "version",
+		Run: func(cmd *cobra.Command, args []string) {
+			version, err := GetVersion()
+			if err != nil {
+				println(err.Error())
+				return
+			}
+			fmt.Printf("%s: %s\n", AppName, version)
+		},
+	}
 )
 
 func init() {
@@ -167,4 +184,45 @@ func Openbrowser(url string) error {
 		err = fmt.Errorf("unsupported platform")
 	}
 	return err
+}
+
+func GetVersion() (string, error) {
+	assetsDirName := "embed/html/assets"
+	files, err := api.HTMLFS.ReadDir(assetsDirName)
+	if err != nil {
+		return "", err
+	}
+
+	var indexJSFile fs.DirEntry
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), "index") && strings.HasSuffix(file.Name(), ".js") {
+			indexJSFile = file
+		}
+	}
+	if indexJSFile == nil {
+		return "", fmt.Errorf("not found gkill page js file.")
+	}
+
+	jsFile, err := api.HTMLFS.Open(assetsDirName + "/" + indexJSFile.Name())
+	if err != nil {
+		return "", fmt.Errorf("error at open gkill page js file.")
+	}
+	defer jsFile.Close()
+
+	jsFileContentBytes, err := io.ReadAll(jsFile)
+	if err != nil {
+		return "", fmt.Errorf("error at read gkill page js file: %w", err)
+	}
+	jsFileContent := string(jsFileContentBytes)
+
+	regex, err := regexp.Compile(`const name = "gkill";[\s\S\n]*?const version = "(.*)";`)
+	if err != nil {
+		return "", fmt.Errorf("error at regex compile: %w", err)
+	}
+	versionStrings := regex.FindStringSubmatch(jsFileContent)
+
+	if len(versionStrings) != 2 {
+		return "", fmt.Errorf("failed extruct version info: version match is not 2")
+	}
+	return "v" + versionStrings[1], nil
 }
