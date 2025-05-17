@@ -28,7 +28,7 @@
                 {{ kyou.typed_nlog.amount }}
             </v-col>
             <v-col v-if="kyou.typed_nlog" class="ma-0 pa-0">
-                {{ $t("YEN_TITLE") }}
+                {{ i18n.global.t("YEN_TITLE") }}
             </v-col>
             <v-col cols="auto" class="ma-0 pa-0"></v-col>
         </v-row>
@@ -55,6 +55,7 @@
         @requested_update_check_kyous="(kyous, is_checked) => emits('requested_update_check_kyous', kyous, is_checked)" />
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import type { NlogViewProps } from './nlog-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { ref } from 'vue'

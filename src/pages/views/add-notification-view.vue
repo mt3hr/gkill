@@ -3,32 +3,58 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("ADD_NOTIFICATION_TITLE") }}</span>
+                    <span>{{ i18n.global.t("ADD_NOTIFICATION_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
                         color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="content_value" :label="$t('NOTIFICATION_CONTENT_TITLE')" autofocus
+        <v-textarea v-model="content_value" :label="i18n.global.t('NOTIFICATION_CONTENT_TITLE')" autofocus
             :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>{{ $t('NOTIFICATION_DATE_TIME_TITLE') }}</label>
-                <input class="input date" type="date" v-model="notification_date" :label="$t('NOTIFICATION_DATE_TITLE')"
-                    :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="notification_time" :label="$t('NOTIFICATION_TIME_TITLE')"
-                    :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_notification_date_time()" :disabled="is_requested_submit">{{
-                    $t("RESET_TITLE") }}</v-btn>
+                <table>
+                    <tr>
+                        <td>
+                            <v-menu v-model="show_notification_date_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="notification_date_string"
+                                        :label="i18n.global.t('NOTIFICATION_DATE_TITLE')" readonly v-bind="props"
+                                        min-width="120" />
+                                </template>
+                                <v-date-picker v-model="notification_date_typed"
+                                    @update:model-value="show_notification_date_menu = false" locale="ja-JP" />
+                            </v-menu>
+                        </td>
+                        <td>
+                            <v-menu v-model="show_notification_time_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="notification_time_string"
+                                        :label="i18n.global.t('NOTIFICATION_TIME_TITLE')" readonly min-width="120"
+                                        v-bind="props" />
+                                </template>
+                                <v-time-picker v-model="notification_time_string" format="24hr"
+                                    @update:model-value="show_notification_time_menu = false" />
+                            </v-menu>
+                        </td>
+                        <td>
+                            <v-btn dark color="secondary" @click="reset_notification_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("RESET_TITLE") }}</v-btn>
+                        </td>
+                    </tr>
+                </table>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
             </v-col>
         </v-row>
@@ -62,7 +88,8 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { i18n } from '@/i18n'
+import { computed, type Ref, ref } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -72,8 +99,8 @@ import { Notification } from '@/classes/datas/notification'
 import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-request'
 import moment from 'moment'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-
-import { i18n } from '@/i18n'
+import { VDatePicker } from 'vuetify/components'
+import { VTimePicker } from 'vuetify/labs/components'
 
 const is_requested_submit = ref(false)
 
@@ -82,14 +109,18 @@ const emits = defineEmits<KyouViewEmits>()
 
 const show_kyou: Ref<boolean> = ref(false)
 const content_value: Ref<string> = ref("")
-const notification_date: Ref<string> = ref("")
-const notification_time: Ref<string> = ref("")
+const notification_date_typed: Ref<Date> = ref(new Date(Date.now()))
+const notification_date_string: Ref<string> = computed(() => moment(notification_date_typed.value).format("YYYY-MM-DD"))
+const notification_time_string: Ref<string> = ref("")
+
+const show_notification_date_menu = ref(false)
+const show_notification_time_menu = ref(false)
 
 async function save(): Promise<void> {
     try {
         is_requested_submit.value = true
         // 日時必須入力チェック
-        if (notification_date.value === "" || notification_time.value === "") {
+        if (notification_date_string.value === "" || notification_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.notification_time_is_blank
             error.error_message = i18n.global.t("NOTIFICATION_DATE_TIME_IS_BLANK_MESSAGE")
@@ -120,7 +151,7 @@ async function save(): Promise<void> {
 
         // 通知内容情報を用意する
         const new_notification = new Notification()
-        new_notification.notification_time = moment(notification_date.value + " " + notification_time.value).toDate()
+        new_notification.notification_time = moment(notification_date_string.value + " " + notification_time_string.value).toDate()
         new_notification.content = content_value.value
         new_notification.id = props.gkill_api.generate_uuid()
         new_notification.is_deleted = false
@@ -157,15 +188,9 @@ async function save(): Promise<void> {
 }
 
 function reset_notification_date_time(): void {
-    notification_date.value = ""
-    notification_time.value = ""
+    notification_date_typed.value = new Date(Date.now())
+    notification_time_string.value = ""
 }
 </script>
 
-<style lang="css" scoped>
-.input.date,
-.input.time,
-.input.text {
-    border: solid 1px silver;
-}
-</style>
+<style lang="css" scoped></style>

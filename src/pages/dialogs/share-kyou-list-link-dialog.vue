@@ -8,6 +8,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { ShareKyousListLinkDialogEmits } from './share-kyou-list-link-dialog-emits'
 import type { ShareKyousListLinkDialogProps } from './share-kyou-list-link-dialog-props'

@@ -25,6 +25,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { ref } from 'vue'
 import KmemoContextMenu from './kmemo-context-menu.vue'
 import type { KmemoViewProps } from './kmemo-view-props.ts'

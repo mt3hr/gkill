@@ -88,7 +88,7 @@
         <v-card v-if="show_footer" :class="footer_class" :ripple="false" :link="false">
             <v-row no-gutters>
                 <v-col v-if="matched_kyous && matched_kyous.length" cols="auto" class="py-3">
-                    {{ matched_kyous.length }}{{ $t("N_COUNT_ITEMS_TITLE") }}
+                    {{ matched_kyous.length }}{{ i18n.global.t("N_COUNT_ITEMS_TITLE") }}
                 </v-col>
                 <v-spacer />
 
@@ -127,6 +127,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import type { KyouListViewEmits } from './kyou-list-view-emits'
 import type { KyouListViewProps } from './kyou-list-view-props'
 import { Kyou } from '@/classes/datas/kyou'

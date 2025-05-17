@@ -1,8 +1,8 @@
 <template>
     <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" app color="primary" flat>
-        <v-toolbar-title>{{ $t("REGIST_FIRST_ACCOUNT_TITLE") }}</v-toolbar-title>
+        <v-toolbar-title>{{ i18n.global.t("REGIST_FIRST_ACCOUNT_TITLE") }}</v-toolbar-title>
         <v-spacer />
-        <span class="gkill_version">{{ $t("VERSION_TITLE") }}: {{ gkill_version }}</span>
+        <span class="gkill_version">{{ i18n.global.t("VERSION_TITLE") }}: {{ gkill_version }}</span>
     </v-app-bar>
     <v-main class="main">
         <RegistFirstAccountView :app_content_height="app_content_height" :app_content_width="app_content_width"
@@ -19,6 +19,7 @@
 </template>
 
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { computed, ref, type Ref } from 'vue'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'

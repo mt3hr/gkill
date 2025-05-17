@@ -15,6 +15,7 @@
 </template>
 
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 'use strict'
 import { computed, ref, type Ref } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'

@@ -29,6 +29,7 @@
     </v-card>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { ref } from 'vue'
 import GitCommitLogContextMenu from './git-commit-log-context-menu.vue'
 import type { GitCommitLogViewProps } from './git-commit-log-view-props'

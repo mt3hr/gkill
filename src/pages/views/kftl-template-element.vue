@@ -3,6 +3,7 @@
         :folder_name="''" :gkill_api="gkill_api" :is_open="true" />
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import type { KFTLTemplateElementEmits } from './kftl-template-element-emits'
 import type { KFTLTemplateElementProps } from './kftl-template-element-props'
 

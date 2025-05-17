@@ -2,15 +2,16 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item @click="emits('requested_edit_device', id)">
-                <v-list-item-title>{{ $t("EDIT_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("EDIT_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="emits('requested_delete_device', id)">
-                <v-list-item-title>{{ $t("DELETE_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("DELETE_TITLE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { computed, ref, type Ref } from 'vue';
 import type { DeviceStructContextMenuEmits } from './device-struct-context-menu-emits';
 import type { DeviceStructContextMenuProps } from './device-struct-context-menu-props';

@@ -3,26 +3,66 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("EDIT_REKYOU_TITLE") }}</span>
+                    <span>{{ i18n.global.t("EDIT_REKYOU_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details color="
+                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details color="
                         primary" />
                 </v-col>
             </v-row>
         </v-card-title>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>{{ $t("REKYOU_DATE_TIME_TITLE") }}</label>
-                <input class="input date" type="date" v-model="related_date" :label="$t('REKYOU_DATE_TITLE')"
-                    :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="related_time" :label="$t('REKYOU_TIME_TITLE')"
-                    :readonly="is_requested_submit" />
+                <table>
+                    <tr>
+                        <td>
+                            <v-menu v-model="show_related_date_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_date_string"
+                                        :label="i18n.global.t('REKYOU_DATE_TITLE')" readonly v-bind="props"
+                                        min-width="120" />
+                                </template>
+                                <v-date-picker v-model="related_date_typed"
+                                    @update:model-value="show_related_date_menu = false" locale="ja-JP" />
+                            </v-menu>
+                        </td>
+                        <td>
+                            <v-menu v-model="show_related_time_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_time_string"
+                                        :label="i18n.global.t('REKYOU_TIME_TITLE')" min-width="120" readonly
+                                        v-bind="props" />
+                                </template>
+                                <v-time-picker v-model="related_time_string" format="24hr"
+                                    @update:model-value="show_related_time_menu = false" />
+                            </v-menu>
+                        </td>
+                    </tr>
+                </table>
+            </v-col>
+            <v-col cols="auto" class="pa-0 ma-0">
+                <table>
+                    <tr>
+                        <td>
+                            <v-btn dark color="secondary" @click="reset_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("RESET_TITLE") }}</v-btn>
+                        </td>
+                        <td>
+                            <v-btn dark color="primary" @click="now_to_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                        </td>
+                    </tr>
+                </table>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                    i18n.global.t("SAVE_TITLE")
                 }}</v-btn>
             </v-col>
         </v-row>
@@ -56,7 +96,8 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref, watch } from 'vue'
+import { i18n } from '@/i18n'
+import { computed, type Ref, ref, watch } from 'vue'
 import type { EditReKyouViewProps } from './edit-re-kyou-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
@@ -66,8 +107,8 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import moment from 'moment'
 import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-
-import { i18n } from '@/i18n'
+import { VDatePicker } from 'vuetify/components'
+import { VTimePicker } from 'vuetify/labs/components'
 
 const is_requested_submit = ref(false)
 
@@ -75,9 +116,13 @@ const props = defineProps<EditReKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
-const related_date: Ref<string> = ref(moment(props.kyou.related_time).format("YYYY-MM-DD"))
-const related_time: Ref<string> = ref(moment(props.kyou.related_time).format("HH:mm:ss"))
+const related_date_typed: Ref<Date> = ref(moment(props.kyou.related_time).toDate())
+const related_date_string: Ref<string> = computed(() => moment(related_date_typed.value).format("YYYY-MM-DD"))
+const related_time_string: Ref<string> = ref(moment(props.kyou.related_time).format("HH:mm:ss"))
 const show_kyou: Ref<boolean> = ref(true)
+
+const show_related_date_menu = ref(false)
+const show_related_time_menu = ref(false)
 
 watch(() => props.kyou, () => load())
 load()
@@ -86,8 +131,8 @@ async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
     await cloned_kyou.value.load_typed_datas()
     cloned_kyou.value.load_all()
-    related_date.value = moment(cloned_kyou.value.related_time).format("YYYY-MM-DD")
-    related_time.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+    related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+    related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
 }
 
 async function save(): Promise<void> {
@@ -109,7 +154,7 @@ async function save(): Promise<void> {
         }
 
         // 日時必須入力チェック
-        if (related_date.value === "" || related_time.value === "") {
+        if (related_date_string.value === "" || related_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.rekyou_related_time_is_blank
             error.error_message = i18n.global.t("REKYOU_DATE_TIME_IS_BLANK_MESSAGE")
@@ -120,8 +165,8 @@ async function save(): Promise<void> {
         }
 
         // 更新がなかったらエラーメッセージを出力する
-        if (moment(rekyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime() &&
-            moment(rekyou.related_time).toDate().getTime() === moment(related_date.value + " " + related_time.value).toDate().getTime()) {
+        if (moment(rekyou.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime() &&
+            moment(rekyou.related_time).toDate().getTime() === moment(related_date_string.value + " " + related_time_string.value).toDate().getTime()) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.rekyou_is_no_update
             error.error_message = i18n.global.t("REKYOU_IS_NO_UPDATE_MESSAGE")
@@ -141,7 +186,7 @@ async function save(): Promise<void> {
 
         // 更新後ReKyou情報を用意する
         const updated_rekyou = rekyou.clone()
-        updated_rekyou.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        updated_rekyou.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         updated_rekyou.update_app = "gkill"
         updated_rekyou.update_device = gkill_info_res.device
         updated_rekyou.update_time = new Date(Date.now())
@@ -166,6 +211,16 @@ async function save(): Promise<void> {
     } finally {
         is_requested_submit.value = false
     }
+}
+
+function reset_related_date_time(): void {
+    related_date_typed.value = moment(cloned_kyou.value.related_time).toDate()
+    related_time_string.value = moment(cloned_kyou.value.related_time).format("HH:mm:ss")
+}
+
+function now_to_related_date_time(): void {
+    related_date_typed.value = moment().toDate()
+    related_time_string.value = moment().format("HH:mm:ss")
 }
 </script>
 <style lang="css">
@@ -240,10 +295,4 @@ td {
     border-spacing: 0 !important;
 }
 </style>
-<style lang="css" scoped>
-.input.date,
-.input.time,
-.input.text {
-    border: solid 1px silver;
-}
-</style>
+<style lang="css" scoped></style>

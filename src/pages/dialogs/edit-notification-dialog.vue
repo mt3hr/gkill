@@ -23,6 +23,7 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import EditNotificationView from '../views/edit-notification-view.vue';
 import { computed, type Ref, ref } from 'vue'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'

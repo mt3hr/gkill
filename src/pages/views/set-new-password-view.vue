@@ -3,30 +3,30 @@
         <v-container class="pa-0 ma-0">
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto">
-                    <div class="welcome">{{ $t("WELCOME_TITLE") }}</div>
+                    <div class="welcome">{{ i18n.global.t("WELCOME_TITLE") }}</div>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="$t('USER_ID_TITLE')" v-model="user_id" autofocus
+                    <v-text-field :label="i18n.global.t('USER_ID_TITLE')" v-model="user_id" autofocus
                         :readonly="!(!useRoute().query.user_id)" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="$t('PASSWORD_TITLE')" :type="'password'" v-model="password" />
+                    <v-text-field :label="i18n.global.t('PASSWORD_TITLE')" :type="'password'" v-model="password" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field :label="$t('PASSWORD_RETYPE_TITLE')" :type="'password'" v-model="password_retype" />
+                    <v-text-field :label="i18n.global.t('PASSWORD_RETYPE_TITLE')" :type="'password'" v-model="password_retype" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto">
                     <v-btn dark class="login_button" color="primary" @click="try_set_new_password()">
-                        {{ $t("RESET_PASSWORD_TITLE") }}
+                        {{ i18n.global.t("RESET_PASSWORD_TITLE") }}
                     </v-btn>
                 </v-col>
             </v-row>
@@ -34,6 +34,7 @@
     </div>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { computed, nextTick, ref, type Ref } from 'vue'
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
@@ -44,8 +45,6 @@ import { SetNewPasswordRequest } from '@/classes/api/req_res/set-new-password-re
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
-
-import { i18n } from '@/i18n'
 
 const password_reset_token: Ref<string> = ref(useRoute().query.reset_token ? useRoute().query.reset_token!.toString() : "")
 const user_id: Ref<string> = ref(useRoute().query.user_id ? useRoute().query.user_id!.toString() : "")

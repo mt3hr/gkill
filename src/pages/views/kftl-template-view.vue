@@ -3,7 +3,7 @@
         <v-card-title>
             <v-row>
                 <v-col cols="auto">
-                    {{ $t("KFTL_TEMPLATE_TITLE") }}
+                    {{ i18n.global.t("KFTL_TEMPLATE_TITLE") }}
                 </v-col>
                 <v-spacer />
                 <v-col class="pa-0 ma-0" cols="auto">
@@ -25,6 +25,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data';
 import KFTLTemplateDialog from '../dialogs/kftl-template-dialog.vue';

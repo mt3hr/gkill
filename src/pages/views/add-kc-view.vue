@@ -3,42 +3,79 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("ADD_KC_TITLE") }}</span>
+                    <span>{{ i18n.global.t("ADD_KC_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
             </v-row>
         </v-card-title>
-        <v-text-field v-model="title" :label="$t('KC_TITLE_TITLE')" autofocus :readonly="is_requested_submit" />
-        <v-text-field type="number" v-model="num_value" :label="$t('KC_NUM_VALUE_TITLE')"
+        <v-text-field v-model="title" :label="i18n.global.t('KC_TITLE_TITLE')" autofocus
+            :readonly="is_requested_submit" />
+        <v-text-field type="number" v-model="num_value" :label="i18n.global.t('KC_NUM_VALUE_TITLE')"
             :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>{{ $t("KC_DATE_TIME_TITLE") }}</label>
-                <input class="input date" type="date" v-model="related_date" :label="$t('KC_DATE_TITLE')"
-                    :readonly="is_requested_submit" />
-                <input class="input time" type="time" v-model="related_time" :label="$t('KC_TIME_TITLE')"
-                    :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_related_date_time()" :disabled="is_requested_submit">{{
-                    $t("RESET_TITLE") }}</v-btn>
-                <v-btn dark color="primary" @click="now_to_related_date_time()" :disabled="is_requested_submit">{{
-                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                <table>
+                    <tr>
+                        <td>
+                            <v-menu v-model="show_related_date_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_date_string" :label="i18n.global.t('KC_DATE_TITLE')"
+                                        readonly v-bind="props" min-width="120" />
+                                </template>
+                                <v-date-picker v-model="related_date_typed"
+                                    @update:model-value="show_related_date_menu = false" locale="ja-JP" />
+                            </v-menu>
+                        </td>
+                        <td>
+                            <v-menu v-model="show_related_time_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_time_string" :label="i18n.global.t('KC_TIME_TITLE')"
+                                        readonly min-width="120" v-bind="props" />
+                                </template>
+                                <v-time-picker v-model="related_time_string" format="24hr"
+                                    @update:model-value="show_related_time_menu = false" />
+                            </v-menu>
+                        </td>
+                    </tr>
+                </table>
+            </v-col>
+            <v-col cols="auto" class="pa-0 ma-0">
+                <table>
+                    <tr>
+                        <td>
+                            <v-btn dark color="secondary" @click="reset_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("RESET_TITLE") }}</v-btn>
+                        </td>
+                        <td>
+                            <v-btn dark color="primary" @click="now_to_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                        </td>
+                    </tr>
+                </table>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
+                    i18n.global.t("RESET_TITLE")
                 }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                    i18n.global.t("SAVE_TITLE")
                 }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
 </template>
 <script lang="ts" setup>
-import { type Ref, ref } from 'vue'
+import { i18n } from '@/i18n'
+import { computed, type Ref, ref } from 'vue'
 import type { EditKCViewProps } from './edit-kc-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { KC } from '@/classes/datas/kc'
@@ -47,8 +84,8 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { AddKCRequest } from '@/classes/api/req_res/add-kc-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-
-import { i18n } from '@/i18n'
+import { VDatePicker } from 'vuetify/components'
+import { VTimePicker } from 'vuetify/labs/components'
 
 const is_requested_submit = ref(false)
 
@@ -62,24 +99,28 @@ const kc: Ref<KC> = ref(((): KC => {
 })())
 const title: Ref<string> = ref(kc.value.title)
 const num_value: Ref<number> = ref(kc.value.num_value)
-const related_date: Ref<string> = ref(moment(kc.value.related_time).format("YYYY-MM-DD"))
-const related_time: Ref<string> = ref(moment(kc.value.related_time).format("HH:mm:ss"))
+const related_date_typed: Ref<Date> = ref(moment(kc.value.related_time).toDate())
+const related_date_string: Ref<string> = computed(() => moment(related_date_typed.value).format("YYYY-MM-DD"))
+const related_time_string: Ref<string> = ref(moment(kc.value.related_time).format("HH:mm:ss"))
+
+const show_related_date_menu = ref(false)
+const show_related_time_menu = ref(false)
 
 function reset(): void {
     title.value = (kc.value.title)
     num_value.value = kc.value.num_value
-    related_date.value = (moment(kc.value.related_time).format("YYYY-MM-DD"))
-    related_time.value = (moment(kc.value.related_time).format("HH:mm:ss"))
+    related_date_typed.value = (moment(kc.value.related_time).toDate())
+    related_time_string.value = (moment(kc.value.related_time).format("HH:mm:ss"))
 }
 
 function reset_related_date_time(): void {
-    related_date.value = moment(kc.value.related_time).format("YYYY-MM-DD")
-    related_time.value = moment(kc.value.related_time).format("HH:mm:ss")
+    related_date_typed.value = moment(kc.value.related_time).toDate()
+    related_time_string.value = moment(kc.value.related_time).format("HH:mm:ss")
 }
 
 function now_to_related_date_time(): void {
-    related_date.value = moment().format("YYYY-MM-DD")
-    related_time.value = moment().format("HH:mm:ss")
+    related_date_typed.value = moment().toDate()
+    related_time_string.value = moment().format("HH:mm:ss")
 }
 
 async function save(): Promise<void> {
@@ -97,7 +138,7 @@ async function save(): Promise<void> {
         }
 
         // 日時必須入力チェック
-        if (related_date.value === "" || related_time.value === "") {
+        if (related_date_string.value === "" || related_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kc_related_time_is_blank
             error.error_message = i18n.global.t("KC_RELATED_TIME_BLANK_MESSAGE")
@@ -142,7 +183,7 @@ async function save(): Promise<void> {
         new_kc.id = props.gkill_api.generate_uuid()
         new_kc.title = title.value
         new_kc.num_value = num_value.value
-        new_kc.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        new_kc.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         new_kc.create_app = "gkill"
         new_kc.create_device = gkill_info_res.device
         new_kc.create_time = new Date(Date.now())
@@ -173,10 +214,4 @@ async function save(): Promise<void> {
 }
 </script>
 
-<style lang="css" scoped>
-.input.date,
-.input.time,
-.input.text {
-    border: solid 1px silver;
-}
-</style>
+<style lang="css" scoped></style>

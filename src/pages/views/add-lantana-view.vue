@@ -3,7 +3,7 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t('ADD_LANTANA_TITLE') }}</span>
+                    <span>{{ i18n.global.t('ADD_LANTANA_TITLE') }}</span>
                 </v-col>
                 <v-spacer />
             </v-row>
@@ -12,27 +12,71 @@
             :editable="!is_requested_submit" ref="edit_lantana_flowers" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>{{ $t("LANTANA_DATE_TIME_TITLE") }}</label>
-                <input class="input" type="date" v-model="related_date" :label="$t('LANTANA_DATE_TITLE')" :readonly="is_requested_submit" />
-                <input class="input" type="time" v-model="related_time" :label="$t('LANTANA_TIME_TITLE')" :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_related_time()" :disabled="is_requested_submit">{{ $t('RESET_TITLE') }}</v-btn>
-                <v-btn dark color="primary" @click="now_to_related_time()"
-                    :disabled="is_requested_submit">{{ $t('CURRENT_DATE_TIME_TITLE') }}</v-btn>
+                <table>
+                    <tr>
+                        <td>
+                            <v-menu v-model="show_related_date_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_date_string"
+                                        :label="i18n.global.t('LANTANA_DATE_TITLE')" readonly v-bind="props"
+                                        min-width="120" />
+                                </template>
+                                <v-date-picker v-model="related_date_typed"
+                                    @update:model-value="show_related_date_menu = false" locale="ja-JP" />
+                            </v-menu>
+                        </td>
+                        <td>
+                            <v-menu v-model="show_related_time_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_time_string"
+                                        :label="i18n.global.t('LANTANA_TIME_TITLE')" min-width="120" readonly
+                                        v-bind="props" />
+                                </template>
+                                <v-time-picker v-model="related_time_string" format="24hr"
+                                    @update:model-value="show_related_time_menu = false" />
+                            </v-menu>
+                        </td>
+                    </tr>
+                </table>
+            </v-col>
+            <v-col cols="auto" class="pa-0 ma-0">
+                <table>
+                    <tr>
+                        <td>
+                            <v-btn dark color="secondary" @click="reset_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("RESET_TITLE") }}</v-btn>
+                        </td>
+                        <td>
+                            <v-btn dark color="primary" @click="now_to_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                        </td>
+                    </tr>
+                </table>
             </v-col>
         </v-row>
+
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE") }}</v-btn>
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
+                    i18n.global.t("RESET_TITLE")
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                    i18n.global.t("SAVE_TITLE")
+                }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
 </template>
 <script lang="ts" setup>
-import { ref, type Ref } from 'vue'
+import { i18n } from '@/i18n'
+import { computed, ref, type Ref } from 'vue'
 
 import type { KyouViewEmits } from './kyou-view-emits'
 import { GkillError } from '@/classes/api/gkill-error'
@@ -43,8 +87,8 @@ import { Lantana } from '@/classes/datas/lantana'
 import type { AddLantanaViewProps } from './add-lantana-view-props'
 import { AddLantanaRequest } from '@/classes/api/req_res/add-lantana-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-
-import { i18n } from '@/i18n'
+import { VDatePicker } from 'vuetify/components'
+import { VTimePicker } from 'vuetify/labs/components'
 
 const edit_lantana_flowers = ref<InstanceType<typeof LantanaFlowersView> | null>(null);
 
@@ -59,8 +103,11 @@ const lantana: Ref<Lantana> = ref((() => {
     return lantana
 })())
 const mood: Ref<Number> = ref(lantana.value.mood)
-const related_date: Ref<string> = ref(moment().format("YYYY-MM-DD"))
-const related_time: Ref<string> = ref(moment().format("HH:mm:ss"))
+const related_date_typed: Ref<Date> = ref(moment().toDate())
+const related_date_string: Ref<string> = computed(() => moment(related_date_typed.value).format("YYYY-MM-DD"))
+const related_time_string: Ref<string> = ref(moment().format("HH:mm:ss"))
+const show_related_date_menu = ref(false)
+const show_related_time_menu = ref(false)
 
 async function save(): Promise<void> {
     try {
@@ -77,7 +124,7 @@ async function save(): Promise<void> {
         }
 
         // 日時必須入力チェック
-        if (related_date.value === "" || related_time.value === "") {
+        if (related_date_string.value === "" || related_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.lantana_related_time_is_blank
             error.error_message = i18n.global.t("LANTANA_DATE_TIME_IS_BLANK_MESSAGE")
@@ -110,7 +157,7 @@ async function save(): Promise<void> {
         const new_lantana = await lantana.value.clone()
         new_lantana.id = props.gkill_api.generate_uuid()
         new_lantana.mood = await edit_lantana_flowers.value!.get_mood()
-        new_lantana.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        new_lantana.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         new_lantana.create_app = "gkill"
         new_lantana.create_device = gkill_info_res.device
         new_lantana.create_time = new Date(Date.now())
@@ -140,27 +187,21 @@ async function save(): Promise<void> {
     }
 }
 
-function reset_related_time(): void {
-    related_date.value = moment(lantana.value.related_time).format("YYYY-MM-DD")
-    related_time.value = moment(lantana.value.related_time).format("HH:mm:ss")
+function reset_related_date_time(): void {
+    related_date_typed.value = moment(lantana.value.related_time).toDate()
+    related_time_string.value = moment(lantana.value.related_time).format("HH:mm:ss")
 }
 
-function now_to_related_time(): void {
-    related_date.value = moment().format("YYYY-MM-DD")
-    related_time.value = moment().format("HH:mm:ss")
+function now_to_related_date_time(): void {
+    related_date_typed.value = moment().toDate()
+    related_time_string.value = moment().format("HH:mm:ss")
 }
 
 function reset(): void {
     mood.value = lantana.value.mood
-    related_date.value = moment().format("YYYY-MM-DD")
-    related_time.value = moment().format("HH:mm:ss")
+    related_date_typed.value = moment().toDate()
+    related_time_string.value = moment().format("HH:mm:ss")
 }
 </script>
 
-<style lang="css" scoped>
-.input.date,
-.input.time,
-.input.text {
-    border: solid 1px silver;
-}
-</style>
+<style lang="css" scoped></style>

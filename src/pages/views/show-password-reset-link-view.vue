@@ -3,24 +3,24 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("RESETED_PASSWORD_TITLE") }}</span>
+                    <span>{{ i18n.global.t("RESETED_PASSWORD_TITLE") }}</span>
                 </v-col>
             </v-row>
         </v-card-title>
         <div>
-            <pre>{{ $t("RESETED_PASSWORD_MESSAGE") }}</pre>
+            <pre>{{ i18n.global.t("RESETED_PASSWORD_MESSAGE") }}</pre>
         </div>
         <div>{{ account.user_id }}</div>
 
-        <v-text-field v-model="lan_password_reset_url" :label="$t('IN_LAN_TITLE')" readonly
+        <v-text-field v-model="lan_password_reset_url" :label="i18n.global.t('IN_LAN_TITLE')" readonly
             @click="copy_lan_password_reset_url" @focus="$event.target.select()" />
-        <v-text-field v-model="over_lan_password_reset_url" :label="$t('OVER_LAN_TITLE')" readonly
+        <v-text-field v-model="over_lan_password_reset_url" :label="i18n.global.t('OVER_LAN_TITLE')" readonly
             @click="copy_over_lan_password_reset_url" @focus="$event.target.select()" />
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ $t("CLOSE_TITLE")
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CLOSE_TITLE")
                         }}</v-btn>
                 </v-col>
             </v-row>
@@ -28,13 +28,12 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref, watch } from 'vue';
 import type { ShowPasswordResetLinkViewEmits } from './show-password-reset-link-view-emits'
 import type { ShowPasswordResetLinkViewProps } from './show-password-reset-link-view-props'
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
-
-import { i18n } from '@/i18n'
 
 const props = defineProps<ShowPasswordResetLinkViewProps>()
 const emits = defineEmits<ShowPasswordResetLinkViewEmits>()

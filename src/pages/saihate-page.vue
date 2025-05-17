@@ -2,7 +2,7 @@
     <div class="saihate_view_wrap">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
-            <v-toolbar-title>{{ $t("SAIHATE_PAGE_TITLE") }}</v-toolbar-title>
+            <v-toolbar-title>{{ i18n.global.t("SAIHATE_PAGE_TITLE") }}</v-toolbar-title>
         </v-app-bar>
         <v-main class="main">
             <div class="overlay_target">
@@ -17,31 +17,31 @@
                     </template>
                     <v-list>
                         <v-list-item @click="show_kftl_dialog()">
-                            <v-list-item-title>{{ $t("KFTL_APP_NAME") }}</v-list-item-title>
-                        </v-list-item>
-                        <v-list-item @click="show_add_kc_dialog()">
-                            <v-list-item-title>{{ $t("KC_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("KFTL_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_mkfl_dialog()">
-                            <v-list-item-title>{{ $t("MKFL_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("MKFL_APP_NAME") }}</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="show_add_kc_dialog()">
+                            <v-list-item-title>{{ i18n.global.t("KC_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_urlog_dialog()">
-                            <v-list-item-title>{{ $t("URLOG_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("URLOG_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_timeis_dialog()">
-                            <v-list-item-title>{{ $t("TIMEIS_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("TIMEIS_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_mi_dialog()">
-                            <v-list-item-title>{{ $t("MI_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("MI_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_nlog_dialog()">
-                            <v-list-item-title>{{ $t("NLOG_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("NLOG_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_lantana_dialog()">
-                            <v-list-item-title>{{ $t("LANTANA_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("LANTANA_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                         <v-list-item @click="show_upload_file_dialog()">
-                            <v-list-item-title>{{ $t("UPLOAD_APP_NAME") }}</v-list-item-title>
+                            <v-list-item-title>{{ i18n.global.t("UPLOAD_APP_NAME") }}</v-list-item-title>
                         </v-list-item>
                     </v-list>
                 </v-menu>
@@ -95,6 +95,7 @@
 </template>
 
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 'use strict'
 import { computed, ref, watch, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'

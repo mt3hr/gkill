@@ -8,6 +8,7 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { ManageAccountDialogEmits } from './manage-account-dialog-emits'
 import type { ManageAccountDialogProps } from './manage-account-dialog-props'

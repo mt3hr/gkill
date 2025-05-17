@@ -2,16 +2,16 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item @click="show_edit_text_dialog()">
-                <v-list-item-title>{{ $t("TEXT_CONTEXTMENU_EDIT_TEXT") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TEXT_CONTEXTMENU_EDIT_TEXT") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_text_histories_dialog()">
-                <v-list-item-title>{{ $t("TEXT_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TEXT_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="copy_id()">
-                <v-list-item-title>{{ $t("TEXT_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TEXT_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_confirm_delete_text_dialog()">
-                <v-list-item-title>{{ $t("TEXT_CONTEXTMENU_DELETE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("TEXT_CONTEXTMENU_DELETE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -80,6 +80,7 @@
         ref="text_histories_dialog" />
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import type { AttachedTextContextMenuProps } from './attached-text-context-menu-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { computed, type Ref, ref } from 'vue'
@@ -88,8 +89,6 @@ import ConfirmDeleteTextDialog from '../dialogs/confirm-delete-text-dialog.vue'
 import TextHistoriesDialog from '../dialogs/text-histories-dialog.vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-
-import { i18n } from '@/i18n'
 
 const edit_text_dialog = ref<InstanceType<typeof EditTextDialog> | null>(null);
 const confirm_delete_text_dialog = ref<InstanceType<typeof ConfirmDeleteTextDialog> | null>(null);

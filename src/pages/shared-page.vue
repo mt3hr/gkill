@@ -17,6 +17,7 @@
 </template>
 
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 'use strict'
 
 import { GkillAPI, GkillAPIForSharedKyou } from '@/classes/api/gkill-api';
@@ -24,7 +25,6 @@ import { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { GetSharedKyousRequest } from '@/classes/api/req_res/get-shared-kyous-request';
-import { i18n } from '@/i18n';
 import { computed, nextTick, type Ref, ref } from 'vue';
 import SharedMiPage from './shared-mi-page.vue';
 import SharedRYKVPage from './shared-rykv-page.vue';
