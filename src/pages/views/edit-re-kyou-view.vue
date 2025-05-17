@@ -44,7 +44,7 @@
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
-                <table>
+                <table class="pt-2">
                     <tr>
                         <td>
                             <v-btn dark color="secondary" @click="reset_related_date_time()"

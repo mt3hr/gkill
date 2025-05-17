@@ -31,7 +31,7 @@
             </tr>
         </table>
         <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
+            <v-col cols="auto" class="pa-0 ma-0">
                 <table>
                     <tr>
                         <td>
@@ -62,7 +62,7 @@
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
-                <table>
+                <table class="pt-2">
                     <tr>
                         <td>
                             <v-btn dark color="secondary" @click="clear_estimate_start_date_time()"
@@ -79,7 +79,7 @@
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
+            <v-col cols="auto" class="pa-0 ma-0">
                 <table>
                     <tr>
                         <td>
@@ -110,7 +110,7 @@
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
-                <table>
+                <table class="pt-2">
                     <tr>
                         <td>
                             <v-btn dark color="secondary" @click="clear_estimate_end_date_time()"
@@ -127,7 +127,7 @@
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
-            <v-col cols="auto">
+            <v-col cols="auto" class="pa-0 ma-0">
                 <table>
                     <tr>
                         <td>
@@ -158,7 +158,7 @@
                 </table>
             </v-col>
             <v-col cols="auto" class="pa-0 ma-0">
-                <table>
+                <table class="pt-2">
                     <tr>
                         <td>
                             <v-btn dark color="secondary" @click="clear_limit_date_time()"
@@ -203,13 +203,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <NewBoardNameDialog v-if="mi" :application_config="application_config" :gkill_api="gkill_api"

@@ -2,19 +2,22 @@
     <div class="login_wrap">
         <v-container class="pa-0 ma-0">
             <v-row class="pa-0 ma-0">
+                <v-spacer />
                 <v-col cols="auto">
-                    <div class="welcome">{{ i18n.global.t("WELCOME_TITLE") }}</div>
+                    <div class="welcome">{{ welcome_emoji + i18n.global.t("WELCOME_TITLE") + welcome_emoji }}</div>
+                </v-col>
+                <v-spacer />
+            </v-row>
+            <v-row class="pa-0 ma-0">
+                <v-col cols="12">
+                    <v-text-field id="username" @keydown.enter="try_login(user_id, password_sha256)" name="username"
+                        autocomplete="username" :label="i18n.global.t('USER_ID_TITLE')" v-model="user_id" />
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
                 <v-col cols="12">
-                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" :label="i18n.global.t('USER_ID_TITLE')"
-                        v-model="user_id" autofocus />
-                </v-col>
-            </v-row>
-            <v-row class="pa-0 ma-0">
-                <v-col cols="12">
-                    <v-text-field @keydown.enter="try_login(user_id, password_sha256)" :label="i18n.global.t('PASSWORD_TITLE')"
+                    <v-text-field id="password" @keydown.enter="try_login(user_id, password_sha256)"
+                        name="current-password" autocomplete="current-password" :label="i18n.global.t('PASSWORD_TITLE')"
                         :type="'password'" v-model="password" />
                 </v-col>
             </v-row>
@@ -30,7 +33,7 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { computed, ref, type Ref } from 'vue'
+import { computed, nextTick, ref, type Ref } from 'vue'
 import { type LoginViewProps } from './login-view-props'
 import type LoginViewEmits from './login-view-emits'
 import { LoginRequest } from '@/classes/api/req_res/login-request';
@@ -38,11 +41,14 @@ import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 
+const welcome_emoji = computed(() => props.gkill_api.get_use_dark_theme() ? "⭐️" : "❄️")
 const user_id: Ref<string> = ref("")
 const password: Ref<string> = ref("")
 
 const props = defineProps<LoginViewProps>()
 const emits = defineEmits<LoginViewEmits>()
+
+// nextTick(() => document.getElementById("username")?.focus()).then(() => nextTick(() => document.getElementById("password")?.focus())).then(() => nextTick(() => document.getElementById("username")?.focus()))
 
 const app_content_height_px = computed(() => props.app_content_height + 'px')
 const app_content_width_px = computed(() => props.app_content_width + 'px')
@@ -122,5 +128,9 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.welcome {
+    font-size: x-large;
 }
 </style>
