@@ -2,15 +2,16 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item @click="emits('requested_edit_dnote_item_list', id)">
-                <v-list-item-title>{{ $t("EDIT_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("EDIT_TITLE") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="emits('requested_delete_dnote_item_list', id)">
-                <v-list-item-title>{{ $t("DELETE_TITLE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("DELETE_TITLE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { computed, ref, type Ref } from 'vue';
 import type { DnoteItemListContextMenuEmits } from './dnote-item-list-context-menu-emits';
 import type { DnoteItemListContextMenuProps } from './dnote-item-list-context-menu-props';

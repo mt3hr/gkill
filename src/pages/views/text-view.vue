@@ -37,6 +37,7 @@
     </v-row>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { TextViewProps } from './text-view-props'
 import AttachedText from './attached-text.vue';

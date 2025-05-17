@@ -3,20 +3,20 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t("EDIT_TEXT_TITLE") }}</span>
+                    <span>{{ i18n.global.t("EDIT_TEXT_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-checkbox v-model="show_kyou" :label="$t('SHOW_TARGET_KYOU_TITLE')" hide-details
+                    <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details
                         color="primary" />
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-textarea v-model="text_value" :label="$t('TEXT_TITLE')" autofocus :readonly="is_requested_submit" />
+        <v-textarea v-model="text_value" :label="i18n.global.t('TEXT_TITLE')" autofocus :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ $t("SAVE_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
             </v-col>
         </v-row>
@@ -50,6 +50,7 @@
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { type Ref, ref, watch } from 'vue'
 import type { EditTextViewProps } from './edit-text-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
@@ -59,8 +60,6 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { GkillError } from '@/classes/api/gkill-error';
 import type { Text } from '@/classes/datas/text';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
-
-import { i18n } from '@/i18n'
 
 const is_requested_submit = ref(false)
 
@@ -142,9 +141,5 @@ async function save(): Promise<void> {
 </script>
 
 <style lang="css" scoped>
-.input.date,
-.input.time,
-.input.text {
-    border: solid 1px silver;
-}
+
 </style>

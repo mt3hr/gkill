@@ -3,54 +3,93 @@
         <v-card-title>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <span>{{ $t('ADD_NLOG_TITLE') }}</span>
+                    <span>{{ i18n.global.t('ADD_NLOG_TITLE') }}</span>
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-if="nlog" v-model="nlog_title_value" :label="$t('NLOG_TITLE_TITLE')" autofocus
+        <v-text-field v-if="nlog" v-model="nlog_title_value" :label="i18n.global.t('NLOG_TITLE_TITLE')" autofocus
             :readonly="is_requested_submit" />
-        <v-text-field v-if="nlog" v-model="nlog_shop_value" :label="$t('NLOG_SHOP_NAME_TITLE')"
+        <v-text-field v-if="nlog" v-model="nlog_shop_value" :label="i18n.global.t('NLOG_SHOP_NAME_TITLE')"
             :readonly="is_requested_submit" />
-        <v-text-field v-if="nlog" v-model="nlog_amount_value" type="number" :label="$t('NLOG_AMOUNT_TITLE')"
+        <v-text-field v-if="nlog" v-model="nlog_amount_value" type="number" :label="i18n.global.t('NLOG_AMOUNT_TITLE')"
             :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <label>{{ $t("NLOG_DATE_TIME_TITLE") }}</label>
-                <input class="input" type="date" v-model="related_date" :label="$t('NLOG_DATE_TITLE')"
-                    :readonly="is_requested_submit" />
-                <input class="input" type="time" v-model="related_time" :label="$t('NLOG_TIME_TITLE')"
-                    :readonly="is_requested_submit" />
-                <v-btn dark color="secondary" @click="reset_related_time()" :disabled="is_requested_submit">{{
-                    $t("RESET_TITLE") }}</v-btn>
-                <v-btn dark color="primary" @click="now_to_related_time()" :disabled="is_requested_submit">{{
-                    $t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                <table>
+                    <tr>
+                        <td>
+                            <v-menu v-model="show_related_date_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_date_string"
+                                        :label="i18n.global.t('LANTANA_DATE_TITLE')" readonly v-bind="props"
+                                        min-width="120" />
+                                </template>
+                                <v-date-picker v-model="related_date_typed"
+                                    @update:model-value="show_related_date_menu = false" locale="ja-JP" />
+                            </v-menu>
+                        </td>
+                        <td>
+                            <v-menu v-model="show_related_time_menu" :close-on-content-click="false"
+                                transition="scale-transition" offset-y min-width="auto">
+                                <template #activator="{ props }">
+                                    <v-text-field v-model="related_time_string"
+                                        :label="i18n.global.t('LANTANA_TIME_TITLE')" min-width="120" readonly
+                                        v-bind="props" />
+                                </template>
+                                <v-time-picker v-model="related_time_string" format="24hr"
+                                    @update:model-value="show_related_time_menu = false" />
+                            </v-menu>
+                        </td>
+                    </tr>
+                </table>
+            </v-col>
+            <v-col cols="auto" class="pa-0 ma-0">
+                <table>
+                    <tr>
+
+                        <td>
+                            <v-btn dark color="secondary" @click="reset_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("RESET_TITLE") }}</v-btn>
+                        </td>
+                        <td>
+                            <v-btn dark color="primary" @click="now_to_related_date_time()"
+                                :disabled="is_requested_submit">{{
+                                    i18n.global.t("CURRENT_DATE_TIME_TITLE") }}</v-btn>
+                        </td>
+                    </tr>
+                </table>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{ $t("RESET_TITLE")
+                <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
+                    i18n.global.t("RESET_TITLE")
                     }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()"
-                    :disabled="is_requested_submit">{{ $t("SAVE_TITLE") }}</v-btn>
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                    i18n.global.t("SAVE_TITLE")
+                    }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import type { AddNlogViewProps } from './add-nlog-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
-import { type Ref, ref } from 'vue'
+import { computed, type Ref, ref } from 'vue'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import moment from 'moment'
 import { Nlog } from '@/classes/datas/nlog'
 import { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-
-import { i18n } from '@/i18n'
+import { VDatePicker } from 'vuetify/components'
+import { VTimePicker } from 'vuetify/labs/components'
 
 const is_requested_submit = ref(false)
 
@@ -66,8 +105,12 @@ const nlog_title_value: Ref<string> = ref("")
 const nlog_amount_value: Ref<number> = ref(0)
 const nlog_shop_value: Ref<string> = ref("")
 
-const related_date: Ref<string> = ref(moment().format("YYYY-MM-DD"))
-const related_time: Ref<string> = ref(moment().format("HH:mm:ss"))
+const related_date_typed: Ref<Date> = ref(moment().toDate())
+const related_date_string: Ref<string> = computed(() => moment(related_date_typed.value).format("YYYY-MM-DD"))
+const related_time_string: Ref<string> = ref(moment().format("HH:mm:ss"))
+
+const show_related_date_menu = ref(false)
+const show_related_time_menu = ref(false)
 
 async function save(): Promise<void> {
     try {
@@ -84,7 +127,7 @@ async function save(): Promise<void> {
         }
 
         // 日時必須入力チェック
-        if (related_date.value === "" || related_time.value === "") {
+        if (related_date_string.value === "" || related_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.nlog_related_time_is_blank
             error.error_message = i18n.global.t("NLOG_DATE_TIME_IS_BLANK_MESSAGE")
@@ -141,7 +184,7 @@ async function save(): Promise<void> {
         new_nlog.amount = nlog_amount_value.value
         new_nlog.shop = nlog_shop_value.value
         new_nlog.title = nlog_title_value.value
-        new_nlog.related_time = moment(related_date.value + " " + related_time.value).toDate()
+        new_nlog.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         new_nlog.create_app = "gkill"
         new_nlog.create_device = gkill_info_res.device
         new_nlog.create_time = new Date(Date.now())
@@ -171,29 +214,23 @@ async function save(): Promise<void> {
     }
 }
 
-function reset_related_time(): void {
-    related_date.value = moment(nlog.value.related_time).format("YYYY-MM-DD")
-    related_time.value = moment(nlog.value.related_time).format("HH:mm:ss")
+function reset_related_date_time(): void {
+    related_date_typed.value = moment(nlog.value.related_time).toDate()
+    related_time_string.value = moment(nlog.value.related_time).format("HH:mm:ss")
 }
 
-function now_to_related_time(): void {
-    related_date.value = moment().format("YYYY-MM-DD")
-    related_time.value = moment().format("HH:mm:ss")
+function now_to_related_date_time(): void {
+    related_date_typed.value = moment().toDate()
+    related_time_string.value = moment().format("HH:mm:ss")
 }
 
 function reset(): void {
     nlog_title_value.value = (nlog.value ? nlog.value.title : "")
     nlog_amount_value.value = (nlog.value ? nlog.value.amount : 0)
     nlog_shop_value.value = (nlog.value ? nlog.value.shop : "")
-    related_date.value = (moment().format("YYYY-MM-DD"))
-    related_time.value = (moment().format("HH:mm:ss"))
+    related_date_typed.value = (moment().toDate())
+    related_time_string.value = (moment().format("HH:mm:ss"))
 }
 </script>
 
-<style lang="css" scoped>
-.input.date,
-.input.time,
-.input.text {
-    border: solid 1px silver;
-}
-</style>
+<style lang="css" scoped></style>

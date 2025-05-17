@@ -2,12 +2,12 @@
     <v-row class="pa-0 ma-0">
         <v-col cols="auto" class="pa-0 ma-0">
             <v-checkbox v-model="query.use_calendar" @change="clicked_use_calendar_checkbox"
-                :label="$t('CALENDAR_QUERY_TITLE')" hide-details class="pb-0 mb-0" />
+                :label="i18n.global.t('CALENDAR_QUERY_TITLE')" hide-details class="pb-0 mb-0" />
         </v-col>
         <v-spacer class="pa-0 ma-0" />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
             <v-btn dark color="secondary" @click="clicked_clear_calendar_button"
-                hide-details>{{ $t("CLEAR_TITLE") }}</v-btn>
+                hide-details>{{ i18n.global.t("CLEAR_TITLE") }}</v-btn>
         </v-col>
     </v-row>
     <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates"
@@ -15,6 +15,7 @@
         @update:model-value="clicked_date" />
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import moment from 'moment';
 import type { CalendarQueryEmits } from './calendar-query-emits'
 import type { CalendarQueryProps } from './calendar-query-props'

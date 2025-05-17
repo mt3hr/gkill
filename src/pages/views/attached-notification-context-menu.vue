@@ -2,16 +2,16 @@
     <v-menu v-model="is_show" :style="context_menu_style">
         <v-list>
             <v-list-item @click="show_edit_notification_dialog()">
-                <v-list-item-title>{{ $t("NOTIFICATION_CONTEXTMENU_EDIT_NOTIFICATION") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("NOTIFICATION_CONTEXTMENU_EDIT_NOTIFICATION") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_notification_histories_dialog()">
-                <v-list-item-title>{{ $t("NOTIFICATION_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("NOTIFICATION_CONTEXTMENU_HISTORIES") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="copy_id()">
-                <v-list-item-title>{{ $t("NOTIFICATION_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("NOTIFICATION_CONTEXTMENU_COPY_ID") }}</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_confirm_delete_notification_dialog()">
-                <v-list-item-title>{{ $t("NOTIFICATION_CONTEXTMENU_DELETE") }}</v-list-item-title>
+                <v-list-item-title>{{ i18n.global.t("NOTIFICATION_CONTEXTMENU_DELETE") }}</v-list-item-title>
             </v-list-item>
         </v-list>
     </v-menu>
@@ -80,6 +80,7 @@
         ref="notification_histories_dialog" />
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import EditNotificationDialog from '../dialogs/edit-notification-dialog.vue';
 import ConfirmDeleteNotificationDialog from '../dialogs/confirm-delete-notification-dialog.vue';
 import NotificationHistoriesDialog from '../dialogs/notification-histories-dialog.vue';
@@ -88,8 +89,6 @@ import { computed, type Ref, ref } from 'vue'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import type { AttachedNotificationContextMenuProps } from './attached-notification-context-menu-props';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
-
-import { i18n } from '@/i18n'
 
 const edit_notification_dialog = ref<InstanceType<typeof EditNotificationDialog> | null>(null);
 const confirm_delete_notification_dialog = ref<InstanceType<typeof ConfirmDeleteNotificationDialog> | null>(null);

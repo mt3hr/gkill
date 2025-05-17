@@ -28,12 +28,11 @@
     </div>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import AttachedNotificationContextMenu from './attached-notification-context-menu.vue';
 import { computed, ref } from 'vue'
 import type { AttachedNotificationProps } from './attached-notification-props';
 import type { KyouViewEmits } from './kyou-view-emits';
-
-import { i18n } from '@/i18n'
 
 const context_menu = ref<InstanceType<typeof AttachedNotificationContextMenu> | null>(null);
 

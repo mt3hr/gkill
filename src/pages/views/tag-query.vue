@@ -2,12 +2,12 @@
     <div>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-checkbox readonly v-model="use_tag" :label="$t('TAG_QUERY_TITLE')" hide-details />
+                <v-checkbox readonly v-model="use_tag" :label="i18n.global.t('TAG_QUERY_TITLE')" hide-details />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0">
                 <v-btn dark color="secondary" @click="emits('request_clear_tag_query')" hide-details>{{
-                    $t("CLEAR_TITLE") }}</v-btn>
+                    i18n.global.t("CLEAR_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row class="pa-0 ma-0">
@@ -29,6 +29,7 @@
     </div>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { nextTick, type Ref, ref, watch } from 'vue'
 import type { TagQueryEmits } from './tag-query-emits'
 import type { TagQueryProps } from './tag-query-props'

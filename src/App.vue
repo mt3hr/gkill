@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue';
 import { RouterView } from 'vue-router'
 import { VLocaleProvider } from 'vuetify/components';

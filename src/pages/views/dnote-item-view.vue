@@ -62,6 +62,7 @@
     </div>
 </template>
 <script lang="ts" setup>
+import { i18n } from '@/i18n'
 import { computed, ref, watch, type Ref } from 'vue'
 import type DnoteItemProps from './dnote-item-props'
 import type { Kyou } from '../../classes/datas/kyou';

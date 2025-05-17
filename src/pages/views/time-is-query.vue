@@ -4,12 +4,12 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-checkbox v-model="cloned_query.use_timeis"
                     @change="emits('request_update_use_timeis_query', cloned_query.use_timeis)"
-                    :label="$t('PLAING_TIMEIS_QUERY_TITLE')" hide-details class="pa-0 ma-0" />
+                    :label="i18n.global.t('PLAING_TIMEIS_QUERY_TITLE')" hide-details class="pa-0 ma-0" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0">
                 <v-btn dark color="secondary" @click="emits('request_clear_timeis_query')" hide-details>{{
-                    $t("CLEAR_TITLE") }}</v-btn>
+                    i18n.global.t("CLEAR_TITLE") }}</v-btn>
             </v-col>
         </v-row>
         <v-row v-show="cloned_query.use_timeis" class="pa-0 ma-0">
@@ -20,7 +20,7 @@
                     @click="cloned_query.timeis_words_and = !cloned_query.timeis_words_and; emits('request_update_and_search_timeis_word', cloned_query.timeis_words_and)" />
             </v-col>
             <v-col cols="10" class="pa-0 ma-0">
-                <v-text-field v-model="cloned_query.timeis_keywords" :label="$t('PLAING_TIMEIS_QUERY_KEYWORD_TITLE')"
+                <v-text-field v-model="cloned_query.timeis_keywords" :label="i18n.global.t('PLAING_TIMEIS_QUERY_KEYWORD_TITLE')"
                     hide-details @change="emits('request_update_timeis_keywords', cloned_query.timeis_keywords)" />
             </v-col>
         </v-row>
@@ -34,7 +34,7 @@
             <v-col cols="10" class="pa-0 ma-0">
                 <v-checkbox v-model="cloned_query.use_timeis_tags"
                     @click="cloned_query.use_timeis_tags = !cloned_query.use_timeis_tags; emits('request_update_use_timeis_query', cloned_query.use_timeis_tags)"
-                    :label="$t('PLAING_TIMEIS_TAG_TITLE')" hide-details class="pa-0 ma-0" />
+                    :label="i18n.global.t('PLAING_TIMEIS_TAG_TITLE')" hide-details class="pa-0 ma-0" />
             </v-col>
         </v-row>
     </div>
@@ -48,6 +48,7 @@
     </table>
 </template>
 <script setup lang="ts">
+import { i18n } from '@/i18n'
 import type { TimeIsQueryEmits } from './time-is-query-emits'
 import type { TimeIsQueryProps } from './time-is-query-props'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
