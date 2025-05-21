@@ -10,4 +10,5 @@ export default interface RyuuListItemViewProps {
     enable_context_menu: boolean
     enable_dialog: boolean
     abort_controller: AbortController
+    editable: boolean
 }

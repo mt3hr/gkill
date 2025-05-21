@@ -468,5 +468,8 @@
     "RYUU_FIND_QUERY_TITLE": "検索条件",
     "RYUU_RELATED_NEAR": "日時が近い",
     "RYUU_RELATED_NEAR_BEFORE": "日時が近い（以前）",
-    "RYUU_RELATED_NEAR_AFTER": "日時が近い（以後）"
+    "RYUU_RELATED_NEAR_AFTER": "日時が近い（以後）",
+    "DELETE_RELATED_KYOU_QUERY_TITLE": "関連情報削除",
+    "EDIT_RELATED_KYOU_QUERY": "編集",
+    "DELETE_RELATED_KYOU_QUERY": "削除"
 }
