@@ -33,6 +33,7 @@ export class ApplicationConfig {
     mi_default_period: number
     account_is_admin: boolean
     dnote_json_data: any
+    ryuu_json_data: any
     is_show_share_footer: boolean
     parsed_kftl_template: KFTLTemplateElementData
     parsed_tag_struct: TagStructElementData
@@ -80,6 +81,7 @@ export class ApplicationConfig {
         application_config.kftl_template_struct = this.kftl_template_struct
         application_config.account_is_admin = this.account_is_admin
         application_config.dnote_json_data = this.dnote_json_data
+        application_config.ryuu_json_data= this.ryuu_json_data
         application_config.mi_board_struct = this.mi_board_struct
         application_config.session_is_local = this.session_is_local
         application_config.rykv_default_period = this.rykv_default_period

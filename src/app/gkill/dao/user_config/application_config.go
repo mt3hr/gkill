@@ -35,6 +35,8 @@ type ApplicationConfig struct {
 
 	DnoteJSONData json.RawMessage `json:"dnote_json_data"`
 
+	RyuuJSONData json.RawMessage `json:"ryuu_json_data"`
+
 	AccountIsAdmin bool `json:"account_is_admin"`
 
 	SessionIsLocal bool `json:"session_is_local"`
