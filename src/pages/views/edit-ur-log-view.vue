@@ -135,6 +135,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -254,6 +255,7 @@ async function save(): Promise<void> {
         }
 
         // 更新リクエストを飛ばす
+        delete_gkill_cache(updated_urlog.id)
         const req = new UpdateURLogRequest()
         req.urlog = updated_urlog
 

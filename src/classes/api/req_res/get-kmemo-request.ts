@@ -6,6 +6,7 @@ export class GetKmemoRequest extends GkillAPIRequest {
 
     update_time: Date | null
     id: string
+    
 
     constructor() {
         super()
