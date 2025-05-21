@@ -301,7 +301,7 @@
     "MI_DEFAULT_BOARD_NAME_TITLE": "タスクデフォルト板名",
     "URLOG_BOOKMARKLET_ADDRESS_TITLE": "ブックマークレット",
     "GOOGLE_MAP_API_KEY_TITLE": "GoogleMapAPIキー",
-    "EDIT_TAG_STRUCT_TITLE": "タグ編集",
+    "EDIT_TAG_STRUCT_TITLE": "タグ構造",
     "ENABLE_TITLE": "有効",
     "WRITE_TITLE": "書込",
     "AUTO_ALLOCATE_ID_TITLE": "ID自動割当",
