@@ -5,9 +5,9 @@
             :matched_kyous="match_kyous_list" :query="query" :last_added_tag="last_added_tag" :is_focused_list="true"
             :closable="false" :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
             :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="true" :show_content_only="true"
-            :show_rep_name="true" :force_show_latest_kyou_info="true" :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
-            @updated_kyou="reload_list(false)" @registered_kyou="reload_list(false)" @deleted_kyou="reload_list(false)"
-            @received_errors="(errors) => emits('received_errors', errors)"
+            :show_rep_name="true" :force_show_latest_kyou_info="true" :is_show_doc_image_toggle_button="false"
+            :is_show_arrow_button="false" @updated_kyou="reload_list(false)" @registered_kyou="reload_list(false)"
+            @deleted_kyou="reload_list(false)" @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_kyou="reload_list(false)" @requested_reload_list="reload_list(false)"
             @requested_search="search(false)" @deleted_tag="(deleted_tag) => { }" @deleted_text="(deleted_text) => { }"
@@ -204,7 +204,15 @@ if (props.application_config.is_loaded) {
     })
 }
 watch(() => props.application_config.is_loaded, () => {
-    nextTick(() => {
+    nextTick(async () => {
+        await nextTick(async () => {
+            const kyou_list_view = kyou_list_views.value as any
+            if (!kyou_list_view) {
+                return
+            }
+            kyou_list_view.set_loading(true)
+            return nextTick(() => { }) // loading表記切り替え待ち
+        })
         search(false)
     })
 })
@@ -218,7 +226,7 @@ watch(() => focused_time.value, () => {
         return
     }
     kyou_list_view.scroll_to_time(focused_time.value)
-})
+});
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
     const kyous_list = match_kyous_list.value
@@ -307,6 +315,8 @@ async function search(update_cache: boolean): Promise<void> {
 }
 
 async function reload_list(update_cache: boolean): Promise<void> {
+    match_kyous_list.value.splice(0)
+
     await search(update_cache)
     if (!kyou_list_views.value) {
         return

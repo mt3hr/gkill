@@ -156,7 +156,8 @@
                             @updated_tag="(updated_tag) => { }" @updated_text="(updated_text) => { }"
                             @updated_notification="(updated_notification) => { }" />
                     </td>
-                    <td valign="top" v-if="!is_shared_rykv_view">
+                    <td valign="top" v-if="!is_shared_rykv_view"
+                        :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <v-btn class="rykv_add_column_button rounded-sm mx-auto" :height="app_content_height.valueOf()"
                             :width="30" :color="'primary'" @click="async () => {
                                 add_list_view()
@@ -167,7 +168,6 @@
                             }" icon="mdi-plus" variant="text"
                             :style="{ background: 'rgb(var(--v-theme-background))' }" />
                     </td>
-
                     <td valign="top" v-if="is_show_kyou_detail_view"
                         :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <div class="kyou_detail_view dummy">
@@ -181,6 +181,22 @@
                                 :width="'auto'" :enable_context_menu="!is_shared_rykv_view"
                                 :enable_dialog="!is_shared_rykv_view" :show_attached_timeis="true" :show_rep_name="true"
                                 :force_show_latest_kyou_info="true" class="kyou_detail_view" :show_related_time="true"
+                                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
+                                @deleted_text="(deleted_text) => { }"
+                                @deleted_notification="(deleted_notification) => { }"
+                                @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
+                                @registered_text="(registered_text) => { }"
+                                @registered_notification="(registered_notification) => { }"
+                                @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)"
+                                @updated_tag="(updated_tag) => { }" @updated_text="(updated_text) => { }"
+                                @updated_notification="(updated_notification) => { }"
+                                @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
+                                @requested_reload_list="() => { }" />
+                        </div>
+                        <div class="ryuu_view dummy">
+                            <RyuuListView :application_config="application_config" :gkill_api="gkill_api"
+                                :related_time="focused_kyou ? focused_kyou.related_time : null" :editable="false"
+                                :find_kyou_query_default="default_query"
                                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                                 @deleted_text="(deleted_text) => { }"
                                 @deleted_notification="(deleted_notification) => { }"
@@ -392,6 +408,7 @@ import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import moment from 'moment'
 import { deepEquals } from '@/classes/deep-equals'
+import RyuuListView from './ryuu-list-view.vue'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
@@ -430,6 +447,7 @@ const last_added_tag: Ref<string> = ref("")
 const drawer: Ref<boolean | null> = ref(false)
 const drawer_mode_is_mobile: Ref<boolean | null> = ref(false)
 const kyou_list_view_height = computed(() => props.app_content_height)
+const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
@@ -550,6 +568,7 @@ async function init(): Promise<void> {
                 is_loading.value = false
                 skip_search_this_tick.value = false
             })
+            nextTick(() => default_query.value = query_editor_sidebar.value!.get_default_query()!.clone())
         }
     })
 }
@@ -824,8 +843,14 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
     resize: horizontal;
     overflow-x: hidden;
     overflow-y: scroll;
-    height: calc(v-bind('app_content_height.toString().concat("px")'));
+    height: calc(v-bind('app_content_height.toString().concat("px")') - 100vh * 0.2);
     width: 400px;
+}
+
+.ryuu_view.dummy {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: calc(100vh * 0.2);
 }
 
 .scroll_snap_container {
