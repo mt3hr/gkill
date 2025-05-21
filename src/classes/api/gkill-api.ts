@@ -1688,6 +1688,7 @@ export class GkillAPI {
                 application_config.kftl_template_struct = response.application_config.kftl_template_struct ? response.application_config.kftl_template_struct : []
                 application_config.account_is_admin = response.application_config.account_is_admin
                 application_config.dnote_json_data = response.application_config.dnote_json_data
+                application_config.ryuu_json_data = response.application_config.ryuu_json_data
                 application_config.device = response.application_config.device
                 application_config.use_dark_theme = response.application_config.use_dark_theme
                 application_config.google_map_api_key = response.application_config.google_map_api_key
