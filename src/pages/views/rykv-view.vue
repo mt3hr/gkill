@@ -194,8 +194,8 @@
                                 @requested_reload_list="() => { }" />
                         </div>
                         <div class="ryuu_view dummy">
-                            <RyuuListView :application_config="application_config" :gkill_api="gkill_api"
-                                :related_time="focused_kyou ? focused_kyou.related_time : null" :editable="false"
+                            <RyuuListView v-if="focused_kyou_related_time" :application_config="application_config"
+                                :gkill_api="gkill_api" :related_time="focused_kyou_related_time" :editable="false"
                                 :find_kyou_query_default="default_query"
                                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                                 @deleted_text="(deleted_text) => { }"
@@ -449,6 +449,8 @@ const drawer_mode_is_mobile: Ref<boolean | null> = ref(false)
 const kyou_list_view_height = computed(() => props.app_content_height)
 const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
+const focused_kyou_related_time = computed(() => focused_kyou.value?.related_time)
+
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
 
@@ -456,6 +458,7 @@ const props = defineProps<rykvViewProps>()
 const emits = defineEmits<rykvViewEmits>()
 
 const skip_search_this_tick = ref(false)
+
 
 watch(() => focused_time.value, () => {
     if (!kyou_list_views.value) {
@@ -845,6 +848,7 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
     overflow-y: scroll;
     height: calc(v-bind('app_content_height.toString().concat("px")') - 100vh * 0.2);
     width: 400px;
+    min-width: 400px;
 }
 
 .ryuu_view.dummy {

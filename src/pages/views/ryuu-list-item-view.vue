@@ -1,5 +1,7 @@
 <template>
-    <v-card class="pa-0 ma-0 related_kyou_list_item" @dblclick="kyou_list_view_dialog?.show()">
+    <v-card class="pa-0 ma-0 related_kyou_list_item"
+        @contextmenu.prevent.stop="(e: any) => { if (editable) { show_context_menu(e) } }"
+        @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } }">
         <table>
             <tr>
                 <td>
@@ -25,14 +27,14 @@
                                     </td>
                                     <td v-if="match_kyou && !is_no_data">
                                         <span
-                                            v-if="match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana"
-                                            @dblclick="show_kyou_dialog()">
+                                            v-if="match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana">
                                             <LantanaFlowersView :gkill_api="gkill_api"
                                                 :application_config="application_config"
-                                                :mood="match_kyou.typed_lantana.mood" :editable="false" />
+                                                :mood="match_kyou.typed_lantana.mood" :editable="false"
+                                                @dblclick="show_edit_ryuu_item_dialog()" />
                                         </span>
                                         <span v-else-if="match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc"
-                                            @dblclick="show_kyou_dialog()">
+                                            @dblclick="show_edit_ryuu_item_dialog()">
                                             {{ match_kyou.typed_kc.num_value }}
                                         </span>
                                         <KyouView v-else :application_config="application_config" :gkill_api="gkill_api"
@@ -79,12 +81,18 @@
             @requested_reload_list="emits('requested_reload_list')"
             @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)"
             ref="kyou_dialog" />
+        <RyuuListItemContextMenu :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
+            @requested_delete_related_kyou_query="(id) => emits('requested_delete_related_kyou_list_query', id)"
+            @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)" ref="contextmenu" />
+        <EditRyuuItemDialog :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
+            ref="edit_related_kyou_query_dialog" />
     </v-card>
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
+import EditRyuuItemDialog from '../dialogs/edit-ryuu-item-dialog.vue'
 import { ref, type Ref } from 'vue';
-import KyouListViewDialog from '../dialogs/kyou-list-view-dialog.vue';
 import KyouView from './kyou-view.vue';
 import type RyuuListItemViewEmits from './ryuu-list-item-view-emits';
 import type RyuuListItemViewProps from './ryuu-list-item-view-props';
@@ -103,9 +111,11 @@ import load_kyous from '@/classes/dnote/kyou-loader';
 import { RelatedTimeMatchType } from '@/classes/dnote/related-time-match-type';
 import moment from 'moment';
 import type RelatedKyouQuery from '../../classes/dnote/related-kyou-query';
+import RyuuListItemContextMenu from './ryuu-list-item-context-menu.vue';
 
-const kyou_list_view_dialog = ref<InstanceType<typeof KyouListViewDialog> | null>(null);
 const kyou_dialog = ref<InstanceType<typeof KyouDialog> | null>(null);
+const contextmenu = ref<InstanceType<typeof RyuuListItemContextMenu> | null>(null);
+const edit_related_kyou_query_dialog = ref<InstanceType<typeof EditRyuuItemDialog> | null>(null);
 const match_kyou: Ref<Kyou | null> = ref(null)
 const is_no_data = ref(false)
 
@@ -208,6 +218,15 @@ function show_kyou_dialog(): void {
     }
 }
 
+async function show_context_menu(e: PointerEvent): Promise<void> {
+    if (props.editable) {
+        contextmenu.value?.show(e)
+    }
+}
+
+async function show_edit_ryuu_item_dialog(): Promise<void> {
+    edit_related_kyou_query_dialog.value?.show()
+}
 </script>
 <style lang="css" scoped>
 .related_kyou_list_item {
