@@ -57,6 +57,7 @@ import { computed, type Ref, ref } from 'vue'
 import { UpdateTextRequest } from '@/classes/api/req_res/update-text-request';
 import KyouView from './kyou-view.vue'
 import type { InfoIdentifier } from '@/classes/datas/info-identifier';
+import delete_gkill_cache from '@/classes/delete-gkill-cache';
 
 const props = defineProps<ConfirmDeleteTextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -86,6 +87,8 @@ async function delete_text(): Promise<void> {
     updated_text.update_user = gkill_info_res.user_id
 
     // 更新リクエストを飛ばす
+    delete_gkill_cache(updated_text.id)
+    delete_gkill_cache(updated_text.target_id)
     const req = new UpdateTextRequest()
     req.text = updated_text
     const res = await props.gkill_api.update_text(req)

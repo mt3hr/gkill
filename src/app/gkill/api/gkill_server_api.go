@@ -1360,6 +1360,8 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.ID)
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.TargetID)
 
 	repName, err := repositories.WriteTagRep.GetRepName(r.Context())
 	if err != nil {
@@ -1507,6 +1509,8 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.ID)
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.TargetID)
 
 	repName, err := repositories.WriteTextRep.GetRepName(r.Context())
 	if err != nil {
@@ -1654,6 +1658,8 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.ID)
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.TargetID)
 
 	repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
 	if err != nil {
@@ -1825,6 +1831,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Kmemo.ID)
 
 	repName, err := repositories.WriteKmemoRep.GetRepName(r.Context())
 	if err != nil {
@@ -1972,6 +1979,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.KC.ID)
 
 	repName, err := repositories.WriteKCRep.GetRepName(r.Context())
 	if err != nil {
@@ -2150,6 +2158,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.URLog.ID)
 
 	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
 	if err != nil {
@@ -2297,6 +2306,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Nlog.ID)
 
 	repName, err := repositories.WriteNlogRep.GetRepName(r.Context())
 	if err != nil {
@@ -2444,6 +2454,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.TimeIs.ID)
 
 	repName, err := repositories.WriteTimeIsRep.GetRepName(r.Context())
 	if err != nil {
@@ -2592,6 +2603,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Lantana.ID)
 
 	repName, err := repositories.WriteLantanaRep.GetRepName(r.Context())
 	if err != nil {
@@ -2739,6 +2751,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Mi.ID)
 
 	repName, err := repositories.WriteMiRep.GetRepName(r.Context())
 	if err != nil {
@@ -2886,6 +2899,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.ReKyou.ID)
 
 	repName, err := repositories.WriteReKyouRep.GetRepName(r.Context())
 	if err != nil {
@@ -3023,6 +3037,8 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.ID)
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.TargetID)
 
 	repName, err := repositories.WriteTagRep.GetRepName(r.Context())
 	if err != nil {
@@ -3183,6 +3199,8 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.ID)
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.TargetID)
 
 	repName, err := repositories.WriteTextRep.GetRepName(r.Context())
 	if err != nil {
@@ -3343,6 +3361,8 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.ID)
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.TargetID)
 
 	repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
 	if err != nil {
@@ -3527,6 +3547,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Kmemo.ID)
 
 	repName, err := repositories.WriteKmemoRep.GetRepName(r.Context())
 	if err != nil {
@@ -3687,6 +3708,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.KC.ID)
 
 	repName, err := repositories.WriteKCRep.GetRepName(r.Context())
 	if err != nil {
@@ -3920,6 +3942,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.URLog.ID)
 
 	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
 	if err != nil {
@@ -4080,6 +4103,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Nlog.ID)
 
 	repName, err := repositories.WriteNlogRep.GetRepName(r.Context())
 	if err != nil {
@@ -4240,6 +4264,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.TimeIs.ID)
 
 	repName, err := repositories.WriteTimeIsRep.GetRepName(r.Context())
 	if err != nil {
@@ -4400,6 +4425,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Lantana.ID)
 
 	repName, err := repositories.WriteLantanaRep.GetRepName(r.Context())
 	if err != nil {
@@ -4560,6 +4586,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.IDFKyou.ID)
 
 	repName, err := repositories.WriteIDFKyouRep.GetRepName(r.Context())
 	if err != nil {
@@ -4730,6 +4757,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.Mi.ID)
 
 	repName, err := repositories.WriteMiRep.GetRepName(r.Context())
 	if err != nil {
@@ -4867,6 +4895,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, request.ReKyou.ID)
 
 	repName, err := repositories.WriteReKyouRep.GetRepName(r.Context())
 	if err != nil {
@@ -7261,6 +7290,7 @@ loop:
 					response.Errors = append(response.Errors, gkillError)
 					return
 				}
+				defer g.WebPushUpdatedData(r.Context(), userID, device, idfKyou.ID)
 				_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
 					IsDeleted:                idfKyou.IsDeleted,
 					TargetID:                 idfKyou.ID,
@@ -11343,6 +11373,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		// response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	defer g.WebPushUpdatedData(r.Context(), userID, device, urlog.ID)
 
 	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
 	if err != nil {
@@ -11557,4 +11588,67 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 	}
 	w.WriteHeader(http.StatusForbidden)
 	return false
+}
+
+func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, device string, kyouID string) {
+	// 通知する
+	// 現在のServerConfigを取得する
+	var currentServerConfig *server_config.ServerConfig
+	serverConfigs, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(ctx)
+	if err != nil {
+		gkill_log.Debug.Print(err)
+		return
+	}
+	for _, serverConfig := range serverConfigs {
+		if serverConfig.EnableThisDevice {
+			currentServerConfig = serverConfig
+		}
+	}
+	if currentServerConfig == nil {
+		err = fmt.Errorf("current server config is not found. in gkill notificator")
+		gkill_log.Debug.Print(err)
+		return
+	}
+
+	// 送信対象を取得する
+	notificationTargets, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.GetGkillNotificationTargets(ctx, userID, currentServerConfig.GkillNotificationPublicKey)
+	if err != nil {
+		err = fmt.Errorf("get notification target. in gkill notificator.: %w", err)
+		gkill_log.Debug.Print(err)
+		return
+	}
+
+	content := &struct {
+		IsUpdatedDataNotify bool   `json:"is_updated_data_notify"`
+		ID                  string `json:"id"`
+	}{
+		IsUpdatedDataNotify: true,
+		ID:                  kyouID,
+	}
+	contentJSONb, err := json.Marshal(content)
+	if err != nil {
+		err = fmt.Errorf("error at marshal webpush content: %w", err)
+		gkill_log.Debug.Print(err)
+		return
+	}
+
+	for _, notificationTarget := range notificationTargets {
+		subscription := string(notificationTarget.Subscription)
+		s := &webpush.Subscription{}
+		json.Unmarshal([]byte(subscription), s)
+		resp, err := webpush.SendNotification(contentJSONb, s, &webpush.Options{
+			Subscriber:      "example@example.com",
+			VAPIDPublicKey:  currentServerConfig.GkillNotificationPublicKey,
+			VAPIDPrivateKey: currentServerConfig.GkillNotificationPrivateKey,
+			TTL:             0,
+		})
+		if err != nil {
+			err = fmt.Errorf("error at send gkill notification: %w", err)
+			gkill_log.Debug.Println(err.Error())
+		}
+		if resp.Body == nil {
+			return
+		}
+		defer resp.Body.Close()
+	}
 }

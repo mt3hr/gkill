@@ -6,6 +6,7 @@ import { GkillAPIRequest } from '../gkill-api-request'
 export class GetKyousRequest extends GkillAPIRequest {
 
     query: FindKyouQuery
+    
 
     constructor() {
         super()

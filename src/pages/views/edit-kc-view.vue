@@ -66,13 +66,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -119,6 +119,7 @@ import moment from 'moment'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -229,6 +230,7 @@ async function save(): Promise<void> {
         updated_kc.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
+        delete_gkill_cache(updated_kc.id)
         const req = new UpdateKCRequest()
         req.kc = updated_kc
 

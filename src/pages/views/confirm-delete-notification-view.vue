@@ -57,6 +57,7 @@ import KyouView from './kyou-view.vue'
 import type { InfoIdentifier } from '@/classes/datas/info-identifier';
 import type { ConfirmDeleteNotificationViewProps } from './confirm-delete-notification-view-props';
 import { UpdateNotificationRequest } from '@/classes/api/req_res/update-notification-request';
+import delete_gkill_cache from '@/classes/delete-gkill-cache';
 
 const props = defineProps<ConfirmDeleteNotificationViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -86,6 +87,8 @@ async function delete_notification(): Promise<void> {
     updated_notification.update_user = gkill_info_res.user_id
 
     // 更新リクエストを飛ばす
+    delete_gkill_cache(updated_notification.id)
+    delete_gkill_cache(updated_notification.target_id)
     const req = new UpdateNotificationRequest()
     req.notification = updated_notification
     const res = await props.gkill_api.update_notification(req)

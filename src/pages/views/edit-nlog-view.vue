@@ -123,6 +123,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -252,6 +253,7 @@ async function save(): Promise<void> {
         updated_nlog.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
+        delete_gkill_cache(updated_nlog.id)
         const req = new UpdateNlogRequest()
         req.nlog = updated_nlog
 
