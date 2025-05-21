@@ -1,5 +1,5 @@
 <template>
-    <v-card class="find_query_editor_view dummy">
+    <v-card class="find_query_editor_view dummy" :class="loading_class">
         <div class="overlay_target">
             <v-overlay v-model="loading" class="align-center justify-center" persistent contained>
                 <v-progress-circular indeterminate color="primary" />
@@ -86,6 +86,7 @@ const is_mounted = ref(false)
 onMounted(() => is_mounted.value = true)
 
 const loading: Ref<boolean> = ref(true)
+const loading_class = computed(() => loading.value ? "loading_find_query_editor_view" : "")
 const inited = computed(() => {
     if (!is_mounted.value) {
         return false
@@ -266,11 +267,18 @@ async function emits_default_query(): Promise<void> {
     display: flex;
     flex-direction: column;
     align-items: center;
+    min-height: 40vh;
+    min-width: 40vw;
 }
 
 .find_query_editor_view.dummy {
     position: relative;
     min-height: 40vh;
     min-width: 40vw;
+}
+
+.loading_find_query_editor_view {
+    overflow-y: hidden !important;
+    min-width: calc(40vw + 8px);
 }
 </style>
