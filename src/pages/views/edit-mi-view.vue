@@ -247,6 +247,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 
@@ -504,6 +505,7 @@ async function save(): Promise<void> {
         updated_mi.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
+        delete_gkill_cache(updated_mi.id)
         const req = new UpdateMiRequest()
         req.mi = updated_mi
 

@@ -119,6 +119,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const edit_lantana_flowers = ref<InstanceType<typeof LantanaFlowersView> | null>(null);
 
@@ -208,6 +209,7 @@ async function save(): Promise<void> {
         updated_lantana.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
+        delete_gkill_cache(updated_lantana.id)
         const req = new UpdateLantanaRequest()
         req.lantana = updated_lantana
 

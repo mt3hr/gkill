@@ -65,6 +65,7 @@ import { UpdateLantanaRequest } from '@/classes/api/req_res/update-lantana-reque
 import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-request';
 import type { ConfirmDeleteKyouViewProps } from './confirm-delete-kyou-view-props';
 import { UpdateIDFKyouRequest } from '@/classes/api/req_res/update-idf-kyou-request';
+import delete_gkill_cache from '@/classes/delete-gkill-cache';
 
 const props = defineProps<ConfirmDeleteKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -128,6 +129,7 @@ async function delete_kmemo(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
+    delete_gkill_cache(cloned_kyou.value.id)
     const req = new UpdateKmemoRequest()
     req.kmemo = cloned_kyou.value.typed_kmemo!!.clone()
     req.kmemo.is_deleted = true
@@ -144,6 +146,7 @@ async function delete_kc(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
+    delete_gkill_cache(cloned_kyou.value.id)
     const req = new UpdateKCRequest()
     req.kc = cloned_kyou.value.typed_kc!!.clone()
     req.kc.is_deleted = true
@@ -160,6 +163,7 @@ async function delete_urlog(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
+    delete_gkill_cache(cloned_kyou.value.id)
     const req = new UpdateURLogRequest()
     req.urlog = cloned_kyou.value.typed_urlog!!.clone()
     req.urlog.is_deleted = true
@@ -177,6 +181,7 @@ async function delete_nlog(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
+    delete_gkill_cache(cloned_kyou.value.id)
     const req = new UpdateNlogRequest()
     req.nlog = cloned_kyou.value.typed_nlog!!.clone()
     req.nlog.is_deleted = true
@@ -194,6 +199,7 @@ async function delete_timeis(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
+    delete_gkill_cache(cloned_kyou.value.id)
     const req = new UpdateTimeisRequest()
     req.timeis = cloned_kyou.value.typed_timeis!!.clone()
     req.timeis.is_deleted = true
@@ -211,6 +217,7 @@ async function delete_mi(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
+    delete_gkill_cache(cloned_kyou.value.id)
     const req = new UpdateMiRequest()
     req.mi = cloned_kyou.value.typed_mi!!.clone()
     req.mi.is_deleted = true
@@ -228,6 +235,7 @@ async function delete_lantana(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
+    delete_gkill_cache(cloned_kyou.value.id)
     const req = new UpdateLantanaRequest()
     req.lantana = cloned_kyou.value.typed_lantana!!.clone()
     req.lantana.is_deleted = true
@@ -246,6 +254,7 @@ async function delete_idf_kyou(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
+    delete_gkill_cache(cloned_kyou.value.id)
     const req = new UpdateIDFKyouRequest()
     req.idf_kyou = cloned_kyou.value.typed_idf_kyou!!.clone()
     req.idf_kyou.is_deleted = true
@@ -267,6 +276,7 @@ async function delete_rekyou(): Promise<Array<GkillError>> {
     const gkill_info_req = new GetGkillInfoRequest()
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
 
+    delete_gkill_cache(cloned_kyou.value.id)
     const req = new UpdateReKyouRequest()
     req.rekyou = cloned_kyou.value.typed_rekyou!!.clone()
     req.rekyou.is_deleted = true

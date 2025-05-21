@@ -109,6 +109,7 @@ import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-reques
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -193,6 +194,7 @@ async function save(): Promise<void> {
         updated_rekyou.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
+        delete_gkill_cache(updated_rekyou.id)
         const req = new UpdateReKyouRequest()
         req.rekyou = updated_rekyou
 
