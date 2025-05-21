@@ -1,5 +1,5 @@
 <template>
-    <v-card class="pa-2">
+    <v-card class="pa-2" v-if="id !== ''">
         <v-text-field v-model="title" :label="i18n.global.t('RYUU_TITLE_TITLE')" />
         <v-text-field v-model="prefix" :label="i18n.global.t('RYUU_PREFIX_TITLE')" />
         <v-text-field v-model="suffix" :label="i18n.global.t('RYUU_SUFFIX_TITLE')" />
@@ -40,49 +40,48 @@ import { nextTick, ref, type Ref } from 'vue'
 import PredicateGroup from './edit-dnote-predicate-group.vue'
 import type PredicateGroupType from '../../classes/dnote/predicate-group-type'
 import type Predicate from '../../classes/dnote/predicate'
-import type AddRyuuItemViewEmits from './add-ryuu-item-view-emits'
-import type AddRyuuItemViewProps from './add-ryuu-item-view-props'
 import RelatedKyouQuery from '@/classes/dnote/related-kyou-query'
 import { RelatedTimeMatchType } from '@/classes/dnote/related-time-match-type'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import regist_dictionary, { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary'
 import FindQueryEditorDialog from '../dialogs/find-query-editor-dialog.vue'
+import type EditRyuuItemViewEmits from './edit-ryuu-item-view-emits'
+import type EditRyuuItemViewProps from './edit-ryuu-item-view-props'
 
 const find_query_editor_dialog = ref<InstanceType<typeof FindQueryEditorDialog> | null>(null);
 
-const props = defineProps<AddRyuuItemViewProps>()
-const emits = defineEmits<AddRyuuItemViewEmits>()
+const model_value = defineModel<RelatedKyouQuery>()
+const props = defineProps<EditRyuuItemViewProps>()
+const emits = defineEmits<EditRyuuItemViewEmits>()
 
 nextTick(() => reset())
 regist_dictionary()
+reset()
 
 async function reset(): Promise<void> {
-    id.value = props.gkill_api.generate_uuid()
-    title.value = ""
-    prefix.value = ""
-    suffix.value = ""
-    root_predicate.value = {
-        logic: 'AND',
-        predicates: []
-    }
-    related_time_match_type.value = RelatedTimeMatchType.NEAR_RELATED_TIME
-    is_use_custom_find_kyou_query.value = false
-    find_kyou_query.value = null
-    find_duration_hour.value = 1
+    id.value = model_value.value!.id
+    title.value = model_value.value!.title
+    prefix.value = model_value.value!.prefix
+    suffix.value = model_value.value!.suffix
+    root_predicate.value = model_value.value!.predicate.predicate_struct_to_json()
+    related_time_match_type.value = model_value.value!.related_time_match_type
+    is_use_custom_find_kyou_query.value = model_value.value!.find_kyou_query !== null
+    find_kyou_query.value = model_value.value!.find_kyou_query
+    find_duration_hour.value = model_value.value!.find_duration_hour
 }
 
 async function save(): Promise<void> {
-    const new_related_kyou_query = new RelatedKyouQuery()
-    new_related_kyou_query.id = id.value
-    new_related_kyou_query.prefix = prefix.value
-    new_related_kyou_query.suffix = suffix.value
-    new_related_kyou_query.title = title.value
-    new_related_kyou_query.predicate = build_dnote_predicate_from_json(predicate_struct_to_json(root_predicate.value))
-    new_related_kyou_query.related_time_match_type = related_time_match_type.value
-    new_related_kyou_query.find_kyou_query = is_use_custom_find_kyou_query.value ? find_kyou_query.value : null
-    new_related_kyou_query.find_duration_hour = find_duration_hour.value
+    const updated_related_kyou_query = new RelatedKyouQuery()
+    updated_related_kyou_query.id = model_value.value!.id
+    updated_related_kyou_query.prefix = prefix.value
+    updated_related_kyou_query.suffix = suffix.value
+    updated_related_kyou_query.title = title.value
+    updated_related_kyou_query.predicate = build_dnote_predicate_from_json(predicate_struct_to_json(root_predicate.value))
+    updated_related_kyou_query.related_time_match_type = related_time_match_type.value
+    updated_related_kyou_query.find_kyou_query = is_use_custom_find_kyou_query.value ? find_kyou_query.value : null
+    updated_related_kyou_query.find_duration_hour = find_duration_hour.value
 
-    emits('requested_add_related_kyou_query', new_related_kyou_query)
+    model_value.value = updated_related_kyou_query
     emits('requested_close_dialog')
 }
 

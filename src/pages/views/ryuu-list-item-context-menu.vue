@@ -1,0 +1,60 @@
+<template>
+    <v-menu v-model="is_show" :style="context_menu_style">
+        <v-list>
+            <v-list-item @click="show_edit_related_kyou_query_dialog()">
+                <v-list-item-title>{{ i18n.global.t("EDIT_RELATED_KYOU_QUERY") }}</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="show_confirm_delete_ryuu_list_item_dialog()">
+                <v-list-item-title>{{ i18n.global.t("DELETE_RELATED_KYOU_QUERY") }}</v-list-item-title>
+            </v-list-item>
+        </v-list>
+    </v-menu>
+    <EditRyuuItemDialog :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
+        ref="edit_related_kyou_query_dialog" />
+    <ConfirmDeleteRyuuListItemDialog :application_config="application_config" :gkill_api="gkill_api"
+        @requested_delete_related_kyou_query="(id) => emits('requested_delete_related_kyou_query', id)"
+        @received_errors="(errors) => emits('received_errors', errors)"
+        @received_messages="(messages) => emits('received_messages', messages)"
+        ref="confirm_delete_ryuu_list_item_dialog" />
+</template>
+<script lang="ts" setup>
+import { i18n } from '@/i18n'
+import { computed, type Ref, ref } from 'vue'
+import ConfirmDeleteRyuuListItemDialog from '../dialogs/confirm-delete-ryuu-list-item-dialog.vue'
+import EditRyuuItemDialog from '../dialogs/edit-ryuu-item-dialog.vue'
+import type { RyuuListItemContextMenuProps } from './ryuu-list-item-context-menu-props'
+import type { RyuuListItemContextMenuEmits } from './ryuu-list-item-context-menu-emits'
+import RelatedKyouQuery from '@/classes/dnote/related-kyou-query'
+
+const edit_related_kyou_query_dialog = ref<InstanceType<typeof EditRyuuItemDialog> | null>(null);
+const confirm_delete_ryuu_list_item_dialog = ref<InstanceType<typeof ConfirmDeleteRyuuListItemDialog> | null>(null);
+
+const model_value = defineModel<RelatedKyouQuery>()
+const props = defineProps<RyuuListItemContextMenuProps>()
+const emits = defineEmits<RyuuListItemContextMenuEmits>()
+defineExpose({ show, hide })
+
+const is_show: Ref<boolean> = ref(false)
+const position_x: Ref<Number> = ref(0)
+const position_y: Ref<Number> = ref(0)
+const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(document.defaultView!.innerHeight - (props.application_config.session_is_local ? 500 : 400), position_y.value.valueOf())}px; }`)
+
+async function show(e: PointerEvent): Promise<void> {
+    position_x.value = e.clientX
+    position_y.value = e.clientY
+    is_show.value = true
+}
+
+async function hide(): Promise<void> {
+    is_show.value = false
+}
+
+async function show_edit_related_kyou_query_dialog(): Promise<void> {
+    edit_related_kyou_query_dialog.value?.show()
+}
+
+async function show_confirm_delete_ryuu_list_item_dialog(): Promise<void> {
+    confirm_delete_ryuu_list_item_dialog.value?.show(model_value.value!)
+}
+</script>
+<style lang="css" scoped></style>

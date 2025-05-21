@@ -2,10 +2,11 @@
     <v-card>
         <div v-if="related_time" class="ryuu_views">
             <RyuuListItemView v-for="related_kyou_query, index in related_kyou_queries"
-                v-model="related_kyou_queries[index]" :key="related_kyou_query.title" :gkill_api="gkill_api"
+                v-model="related_kyou_queries[index]" :key="related_kyou_query.id" :gkill_api="gkill_api"
                 :application_config="application_config" :enable_dialog="true" :enable_context_menu="true"
                 :related_time="related_time" :abort_controller="abort_controler"
-                :find_kyou_query_default="find_kyou_query_default"
+                :find_kyou_query_default="find_kyou_query_default" :editable="editable"
+                @requested_delete_related_kyou_list_query="(id) => delete_related_kyou_query(id)"
                 @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
                 @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
@@ -71,9 +72,15 @@ const emits = defineEmits<RyuuListViewEmits>()
 const related_kyou_queries: Ref<Array<RelatedKyouQuery>> = ref(new Array<RelatedKyouQuery>())
 const abort_controler: Ref<AbortController> = ref(new AbortController())
 
-nextTick(() => {
-    load_from_application_config()
-    load_related_kyou()
+nextTick(async () => {
+    await load_from_application_config()
+    if (props.editable) {
+        return
+    }
+    abort_controler.value.abort()
+    abort_controler.value = new AbortController()
+
+    nextTick(() => load_related_kyou())
 })
 
 watch(() => props.related_time, () => {
@@ -96,7 +103,7 @@ async function load_related_kyou(): Promise<void> {
     await Promise.all(wait_promises)
 }
 
-function load_from_application_config(): void {
+async function load_from_application_config(): Promise<void> {
     nextTick(() => {
         related_kyou_queries.value.splice(0)
         related_kyou_queries.value.push(...load_from_json(props.application_config.ryuu_json_data))
@@ -158,12 +165,24 @@ function floatingActionButtonStyle() {
         'width': '50px',
     }
 }
+function delete_related_kyou_query(id: string): void {
+    let delete_target_index: number | null = null
+    for (let i = 0; i < related_kyou_queries.value.length; i++) {
+        if (related_kyou_queries.value[i].id === id) {
+            delete_target_index = i
+            break
+        }
+    }
+    if (delete_target_index) {
+        related_kyou_queries.value.splice(delete_target_index, 1)
+    }
+}
 
 </script>
 <style lang="css" scoped>
 .ryuu_views {
     position: relative;
-    width: 400px;
+    width: -webkit-fill-available;
     min-width: 400px;
     min-height: 20vh;
 }
