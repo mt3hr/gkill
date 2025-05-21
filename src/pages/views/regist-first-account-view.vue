@@ -77,8 +77,10 @@ import { LoginRequest } from '@/classes/api/req_res/login-request';
 import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-configs-request';
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
+import { useTheme } from 'vuetify';
+const theme = useTheme()
 
-const welcome_emoji = computed(() => props.gkill_api.get_use_dark_theme() ? "⭐️" : "❄️")
+const welcome_emoji = computed(() => theme.current.value.dark ? "⭐️" : "❄️")
 const admin_account_password_reset_token: Ref<string> = ref(useRoute().query.reset_token ? useRoute().query.reset_token!.toString() : "")
 const user_id: Ref<string> = ref(useRoute().query.user_id ? useRoute().query.user_id!.toString() : "")
 const password: Ref<string> = ref("")

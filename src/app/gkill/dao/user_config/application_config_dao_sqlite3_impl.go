@@ -86,6 +86,7 @@ var applicationConfigDefaultValue = map[string]interface{}{
 	"MI_DEFAULT_BOARD":              "Inbox",
 	"MI_DEFAULT_PERIOD":             -1,
 	"IS_SHOW_SHARE_FOOTER":          false,
+	"RYUU_JSON_DATA":                json.RawMessage{},
 }
 
 func (a *applicationConfigDAOSQLite3Impl) GetAllApplicationConfigs(ctx context.Context) ([]*ApplicationConfig, error) {
@@ -190,7 +191,19 @@ SELECT
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
 	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
 	AND KEY = 'IS_SHOW_SHARE_FOOTER'
-  ) AS IS_SHOW_SHARE_FOOTER
+  ) AS IS_SHOW_SHARE_FOOTER,
+  /* RYUU_JSON_DATA */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'RYUU_JSON_DATA'
+  ) AS RYUU_JSON_DATA
 FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
 GROUP BY USER_ID, DEVICE
 `,
@@ -202,6 +215,7 @@ GROUP BY USER_ID, DEVICE
 		applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"],
 		applicationConfigDefaultValue["MI_DEFAULT_PERIOD"],
 		applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"],
+		applicationConfigDefaultValue["RYUU_JSON_DATA"],
 	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
@@ -228,6 +242,7 @@ GROUP BY USER_ID, DEVICE
 			applicationConfig := &ApplicationConfig{}
 			rykvDefaultPeriod := -1
 			miDefaultPeriod := -1
+			ryuuJSONData := ""
 
 			err = rows.Scan(
 				&applicationConfig.UserID,
@@ -240,6 +255,7 @@ GROUP BY USER_ID, DEVICE
 				&rykvDefaultPeriod,
 				&miDefaultPeriod,
 				&applicationConfig.IsShowShareFooter,
+				&ryuuJSONData,
 			)
 			if err != nil {
 				return nil, err
@@ -247,6 +263,7 @@ GROUP BY USER_ID, DEVICE
 
 			applicationConfig.RykvDefaultPeriod = json.Number(strconv.Itoa(rykvDefaultPeriod))
 			applicationConfig.MiDefaultPeriod = json.Number(strconv.Itoa(miDefaultPeriod))
+			applicationConfig.RyuuJSONData = json.RawMessage(ryuuJSONData)
 
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
@@ -356,7 +373,19 @@ SELECT
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
 	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
 	AND KEY = 'IS_SHOW_SHARE_FOOTER'
-  ) AS IS_SHOW_SHARE_FOOTER 
+  ) AS IS_SHOW_SHARE_FOOTER,
+  /* RYUU_JSON_DATA */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'RYUU_JSON_DATA'
+  ) AS RYUU_JSON_DATA
 FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
 GROUP BY USER_ID, DEVICE
 HAVING USER_ID = ? AND DEVICE = ?
@@ -369,6 +398,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 		applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"],
 		applicationConfigDefaultValue["MI_DEFAULT_PERIOD"],
 		applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"],
+		applicationConfigDefaultValue["RYUU_JSON_DATA"],
 	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
@@ -401,6 +431,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 
 			rykvDefaultPeriod := -1
 			miDefaultPeriod := -1
+			ryuuJSONData := ""
 
 			err = rows.Scan(
 				&applicationConfig.UserID,
@@ -413,10 +444,12 @@ HAVING USER_ID = ? AND DEVICE = ?
 				&rykvDefaultPeriod,
 				&miDefaultPeriod,
 				&applicationConfig.IsShowShareFooter,
+				&ryuuJSONData,
 			)
 
 			applicationConfig.RykvDefaultPeriod = json.Number(strconv.Itoa(rykvDefaultPeriod))
 			applicationConfig.MiDefaultPeriod = json.Number(strconv.Itoa(miDefaultPeriod))
+			applicationConfig.RyuuJSONData = json.RawMessage(ryuuJSONData)
 
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
@@ -457,6 +490,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"RYKV_DEFAULT_PERIOD":           applicationConfig.RykvDefaultPeriod,
 		"MI_DEFAULT_PERIOD":             applicationConfig.MiDefaultPeriod,
 		"IS_SHOW_SHARE_FOOTER":          applicationConfig.IsShowShareFooter,
+		"RYUU_JSON_DATA":                applicationConfig.RyuuJSONData,
 	}
 	for key, value := range insertValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -547,6 +581,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"RYKV_DEFAULT_PERIOD":           applicationConfig.RykvDefaultPeriod,
 		"MI_DEFAULT_PERIOD":             applicationConfig.MiDefaultPeriod,
 		"IS_SHOW_SHARE_FOOTER":          applicationConfig.IsShowShareFooter,
+		"RYUU_JSON_DATA":                applicationConfig.RyuuJSONData,
 	}
 
 	// レコード自体が存在しなかったらいれる

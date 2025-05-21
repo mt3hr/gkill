@@ -278,6 +278,7 @@ body::-webkit-scrollbar {
 
 .v-navigation-drawer__content::-webkit-scrollbar-thumb,
 .kyou_detail_view::-webkit-scrollbar-thumb,
+.ryuu_view::-webkit-scrollbar-thumb,
 .kyou_list_view::-webkit-scrollbar-thumb,
 .kyou_list_view_image::-webkit-scrollbar-thumb,
 .aggregate_amount_list::-webkit-scrollbar-thumb,

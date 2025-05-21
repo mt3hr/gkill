@@ -14,7 +14,8 @@
                         @click="show_server_config_dialog()">{{ i18n.global.t("SERVER_CONFIG_TITLE") }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="reload_repositories()">{{ i18n.global.t("RELOAD_TITLE") }}</v-btn>
+                    <v-btn dark color="primary" @click="reload_repositories()">{{ i18n.global.t("RELOAD_TITLE")
+                    }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="logout()" color="primary">{{ i18n.global.t("LOGOUT_TITLE") }}</v-btn>
@@ -44,7 +45,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="is_show_share_footer" hide-detail :label="i18n.global.t('SHOW_SHARE_FOOTER')" />
+                        <v-checkbox v-model="is_show_share_footer" hide-detail
+                            :label="i18n.global.t('SHOW_SHARE_FOOTER')" />
                     </td>
                 </tr>
                 <tr>
@@ -94,18 +96,27 @@
             <table>
                 <tr>
                     <td>
-                        <v-btn dark color="primary" @click="show_edit_tag_dialog">{{ i18n.global.t("EDIT_TAG_STRUCT_TITLE")
-                            }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{ i18n.global.t("EDIT_REP_STRUCT_TITLE")
-                            }}</v-btn>
-                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{ i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
+                        <v-btn dark color="primary" @click="show_edit_tag_dialog">{{
+                            i18n.global.t("EDIT_TAG_STRUCT_TITLE")
+                        }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_rep_dialog">{{
+                            i18n.global.t("EDIT_REP_STRUCT_TITLE")
+                        }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_device_dialog">{{
+                            i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
                         }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                             i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <v-btn dark color="primary" @click="show_edit_kftl_template_dialog">{{
                             i18n.global.t("EDIT_KFTL_TEMPLATE_STRUCT_TITLE") }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_dnote_dialog">{{
                             i18n.global.t("EDIT_DNOTE_TITLE") }}</v-btn>
+                        <v-btn dark color="primary" @click="show_edit_ryuu_dialog">{{
+                            i18n.global.t("EDIT_RYUU_TITLE") }}</v-btn>
                     </td>
                 </tr>
             </table>
@@ -113,11 +124,13 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="update_application_config" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
+                    <v-btn dark @click="update_application_config" color="primary">{{ i18n.global.t("APPLY_TITLE")
+                    }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
+                        i18n.global.t("CANCEL_TITLE")
                     }}</v-btn>
                 </v-col>
             </v-row>
@@ -157,6 +170,12 @@
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_reload_application_config="emits('requested_reload_application_config')"
             ref="edit_dnote_dialog" />
+        <EditRyuuDialog v-model="cloned_application_config" :app_content_height="app_content_height"
+            :app_content_width="app_content_width" :application_config="cloned_application_config"
+            :gkill_api="gkill_api" @received_errors="(errors) => emits('received_errors', errors)"
+            @received_messages="(messages) => emits('received_messages', messages)"
+            @requested_reload_application_config="emits('requested_reload_application_config')"
+            ref="edit_ryuu_dialog" />
         <NewBoardNameDialog :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
@@ -189,6 +208,7 @@ import { LogoutRequest } from '@/classes/api/req_res/logout-request'
 import router from '@/router'
 import { ReloadRepositoriesRequest } from '@/classes/api/req_res/reload-repositories-request'
 import { useTheme } from 'vuetify'
+import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
 
 const theme = useTheme()
 
@@ -199,6 +219,7 @@ const edit_rep_type_struct_dialog = ref<InstanceType<typeof EditRepTypeStructDia
 const edit_tag_struct_dialog = ref<InstanceType<typeof EditTagStructDialog> | null>(null);
 const edit_kftl_template_dialog = ref<InstanceType<typeof EditKFTLTemplateDialog> | null>(null);
 const edit_dnote_dialog = ref<InstanceType<typeof EditDnoteDialog> | null>(null);
+const edit_ryuu_dialog = ref<InstanceType<typeof EditRyuuDialog> | null>(null);
 const server_config_dialog = ref<InstanceType<typeof ServerConfigDialog> | null>(null);
 
 const props = defineProps<ApplicationConfigViewProps>()
@@ -207,7 +228,7 @@ defineExpose({ reload_cloned_application_config })
 
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
-    cloned_application_config.value.parse_template_and_struct()
+    await cloned_application_config.value.load_all()
 })
 
 const is_loading = ref(false)
@@ -287,6 +308,7 @@ async function update_application_config(): Promise<void> {
     application_config.mi_default_period = mi_default_period.value
     application_config.use_dark_theme = use_dark_theme.value
     application_config.is_show_share_footer = is_show_share_footer.value
+    application_config.ryuu_json_data = cloned_application_config.value.ryuu_json_data
 
     const req = new UpdateApplicationConfigRequest()
     req.application_config = application_config
@@ -337,6 +359,9 @@ function show_edit_kftl_template_dialog() {
 }
 function show_edit_dnote_dialog() {
     edit_dnote_dialog.value?.show()
+}
+function show_edit_ryuu_dialog() {
+    edit_ryuu_dialog.value?.show()
 }
 function show_new_board_name_dialog(): void {
     new_board_name_dialog.value?.show()

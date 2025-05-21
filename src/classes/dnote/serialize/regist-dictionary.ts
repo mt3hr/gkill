@@ -56,6 +56,12 @@ import TimeIsTitleEqualPredicate from "../dnote-predicate/timeis-title-equal-pre
 import AgregateTargetDictionary from "./dnote-aggregate-target-dictionary"
 import DnoteKeyGetterDictionary from "./dnote-key-getter-dictionary"
 import PredicateDictonary from "./dnote-predicate-dictionary"
+import RelatedTimeAfterPredicate from "../dnote-predicate/related-time-after-predicate"
+import RelatedTimeBeforePredicate from "../dnote-predicate/related-time-before-predicate"
+import type DnoteKyouFilter from "../dnote-kyou-filter"
+import DnoteKyouFilterDictionary from "./dnote-kyou-filter-dictionary"
+import FilterBottomKyous from "../dnote-filter/filter-bottom-kyous"
+import FilterTopKyous from "../dnote-filter/filter-top-kyous"
 
 export default function regist_dictionary(): void {
     PredicateDictonary.set("AndPredicate", AndPredicate)
@@ -87,6 +93,8 @@ export default function regist_dictionary(): void {
     PredicateDictonary.set("TagEqualPredicate", TagEqualPredicate)
     PredicateDictonary.set("TimeIsTitleContainsPredicate", TimeIsTitleContainsPredicate)
     PredicateDictonary.set("TimeIsTitleEqualPredicate", TimeIsTitleEqualPredicate)
+    PredicateDictonary.set("RelatedTimeAfterPredicate", RelatedTimeAfterPredicate)
+    PredicateDictonary.set("RelatedTimeBeforePredicate", RelatedTimeBeforePredicate)
     DnoteKeyGetterDictionary.set("DataTypeGetter", DataTypeGetter)
     DnoteKeyGetterDictionary.set("LantanaMoodGetter", LantanaMoodGetter)
     DnoteKeyGetterDictionary.set("NlogShopNameGetter", NlogShopNameGetter)
@@ -115,21 +123,26 @@ export default function regist_dictionary(): void {
     AgregateTargetDictionary.set("AgregateMaxKCNumValue", AgregateSumKCNumValue)
     AgregateTargetDictionary.set("AgregateMinKCNumValue", AgregateSumKCNumValue)
     AgregateTargetDictionary.set("AgregateSumKCNumValue", AgregateSumKCNumValue)
+    DnoteKyouFilterDictionary.set("FilterTopKyous", FilterTopKyous)
+    DnoteKyouFilterDictionary.set("FilterBottomKyous", FilterBottomKyous)
 }
 
 export function build_dnote_aggregate_target_from_json(json: any): DnoteAgregateTarget {
+    regist_dictionary()
     const ctor = AgregateTargetDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown aggregate type: ${json.type}`)
     return new ctor(json.value)
 }
 
 export function build_dnote_key_getter_from_json(json: any): DnoteKeyGetter {
+    regist_dictionary()
     const ctor = DnoteKeyGetterDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown getter type: ${json.type}`)
     return new ctor(json.value)
 }
 
 export function build_dnote_predicate_from_json(json: any): DnotePredicate {
+    regist_dictionary()
     if ('logic' in json && Array.isArray(json.predicates)) {
         const children = json.predicates.map(build_dnote_predicate_from_json)
         if (json.logic === 'AND') return new AndPredicate(children)
@@ -140,5 +153,12 @@ export function build_dnote_predicate_from_json(json: any): DnotePredicate {
 
     const ctor = PredicateDictonary.get(json.type)
     if (!ctor) throw new Error(`Unknown predicate type: ${json.type}`)
+    return new ctor(json.value)
+}
+
+export function build_dnote_kyou_filter_from_json(json: any): DnoteKyouFilter {
+    regist_dictionary()
+    const ctor = DnoteKyouFilterDictionary.get(json.type)
+    if (!ctor) throw new Error(`Unknown getter type: ${json.type}`)
     return new ctor(json.value)
 }

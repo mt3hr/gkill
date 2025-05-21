@@ -1,0 +1,5 @@
+export enum RelatedTimeMatchType {
+    NEAR_RELATED_TIME,
+    NEAR_RELATED_TIME_BEFORE,
+    NEAR_RELATED_TIME_AFTER,
+}
