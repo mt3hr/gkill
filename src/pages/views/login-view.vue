@@ -40,8 +40,10 @@ import { LoginRequest } from '@/classes/api/req_res/login-request';
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { useTheme } from 'vuetify';
+const theme = useTheme()
 
-const welcome_emoji = computed(() => props.gkill_api.get_use_dark_theme() ? "⭐️" : "❄️")
+const welcome_emoji = computed(() => theme.current.value.dark ? "⭐️" : "❄️")
 const user_id: Ref<string> = ref("")
 const password: Ref<string> = ref("")
 
