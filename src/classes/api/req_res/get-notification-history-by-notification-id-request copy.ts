@@ -6,6 +6,7 @@ export class GetNotificationHistoryByNotificationIDRequest extends GkillAPIReque
 
     id: string
     update_time: Date | null
+    
 
     constructor() {
         super()

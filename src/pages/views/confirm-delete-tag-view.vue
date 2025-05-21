@@ -56,6 +56,7 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import { type Ref, ref } from 'vue'
 import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request';
 import KyouView from './kyou-view.vue'
+import delete_gkill_cache from '@/classes/delete-gkill-cache';
 
 const props = defineProps<ConfirmDeleteTagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -80,6 +81,8 @@ async function delete_tag(): Promise<void> {
     updated_tag.update_user = gkill_info_res.user_id
 
     // 更新リクエストを飛ばす
+    delete_gkill_cache(updated_tag.id)
+    delete_gkill_cache(updated_tag.target_id)
     const req = new UpdateTagRequest()
     req.tag = updated_tag
     const res = await props.gkill_api.update_tag(req)

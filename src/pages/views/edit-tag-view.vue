@@ -12,11 +12,13 @@
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-text-field v-model="tag_name" :label="i18n.global.t('TAG_TITLE')" autofocus :readonly="is_requested_submit" />
+        <v-text-field v-model="tag_name" :label="i18n.global.t('TAG_TITLE')" autofocus
+            :readonly="is_requested_submit" />
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ i18n.global.t("SAVE_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                    i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
             </v-col>
         </v-row>
@@ -60,6 +62,7 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { GkillError } from '@/classes/api/gkill-error';
 import type { Tag } from '@/classes/datas/tag';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -120,6 +123,8 @@ async function save(): Promise<void> {
         updated_tag.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
+        delete_gkill_cache(updated_tag.id)
+        delete_gkill_cache(updated_tag.target_id)
         const req = new UpdateTagRequest()
         req.tag = updated_tag
         const res = await props.gkill_api.update_tag(req)
@@ -140,6 +145,4 @@ async function save(): Promise<void> {
 }
 </script>
 
-<style lang="css" scoped>
-
-</style>
+<style lang="css" scoped></style>

@@ -6,6 +6,7 @@ export class GetReKyouRequest extends GkillAPIRequest {
 
     id: string
     update_time: Date | null
+    
 
     constructor() {
         super()
