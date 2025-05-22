@@ -20,8 +20,8 @@
 </template>
 
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 'use strict'
+import { i18n } from '@/i18n'
 import { computed, nextTick, ref, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
@@ -34,6 +34,9 @@ import MiView from './views/mi-view.vue'
 import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { useTheme } from 'vuetify'
+
+
+
 
 const theme = useTheme()
 

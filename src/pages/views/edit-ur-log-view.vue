@@ -255,7 +255,7 @@ async function save(): Promise<void> {
         }
 
         // 更新リクエストを飛ばす
-        delete_gkill_cache(updated_urlog.id)
+        await delete_gkill_cache(updated_urlog.id)
         const req = new UpdateURLogRequest()
         req.urlog = updated_urlog
 

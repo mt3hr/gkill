@@ -317,4 +317,7 @@ const (
 	AccountInvalidAddKCRequestDataError                              = "ERR000312"
 	InvalidGetKCResponseDataError                                    = "ERR000313"
 	InvalidGetKCRequestDataError                                     = "ERR000314"
+	InvalidGetUpdatedDatasByTimeResponse                             = "ERR000315"
+	InvalidGetUpdatedDatasByTimeRequest                              = "ERR000316"
+	GetLatestDataRepositoryAddressByUpdateTimeAfterError             = "ERR000317"
 )

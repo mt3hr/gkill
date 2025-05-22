@@ -65,13 +65,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -89,6 +89,7 @@ import { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -194,6 +195,7 @@ async function save(): Promise<void> {
         new_nlog.update_user = gkill_info_res.user_id
 
         // 追加リクエストを飛ばす
+        await delete_gkill_cache(new_nlog.id)
         const req = new AddNlogRequest()
         req.nlog = new_nlog
         const res = await props.gkill_api.add_nlog(req)

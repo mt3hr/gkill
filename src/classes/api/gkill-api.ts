@@ -176,6 +176,9 @@ import type { ReloadRepositoriesResponse } from "./req_res/reload-repositories-r
 import type { UpdateDnoteJSONDataRequest } from "./req_res/update-dnote-json-data-request"
 import type { UpdateDnoteJSONDataResponse } from "./req_res/update-dnote-json-data-response"
 import { GetShareKyouListInfosResponse } from "./req_res/get-share-kyou-list-infos-response"
+import { GetUpdatedDatasByTimeRequest } from "./req_res/get-updated-datas-by-time-request"
+import type { GetUpdatedDatasByTimeResponse } from "./req_res/get-updated-datas-by-time-response"
+import delete_gkill_cache from "../delete-gkill-cache"
 
 export class GkillAPI {
         // 画面以外から参照されるやつ
@@ -276,6 +279,7 @@ export class GkillAPI {
         open_file_address: string
         reload_repositories_address: string
         urlog_bookmarklet_address: string
+        get_updated_datas_by_time_address: string
 
         login_method: string
         logout_method: string
@@ -358,6 +362,7 @@ export class GkillAPI {
         open_file_method: string
         reload_repositories_method: string
         urlog_bookmarklet_method: string
+        get_updated_datas_by_time_method: string
 
         protected constructor() {
                 this.saved_application_config = null
@@ -441,6 +446,7 @@ export class GkillAPI {
                 this.open_file_address = "/api/open_file"
                 this.reload_repositories_address = "/api/reload_repositories"
                 this.urlog_bookmarklet_address = "/api/urlog_bookmarklet"
+                this.get_updated_datas_by_time_address = "/api/get_updated_datas_by_time"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
@@ -522,6 +528,7 @@ export class GkillAPI {
                 this.open_file_method = "POST"
                 this.reload_repositories_method = "POST"
                 this.urlog_bookmarklet_method = "POST"
+                this.get_updated_datas_by_time_method = "POST"
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
@@ -2422,6 +2429,21 @@ export class GkillAPI {
                 return response
         }
 
+        async get_updated_datas_by_time(req: GetUpdatedDatasByTimeRequest): Promise<GetUpdatedDatasByTimeResponse> {
+                const res = await fetch(this.get_updated_datas_by_time_address, {
+                        'method': this.get_updated_datas_by_time_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: GetUpdatedDatasByTimeResponse = json
+                this.check_auth(response)
+                return response
+        }
+
         private gkill_session_id_cookie_key = "gkill_session_id"
 
         get_session_id(): string {
@@ -2655,6 +2677,41 @@ export class GkillAPI {
                         this.set_shared_id_to_cookie("")
                 }
                 return shared_id
+        }
+
+
+        private last_cache_update_time_cookie_key = "last_cache_update_time"
+        get_last_cache_update_time(): Date {
+                const cookies = document.cookie.split(';')
+                const last_cache_update_time_string = cookies.find(
+                        (cookie) => cookie.split('=')[0].trim() === this.last_cache_update_time_cookie_key.trim()
+                )?.replace(this.last_cache_update_time_cookie_key + "=", "").trim()
+                const last_cache_update_time: number = last_cache_update_time_string ? Number.parseInt(last_cache_update_time_string) : Date.now()
+                return new Date(last_cache_update_time)
+        }
+
+        set_last_cache_update_time(time: Date): void {
+                document.cookie = this.last_cache_update_time_cookie_key + "=" + time.getTime() + "; path=/; max-age=" + 86400 * 400
+        }
+
+        async delete_updated_gkill_caches(): Promise<void> {
+                const req = new GetUpdatedDatasByTimeRequest()
+                req.last_updated_time = new Date(this.get_last_cache_update_time())
+                const res = await this.get_updated_datas_by_time(req)
+                if (res.updated_ids) {
+                        /*
+                        if (res.updated_ids.length > 2000) {
+                                await delete_gkill_cache(null)
+                        } else {
+                        */
+                                for (let i = 1; i < res.updated_ids.length; i++) {
+                                        await delete_gkill_cache(res.updated_ids[i])
+                                }
+                        /*
+                        }
+                        */
+                }
+                this.set_last_cache_update_time(new Date(Date.now()))
         }
 }
 

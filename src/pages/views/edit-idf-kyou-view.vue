@@ -196,7 +196,7 @@ async function save(): Promise<void> {
         updated_idf_kyou.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
-        delete_gkill_cache(updated_idf_kyou.id)
+        await delete_gkill_cache(updated_idf_kyou.id)
         const req = new UpdateIDFKyouRequest()
         req.idf_kyou = updated_idf_kyou
 
