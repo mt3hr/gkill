@@ -87,8 +87,8 @@ async function delete_notification(): Promise<void> {
     updated_notification.update_user = gkill_info_res.user_id
 
     // 更新リクエストを飛ばす
-    delete_gkill_cache(updated_notification.id)
-    delete_gkill_cache(updated_notification.target_id)
+    await delete_gkill_cache(updated_notification.id)
+    await delete_gkill_cache(updated_notification.target_id)
     const req = new UpdateNotificationRequest()
     req.notification = updated_notification
     const res = await props.gkill_api.update_notification(req)

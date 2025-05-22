@@ -673,37 +673,41 @@ notificationsloop:
 	latestDataRepositoryAddresses := []*account_state.LatestDataRepositoryAddress{}
 	for _, kyou := range latestKyousMap {
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
-			IsDeleted:                kyou.IsDeleted,
-			TargetID:                 kyou.ID,
-			LatestDataRepositoryName: kyou.RepName,
-			DataUpdateTime:           kyou.UpdateTime,
+			IsDeleted:                              kyou.IsDeleted,
+			TargetID:                               kyou.ID,
+			LatestDataRepositoryName:               kyou.RepName,
+			DataUpdateTime:                         kyou.UpdateTime,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 	for _, tag := range latestTagsMap {
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
-			IsDeleted:                tag.IsDeleted,
-			TargetID:                 tag.ID,
-			LatestDataRepositoryName: tag.RepName,
-			DataUpdateTime:           tag.UpdateTime,
+			IsDeleted:                              tag.IsDeleted,
+			TargetID:                               tag.ID,
+			LatestDataRepositoryName:               tag.RepName,
+			DataUpdateTime:                         tag.UpdateTime,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 	for _, text := range latestTextsMap {
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
-			IsDeleted:                text.IsDeleted,
-			TargetID:                 text.ID,
-			LatestDataRepositoryName: text.RepName,
-			DataUpdateTime:           text.UpdateTime,
+			IsDeleted:                              text.IsDeleted,
+			TargetID:                               text.ID,
+			LatestDataRepositoryName:               text.RepName,
+			DataUpdateTime:                         text.UpdateTime,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 	for _, notification := range latestNotificationsMap {
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
-			IsDeleted:                notification.IsDeleted,
-			TargetID:                 notification.ID,
-			LatestDataRepositoryName: notification.RepName,
-			DataUpdateTime:           notification.UpdateTime,
+			IsDeleted:                              notification.IsDeleted,
+			TargetID:                               notification.ID,
+			LatestDataRepositoryName:               notification.RepName,
+			DataUpdateTime:                         notification.UpdateTime,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}

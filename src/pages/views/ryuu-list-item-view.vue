@@ -148,6 +148,7 @@ async function load_related_kyou(): Promise<void> {
     const get_kyous_req = new GetKyousRequest()
     get_kyous_req.abort_controller = props.abort_controller
     get_kyous_req.query = find_kyou_query
+    await props.gkill_api.delete_updated_gkill_caches()
     const res = await props.gkill_api.get_kyous(get_kyous_req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)

@@ -5,6 +5,7 @@ import type { GkillError } from '../api/gkill-error'
 import { AddTagRequest } from '../api/req_res/add-tag-request'
 import { AddTextRequest } from '../api/req_res/add-text-request'
 import { GetGkillInfoRequest } from '../api/req_res/get-gkill-info-request'
+import delete_gkill_cache from '../delete-gkill-cache'
 import { KFTLRequestBase } from './kftl-request-base'
 import type { KFTLStatementLineContext } from './kftl-statement-line-context'
 
@@ -60,6 +61,8 @@ export abstract class KFTLRequest extends KFTLRequestBase {
             req.tag.update_device = res.device
             req.tag.update_time = now
             req.tag.update_user = res.user_id
+            await delete_gkill_cache(req.tag.id)
+            await delete_gkill_cache(req.tag.target_id)
             await GkillAPI.get_gkill_api().add_tag(req).then((res) => {
                 if (res.errors && res.errors.length !== 0) {
                     errors = errors.concat(res.errors)
@@ -84,6 +87,8 @@ export abstract class KFTLRequest extends KFTLRequestBase {
             req.text.update_device = res.device
             req.text.update_time = now
             req.text.update_user = res.user_id
+            await delete_gkill_cache(req.text.id)
+            await delete_gkill_cache(req.text.target_id)
             await GkillAPI.get_gkill_api().add_text(req).then((res) => {
                 if (res.errors && res.errors.length !== 0) {
                     errors = errors.concat(res.errors)

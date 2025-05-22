@@ -508,6 +508,7 @@ if (props.is_shared_rykv_view) {
     nextTick(async () => {
         is_loading.value = false
         inited.value = true
+        await props.gkill_api.delete_updated_gkill_caches()
         const kyous = (await props.gkill_api.get_kyous(new GetKyousRequest())).kyous
         match_kyous_list.value = [kyous]
         focused_kyous_list.value = kyous
@@ -748,6 +749,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         if (update_cache) {
             req.query.update_cache = true
         }
+        await props.gkill_api.delete_updated_gkill_caches()
         const res = await props.gkill_api.get_kyous(req)
         if (res.errors && res.errors.length !== 0) {
             emits('received_errors', res.errors)

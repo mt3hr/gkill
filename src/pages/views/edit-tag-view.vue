@@ -123,8 +123,8 @@ async function save(): Promise<void> {
         updated_tag.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
-        delete_gkill_cache(updated_tag.id)
-        delete_gkill_cache(updated_tag.target_id)
+        await delete_gkill_cache(updated_tag.id)
+        await delete_gkill_cache(updated_tag.target_id)
         const req = new UpdateTagRequest()
         req.tag = updated_tag
         const res = await props.gkill_api.update_tag(req)

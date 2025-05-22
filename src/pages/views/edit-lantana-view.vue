@@ -209,7 +209,7 @@ async function save(): Promise<void> {
         updated_lantana.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
-        delete_gkill_cache(updated_lantana.id)
+        await delete_gkill_cache(updated_lantana.id)
         const req = new UpdateLantanaRequest()
         req.lantana = updated_lantana
 

@@ -56,6 +56,7 @@ import KyouView from './kyou-view.vue'
 import { ReKyou } from '@/classes/datas/re-kyou'
 import { AddReKyouRequest } from '@/classes/api/req_res/add-re-kyou-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const props = defineProps<ConfirmReKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -87,6 +88,7 @@ async function rekyou(): Promise<void> {
     new_rekyou.update_user = gkill_info_res.user_id
 
     // 追加リクエストを飛ばす
+    await delete_gkill_cache(new_rekyou.id)
     const req = new AddReKyouRequest()
     req.rekyou = new_rekyou
     const res = await props.gkill_api.add_rekyou(req)
