@@ -69,7 +69,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         const cacheKey = `/cache/api/${data_type}/${id}`
 
         const cache = await caches.open('gkill-post-cache')
-        if (!force_reget) {
+        if (JSON.parse(force_reget).toString().toLowerCase() !== "true") {
           const cached = await cache.match(cacheKey)
           if (cached) return cached
         }

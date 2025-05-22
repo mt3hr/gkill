@@ -47,7 +47,7 @@ onMounted(() => {
     height: 100vh;
     pointer-events: none;
     overflow: hidden;
-    /* z-index: 1; */
+    z-index: -100000000;
     background-color: white;
 }
 
