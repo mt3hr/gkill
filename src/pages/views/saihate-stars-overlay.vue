@@ -78,15 +78,29 @@ onMounted(() => {
   pointer-events: none;
   animation: cameraShake 10s infinite ease-in-out;
   overflow: hidden;
-  /* z-index: 1; */
+  z-index: -100000000;
 }
 
 @keyframes cameraShake {
-  0% { transform: translate(0px, 0px); }
-  25% { transform: translate(1px, -1px); }
-  50% { transform: translate(-1px, 1px); }
-  75% { transform: translate(1px, 0px); }
-  100% { transform: translate(0px, 0px); }
+  0% {
+    transform: translate(0px, 0px);
+  }
+
+  25% {
+    transform: translate(1px, -1px);
+  }
+
+  50% {
+    transform: translate(-1px, 1px);
+  }
+
+  75% {
+    transform: translate(1px, 0px);
+  }
+
+  100% {
+    transform: translate(0px, 0px);
+  }
 }
 
 .star-field {
@@ -108,8 +122,15 @@ onMounted(() => {
 }
 
 @keyframes twinkle {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 .red-star {
@@ -120,8 +141,15 @@ onMounted(() => {
 }
 
 @keyframes twinkleRed {
-  0%, 100% { opacity: 0.1; }
-  50% { opacity: 0.9; }
+
+  0%,
+  100% {
+    opacity: 0.1;
+  }
+
+  50% {
+    opacity: 0.9;
+  }
 }
 
 .big-star {
@@ -131,8 +159,15 @@ onMounted(() => {
 }
 
 @keyframes twinkleBig {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 .blue-star {
@@ -143,8 +178,15 @@ onMounted(() => {
 }
 
 @keyframes twinkleBlue {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 0.8; }
+
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
 }
 
 .moon {
@@ -168,6 +210,7 @@ onMounted(() => {
     opacity: 1;
     transform: translate(0, 0) rotate(135deg);
   }
+
   100% {
     opacity: 0;
     transform: translate(-500px, 500px) rotate(135deg);
