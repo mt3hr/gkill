@@ -2699,17 +2699,13 @@ export class GkillAPI {
                 req.last_updated_time = new Date(this.get_last_cache_update_time())
                 const res = await this.get_updated_datas_by_time(req)
                 if (res.updated_ids) {
-                        /*
-                        if (res.updated_ids.length > 2000) {
+                        if (res.updated_ids.length > 1000) {
                                 await delete_gkill_cache(null)
                         } else {
-                        */
                                 for (let i = 1; i < res.updated_ids.length; i++) {
                                         await delete_gkill_cache(res.updated_ids[i])
                                 }
-                        /*
                         }
-                        */
                 }
                 this.set_last_cache_update_time(new Date(Date.now()))
         }
