@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import { VitePWA } from 'vite-plugin-pwa'
+import package_json from './package.json'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -24,13 +25,14 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'serviceWorker.ts',
       manifest: {
+        version: package_json.version,
         icons: [{
           src: "favicon.png",
           sizes: "144x144",
           type: "image/png",
           purpose: "any"
         }]
-      },
+      } as any,
       injectManifest: {
         maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
       },
