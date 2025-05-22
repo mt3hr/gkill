@@ -318,7 +318,7 @@ SELECT
   DATA_UPDATE_TIME,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
 FROM %s
-WHERE datetime('localtime', LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME) >= datetime('localtime', ?)
+WHERE datetime(LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME, 'localtime') >= datetime(?, 'localtime')
 `, l.tableName)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
