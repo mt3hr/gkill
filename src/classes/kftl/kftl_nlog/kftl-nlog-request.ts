@@ -7,6 +7,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 export class KFTLNlogRequest extends KFTLRequest {
 
@@ -65,6 +66,7 @@ export class KFTLNlogRequest extends KFTLRequest {
             req.nlog.update_time = now
             req.nlog.update_user = gkill_info_res.user_id
 
+            await delete_gkill_cache(req.nlog.id)
             await GkillAPI.get_gkill_api().add_nlog(req).then(res => {
                 if (res.errors && res.errors.length !== 0) {
                     errors = errors.concat(res.errors)

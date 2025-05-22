@@ -161,6 +161,8 @@ type GkillServerAPIAddress struct {
 
 	URLogBookmarkletAddress string
 
+	GetUpdatedDatasByTimeAddress string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -318,6 +320,8 @@ type GkillServerAPIAddress struct {
 	ReloadRepositoriesMethod string
 
 	URLogBookmarkletMethod string
+
+	GetUpdatedDatasByTimeMethod string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -403,6 +407,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.OpenFileAddress = "/api/open_file"
 	gkillAPIAddress.ReloadRepositoriesAddress = "/api/reload_repositories"
 	gkillAPIAddress.URLogBookmarkletAddress = "/api/urlog_bookmarklet"
+	gkillAPIAddress.GetUpdatedDatasByTimeAddress = "/api/get_updated_datas_by_time"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
@@ -482,5 +487,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.OpenFileMethod = "POST"
 	gkillAPIAddress.ReloadRepositoriesMethod = "POST"
 	gkillAPIAddress.URLogBookmarkletMethod = "POST"
+	gkillAPIAddress.GetUpdatedDatasByTimeMethod = "POST"
 	return gkillAPIAddress
 }

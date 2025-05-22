@@ -38,6 +38,7 @@ import rykvView from './views/rykv-view.vue'
 import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { useTheme } from 'vuetify'
+
 const theme = useTheme()
 
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);
@@ -53,6 +54,8 @@ const app_content_width: Ref<Number> = ref(0)
 
 const is_show_application_config_dialog: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
+
+
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()

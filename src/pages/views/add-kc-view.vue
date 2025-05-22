@@ -86,6 +86,7 @@ import { AddKCRequest } from '@/classes/api/req_res/add-kc-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -194,6 +195,7 @@ async function save(): Promise<void> {
         new_kc.update_user = gkill_info_res.user_id
 
         // 追加リクエストを飛ばす
+        await delete_gkill_cache(new_kc.id)
         const req = new AddKCRequest()
         req.kc = new_kc
         const res = await props.gkill_api.add_kc(req)

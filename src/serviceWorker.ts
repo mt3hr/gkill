@@ -19,7 +19,7 @@ self.addEventListener('push', async function (event: any) {
     }
     event.waitUntil(self.registration.showNotification(title, options))
   } else if (data.is_updated_data_notify) {
-    delete_gkill_cache(data.id)
+    await delete_gkill_cache(data.id)
   }
 })
 

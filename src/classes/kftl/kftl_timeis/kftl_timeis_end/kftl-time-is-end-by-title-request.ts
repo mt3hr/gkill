@@ -47,6 +47,8 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
         const get_plaing_timeis_query = generate_get_plaing_timeis_kyous_query(null)
         const get_plaing_timeis_req = new GetKyousRequest()
         get_plaing_timeis_req.query = get_plaing_timeis_query
+
+        await GkillAPI.get_instance().delete_updated_gkill_caches()
         const get_plaing_timeis_res = await GkillAPI.get_gkill_api().get_kyous(get_plaing_timeis_req)
         if (get_plaing_timeis_res.errors && get_plaing_timeis_res.errors.length !== 0) {
             errors = errors.concat(get_plaing_timeis_res.errors)
@@ -81,7 +83,7 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
         }
 
         // end_timeをいれてUPDATEする
-        delete_gkill_cache(target_timeis.id)
+        await delete_gkill_cache(target_timeis.id)
         const update_timeis_req = new UpdateTimeisRequest()
         update_timeis_req.timeis = target_timeis.clone()
         update_timeis_req.timeis.end_time = time

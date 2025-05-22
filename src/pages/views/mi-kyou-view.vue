@@ -161,7 +161,7 @@ async function clicked_mi_check(): Promise<void> {
     updated_mi.update_user = gkill_info_res.user_id
 
     // 更新リクエストを飛ばす
-    delete_gkill_cache(updated_mi.id)
+    await delete_gkill_cache(updated_mi.id)
     const req = new UpdateMiRequest()
     req.mi = updated_mi
 
