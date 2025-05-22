@@ -238,6 +238,7 @@ import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-r
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 const add_notification_views = ref<any>(null);
@@ -495,6 +496,7 @@ async function save(): Promise<void> {
         new_mi.update_user = gkill_info_res.user_id
 
         // 追加リクエストを飛ばす
+        await delete_gkill_cache(new_mi.id)
         const req = new AddMiRequest()
         req.mi = new_mi
         const res = await props.gkill_api.add_mi(req)
@@ -509,6 +511,7 @@ async function save(): Promise<void> {
         // Notification 追加
         for (let i = 0; i < notifications.length; i++) {
             // 追加リクエストを飛ばす
+            await delete_gkill_cache(notifications[i].id)
             const req = new AddNotificationRequest()
             req.notification = notifications[i]
             const res = await props.gkill_api.add_notification(req)

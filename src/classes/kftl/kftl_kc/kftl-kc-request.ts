@@ -6,6 +6,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { AddKCRequest } from '@/classes/api/req_res/add-kc-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 export class KFTLKCRequest extends KFTLRequest {
 
@@ -43,6 +44,7 @@ export class KFTLKCRequest extends KFTLRequest {
         req.kc.update_time = now
         req.kc.update_user = gkill_info_res.user_id
 
+        await delete_gkill_cache(req.kc.id)
         await GkillAPI.get_gkill_api().add_kc(req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)

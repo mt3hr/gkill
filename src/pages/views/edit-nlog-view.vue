@@ -253,7 +253,7 @@ async function save(): Promise<void> {
         updated_nlog.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
-        delete_gkill_cache(updated_nlog.id)
+        await delete_gkill_cache(updated_nlog.id)
         const req = new UpdateNlogRequest()
         req.nlog = updated_nlog
 

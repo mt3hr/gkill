@@ -6,6 +6,7 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { AddLantanaRequest } from '@/classes/api/req_res/add-lantana-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 export class KFTLLantanaRequest extends KFTLRequest {
 
@@ -40,6 +41,7 @@ export class KFTLLantanaRequest extends KFTLRequest {
         req.lantana.update_time = now
         req.lantana.update_user = gkill_info_res.user_id
 
+        await delete_gkill_cache(req.lantana.id)
         await GkillAPI.get_gkill_api().add_lantana(req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)

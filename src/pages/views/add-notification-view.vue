@@ -54,7 +54,8 @@
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{ i18n.global.t("SAVE_TITLE")
+                <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
+                    i18n.global.t("SAVE_TITLE")
                     }}</v-btn>
             </v-col>
         </v-row>
@@ -101,6 +102,7 @@ import moment from 'moment'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
+import delete_gkill_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -169,6 +171,8 @@ async function save(): Promise<void> {
         new_notification.related_time = new Date(Date.now())
 
         // 追加リクエストを飛ばす
+        await delete_gkill_cache(new_notification.id)
+        await delete_gkill_cache(new_notification.target_id)
         const req = new AddNotificationRequest()
         req.notification = new_notification
         const res = await props.gkill_api.add_notification(req)

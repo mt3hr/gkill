@@ -87,8 +87,8 @@ async function delete_text(): Promise<void> {
     updated_text.update_user = gkill_info_res.user_id
 
     // 更新リクエストを飛ばす
-    delete_gkill_cache(updated_text.id)
-    delete_gkill_cache(updated_text.target_id)
+    await delete_gkill_cache(updated_text.id)
+    await delete_gkill_cache(updated_text.target_id)
     const req = new UpdateTextRequest()
     req.text = updated_text
     const res = await props.gkill_api.update_text(req)

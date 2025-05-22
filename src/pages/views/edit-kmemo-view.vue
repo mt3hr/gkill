@@ -215,7 +215,7 @@ async function save(): Promise<void> {
         updated_kmemo.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
-        delete_gkill_cache(updated_kmemo.id)
+        await delete_gkill_cache(updated_kmemo.id)
         const req = new UpdateKmemoRequest()
         req.kmemo = updated_kmemo
 

@@ -10,7 +10,7 @@ var (
 	TLSKeyFileDefault    = "$HOME/gkill/tls/key.pem"
 	DataDirectoryDefault = "$HOME/gkill/datas"
 
-	IsCacheInMemory = true
+	IsCacheInMemory = false
 	IsOutputLog     = false
 	DisableTLSForce = false
 
