@@ -194,7 +194,7 @@ async function save(): Promise<void> {
         updated_rekyou.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
-        delete_gkill_cache(updated_rekyou.id)
+        await delete_gkill_cache(updated_rekyou.id)
         const req = new UpdateReKyouRequest()
         req.rekyou = updated_rekyou
 

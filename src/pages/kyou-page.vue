@@ -76,6 +76,9 @@ import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 import { useTheme } from 'vuetify'
 
+
+
+
 const theme = useTheme()
 
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);

@@ -67,6 +67,9 @@ import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register
 import { useTheme } from 'vuetify'
 import MkflView from './views/mkfl-view.vue'
 
+
+
+
 const theme = useTheme()
 
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);

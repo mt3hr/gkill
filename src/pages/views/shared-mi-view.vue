@@ -110,6 +110,7 @@ const focused_kyou: Ref<Kyou | null> = ref(null)
 
 async function load_content(): Promise<void> {
     const get_kyous_req = new GetKyousRequest()
+    await props.gkill_api.delete_updated_gkill_caches()
     const res = await props.gkill_api.get_kyous(get_kyous_req)
     match_kyous.value = res.kyous
     is_loading.value = false
