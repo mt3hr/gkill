@@ -7,6 +7,8 @@ export class UpdateTimeisRequest extends GkillAPIRequest {
 
     timeis: TimeIs
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.timeis = new TimeIs()

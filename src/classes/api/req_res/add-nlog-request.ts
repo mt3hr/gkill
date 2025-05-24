@@ -7,6 +7,8 @@ export class AddNlogRequest extends GkillAPIRequest {
 
     nlog: Nlog
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.nlog = new Nlog()

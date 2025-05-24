@@ -6,4 +6,6 @@ type AddReKyouRequest struct {
 	SessionID string `json:"session_id"`
 
 	ReKyou *reps.ReKyou `json:"rekyou"`
+
+	TXID *string `json:"tx_id"`
 }

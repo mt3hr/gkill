@@ -6,4 +6,6 @@ type AddTextRequest struct {
 	SessionID string `json:"session_id"`
 
 	Text *reps.Text `json:"text"`
+
+	TXID *string `json:"tx_id"`
 }

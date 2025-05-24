@@ -14,6 +14,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/memory_db"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps/rep_cache_updater"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
@@ -30,6 +31,7 @@ type GkillDAOManager struct {
 	fileRepWatchCacheUpdater rep_cache_updater.FileRepCacheUpdater
 
 	ConfigDAOs *ConfigDAOs
+	TempReps   *TempReps
 
 	router    *mux.Router
 	autoIDF   *bool
@@ -125,6 +127,11 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		return nil, err
 	}
 	gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO, err = gkill_notification.NewGkillNotificateTargetDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "gkill_notification_target.db"))
+	if err != nil {
+		return nil, err
+	}
+
+	gkillDAOManager.TempReps, err = NewTempReps(memory_db.MemoryDB)
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,8 @@ export class UpdateTextRequest extends GkillAPIRequest {
 
     text: Text
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.text = new Text()

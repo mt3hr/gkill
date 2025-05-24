@@ -650,6 +650,18 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		g.HandleGetUpdatedDatasByTime(w, r)
 	}).Methods(g.APIAddress.GetUpdatedDatasByTimeMethod)
+	router.HandleFunc(g.APIAddress.CommitTXAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
+		g.HandleCommitTx(w, r)
+	}).Methods(g.APIAddress.CommitTXMethod)
+	router.HandleFunc(g.APIAddress.DiscardTXAddress, func(w http.ResponseWriter, r *http.Request) {
+		if ok := g.filterLocalOnly(w, r); !ok {
+			return
+		}
+		g.HandleDiscardTX(w, r)
+	}).Methods(g.APIAddress.DiscardTXMethod)
 
 	gkillPage, err := fs.Sub(HTMLFS, "embed/html")
 	if err != nil {
@@ -1355,16 +1367,30 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repositories.WriteTagRep.AddTagInfo(r.Context(), request.Tag)
-	if err != nil {
-		err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddTagError,
-			ErrorMessage: "タグ追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteTagRep.AddTagInfo(r.Context(), request.Tag)
+		if err != nil {
+			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTagError,
+				ErrorMessage: "タグ追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.TagTempRep.AddTagInfo(r.Context(), request.Tag, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTagError,
+				ErrorMessage: "タグ追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.ID)
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.TargetID)
@@ -1505,16 +1531,30 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repositories.WriteTextRep.AddTextInfo(r.Context(), request.Text)
-	if err != nil {
-		err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddTextError,
-			ErrorMessage: "テキスト追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteTextRep.AddTextInfo(r.Context(), request.Text)
+		if err != nil {
+			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTextError,
+				ErrorMessage: "テキスト追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.TextTempRep.AddTextInfo(r.Context(), request.Text, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTextError,
+				ErrorMessage: "テキスト追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.ID)
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.TargetID)
@@ -1655,16 +1695,30 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	err = repositories.WriteNotificationRep.AddNotificationInfo(r.Context(), request.Notification)
-	if err != nil {
-		err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddNotificationError,
-			ErrorMessage: "通知追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteNotificationRep.AddNotificationInfo(r.Context(), request.Notification)
+		if err != nil {
+			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddNotificationError,
+				ErrorMessage: "通知追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.NotificationTempRep.AddNotificationInfo(r.Context(), request.Notification, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddNotificationError,
+				ErrorMessage: "通知追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.ID)
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.TargetID)
@@ -1729,6 +1783,43 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificatorError,
 			ErrorMessage: "通知更新に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	response.AddedNotification = notification
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.AddNotificationSuccessMessage,
+		Message:     "通知を追加しました",
+	})
+	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.ID)
+	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.TargetID)
+
+	repName, err = repositories.WriteNotificationRep.GetRepName(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知追加後取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+		IsDeleted:                              request.Notification.IsDeleted,
+		TargetID:                               request.Notification.ID,
+		DataUpdateTime:                         request.Notification.UpdateTime,
+		LatestDataRepositoryName:               repName,
+		LatestDataRepositoryAddressUpdatedTime: time.Now(),
+	})
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetNotificationError,
+			ErrorMessage: "通知追加後取得に失敗しました",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1829,16 +1920,30 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = repositories.WriteKmemoRep.AddKmemoInfo(r.Context(), request.Kmemo)
-	if err != nil {
-		err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddKmemoError,
-			ErrorMessage: "Kmemo追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteKmemoRep.AddKmemoInfo(r.Context(), request.Kmemo)
+		if err != nil {
+			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddKmemoError,
+				ErrorMessage: "Kmemo追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.KmemoTempRep.AddKmemoInfo(r.Context(), request.Kmemo, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddKmemoError,
+				ErrorMessage: "Kmemo追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Kmemo.ID)
 
@@ -1978,16 +2083,30 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repositories.WriteKCRep.AddKCInfo(r.Context(), request.KC)
-	if err != nil {
-		err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddKCError,
-			ErrorMessage: "KC追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteKCRep.AddKCInfo(r.Context(), request.KC)
+		if err != nil {
+			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddKCError,
+				ErrorMessage: "KC追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.KCTempRep.AddKCInfo(r.Context(), request.KC, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddKCError,
+				ErrorMessage: "KC追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.KC.ID)
 
@@ -2158,16 +2277,30 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 	}
 
-	err = repositories.WriteURLogRep.AddURLogInfo(r.Context(), request.URLog)
-	if err != nil {
-		err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddURLogError,
-			ErrorMessage: "URLog追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteURLogRep.AddURLogInfo(r.Context(), request.URLog)
+		if err != nil {
+			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddURLogError,
+				ErrorMessage: "URLog追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.URLogTempRep.AddURLogInfo(r.Context(), request.URLog, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddURLogError,
+				ErrorMessage: "URLog追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.URLog.ID)
 
@@ -2307,16 +2440,30 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repositories.WriteNlogRep.AddNlogInfo(r.Context(), request.Nlog)
-	if err != nil {
-		err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddNlogError,
-			ErrorMessage: "Nlog追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteNlogRep.AddNlogInfo(r.Context(), request.Nlog)
+		if err != nil {
+			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddNlogError,
+				ErrorMessage: "Nlog追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.NlogTempRep.AddNlogInfo(r.Context(), request.Nlog, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddNlogError,
+				ErrorMessage: "Nlog追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Nlog.ID)
 
@@ -2456,16 +2603,30 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = repositories.WriteTimeIsRep.AddTimeIsInfo(r.Context(), request.TimeIs)
-	if err != nil {
-		err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddTimeIsError,
-			ErrorMessage: "TimeIs追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteTimeIsRep.AddTimeIsInfo(r.Context(), request.TimeIs)
+		if err != nil {
+			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTimeIsError,
+				ErrorMessage: "TimeIs追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.TimeIsTempRep.AddTimeIsInfo(r.Context(), request.TimeIs, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTimeIsError,
+				ErrorMessage: "TimeIs追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.TimeIs.ID)
 
@@ -2606,16 +2767,30 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = repositories.WriteLantanaRep.AddLantanaInfo(r.Context(), request.Lantana)
-	if err != nil {
-		err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddLantanaError,
-			ErrorMessage: "Lantana追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteLantanaRep.AddLantanaInfo(r.Context(), request.Lantana)
+		if err != nil {
+			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddLantanaError,
+				ErrorMessage: "Lantana追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.LantanaTempRep.AddLantanaInfo(r.Context(), request.Lantana, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddLantanaError,
+				ErrorMessage: "Lantana追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Lantana.ID)
 
@@ -2755,16 +2930,30 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repositories.WriteMiRep.AddMiInfo(r.Context(), request.Mi)
-	if err != nil {
-		err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddMiError,
-			ErrorMessage: "Mi追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteMiRep.AddMiInfo(r.Context(), request.Mi)
+		if err != nil {
+			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddMiError,
+				ErrorMessage: "Mi追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.MiTempRep.AddMiInfo(r.Context(), request.Mi, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddMiError,
+				ErrorMessage: "Mi追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Mi.ID)
 
@@ -2904,16 +3093,30 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = repositories.WriteReKyouRep.AddReKyouInfo(r.Context(), request.ReKyou)
-	if err != nil {
-		err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddReKyouError,
-			ErrorMessage: "ReKyou追加に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteReKyouRep.AddReKyouInfo(r.Context(), request.ReKyou)
+		if err != nil {
+			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddReKyouError,
+				ErrorMessage: "ReKyou追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.ReKyouTempRep.AddReKyouInfo(r.Context(), request.ReKyou, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddReKyouError,
+				ErrorMessage: "ReKyou追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.ReKyou.ID)
 
@@ -3043,16 +3246,30 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = repositories.WriteTagRep.AddTagInfo(r.Context(), request.Tag)
-	if err != nil {
-		err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddTagError,
-			ErrorMessage: "タグ更新に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteTagRep.AddTagInfo(r.Context(), request.Tag)
+		if err != nil {
+			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTagError,
+				ErrorMessage: "タグ更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.TagTempRep.AddTagInfo(r.Context(), request.Tag, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTagError,
+				ErrorMessage: "タグ更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.ID)
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.TargetID)
@@ -3206,16 +3423,30 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = repositories.WriteTextRep.AddTextInfo(r.Context(), request.Text)
-	if err != nil {
-		err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddTextError,
-			ErrorMessage: "テキスト更新に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteTextRep.AddTextInfo(r.Context(), request.Text)
+		if err != nil {
+			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTextError,
+				ErrorMessage: "テキスト更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.TextTempRep.AddTextInfo(r.Context(), request.Text, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTextError,
+				ErrorMessage: "テキスト更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.ID)
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.TargetID)
@@ -3369,16 +3600,30 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		return
 	}
 
-	err = repositories.WriteNotificationRep.AddNotificationInfo(r.Context(), request.Notification)
-	if err != nil {
-		err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddNotificationError,
-			ErrorMessage: "通知更新に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteNotificationRep.AddNotificationInfo(r.Context(), request.Notification)
+		if err != nil {
+			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddNotificationError,
+				ErrorMessage: "通知更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.NotificationTempRep.AddNotificationInfo(r.Context(), request.Notification, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddNotificationError,
+				ErrorMessage: "通知更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.ID)
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.TargetID)
@@ -3556,16 +3801,30 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = repositories.WriteKmemoRep.AddKmemoInfo(r.Context(), request.Kmemo)
-	if err != nil {
-		err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddKmemoError,
-			ErrorMessage: "Kmemo更新に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteKmemoRep.AddKmemoInfo(r.Context(), request.Kmemo)
+		if err != nil {
+			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddKmemoError,
+				ErrorMessage: "Kmemo更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.KmemoTempRep.AddKmemoInfo(r.Context(), request.Kmemo, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddKmemoError,
+				ErrorMessage: "Kmemo更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Kmemo.ID)
 
@@ -3718,16 +3977,30 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = repositories.WriteKCRep.AddKCInfo(r.Context(), request.KC)
-	if err != nil {
-		err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddKCError,
-			ErrorMessage: "KC更新に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteKCRep.AddKCInfo(r.Context(), request.KC)
+		if err != nil {
+			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddKCError,
+				ErrorMessage: "KC更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.KCTempRep.AddKCInfo(r.Context(), request.KC, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddKCError,
+				ErrorMessage: "KC更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.KC.ID)
 
@@ -3953,16 +4226,30 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	err = repositories.WriteURLogRep.AddURLogInfo(r.Context(), request.URLog)
-	if err != nil {
-		err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddURLogError,
-			ErrorMessage: "URLog更新に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteURLogRep.AddURLogInfo(r.Context(), request.URLog)
+		if err != nil {
+			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddURLogError,
+				ErrorMessage: "URLog更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.URLogTempRep.AddURLogInfo(r.Context(), request.URLog, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddURLogError,
+				ErrorMessage: "URLog更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.URLog.ID)
 
@@ -4115,16 +4402,30 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = repositories.WriteNlogRep.AddNlogInfo(r.Context(), request.Nlog)
-	if err != nil {
-		err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddNlogError,
-			ErrorMessage: "Nlog更新に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteNlogRep.AddNlogInfo(r.Context(), request.Nlog)
+		if err != nil {
+			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddNlogError,
+				ErrorMessage: "Nlog更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.NlogTempRep.AddNlogInfo(r.Context(), request.Nlog, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddNlogError,
+				ErrorMessage: "Nlog更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Nlog.ID)
 
@@ -4277,16 +4578,30 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = repositories.WriteTimeIsRep.AddTimeIsInfo(r.Context(), request.TimeIs)
-	if err != nil {
-		err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddTimeIsError,
-			ErrorMessage: "TimeIs更新に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteTimeIsRep.AddTimeIsInfo(r.Context(), request.TimeIs)
+		if err != nil {
+			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTimeIsError,
+				ErrorMessage: "TimeIs更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.TimeIsTempRep.AddTimeIsInfo(r.Context(), request.TimeIs, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTimeIsError,
+				ErrorMessage: "TimeIs更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.TimeIs.ID)
 
@@ -4439,16 +4754,30 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = repositories.WriteLantanaRep.AddLantanaInfo(r.Context(), request.Lantana)
-	if err != nil {
-		err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddLantanaError,
-			ErrorMessage: "Lantana更新に失敗しました",
+	if existLantana == nil {
+		err = repositories.WriteLantanaRep.AddLantanaInfo(r.Context(), request.Lantana)
+		if err != nil {
+			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddLantanaError,
+				ErrorMessage: "Lantana更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.LantanaTempRep.AddLantanaInfo(r.Context(), request.Lantana, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddLantanaError,
+				ErrorMessage: "Lantana更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Lantana.ID)
 
@@ -4601,16 +4930,30 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = repositories.WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), request.IDFKyou)
-	if err != nil {
-		err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddIDFKyouError,
-			ErrorMessage: "IDFKyou更新に失敗しました",
+	if existIDFKyou == nil {
+		err = repositories.WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), request.IDFKyou)
+		if err != nil {
+			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddIDFKyouError,
+				ErrorMessage: "IDFKyou更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.IDFKyouTempRep.AddIDFKyouInfo(r.Context(), request.IDFKyou, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddIDFKyouError,
+				ErrorMessage: "IDFKyou更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.IDFKyou.ID)
 
@@ -4773,16 +5116,30 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = repositories.WriteMiRep.AddMiInfo(r.Context(), request.Mi)
-	if err != nil {
-		err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddMiError,
-			ErrorMessage: "Mi更新に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteMiRep.AddMiInfo(r.Context(), request.Mi)
+		if err != nil {
+			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddMiError,
+				ErrorMessage: "Mi更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.MiTempRep.AddMiInfo(r.Context(), request.Mi, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddMiError,
+				ErrorMessage: "Mi更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Mi.ID)
 
@@ -4912,16 +5269,30 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = repositories.WriteReKyouRep.AddReKyouInfo(r.Context(), request.ReKyou)
-	if err != nil {
-		err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddReKyouError,
-			ErrorMessage: "ReKyou更新に失敗しました",
+	if request.TXID == nil {
+		err = repositories.WriteReKyouRep.AddReKyouInfo(r.Context(), request.ReKyou)
+		if err != nil {
+			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddReKyouError,
+				ErrorMessage: "ReKyou更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
+	} else {
+		err = g.GkillDAOManager.TempReps.ReKyouTempRep.AddReKyouInfo(r.Context(), request.ReKyou, *request.TXID, userID, device)
+		if err != nil {
+			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddReKyouError,
+				ErrorMessage: "ReKyou更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
 	}
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.ReKyou.ID)
 
@@ -11768,5 +12139,916 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 			return
 		}
 		defer resp.Body.Close()
+	}
+}
+
+func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) {
+	defer func() { runtime.GC() }()
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.CommitTxRequest{}
+	response := &req_res.CommitTxResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse commit tx response to json: %w", err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AccountInvalidCommitTxResponseDataError,
+				ErrorMessage: "保存に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse commit tx request to json: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidCommitTxRequestDataError,
+			ErrorMessage: "保存に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "kmemo追加に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	txID := request.TXID
+	ctx := r.Context()
+
+	kmemos, err := g.GkillDAOManager.TempReps.KmemoTempRep.GetKmemosByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get kmemo by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetKmemoError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	kcs, err := g.GkillDAOManager.TempReps.KCTempRep.GetKCsByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get kc by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetKCError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	idfKyous, err := g.GkillDAOManager.TempReps.IDFKyouTempRep.GetIDFKyousByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get idfkyou by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetIDFKyouError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	lantanas, err := g.GkillDAOManager.TempReps.LantanaTempRep.GetLantanasByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get lantana by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetLantanaError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	mis, err := g.GkillDAOManager.TempReps.MiTempRep.GetMisByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get mi by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetMiError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	nlogs, err := g.GkillDAOManager.TempReps.NlogTempRep.GetNlogsByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get nlog by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetNlogError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	notifications, err := g.GkillDAOManager.TempReps.NotificationTempRep.GetNotificationsByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get notification by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetNotificationError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	rekyous, err := g.GkillDAOManager.TempReps.ReKyouTempRep.GetReKyousByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get rekyou by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetReKyouError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	tags, err := g.GkillDAOManager.TempReps.TagTempRep.GetTagsByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get tag by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetTagError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	texts, err := g.GkillDAOManager.TempReps.TextTempRep.GetTextsByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get text by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetTextError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	timeiss, err := g.GkillDAOManager.TempReps.TimeIsTempRep.GetTimeIssByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get timeis by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetTimeIsError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	urlogs, err := g.GkillDAOManager.TempReps.URLogTempRep.GetURLogsByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get urlog by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.CommitTxGetURLogError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	for _, idfKyou := range idfKyous {
+		err = repositories.WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), idfKyou)
+		if err != nil {
+			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddIDFKyouError,
+				ErrorMessage: "IDFKyou更新に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		// defer g.WebPushUpdatedData(r.Context(), userID, device, request.IDFKyou.ID)
+
+		repName, err := repositories.WriteIDFKyouRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetIDFKyouError,
+				ErrorMessage: "IDFKyou更新後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              idfKyou.IsDeleted,
+			TargetID:                               idfKyou.ID,
+			DataUpdateTime:                         idfKyou.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetIDFKyouError,
+				ErrorMessage: "IDFKyou更新後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, kc := range kcs {
+		err = repositories.WriteKCRep.AddKCInfo(r.Context(), kc)
+		if err != nil {
+			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddKCError,
+				ErrorMessage: "KC追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteKCRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetKCError,
+				ErrorMessage: "KC追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              kc.IsDeleted,
+			TargetID:                               kc.ID,
+			DataUpdateTime:                         kc.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetKCError,
+				ErrorMessage: "KC追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, kmemo := range kmemos {
+		err = repositories.WriteKmemoRep.AddKmemoInfo(r.Context(), kmemo)
+		if err != nil {
+			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddKmemoError,
+				ErrorMessage: "Kmemo追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteKmemoRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetKmemoError,
+				ErrorMessage: "Kmemo追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              kmemo.IsDeleted,
+			TargetID:                               kmemo.ID,
+			DataUpdateTime:                         kmemo.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetKmemoError,
+				ErrorMessage: "Kmemo追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, lantana := range lantanas {
+		err = repositories.WriteLantanaRep.AddLantanaInfo(r.Context(), lantana)
+		if err != nil {
+			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, lantana, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddLantanaError,
+				ErrorMessage: "Lantana追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteLantanaRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetLantanaError,
+				ErrorMessage: "Lantana追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              lantana.IsDeleted,
+			TargetID:                               lantana.ID,
+			DataUpdateTime:                         lantana.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetLantanaError,
+				ErrorMessage: "Lantana追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, mi := range mis {
+		err = repositories.WriteMiRep.AddMiInfo(r.Context(), mi)
+		if err != nil {
+			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddMiError,
+				ErrorMessage: "Mi追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteMiRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetMiError,
+				ErrorMessage: "Mi追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              mi.IsDeleted,
+			TargetID:                               mi.ID,
+			DataUpdateTime:                         mi.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetMiError,
+				ErrorMessage: "Mi追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, nlog := range nlogs {
+		err = repositories.WriteNlogRep.AddNlogInfo(r.Context(), nlog)
+		if err != nil {
+			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddNlogError,
+				ErrorMessage: "Nlog追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteNlogRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetNlogError,
+				ErrorMessage: "Nlog追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              nlog.IsDeleted,
+			TargetID:                               nlog.ID,
+			DataUpdateTime:                         nlog.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetNlogError,
+				ErrorMessage: "Nlog追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, notification := range notifications {
+		err = repositories.WriteNotificationRep.AddNotificationInfo(r.Context(), notification)
+		if err != nil {
+			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddNotificationError,
+				ErrorMessage: "通知追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetNotificationError,
+				ErrorMessage: "通知追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              notification.IsDeleted,
+			TargetID:                               notification.ID,
+			DataUpdateTime:                         notification.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetNotificationError,
+				ErrorMessage: "通知追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, rekyou := range rekyous {
+		err = repositories.WriteReKyouRep.AddReKyouInfo(r.Context(), rekyou)
+		if err != nil {
+			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddReKyouError,
+				ErrorMessage: "ReKyou追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteReKyouRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetReKyouError,
+				ErrorMessage: "ReKyou追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              rekyou.IsDeleted,
+			TargetID:                               rekyou.ID,
+			DataUpdateTime:                         rekyou.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetReKyouError,
+				ErrorMessage: "ReKyou追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, tag := range tags {
+		err = repositories.WriteTagRep.AddTagInfo(r.Context(), tag)
+		if err != nil {
+			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTagError,
+				ErrorMessage: "タグ追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteTagRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetTagError,
+				ErrorMessage: "タグ追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              tag.IsDeleted,
+			TargetID:                               tag.ID,
+			DataUpdateTime:                         tag.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetTagError,
+				ErrorMessage: "タグ追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, text := range texts {
+		err = repositories.WriteTextRep.AddTextInfo(r.Context(), text)
+		if err != nil {
+			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTextError,
+				ErrorMessage: "テキスト追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteTextRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetTextError,
+				ErrorMessage: "テキスト追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              text.IsDeleted,
+			TargetID:                               text.ID,
+			DataUpdateTime:                         text.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetTextError,
+				ErrorMessage: "テキスト追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, timeis := range timeiss {
+		err = repositories.WriteTimeIsRep.AddTimeIsInfo(r.Context(), timeis)
+		if err != nil {
+			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddTimeIsError,
+				ErrorMessage: "TimeIs追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteTimeIsRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetTimeIsError,
+				ErrorMessage: "TimeIs追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              timeis.IsDeleted,
+			TargetID:                               timeis.ID,
+			DataUpdateTime:                         timeis.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetTimeIsError,
+				ErrorMessage: "TimeIs追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	for _, urlog := range urlogs {
+		err = repositories.WriteURLogRep.AddURLogInfo(r.Context(), urlog)
+		if err != nil {
+			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddURLogError,
+				ErrorMessage: "URLog追加に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
+		if err != nil {
+			err = fmt.Errorf("error at get rep name user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetURLogError,
+				ErrorMessage: "URLog追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), &account_state.LatestDataRepositoryAddress{
+			IsDeleted:                              urlog.IsDeleted,
+			TargetID:                               urlog.ID,
+			DataUpdateTime:                         urlog.UpdateTime,
+			LatestDataRepositoryName:               repName,
+			LatestDataRepositoryAddressUpdatedTime: time.Now(),
+		})
+		if err != nil {
+			err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetURLogError,
+				ErrorMessage: "URLog追加後取得に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
+	response.Messages = append(response.Messages, &message.GkillMessage{
+		MessageCode: message.CommitTxSuccessMessage,
+		Message:     "保存しました",
+	})
+}
+func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request) {
+	defer func() { runtime.GC() }()
+	w.Header().Set("Content-Type", "application/json")
+	request := &req_res.DiscardTxRequest{}
+	response := &req_res.DiscardTxResponse{}
+
+	defer r.Body.Close()
+	defer func() {
+		err := json.NewEncoder(w).Encode(response)
+		if err != nil {
+			err = fmt.Errorf("error at parse discart tx response to json: %w", err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AccountInvalidDiscardTxResponseDataError,
+				ErrorMessage: "トランザクション破棄に失敗しました",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}()
+
+	err := json.NewDecoder(r.Body).Decode(request)
+	if err != nil {
+		err = fmt.Errorf("error at parse discard tx request to json: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountInvalidDiscardTxRequestDataError,
+			ErrorMessage: "トランザクション破棄に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	// アカウントを取得
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	if err != nil {
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	userID := account.UserID
+	device, err := g.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: "内部エラー",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	txID := request.TXID
+	ctx := r.Context()
+
+	err = g.GkillDAOManager.TempReps.IDFKyouTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete idfKyou by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteIDFKyouError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.KCTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete kc by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteKCError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.KmemoTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete kmemo by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteKmemoError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.LantanaTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete lantana by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteLantanaError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.MiTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete mi by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteMiError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.NlogTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete nlog by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteNlogError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.NotificationTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete notification by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteNotificationError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.ReKyouTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete rekyou by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteReKyouError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.TagTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete tag by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteTagError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.TextTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete text by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteTextError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.TimeIsTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete timeis by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteTimeIsError,
+			ErrorMessage: "内部エラー",
+		})
+		return
+	}
+	err = g.GkillDAOManager.TempReps.URLogTempRep.DeleteByTXID(ctx, txID, userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at delete urlog by tx id %s user id = %s device = %s: %w", txID, userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		response.Errors = append(response.Errors, &message.GkillError{
+			ErrorCode:    message.CommitTxDeleteURLogError,
+			ErrorMessage: "内部エラー",
+		})
+		return
 	}
 }

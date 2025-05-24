@@ -85,6 +85,7 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
         // end_timeをいれてUPDATEする
         await delete_gkill_cache(target_timeis.id)
         const update_timeis_req = new UpdateTimeisRequest()
+        update_timeis_req.tx_id = this.get_tx_id()
         update_timeis_req.timeis = target_timeis.clone()
         update_timeis_req.timeis.end_time = time
         update_timeis_req.timeis.update_app = "gkill_kftl"

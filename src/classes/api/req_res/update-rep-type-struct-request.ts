@@ -7,6 +7,8 @@ export class UpdateRepTypeStructRequest extends GkillAPIRequest {
 
     rep_type_struct: Array<RepTypeStruct>
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.rep_type_struct = new Array<RepTypeStruct>()
