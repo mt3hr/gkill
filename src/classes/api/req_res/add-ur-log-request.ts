@@ -7,6 +7,8 @@ export class AddURLogRequest extends GkillAPIRequest {
 
     urlog: URLog
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.urlog = new URLog()

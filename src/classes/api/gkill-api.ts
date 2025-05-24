@@ -179,6 +179,10 @@ import { GetShareKyouListInfosResponse } from "./req_res/get-share-kyou-list-inf
 import { GetUpdatedDatasByTimeRequest } from "./req_res/get-updated-datas-by-time-request"
 import type { GetUpdatedDatasByTimeResponse } from "./req_res/get-updated-datas-by-time-response"
 import delete_gkill_cache from "../delete-gkill-cache"
+import type { CommitTXRequest } from "./req_res/commit-tx-request"
+import type { CommitTXResponse } from "./req_res/commit-tx-response"
+import type { DiscardTXRequest } from "./req_res/discard-tx-request"
+import type { DiscardTXResponse } from "./req_res/discard-tx-response"
 
 export class GkillAPI {
         // 画面以外から参照されるやつ
@@ -280,6 +284,8 @@ export class GkillAPI {
         reload_repositories_address: string
         urlog_bookmarklet_address: string
         get_updated_datas_by_time_address: string
+        commit_tx_address: string
+        discard_tx_address: string
 
         login_method: string
         logout_method: string
@@ -363,6 +369,8 @@ export class GkillAPI {
         reload_repositories_method: string
         urlog_bookmarklet_method: string
         get_updated_datas_by_time_method: string
+        commit_tx_method: string
+        discard_tx_method: string
 
         protected constructor() {
                 this.saved_application_config = null
@@ -447,6 +455,8 @@ export class GkillAPI {
                 this.reload_repositories_address = "/api/reload_repositories"
                 this.urlog_bookmarklet_address = "/api/urlog_bookmarklet"
                 this.get_updated_datas_by_time_address = "/api/get_updated_datas_by_time"
+                this.commit_tx_address = "/api/commit_tx"
+                this.discard_tx_address = "/api/discard_tx"
                 this.login_method = "POST"
                 this.logout_method = "POST"
                 this.reset_password_method = "POST"
@@ -529,6 +539,8 @@ export class GkillAPI {
                 this.reload_repositories_method = "POST"
                 this.urlog_bookmarklet_method = "POST"
                 this.get_updated_datas_by_time_method = "POST"
+                this.commit_tx_method = "POST"
+                this.discard_tx_method = "POST"
         }
 
         async login(req: LoginRequest): Promise<LoginResponse> {
@@ -2440,6 +2452,36 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: GetUpdatedDatasByTimeResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async commit_tx(req: CommitTXRequest): Promise<CommitTXResponse> {
+                const res = await fetch(this.commit_tx_address, {
+                        'method': this.commit_tx_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: CommitTXResponse = json
+                this.check_auth(response)
+                return response
+        }
+
+        async discard_tx(req: DiscardTXRequest): Promise<DiscardTXResponse> {
+                const res = await fetch(this.discard_tx_address, {
+                        'method': this.discard_tx_method,
+                        headers: {
+                                'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(req),
+                        signal: req.abort_controller?.signal,
+                })
+                const json = await res.json()
+                const response: DiscardTXResponse = json
                 this.check_auth(response)
                 return response
         }

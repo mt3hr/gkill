@@ -7,6 +7,8 @@ export class AddKCRequest extends GkillAPIRequest {
 
     kc: KC
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.kc = new KC()

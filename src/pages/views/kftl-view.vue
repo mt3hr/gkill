@@ -13,7 +13,7 @@
                 <v-col cols="auto">
                     <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{
                         i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -60,6 +60,8 @@ import { GkillMessage } from '@/classes/api/gkill-message'
 import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { DiscardTXRequest } from '@/classes/api/req_res/discard-tx-request'
+import { CommitTXRequest } from '@/classes/api/req_res/commit-tx-request'
 
 const kftl_template_dialog = ref<InstanceType<typeof KFTLTemplateDialog> | null>(null);
 
@@ -199,6 +201,7 @@ async function submit(): Promise<void> {
         const kftl_requests = await statement.generate_requests()
         let last_added_request_time = new Date(Date.now()) // 「、、」でずれた分をPlaingTimeIsにわたすための考慮。リロード時刻より大きかった場合はこの値でTimeIsをリロードする
         let errors = new Array<GkillError>()
+        const tx_id = kftl_requests.length > 0 ? kftl_requests[0].get_tx_id() : null
         for (let i = 0; i < kftl_requests.length; i++) {
             const request = kftl_requests[i]
             const request_related_time = request.get_related_time()
@@ -209,8 +212,26 @@ async function submit(): Promise<void> {
         }
         if (errors.length != 0) {
             emits('received_errors', errors)
-            return
+            if (tx_id) {
+                const deiscard_req = new DiscardTXRequest()
+                deiscard_req.tx_id = tx_id
+                const discard_res = await props.gkill_api.discard_tx(deiscard_req)
+                if (discard_res.errors && discard_res.errors.length != 0) {
+                    emits('received_errors', discard_res.errors)
+                }
+                return
+            }
         }
+        if (tx_id) {
+            const commit_req = new CommitTXRequest()
+            commit_req.tx_id = tx_id
+            const commit_res = await props.gkill_api.commit_tx(commit_req)
+            if (commit_res.errors && commit_res.errors.length != 0) {
+                emits('received_errors', commit_res.errors)
+                return
+            }
+        }
+
         clear()
         const message = new GkillMessage()
         message.message_code = GkillMessageCodes.saved_kftls

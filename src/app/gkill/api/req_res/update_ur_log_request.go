@@ -8,4 +8,6 @@ type UpdateURLogRequest struct {
 	URLog *reps.URLog `json:"urlog"`
 
 	ReGetURLogContent bool `json:"re_get_urlog_content"`
+
+	TXID *string `json:"tx_id"`
 }

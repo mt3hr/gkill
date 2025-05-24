@@ -29,6 +29,7 @@ export class KFTLKCRequest extends KFTLRequest {
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddKCRequest()
         const now = new Date(Date.now())
+        req.tx_id = this.get_tx_id()
 
         req.kc.id = this.get_request_id()
         req.kc.title = this.title

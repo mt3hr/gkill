@@ -622,7 +622,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := u.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
+		err = fmt.Errorf("error at get urlog histories sql %s: %w", id, err)
 		return nil, err
 	}
 	defer stmt.Close()

@@ -48,6 +48,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         for (let i = 0; i < this.tags.length; i++) {
             const tag = this.tags[i]
             const req = new AddTagRequest()
+            req.tx_id = this.get_tx_id()
 
             req.tag.id = GkillAPI.get_gkill_api().generate_uuid()
             req.tag.tag = tag
@@ -74,6 +75,7 @@ export abstract class KFTLRequest extends KFTLRequestBase {
             const text = text_entry[1]
 
             const req = new AddTextRequest()
+            req.tx_id = this.get_tx_id()
 
             req.text.id = id
             req.text.target_id = this.get_request_id()
@@ -161,6 +163,10 @@ export abstract class KFTLRequest extends KFTLRequestBase {
             text += `\n${text_line}`
         }
         this.texts_map.set(text_id, text)
+    }
+
+    get_tx_id(): string {
+        return this.context.get_tx_id()
     }
 }
 

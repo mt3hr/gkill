@@ -6,4 +6,6 @@ type AddURLogRequest struct {
 	SessionID string `json:"session_id"`
 
 	URLog *reps.URLog `json:"urlog"`
+
+	TXID *string `json:"tx_id"`
 }
