@@ -6,4 +6,6 @@ type AddKCRequest struct {
 	SessionID string `json:"session_id"`
 
 	KC *reps.KC `json:"kc"`
+
+	TXID *string `json:"tx_id"`
 }

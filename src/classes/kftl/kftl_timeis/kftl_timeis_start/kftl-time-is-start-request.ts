@@ -43,6 +43,7 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddTimeisRequest()
         const now = new Date(Date.now())
+        req.tx_id = this.get_tx_id()
 
         req.timeis.id = this.get_request_id()
         req.timeis.start_time = time

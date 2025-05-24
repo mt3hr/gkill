@@ -8,6 +8,8 @@ export class UpdateURLogRequest extends GkillAPIRequest {
     urlog: URLog
     re_get_urlog_content: boolean
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.re_get_urlog_content = true

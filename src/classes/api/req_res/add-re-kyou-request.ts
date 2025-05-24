@@ -7,6 +7,8 @@ export class AddReKyouRequest extends GkillAPIRequest {
 
     rekyou: ReKyou
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.rekyou = new ReKyou()
