@@ -7,6 +7,8 @@ export class AddShareKyouListInfoRequest extends GkillAPIRequest {
 
     share_kyou_list_info: ShareKyousInfo
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.share_kyou_list_info = new ShareKyousInfo()

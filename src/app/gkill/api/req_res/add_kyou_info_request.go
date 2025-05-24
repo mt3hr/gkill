@@ -6,4 +6,6 @@ type AddKyouInfoRequest struct {
 	SessionID string `json:"session_id"`
 
 	Kyou *reps.IDFKyou `json:"kyou"`
+
+	TXID *string `json:"tx_id"`
 }

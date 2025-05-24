@@ -77,4 +77,5 @@ const (
 	AddKCSuccessMessage                    = "MSG000072"
 	UpdateKCSuccessMessage                 = "MSG000073"
 	GetKCSuccessMessage                    = "MSG000074"
+	CommitTxSuccessMessage                 = "MSG000075"
 )

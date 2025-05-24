@@ -6,4 +6,6 @@ type UpdateKmemoRequest struct {
 	SessionID string `json:"session_id"`
 
 	Kmemo *reps.Kmemo `json:"kmemo"`
+
+	TXID *string `json:"tx_id"`
 }

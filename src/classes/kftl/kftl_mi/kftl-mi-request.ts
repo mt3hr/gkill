@@ -68,6 +68,7 @@ export class KFTLMiRequest extends KFTLRequest {
         const now = new Date(Date.now())
 
         const mi_req = new AddMiRequest()
+        mi_req.tx_id = this.get_tx_id()
 
         mi_req.mi.id = id
         mi_req.mi.title = this.title

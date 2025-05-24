@@ -49,6 +49,7 @@ export class KFTLNlogRequest extends KFTLRequest {
             }
             const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
             const req = new AddNlogRequest()
+            req.tx_id = this.get_tx_id()
             const now = new Date(Date.now())
 
             req.nlog.id = GkillAPI.get_gkill_api().generate_uuid()
