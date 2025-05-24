@@ -163,6 +163,10 @@ type GkillServerAPIAddress struct {
 
 	GetUpdatedDatasByTimeAddress string
 
+	CommitTXAddress string
+
+	DiscardTXAddress string
+
 	LoginMethod string
 
 	LogoutMethod string
@@ -322,6 +326,10 @@ type GkillServerAPIAddress struct {
 	URLogBookmarkletMethod string
 
 	GetUpdatedDatasByTimeMethod string
+
+	CommitTXMethod string
+
+	DiscardTXMethod string
 }
 
 func NewGKillAPIAddress() *GkillServerAPIAddress {
@@ -408,6 +416,8 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.ReloadRepositoriesAddress = "/api/reload_repositories"
 	gkillAPIAddress.URLogBookmarkletAddress = "/api/urlog_bookmarklet"
 	gkillAPIAddress.GetUpdatedDatasByTimeAddress = "/api/get_updated_datas_by_time"
+	gkillAPIAddress.CommitTXAddress = "/api/commit_tx"
+	gkillAPIAddress.DiscardTXAddress = "/api/discard_tx"
 	gkillAPIAddress.LoginMethod = "POST"
 	gkillAPIAddress.LogoutMethod = "POST"
 	gkillAPIAddress.ResetPasswordMethod = "POST"
@@ -488,5 +498,7 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.ReloadRepositoriesMethod = "POST"
 	gkillAPIAddress.URLogBookmarkletMethod = "POST"
 	gkillAPIAddress.GetUpdatedDatasByTimeMethod = "POST"
+	gkillAPIAddress.CommitTXMethod = "POST"
+	gkillAPIAddress.DiscardTXMethod = "POST"
 	return gkillAPIAddress
 }

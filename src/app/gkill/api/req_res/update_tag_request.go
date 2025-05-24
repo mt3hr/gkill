@@ -6,4 +6,6 @@ type UpdateTagRequest struct {
 	SessionID string `json:"session_id"`
 
 	Tag *reps.Tag `json:"tag"`
+
+	TXID *string `json:"tx_id"`
 }

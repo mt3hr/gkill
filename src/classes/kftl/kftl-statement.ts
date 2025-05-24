@@ -38,6 +38,7 @@ export class KFTLStatement {
     }
 
     generate_line_label_data(text_area_info: TextAreaInfo): Array<LineLabelData> {
+        const tx_id = "" // label_data作るためには必要ない
         const label_datas = new Array<LineLabelData>()
         const lines = this.generate_kftl_lines()
         let prev_context: KFTLStatementLineContext | null = null
@@ -54,7 +55,7 @@ export class KFTLStatement {
             const line_text = ""
             const next_line_text = ""
             const target_id: string = (prev_context != null && prev_context.get_next_statement_line_target_id() != null) ? prev_context.get_next_statement_line_target_id()!! : GkillAPI.get_gkill_api().generate_uuid()!!
-            const context = new KFTLStatementLineContext(line_text, next_line_text, target_id, lines, false)
+            const context = new KFTLStatementLineContext(tx_id, line_text, next_line_text, target_id, lines, false)
             line = line.get_context().get_next_statement_line_constructor()!!(context.get_this_statement_line_target_id(), context)
             const label_data = new LineLabelData()
             label_data.lines = line.get_count_line_in_textarea(text_area_info).valueOf()
@@ -84,6 +85,7 @@ export class KFTLStatement {
     }
 
     private generate_kftl_lines(): Array<KFTLStatementLine> {
+        const tx_id = GkillAPI.get_gkill_api().generate_uuid()
         KFTLStatementLineConstructorFactory.get_instance().reset()
         const lines = new Array<KFTLStatementLine>()
         const text = this.get_statement_text()
@@ -95,7 +97,7 @@ export class KFTLStatement {
             const next_line_text = i < line_texts.length - 1 ? line_texts[i + 1] : ""
             const target_id: string = (prev_context != null && prev_context.get_next_statement_line_target_id() != null) ? prev_context.get_next_statement_line_target_id()!! : GkillAPI.get_gkill_api().generate_uuid()
             const prototype_flag: boolean = (prev_context != null && prev_context.is_this_prototype() != null) ? prev_context?.is_next_prototype() : true
-            const context: KFTLStatementLineContext = new KFTLStatementLineContext(line_text, target_id, next_line_text, lines.slice(0, i), prototype_flag)
+            const context: KFTLStatementLineContext = new KFTLStatementLineContext(tx_id, line_text, target_id, next_line_text, lines.slice(0, i), prototype_flag)
             context.set_add_second(prev_add_second)
 
             if (i != 0 && line_text == "！") {
@@ -112,7 +114,6 @@ export class KFTLStatement {
         }
         return lines
     }
-
 
     public async get_invalid_line_indexs(): Promise<Array<number>> {
         const lines = this.generate_kftl_lines()

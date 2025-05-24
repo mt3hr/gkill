@@ -6,4 +6,6 @@ type UpdateNlogRequest struct {
 	SessionID string `json:"session_id"`
 
 	Nlog *reps.Nlog `json:"nlog"`
+
+	TXID *string `json:"tx_id"`
 }

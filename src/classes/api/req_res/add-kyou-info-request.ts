@@ -7,6 +7,8 @@ export class AddKyouInfoRequest extends GkillAPIRequest {
 
     kyou: IDFKyou
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.kyou = new IDFKyou()

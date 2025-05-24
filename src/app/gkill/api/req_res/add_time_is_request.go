@@ -6,4 +6,6 @@ type AddTimeIsRequest struct {
 	SessionID string `json:"session_id"`
 
 	TimeIs *reps.TimeIs `json:"timeis"`
+
+	TXID *string `json:"tx_id"`
 }

@@ -7,6 +7,8 @@ export class UpdateLantanaRequest extends GkillAPIRequest {
 
     lantana: Lantana
 
+    tx_id: string | null = null
+
     constructor() {
         super()
         this.lantana = new Lantana()

@@ -1,8 +1,10 @@
 'use strict'
 
+import { GkillAPI } from "../api/gkill-api"
 import type { KFTLStatementLine } from "./kftl-statement-line"
 
 export class KFTLStatementLineContext {
+    private tx_id: string
 
     private this_statement_line_text: string
 
@@ -22,7 +24,8 @@ export class KFTLStatementLineContext {
 
     private add_second: Number
 
-    constructor(statement_line_text: string, target_id: string, next_statement_line_text: string, kftl_statement_lines: Array<KFTLStatementLine>, is_prototype: boolean) {
+    constructor(tx_id: string, statement_line_text: string, target_id: string, next_statement_line_text: string, kftl_statement_lines: Array<KFTLStatementLine>, is_prototype: boolean) {
+        this.tx_id = tx_id
         this.this_statement_line_text = statement_line_text
         this.this_statement_line_target_id = target_id
         this.this_is_prototype = is_prototype
@@ -32,7 +35,6 @@ export class KFTLStatementLineContext {
         this.kftl_statement_lines = kftl_statement_lines
         this.add_second = 0
         this.next_statement_line_constructor = null
-
     }
 
     get_this_statement_line_text(): string {
@@ -103,6 +105,9 @@ export class KFTLStatementLineContext {
         this.next_is_prototype = is_next_prototype
     }
 
+    get_tx_id(): string {
+        return this.tx_id
+    }
 }
 
 
