@@ -45,7 +45,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -60,6 +60,7 @@ import type RyuuListViewProps from './ryuu-list-view-props';
 import type RyuuListViewEmits from './ryuu-list-view-emits';
 import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary';
 import { ApplicationConfig } from '@/classes/datas/config/application-config';
+import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 
 const add_ryuu_item_dialog = ref<InstanceType<typeof AddRyuuItemDialog> | null>(null);
 
@@ -120,7 +121,7 @@ function load_from_json(json: any): Array<RelatedKyouQuery> {
         related_kyou_query.suffix = json[i].suffix
         related_kyou_query.predicate = build_dnote_predicate_from_json(json[i].predicate)
         related_kyou_query.related_time_match_type = json[i].related_time_match_type
-        related_kyou_query.find_kyou_query = json[i].find_kyou_query
+        related_kyou_query.find_kyou_query = FindKyouQuery.parse_find_kyou_query(json[i].find_kyou_query)
         related_kyou_query.find_duration_hour = json[i].find_duration_hour
         related_kyou_queries.push(related_kyou_query)
     }
@@ -173,7 +174,7 @@ function delete_related_kyou_query(id: string): void {
             break
         }
     }
-    if (delete_target_index) {
+    if (delete_target_index !== null) {
         related_kyou_queries.value.splice(delete_target_index, 1)
     }
 }
