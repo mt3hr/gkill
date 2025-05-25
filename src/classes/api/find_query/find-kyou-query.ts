@@ -61,6 +61,61 @@ export class FindKyouQuery {
     include_end_mi: boolean
     include_end_timeis: boolean
 
+    static parse_find_kyou_query(json: any): FindKyouQuery {
+        const cloned = new FindKyouQuery()
+        cloned.query_id = json.query_id
+        cloned.use_reps = json.use_reps
+        cloned.use_tags = json.use_tags
+        cloned.update_cache = json.update_cache
+        cloned.use_words = json.use_words
+        cloned.keywords = json.keywords.concat()
+        cloned.words_and = json.words_and
+        cloned.words = json.words.concat()
+        cloned.not_words = json.not_words.concat()
+        cloned.use_timeis = json.use_timeis
+        cloned.timeis_words_and = json.timeis_words_and
+        cloned.timeis_keywords = json.timeis_keywords.concat()
+        cloned.timeis_words = json.timeis_words.concat()
+        cloned.timeis_not_words = json.timeis_not_words.concat()
+        cloned.use_timeis_tags = json.use_timeis_tags
+        cloned.timeis_tags = json.timeis_tags.concat()
+        cloned.timeis_tags_and = json.timeis_tags_and
+        cloned.tags = json.tags.concat()
+        cloned.tags_and = json.tags_and
+        cloned.use_map = json.use_map
+        cloned.map_latitude = json.map_latitude
+        cloned.map_longitude = json.map_longitude
+        cloned.map_radius = json.map_radius
+        cloned.use_calendar = json.use_calendar
+        cloned.calendar_start_date = json.calendar_start_date
+        cloned.calendar_end_date = json.calendar_end_date
+        cloned.use_plaing = json.use_plaing
+        cloned.plaing_time = json.plaing_time
+        cloned.reps = json.reps.concat()
+        cloned.is_image_only = json.is_image_only
+        cloned.devices_in_sidebar = json.devices_in_sidebar.concat()
+        cloned.rep_types_in_sidebar = json.rep_types_in_sidebar.concat()
+        cloned.use_update_time = json.use_update_time
+        cloned.update_time = json.update_time
+        cloned.is_enable_map_circle_in_sidebar = json.is_enable_map_circle_in_sidebar
+        cloned.use_rep_types = json.use_rep_types
+        cloned.rep_types = json.rep_types.concat()
+        cloned.use_mi_board_name = json.use_mi_board_name
+        cloned.mi_board_name = json.mi_board_name
+        cloned.use_mi_sort_type = json.use_mi_sort_type
+        cloned.mi_sort_type = json.mi_sort_type
+        cloned.use_mi_check_state = json.use_mi_check_state
+        cloned.mi_check_state = json.mi_check_state
+        cloned.for_mi = json.for_mi
+        cloned.include_create_mi = json.include_create_mi
+        cloned.include_check_mi = json.include_check_mi
+        cloned.include_limit_mi = json.include_limit_mi
+        cloned.include_start_mi = json.include_start_mi
+        cloned.include_end_mi = json.include_end_mi
+        cloned.include_end_timeis = json.include_end_timeis
+        return cloned
+    }
+
     clone(): FindKyouQuery {
         const cloned = new FindKyouQuery()
         cloned.query_id = this.query_id
