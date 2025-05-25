@@ -91,6 +91,7 @@ const inited = computed(() => {
     if (!is_mounted.value) {
         return false
     }
+
     return inited_keyword_query_for_query_sidebar.value &&
         inited_rep_query_for_query_sidebar.value &&
         inited_tag_query_for_query_sidebar.value &&
@@ -102,15 +103,13 @@ watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
     if (old_value !== new_value && new_value) {
         default_query.value = generate_query().clone()
         default_query.value.query_id = props.gkill_api.generate_uuid()
-        nextTick(() => { emits('inited') })
         nextTick(() => {
             if (props.find_kyou_query.query_id === "") {
                 query.value = default_query.value
-            } else {
-                query.value = props.find_kyou_query
             }
+            loading.value = false
+            nextTick(() => emits('inited'))
         })
-        nextTick(() => loading.value = false)
     }
 })
 
@@ -139,7 +138,8 @@ function get_default_query(): FindKyouQuery {
 }
 
 function emits_current_query(): void {
-    const currentt_query = generate_query(query.value.query_id)
+    // const currentt_query = generate_query(query.value.query_id)
+    // emits('updated_query', currentt_query)
 }
 
 function generate_query(query_id?: string): FindKyouQuery {
