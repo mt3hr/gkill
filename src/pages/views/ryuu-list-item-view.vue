@@ -183,7 +183,7 @@ async function load_related_kyou(): Promise<void> {
             } else if (!match_kyou_before && match_kyou_after) {
                 match_kyou.value = match_kyou_after
             } else if (match_kyou_before && match_kyou_after) {
-                if (moment(match_kyou_before.related_time).diff(props.related_time) < moment(match_kyou_after.related_time).diff(props.related_time)) {
+                if (Math.abs(moment(match_kyou_before.related_time).diff(props.related_time)) < Math.abs(moment(match_kyou_after.related_time).diff(props.related_time))) {
                     match_kyou.value = match_kyou_before
                 } else {
                     match_kyou.value = match_kyou_after

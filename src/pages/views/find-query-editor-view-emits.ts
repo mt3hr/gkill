@@ -9,5 +9,6 @@ export interface FindQueryEditorViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
     (e: 'inited'): void
+    (e: 'updated_query', find_kyou_query: FindKyouQuery): void
     (e: 'requested_close_dialog'): void
 }

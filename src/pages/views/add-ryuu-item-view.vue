@@ -29,8 +29,8 @@
                 <v-btn dark color="primary" @click="() => save()">{{ i18n.global.t("SAVE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
-        <FindQueryEditorDialog v-if="find_kyou_query" :application_config="application_config" :gkill_api="gkill_api"
-            v-model="find_kyou_query" ref="find_query_editor_dialog" />
+        <FindQueryEditorDialog v-model="find_kyou_query" v-if="find_kyou_query" :application_config="application_config"
+            :gkill_api="gkill_api" ref="find_query_editor_dialog" />
     </v-card>
 </template>
 
@@ -45,7 +45,7 @@ import type AddRyuuItemViewProps from './add-ryuu-item-view-props'
 import RelatedKyouQuery from '@/classes/dnote/related-kyou-query'
 import { RelatedTimeMatchType } from '@/classes/dnote/related-time-match-type'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
-import regist_dictionary, { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary'
+import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary'
 import FindQueryEditorDialog from '../dialogs/find-query-editor-dialog.vue'
 
 const find_query_editor_dialog = ref<InstanceType<typeof FindQueryEditorDialog> | null>(null);
@@ -53,8 +53,26 @@ const find_query_editor_dialog = ref<InstanceType<typeof FindQueryEditorDialog> 
 const props = defineProps<AddRyuuItemViewProps>()
 const emits = defineEmits<AddRyuuItemViewEmits>()
 
-nextTick(() => reset())
-regist_dictionary()
+const id = ref("")
+const title = ref("")
+const prefix = ref("")
+const suffix = ref("")
+const related_time_match_type = ref(RelatedTimeMatchType.NEAR_RELATED_TIME)
+const find_kyou_query: Ref<FindKyouQuery | null> = ref(null)
+const find_duration_hour = ref(1)
+
+const is_use_custom_find_kyou_query = ref(false)
+
+const related_time_match_types = ref([
+    { label: i18n.global.t('RYUU_RELATED_NEAR'), value: RelatedTimeMatchType.NEAR_RELATED_TIME },
+    { label: i18n.global.t('RYUU_RELATED_NEAR_BEFORE'), value: RelatedTimeMatchType.NEAR_RELATED_TIME_BEFORE },
+    { label: i18n.global.t('RYUU_RELATED_NEAR_AFTER'), value: RelatedTimeMatchType.NEAR_RELATED_TIME_AFTER },
+])
+
+const root_predicate = ref<PredicateGroupType>({
+    logic: 'AND',
+    predicates: []
+})
 
 async function reset(): Promise<void> {
     id.value = props.gkill_api.generate_uuid()
@@ -86,27 +104,6 @@ async function save(): Promise<void> {
     emits('requested_close_dialog')
 }
 
-const id = ref("")
-const title = ref("")
-const prefix = ref("")
-const suffix = ref("")
-const related_time_match_type = ref(RelatedTimeMatchType.NEAR_RELATED_TIME)
-const find_kyou_query: Ref<FindKyouQuery | null> = ref(null)
-const find_duration_hour = ref(1)
-
-const is_use_custom_find_kyou_query = ref(false)
-
-const related_time_match_types = ref([
-    { label: i18n.global.t('RYUU_RELATED_NEAR'), value: RelatedTimeMatchType.NEAR_RELATED_TIME },
-    { label: i18n.global.t('RYUU_RELATED_NEAR_BEFORE'), value: RelatedTimeMatchType.NEAR_RELATED_TIME_BEFORE },
-    { label: i18n.global.t('RYUU_RELATED_NEAR_AFTER'), value: RelatedTimeMatchType.NEAR_RELATED_TIME_AFTER },
-])
-
-const root_predicate = ref<PredicateGroupType>({
-    logic: 'AND',
-    predicates: []
-})
-
 function predicate_struct_to_json(group: PredicateGroupType | Predicate): any {
     if (is_group(group)) {
         return {
@@ -126,9 +123,12 @@ function show_find_query_editor_dialog(): void {
     if (!find_kyou_query.value) {
         find_kyou_query.value = new FindKyouQuery()
     }
+    const cloned_find_kyou_query = find_kyou_query.value.clone()
     nextTick(() => {
-        find_query_editor_dialog.value?.show()
+        find_query_editor_dialog.value?.show(cloned_find_kyou_query)
     })
 }
+
+nextTick(() => reset())
 </script>
 <style lang="css" scoped></style>
