@@ -819,6 +819,7 @@ func (g *GkillServerAPI) Serve() error {
 	}
 	port := serverConfig.Address
 
+	g.PrintStartedMessage()
 	g.server = &http.Server{Addr: port, Handler: router}
 	if serverConfig.EnableTLS && !gkill_options.DisableTLSForce {
 		certFileName, pemFileName, err := g.getTLSFileNames(device)
@@ -13051,4 +13052,27 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		})
 		return
 	}
+}
+
+func (g *GkillServerAPI) PrintStartedMessage() {
+	device, err := g.GetDevice()
+	if err != nil {
+		gkill_log.Debug.Println("Error getting device information:", err)
+		return
+	}
+
+	serverConfig, err := g.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
+	if err != nil {
+		gkill_log.Debug.Println("Error getting server configuration:", err)
+		return
+	}
+
+	port := serverConfig.Address
+	protocol := "http"
+	if serverConfig.EnableTLS {
+		protocol = "https"
+	}
+
+	os.Stdout.WriteString("gkill server started.\n")
+	os.Stdout.WriteString(fmt.Sprintf("Access your record space at : %s://localhost:%s\n", protocol, port))
 }
