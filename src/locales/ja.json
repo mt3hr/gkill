@@ -471,5 +471,7 @@
     "RYUU_RELATED_NEAR_AFTER": "日時が近い（以後）",
     "DELETE_RELATED_KYOU_QUERY_TITLE": "関連情報削除",
     "EDIT_RELATED_KYOU_QUERY": "編集",
-    "DELETE_RELATED_KYOU_QUERY": "削除"
+    "DELETE_RELATED_KYOU_QUERY": "削除",
+    "DEFAULT_VIEW_TITLE": "起動時の画面",
+    "GKILL_APP_TITLE": "gkill"
 }
