@@ -163,6 +163,8 @@ func LaunchGkillServerAPI() error {
 			}
 		}
 	}
+
+	PrintStartedMessage()
 	return nil
 }
 
@@ -225,4 +227,27 @@ func GetVersion() (string, error) {
 		return "", fmt.Errorf("failed extruct version info: version match is not 2")
 	}
 	return "v" + versionStrings[1], nil
+}
+
+func PrintStartedMessage() {
+	device, err := gkillServerAPI.GetDevice()
+	if err != nil {
+		gkill_log.Debug.Println("Error getting device information:", err)
+		return
+	}
+
+	serverConfig, err := gkillServerAPI.GkillDAOManager.ConfigDAOs.ServerConfigDAO.GetServerConfig(context.Background(), device)
+	if err != nil {
+		gkill_log.Debug.Println("Error getting server configuration:", err)
+		return
+	}
+
+	port := serverConfig.Address
+	protocol := "http"
+	if serverConfig.EnableTLS {
+		protocol = "https"
+	}
+
+	fmt.Printf("gkill server started.\n")
+	fmt.Printf("Access your record space at : %s://localhost:%d\n", port, protocol)
 }
