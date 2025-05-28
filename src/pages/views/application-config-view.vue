@@ -15,7 +15,7 @@
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="reload_repositories()">{{ i18n.global.t("RELOAD_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="logout()" color="primary">{{ i18n.global.t("LOGOUT_TITLE") }}</v-btn>
@@ -47,6 +47,19 @@
                     <td>
                         <v-checkbox v-model="is_show_share_footer" hide-detail
                             :label="i18n.global.t('SHOW_SHARE_FOOTER')" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        {{ i18n.global.t("DEFAULT_VIEW_TITLE") }}
+                    </td>
+                    <td>
+                        <v-row class="pa-0 ma-0">
+                            <v-col class="pa-0 ma-0">
+                                <v-select class="select" v-model="default_page" :items="pages" item-title="app_name"
+                                    item-value="page_name" />
+                            </v-col>
+                        </v-row>
                     </td>
                 </tr>
                 <tr>
@@ -98,13 +111,13 @@
                     <td>
                         <v-btn dark color="primary" @click="show_edit_tag_dialog">{{
                             i18n.global.t("EDIT_TAG_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_dialog">{{
                             i18n.global.t("EDIT_REP_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_device_dialog">{{
                             i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                             i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
                     </td>
@@ -125,13 +138,13 @@
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="update_application_config" color="primary">{{ i18n.global.t("APPLY_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CANCEL_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -221,6 +234,13 @@ const edit_kftl_template_dialog = ref<InstanceType<typeof EditKFTLTemplateDialog
 const edit_dnote_dialog = ref<InstanceType<typeof EditDnoteDialog> | null>(null);
 const edit_ryuu_dialog = ref<InstanceType<typeof EditRyuuDialog> | null>(null);
 const server_config_dialog = ref<InstanceType<typeof ServerConfigDialog> | null>(null);
+const pages = ref([
+    { app_name: i18n.global.t('RYKV_APP_NAME'), page_name: 'rykv' },
+    { app_name: i18n.global.t('MI_APP_NAME'), page_name: 'mi' },
+    { app_name: i18n.global.t('KFTL_APP_NAME'), page_name: 'kftl' },
+    { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
+    { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
+])
 
 const props = defineProps<ApplicationConfigViewProps>()
 const emits = defineEmits<ApplicationConfigViewEmits>()
@@ -246,6 +266,7 @@ const is_checked_use_rykv_period: Ref<boolean> = ref(cloned_application_config.v
 const is_checked_use_mi_period: Ref<boolean> = ref(cloned_application_config.value.mi_default_period !== -1)
 const use_dark_theme: Ref<boolean> = ref(theme.global.name.value === 'gkill_dark_theme')
 const is_show_share_footer: Ref<boolean> = ref(cloned_application_config.value.is_show_share_footer)
+const default_page: Ref<string> = ref(cloned_application_config.value.default_page)
 
 watch(() => is_checked_use_rykv_period.value, () => {
     if (is_checked_use_rykv_period.value) {
@@ -281,6 +302,7 @@ async function reload_cloned_application_config(): Promise<void> {
     rykv_default_period.value = cloned_application_config.value.rykv_default_period
     mi_default_period.value = cloned_application_config.value.mi_default_period
     is_show_share_footer.value = cloned_application_config.value.is_show_share_footer
+    default_page.value = cloned_application_config.value.default_page
     load_mi_board_names()
 }
 
@@ -308,6 +330,7 @@ async function update_application_config(): Promise<void> {
     application_config.mi_default_period = mi_default_period.value
     application_config.use_dark_theme = use_dark_theme.value
     application_config.is_show_share_footer = is_show_share_footer.value
+    application_config.default_page = default_page.value
     application_config.ryuu_json_data = cloned_application_config.value.ryuu_json_data
 
     const req = new UpdateApplicationConfigRequest()
@@ -321,6 +344,7 @@ async function update_application_config(): Promise<void> {
     if (res.messages && res.messages.length !== 0) {
         emits('received_messages', res.messages)
     }
+    props.gkill_api.set_default_page_to_cookie(application_config.default_page)
     emits('requested_reload_application_config')
     emits('requested_close_dialog')
 }
