@@ -23,6 +23,8 @@ type ApplicationConfig struct {
 
 	IsShowShareFooter bool `json:"is_show_share_footer"`
 
+	DefaultPage string `json:"default_page"`
+
 	KFTLTemplate []*KFTLTemplate `json:"kftl_template_struct"`
 
 	TagStruct []*TagStruct `json:"tag_struct"`
