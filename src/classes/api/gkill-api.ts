@@ -1713,6 +1713,7 @@ export class GkillAPI {
                 application_config.google_map_api_key = response.application_config.google_map_api_key
                 application_config.is_loaded = response.application_config.is_loaded
                 application_config.mi_default_board = response.application_config.mi_default_board
+                application_config.default_page = response.application_config.default_page
                 application_config.rykv_hot_reload = response.application_config.rykv_hot_reload
                 application_config.rykv_image_list_column_number = response.application_config.rykv_image_list_column_number
                 application_config.user_id = response.application_config.user_id
@@ -1726,6 +1727,8 @@ export class GkillAPI {
                 this.check_auth(response)
 
                 this.set_google_map_api_key(response.application_config.google_map_api_key)
+                this.set_saved_application_config(response.application_config)
+                this.set_default_page_to_cookie(response.application_config.default_page)
                 response.application_config.is_loaded = true
                 return response
         }
@@ -2721,6 +2724,25 @@ export class GkillAPI {
                 return shared_id
         }
 
+
+        private default_page_cookie_key = "gkill_default_page"
+
+        set_default_page_to_cookie(default_page: string): void {
+                document.cookie = this.default_page_cookie_key + "=" + default_page + "; path=/; max-age=" + 86400 * 400
+        }
+
+        get_default_page_from_cookie(): string {
+                const cookies = document.cookie.split(';')
+                const default_page_string = cookies.find(
+                        (cookie) => cookie.split('=')[0].trim() === this.default_page_cookie_key.trim()
+                )?.replace(this.default_page_cookie_key + "=", "").trim()
+                const default_page = default_page_string ? default_page_string : "rykv"
+
+                if (!default_page || default_page === "") {
+                        this.set_default_page_to_cookie("rykv")
+                }
+                return default_page
+        }
 
         private last_cache_update_time_cookie_key = "last_cache_update_time"
         get_last_cache_update_time(): Date {
