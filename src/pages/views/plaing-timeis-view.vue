@@ -247,8 +247,13 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
     }
 }
 
+const is_loading = ref(false)
 const abort_controller: Ref<AbortController> = ref(new AbortController())
 async function search(update_cache: boolean): Promise<void> {
+    if (is_loading.value) {
+        return
+    }
+    is_loading.value = true
     // 検索する。Tickでまとめる
     query.value = generate_get_plaing_timeis_kyous_query(last_added_request_time.value)
     try {
@@ -312,10 +317,13 @@ async function search(update_cache: boolean): Promise<void> {
             // abort以外はエラー出力する
             console.error(err)
         }
+    } finally {
+        is_loading.value = false
     }
 }
 
 async function reload_list(update_cache: boolean): Promise<void> {
+    // nextTickでまとめる
     match_kyous_list.value.splice(0)
 
     await search(update_cache)
