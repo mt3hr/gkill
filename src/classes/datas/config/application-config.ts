@@ -35,6 +35,7 @@ export class ApplicationConfig {
     dnote_json_data: any
     ryuu_json_data: any
     is_show_share_footer: boolean
+    default_page: string
     parsed_kftl_template: KFTLTemplateElementData
     parsed_tag_struct: TagStructElementData
     parsed_rep_struct: RepStructElementData
@@ -87,6 +88,7 @@ export class ApplicationConfig {
         application_config.rykv_default_period = this.rykv_default_period
         application_config.mi_default_period = this.mi_default_period
         application_config.is_show_share_footer = this.is_show_share_footer
+        application_config.default_page = this.default_page
         return application_config
     }
     async load_all(): Promise<Array<GkillError>> {
@@ -979,6 +981,7 @@ export class ApplicationConfig {
         this.mi_board_struct = new Array<MiBoardStruct>()
         this.session_is_local = false
         this.is_show_share_footer = false
+        this.default_page = "rykv"
     }
 
 

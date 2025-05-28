@@ -72,8 +72,9 @@ check_logined()
 
 async function check_logined(): Promise<void> {
     const session_id = props.gkill_api.get_session_id()
-    if (session_id && session_id !== "") {
-        router.replace("/rykv")
+    const default_page = props.gkill_api.get_default_page_from_cookie()
+    if (session_id && session_id !== "" && default_page && default_page !== "") {
+        router.replace("/" + default_page)
     }
 }
 
