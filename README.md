@@ -53,20 +53,22 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 [gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
 
 【Windowsユーザ向け】  
-Assetsから「windows_amd64_gkill_vX.X.X.zip」をダウンロード  
-zipを解凍して「gkill.exe」を実行  
+①Assetsから「windows_amd64_gkill_vX.X.X.zip」をダウンロード  
+②zipを解凍して「gkill.exe」を実行  
 ※初回起動には時間がかかります。コーヒーでも淹れてお待ち下さい。  
 
 【Androidユーザ向け】  
-Assetsから「gkill_vX.X.X.apk」をダウンロード  
-インストール  
+①Assetsから「gkill_vX.X.X.apk」をダウンロード  
+②インストール  
+③ホーム画面から起動  
 ※インストール時に警告が出ますが、「詳細」からインストールできます  
 ⇛警告理由：古いAndroidAPIを利用しているため  
 
 【上級者・サーバ構築派向け】  
-あなたの環境の「gkill_server_vX.X.X.zip」をダウンロード  
-適当な場所に展開して「gkill_server.exe」を実行  
-その後「[http://localhost:9999](http://localhost:9999)」にアクセスし、ブラウザからインストール（PWA）  
+①あなたの環境の「gkill_server_vX.X.X.zip」をダウンロード  
+②適当な場所に展開して「gkill_server.exe」を実行  
+③その後「[http://localhost:9999](http://localhost:9999)」にアクセス  
+④ブラウザからインストール（PWA）  
 （環境のzipがリリースされていなかったら自分でビルドしてください。README下部「開発者向け」参照）  
 
 ## 初回起動  
@@ -161,16 +163,15 @@ npm run install_server
 <details>
 <summary>その他</summary>
 <h3>gkill_server利用のすすめ</h3>
-もし分かるなら、「gkill」ではなく「gkill_server」を使うのが望ましいです。  
-「gkill_server」以外では、PWA依存の一部機能の動作を保証しません。  
-通知の確実性、キャッシュ制御やアプリ起動時間短縮など、様々なメリットがあります。  
-ぜひ「gkill_server」の利用を検討してください。  
-
-デスクトップ：gkill_serverをタスクスケジューラやcronに登録、お好みのブラウザからインストール（PWA）  
-Android：termux上でgkill_serverを起動、GoogleChromeからインストール（PWA）  
-
+もし分かるなら、「gkill」ではなく「gkill_server」を使うのが望ましいです。  <br>
+「gkill_server」以外では、PWA依存の一部機能の動作を保証しません。  <br>
+通知の確実性、キャッシュ制御やアプリ起動時間短縮など、様々なメリットがあります。  <br>
+ぜひ「gkill_server」の利用を検討してください。  <br>
+<br>
+デスクトップ：gkill_serverをタスクスケジューラやcronに登録、お好みのブラウザからインストール（PWA）  <br>
+Android：termux上でgkill_serverを起動、GoogleChromeからインストール（PWA）  <br>
 <h3>通知機能の動作について</h3>
-通知機能は環境に依存します。  
-ざっくりの時間でしか通知されないことがありますのでご承知おきください  
+通知機能は環境に依存します。  <br>
+ざっくりの時間でしか通知されないことがありますのでご承知おきください  <br>
 
 </details>
