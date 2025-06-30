@@ -15,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mitchellh/go-homedir"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -82,6 +83,11 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 	oldMiBoards := []*MiBoardInfo{}
 	oldTimeIsStarts := []*TimeIsStart{}
 	oldTimeIsEnds := []*TimeIsEnd{}
+	oldBarometricPressures := []*BarometricPressure{}
+	oldCO2Concentrations := []*CO2Concentration{}
+	oldHumiditys := []*Humidity{}
+	oldTVOCs := []*TVOC{}
+	oldTemperatures := []*Temperature{}
 
 	files, err := os.ReadDir(SrcKyouDir)
 	if err != nil {
@@ -245,6 +251,44 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 				oldURLogs = append(oldURLogs, urlogsFromOldRep...)
 
 				log.Printf("データ抽出:%+v件\n", len(oldURLogs))
+			case "STVS":
+				log.Printf("STVS \n")
+				recordCounts := 0
+				barometricPressuresFromOldRep, err := getBarometricPressuresFromOldDB(filepath.Join(srcKyouDir, file.Name()))
+				if err != nil {
+					panic(err)
+				}
+				oldBarometricPressures = append(oldBarometricPressures, barometricPressuresFromOldRep...)
+				recordCounts += len(barometricPressuresFromOldRep)
+
+				co2ConcentrationsFromOldRep, err := getCO2ConcentrationsFromOldDB(filepath.Join(srcKyouDir, file.Name()))
+				if err != nil {
+					panic(err)
+				}
+				oldCO2Concentrations = append(oldCO2Concentrations, co2ConcentrationsFromOldRep...)
+				recordCounts += len(co2ConcentrationsFromOldRep)
+
+				humiditysFromOldRep, err := getHumiditysFromOldDB(filepath.Join(srcKyouDir, file.Name()))
+				if err != nil {
+					panic(err)
+				}
+				oldHumiditys = append(oldHumiditys, humiditysFromOldRep...)
+				recordCounts += len(humiditysFromOldRep)
+
+				tvocsFromOldRep, err := getTVOCsFromOldDB(filepath.Join(srcKyouDir, file.Name()))
+				if err != nil {
+					panic(err)
+				}
+				oldTVOCs = append(oldTVOCs, tvocsFromOldRep...)
+				recordCounts += len(tvocsFromOldRep)
+
+				temperaturesFromOldRep, err := getTemperaturesFromOldDB(filepath.Join(srcKyouDir, file.Name()))
+				if err != nil {
+					panic(err)
+				}
+				oldTemperatures = append(oldTemperatures, temperaturesFromOldRep...)
+				recordCounts += len(temperaturesFromOldRep)
+				log.Printf("データ抽出:%+v件\n", recordCounts)
 			default:
 			}
 		}
@@ -321,6 +365,27 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		panic(err)
 	}
 	err = tempDBInMemory.insertTimeisEndsFromOldDB(oldTimeIsEnds)
+	if err != nil {
+		panic(err)
+	}
+
+	err = tempDBInMemory.insertBarometricPressurs(oldBarometricPressures)
+	if err != nil {
+		panic(err)
+	}
+	err = tempDBInMemory.insertCO2Concentrations(oldCO2Concentrations)
+	if err != nil {
+		panic(err)
+	}
+	err = tempDBInMemory.insertHumiditys(oldHumiditys)
+	if err != nil {
+		panic(err)
+	}
+	err = tempDBInMemory.insertTVOCs(oldTVOCs)
+	if err != nil {
+		panic(err)
+	}
+	err = tempDBInMemory.insertTemperatures(oldTemperatures)
 	if err != nil {
 		panic(err)
 	}
@@ -483,6 +548,38 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		timeIsRep.Close(context.Background())
 	}
 
+	kcs, err := tempDBInMemory.getGkillKCs()
+	if err != nil {
+		panic(err)
+	}
+	for _, kc := range kcs {
+		kcRep, err := reps.NewKCRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, kc.RepName+".db"))
+		if err != nil {
+			panic(err)
+		}
+		err = kcRep.AddKCInfo(context.Background(), kc)
+		if err != nil {
+			panic(err)
+		}
+		kcRep.Close(context.Background())
+
+		tagRep, err := reps.NewTagRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, strings.ReplaceAll(kc.RepName, "STVS", "Tag")+".db"))
+		if err != nil {
+			panic(err)
+		}
+		kcTag := &reps.Tag{
+			ID:          sqlite3impl.GenerateNewID(),
+			TargetID:    kc.ID,
+			Tag:         "stvs_log",
+			RelatedTime: kc.RelatedTime,
+		}
+		err = tagRep.AddTagInfo(context.Background(), kcTag)
+		if err != nil {
+			panic(err)
+		}
+		tagRep.Close(context.Background())
+	}
+
 	return nil
 }
 
@@ -610,6 +707,37 @@ type TimeIsEnd struct {
 	StartID string     `json:"start_id"`
 	EndTime *time.Time `json:"end_time"`
 	RepName string
+}
+
+type BarometricPressure struct {
+	ID                 string    `json:"id"`
+	Time               time.Time `json:"time"`
+	BarometricPressure float64   `json:"barometric_pressure"`
+	RepName            string
+}
+type CO2Concentration struct {
+	ID               string    `json:"id"`
+	Time             time.Time `json:"time"`
+	CO2Concentration float64   `json:"co2_concentration"`
+	RepName          string
+}
+type Humidity struct {
+	ID       string    `json:"id"`
+	Time     time.Time `json:"time"`
+	Humidity float64   `json:"humidity"`
+	RepName  string
+}
+type TVOC struct {
+	ID      string    `json:"id"`
+	Time    time.Time `json:"time"`
+	TVOC    float64   `json:"tvoc"`
+	RepName string
+}
+type Temperature struct {
+	ID          string    `json:"id"`
+	Time        time.Time `json:"time"`
+	Temperature float64   `json:"temperature"`
+	RepName     string
 }
 
 func getNlogsFromOldDB(filename string) ([]*Nlog, error) {
@@ -1515,6 +1643,95 @@ func newAllDataDB(db *sql.DB, userName string) (*allDataDB, error) {
 		err = fmt.Errorf("error at CREATE TABLE to database: %w", err)
 		return nil, err
 	}
+
+	_, err = db.Exec(` CREATE TABLE IF NOT EXISTS "kc" (
+  IS_DELETED NOT NULL,
+  ID NOT NULL,
+  TITLE NOT NULL,
+  NUM_VALUE NOT NULL,
+  RELATED_TIME NOT NULL,
+  CREATE_TIME NOT NULL,
+  CREATE_APP NOT NULL,
+  CREATE_USER NOT NULL,
+  CREATE_DEVICE NOT NULL,
+  UPDATE_TIME NOT NULL,
+  UPDATE_APP NOT NULL,
+  UPDATE_DEVICE NOT NULL,
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL
+)
+	`)
+	if err != nil {
+		err = fmt.Errorf("error at KC db")
+		err = fmt.Errorf("error at CREATE TABLE to database: %w", err)
+		return nil, err
+	}
+
+	_, err = db.Exec(` CREATE TABLE "BarometricPressure" (
+	"ID"	,
+	"Time"	,
+	"BarometricPressure"	,
+	PRIMARY KEY("ID")
+);
+`)
+	if err != nil {
+		err = fmt.Errorf("error at BarometricPressure db")
+		err = fmt.Errorf("error at CREATE TABLE to database: %w", err)
+		return nil, err
+	}
+
+	_, err = db.Exec(` CREATE TABLE "CO2Concentration" (
+	"ID"	,
+	"Time"	,
+	"CO2Concentration"	,
+	PRIMARY KEY("ID")
+);
+`)
+	if err != nil {
+		err = fmt.Errorf("error at CO2Concentration db")
+		err = fmt.Errorf("error at CREATE TABLE to database: %w", err)
+		return nil, err
+	}
+
+	_, err = db.Exec(` CREATE TABLE "Humidity" (
+	"ID"	,
+	"Time"	,
+	"Humidity"	,
+	PRIMARY KEY("ID")
+);
+`)
+	if err != nil {
+		err = fmt.Errorf("error at Humidity db")
+		err = fmt.Errorf("error at CREATE TABLE to database: %w", err)
+		return nil, err
+	}
+
+	_, err = db.Exec(` CREATE TABLE "TVOC" (
+	"ID"	,
+	"Time"	,
+	"TVOC"	,
+	PRIMARY KEY("ID")
+);
+`)
+	if err != nil {
+		err = fmt.Errorf("error at TVOC db")
+		err = fmt.Errorf("error at CREATE TABLE to database: %w", err)
+		return nil, err
+	}
+
+	_, err = db.Exec(` CREATE TABLE "Temperature" (
+	"ID"	,
+	"Time"	,
+	"Temperature"	,
+	PRIMARY KEY("ID")
+);
+`)
+	if err != nil {
+		err = fmt.Errorf("error at Temperature db")
+		err = fmt.Errorf("error at CREATE TABLE to database: %w", err)
+		return nil, err
+	}
+
 	return allDataDB, nil
 }
 
@@ -1559,6 +1776,263 @@ func (a *allDataDB) insertNlogsFromOldDB(nlogs []*Nlog) error {
 	}
 
 	return nil
+}
+
+func getBarometricPressuresFromOldDB(filename string) ([]*BarometricPressure, error) {
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+	if err != nil {
+		err = fmt.Errorf("error at open database %s: %w", filename, err)
+		return nil, err
+	}
+
+	defer db.Close()
+
+	statement := `
+SELECT
+    ID,
+	Time,
+	BarometricPressure
+FROM
+    BarometricPressure
+`
+	rows, err := db.Query(statement)
+	if err != nil {
+		err = fmt.Errorf("error at get barometric pressures: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	barometricPressures := []*BarometricPressure{}
+
+	for rows.Next() {
+		barometricPressure := &BarometricPressure{RepName: RepName(filename)}
+		timeStr := ""
+		barometricPressureStr := ""
+		err := rows.Scan(
+			&barometricPressure.ID,
+			&timeStr,
+			&barometricPressureStr,
+		)
+		if err != nil {
+			err = fmt.Errorf("error at get time info: %w", err)
+			return nil, err
+		}
+
+		barometricPressure.Time, err = time.Parse(TimeLayout, strings.ReplaceAll(timeStr, " ", "T"))
+		if err != nil {
+			err = fmt.Errorf("error at parse time: %w", err)
+			return nil, err
+		}
+		barometricPressureStr = strings.ReplaceAll(barometricPressureStr, ",", "")
+		barometricPressure.BarometricPressure, err = strconv.ParseFloat(barometricPressureStr, 64)
+		if err != nil {
+			err = fmt.Errorf("error at parse float info: %w", err)
+			return nil, err
+		}
+
+		barometricPressures = append(barometricPressures, barometricPressure)
+	}
+	return barometricPressures, nil
+}
+
+func getCO2ConcentrationsFromOldDB(filename string) ([]*CO2Concentration, error) {
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+	if err != nil {
+		err = fmt.Errorf("error at open database %s: %w", filename, err)
+		return nil, err
+	}
+
+	defer db.Close()
+
+	statement := `
+SELECT
+    ID,
+	Time,
+	CO2Concentration
+FROM
+    CO2Concentration 
+`
+	rows, err := db.Query(statement)
+	if err != nil {
+		err = fmt.Errorf("error at get co2 concentration: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	co2Concentrations := []*CO2Concentration{}
+
+	for rows.Next() {
+		co2Concentration := &CO2Concentration{RepName: RepName(filename)}
+		timeStr := ""
+		err := rows.Scan(
+			&co2Concentration.ID,
+			&timeStr,
+			&co2Concentration.CO2Concentration,
+		)
+		if err != nil {
+			err = fmt.Errorf("error at get time info: %w", err)
+			return nil, err
+		}
+
+		co2Concentration.Time, err = time.Parse(TimeLayout, strings.ReplaceAll(timeStr, " ", "T"))
+		if err != nil {
+			err = fmt.Errorf("error at parse time: %w", err)
+			return nil, err
+		}
+
+		co2Concentrations = append(co2Concentrations, co2Concentration)
+	}
+	return co2Concentrations, nil
+}
+
+func getHumiditysFromOldDB(filename string) ([]*Humidity, error) {
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+	if err != nil {
+		err = fmt.Errorf("error at open database %s: %w", filename, err)
+		return nil, err
+	}
+
+	defer db.Close()
+
+	statement := `
+SELECT
+    ID,
+	Time,
+	Humidity
+FROM
+    Humidity
+`
+	rows, err := db.Query(statement)
+	if err != nil {
+		err = fmt.Errorf("error at get humidity: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	humiditys := []*Humidity{}
+
+	for rows.Next() {
+		humidity := &Humidity{RepName: RepName(filename)}
+		timeStr := ""
+		err := rows.Scan(
+			&humidity.ID,
+			&timeStr,
+			&humidity.Humidity,
+		)
+		if err != nil {
+			err = fmt.Errorf("error at get time info: %w", err)
+			return nil, err
+		}
+
+		humidity.Time, err = time.Parse(TimeLayout, strings.ReplaceAll(timeStr, " ", "T"))
+		if err != nil {
+			err = fmt.Errorf("error at parse time: %w", err)
+			return nil, err
+		}
+
+		humiditys = append(humiditys, humidity)
+	}
+	return humiditys, nil
+}
+
+func getTVOCsFromOldDB(filename string) ([]*TVOC, error) {
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+	if err != nil {
+		err = fmt.Errorf("error at open database %s: %w", filename, err)
+		return nil, err
+	}
+
+	defer db.Close()
+
+	statement := `
+SELECT
+    ID,
+	Time,
+	TVOC
+FROM
+    TVOC
+`
+	rows, err := db.Query(statement)
+	if err != nil {
+		err = fmt.Errorf("error at get tvocs: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	tvocs := []*TVOC{}
+
+	for rows.Next() {
+		tvoc := &TVOC{RepName: RepName(filename)}
+		timeStr := ""
+		err := rows.Scan(
+			&tvoc.ID,
+			&timeStr,
+			&tvoc.TVOC,
+		)
+		if err != nil {
+			err = fmt.Errorf("error at get time info: %w", err)
+			return nil, err
+		}
+
+		tvoc.Time, err = time.Parse(TimeLayout, strings.ReplaceAll(timeStr, " ", "T"))
+		if err != nil {
+			err = fmt.Errorf("error at parse time: %w", err)
+			return nil, err
+		}
+
+		tvocs = append(tvocs, tvoc)
+	}
+	return tvocs, nil
+}
+
+func getTemperaturesFromOldDB(filename string) ([]*Temperature, error) {
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+	if err != nil {
+		err = fmt.Errorf("error at open database %s: %w", filename, err)
+		return nil, err
+	}
+
+	defer db.Close()
+
+	statement := `
+SELECT
+    ID,
+	Time,
+    Temperature
+FROM
+    Temperature
+`
+	rows, err := db.Query(statement)
+	if err != nil {
+		err = fmt.Errorf("error at get temperature: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	temperatures := []*Temperature{}
+
+	for rows.Next() {
+		temperature := &Temperature{RepName: RepName(filename)}
+		timeStr := ""
+		err := rows.Scan(
+			&temperature.ID,
+			&timeStr,
+			&temperature.Temperature,
+		)
+		if err != nil {
+			err = fmt.Errorf("error at get time info: %w", err)
+			return nil, err
+		}
+
+		temperature.Time, err = time.Parse(TimeLayout, strings.ReplaceAll(timeStr, " ", "T"))
+		if err != nil {
+			err = fmt.Errorf("error at parse time: %w", err)
+			return nil, err
+		}
+
+		temperatures = append(temperatures, temperature)
+	}
+	return temperatures, nil
 }
 
 func (a *allDataDB) insertKmemosFromOldDB(kmemos []*Kmemo) error {
@@ -2202,6 +2676,350 @@ func (a *allDataDB) insertMiBoardsFromOldDB(miBoardInfos []*MiBoardInfo) error {
 	return nil
 }
 
+func (a *allDataDB) insertBarometricPressurs(barometricPressurs []*BarometricPressure) error {
+	tx, err := a.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	sql :=
+		`INSERT INTO KC (
+			IS_DELETED,
+			ID,
+			TITLE,
+			NUM_VALUE,
+			RELATED_TIME,
+			CREATE_TIME,
+			CREATE_APP,
+			CREATE_USER,
+			CREATE_DEVICE,
+			UPDATE_TIME,
+			UPDATE_APP,
+			UPDATE_USER,
+			UPDATE_DEVICE,
+			REP_NAME
+		) VALUES (
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?
+		)`
+	for _, barometricPressure := range barometricPressurs {
+		_, err = tx.Exec(sql, []interface {
+		}{
+			false,
+			barometricPressure.ID,
+			"部屋気圧",
+			barometricPressure.BarometricPressure,
+			barometricPressure.Time.Format(TimeLayout),
+			barometricPressure.Time.Format(TimeLayout),
+			"STVS",
+			"STVS",
+			"RaspberryPi",
+			barometricPressure.Time.Format(TimeLayout),
+			"STVS",
+			"STVS",
+			"RaspberryPi",
+			barometricPressure.RepName,
+		}...)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *allDataDB) insertCO2Concentrations(co2Concentrations []*CO2Concentration) error {
+	tx, err := a.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	sql :=
+		`INSERT INTO KC (
+			IS_DELETED,
+			ID,
+			TITLE,
+			NUM_VALUE,
+			RELATED_TIME,
+			CREATE_TIME,
+			CREATE_APP,
+			CREATE_USER,
+			CREATE_DEVICE,
+			UPDATE_TIME,
+			UPDATE_APP,
+			UPDATE_USER,
+			UPDATE_DEVICE,
+			REP_NAME
+		) VALUES (
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?
+		)`
+	for _, co2Concentration := range co2Concentrations {
+		_, err = tx.Exec(sql, []interface {
+		}{
+			false,
+			co2Concentration.ID,
+			"部屋CO2濃度",
+			co2Concentration.CO2Concentration,
+			co2Concentration.Time.Format(TimeLayout),
+			co2Concentration.Time.Format(TimeLayout),
+			"STVS",
+			"STVS",
+			"RaspberryPi",
+			co2Concentration.Time.Format(TimeLayout),
+			"STVS",
+			"STVS",
+			"RaspberryPi",
+			co2Concentration.RepName,
+		}...)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *allDataDB) insertHumiditys(humiditys []*Humidity) error {
+	tx, err := a.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	sql :=
+		`INSERT INTO KC (
+			IS_DELETED,
+			ID,
+			TITLE,
+			NUM_VALUE,
+			RELATED_TIME,
+			CREATE_TIME,
+			CREATE_APP,
+			CREATE_USER,
+			CREATE_DEVICE,
+			UPDATE_TIME,
+			UPDATE_APP,
+			UPDATE_USER,
+			UPDATE_DEVICE,
+			REP_NAME
+		) VALUES (
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?
+		)`
+	for _, humidity := range humiditys {
+		_, err = tx.Exec(sql, []interface {
+		}{
+			false,
+			humidity.ID,
+			"部屋湿度",
+			humidity.Humidity,
+			humidity.Time.Format(TimeLayout),
+			humidity.Time.Format(TimeLayout),
+			"STVS",
+			"STVS",
+			"RaspberryPi",
+			humidity.Time.Format(TimeLayout),
+			"STVS",
+			"STVS",
+			"RaspberryPi",
+			humidity.RepName,
+		}...)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *allDataDB) insertTVOCs(tvocs []*TVOC) error {
+	tx, err := a.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	sql :=
+		`INSERT INTO KC (
+			IS_DELETED,
+			ID,
+			TITLE,
+			NUM_VALUE,
+			RELATED_TIME,
+			CREATE_TIME,
+			CREATE_APP,
+			CREATE_USER,
+			CREATE_DEVICE,
+			UPDATE_TIME,
+			UPDATE_APP,
+			UPDATE_USER,
+			UPDATE_DEVICE,
+			REP_NAME
+		) VALUES (
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?
+		)`
+	for _, tvoc := range tvocs {
+		_, err = tx.Exec(sql, []interface {
+		}{
+			false,
+			tvoc.ID,
+			"部屋TVOC濃度",
+			tvoc.TVOC,
+			tvoc.Time.Format(TimeLayout),
+			tvoc.Time.Format(TimeLayout),
+			"STVS",
+			"STVS",
+			"RaspberryPi",
+			tvoc.Time.Format(TimeLayout),
+			"STVS",
+			"STVS",
+			"RaspberryPi",
+			tvoc.RepName,
+		}...)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func (a *allDataDB) insertTemperatures(tempratures []*Temperature) error {
+	tx, err := a.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	sql :=
+		`INSERT INTO KC (
+			IS_DELETED,
+			ID,
+			TITLE,
+			NUM_VALUE,
+			RELATED_TIME,
+			CREATE_TIME,
+			CREATE_APP,
+			CREATE_USER,
+			CREATE_DEVICE,
+			UPDATE_TIME,
+			UPDATE_APP,
+			UPDATE_USER,
+			UPDATE_DEVICE,
+			REP_NAME
+		) VALUES (
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?,
+			?
+		)`
+	for _, temprature := range tempratures {
+		_, err = tx.Exec(sql, []interface {
+		}{
+			false,
+			temprature.ID,
+			"部屋気温",
+			temprature.Temperature,
+			temprature.Time.Format(TimeLayout),
+			temprature.Time.Format(TimeLayout),
+			"STVS",
+			"STVS",
+			"RaspberryPi",
+			temprature.Time.Format(TimeLayout),
+			"STVS",
+			"STVS",
+			"RaspberryPi",
+			temprature.RepName,
+		}...)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (a *allDataDB) getGkillNlogs() ([]*reps.Nlog, error) {
 	nlogs := []*reps.Nlog{}
 	statement := `
@@ -2294,6 +3112,73 @@ FROM "kmemo";`
 		kmemos = append(kmemos, kmemo)
 	}
 	return kmemos, nil
+}
+
+func (a *allDataDB) getGkillKCs() ([]*reps.KC, error) {
+	kcs := []*reps.KC{}
+	statement := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TITLE,
+  RELATED_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  NUM_VALUE,
+  REP_NAME
+FROM "kc";`
+	rows, err := a.db.Query(statement)
+	if err != nil {
+		err = fmt.Errorf("error at get all kcs: %w", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		kc := &reps.KC{}
+		timestr := ""
+		numValueStr := ""
+		err = rows.Scan(
+			&kc.IsDeleted,
+			&kc.ID,
+			&kc.Title,
+			&timestr,
+			&kc.CreateApp,
+			&kc.CreateDevice,
+			&kc.CreateUser,
+			&kc.UpdateApp,
+			&kc.UpdateDevice,
+			&kc.UpdateUser,
+			&numValueStr,
+			&kc.RepName,
+		)
+		if err != nil {
+			err = fmt.Errorf("error at scan rows: %w", err)
+			return nil, err
+		}
+
+		time, err := time.Parse(TimeLayout, timestr)
+		if err != nil {
+			err = fmt.Errorf("error at parse time '%s' at %s: %w", timestr, kc.ID, err)
+			return nil, err
+		}
+		kc.IsDeleted = false
+		kc.CreateTime = time
+		kc.UpdateTime = time
+		kc.RelatedTime = time
+		numValue, err := strconv.ParseFloat(numValueStr, 64)
+		if err != nil {
+			panic(fmt.Sprintf("error at parse numValue '%s' at %s: %v", numValueStr, kc.ID, err))
+		}
+		kc.NumValue = json.Number(strconv.FormatFloat(numValue, 'f', -1, 64))
+
+		kcs = append(kcs, kc)
+	}
+	return kcs, nil
 }
 
 func (a *allDataDB) getGkillURLogs() ([]*reps.URLog, error) {
