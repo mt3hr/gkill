@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -476,7 +477,7 @@ WHERE
 			kc := &KC{}
 			kc.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			var numValue json.Number
+			numValueStr := ""
 
 			err = rows.Scan(&kc.IsDeleted,
 				&kc.ID,
@@ -490,7 +491,7 @@ WHERE
 				&kc.UpdateDevice,
 				&kc.UpdateUser,
 				&kc.Title,
-				&numValue,
+				&numValueStr,
 				&kc.RepName,
 				&kc.DataType,
 			)
@@ -498,7 +499,8 @@ WHERE
 				err = fmt.Errorf("error at scan kc: %w", err)
 				return nil, err
 			}
-			kc.NumValue = numValue
+			numValue := strings.ReplaceAll(numValueStr, ",", "")
+			kc.NumValue = json.Number(numValue)
 
 			kc.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -628,7 +630,7 @@ WHERE
 			kc := &KC{}
 			kc.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			var numValue json.Number
+			numValueStr := ""
 
 			err = rows.Scan(&kc.IsDeleted,
 				&kc.ID,
@@ -642,7 +644,7 @@ WHERE
 				&kc.UpdateDevice,
 				&kc.UpdateUser,
 				&kc.Title,
-				&numValue,
+				&numValueStr,
 				&kc.RepName,
 				&kc.DataType,
 			)
@@ -650,7 +652,8 @@ WHERE
 				err = fmt.Errorf("error at scan kc %s: %w", id, err)
 				return nil, err
 			}
-			kc.NumValue = numValue
+			numValue := strings.ReplaceAll(numValueStr, ",", "")
+			kc.NumValue = json.Number(numValue)
 
 			kc.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
