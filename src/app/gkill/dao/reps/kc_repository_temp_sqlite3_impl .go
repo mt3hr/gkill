@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -383,7 +384,7 @@ AND DEVICE = ?
 			kc := &KC{}
 			kc.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			var numValue json.Number
+			numValueStr := ""
 
 			err = rows.Scan(&kc.IsDeleted,
 				&kc.ID,
@@ -397,7 +398,7 @@ AND DEVICE = ?
 				&kc.UpdateDevice,
 				&kc.UpdateUser,
 				&kc.Title,
-				&numValue,
+				&numValueStr,
 				&kc.RepName,
 				&kc.DataType,
 			)
@@ -405,7 +406,8 @@ AND DEVICE = ?
 				err = fmt.Errorf("error at scan kc %s: %w", txID, err)
 				return nil, err
 			}
-			kc.NumValue = numValue
+			numValue := strings.ReplaceAll(numValueStr, ",", "")
+			kc.NumValue = json.Number(numValue)
 
 			kc.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
