@@ -62,6 +62,8 @@ import type DnoteKyouFilter from "../dnote-kyou-filter"
 import DnoteKyouFilterDictionary from "./dnote-kyou-filter-dictionary"
 import FilterBottomKyous from "../dnote-filter/filter-bottom-kyous"
 import FilterTopKyous from "../dnote-filter/filter-top-kyous"
+import KCTitleContainsPredicate from "../dnote-predicate/kc-title-contains-predicate"
+import KCTitleEqualPredicate from "../dnote-predicate/kc-title-equal-predicate"
 
 export default function regist_dictionary(): void {
     PredicateDictonary.set("AndPredicate", AndPredicate)
@@ -93,6 +95,8 @@ export default function regist_dictionary(): void {
     PredicateDictonary.set("TagEqualPredicate", TagEqualPredicate)
     PredicateDictonary.set("TimeIsTitleContainsPredicate", TimeIsTitleContainsPredicate)
     PredicateDictonary.set("TimeIsTitleEqualPredicate", TimeIsTitleEqualPredicate)
+    PredicateDictonary.set("KCTitleContainsPredicate", KCTitleContainsPredicate)
+    PredicateDictonary.set("KCTitleEqualPredicate", KCTitleEqualPredicate)
     PredicateDictonary.set("RelatedTimeAfterPredicate", RelatedTimeAfterPredicate)
     PredicateDictonary.set("RelatedTimeBeforePredicate", RelatedTimeBeforePredicate)
     DnoteKeyGetterDictionary.set("DataTypeGetter", DataTypeGetter)

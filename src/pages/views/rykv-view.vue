@@ -194,8 +194,9 @@
                                 @requested_reload_list="() => { }" />
                         </div>
                         <div class="ryuu_view dummy">
-                            <RyuuListView v-if="focused_kyou_related_time" :application_config="application_config"
-                                :gkill_api="gkill_api" :related_time="focused_kyou_related_time" :editable="false"
+                            <RyuuListView v-if="focused_kyou_related_time && default_query"
+                                :application_config="application_config" :gkill_api="gkill_api"
+                                :related_time="focused_kyou_related_time" :editable="false"
                                 :find_kyou_query_default="default_query"
                                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                                 @deleted_text="(deleted_text) => { }"
@@ -533,10 +534,12 @@ async function init(): Promise<void> {
             // 前回開いていた列があれば復元する
             skip_search_this_tick.value = true
             const saved_querys = props.gkill_api.get_saved_rykv_find_kyou_querys()
+            default_query.value = query_editor_sidebar.value!.get_default_query()!.clone()
+            default_query.value.query_id = props.gkill_api.generate_uuid()
             if (saved_querys.length.valueOf() === 0) {
-                const default_query = query_editor_sidebar.value!.get_default_query()!.clone()
-                default_query.query_id = props.gkill_api.generate_uuid()
-                saved_querys.push(default_query)
+                const cloned_default_query = default_query.value.clone()
+                cloned_default_query.query_id = props.gkill_api.generate_uuid()
+                saved_querys.push(cloned_default_query)
             }
 
             if (props.application_config.rykv_hot_reload) {
