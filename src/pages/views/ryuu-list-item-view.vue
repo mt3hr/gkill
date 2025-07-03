@@ -31,10 +31,10 @@
                                             <LantanaFlowersView :gkill_api="gkill_api"
                                                 :application_config="application_config"
                                                 :mood="match_kyou.typed_lantana.mood" :editable="false"
-                                                @dblclick="show_edit_ryuu_item_dialog()" />
+                                                @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } else { show_kyou_dialog() } }" />
                                         </span>
                                         <span v-if="(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)"
-                                            @dblclick="show_edit_ryuu_item_dialog()">
+                                            @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } else { show_kyou_dialog() } }">
                                             {{ match_kyou.typed_kc.num_value }}
                                         </span>
                                         <KyouView
