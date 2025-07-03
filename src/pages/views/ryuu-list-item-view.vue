@@ -27,17 +27,19 @@
                                     </td>
                                     <td v-if="match_kyou && !is_no_data">
                                         <span
-                                            v-if="match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana">
+                                            v-if="(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana)">
                                             <LantanaFlowersView :gkill_api="gkill_api"
                                                 :application_config="application_config"
                                                 :mood="match_kyou.typed_lantana.mood" :editable="false"
                                                 @dblclick="show_edit_ryuu_item_dialog()" />
                                         </span>
-                                        <span v-else-if="match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc"
+                                        <span v-if="(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)"
                                             @dblclick="show_edit_ryuu_item_dialog()">
                                             {{ match_kyou.typed_kc.num_value }}
                                         </span>
-                                        <KyouView v-else :application_config="application_config" :gkill_api="gkill_api"
+                                        <KyouView
+                                            v-if="!(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana) && !(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)"
+                                            :application_config="application_config" :gkill_api="gkill_api"
                                             :highlight_targets="[]" :is_image_view="false" :kyou="match_kyou"
                                             :last_added_tag="''" :show_checkbox="false" :show_content_only="true"
                                             :show_mi_create_time="false" :show_mi_estimate_end_time="false"
@@ -112,6 +114,8 @@ import { RelatedTimeMatchType } from '@/classes/dnote/related-time-match-type';
 import moment from 'moment';
 import type RelatedKyouQuery from '../../classes/dnote/related-kyou-query';
 import RyuuListItemContextMenu from './ryuu-list-item-context-menu.vue';
+import type Predicate from '@/classes/dnote/predicate';
+import type PredicateGroupType from '@/classes/dnote/predicate-group-type';
 
 const kyou_dialog = ref<InstanceType<typeof KyouDialog> | null>(null);
 const contextmenu = ref<InstanceType<typeof RyuuListItemContextMenu> | null>(null);
@@ -184,8 +188,10 @@ async function load_related_kyou(): Promise<void> {
                 match_kyou.value = match_kyou_after
             } else if (match_kyou_before && match_kyou_after) {
                 if (Math.abs(moment(match_kyou_before.related_time).diff(props.related_time)) < Math.abs(moment(match_kyou_after.related_time).diff(props.related_time))) {
+                    await match_kyou_before.load_all()
                     match_kyou.value = match_kyou_before
                 } else {
+                    await match_kyou_after.load_all()
                     match_kyou.value = match_kyou_after
                 }
             }
@@ -195,6 +201,7 @@ async function load_related_kyou(): Promise<void> {
             let match_kyou_before: Kyou | null = null
             if (match_kyous_before.length !== 0) {
                 match_kyou_before = match_kyous_before[0]
+                await match_kyou_before.load_all()
             }
             match_kyou.value = match_kyou_before
             break
@@ -203,6 +210,7 @@ async function load_related_kyou(): Promise<void> {
             let match_kyou_after: Kyou | null = null
             if (match_kyous_after.length !== 0) {
                 match_kyou_after = match_kyous_after[0]
+                await match_kyou_after.load_all()
             }
             match_kyou.value = match_kyou_after
             break
@@ -211,6 +219,21 @@ async function load_related_kyou(): Promise<void> {
     if (!match_kyou.value) {
         is_no_data.value = true
     }
+}
+
+function predicate_struct_to_json(group: PredicateGroupType | Predicate): any {
+    if (is_group(group)) {
+        return {
+            logic: group.logic,
+            predicates: group.predicates.map(p => predicate_struct_to_json(p))
+        }
+    } else {
+        return { type: group.type, value: group.value }
+    }
+}
+
+function is_group(p: Predicate | PredicateGroupType): p is PredicateGroupType {
+    return 'logic' in p && Array.isArray(p.predicates)
 }
 
 function show_kyou_dialog(): void {
