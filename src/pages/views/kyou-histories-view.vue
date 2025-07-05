@@ -9,8 +9,8 @@
                 :show_timeis_plaing_end_button="false" :height="'100%'" :width="'100%'"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="false" :show_attached_timeis="false"
-                @received_errors="(errors) => emits('received_errors', errors)" :show_related_time="true"
-                @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
+                @received_errors="(errors) => emits('received_errors', errors)" :show_update_time="true"
+                :show_related_time="false" @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
                 @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
                 @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
@@ -44,8 +44,11 @@ const cloned_kyou = ref(new Kyou())
 load_cloned_kyou()
 
 async function load_cloned_kyou() {
-    cloned_kyou.value = props.kyou.clone()
-    cloned_kyou.value.load_attached_histories()
-    cloned_kyou.value.load_attached_histories()
+    const cloned_kyou_value = props.kyou.clone()
+    await cloned_kyou_value.load_attached_histories()
+    for (let i = 0; i < cloned_kyou.value.attached_histories.length; i++) {
+        cloned_kyou_value.attached_histories[i].related_time = cloned_kyou_value.attached_histories[i].update_time
+    }
+    cloned_kyou.value = cloned_kyou_value
 }
 </script>
