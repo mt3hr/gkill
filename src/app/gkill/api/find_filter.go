@@ -238,25 +238,30 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	if err != nil {
 		return nil, nil, err
 	}
-	gkillErr, err = f.replaceLatestKyouInfos(ctx, findKyouContext, <-latestDatasCh)
-	if err != nil {
-		err = fmt.Errorf("error at replace latest kyou infos: %w", err)
-		return nil, gkillErr, err
-	}
-	gkill_log.Trace.Printf("finish replaceLatestKyouInfos")
-	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 
-	for _, kyous := range findKyouContext.MatchKyousCurrent {
-		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, kyous...)
+	if (findKyouContext.ParsedFindQuery.IDs == nil || len(*findKyouContext.ParsedFindQuery.IDs) == 0) && (findKyouContext.ParsedFindQuery.UseIDs == nil || (*findKyouContext.ParsedFindQuery.UseIDs) == false) {
+		gkillErr, err = f.replaceLatestKyouInfos(ctx, findKyouContext, <-latestDatasCh)
+		if err != nil {
+			err = fmt.Errorf("error at replace latest kyou infos: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish replaceLatestKyouInfos")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
+
+		for _, kyous := range findKyouContext.MatchKyousCurrent {
+			findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, kyous...)
+		}
 	}
 
-	gkillErr, err = f.overrideKyous(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at override kyous: %w", err)
-		return nil, gkillErr, err
+	if (findKyouContext.ParsedFindQuery.IDs == nil || len(*findKyouContext.ParsedFindQuery.IDs) == 0) && (findKyouContext.ParsedFindQuery.UseIDs == nil || (*findKyouContext.ParsedFindQuery.UseIDs) == false) {
+		gkillErr, err = f.overrideKyous(ctx, findKyouContext)
+		if err != nil {
+			err = fmt.Errorf("error at override kyous: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish overrideKyous")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
-	gkill_log.Trace.Printf("finish overrideKyous")
-	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 
 	gkillErr, err = f.sortResultKyous(ctx, findKyouContext)
 	if err != nil {
