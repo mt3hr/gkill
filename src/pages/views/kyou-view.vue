@@ -52,6 +52,9 @@
                 <v-col v-if="show_related_time" class="kyou_related_time pa-0 ma-0" cols="auto">
                     {{ format_time(cloned_kyou.related_time) }}
                 </v-col>
+                <v-col v-if="show_update_time" class="kyou_update_time pa-0 ma-0" cols="auto">
+                    {{ format_time(cloned_kyou.update_time) }}
+                </v-col>
                 <v-spacer />
                 <v-col v-if="show_rep_name" class="kyou_rep_name pa-0 ma-0" cols="auto">
                     <span>{{ cloned_kyou.rep_name }}</span>
@@ -511,6 +514,7 @@ function format_time(time: Date) {
 }
 
 .kyou_related_time,
+.kyou_update_time,
 .kyou_rep_name,
 .kyou_device,
 .kyou_data_type {

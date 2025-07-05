@@ -151,7 +151,7 @@
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
                                 :show_timeis_plaing_end_button="true" :height="'unset'" :is_readonly_mi_check="false"
-                                :width="'unset'" :enable_context_menu="enable_context_menu" :show_related_time="true"
+                                :width="'unset'" :enable_context_menu="enable_context_menu" :show_update_time="false" :show_related_time="true"
                                 :show_rep_name="true" :force_show_latest_kyou_info="true" :enable_dialog="enable_dialog"
                                 :show_attached_timeis="true" class="kyou_detail_view"
                                 @received_errors="(errors) => emits('received_errors', errors)"

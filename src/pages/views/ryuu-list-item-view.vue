@@ -47,7 +47,7 @@
                                             :show_timeis_elapsed_time="false" :show_timeis_plaing_end_button="false"
                                             :height="'fit-content'" :enable_context_menu="enable_context_menu"
                                             :enable_dialog="enable_dialog" :show_attached_timeis="false"
-                                            :show_related_time="false" :width="'fit-content'"
+                                            :show_update_time="false" :show_related_time="false" :width="'fit-content'"
                                             :is_readonly_mi_check="true" :show_rep_name="false"
                                             :force_show_latest_kyou_info="true"
                                             @received_errors="(errors) => emits('received_errors', errors)"

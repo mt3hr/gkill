@@ -180,7 +180,7 @@
                                 :show_timeis_plaing_end_button="true" :height="'auto'" :is_readonly_mi_check="false"
                                 :width="'auto'" :enable_context_menu="!is_shared_rykv_view"
                                 :enable_dialog="!is_shared_rykv_view" :show_attached_timeis="true" :show_rep_name="true"
-                                :force_show_latest_kyou_info="true" class="kyou_detail_view" :show_related_time="true"
+                                :force_show_latest_kyou_info="true" class="kyou_detail_view" :show_update_time="false" :show_related_time="true"
                                 @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true) }"
                                 @deleted_text="(deleted_text) => { }"
                                 @deleted_notification="(deleted_notification) => { }"
