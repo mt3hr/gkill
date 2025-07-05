@@ -100,6 +100,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			return nil, gkillErr, err
 		}
 		gkill_log.Trace.Printf("finish getAllTags")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
 		gkillErr, err = f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
@@ -108,6 +109,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			return nil, gkillErr, err
 		}
 		gkill_log.Trace.Printf("finish getAllHideTagsWhenUnChecked")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
 		gkillErr, err = f.findTags(ctx, findKyouContext)
@@ -116,6 +118,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			return nil, gkillErr, err
 		}
 		gkill_log.Trace.Printf("finish findTags")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
 	gkillErr, err = f.findTexts(ctx, findKyouContext)
 	if err != nil {
@@ -123,12 +126,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish findTexts")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	gkillErr, err = f.findTimeIsTexts(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis texts: %w", err)
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish findTimeIsTexts")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	gkillErr, err = f.findTimeIs(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis: %w", err)
@@ -136,12 +141,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	}
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
 		gkill_log.Trace.Printf("finish findTimeIs")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 		gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
 		if err != nil {
 			err = fmt.Errorf("error at find timeis tags: %w", err)
 			return nil, gkillErr, err
 		}
 		gkill_log.Trace.Printf("finish findTimeIsTags")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
 		gkillErr, err = f.getMatchHideTagsWhenUnckedTimeIs(ctx, findKyouContext)
@@ -150,6 +157,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			return nil, gkillErr, err
 		}
 		gkill_log.Trace.Printf("finish getMatchHideTagsWhenUnckedTimeIs")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
 		gkillErr, err = f.filterTagsTimeIs(ctx, findKyouContext)
@@ -158,6 +166,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			return nil, gkillErr, err
 		}
 		gkill_log.Trace.Printf("finish filterTagsTimeIs")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
 	gkillErr, err = f.findKyous(ctx, findKyouContext)
 	if err != nil {
@@ -165,6 +174,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish findKyous")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 
 	gkillErr, err = f.sortAndTrimKyousMap(ctx, findKyouContext)
 	if err != nil {
@@ -172,6 +182,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish findKyous")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 
 	gkillErr, err = f.filterMiForMi(ctx, findKyouContext) //miの場合のみ
 	if err != nil {
@@ -179,6 +190,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish filterMiForMi")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
 		gkillErr, err = f.getMatchHideTagsWhenUnckedKyou(ctx, findKyouContext)
 		if err != nil {
@@ -186,6 +198,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			return nil, gkillErr, err
 		}
 		gkill_log.Trace.Printf("finish getMatchHideTagsWhenUnckedKyou")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
 		gkillErr, err = f.filterTagsKyous(ctx, findKyouContext)
@@ -194,6 +207,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 			return nil, gkillErr, err
 		}
 		gkill_log.Trace.Printf("finish filterTagsKyous")
+		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
 	gkillErr, err = f.filterPlaingTimeIsKyous(ctx, findKyouContext)
 	if err != nil {
@@ -201,20 +215,24 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish filterPlaingTimeIsKyous")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	gkillErr, err = f.filterLocationKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter location kyous: %w", err)
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish filterLocationKyous")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	gkillErr, err = f.filterImageKyous(ctx, findKyouContext)
 	if err != nil {
 		err = fmt.Errorf("error at filter image kyous: %w", err)
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish filterImageKyous")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 
 	gkill_log.Trace.Printf("finish waitLatestDataWg")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	latestDatasWg.Wait()
 	err = <-errCh
 	if err != nil {
@@ -226,6 +244,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish replaceLatestKyouInfos")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 
 	for _, kyous := range findKyouContext.MatchKyousCurrent {
 		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, kyous...)
@@ -237,6 +256,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish overrideKyous")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 
 	gkillErr, err = f.sortResultKyous(ctx, findKyouContext)
 	if err != nil {
@@ -244,6 +264,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish sortResultKyous")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 
 	return findKyouContext.ResultKyous, nil, nil
 }
@@ -816,16 +837,17 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 			if !isTagInQuery {
 				continue
 			}
-			if _, exist := tagNameMap[tag.Tag]; !exist {
-				tagNameMap[tag.Tag] = map[string][]*reps.Kyou{}
-			}
 
-			kyou, exist := findCtx.MatchKyousCurrent[tag.TargetID]
+			kyous, exist := findCtx.MatchKyousCurrent[tag.TargetID]
 			if !exist {
 				continue
 			}
 
-			tagNameMap[tag.Tag][tag.TargetID] = kyou
+			if _, exist := tagNameMap[tag.Tag]; !exist {
+				tagNameMap[tag.Tag] = map[string][]*reps.Kyou{}
+			}
+
+			tagNameMap[tag.Tag][tag.TargetID] = kyous
 		}
 
 		// タグ無しの情報もtagNameMapにいれる
@@ -843,42 +865,65 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 		}
 
 		if existNoTags {
-			for id, kyou := range findCtx.MatchKyousCurrent {
+			for id, kyous := range findCtx.MatchKyousCurrent {
 				_, relatedTagKyou := findCtx.RelatedTagIDs[id]
 				if !relatedTagKyou {
 					if _, exist := tagNameMap[NoTags][id]; !exist {
 						tagNameMap[NoTags] = map[string][]*reps.Kyou{}
 					}
-					tagNameMap[NoTags][id] = kyou
+					tagNameMap[NoTags][id] = kyous
 				}
 			}
 		}
 
 		// tagNameMapの全部のタグ名に存在するKyouだけを抽出
-		hasAllMatchTagsKyousMap := map[string][]*reps.Kyou{}
-		index := 0
-		for id, kyouIDMap := range tagNameMap {
-			switch index {
-			case 0:
-				// 初回ループは全部いれる
-				for _, kyou := range kyouIDMap {
-					hasAllMatchTagsKyousMap[id] = kyou
+		hasAllMatchTagsKyousMap := map[string]map[string][]*reps.Kyou{}
+		// 初回は全部いれる
+		for tagName, kyouIDMap := range tagNameMap {
+			for kyouID, kyous := range kyouIDMap {
+				if _, exist := hasAllMatchTagsKyousMap[tagName]; !exist {
+					hasAllMatchTagsKyousMap[tagName] = map[string][]*reps.Kyou{}
 				}
-			default:
-				matchThisLoopKyousMap := map[string][]*reps.Kyou{}
-				for _, kyou := range kyouIDMap {
-					// 初回ループ以外は、
-					// 以前のタグにマッチしたもの（hasAllMatchTagsKyous）にあり、かつ
-					// 今回のタグにマッチしたもの　をいれる。
-					if _, exist := hasAllMatchTagsKyousMap[id]; exist {
-						matchThisLoopKyousMap[id] = kyou
+				hasAllMatchTagsKyousMap[tagName][kyouID] = kyous
+			}
+		}
+		for tagName := range tagNameMap {
+			matchThisLoopKyousMap := map[string]map[string][]*reps.Kyou{}
+			// 初回ループ以外は、
+			// 以前のタグにマッチしたもの（hasAllMatchTagsKyous）にあり、かつ
+			// 今回のタグにマッチしたもの　をいれる。
+			if _, exist := matchThisLoopKyousMap[tagName]; !exist {
+				matchThisLoopKyousMap[tagName] = map[string][]*reps.Kyou{}
+			}
+
+			beforeMatchKyous := map[string][]*reps.Kyou{}
+			for _, kyous := range hasAllMatchTagsKyousMap {
+				for kyouID, kyou := range kyous {
+					beforeMatchKyous[kyouID] = kyou
+				}
+			}
+			currentMatchKyous := map[string][]*reps.Kyou{}
+			for kyouID, kyous := range tagNameMap[tagName] {
+				currentMatchKyous[kyouID] = kyous
+			}
+
+			for beforeKyouID, kyous := range beforeMatchKyous {
+				for currentKyouID := range currentMatchKyous {
+					if beforeKyouID == currentKyouID {
+						matchThisLoopKyousMap[tagName][currentKyouID] = kyous
+						break
 					}
 				}
-				hasAllMatchTagsKyousMap = matchThisLoopKyousMap
 			}
-			index++
+			hasAllMatchTagsKyousMap = matchThisLoopKyousMap
 		}
-		findCtx.MatchKyousAtFilterTags = hasAllMatchTagsKyousMap
+
+		findCtx.MatchKyousAtFilterTags = map[string][]*reps.Kyou{}
+		for _, matchTagsKyousMap := range hasAllMatchTagsKyousMap {
+			for kyouID, kyous := range matchTagsKyousMap {
+				findCtx.MatchKyousAtFilterTags[kyouID] = kyous
+			}
+		}
 
 		// 非表示タグの対象を消す
 		for _, hideTag := range findCtx.MatchHideTagsWhenUncheckedKyou {
