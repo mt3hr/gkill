@@ -3,7 +3,7 @@ import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteAgregateTarget from "../dnote-agregate-target";
 import { i18n } from "@/i18n";
 
-export default class AgregateSumTimeIsTime implements DnoteAgregateTarget{
+export default class AgregateSumTimeIsTime implements DnoteAgregateTarget {
     static from_json(_json: any): DnoteAgregateTarget {
         return new AgregateSumTimeIsTime()
     }
@@ -71,6 +71,12 @@ export default class AgregateSumTimeIsTime implements DnoteAgregateTarget{
         }
         if (diff_str === "") {
             diff_str += diff_date.getSeconds() + i18n.global.t("SECOND_SUFFIX")
+        }
+        if (diff_str !== "") {
+            if (diff_str !== "") {
+                diff_str += " "
+            }
+            diff_str += "<br>（" + (diff / 3600000).toFixed(2) + i18n.global.t("HOUR_SUFFIX") + "）"
         }
         return diff_str
     }
