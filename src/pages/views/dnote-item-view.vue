@@ -122,7 +122,7 @@ async function load_aggregated_value(abort_controller: AbortController, kyous: A
     related_kyous.value.splice(0)
     const dnote_aggregator = new DnoteAgregator(model_value.value!.predicate, model_value.value!.agregate_target)
     const aggregate_result = await dnote_aggregator.agregate(abort_controller, kyous, query, kyou_is_loaded)
-    value.value = aggregate_result.result_string
+    value.value = aggregate_result.result_string.replace("<br>", "")
     related_kyous.value.splice(0, Infinity, ...aggregate_result.match_kyous)
     emits('finish_a_aggregate_task')
 }

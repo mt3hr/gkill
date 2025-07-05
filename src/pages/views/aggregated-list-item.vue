@@ -11,14 +11,14 @@
                             <span>{{ dnote_list_query.prefix }}</span>
                         </td>
                         <td>
-                            <span :class="value_class">{{ aggregated_item.value }}</span>
+                            <span v-if="!is_lantana_type" :class="value_class" v-html="aggregated_item.value"></span>
                             <span v-if="is_lantana_type">
                                 <LantanaFlowersView :gkill_api="gkill_api" :application_config="application_config"
                                     :mood="mood_value" :editable="false" />
                             </span>
                         </td>
                         <td>
-                            <span v-if="!is_lantana_type">{{ dnote_list_query.suffix }}</span>
+                            <span>{{ dnote_list_query.suffix }}</span>
                         </td>
                     </tr>
                 </table>
