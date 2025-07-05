@@ -83,7 +83,7 @@
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
                 :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :is_readonly_mi_check="true" :show_attached_timeis="true"
-                :show_content_only="false" :show_related_time="true" :show_rep_name="true"
+                :show_content_only="false" :show_update_time="false" :show_related_time="true" :show_rep_name="true"
                 :force_show_latest_kyou_info="true"
                 @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
