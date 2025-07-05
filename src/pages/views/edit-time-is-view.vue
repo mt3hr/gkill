@@ -119,13 +119,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -136,8 +136,8 @@
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
                 :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :is_readonly_mi_check="true" :show_attached_timeis="true"
-                :show_rep_name="true" :force_show_latest_kyou_info="true" :show_update_time="false" :show_related_time="true"
-                @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
+                :show_rep_name="true" :force_show_latest_kyou_info="true" :show_update_time="false"
+                :show_related_time="true" @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
                 @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
                 @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
@@ -180,12 +180,12 @@ const emits = defineEmits<KyouViewEmits>()
 
 const cloned_kyou: Ref<Kyou> = ref(props.kyou.clone())
 const timeis_title: Ref<string> = ref(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : "")
-const timeis_start_date_typed: Ref<Date> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.start_time).toDate() : new Date(0))
+const timeis_start_date_typed: Ref<Date> = ref(cloned_kyou.value.typed_timeis?.start_time ? moment(cloned_kyou.value.typed_timeis?.start_time).toDate() : new Date(0))
 const timeis_start_date_string: Ref<string> = computed(() => moment(timeis_start_date_typed.value).format("YYYY-MM-DD"))
 const timeis_start_time_string: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.start_time).format("HH:mm:ss") : "")
-const timeis_end_date_typed: Ref<Date | null> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.end_time).toDate() : null)
+const timeis_end_date_typed: Ref<Date | null> = ref(cloned_kyou.value.typed_timeis?.end_time ? moment(cloned_kyou.value.typed_timeis.end_time).toDate() : null)
 const timeis_end_date_string: Ref<string> = computed(() => timeis_end_date_typed.value ? moment(timeis_end_date_typed.value).format("YYYY-MM-DD") : "")
-const timeis_end_time_string: Ref<string> = ref(cloned_kyou.value.typed_timeis ? moment(cloned_kyou.value.typed_timeis.end_time).format("HH:mm:ss") : "")
+const timeis_end_time_string: Ref<string> = ref(timeis_end_date_typed.value ? moment(timeis_end_date_typed.value).format("HH:mm:ss") : "")
 
 const show_kyou: Ref<boolean> = ref(false)
 const show_start_date_menu = ref(false)
@@ -203,8 +203,8 @@ async function load(): Promise<void> {
     timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""
     timeis_start_date_typed.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").toDate()
     timeis_start_time_string.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.start_time : "").format("HH:mm:ss")
-    timeis_end_date_typed.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").toDate()
-    timeis_end_time_string.value = moment(cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.end_time : "").format("HH:mm:ss")
+    timeis_end_date_typed.value = cloned_kyou.value.typed_timeis?.end_time ? moment(cloned_kyou.value.typed_timeis.end_time).toDate() : null
+    timeis_end_time_string.value = cloned_kyou.value.typed_timeis?.end_time ? moment(cloned_kyou.value.typed_timeis.end_time).format("HH:mm:ss") : ""
 }
 
 function reset(): void {
@@ -290,7 +290,7 @@ async function save(): Promise<void> {
         // 更新がなかったらエラーメッセージを出力する
         if (timeis.title === timeis_title.value &&
             (moment(timeis.start_time).toDate().getTime() === moment(timeis_start_date_string.value + " " + timeis_start_time_string.value).toDate().getTime()) &&
-            (moment(timeis.end_time).toDate().getTime() === moment(timeis_end_date_string.value + " " + timeis_end_time_string.value).toDate().getTime()) || (timeis.end_time === null && timeis_end_date_string.value === "" && timeis_end_time_string.value === "")) {
+            (moment(timeis.end_time).toDate().getTime() === moment(timeis_end_date_string.value + " " + timeis_end_time_string.value).toDate().getTime() || (timeis.end_time === null && timeis_end_date_string.value === "" && timeis_end_time_string.value === ""))) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.timeis_is_no_update
             error.error_message = i18n.global.t("TIMEIS_IS_NO_UPDATE_MESSAGE")
