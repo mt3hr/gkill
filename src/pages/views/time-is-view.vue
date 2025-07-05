@@ -1,14 +1,16 @@
 <template>
     <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
         <div>{{ kyou.typed_timeis?.title }}</div>
-        <div v-if="kyou.typed_timeis && kyou.typed_timeis.start_time && show_timeis_elapsed_time">{{ duration }}</div>
+        <div class="duration" v-if="kyou.typed_timeis && kyou.typed_timeis.start_time && show_timeis_elapsed_time">{{
+            duration }}</div>
         <br />
         <div v-if="kyou.typed_timeis">{{ i18n.global.t("START_DATE_TIME_TITLE") }}：<span>{{
             format_time(kyou.typed_timeis.start_time) }}</span></div>
         <div v-if="kyou.typed_timeis && kyou.typed_timeis.end_time">{{ i18n.global.t("END_DATE_TIME_TITLE") }}：<span>{{
             format_time(kyou.typed_timeis?.end_time) }}</span></div>
-        <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time && show_timeis_elapsed_time">{{ i18n.global.t("PLAING_TITLE")
-            }}</div>
+        <div v-if="kyou.typed_timeis && !kyou.typed_timeis.end_time && show_timeis_elapsed_time">{{
+            i18n.global.t("PLAING_TITLE")
+        }}</div>
         <v-row v-if="show_timeis_plaing_end_button && kyou.typed_timeis && !kyou.typed_timeis.end_time"
             class="pa-0 ma-0">
             <v-spacer cols="auto" />
@@ -116,6 +118,12 @@ const duration = computed(() => {
     if (diff_str === "") {
         diff_str += diff_date.getSeconds() + i18n.global.t("SECOND_SUFFIX")
     }
+    if (diff_str !== "") {
+        if (diff_str !== "") {
+            diff_str += " "
+        }
+        diff_str += "（" + (diff / 3600000).toFixed(2) + i18n.global.t("HOUR_SUFFIX") + "）"
+    }
     return diff_str
 })
 
@@ -133,3 +141,6 @@ function show_end_timeis_dialog(): void {
     end_timeis_plaing_dialog.value?.show()
 }
 </script>
+<style scoped>
+.duration {}
+</style>

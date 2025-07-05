@@ -61,6 +61,12 @@ export default class AgregateAverageTimeIsEndTime implements DnoteAgregateTarget
         if (diff_str === "") {
             diff_str += diff_date.getSeconds() + i18n.global.t("SECOND_SUFFIX")
         }
+        if (diff_str !== "") {
+            if (diff_str !== "") {
+                diff_str += " "
+            }
+            diff_str += "<br>（" + (diff / 3600000).toFixed(2) + i18n.global.t("HOUR_SUFFIX") + "）"
+        }
         return diff_str
     }
     to_json(): any {
