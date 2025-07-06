@@ -1,0 +1,918 @@
+﻿=== 依存ライセンス一覧 ===
+
+
+=== [Go Modules] ===
+
+=== [github.com/mt3hr/gkill/src/app] ===
+No license file found.
+
+=== [dario.cat/mergo] ===
+License file: LICENSE
+
+Copyright (c) 2013 Dario Castaﾃｱﾃｩ. All rights reserved. Copyright (c) 2012 The Go Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above
+
+=== [github.com/Microsoft/go-winio] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2015 Microsoft  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/ProtonMail/go-crypto] ===
+License file: LICENSE
+
+Copyright (c) 2009 The Go Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/PuerkitoBio/goquery] ===
+License file: LICENSE
+
+Copyright (c) 2012-2021, Martin Angers & Contributors All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:  * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.  * Neither the name of the author nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+=== [github.com/SherClockHolmes/webpush-go] ===
+License file: LICENSE
+
+MIT License  Copyright (c) 2016 Ethan Holmes  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/alecthomas/assert/v2] ===
+License file: COPYING
+
+Copyright (C) 2021 Alec Thomas  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all
+
+=== [github.com/alecthomas/repr] ===
+License file: COPYING
+
+The MIT License (MIT)  Copyright (c) 2016 Alec Thomas  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/andybalholm/cascadia] ===
+License file: LICENSE
+
+Copyright (c) 2011 Andy Balholm. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/anmitsu/go-shlex] ===
+License file: LICENSE
+
+Copyright (c) anmitsu <anmitsu.s@gmail.com>  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: 
+
+=== [github.com/armon/go-socks5] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2014 Armon Dadgar  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/asticode/go-astikit] ===
+License file: LICENSE
+
+MIT License  Copyright (c) 2020 Quentin Renard  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/asticode/go-astilectron] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2017 Quentin RENARD  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/axgle/mahonia] ===
+License file: LICENSE
+
+BSD 3-Clause License https://opensource.org/licenses/BSD-3-Clause
+
+=== [github.com/cloudflare/circl] ===
+License file: LICENSE
+
+Copyright (c) 2019 Cloudflare. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/cyphar/filepath-securejoin] ===
+License file: LICENSE
+
+Copyright (C) 2014-2015 Docker Inc & Go Authors. All rights reserved. Copyright (C) 2017-2024 SUSE LLC. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above
+
+=== [github.com/davecgh/go-spew] ===
+License file: LICENSE
+
+ISC License  Copyright (c) 2012-2016 Dave Collins <dave@davec.name>  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+
+=== [github.com/elazarl/goproxy] ===
+License file: LICENSE
+
+Copyright (c) 2012 Elazar Leibovich. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/emirpasic/gods] ===
+License file: LICENSE
+
+Copyright (c) 2015, Emir Pasic All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:  * Redistributions of source code must retain the above copyright notice, this   list of conditions and the following disclaimer.  * Redistributions in binary form must reproduce the above copyright notice,
+
+=== [github.com/frankban/quicktest] ===
+License file: LICENSE
+
+MIT License  Copyright (c) 2017 Canonical Ltd.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/fsnotify/fsnotify] ===
+License file: LICENSE
+
+Copyright ﾂｩ 2012 The Go Authors. All rights reserved. Copyright ﾂｩ fsnotify Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:  * Redistributions of source code must retain the above copyright notice, this   list of conditions and the following disclaimer. * Redistributions in binary form must reproduce the above copyright notice, this   list of conditions and the following disclaimer in the documentation and/or
+
+=== [github.com/gliderlabs/ssh] ===
+License file: LICENSE
+
+Copyright (c) 2016 Glider Labs. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/go-git/gcfg] ===
+License file: LICENSE
+
+Copyright (c) 2012 Pﾃｩter Surﾃ｡nyi. Portions Copyright (c) 2009 The Go Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above
+
+=== [github.com/go-git/go-billy/v5] ===
+License file: LICENSE
+
+                                 Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,       and distribution as defined by Sections 1 through 9 of this document.
+
+=== [github.com/go-git/go-git-fixtures/v4] ===
+License file: LICENSE
+
+                                 Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,       and distribution as defined by Sections 1 through 9 of this document.
+
+=== [github.com/go-git/go-git/v5] ===
+License file: LICENSE
+
+                                 Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,       and distribution as defined by Sections 1 through 9 of this document.
+
+=== [github.com/golang-jwt/jwt/v5] ===
+License file: LICENSE
+
+Copyright (c) 2012 Dave Grijalva Copyright (c) 2021 golang-jwt maintainers  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+
+=== [github.com/golang/groupcache] ===
+License file: LICENSE
+
+Apache License Version 2.0, January 2004 http://www.apache.org/licenses/  TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION  1. Definitions.  "License" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.
+
+=== [github.com/google/go-cmp] ===
+License file: LICENSE
+
+Copyright (c) 2017 The Go Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/google/uuid] ===
+License file: LICENSE
+
+Copyright (c) 2009,2014 Google Inc. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/gorilla/mux] ===
+License file: LICENSE
+
+Copyright (c) 2023 The Gorilla Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:  	 * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. 	 * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/hashicorp/hcl] ===
+License file: LICENSE
+
+Mozilla Public License, version 2.0  1. Definitions  1.1. 窶廚ontributor窶・      means each individual or legal entity that creates, contributes to the      creation of, or owns Covered Software.  1.2. 窶廚ontributor Version窶・      means the combination of the Contributions of others (if any) used by a
+
+=== [github.com/hexops/gotextdiff] ===
+License file: LICENSE
+
+Copyright (c) 2009 The Go Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/inconshreveable/mousetrap] ===
+License file: LICENSE
+
+                                 Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,       and distribution as defined by Sections 1 through 9 of this document.
+
+=== [github.com/jbenet/go-context] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2014 Juan Batiz-Benet  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/kevinburke/ssh_config] ===
+License file: LICENSE
+
+Copyright (c) 2017 Kevin Burke.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/kr/pretty] ===
+License file: LICENSE
+
+Copyright 2012 Keith Rarick  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in
+
+=== [github.com/kr/text] ===
+License file: LICENSE
+
+Copyright 2012 Keith Rarick  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in
+
+=== [github.com/magiconair/properties] ===
+License file: LICENSE.md
+
+Copyright (c) 2013-2020, Frank Schroeder  All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:   * Redistributions of source code must retain the above copyright notice, this    list of conditions and the following disclaimer. 
+
+=== [github.com/mattn/go-sqlite3] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2014 Yasuhiro Matsumoto  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/mattn/go-zglob] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2017 Yasuhiro Matsumoto  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/mitchellh/go-homedir] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2013 Mitchell Hashimoto  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/mitchellh/mapstructure] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2013 Mitchell Hashimoto  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/onsi/gomega] ===
+License file: LICENSE
+
+Copyright (c) 2013-2014 Onsi Fakhouri  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: 
+
+=== [github.com/pelletier/go-toml/v2] ===
+License file: LICENSE
+
+The MIT License (MIT)  go-toml v2 Copyright (c) 2021 - 2023 Thomas Pelletier  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+
+=== [github.com/pjbgf/sha1cd] ===
+License file: LICENSE
+
+                                 Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,       and distribution as defined by Sections 1 through 9 of this document.
+
+=== [github.com/pkg/errors] ===
+License file: LICENSE
+
+Copyright (c) 2015, Dave Cheney <dave@cheney.net> All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:  * Redistributions of source code must retain the above copyright notice, this   list of conditions and the following disclaimer.  * Redistributions in binary form must reproduce the above copyright notice,
+
+=== [github.com/pmezard/go-difflib] ===
+License file: LICENSE
+
+Copyright (c) 2013, Patrick Mezard All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:      Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.     Redistributions in binary form must reproduce the above copyright
+
+=== [github.com/rogpeppe/go-internal] ===
+License file: LICENSE
+
+Copyright (c) 2018 The Go Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/sagikazarmark/locafero] ===
+License file: LICENSE
+
+Copyright (c) 2023 Mﾃ｡rk Sﾃ｡gi-Kazﾃ｡r <mark.sagikazar@gmail.com>  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all
+
+=== [github.com/sagikazarmark/slog-shim] ===
+License file: LICENSE
+
+Copyright (c) 2009 The Go Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [github.com/saintfish/chardet] ===
+License file: LICENSE
+
+Copyright (c) 2012 chardet Authors  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all
+
+=== [github.com/sergi/go-diff] ===
+License file: LICENSE
+
+Copyright (c) 2012-2016 The go-diff Authors. All rights reserved.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included
+
+=== [github.com/skeema/knownhosts] ===
+License file: LICENSE
+
+                                 Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,       and distribution as defined by Sections 1 through 9 of this document.
+
+=== [github.com/sourcegraph/conc] ===
+License file: LICENSE
+
+MIT License  Copyright (c) 2023 Sourcegraph  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/spf13/afero] ===
+License file: LICENSE.txt
+
+                                Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,       and distribution as defined by Sections 1 through 9 of this document.
+
+=== [github.com/spf13/cast] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2014 Steve Francia  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/spf13/cobra] ===
+License file: LICENSE.txt
+
+                                Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,       and distribution as defined by Sections 1 through 9 of this document.
+
+=== [github.com/spf13/pflag] ===
+License file: LICENSE
+
+Copyright (c) 2012 Alex Ogier. All rights reserved. Copyright (c) 2012 The Go Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above
+
+=== [github.com/spf13/viper] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2014 Steve Francia  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/stretchr/testify] ===
+License file: LICENSE
+
+MIT License  Copyright (c) 2012-2020 Mat Ryer, Tyler Bunnell and contributors.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/subosito/gotenv] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2013 Alif Rachmawadi  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/twpayne/go-geom] ===
+License file: LICENSE
+
+Copyright (c) 2013, Tom Payne All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:    Redistributions of source code must retain the above copyright notice, this   list of conditions and the following disclaimer.    Redistributions in binary form must reproduce the above copyright notice, this
+
+=== [github.com/twpayne/go-gpx] ===
+License file: LICENSE
+
+The MIT License (MIT)  Copyright (c) 2015 Tom Payne  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [github.com/xanzy/ssh-agent] ===
+License file: LICENSE
+
+                                 Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,       and distribution as defined by Sections 1 through 9 of this document.
+
+=== [go.uber.org/atomic] ===
+License file: LICENSE.txt
+
+Copyright (c) 2016 Uber Technologies, Inc.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in
+
+=== [go.uber.org/multierr] ===
+License file: LICENSE.txt
+
+Copyright (c) 2017-2021 Uber Technologies, Inc.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in
+
+=== [golang.org/x/crypto] ===
+License file: LICENSE
+
+Copyright 2009 The Go Authors.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [golang.org/x/exp] ===
+License file: LICENSE
+
+Copyright 2009 The Go Authors.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [golang.org/x/image] ===
+License file: LICENSE
+
+Copyright 2009 The Go Authors.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [golang.org/x/mod] ===
+License file: LICENSE
+
+Copyright (c) 2009 The Go Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [golang.org/x/net] ===
+License file: LICENSE
+
+Copyright 2009 The Go Authors.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [golang.org/x/sync] ===
+License file: LICENSE
+
+Copyright 2009 The Go Authors.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [golang.org/x/sys] ===
+License file: LICENSE
+
+Copyright 2009 The Go Authors.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [golang.org/x/term] ===
+License file: LICENSE
+
+Copyright 2009 The Go Authors.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [golang.org/x/text] ===
+License file: LICENSE
+
+Copyright 2009 The Go Authors.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [golang.org/x/tools] ===
+License file: LICENSE
+
+Copyright (c) 2009 The Go Authors. All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [gopkg.in/check.v1] ===
+License file: LICENSE
+
+Gocheck - A rich testing framework for Go   Copyright (c) 2010-2013 Gustavo Niemeyer <gustavo@niemeyer.net>  All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:   1. Redistributions of source code must retain the above copyright notice, this
+
+=== [gopkg.in/ini.v1] ===
+License file: LICENSE
+
+Apache License Version 2.0, January 2004 http://www.apache.org/licenses/  TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION  1. Definitions.  "License" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.
+
+=== [gopkg.in/warnings.v0] ===
+License file: LICENSE
+
+Copyright (c) 2016 Pﾃｩter Surﾃ｡nyi.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:     * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer
+
+=== [gopkg.in/yaml.v3] ===
+License file: LICENSE
+
+ This project is covered by two different licenses: MIT and Apache.  #### MIT License ####  The following files were ported to Go from C files of libyaml, and thus are still covered by their original MIT license, with the additional copyright staring in 2011 when the project was ported over:      apic.go emitterc.go parserc.go readerc.go scannerc.go
+
+=== [Node.js Modules] ===
+
+=== [@babel/helper-string-parser@7.25.9] ===
+License: MIT
+Repository: https://github.com/babel/babel
+
+MIT License  Copyright (c) 2014-present Sebastian McKenzie and other contributors  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+
+=== [@babel/helper-validator-identifier@7.25.9] ===
+License: MIT
+Repository: https://github.com/babel/babel
+
+MIT License  Copyright (c) 2014-present Sebastian McKenzie and other contributors  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+
+=== [@babel/parser@7.26.3] ===
+License: MIT
+Repository: https://github.com/babel/babel
+
+Copyright (C) 2012-2014 by various contributors (see AUTHORS)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in
+
+=== [@babel/types@7.26.3] ===
+License: MIT
+Repository: https://github.com/babel/babel
+
+MIT License  Copyright (c) 2014-present Sebastian McKenzie and other contributors  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+
+=== [@googlemaps/js-api-loader@1.16.8] ===
+License: Apache-2.0
+Repository: https://github.com/googlemaps/js-api-loader
+
+                                  Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,
+
+=== [@googlemaps/markerclusterer@2.5.3] ===
+License: Apache-2.0
+Repository: https://github.com/googlemaps/js-markerclusterer
+
+                                  Apache License                            Version 2.0, January 2004                         http://www.apache.org/licenses/     TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION     1. Definitions.        "License" shall mean the terms and conditions for use, reproduction,
+
+=== [@intlify/core-base@9.14.4] ===
+License: MIT
+Repository: https://github.com/intlify/vue-i18n
+
+The MIT License (MIT)  Copyright (c) 2020 kazuya kawaguchi  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@intlify/message-compiler@9.14.4] ===
+License: MIT
+Repository: https://github.com/intlify/vue-i18n
+
+The MIT License (MIT)  Copyright (c) 2020 kazuya kawaguchi  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@intlify/shared@9.14.4] ===
+License: MIT
+Repository: https://github.com/intlify/vue-i18n
+
+The MIT License (MIT)  Copyright (c) 2020 kazuya kawaguchi  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@jridgewell/sourcemap-codec@1.5.0] ===
+License: MIT
+Repository: https://github.com/jridgewell/sourcemap-codec
+
+The MIT License  Copyright (c) 2015 Rich Harris  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@mdi/font@7.4.47] ===
+License: Apache-2.0
+Repository: https://github.com/Templarian/MaterialDesign-Webfont
+
+Pictogrammers Free License --------------------------  This icon collection is released as free, open source, and GPL friendly by the [Pictogrammers](http://pictogrammers.com/) icon group. You may use it for commercial projects, open source projects, or anything really.  # Icons: Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0) Some of the icons are redistributed under the Apache 2.0 license. All other icons are either redistributed under their respective licenses or are
+
+=== [@mdi/js@7.4.47] ===
+License: Apache-2.0
+Repository: https://github.com/Templarian/MaterialDesign-JS
+
+Pictogrammers Free License --------------------------  This icon collection is released as free, open source, and GPL friendly by the [Pictogrammers](http://pictogrammers.com/) icon group. You may use it for commercial projects, open source projects, or anything really.  # Icons: Apache 2.0 (https://www.apache.org/licenses/LICENSE-2.0) Some of the icons are redistributed under the Apache 2.0 license. All other icons are either redistributed under their respective licenses or are
+
+=== [@vue/compiler-core@3.4.31] ===
+License: MIT
+Repository: https://github.com/vuejs/core
+
+The MIT License (MIT)  Copyright (c) 2018-present, Yuxi (Evan) You  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@vue/compiler-dom@3.4.31] ===
+License: MIT
+Repository: https://github.com/vuejs/core
+
+The MIT License (MIT)  Copyright (c) 2018-present, Yuxi (Evan) You  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@vue/compiler-sfc@3.4.31] ===
+License: MIT
+Repository: https://github.com/vuejs/core
+
+The MIT License (MIT)  Copyright (c) 2018-present, Yuxi (Evan) You  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@vue/compiler-ssr@3.4.31] ===
+License: MIT
+Repository: https://github.com/vuejs/core
+
+The MIT License (MIT)  Copyright (c) 2018-present, Yuxi (Evan) You  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@vue/devtools-api@6.6.3] ===
+License: MIT
+Repository: https://github.com/vuejs/vue-devtools
+
+(ライセンス本文が見つかりませんでした)
+
+=== [@vue/reactivity@3.4.31] ===
+License: MIT
+Repository: https://github.com/vuejs/core
+
+The MIT License (MIT)  Copyright (c) 2018-present, Yuxi (Evan) You  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@vue/runtime-core@3.4.31] ===
+License: MIT
+Repository: https://github.com/vuejs/core
+
+The MIT License (MIT)  Copyright (c) 2018-present, Yuxi (Evan) You  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@vue/runtime-dom@3.4.31] ===
+License: MIT
+Repository: https://github.com/vuejs/core
+
+The MIT License (MIT)  Copyright (c) 2018-present, Yuxi (Evan) You  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@vue/server-renderer@3.4.31] ===
+License: MIT
+Repository: https://github.com/vuejs/core
+
+The MIT License (MIT)  Copyright (c) 2018-present, Yuxi (Evan) You  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [@vue/shared@3.4.31] ===
+License: MIT
+Repository: https://github.com/vuejs/core
+
+The MIT License (MIT)  Copyright (c) 2018-present, Yuxi (Evan) You  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [ansi-regex@5.0.1] ===
+License: MIT
+Repository: https://github.com/chalk/ansi-regex
+
+MIT License  Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [ansi-styles@4.3.0] ===
+License: MIT
+Repository: https://github.com/chalk/ansi-styles
+
+MIT License  Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [balanced-match@1.0.2] ===
+License: MIT
+Repository: https://github.com/juliangruber/balanced-match
+
+(MIT)  Copyright (c) 2013 Julian Gruber &lt;julian@juliangruber.com&gt;  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [brace-expansion@1.1.11] ===
+License: MIT
+Repository: https://github.com/juliangruber/brace-expansion
+
+MIT License  Copyright (c) 2013 Julian Gruber <julian@juliangruber.com>  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [cliui@7.0.4] ===
+License: ISC
+Repository: https://github.com/yargs/cliui
+
+Copyright (c) 2015, Contributors  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE
+
+=== [color-convert@2.0.1] ===
+License: MIT
+Repository: https://github.com/Qix-/color-convert
+
+Copyright (c) 2011-2016 Heather Arthur <fayearthur@gmail.com>  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: 
+
+=== [color-name@1.1.4] ===
+License: MIT
+Repository: https://github.com/colorjs/color-name
+
+The MIT License (MIT) Copyright (c) 2015 Dmitry Ivanov  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [concat-map@0.0.1] ===
+License: MIT
+Repository: https://github.com/substack/node-concat-map
+
+This software is released under the MIT license:  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all
+
+=== [copyfiles@2.4.1] ===
+License: MIT
+Repository: https://github.com/calvinmetcalf/copyfiles
+
+# Copyright (c) 2014-2018 Calvin Metcalf  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in
+
+=== [core-util-is@1.0.3] ===
+License: MIT
+Repository: https://github.com/isaacs/core-util-is
+
+Copyright Node.js contributors. All rights reserved.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in
+
+=== [csstype@3.1.3] ===
+License: MIT
+Repository: https://github.com/frenic/csstype
+
+Copyright (c) 2017-2018 Fredrik Nicol  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all
+
+=== [emoji-regex@8.0.0] ===
+License: MIT
+Repository: https://github.com/mathiasbynens/emoji-regex
+
+Copyright Mathias Bynens <https://mathiasbynens.be/>  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: 
+
+=== [entities@4.5.0] ===
+License: BSD-2-Clause
+Repository: https://github.com/fb55/entities
+
+Copyright (c) Felix Bﾃｶhm All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:  Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.  Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.  THIS IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS,
+
+=== [escalade@3.2.0] ===
+License: MIT
+Repository: https://github.com/lukeed/escalade
+
+MIT License  Copyright (c) Luke Edwards <luke.edwards05@gmail.com> (lukeed.com)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [estree-walker@2.0.2] ===
+License: MIT
+Repository: https://github.com/Rich-Harris/estree-walker
+
+Copyright (c) 2015-20 [these people](https://github.com/Rich-Harris/estree-walker/graphs/contributors)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [fast-deep-equal@3.1.3] ===
+License: MIT
+Repository: https://github.com/epoberezkin/fast-deep-equal
+
+MIT License  Copyright (c) 2017 Evgeny Poberezkin  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [fs.realpath@1.0.0] ===
+License: ISC
+Repository: https://github.com/isaacs/fs.realpath
+
+The ISC License  Copyright (c) Isaac Z. Schlueter and Contributors  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+
+=== [get-caller-file@2.0.5] ===
+License: ISC
+Repository: https://github.com/stefanpenner/get-caller-file
+
+ISC License (ISC) Copyright 2018 Stefan Penner  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+=== [gkill@1.0.6-dev] ===
+License: UNLICENSED
+
+MIT License  Copyright (c) 2024 mt3hr  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [glob@7.2.3] ===
+License: ISC
+Repository: https://github.com/isaacs/node-glob
+
+The ISC License  Copyright (c) Isaac Z. Schlueter and Contributors  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+
+=== [inflight@1.0.6] ===
+License: ISC
+Repository: https://github.com/npm/inflight
+
+The ISC License  Copyright (c) Isaac Z. Schlueter  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+
+=== [inherits@2.0.4] ===
+License: ISC
+Repository: https://github.com/isaacs/inherits
+
+The ISC License  Copyright (c) Isaac Z. Schlueter  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+
+=== [is-fullwidth-code-point@3.0.0] ===
+License: MIT
+Repository: https://github.com/sindresorhus/is-fullwidth-code-point
+
+MIT License  Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [isarray@0.0.1] ===
+License: MIT
+Repository: https://github.com/juliangruber/isarray
+
+ # isarray  `Array#isArray` for older browsers.  ## Usage  ```js var isArray = require('isarray'); 
+
+=== [isarray@1.0.0] ===
+License: MIT
+Repository: https://github.com/juliangruber/isarray
+
+ # isarray  `Array#isArray` for older browsers.  [![build status](https://secure.travis-ci.org/juliangruber/isarray.svg)](http://travis-ci.org/juliangruber/isarray) [![downloads](https://img.shields.io/npm/dm/isarray.svg)](https://www.npmjs.org/package/isarray)  [![browser support](https://ci.testling.com/juliangruber/isarray.png) ](https://ci.testling.com/juliangruber/isarray)
+
+=== [kdbush@4.0.2] ===
+License: ISC
+Repository: https://github.com/mourner/kdbush
+
+ISC License  Copyright (c) 2018, Vladimir Agafonkin  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+
+=== [magic-string@0.30.10] ===
+License: MIT
+Repository: https://github.com/rich-harris/magic-string
+
+Copyright 2018 Rich Harris  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [minimatch@3.1.2] ===
+License: ISC
+Repository: https://github.com/isaacs/minimatch
+
+The ISC License  Copyright (c) Isaac Z. Schlueter and Contributors  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+
+=== [mkdirp@1.0.4] ===
+License: MIT
+Repository: https://github.com/isaacs/node-mkdirp
+
+Copyright James Halliday (mail@substack.net) and Isaac Z. Schlueter (i@izs.me)  This project is free software released under the MIT license:  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [mkdirp@3.0.1] ===
+License: MIT
+Repository: https://github.com/isaacs/node-mkdirp
+
+Copyright (c) 2011-2023 James Halliday (mail@substack.net) and Isaac Z. Schlueter (i@izs.me)  This project is free software released under the MIT license:  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [moment@2.30.1] ===
+License: MIT
+Repository: https://github.com/moment/moment
+
+Copyright (c) JS Foundation and other contributors  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [nanoid@3.3.7] ===
+License: MIT
+Repository: https://github.com/ai/nanoid
+
+The MIT License (MIT)  Copyright 2017 Andrey Sitnik <andrey@sitnik.ru>  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [noms@0.0.0] ===
+License: ISC
+Repository: https://github.com/calvinmetcalf/noms
+
+noms ====  create super easy readable-streams filled with yummy data to nom on, inspired by [from2](https://github.com/hughsk/from2) (and a test based on one from there).  ```bash npm install noms ```  ```js
+
+=== [once@1.4.0] ===
+License: ISC
+Repository: https://github.com/isaacs/once
+
+The ISC License  Copyright (c) Isaac Z. Schlueter and Contributors  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+
+=== [path-is-absolute@1.0.1] ===
+License: MIT
+Repository: https://github.com/sindresorhus/path-is-absolute
+
+The MIT License (MIT)  Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [picocolors@1.1.1] ===
+License: ISC
+Repository: https://github.com/alexeyraspopov/picocolors
+
+ISC License  Copyright (c) 2021-2024 Oleksii Raspopov, Kostiantyn Denysov, Anton Verinov  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+
+=== [postcss@8.4.39] ===
+License: MIT
+Repository: https://github.com/postcss/postcss
+
+The MIT License (MIT)  Copyright 2013 Andrey Sitnik <andrey@sitnik.ru>  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [process-nextick-args@2.0.1] ===
+License: MIT
+Repository: https://github.com/calvinmetcalf/process-nextick-args
+
+# Copyright (c) 2015 Calvin Metcalf  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all
+
+=== [readable-stream@1.0.34] ===
+License: MIT
+Repository: https://github.com/isaacs/readable-stream
+
+Copyright Joyent, Inc. and other Node contributors. All rights reserved. Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+=== [readable-stream@2.3.8] ===
+License: MIT
+Repository: https://github.com/nodejs/readable-stream
+
+Node.js is licensed for use as follows:  """ Copyright Node.js contributors. All rights reserved.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+
+=== [require-directory@2.1.1] ===
+License: MIT
+Repository: https://github.com/troygoode/node-require-directory
+
+The MIT License (MIT)  Copyright (c) 2011 Troy Goode <troygoode@gmail.com>  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to
+
+=== [safe-buffer@5.1.2] ===
+License: MIT
+Repository: https://github.com/feross/safe-buffer
+
+The MIT License (MIT)  Copyright (c) Feross Aboukhadijeh  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [source-map-js@1.2.0] ===
+License: BSD-3-Clause
+Repository: https://github.com/7rulnik/source-map-js
+
+ Copyright (c) 2009-2011, Mozilla Foundation and contributors All rights reserved.  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:  * Redistributions of source code must retain the above copyright notice, this   list of conditions and the following disclaimer. 
+
+=== [string-width@4.2.3] ===
+License: MIT
+Repository: https://github.com/sindresorhus/string-width
+
+MIT License  Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [string_decoder@0.10.31] ===
+License: MIT
+Repository: https://github.com/rvagg/string_decoder
+
+Copyright Joyent, Inc. and other Node contributors.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: 
+
+=== [string_decoder@1.1.1] ===
+License: MIT
+Repository: https://github.com/nodejs/string_decoder
+
+Node.js is licensed for use as follows:  """ Copyright Node.js contributors. All rights reserved.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+
+=== [strip-ansi@6.0.1] ===
+License: MIT
+Repository: https://github.com/chalk/strip-ansi
+
+MIT License  Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [supercluster@8.0.1] ===
+License: ISC
+Repository: https://github.com/mapbox/supercluster
+
+ISC License  Copyright (c) 2021, Mapbox  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+
+=== [through2@2.0.5] ===
+License: MIT
+Repository: https://github.com/rvagg/through2
+
+# The MIT License (MIT)  **Copyright (c) Rod Vagg (the "Original Author") and additional contributors**  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [typescript@5.4.5] ===
+License: Apache-2.0
+Repository: https://github.com/Microsoft/TypeScript
+
+Apache License  Version 2.0, January 2004  http://www.apache.org/licenses/   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION  1. Definitions. 
+
+=== [untildify@4.0.0] ===
+License: MIT
+Repository: https://github.com/sindresorhus/untildify
+
+MIT License  Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [util-deprecate@1.0.2] ===
+License: MIT
+Repository: https://github.com/TooTallNate/util-deprecate
+
+(The MIT License)  Copyright (c) 2014 Nathan Rajlich <nathan@tootallnate.net>  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+
+=== [vue-i18n@9.14.4] ===
+License: MIT
+Repository: https://github.com/intlify/vue-i18n
+
+The MIT License (MIT)  Copyright (c) 2020 kazuya kawaguchi  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [vue-router@4.4.0] ===
+License: MIT
+Repository: https://github.com/vuejs/router
+
+The MIT License (MIT)  Copyright (c) 2019-present Eduardo San Martin Morote  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [vue3-google-map@0.21.0] ===
+License: MIT
+Repository: https://github.com/inocan-group/vue3-google-maps
+
+The MIT License (MIT)  Copyright (c) 2020-present, Inocan Group  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [vue@3.4.31] ===
+License: MIT
+Repository: https://github.com/vuejs/core
+
+The MIT License (MIT)  Copyright (c) 2018-present, Yuxi (Evan) You  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [vuetify@3.6.13-3.7.0-beta.0.0] ===
+License: MIT
+Repository: https://github.com/vuetifyjs/vuetify
+
+The MIT License (MIT)  Copyright (c) 2016-2023 John Jeremy Leider  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+=== [wrap-ansi@7.0.0] ===
+License: MIT
+Repository: https://github.com/chalk/wrap-ansi
+
+MIT License  Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=== [wrappy@1.0.2] ===
+License: ISC
+Repository: https://github.com/npm/wrappy
+
+The ISC License  Copyright (c) Isaac Z. Schlueter and Contributors  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+
+=== [xtend@4.0.2] ===
+License: MIT
+Repository: https://github.com/Raynos/xtend
+
+The MIT License (MIT) Copyright (c) 2012-2014 Raynos.  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: 
+
+=== [y18n@5.0.8] ===
+License: ISC
+Repository: https://github.com/yargs/y18n
+
+Copyright (c) 2015, Contributors  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+
+=== [yargs-parser@20.2.9] ===
+License: ISC
+Repository: https://github.com/yargs/yargs-parser
+
+Copyright (c) 2016, Contributors  Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE
+
+=== [yargs@16.2.0] ===
+License: MIT
+Repository: https://github.com/yargs/yargs
+
+MIT License  Copyright 2010 James Halliday (mail@substack.net); Modified work Copyright 2014 Contributors (ben@npmjs.com)  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
