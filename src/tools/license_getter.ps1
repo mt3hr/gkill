@@ -1,70 +1,63 @@
-# ==========
-# 設定
-# ==========
+# ========== 設定 ==========
 $goProjectPath = "../app/"
 $nodeProjectPath = "../../"
 $outputFile = "../../DEPENDENCE_LICENSES.txt"
 
-# ==========
-# 出力初期化
-# ==========
+# ========== 出力初期化 ==========
 "=== 依存ライセンス一覧 ===`n" | Out-File -Encoding utf8 $outputFile
 
 ########################################
-# ? Go モジュールライセンス抽出（vendor使わない版）
+# Go モジュールライセンス抽出
 ########################################
 if (Test-Path "$goProjectPath\go.mod") {
     Push-Location $goProjectPath
     Write-Host "? Go依存ライセンスを取得中..."
-
     go mod tidy | Out-Null
     $goDepsRaw = go list -m -json all
-
     Pop-Location
 
     Add-Content $outputFile "`n=== [Go Modules] ==="
 
-    $lines = $goDepsRaw -split "`r?`n"
-    $buffer = ""
+    # JSONブロックを手動で分割
+    $lines = $goDepsRaw -split "`n"
+    $jsonBlock = ""
     $braceCount = 0
 
     foreach ($line in $lines) {
-        $trimmed = $line.Trim()
-        $braceCount += ($trimmed -split "{").Count - 1
-        $braceCount -= ($trimmed -split "}").Count - 1
-        $buffer += "$line`n"
+        $braceCount += ($line -split "{").Count - 1
+        $braceCount -= ($line -split "}").Count - 1
+        $jsonBlock += "$line`n"
 
-        if ($braceCount -eq 0 -and $buffer.Trim() -ne "") {
+        if ($braceCount -eq 0 -and $jsonBlock.Trim()) {
             try {
-                $mod = $buffer | ConvertFrom-Json
-                $buffer = ""
+                $mod = $jsonBlock | ConvertFrom-Json
+                $jsonBlock = ""
 
                 if ($mod.Dir -and (Test-Path $mod.Dir)) {
                     $licenseFiles = @(
                         "LICENSE", "LICENSE.txt", "LICENSE.md",
                         "UNLICENSE", "COPYING", "NOTICE"
-                    )
+                    ) | ForEach-Object { Join-Path $mod.Dir $_ }
 
                     $found = $false
-                    foreach ($fileName in $licenseFiles) {
-                        $filePath = Join-Path $mod.Dir $fileName
-                        if (Test-Path $filePath) {
+                    foreach ($file in $licenseFiles) {
+                        if (Test-Path $file) {
                             Add-Content $outputFile "`n=== [$($mod.Path)] ==="
-                            Add-Content $outputFile "License file: $fileName"
-                            Add-Content $outputFile "`n$(Get-Content $filePath -TotalCount 10)"
+                            Add-Content $outputFile "License file: $(Split-Path $file -Leaf)"
+                            Add-Content $outputFile "`n$(Get-Content $file)"
                             $found = $true
-                            break
                         }
                     }
 
                     if (-not $found) {
                         Add-Content $outputFile "`n=== [$($mod.Path)] ==="
-                        Add-Content $outputFile "No license file found."
+                        Add-Content $outputFile "No license or notice file found."
                     }
                 }
             } catch {
-                Add-Content $outputFile "`n[ERROR] Failed to parse Go module block."
-                $buffer = ""
+                Add-Content $outputFile "`n[ERROR] Failed to parse Go module block (manual)."
+                Add-Content $outputFile $jsonBlock
+                $jsonBlock = ""
             }
         }
     }
@@ -73,7 +66,7 @@ if (Test-Path "$goProjectPath\go.mod") {
 }
 
 ########################################
-# ? Node.js ライセンス抽出（前回のまま）
+# Node.js ライセンス抽出
 ########################################
 if (Test-Path "$nodeProjectPath\package.json") {
     Add-Content $outputFile "`n=== [Node.js Modules] ==="
@@ -101,9 +94,15 @@ if (Test-Path "$nodeProjectPath\package.json") {
             if ($licenseText) {
                 Add-Content $outputFile "`n$licenseText"
             } elseif ($licenseFile -and (Test-Path $licenseFile)) {
-                Add-Content $outputFile "`n$(Get-Content $licenseFile -TotalCount 10)"
+                Add-Content $outputFile "`n$(Get-Content $licenseFile)"
             } else {
                 Add-Content $outputFile "`n(ライセンス本文が見つかりませんでした)"
+            }
+
+            # NOTICEも探す
+            if ($info.path -and (Test-Path "$($info.path)\NOTICE")) {
+                Add-Content $outputFile "`n[NOTICE] (from $($info.path)\NOTICE):"
+                Add-Content $outputFile "$(Get-Content "$($info.path)\NOTICE" )"
             }
         }
     } else {
