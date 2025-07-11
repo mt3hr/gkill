@@ -1618,6 +1618,13 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	return nil, nil
 }
 func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKyouContext, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
+	forMi := findCtx.ParsedFindQuery.ForMi == nil || findCtx.ParsedFindQuery.MiSortType == nil || *findCtx.ParsedFindQuery.ForMi
+	forPlaing := findCtx.ParsedFindQuery.UsePlaing != nil && *(findCtx.ParsedFindQuery.UsePlaing) && findCtx.ParsedFindQuery.PlaingTime != nil
+
+	if !forMi && !forPlaing {
+		return nil, nil
+	}
+
 	latestKyousMap := map[string][]*reps.Kyou{}
 
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
