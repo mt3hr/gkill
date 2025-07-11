@@ -527,6 +527,97 @@ loop:
 	return kyouHistoriesList, nil
 }
 
+func (k KmemoRepositories) GetKmemoHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Kmemo, error) {
+	kyouHistories := map[string]*Kmemo{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*Kmemo, len(k))
+	errch := make(chan error, len(k))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range k {
+		wg.Add(1)
+
+		go func(rep KmemoRepository) {
+			defer wg.Done()
+
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- fmt.Errorf("error at get rep name: %w", err)
+					return
+				}
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchKmemosInRep, err := rep.GetKmemoHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKmemosInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get kmemo histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// Kmemo集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchKmemosInRep := <-ch:
+			if matchKmemosInRep == nil {
+				continue loop
+			}
+			for _, kyou := range matchKmemosInRep {
+				if existKmemo, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.After(existKmemo.UpdateTime) {
+						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+					}
+				} else {
+					kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	kyouHistoriesList := []*Kmemo{}
+	for _, kyou := range kyouHistories {
+		if kyou == nil {
+			continue
+		}
+		kyouHistoriesList = append(kyouHistoriesList, kyou)
+	}
+
+	sort.Slice(kyouHistoriesList, func(i, j int) bool {
+		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	})
+
+	return kyouHistoriesList, nil
+}
+
 func (k KmemoRepositories) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
 	err := fmt.Errorf("not implements KmemoReps.AddKmemoInfo")
 	return err

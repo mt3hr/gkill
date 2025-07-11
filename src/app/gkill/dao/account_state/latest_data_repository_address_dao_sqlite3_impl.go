@@ -307,7 +307,7 @@ WHERE TARGET_ID = ?
 	return latestDataRepositoryAddresses[0], nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx context.Context, updateTime time.Time) (map[string]*LatestDataRepositoryAddress, error) {
+func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx context.Context, updateTime time.Time, limit int) (map[string]*LatestDataRepositoryAddress, error) {
 	l.m.Lock()
 	defer l.m.Unlock()
 	sql := fmt.Sprintf(`
@@ -319,7 +319,8 @@ SELECT
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
 FROM %s
 WHERE datetime(LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME, 'localtime') >= datetime(?, 'localtime')
-`, l.tableName)
+LIMIT %d
+`, l.tableName, limit)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {

@@ -528,6 +528,97 @@ loop:
 	return kyouHistoriesList, nil
 }
 
+func (n NlogRepositories) GetNlogHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Nlog, error) {
+	kyouHistories := map[string]*Nlog{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*Nlog, len(n))
+	errch := make(chan error, len(n))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range n {
+		wg.Add(1)
+
+		go func(rep NlogRepository) {
+			defer wg.Done()
+
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- fmt.Errorf("error at get rep name: %w", err)
+					return
+				}
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchNlogsInRep, err := rep.GetNlogHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchNlogsInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get nlog histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// Nlog集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchNlogsInRep := <-ch:
+			if matchNlogsInRep == nil {
+				continue loop
+			}
+			for _, kyou := range matchNlogsInRep {
+				if existNlog, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.After(existNlog.UpdateTime) {
+						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+					}
+				} else {
+					kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	kyouHistoriesList := []*Nlog{}
+	for _, kyou := range kyouHistories {
+		if kyou == nil {
+			continue
+		}
+		kyouHistoriesList = append(kyouHistoriesList, kyou)
+	}
+
+	sort.Slice(kyouHistoriesList, func(i, j int) bool {
+		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	})
+
+	return kyouHistoriesList, nil
+}
+
 func (n NlogRepositories) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
 	err := fmt.Errorf("not implements NlogReps.AddNlogInfo")
 	return err

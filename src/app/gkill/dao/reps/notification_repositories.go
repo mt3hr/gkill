@@ -480,6 +480,97 @@ loop:
 	return notificationHistoriesList, nil
 }
 
+func (t NotificationRepositories) GetNotificationHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Notification, error) {
+	notificationHistories := map[string]*Notification{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*Notification, len(t))
+	errch := make(chan error, len(t))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range t {
+		wg.Add(1)
+
+		go func(rep NotificationRepository) {
+			defer wg.Done()
+
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- fmt.Errorf("error at get rep name: %w", err)
+					return
+				}
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchNotificationsInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get notification histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// Notification集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchNotificationsInRep := <-ch:
+			if matchNotificationsInRep == nil {
+				continue loop
+			}
+			for _, notification := range matchNotificationsInRep {
+				if existNotification, exist := notificationHistories[notification.ID+notification.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if notification.UpdateTime.After(existNotification.UpdateTime) {
+						notificationHistories[notification.ID+notification.UpdateTime.Format(sqlite3impl.TimeLayout)] = notification
+					}
+				} else {
+					notificationHistories[notification.ID+notification.UpdateTime.Format(sqlite3impl.TimeLayout)] = notification
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	notificationHistoriesList := []*Notification{}
+	for _, notification := range notificationHistories {
+		if notification == nil {
+			continue
+		}
+		notificationHistoriesList = append(notificationHistoriesList, notification)
+	}
+
+	sort.Slice(notificationHistoriesList, func(i, j int) bool {
+		return notificationHistoriesList[i].UpdateTime.After(notificationHistoriesList[j].UpdateTime)
+	})
+
+	return notificationHistoriesList, nil
+}
+
 func (t NotificationRepositories) AddNotificationInfo(ctx context.Context, text *Notification) error {
 	err := fmt.Errorf("not implements NotificationReps.AddNotificationInfo")
 	return err
