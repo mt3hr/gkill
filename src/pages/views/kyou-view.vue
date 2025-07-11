@@ -417,7 +417,7 @@ watch(() => props.kyou, async () => {
 
 (async () => {
     if (props.force_show_latest_kyou_info) {
-        await cloned_kyou.value.reload(true, false);//最新を読み込むためにReload
+        await cloned_kyou.value.reload(true, true);//最新を読み込むためにReload
     }
     load_attached_infos()
 })(); //非同期で実行してほしい

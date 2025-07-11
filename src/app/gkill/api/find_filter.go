@@ -239,18 +239,16 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, nil, err
 	}
 
-	if (findKyouContext.ParsedFindQuery.IDs == nil || len(*findKyouContext.ParsedFindQuery.IDs) == 0) && (findKyouContext.ParsedFindQuery.UseIDs == nil || (*findKyouContext.ParsedFindQuery.UseIDs) == false) {
-		gkillErr, err = f.replaceLatestKyouInfos(ctx, findKyouContext, <-latestDatasCh)
-		if err != nil {
-			err = fmt.Errorf("error at replace latest kyou infos: %w", err)
-			return nil, gkillErr, err
-		}
-		gkill_log.Trace.Printf("finish replaceLatestKyouInfos")
-		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
+	gkillErr, err = f.replaceLatestKyouInfos(ctx, findKyouContext, <-latestDatasCh)
+	if err != nil {
+		err = fmt.Errorf("error at replace latest kyou infos: %w", err)
+		return nil, gkillErr, err
+	}
+	gkill_log.Trace.Printf("finish replaceLatestKyouInfos")
+	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 
-		for _, kyous := range findKyouContext.MatchKyousCurrent {
-			findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, kyous...)
-		}
+	for _, kyous := range findKyouContext.MatchKyousCurrent {
+		findKyouContext.ResultKyous = append(findKyouContext.ResultKyous, kyous...)
 	}
 
 	gkillErr, err = f.overrideKyous(ctx, findKyouContext)
@@ -1618,13 +1616,6 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	return nil, nil
 }
 func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKyouContext, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
-	forMi := findCtx.ParsedFindQuery.ForMi == nil || findCtx.ParsedFindQuery.MiSortType == nil || *findCtx.ParsedFindQuery.ForMi
-	forPlaing := findCtx.ParsedFindQuery.UsePlaing != nil && *(findCtx.ParsedFindQuery.UsePlaing) && findCtx.ParsedFindQuery.PlaingTime != nil
-
-	if !forMi && !forPlaing {
-		return nil, nil
-	}
-
 	latestKyousMap := map[string][]*reps.Kyou{}
 
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
