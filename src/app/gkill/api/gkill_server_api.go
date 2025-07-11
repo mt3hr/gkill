@@ -5510,7 +5510,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 		kyou, err = repositories.GetKyou(r.Context(), request.ID, request.UpdateTime)
 		kyouHistories = []*reps.Kyou{kyou}
 	} else {
-		kyouHistories, err = repositories.GetKyouHistories(r.Context(), request.ID)
+		kyouHistories, err = repositories.Reps.GetKyouHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	}
 
 	if err != nil {
@@ -5596,7 +5596,7 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	kmemoHistories, err := repositories.KmemoReps.GetKmemoHistories(r.Context(), request.ID)
+	kmemoHistories, err := repositories.KmemoReps.GetKmemoHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5680,7 +5680,7 @@ func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kcHistories, err := repositories.KCReps.GetKCHistories(r.Context(), request.ID)
+	kcHistories, err := repositories.KCReps.GetKCHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	if err != nil {
 		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5764,7 +5764,7 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	urlogHistories, err := repositories.URLogReps.GetURLogHistories(r.Context(), request.ID)
+	urlogHistories, err := repositories.URLogReps.GetURLogHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5848,7 +5848,7 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nlogHistories, err := repositories.NlogReps.GetNlogHistories(r.Context(), request.ID)
+	nlogHistories, err := repositories.NlogReps.GetNlogHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	if err != nil {
 		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5932,7 +5932,7 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	timeisHistories, err := repositories.TimeIsReps.GetTimeIsHistories(r.Context(), request.ID)
+	timeisHistories, err := repositories.TimeIsReps.GetTimeIsHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	if err != nil {
 		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6016,7 +6016,7 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	miHistories, err := repositories.MiReps.GetMiHistories(r.Context(), request.ID)
+	miHistories, err := repositories.MiReps.GetMiHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	if err != nil {
 		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6100,7 +6100,7 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	lantanaHistories, err := repositories.LantanaReps.GetLantanaHistories(r.Context(), request.ID)
+	lantanaHistories, err := repositories.LantanaReps.GetLantanaHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	if err != nil {
 		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6184,7 +6184,7 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	rekyouHistories, err := repositories.ReKyouReps.GetReKyouHistories(r.Context(), request.ID)
+	rekyouHistories, err := repositories.ReKyouReps.GetReKyouHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6352,7 +6352,7 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	idfKyouHistories, err := repositories.IDFKyouReps.GetIDFKyouHistories(r.Context(), request.ID)
+	idfKyouHistories, err := repositories.IDFKyouReps.GetIDFKyouHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	if err != nil {
 		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.ID, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6780,7 +6780,7 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 		tag, err = repositories.GetTag(r.Context(), request.ID, request.UpdateTime)
 		tags = []*reps.Tag{tag}
 	} else {
-		tags, err = repositories.GetTagHistories(r.Context(), request.ID)
+		tags, err = repositories.TagReps.GetTagHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	}
 
 	if err != nil {
@@ -7041,7 +7041,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 		text, err = repositories.GetText(r.Context(), request.ID, request.UpdateTime)
 		texts = []*reps.Text{text}
 	} else {
-		texts, err = repositories.GetTextHistories(r.Context(), request.ID)
+		texts, err = repositories.TextReps.GetTextHistoriesByRepName(r.Context(), request.ID, request.RepName)
 	}
 
 	if err != nil {
@@ -11942,7 +11942,8 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 		return
 	}
 
-	updatedInfos, err := repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(r.Context(), request.LastUpdatedTime)
+	limit := 1001 // 1000はは超え画面側でキャッシュ全件強制正新
+	updatedInfos, err := repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(r.Context(), request.LastUpdatedTime, limit)
 	if err != nil {
 		err = fmt.Errorf("error at get latest data repositories data user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())

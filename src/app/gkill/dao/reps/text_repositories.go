@@ -402,6 +402,97 @@ loop:
 	return textHistoriesList, nil
 }
 
+func (t TextRepositories) GetTextHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Text, error) {
+	textHistories := map[string]*Text{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*Text, len(t))
+	errch := make(chan error, len(t))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range t {
+		wg.Add(1)
+
+		go func(rep TextRepository) {
+			defer wg.Done()
+
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- fmt.Errorf("error at get rep name: %w", err)
+					return
+				}
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchTextsInRep, err := rep.GetTextHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchTextsInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get text histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// Text集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchTextsInRep := <-ch:
+			if matchTextsInRep == nil {
+				continue loop
+			}
+			for _, text := range matchTextsInRep {
+				if existText, exist := textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if text.UpdateTime.After(existText.UpdateTime) {
+						textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
+					}
+				} else {
+					textHistories[text.ID+text.UpdateTime.Format(sqlite3impl.TimeLayout)] = text
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	textHistoriesList := []*Text{}
+	for _, text := range textHistories {
+		if text == nil {
+			continue
+		}
+		textHistoriesList = append(textHistoriesList, text)
+	}
+
+	sort.Slice(textHistoriesList, func(i, j int) bool {
+		return textHistoriesList[i].UpdateTime.After(textHistoriesList[j].UpdateTime)
+	})
+
+	return textHistoriesList, nil
+}
+
 func (t TextRepositories) AddTextInfo(ctx context.Context, text *Text) error {
 	err := fmt.Errorf("not implements TextReps.AddTextInfo")
 	return err
