@@ -547,6 +547,97 @@ loop:
 	return kyouHistoriesList, nil
 }
 
+func (t TimeIsRepositories) GetTimeIsHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*TimeIs, error) {
+	kyouHistories := map[string]*TimeIs{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*TimeIs, len(t))
+	errch := make(chan error, len(t))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range t {
+		wg.Add(1)
+
+		go func(rep TimeIsRepository) {
+			defer wg.Done()
+
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- fmt.Errorf("error at get rep name: %w", err)
+					return
+				}
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchTimeIssInRep, err := rep.GetTimeIsHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchTimeIssInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get timeis histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// TimeIs集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchTimeIssInRep := <-ch:
+			if matchTimeIssInRep == nil {
+				continue loop
+			}
+			for _, kyou := range matchTimeIssInRep {
+				if existTimeIs, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.After(existTimeIs.UpdateTime) {
+						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+					}
+				} else {
+					kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	kyouHistoriesList := []*TimeIs{}
+	for _, kyou := range kyouHistories {
+		if kyou == nil {
+			continue
+		}
+		kyouHistoriesList = append(kyouHistoriesList, kyou)
+	}
+
+	sort.Slice(kyouHistoriesList, func(i, j int) bool {
+		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	})
+
+	return kyouHistoriesList, nil
+}
+
 func (t TimeIsRepositories) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
 	err := fmt.Errorf("not implements TimeIsReps.AddTimeIsInfo")
 	return err

@@ -528,6 +528,97 @@ loop:
 	return kyouHistoriesList, nil
 }
 
+func (i IDFKyouRepositories) GetIDFKyouHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*IDFKyou, error) {
+	kyouHistories := map[string]*IDFKyou{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*IDFKyou, len(i))
+	errch := make(chan error, len(i))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range i {
+		wg.Add(1)
+
+		go func(rep IDFKyouRepository) {
+			defer wg.Done()
+
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- fmt.Errorf("error at get rep name: %w", err)
+					return
+				}
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchIDFKyousInRep, err := rep.GetIDFKyouHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchIDFKyousInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get idfkyou histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// IDFKyou集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchIDFKyousInRep := <-ch:
+			if matchIDFKyousInRep == nil {
+				continue loop
+			}
+			for _, kyou := range matchIDFKyousInRep {
+				if existIDFKyou, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.After(existIDFKyou.UpdateTime) {
+						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+					}
+				} else {
+					kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	kyouHistoriesList := []*IDFKyou{}
+	for _, kyou := range kyouHistories {
+		if kyou == nil {
+			continue
+		}
+		kyouHistoriesList = append(kyouHistoriesList, kyou)
+	}
+
+	sort.Slice(kyouHistoriesList, func(i, j int) bool {
+		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	})
+
+	return kyouHistoriesList, nil
+}
+
 func (i IDFKyouRepositories) HandleFileServe(w http.ResponseWriter, r *http.Request) {
 	http.NotFoundHandler().ServeHTTP(w, r)
 }

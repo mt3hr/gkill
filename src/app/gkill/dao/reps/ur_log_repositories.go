@@ -528,6 +528,97 @@ loop:
 	return kyouHistoriesList, nil
 }
 
+func (u URLogRepositories) GetURLogHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*URLog, error) {
+	kyouHistories := map[string]*URLog{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*URLog, len(u))
+	errch := make(chan error, len(u))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range u {
+		wg.Add(1)
+
+		go func(rep URLogRepository) {
+			defer wg.Done()
+
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- fmt.Errorf("error at get rep name: %w", err)
+					return
+				}
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchURLogsInRep, err := rep.GetURLogHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchURLogsInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get urlog histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// URLog集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchURLogsInRep := <-ch:
+			if matchURLogsInRep == nil {
+				continue loop
+			}
+			for _, kyou := range matchURLogsInRep {
+				if existURLog, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.After(existURLog.UpdateTime) {
+						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+					}
+				} else {
+					kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	kyouHistoriesList := []*URLog{}
+	for _, kyou := range kyouHistories {
+		if kyou == nil {
+			continue
+		}
+		kyouHistoriesList = append(kyouHistoriesList, kyou)
+	}
+
+	sort.Slice(kyouHistoriesList, func(i, j int) bool {
+		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	})
+
+	return kyouHistoriesList, nil
+}
+
 func (u URLogRepositories) AddURLogInfo(ctx context.Context, urlog *URLog) error {
 	err := fmt.Errorf("not implements URLogReps.AddURLogInfo")
 	return err

@@ -6,7 +6,7 @@ export class GetURLogRequest extends GkillAPIRequest {
 
     id: string
     update_time: Date | null
-    
+    rep_name?: string
 
     constructor() {
         super()

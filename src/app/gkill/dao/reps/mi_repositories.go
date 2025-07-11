@@ -528,6 +528,97 @@ loop:
 	return kyouHistoriesList, nil
 }
 
+func (m MiRepositories) GetMiHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Mi, error) {
+	kyouHistories := map[string]*Mi{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*Mi, len(m))
+	errch := make(chan error, len(m))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range m {
+		wg.Add(1)
+
+		go func(rep MiRepository) {
+			defer wg.Done()
+
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- fmt.Errorf("error at get rep name: %w", err)
+					return
+				}
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchMisInRep, err := rep.GetMiHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchMisInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get mi histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// Mi集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchMisInRep := <-ch:
+			if matchMisInRep == nil {
+				continue loop
+			}
+			for _, kyou := range matchMisInRep {
+				if existMi, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.After(existMi.UpdateTime) {
+						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+					}
+				} else {
+					kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	kyouHistoriesList := []*Mi{}
+	for _, kyou := range kyouHistories {
+		if kyou == nil {
+			continue
+		}
+		kyouHistoriesList = append(kyouHistoriesList, kyou)
+	}
+
+	sort.Slice(kyouHistoriesList, func(i, j int) bool {
+		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	})
+
+	return kyouHistoriesList, nil
+}
+
 func (m MiRepositories) AddMiInfo(ctx context.Context, mi *Mi) error {
 	err := fmt.Errorf("not implements MiReps.AddMiInfo")
 	return err
