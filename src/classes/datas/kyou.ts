@@ -386,7 +386,7 @@ export class Kyou extends InfoBase {
     async load_typed_mi(): Promise<Array<GkillError>> {
         const req = new GetMiRequest()
         req.abort_controller = this.abort_controller
-        req.rep_name = this.rep_name
+        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_mi(req)
