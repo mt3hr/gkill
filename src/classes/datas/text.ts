@@ -2,7 +2,7 @@
 
 import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
-import { GetTextHistoryByTextIDRequest } from '../api/req_res/get-text-history-by-tag-id-request'
+import { GetTextHistoryByTextIDRequest } from '../api/req_res/get-text-history-by-text-id-request'
 import { InfoIdentifier } from './info-identifier'
 import { MetaInfoBase } from './meta-info-base'
 
