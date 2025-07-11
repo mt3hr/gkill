@@ -84,7 +84,6 @@ const mi_title_style = ref({
     maxWidth: 'calc(100% - 0px)'
 })
 
-load_cloned_kyou()
 nextTick(() => update_mi_title_style())
 
 watch(() => props.kyou, async () => {
