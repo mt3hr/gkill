@@ -527,6 +527,97 @@ loop:
 	return kyouHistoriesList, nil
 }
 
+func (l LantanaRepositories) GetLantanaHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*Lantana, error) {
+	kyouHistories := map[string]*Lantana{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*Lantana, len(l))
+	errch := make(chan error, len(l))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range l {
+		wg.Add(1)
+
+		go func(rep LantanaRepository) {
+			defer wg.Done()
+
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- fmt.Errorf("error at get rep name: %w", err)
+					return
+				}
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchLantanasInRep, err := rep.GetLantanaHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchLantanasInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get lantana histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// Lantana集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchLantanasInRep := <-ch:
+			if matchLantanasInRep == nil {
+				continue loop
+			}
+			for _, kyou := range matchLantanasInRep {
+				if existLantana, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.After(existLantana.UpdateTime) {
+						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+					}
+				} else {
+					kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	kyouHistoriesList := []*Lantana{}
+	for _, kyou := range kyouHistories {
+		if kyou == nil {
+			continue
+		}
+		kyouHistoriesList = append(kyouHistoriesList, kyou)
+	}
+
+	sort.Slice(kyouHistoriesList, func(i, j int) bool {
+		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	})
+
+	return kyouHistoriesList, nil
+}
+
 func (l LantanaRepositories) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
 	err := fmt.Errorf("not implements LantanaReps.AddLantanaInfo")
 	return err

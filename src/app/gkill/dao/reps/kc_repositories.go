@@ -527,6 +527,97 @@ loop:
 	return kyouHistoriesList, nil
 }
 
+func (k KCRepositories) GetKCHistoriesByRepName(ctx context.Context, id string, repName *string) ([]*KC, error) {
+	kyouHistories := map[string]*KC{}
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	ch := make(chan []*KC, len(k))
+	errch := make(chan error, len(k))
+	defer close(ch)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range k {
+		wg.Add(1)
+
+		go func(rep KCRepository) {
+			defer wg.Done()
+
+			if repName != nil {
+				// repNameが一致しない場合はスキップ
+				repNameInRep, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- fmt.Errorf("error at get rep name: %w", err)
+					return
+				}
+				if repNameInRep != *repName {
+					return
+				}
+			}
+
+			matchKCsInRep, err := rep.GetKCHistories(ctx, id)
+			if err != nil {
+				errch <- err
+				return
+			}
+			ch <- matchKCsInRep
+		}(rep)
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at find get kc histories: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	// KC集約。UpdateTimeが最新のものを収める
+loop:
+	for {
+		select {
+		case matchKCsInRep := <-ch:
+			if matchKCsInRep == nil {
+				continue loop
+			}
+			for _, kyou := range matchKCsInRep {
+				if existKC, exist := kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)]; exist {
+					if kyou.UpdateTime.After(existKC.UpdateTime) {
+						kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+					}
+				} else {
+					kyouHistories[kyou.ID+kyou.UpdateTime.Format(sqlite3impl.TimeLayout)] = kyou
+				}
+			}
+		default:
+			break loop
+		}
+	}
+
+	kyouHistoriesList := []*KC{}
+	for _, kyou := range kyouHistories {
+		if kyou == nil {
+			continue
+		}
+		kyouHistoriesList = append(kyouHistoriesList, kyou)
+	}
+
+	sort.Slice(kyouHistoriesList, func(i, j int) bool {
+		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
+	})
+
+	return kyouHistoriesList, nil
+}
+
 func (k KCRepositories) AddKCInfo(ctx context.Context, kc *KC) error {
 	err := fmt.Errorf("not implements KCReps.AddKCInfo")
 	return err
