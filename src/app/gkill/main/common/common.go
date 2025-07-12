@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -16,6 +17,7 @@ import (
 
 	_ "time/tzdata"
 
+	"net/http"
 	_ "net/http/pprof"
 
 	"github.com/gorilla/mux"
@@ -25,6 +27,7 @@ import (
 	dvnf_cmd "github.com/mt3hr/gkill/src/app/gkill/dvnf/cmd"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 	"github.com/spf13/cobra"
 )
 
@@ -98,6 +101,8 @@ func init() {
 	}
 	fixTimezone()
 	/*
+		done := threads.AllocateThread()
+		defer done()
 		go func() {
 			http.ListenAndServe("localhost:6060", nil) // pprof用
 		}()
@@ -141,11 +146,12 @@ func InitGkillServerAPI() error {
 
 func LaunchGkillServerAPI() error {
 	var err error
-
 	defer gkillServerAPI.Close()
 	interceptCh := make(chan os.Signal, 1)
 	signal.Notify(interceptCh, os.Interrupt)
+	done := threads.AllocateThread()
 	go func() {
+		defer done()
 		<-interceptCh
 		gkillServerAPI.Close()
 		os.Exit(0)
@@ -154,13 +160,17 @@ func LaunchGkillServerAPI() error {
 	for err == nil {
 		err = gkillServerAPI.Serve()
 		if err != nil {
-			return err
-		}
-		if err == nil {
-			err = InitGkillServerAPI()
-			if err != nil {
+			if errors.Is(err, http.ErrServerClosed) {
+				err = nil
+				continue
+			} else {
+				gkill_log.Error.Printf("error at gkill server api serve: %v", err)
 				return err
 			}
+		}
+		err = InitGkillServerAPI()
+		if err != nil {
+			return err
 		}
 	}
 

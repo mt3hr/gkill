@@ -9,6 +9,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type KmemoRepositories []KmemoRepository
@@ -27,7 +28,9 @@ func (k KmemoRepositories) FindKyous(ctx context.Context, query *find.FindQuery)
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KmemoRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -91,7 +94,9 @@ func (k KmemoRepositories) GetKyou(ctx context.Context, id string, updateTime *t
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KmemoRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -155,7 +160,9 @@ func (k KmemoRepositories) GetKyouHistories(ctx context.Context, id string) ([]*
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KmemoRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -235,7 +242,9 @@ func (k KmemoRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KmemoRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -279,7 +288,9 @@ func (k KmemoRepositories) Close(ctx context.Context) error {
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KmemoRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -322,7 +333,9 @@ func (k KmemoRepositories) FindKmemo(ctx context.Context, query *find.FindQuery)
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KmemoRepository) {
+			defer done()
 			defer wg.Done()
 			matchKmemosInRep, err := rep.FindKmemo(ctx, query)
 			if err != nil {
@@ -399,7 +412,9 @@ func (k KmemoRepositories) GetKmemo(ctx context.Context, id string, updateTime *
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KmemoRepository) {
+			defer done()
 			defer wg.Done()
 			matchKmemoInRep, err := rep.GetKmemo(ctx, id, updateTime)
 			if err != nil {
@@ -463,7 +478,9 @@ func (k KmemoRepositories) GetKmemoHistories(ctx context.Context, id string) ([]
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KmemoRepository) {
+			defer done()
 			defer wg.Done()
 			matchKmemosInRep, err := rep.GetKmemoHistories(ctx, id)
 			if err != nil {
@@ -541,7 +558,9 @@ func (k KmemoRepositories) GetKmemoHistoriesByRepName(ctx context.Context, id st
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KmemoRepository) {
+			defer done()
 			defer wg.Done()
 
 			if repName != nil {

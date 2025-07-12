@@ -6,6 +6,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type GPSLogRepositories []GPSLogRepository
@@ -24,7 +26,9 @@ func (g GPSLogRepositories) GetAllGPSLogs(ctx context.Context) ([]*GPSLog, error
 	for _, rep := range g {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep GPSLogRepository) {
+			defer done()
 			defer wg.Done()
 			matchGPSLogsInRep, err := rep.GetAllGPSLogs(ctx)
 			if err != nil {
@@ -85,7 +89,9 @@ func (g GPSLogRepositories) GetGPSLogs(ctx context.Context, startTime *time.Time
 	for _, rep := range g {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep GPSLogRepository) {
+			defer done()
 			defer wg.Done()
 			matchGPSLogsInRep, err := rep.GetGPSLogs(ctx, startTime, endTime)
 			if err != nil {

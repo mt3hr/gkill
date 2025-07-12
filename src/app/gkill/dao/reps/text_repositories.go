@@ -9,6 +9,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type TextRepositories []TextRepository
@@ -27,7 +28,9 @@ func (t TextRepositories) FindTexts(ctx context.Context, query *find.FindQuery) 
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			matchTextsInRep, err := rep.FindTexts(ctx, query)
 			if err != nil {
@@ -104,7 +107,9 @@ func (t TextRepositories) Close(ctx context.Context) error {
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -147,7 +152,9 @@ func (t TextRepositories) GetText(ctx context.Context, id string, updateTime *ti
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			matchTextInRep, err := rep.GetText(ctx, id, updateTime)
 			if err != nil {
@@ -211,7 +218,9 @@ func (t TextRepositories) GetTextsByTargetID(ctx context.Context, target_id stri
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			matchTextsInRep, err := rep.GetTextsByTargetID(ctx, target_id)
 			if err != nil {
@@ -286,7 +295,9 @@ func (t TextRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -338,7 +349,9 @@ func (t TextRepositories) GetTextHistories(ctx context.Context, id string) ([]*T
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			matchTextsInRep, err := rep.GetTextHistories(ctx, id)
 			if err != nil {
@@ -416,7 +429,9 @@ func (t TextRepositories) GetTextHistoriesByRepName(ctx context.Context, id stri
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 
 			if repName != nil {
