@@ -8,6 +8,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type watchTargetEntry struct {
@@ -36,7 +37,9 @@ func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes
 		return nil, err
 	}
 	requestCloseCh := make(chan interface{}, 1) // goroutine終了用Ch
+	done := threads.AllocateThread()
 	go func() {
+		defer done()
 		for {
 			select {
 			case <-requestCloseCh:

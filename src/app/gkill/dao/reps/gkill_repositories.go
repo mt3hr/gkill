@@ -15,6 +15,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type GkillRepositories struct {
@@ -237,7 +238,9 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 	for _, rep := range matchReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep Repository) {
+			defer done()
 			defer wg.Done()
 			// jsonからパースする
 			queryLatestValue := *query
@@ -414,7 +417,9 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	// UpdateCache並列処理
 	for _, rep := range g.Reps {
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(rep Repository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -429,7 +434,9 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range g.Reps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep Repository) {
+			defer done()
 			defer wg.Done()
 			select {
 			case <-ctx.Done():
@@ -464,7 +471,9 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range g.TagReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			select {
 			case <-ctx.Done():
@@ -497,7 +506,9 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range g.TextReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			select {
 			case <-ctx.Done():
@@ -530,7 +541,9 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range g.NotificationReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			select {
 			case <-ctx.Done():
@@ -749,7 +762,9 @@ func (g *GkillRepositories) GetKyouHistories(ctx context.Context, id string) ([]
 	for _, rep := range g.Reps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep Repository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -830,7 +845,9 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 	for _, rep := range g.TagReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			queryLatestValue := *query
 			queryLatest := &queryLatestValue
@@ -948,7 +965,9 @@ func (g *GkillRepositories) GetTag(ctx context.Context, id string, updateTime *t
 	for _, rep := range g.TagReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			matchTagInRep, err := rep.GetTag(ctx, id, updateTime)
 			if err != nil {
@@ -1012,7 +1031,9 @@ func (g *GkillRepositories) GetTagsByTagName(ctx context.Context, tagname string
 	for _, rep := range g.TagReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagsByTagName(ctx, tagname)
 			if err != nil {
@@ -1119,7 +1140,9 @@ func (g *GkillRepositories) GetTagHistories(ctx context.Context, id string) ([]*
 	for _, rep := range g.TagReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagHistories(ctx, id)
 			if err != nil {
@@ -1209,7 +1232,9 @@ func (g *GkillRepositories) GetAllRepNames(ctx context.Context) ([]string, error
 	for _, rep := range g.Reps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep Repository) {
+			defer done()
 			defer wg.Done()
 			repName, err := rep.GetRepName(ctx)
 			if err != nil {
@@ -1273,7 +1298,9 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 	for _, rep := range g.TextReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			// jsonからパースする
 			queryLatest := query
@@ -1393,7 +1420,9 @@ func (g *GkillRepositories) GetText(ctx context.Context, id string, updateTime *
 	for _, rep := range g.TextReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			matchTextInRep, err := rep.GetText(ctx, id, updateTime)
 			if err != nil {
@@ -1457,7 +1486,9 @@ func (g *GkillRepositories) GetNotification(ctx context.Context, id string, upda
 	for _, rep := range g.NotificationReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			matchNotificationInRep, err := rep.GetNotification(ctx, id, updateTime)
 			if err != nil {
@@ -1521,7 +1552,9 @@ func (g *GkillRepositories) GetTextsByTargetID(ctx context.Context, target_id st
 	for _, rep := range g.TextReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			matchTextsInRep, err := rep.GetTextsByTargetID(ctx, target_id)
 			if err != nil {
@@ -1602,7 +1635,9 @@ func (g *GkillRepositories) GetNotificationsByTargetID(ctx context.Context, targ
 	for _, rep := range g.NotificationReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			matchNotificationsInRep, err := rep.GetNotificationsByTargetID(ctx, target_id)
 			if err != nil {
@@ -1683,7 +1718,9 @@ func (g *GkillRepositories) GetTextHistories(ctx context.Context, id string) ([]
 	for _, rep := range g.TextReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TextRepository) {
+			defer done()
 			defer wg.Done()
 			matchTextsInRep, err := rep.GetTextHistories(ctx, id)
 			if err != nil {
@@ -1764,7 +1801,9 @@ func (g *GkillRepositories) GetNotificationHistories(ctx context.Context, id str
 	for _, rep := range g.NotificationReps {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
 			if err != nil {
@@ -1854,7 +1893,9 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 	}
 	for _, rep := range targetReps {
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(rep Repository) {
+			defer done()
 			defer wg.Done()
 
 			repName, err := rep.GetRepName(ctx)
