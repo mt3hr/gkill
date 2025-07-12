@@ -120,6 +120,9 @@ async function clicked_mi_check(): Promise<void> {
 
     is_checked_mi.value = !is_checked_mi.value
 
+    cloned_kyou.value = props.kyou.clone()
+    await cloned_kyou.value.load_typed_datas()
+
     // データがちゃんとあるか確認。なければエラーメッセージを出力する
     const mi = cloned_kyou.value.typed_mi
     if (!mi) {
