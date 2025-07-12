@@ -9,6 +9,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type TimeIsRepositories []TimeIsRepository
@@ -27,7 +28,9 @@ func (t TimeIsRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TimeIsRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -104,7 +107,9 @@ func (t TimeIsRepositories) GetKyou(ctx context.Context, id string, updateTime *
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TimeIsRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -168,7 +173,9 @@ func (t TimeIsRepositories) GetKyouHistories(ctx context.Context, id string) ([]
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TimeIsRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -248,7 +255,9 @@ func (t TimeIsRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TimeIsRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -292,7 +301,9 @@ func (t TimeIsRepositories) Close(ctx context.Context) error {
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TimeIsRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -335,7 +346,9 @@ func (t TimeIsRepositories) FindTimeIs(ctx context.Context, query *find.FindQuer
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TimeIsRepository) {
+			defer done()
 			defer wg.Done()
 			matchTimeIssInRep, err := rep.FindTimeIs(ctx, query)
 			if err != nil {
@@ -419,7 +432,9 @@ func (t TimeIsRepositories) GetTimeIs(ctx context.Context, id string, updateTime
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TimeIsRepository) {
+			defer done()
 			defer wg.Done()
 			matchTimeIsInRep, err := rep.GetTimeIs(ctx, id, updateTime)
 			if err != nil {
@@ -483,7 +498,9 @@ func (t TimeIsRepositories) GetTimeIsHistories(ctx context.Context, id string) (
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TimeIsRepository) {
+			defer done()
 			defer wg.Done()
 			matchTimeIssInRep, err := rep.GetTimeIsHistories(ctx, id)
 			if err != nil {
@@ -561,7 +578,9 @@ func (t TimeIsRepositories) GetTimeIsHistoriesByRepName(ctx context.Context, id 
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TimeIsRepository) {
+			defer done()
 			defer wg.Done()
 
 			if repName != nil {

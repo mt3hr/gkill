@@ -48,6 +48,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 	"github.com/twpayne/go-gpx"
 )
 
@@ -162,6 +163,7 @@ type GkillServerAPI struct {
 }
 
 func (g *GkillServerAPI) Serve() error {
+	var err error
 	router := g.GkillDAOManager.GetRouter()
 	router.PathPrefix("/files/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
@@ -829,11 +831,12 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		certFileName, pemFileName = os.ExpandEnv(certFileName), os.ExpandEnv(pemFileName)
 		certFileName, pemFileName = filepath.ToSlash(certFileName), filepath.ToSlash(pemFileName)
-		g.server.ListenAndServeTLS(certFileName, pemFileName)
+		err = g.server.ListenAndServeTLS(certFileName, pemFileName)
+		return err
 	} else {
-		g.server.ListenAndServe()
+		err = g.server.ListenAndServe()
+		return err
 	}
-	return err
 }
 
 func (g *GkillServerAPI) Close() error {
@@ -7598,7 +7601,9 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		}
 
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(filename string, base64Data string) {
+			defer done()
 			// ファイル書き込み
 			defer wg.Done()
 			var gkillError *message.GkillError
@@ -7860,7 +7865,9 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		}
 
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(filename string, base64Data string) {
+			defer done()
 			// テンポラリファイル書き込み
 			defer wg.Done()
 			base64Reader := bufio.NewReader(strings.NewReader(strings.SplitN(base64Data, ",", 2)[1]))
@@ -7958,7 +7965,9 @@ loop:
 		}
 
 		wg2.Add(1)
+		done := threads.AllocateThread()
 		go func(filename string, gpsLogs []*reps.GPSLog) {
+			defer done()
 			defer wg2.Done()
 			// Mergeだったら既存のデータも混ぜる
 			if request.ConflictBehavior == req_res.Merge {
@@ -9007,7 +9016,11 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 
 func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
-	defer func() { go g.server.Shutdown(context.Background()) }()
+	defer func() {
+		done := threads.AllocateThread()
+		defer done()
+		go g.server.Shutdown(context.Background())
+	}()
 	func() {
 		w.Header().Set("Content-Type", "application/json")
 		request := &req_res.UpdateServerConfigsRequest{}

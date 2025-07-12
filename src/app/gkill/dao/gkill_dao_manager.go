@@ -39,6 +39,7 @@ type GkillDAOManager struct {
 
 	enableOutputLogs bool
 	infoLogFile      *os.File
+	errorLogFile     *os.File
 	debugLogFile     *os.File
 	traceLogFile     *os.File
 	traceSQLLogFile  *os.File
@@ -153,6 +154,15 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		}
 		gkillDAOManager.infoLogFile = infoLogFile
 		gkill_log.Info.SetOutput(infoLogFile)
+
+		errorLogFileName := filepath.Join(logRootDir, "gkill_error.log")
+		errorLogFile, err := os.OpenFile(errorLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
+		if err != nil {
+			err = fmt.Errorf("error at create error log file %s: %w", errorLogFile.Name(), err)
+			return nil, err
+		}
+		gkillDAOManager.errorLogFile = errorLogFile
+		gkill_log.Error.SetOutput(errorLogFile)
 
 		debugLogFileName := filepath.Join(logRootDir, "gkill_debug.log")
 		debugLogFile, err := os.OpenFile(debugLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
@@ -908,6 +918,10 @@ func (g *GkillDAOManager) Close() error {
 	if g.enableOutputLogs {
 		if e := g.infoLogFile.Close(); e != nil {
 			err = fmt.Errorf("error at close info log file %s: %w: %w", g.infoLogFile.Name(), e, err)
+		}
+
+		if e := g.errorLogFile.Close(); e != nil {
+			err = fmt.Errorf("error at close error log file %s: %w: %w", g.errorLogFile.Name(), e, err)
 		}
 
 		if e := g.debugLogFile.Close(); e != nil {
