@@ -10,6 +10,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type notificator struct {
@@ -28,6 +29,8 @@ func newNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, gkill
 		gkillReps:       gkillReps,
 		notification:    notification,
 	}
+	done := threads.AllocateThread()
+	defer done()
 	go newNotificator.waitAndNotify()
 	return newNotificator
 }
@@ -149,6 +152,8 @@ func NewGkillNotificator(ctx context.Context, gkillDAOManager *GkillDAOManager, 
 		notificators:           map[string]*notificator{},
 		notificationServiceCtx: ctx,
 	}
+	done := threads.AllocateThread()
+	defer done()
 	go gkillNotificator.updateLoopWhenTick()
 	return gkillNotificator, nil
 }

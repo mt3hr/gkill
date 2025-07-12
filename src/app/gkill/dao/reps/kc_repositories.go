@@ -9,6 +9,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type KCRepositories []KCRepository
@@ -27,7 +28,9 @@ func (k KCRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (m
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KCRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -91,7 +94,9 @@ func (k KCRepositories) GetKyou(ctx context.Context, id string, updateTime *time
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KCRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -155,7 +160,9 @@ func (k KCRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyo
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KCRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -235,7 +242,9 @@ func (k KCRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KCRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -279,7 +288,9 @@ func (k KCRepositories) Close(ctx context.Context) error {
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KCRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -322,7 +333,9 @@ func (k KCRepositories) FindKC(ctx context.Context, query *find.FindQuery) ([]*K
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KCRepository) {
+			defer done()
 			defer wg.Done()
 			matchKCsInRep, err := rep.FindKC(ctx, query)
 			if err != nil {
@@ -399,7 +412,9 @@ func (k KCRepositories) GetKC(ctx context.Context, id string, updateTime *time.T
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KCRepository) {
+			defer done()
 			defer wg.Done()
 			matchKCInRep, err := rep.GetKC(ctx, id, updateTime)
 			if err != nil {
@@ -463,7 +478,9 @@ func (k KCRepositories) GetKCHistories(ctx context.Context, id string) ([]*KC, e
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KCRepository) {
+			defer done()
 			defer wg.Done()
 			matchKCsInRep, err := rep.GetKCHistories(ctx, id)
 			if err != nil {
@@ -541,7 +558,9 @@ func (k KCRepositories) GetKCHistoriesByRepName(ctx context.Context, id string, 
 	for _, rep := range k {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep KCRepository) {
+			defer done()
 			defer wg.Done()
 
 			if repName != nil {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type ReKyouRepositories struct {
@@ -93,7 +94,9 @@ func (r *ReKyouRepositories) GetKyou(ctx context.Context, id string, updateTime 
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep ReKyouRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -157,7 +160,9 @@ func (r *ReKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep ReKyouRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -237,7 +242,9 @@ func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep ReKyouRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -281,7 +288,9 @@ func (r *ReKyouRepositories) Close(ctx context.Context) error {
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep ReKyouRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -369,7 +378,9 @@ func (r *ReKyouRepositories) GetReKyou(ctx context.Context, id string, updateTim
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep ReKyouRepository) {
+			defer done()
 			defer wg.Done()
 			matchReKyouInRep, err := rep.GetReKyou(ctx, id, updateTime)
 			if err != nil {
@@ -433,7 +444,9 @@ func (r *ReKyouRepositories) GetReKyouHistories(ctx context.Context, id string) 
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep ReKyouRepository) {
+			defer done()
 			defer wg.Done()
 			matchReKyousInRep, err := rep.GetReKyouHistories(ctx, id)
 			if err != nil {
@@ -511,7 +524,9 @@ func (r *ReKyouRepositories) GetReKyouHistoriesByRepName(ctx context.Context, id
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep ReKyouRepository) {
+			defer done()
 			defer wg.Done()
 
 			if repName != nil {
@@ -607,7 +622,9 @@ func (r *ReKyouRepositories) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep ReKyouRepository) {
+			defer done()
 			defer wg.Done()
 			matchReKyousInRep, err := rep.GetReKyousAllLatest(ctx)
 			if err != nil {

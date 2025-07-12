@@ -9,6 +9,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type GitCommitLogRepositories []GitCommitLogRepository
@@ -27,7 +28,9 @@ func (g GitCommitLogRepositories) FindKyous(ctx context.Context, query *find.Fin
 	for _, rep := range g {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep GitCommitLogRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -92,7 +95,9 @@ func (g GitCommitLogRepositories) GetKyou(ctx context.Context, id string, update
 	for _, rep := range g {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep GitCommitLogRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -156,7 +161,9 @@ func (g GitCommitLogRepositories) GetKyouHistories(ctx context.Context, id strin
 	for _, rep := range g {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep GitCommitLogRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -236,7 +243,9 @@ func (g GitCommitLogRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range g {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep GitCommitLogRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -280,7 +289,9 @@ func (g GitCommitLogRepositories) Close(ctx context.Context) error {
 	for _, rep := range g {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep GitCommitLogRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -323,7 +334,9 @@ func (g GitCommitLogRepositories) FindGitCommitLog(ctx context.Context, query *f
 	for _, rep := range g {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep GitCommitLogRepository) {
+			defer done()
 			defer wg.Done()
 			matchGitCommitLogsInRep, err := rep.FindGitCommitLog(ctx, query)
 			if err != nil {
@@ -399,7 +412,9 @@ func (g GitCommitLogRepositories) GetGitCommitLog(ctx context.Context, id string
 	// 並列処理
 	for _, rep := range g {
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(rep GitCommitLogRepository) {
+			defer done()
 			defer wg.Done()
 			matchGitCommitLogInRep, err := rep.GetGitCommitLog(ctx, id, updateTime)
 			if err != nil {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type TagRepositories []TagRepository
@@ -27,7 +28,9 @@ func (t TagRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			matchTagsInRep, err := rep.FindTags(ctx, query)
 			if err != nil {
@@ -104,7 +107,9 @@ func (t TagRepositories) Close(ctx context.Context) error {
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -147,7 +152,9 @@ func (t TagRepositories) GetTag(ctx context.Context, id string, updateTime *time
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			matchTagInRep, err := rep.GetTag(ctx, id, updateTime)
 			if err != nil {
@@ -211,7 +218,9 @@ func (t TagRepositories) GetTagsByTagName(ctx context.Context, tagname string) (
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagsByTagName(ctx, tagname)
 			if err != nil {
@@ -292,7 +301,9 @@ func (t TagRepositories) GetTagsByTargetID(ctx context.Context, target_id string
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagsByTargetID(ctx, target_id)
 			if err != nil {
@@ -370,7 +381,9 @@ func (t TagRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -422,7 +435,9 @@ func (t TagRepositories) GetTagHistories(ctx context.Context, id string) ([]*Tag
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetTagHistories(ctx, id)
 			if err != nil {
@@ -499,7 +514,9 @@ func (t TagRepositories) GetTagHistoriesByRepName(ctx context.Context, id string
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 
 			if repName != nil {
@@ -626,7 +643,9 @@ func (t TagRepositories) GetAllTags(ctx context.Context) ([]*Tag, error) {
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep TagRepository) {
+			defer done()
 			defer wg.Done()
 			matchTagsInRep, err := rep.GetAllTags(ctx)
 			if err != nil {
