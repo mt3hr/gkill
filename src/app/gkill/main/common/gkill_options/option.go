@@ -34,4 +34,6 @@ var (
 		"id.db-shm",
 		"id.db-wal",
 	}
+
+	ThreadPool = 1000 - 1
 )

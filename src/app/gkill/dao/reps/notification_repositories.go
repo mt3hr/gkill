@@ -9,6 +9,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type NotificationRepositories []NotificationRepository
@@ -27,7 +28,9 @@ func (t NotificationRepositories) FindNotifications(ctx context.Context, query *
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			matchNotificationsInRep, err := rep.FindNotifications(ctx, query)
 			if err != nil {
@@ -104,7 +107,9 @@ func (t NotificationRepositories) Close(ctx context.Context) error {
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -147,7 +152,9 @@ func (t NotificationRepositories) GetNotification(ctx context.Context, id string
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			matchNotificationInRep, err := rep.GetNotification(ctx, id, updateTime)
 			if err != nil {
@@ -211,7 +218,9 @@ func (t NotificationRepositories) GetNotificationsByTargetID(ctx context.Context
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			matchNotificationsInRep, err := rep.GetNotificationsByTargetID(ctx, target_id)
 			if err != nil {
@@ -289,7 +298,9 @@ func (t NotificationRepositories) GetNotificationsBetweenNotificationTime(ctx co
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			matchNotificationsInRep, err := rep.GetNotificationsBetweenNotificationTime(ctx, startTime, endTime)
 			if err != nil {
@@ -364,7 +375,9 @@ func (t NotificationRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -416,7 +429,9 @@ func (t NotificationRepositories) GetNotificationHistories(ctx context.Context, 
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 			matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
 			if err != nil {
@@ -494,7 +509,9 @@ func (t NotificationRepositories) GetNotificationHistoriesByRepName(ctx context.
 	for _, rep := range t {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NotificationRepository) {
+			defer done()
 			defer wg.Done()
 
 			if repName != nil {

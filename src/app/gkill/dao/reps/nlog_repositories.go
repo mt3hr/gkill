@@ -9,6 +9,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type NlogRepositories []NlogRepository
@@ -27,7 +28,9 @@ func (n NlogRepositories) FindKyous(ctx context.Context, query *find.FindQuery) 
 	for _, rep := range n {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NlogRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.FindKyous(ctx, query)
 			if err != nil {
@@ -92,7 +95,9 @@ func (n NlogRepositories) GetKyou(ctx context.Context, id string, updateTime *ti
 	for _, rep := range n {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NlogRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
 			if err != nil {
@@ -156,7 +161,9 @@ func (n NlogRepositories) GetKyouHistories(ctx context.Context, id string) ([]*K
 	for _, rep := range n {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NlogRepository) {
+			defer done()
 			defer wg.Done()
 			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
 			if err != nil {
@@ -236,7 +243,9 @@ func (n NlogRepositories) UpdateCache(ctx context.Context) error {
 	for _, rep := range n {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NlogRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -280,7 +289,9 @@ func (n NlogRepositories) Close(ctx context.Context) error {
 	for _, rep := range n {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NlogRepository) {
+			defer done()
 			defer wg.Done()
 			err = rep.Close(ctx)
 			if err != nil {
@@ -323,7 +334,9 @@ func (n NlogRepositories) FindNlog(ctx context.Context, query *find.FindQuery) (
 	for _, rep := range n {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NlogRepository) {
+			defer done()
 			defer wg.Done()
 			matchNlogsInRep, err := rep.FindNlog(ctx, query)
 			if err != nil {
@@ -400,7 +413,9 @@ func (n NlogRepositories) GetNlog(ctx context.Context, id string, updateTime *ti
 	for _, rep := range n {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NlogRepository) {
+			defer done()
 			defer wg.Done()
 			matchNlogInRep, err := rep.GetNlog(ctx, id, updateTime)
 			if err != nil {
@@ -464,7 +479,9 @@ func (n NlogRepositories) GetNlogHistories(ctx context.Context, id string) ([]*N
 	for _, rep := range n {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NlogRepository) {
+			defer done()
 			defer wg.Done()
 			matchNlogsInRep, err := rep.GetNlogHistories(ctx, id)
 			if err != nil {
@@ -542,7 +559,9 @@ func (n NlogRepositories) GetNlogHistoriesByRepName(ctx context.Context, id stri
 	for _, rep := range n {
 		wg.Add(1)
 
+		done := threads.AllocateThread()
 		go func(rep NlogRepository) {
+			defer done()
 			defer wg.Done()
 
 			if repName != nil {

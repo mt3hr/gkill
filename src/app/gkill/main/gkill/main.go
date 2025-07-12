@@ -15,6 +15,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 	"github.com/spf13/cobra"
 )
 
@@ -49,6 +50,8 @@ var (
 			if err != nil {
 				log.Fatal(err)
 			}
+			done := threads.AllocateThread()
+			defer done()
 			go common.LaunchGkillServerAPI()
 
 			for ; ; time.Sleep(time.Microsecond * 500) {
