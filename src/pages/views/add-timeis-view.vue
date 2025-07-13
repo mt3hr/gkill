@@ -134,7 +134,7 @@ import { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
-import delete_gkill_cache from '@/classes/delete-gkill-cache'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -271,7 +271,7 @@ async function save(): Promise<void> {
         new_timeis.update_user = gkill_info_res.user_id
 
         // 追加リクエストを飛ばす
-        await delete_gkill_cache(new_timeis.id)
+        await delete_gkill_kyou_cache(new_timeis.id)
         const req = new AddTimeisRequest()
         req.timeis = new_timeis
         const res = await props.gkill_api.add_timeis(req)

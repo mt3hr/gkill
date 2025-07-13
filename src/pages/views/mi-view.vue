@@ -78,7 +78,7 @@
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                                }}</v-card-title>
+                            }}</v-card-title>
                             <KyouListView :kyou_height="56 + 35" :width="400"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
@@ -151,9 +151,11 @@
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
                                 :show_timeis_plaing_end_button="true" :height="'unset'" :is_readonly_mi_check="false"
-                                :width="'unset'" :enable_context_menu="enable_context_menu" :show_update_time="false" :show_related_time="true"
-                                :show_rep_name="true" :force_show_latest_kyou_info="true" :enable_dialog="enable_dialog"
-                                :show_attached_timeis="true" class="kyou_detail_view"
+                                :width="'unset'" :enable_context_menu="enable_context_menu" :show_update_time="false"
+                                :show_related_time="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
+                                :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
+                                :show_attached_tags="false" :show_attached_texts="false"
+                                :show_attached_notifications="false"
                                 @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
@@ -255,7 +257,7 @@
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true,true) }"
+                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(true, true) }"
                 @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
                 @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
                 @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"

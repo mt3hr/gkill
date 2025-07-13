@@ -192,7 +192,7 @@ import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
 import { Tag } from '@/classes/datas/tag'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import delete_gkill_cache from '@/classes/delete-gkill-cache'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const edit_timeis_dialog = ref<InstanceType<typeof EditTimeIsDialog> | null>(null);
 const add_tag_dialog = ref<InstanceType<typeof AddTagDialog> | null>(null);
@@ -308,8 +308,8 @@ async function add_last_added_tag(): Promise<void> {
         new_tag.update_user = gkill_info_res.user_id
 
         // 追加リクエストを飛ばす
-        await delete_gkill_cache(new_tag.id)
-        await delete_gkill_cache(new_tag.target_id)
+        await delete_gkill_kyou_cache(new_tag.id)
+        await delete_gkill_kyou_cache(new_tag.target_id)
         const req = new AddTagRequest()
         req.tag = new_tag
         const res = await props.gkill_api.add_tag(req)

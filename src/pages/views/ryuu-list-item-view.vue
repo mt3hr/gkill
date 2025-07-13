@@ -49,7 +49,8 @@
                                             :enable_dialog="enable_dialog" :show_attached_timeis="false"
                                             :show_update_time="false" :show_related_time="false" :width="'fit-content'"
                                             :is_readonly_mi_check="true" :show_rep_name="false"
-                                            :force_show_latest_kyou_info="true"
+                                            :force_show_latest_kyou_info="true" :show_attached_tags="true"
+                                            :show_attached_texts="true" :show_attached_notifications="true"
                                             @received_errors="(errors) => emits('received_errors', errors)"
                                             @received_messages="(messages) => emits('received_messages', messages)" />
                                     </td>

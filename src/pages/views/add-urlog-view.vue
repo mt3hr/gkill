@@ -97,7 +97,7 @@ import { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
-import delete_gkill_cache from '@/classes/delete-gkill-cache'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -185,7 +185,7 @@ async function save(): Promise<void> {
         new_urlog.update_user = gkill_info_res.user_id
 
         // 追加リクエストを飛ばす
-        await delete_gkill_cache(new_urlog.id)
+        await delete_gkill_kyou_cache(new_urlog.id)
         const req = new AddURLogRequest()
         req.urlog = new_urlog
         const res = await props.gkill_api.add_urlog(req)
