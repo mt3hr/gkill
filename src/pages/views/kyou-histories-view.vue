@@ -9,6 +9,7 @@
                 :show_timeis_plaing_end_button="false" :height="'100%'" :width="'100%'"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="false" :show_attached_timeis="false"
+                :show_attached_tags="false" :show_attached_texts="false" :show_attached_notifications="false"
                 @received_errors="(errors) => emits('received_errors', errors)" :show_update_time="true"
                 :show_related_time="false" @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"

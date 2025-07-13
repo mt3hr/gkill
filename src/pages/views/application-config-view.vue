@@ -36,11 +36,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="is_checked_use_rykv_period" hide-detail
-                            :label="i18n.global.t('RYKV_DEFAULT_PERIOD_TITLE')" />
-                    </td>
-                    <td v-show="rykv_default_period !== -1">
-                        <v-text-field type="number" min="-1" width="400" v-model="rykv_default_period" />
+                        <v-checkbox v-model="show_tags_in_list" hide-detail
+                            :label="i18n.global.t('SHOW_TAGS_IN_LIST')" />
                     </td>
                 </tr>
                 <tr>
@@ -49,6 +46,16 @@
                             :label="i18n.global.t('SHOW_SHARE_FOOTER')" />
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <v-checkbox v-model="is_checked_use_rykv_period" hide-detail
+                            :label="i18n.global.t('RYKV_DEFAULT_PERIOD_TITLE')" />
+                    </td>
+                    <td v-show="rykv_default_period !== -1">
+                        <v-text-field type="number" min="-1" width="400" v-model="rykv_default_period" />
+                    </td>
+                </tr>
+
                 <tr>
                     <td>
                         {{ i18n.global.t("DEFAULT_VIEW_TITLE") }}
@@ -222,6 +229,7 @@ import router from '@/router'
 import { ReloadRepositoriesRequest } from '@/classes/api/req_res/reload-repositories-request'
 import { useTheme } from 'vuetify'
 import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
+import delete_gkill_kyou_cache, { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
 
 const theme = useTheme()
 
@@ -258,6 +266,7 @@ const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_
 const google_map_api_key: Ref<string> = ref(cloned_application_config.value.google_map_api_key)
 const rykv_image_list_column_number: Ref<number> = ref(cloned_application_config.value.rykv_image_list_column_number)
 const rykv_hot_reload: Ref<boolean> = ref(cloned_application_config.value.rykv_hot_reload)
+const show_tags_in_list: Ref<boolean> = ref(cloned_application_config.value.show_tags_in_list)
 const mi_default_board: Ref<string> = ref(cloned_application_config.value.mi_default_board)
 const mi_board_names: Ref<Array<string>> = ref(new Array())
 const rykv_default_period: Ref<number> = ref(cloned_application_config.value.rykv_default_period)
@@ -297,6 +306,7 @@ async function reload_cloned_application_config(): Promise<void> {
     google_map_api_key.value = cloned_application_config.value.google_map_api_key
     rykv_image_list_column_number.value = cloned_application_config.value.rykv_image_list_column_number
     rykv_hot_reload.value = cloned_application_config.value.rykv_hot_reload
+    show_tags_in_list.value = cloned_application_config.value.show_tags_in_list
     mi_default_board.value = cloned_application_config.value.mi_default_board
     mi_board_names.value = new Array()
     rykv_default_period.value = cloned_application_config.value.rykv_default_period
@@ -327,6 +337,7 @@ async function update_application_config(): Promise<void> {
     application_config.rykv_hot_reload = rykv_hot_reload.value
     application_config.mi_default_board = mi_default_board.value
     application_config.rykv_default_period = rykv_default_period.value
+    application_config.show_tags_in_list = show_tags_in_list.value
     application_config.mi_default_period = mi_default_period.value
     application_config.use_dark_theme = use_dark_theme.value
     application_config.is_show_share_footer = is_show_share_footer.value
@@ -402,6 +413,8 @@ async function reload_repositories(): Promise<void> {
     is_loading.value = true
     const req = new ReloadRepositoriesRequest()
     const res = await props.gkill_api.reload_repositories(req)
+    await delete_gkill_config_cache()
+    await delete_gkill_kyou_cache(null)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
         return

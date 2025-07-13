@@ -475,5 +475,6 @@
     "EDIT_RELATED_KYOU_QUERY": "編集",
     "DELETE_RELATED_KYOU_QUERY": "削除",
     "DEFAULT_VIEW_TITLE": "起動時の画面",
-    "GKILL_APP_TITLE": "gkill"
+    "GKILL_APP_TITLE": "gkill",
+    "SHOW_TAGS_IN_LIST": "リスト上でタグを表示"
 }

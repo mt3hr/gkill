@@ -407,8 +407,8 @@ onUnmounted(() => {
 
 watch(() => props.kyou, async () => {
     cloned_kyou.value.abort_controller.abort()
-    cloned_kyou.value.abort_controller = new AbortController()
     cloned_kyou.value = props.kyou.clone()
+    cloned_kyou.value.abort_controller = new AbortController()
     if (props.force_show_latest_kyou_info) {
         await cloned_kyou.value.reload(true, true);//最新を読み込むためにReload
     }
@@ -416,9 +416,7 @@ watch(() => props.kyou, async () => {
 });
 
 (async () => {
-    if (props.force_show_latest_kyou_info) {
-        await cloned_kyou.value.reload(true, true);//最新を読み込むためにReload
-    }
+    await cloned_kyou.value.reload(true, props.force_show_latest_kyou_info);//最新を読み込むためにReload
     load_attached_infos()
 })(); //非同期で実行してほしい
 
@@ -444,9 +442,15 @@ async function load_attached_infos(): Promise<void> {
         const awaitPromises = new Array<Promise<any>>()
         try {
             awaitPromises.push(cloned_kyou.value.load_typed_datas())
-            awaitPromises.push(cloned_kyou.value.load_attached_tags())
-            awaitPromises.push(cloned_kyou.value.load_attached_texts())
-            awaitPromises.push(cloned_kyou.value.load_attached_notifications())
+            if (props.show_attached_tags) {
+                awaitPromises.push(cloned_kyou.value.load_attached_tags())
+            }
+            if (props.show_attached_texts) {
+                awaitPromises.push(cloned_kyou.value.load_attached_texts())
+            }
+            if (props.show_attached_notifications) {
+                awaitPromises.push(cloned_kyou.value.load_attached_notifications())
+            }
             // awaitPromises.push(cloned_kyou.value.load_attached_histories()) // 重いのでKyouHistoriesViewで読み込む
             if (props.show_attached_timeis) {
                 awaitPromises.push(cloned_kyou.value.load_attached_timeis())
@@ -467,6 +471,7 @@ async function load_attached_infos(): Promise<void> {
         }
     }
 }
+
 
 async function show_context_menu(e: PointerEvent): Promise<void> {
     if (!props.enable_context_menu) {

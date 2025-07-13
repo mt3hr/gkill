@@ -87,6 +87,7 @@ var applicationConfigDefaultValue = map[string]interface{}{
 	"MI_DEFAULT_PERIOD":             -1,
 	"IS_SHOW_SHARE_FOOTER":          false,
 	"DEFAULT_PAGE":                  "rykv",
+	"SHOW_TAGS_IN_LIST":             true,
 	"RYUU_JSON_DATA":                json.RawMessage{},
 }
 
@@ -205,7 +206,18 @@ SELECT
 	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
 	AND KEY = 'DEFAULT_PAGE'
   ) AS DEFAULT_PAGE,
- 
+  /* SHOW_TAGS_IN_LIST */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE %v
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'SHOW_TAGS_IN_LIST'
+  ) AS SHOW_TAGS_IN_LIST,
   /* RYUU_JSON_DATA */ (
     SELECT 
 	  CASE 
@@ -230,6 +242,7 @@ GROUP BY USER_ID, DEVICE
 		applicationConfigDefaultValue["MI_DEFAULT_PERIOD"],
 		applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"],
 		applicationConfigDefaultValue["DEFAULT_PAGE"],
+		applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"],
 		applicationConfigDefaultValue["RYUU_JSON_DATA"],
 	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -271,6 +284,7 @@ GROUP BY USER_ID, DEVICE
 				&miDefaultPeriod,
 				&applicationConfig.IsShowShareFooter,
 				&applicationConfig.DefaultPage,
+				&applicationConfig.ShowTagsInList,
 				&ryuuJSONData,
 			)
 			if err != nil {
@@ -402,7 +416,18 @@ SELECT
 	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
 	AND KEY = 'DEFAULT_PAGE'
   ) AS DEFAULT_PAGE,
- 
+  /* SHOW_TAGS_IN_LIST */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE %v
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND KEY = 'SHOW_TAGS_IN_LIST'
+  ) AS SHOW_TAGS_IN_LIST,
   /* RYUU_JSON_DATA */ (
     SELECT 
 	  CASE 
@@ -428,6 +453,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 		applicationConfigDefaultValue["MI_DEFAULT_PERIOD"],
 		applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"],
 		applicationConfigDefaultValue["DEFAULT_PAGE"],
+		applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"],
 		applicationConfigDefaultValue["RYUU_JSON_DATA"],
 	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -475,6 +501,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 				&miDefaultPeriod,
 				&applicationConfig.IsShowShareFooter,
 				&applicationConfig.DefaultPage,
+				&applicationConfig.ShowTagsInList,
 				&ryuuJSONData,
 			)
 
@@ -522,6 +549,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"MI_DEFAULT_PERIOD":             applicationConfig.MiDefaultPeriod,
 		"IS_SHOW_SHARE_FOOTER":          applicationConfig.IsShowShareFooter,
 		"DEFAULT_PAGE":                  applicationConfig.DefaultPage,
+		"SHOW_TAGS_IN_LIST":             applicationConfig.ShowTagsInList,
 		"RYUU_JSON_DATA":                applicationConfig.RyuuJSONData,
 	}
 	for key, value := range insertValuesMap {
@@ -614,6 +642,7 @@ INSERT INTO APPLICATION_CONFIG (
 		"MI_DEFAULT_PERIOD":             applicationConfig.MiDefaultPeriod,
 		"IS_SHOW_SHARE_FOOTER":          applicationConfig.IsShowShareFooter,
 		"DEFAULT_PAGE":                  applicationConfig.DefaultPage,
+		"SHOW_TAGS_IN_LIST":             applicationConfig.ShowTagsInList,
 		"RYUU_JSON_DATA":                applicationConfig.RyuuJSONData,
 	}
 
