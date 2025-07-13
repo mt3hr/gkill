@@ -18,6 +18,9 @@ export interface KyouViewProps extends KyouViewPropsBase {
     show_timeis_plaing_end_button: boolean
     show_timeis_elapsed_time: boolean
     show_attached_timeis: boolean
+    show_attached_tags: boolean
+    show_attached_texts: boolean
+    show_attached_notifications: boolean
     show_rep_name: boolean
     is_readonly_mi_check: boolean
     highlight_targets: Array<InfoIdentifier>

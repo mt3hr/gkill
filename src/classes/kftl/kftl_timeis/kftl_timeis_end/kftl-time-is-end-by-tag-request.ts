@@ -10,7 +10,7 @@ import { GetGkillInfoRequest } from "@/classes/api/req_res/get-gkill-info-reques
 import { GkillErrorCodes } from "@/classes/api/message/gkill_error"
 import generate_get_plaing_timeis_kyous_query from "@/classes/api/generate-get-plaing-timeis-kyous-query"
 import { GetKyousRequest } from "@/classes/api/req_res/get-kyous-request"
-import delete_gkill_cache from "@/classes/delete-gkill-cache"
+import delete_gkill_kyou_cache from "@/classes/delete-gkill-cache"
 
 export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
 
@@ -100,7 +100,7 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
         }
 
         // end_timeをいれてUPDATEする
-        await delete_gkill_cache(target_timeis.id)
+        await delete_gkill_kyou_cache(target_timeis.id)
         const update_timeis_req = new UpdateTimeisRequest()
         update_timeis_req.tx_id = this.get_tx_id()
         update_timeis_req.timeis = target_timeis

@@ -55,13 +55,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -72,7 +72,9 @@
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
                 :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :is_readonly_mi_check="true" :show_attached_timeis="true"
-                :show_rep_name="true" :force_show_latest_kyou_info="true" :show_update_time="false" :show_related_time="true"
+                :show_rep_name="true" :force_show_latest_kyou_info="true" :show_update_time="false"
+                :show_related_time="true" :show_attached_tags="true" :show_attached_texts="true"
+                :show_attached_notifications="true"
                 @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
                 @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
@@ -107,7 +109,7 @@ import moment from 'moment';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
-import delete_gkill_cache from '@/classes/delete-gkill-cache';
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache';
 
 const is_requested_submit = ref(false)
 
@@ -187,8 +189,8 @@ async function save(): Promise<void> {
         updated_notification.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
-        await delete_gkill_cache(updated_notification.id)
-        await delete_gkill_cache(updated_notification.target_id)
+        await delete_gkill_kyou_cache(updated_notification.id)
+        await delete_gkill_kyou_cache(updated_notification.target_id)
         const req = new UpdateNotificationRequest()
         req.notification = updated_notification
         const res = await props.gkill_api.update_notification(req)

@@ -125,6 +125,7 @@
                 :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :is_readonly_mi_check="true" :show_attached_timeis="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true" :show_update_time="false" :show_related_time="true"
+                :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
                 @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
                 @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
@@ -159,7 +160,7 @@ import { UpdateTimeisRequest } from '@/classes/api/req_res/update-timeis-request
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
-import delete_gkill_cache from '@/classes/delete-gkill-cache'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -307,7 +308,7 @@ async function save(): Promise<void> {
         updated_timeis.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
-        await delete_gkill_cache(updated_timeis.id)
+        await delete_gkill_kyou_cache(updated_timeis.id)
         const req = new UpdateTimeisRequest()
         req.timeis = updated_timeis
 

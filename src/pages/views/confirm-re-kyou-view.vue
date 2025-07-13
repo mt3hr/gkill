@@ -26,7 +26,9 @@
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
                 :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :is_readonly_mi_check="false" :show_attached_timeis="true"
-                :show_rep_name="true" :force_show_latest_kyou_info="true" :show_update_time="false" :show_related_time="true"
+                :show_rep_name="true" :force_show_latest_kyou_info="true" :show_update_time="false"
+                :show_related_time="true" :show_attached_tags="true" :show_attached_texts="true"
+                :show_attached_notifications="true"
                 @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
                 @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
@@ -56,7 +58,7 @@ import KyouView from './kyou-view.vue'
 import { ReKyou } from '@/classes/datas/re-kyou'
 import { AddReKyouRequest } from '@/classes/api/req_res/add-re-kyou-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
-import delete_gkill_cache from '@/classes/delete-gkill-cache'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const props = defineProps<ConfirmReKyouViewProps>()
 const emits = defineEmits<KyouViewEmits>()
@@ -88,7 +90,7 @@ async function rekyou(): Promise<void> {
     new_rekyou.update_user = gkill_info_res.user_id
 
     // 追加リクエストを飛ばす
-    await delete_gkill_cache(new_rekyou.id)
+    await delete_gkill_kyou_cache(new_rekyou.id)
     const req = new AddReKyouRequest()
     req.rekyou = new_rekyou
     const res = await props.gkill_api.add_rekyou(req)

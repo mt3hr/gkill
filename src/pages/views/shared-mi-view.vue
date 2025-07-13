@@ -65,7 +65,9 @@
                                             :show_timeis_plaing_end_button="true" :height="app_content_height.valueOf()"
                                             :is_readonly_mi_check="true" :width="400" :enable_context_menu="false"
                                             :show_rep_name="false" :force_show_latest_kyou_info="true"
-                                            :enable_dialog="false" :show_update_time="false" :show_related_time="true" class="kyou_detail_view"
+                                            :enable_dialog="false" :show_update_time="false" :show_related_time="true"
+                                            class="kyou_detail_view" :show_attached_tags="true"
+                                            :show_attached_texts="true" :show_attached_notifications="true"
                                             @received_errors="(errors) => emits('received_errors', errors)"
                                             @received_messages="(messages) => emits('received_messages', messages)" />
                                     </div>

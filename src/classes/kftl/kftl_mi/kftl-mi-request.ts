@@ -8,7 +8,7 @@ import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-applicati
 import { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import delete_gkill_cache from '@/classes/delete-gkill-cache'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 export class KFTLMiRequest extends KFTLRequest {
 
@@ -87,7 +87,7 @@ export class KFTLMiRequest extends KFTLRequest {
         mi_req.mi.update_time = now
         mi_req.mi.update_user = gkill_info_res.user_id
 
-        await delete_gkill_cache(mi_req.mi.id)
+        await delete_gkill_kyou_cache(mi_req.mi.id)
         await GkillAPI.get_gkill_api().add_mi(mi_req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)

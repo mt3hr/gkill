@@ -178,7 +178,7 @@ import type { UpdateDnoteJSONDataResponse } from "./req_res/update-dnote-json-da
 import { GetShareKyouListInfosResponse } from "./req_res/get-share-kyou-list-infos-response"
 import { GetUpdatedDatasByTimeRequest } from "./req_res/get-updated-datas-by-time-request"
 import type { GetUpdatedDatasByTimeResponse } from "./req_res/get-updated-datas-by-time-response"
-import delete_gkill_cache from "../delete-gkill-cache"
+import delete_gkill_kyou_cache, { delete_gkill_config_cache } from "../delete-gkill-cache"
 import type { CommitTXRequest } from "./req_res/commit-tx-request"
 import type { CommitTXResponse } from "./req_res/commit-tx-response"
 import type { DiscardTXRequest } from "./req_res/discard-tx-request"
@@ -558,6 +558,7 @@ export class GkillAPI {
         }
 
         async logout(req: LogoutRequest): Promise<LogoutResponse> {
+                await delete_gkill_config_cache()
                 const res = await fetch(this.logout_address, {
                         'method': this.logout_method,
                         headers: {
@@ -1716,6 +1717,7 @@ export class GkillAPI {
                 application_config.default_page = response.application_config.default_page
                 application_config.rykv_hot_reload = response.application_config.rykv_hot_reload
                 application_config.rykv_image_list_column_number = response.application_config.rykv_image_list_column_number
+                application_config.show_tags_in_list = response.application_config.show_tags_in_list
                 application_config.user_id = response.application_config.user_id
                 application_config.session_is_local = response.application_config.session_is_local
                 application_config.rykv_default_period = response.application_config.rykv_default_period
@@ -2764,10 +2766,10 @@ export class GkillAPI {
                 const res = await this.get_updated_datas_by_time(req)
                 if (res.updated_ids) {
                         if (res.updated_ids.length > 1000) {
-                                await delete_gkill_cache(null)
+                                await delete_gkill_kyou_cache(null)
                         } else {
                                 for (let i = 1; i < res.updated_ids.length; i++) {
-                                        await delete_gkill_cache(res.updated_ids[i])
+                                        await delete_gkill_kyou_cache(res.updated_ids[i])
                                 }
                         }
                 }
