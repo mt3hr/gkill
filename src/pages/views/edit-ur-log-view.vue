@@ -101,6 +101,7 @@
                 :show_mi_limit_time="true" :show_urlog_plaing_end_button="true" :height="'100%'" :width="'100%'"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true" :show_attached_timeis="true"
+                :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
                 @received_errors="(errors) => emits('received_errors', errors)" :show_update_time="false" :show_related_time="true"
                 @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
@@ -135,7 +136,7 @@ import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/labs/components'
-import delete_gkill_cache from '@/classes/delete-gkill-cache'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -255,7 +256,7 @@ async function save(): Promise<void> {
         }
 
         // 更新リクエストを飛ばす
-        await delete_gkill_cache(updated_urlog.id)
+        await delete_gkill_kyou_cache(updated_urlog.id)
         const req = new UpdateURLogRequest()
         req.urlog = updated_urlog
 

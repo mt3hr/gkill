@@ -20,13 +20,14 @@
 
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { computed, ref, type Ref } from 'vue'
+import { computed, onMounted, ref, type Ref } from 'vue'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import LoginView from './views/login-view.vue'
 import package_json from '../../package.json'
 import router from '@/router'
+import { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -37,6 +38,10 @@ const gkill_api = computed(() => GkillAPI.get_instance())
 const app_content_height: Ref<Number> = ref(0)
 const app_content_width: Ref<Number> = ref(0)
 const gkill_version: Ref<string> = ref(package_json.version)
+
+onMounted(async () => {
+    await delete_gkill_config_cache()
+})
 
 async function resize_content(): Promise<void> {
     const inner_element = document.querySelector('#control-height')

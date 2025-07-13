@@ -41,6 +41,7 @@
                 :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true" :height="'fit-content'"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :show_attached_timeis="true"
                 :show_update_time="false" :show_related_time="true" :width="'fit-content'" :is_readonly_mi_check="false"
+                :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true" @received_errors="write_errors"
                 @received_messages="write_messages" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"

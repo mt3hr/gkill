@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute } from 'workbox-precaching'
-import delete_gkill_cache from './classes/delete-gkill-cache';
+import delete_gkill_kyou_cache from './classes/delete-gkill-cache';
 export default null
 declare let self: ServiceWorkerGlobalScope
 declare let clients: Clients;
@@ -19,7 +19,7 @@ self.addEventListener('push', async function (event: any) {
     }
     event.waitUntil(self.registration.showNotification(title, options))
   } else if (data.is_updated_data_notify) {
-    await delete_gkill_cache(data.id)
+    await delete_gkill_kyou_cache(data.id)
   }
 })
 
@@ -36,6 +36,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
 
   const url = new URL(request.url)
   if (request.method === 'POST' && (
+    // Kyou系
     url.pathname === '/api/get_kyou' ||
     url.pathname === '/api/get_kmemo' ||
     url.pathname === '/api/get_kc' ||
@@ -68,7 +69,42 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         const data_type = new URL(request.url).pathname.replace('/api/get_', '')
         const cacheKey = `/cache/api/${data_type}/${id}`
 
-        const cache = await caches.open('gkill-post-cache')
+        const cache = await caches.open('gkill-post-kyou-cache')
+        if (JSON.parse(force_reget).toString().toLowerCase() !== "true") {
+          const cached = await cache.match(cacheKey)
+          if (cached) return cached
+        }
+
+        const response = await fetch(reqClone2)
+        cache.put(cacheKey, response.clone())
+        return response
+      })()
+    )
+  }
+})
+
+self.addEventListener('fetch', (event: FetchEvent) => {
+  const { request } = event
+
+  const url = new URL(request.url)
+  if (request.method === 'POST' && (
+    // ApplicationConfig系
+    url.pathname === '/api/get_gkill_info' ||
+    url.pathname === '/api/get_all_rep_names' ||
+    url.pathname === '/api/get_all_tag_names' ||
+    url.pathname === '/api/get_mi_board_list')) {
+    event.respondWith(
+      (async () => {
+        const reqClone1 = request.clone()
+        const reqClone2 = request.clone()
+
+        const body = await reqClone1.json()
+        const force_reget = body.force_reget
+
+        const data_type = new URL(request.url).pathname.replace('/api/get_', '')
+        const cacheKey = `/cache/api/${data_type}`
+
+        const cache = await caches.open('gkill-post-config-cache')
         if (JSON.parse(force_reget).toString().toLowerCase() !== "true") {
           const cached = await cache.match(cacheKey)
           if (cached) return cached

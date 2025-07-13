@@ -1,4 +1,4 @@
-export default async function delete_gkill_cache(id: string | null): Promise<void> {
+export default async function delete_gkill_kyou_cache(id: string | null): Promise<void> {
     const data_types = [
         'kyou',
         'kmemo',
@@ -20,10 +20,27 @@ export default async function delete_gkill_cache(id: string | null): Promise<voi
         for (let i = 0; i < data_types.length; i++) {
             const data_type = data_types[i]
             const cacheKey = `/cache/api/${data_type}/${id}`
-            const cache = await caches.open('gkill-post-cache');
-            await cache.delete(new Request(cacheKey));
+            const cache = await caches.open('gkill-post-kyou-cache')
+            await cache.delete(new Request(cacheKey))
         }
     } else {
-        caches.delete('gkill-post-cache')
+        caches.delete('gkill-post-kyou-cache')
+    }
+}
+
+
+export async function delete_gkill_config_cache(): Promise<void> {
+    const data_types = [
+        'gkill_info',
+        'all_rep_names',
+        'all_tag_names',
+        'mi_board_list'
+    ]
+
+    for (let i = 0; i < data_types.length; i++) {
+        const data_type = data_types[i]
+        const cacheKey = `/cache/api/${data_type}`
+        const cache = await caches.open('gkill-post-config-cache')
+        await cache.delete(new Request(cacheKey))
     }
 }

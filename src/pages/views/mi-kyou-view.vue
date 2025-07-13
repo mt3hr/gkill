@@ -69,7 +69,7 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { KyouViewEmits } from './kyou-view-emits'
-import delete_gkill_cache from '@/classes/delete-gkill-cache'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const context_menu = ref<InstanceType<typeof MiContextMenu> | null>(null);
 
@@ -163,7 +163,7 @@ async function clicked_mi_check(): Promise<void> {
     updated_mi.update_user = gkill_info_res.user_id
 
     // 更新リクエストを飛ばす
-    await delete_gkill_cache(updated_mi.id)
+    await delete_gkill_kyou_cache(updated_mi.id)
     const req = new UpdateMiRequest()
     req.mi = updated_mi
 
