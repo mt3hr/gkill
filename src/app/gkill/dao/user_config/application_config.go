@@ -41,5 +41,7 @@ type ApplicationConfig struct {
 
 	AccountIsAdmin bool `json:"account_is_admin"`
 
+	ShowTagsInList bool `json:"show_tags_in_list"`
+
 	SessionIsLocal bool `json:"session_is_local"`
 }

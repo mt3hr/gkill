@@ -48,6 +48,7 @@ export class ApplicationConfig {
     rep_type_struct: Array<RepTypeStruct>
     kftl_template_struct: Array<KFTLTemplateStruct>
     mi_board_struct: Array<MiBoardStruct>
+    show_tags_in_list: boolean
     session_is_local: boolean
     async parse_template_and_struct(): Promise<Array<GkillError>> {
         const awaitPromises = new Array<Promise<any>>()
@@ -88,6 +89,7 @@ export class ApplicationConfig {
         application_config.rykv_default_period = this.rykv_default_period
         application_config.mi_default_period = this.mi_default_period
         application_config.is_show_share_footer = this.is_show_share_footer
+        application_config.show_tags_in_list= this.show_tags_in_list
         application_config.default_page = this.default_page
         return application_config
     }
@@ -981,6 +983,7 @@ export class ApplicationConfig {
         this.mi_board_struct = new Array<MiBoardStruct>()
         this.session_is_local = false
         this.is_show_share_footer = false
+        this.show_tags_in_list = true
         this.default_page = "rykv"
     }
 

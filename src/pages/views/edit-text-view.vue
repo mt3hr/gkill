@@ -31,6 +31,7 @@
                 :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
                 :enable_dialog="enable_dialog" :is_readonly_mi_check="true" :show_attached_timeis="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true" :show_update_time="false" :show_related_time="true"
+                :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
                 @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
                 @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
@@ -62,7 +63,7 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { GkillError } from '@/classes/api/gkill-error';
 import type { Text } from '@/classes/datas/text';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
-import delete_gkill_cache from '@/classes/delete-gkill-cache'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)
 
@@ -123,8 +124,8 @@ async function save(): Promise<void> {
         updated_text.update_user = gkill_info_res.user_id
 
         // 更新リクエストを飛ばす
-        await delete_gkill_cache(updated_text.id)
-        await delete_gkill_cache(updated_text.target_id)
+        await delete_gkill_kyou_cache(updated_text.id)
+        await delete_gkill_kyou_cache(updated_text.target_id)
         const req = new UpdateTextRequest()
         req.text = updated_text
         const res = await props.gkill_api.update_text(req)
