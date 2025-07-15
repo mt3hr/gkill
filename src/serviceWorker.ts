@@ -7,6 +7,17 @@ declare let clients: Clients;
 
 precacheAndRoute(self.__WB_MANIFEST)
 
+function parseBoolLoose(value: unknown): boolean {
+  if (typeof value === "boolean") return value
+  if (typeof value === "number") return value !== 0
+  if (typeof value === "string") {
+    const v = value.trim().toLowerCase()
+    if (["true", "1", "yes", "y"].includes(v)) return true
+    if (["false", "0", "no", "n"].includes(v)) return false
+  }
+  throw new SyntaxError(`Boolean expected, got ${JSON.stringify(value)}`)
+}
+
 self.addEventListener('push', async function (event: any) {
   const data = event.data.json()
   if (data.is_notification) {
@@ -57,26 +68,20 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         const reqClone2 = request.clone()
 
         const body = await reqClone1.json()
-        const force_reget = body.force_reget
-        let id = body.id
-        if (!id) {
-          id = body.target_id
-        }
-        if (!id) {
-          return fetch(reqClone2)
-        }
+        const force_reget = parseBoolLoose(body.force_reget)
+        const id = body.target_id ? body.target_id : body.id
 
         const data_type = new URL(request.url).pathname.replace('/api/get_', '')
         const cacheKey = `/cache/api/${data_type}/${id}`
 
-        const cache = await caches.open('gkill-post-kyou-cache')
-        if (JSON.parse(force_reget).toString().toLowerCase() !== "true") {
-          const cached = await cache.match(cacheKey)
+        const kyou_cache = await caches.open('gkill-post-kyou-cache')
+        if (!force_reget) {
+          const cached = await kyou_cache.match(cacheKey)
           if (cached) return cached
         }
 
         const response = await fetch(reqClone2)
-        cache.put(cacheKey, response.clone())
+        kyou_cache.put(cacheKey, response.clone())
         return response
       })()
     )
@@ -92,19 +97,19 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         const reqClone1 = request.clone()
 
         const body = await reqClone0.json()
-        const force_reget = body.force_reget
+        const force_reget = parseBoolLoose(body.force_reget)
 
         const data_type = new URL(request.url).pathname.replace('/api/get_', '')
         const cacheKey = `/cache/api/${data_type}`
 
-        const cache = await caches.open('gkill-post-config-cache')
-        if (JSON.parse(force_reget).toString().toLowerCase() !== "true") {
-          const cached = await cache.match(cacheKey)
+        const config_cache = await caches.open('gkill-post-config-cache')
+        if (!force_reget) {
+          const cached = await config_cache.match(cacheKey)
           if (cached) return cached
         }
 
         const response = await fetch(reqClone1)
-        cache.put(cacheKey, response.clone())
+        config_cache.put(cacheKey, response.clone())
         return response
       })()
     )
