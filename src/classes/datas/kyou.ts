@@ -609,6 +609,7 @@ export class Kyou extends InfoBase {
         const req = new GetKyouRequest()
         req.abort_controller = this.abort_controller
         if (!is_updated_info) {
+            req.update_time = this.update_time
             req.rep_name = this.rep_name
         }
 
