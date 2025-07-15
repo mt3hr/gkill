@@ -80,14 +80,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
         return response
       })()
     )
-  }
-})
-
-self.addEventListener('fetch', (event: FetchEvent) => {
-  const { request } = event
-
-  const url = new URL(request.url)
-  if (request.method === 'POST' && (
+  } else if (request.method === 'POST' && (
     // ApplicationConfig系
     url.pathname === '/api/get_gkill_info' ||
     url.pathname === '/api/get_all_rep_names' ||
@@ -95,10 +88,10 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     url.pathname === '/api/get_mi_board_list')) {
     event.respondWith(
       (async () => {
+        const reqClone0 = request.clone()
         const reqClone1 = request.clone()
-        const reqClone2 = request.clone()
 
-        const body = await reqClone1.json()
+        const body = await reqClone0.json()
         const force_reget = body.force_reget
 
         const data_type = new URL(request.url).pathname.replace('/api/get_', '')
@@ -110,7 +103,7 @@ self.addEventListener('fetch', (event: FetchEvent) => {
           if (cached) return cached
         }
 
-        const response = await fetch(reqClone2)
+        const response = await fetch(reqClone1)
         cache.put(cacheKey, response.clone())
         return response
       })()
