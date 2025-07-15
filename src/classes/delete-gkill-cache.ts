@@ -16,23 +16,18 @@ export default async function delete_gkill_kyou_cache(id: string | null): Promis
         'gkill_notifications_by_id',
     ]
 
+    const cache = await caches.open('gkill-post-kyou-cache')
+    const wait_promises = new Array<Promise<any>>()
     if (id) {
         for (let i = 0; i < data_types.length; i++) {
             const data_type = data_types[i]
             const cacheKey = `/cache/api/${data_type}/${id}`
-            const cache = await caches.open('gkill-post-kyou-cache')
-            await cache.delete(new Request(cacheKey))
+            wait_promises.push(cache.delete(new Request(cacheKey)))
         }
     } else {
         caches.delete('gkill-post-kyou-cache')
-        caches.open('gkill-post-kyou-cache').then(cache => {
-            cache.keys().then(keys => {
-                keys.forEach(key => {
-                    cache.delete(key)
-                })
-            })
-        })
     }
+    await Promise.all(wait_promises)
 }
 
 
@@ -44,10 +39,12 @@ export async function delete_gkill_config_cache(): Promise<void> {
         'mi_board_list'
     ]
 
+    const cache = await caches.open('gkill-post-config-cache')
+    const wait_promises = new Array<Promise<any>>()
     for (let i = 0; i < data_types.length; i++) {
         const data_type = data_types[i]
         const cacheKey = `/cache/api/${data_type}`
-        const cache = await caches.open('gkill-post-config-cache')
-        await cache.delete(new Request(cacheKey))
+        wait_promises.push(cache.delete(new Request(cacheKey)))
     }
+    await Promise.all(wait_promises)
 }
