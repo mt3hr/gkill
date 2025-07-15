@@ -25,6 +25,13 @@ export default async function delete_gkill_kyou_cache(id: string | null): Promis
         }
     } else {
         caches.delete('gkill-post-kyou-cache')
+        caches.open('gkill-post-kyou-cache').then(cache => {
+            cache.keys().then(keys => {
+                keys.forEach(key => {
+                    cache.delete(key)
+                })
+            })
+        })
     }
 }
 
