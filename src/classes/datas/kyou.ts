@@ -621,16 +621,16 @@ export class Kyou extends InfoBase {
         const latest_kyou = res.kyou_histories[0]
         this.is_deleted = latest_kyou.is_deleted
         this.id = latest_kyou.id
-        this.rep_name = latest_kyou.rep_name
         if (!content_only) {
+            this.rep_name = latest_kyou.rep_name
             this.related_time = latest_kyou.related_time
+            this.update_time = latest_kyou.update_time
         }
         this.data_type = latest_kyou.data_type
         this.create_time = latest_kyou.create_time
         this.create_app = latest_kyou.create_app
         this.create_device = latest_kyou.create_device
         this.create_user = latest_kyou.create_user
-        this.update_time = latest_kyou.update_time
         this.update_app = latest_kyou.update_app
         this.update_device = latest_kyou.update_device
         this.update_user = latest_kyou.update_user
