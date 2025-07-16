@@ -64,25 +64,36 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     url.pathname === '/api/get_gkill_notifications_by_id')) {
     event.respondWith(
       (async () => {
-        const reqClone1 = request.clone()
-        const reqClone2 = request.clone()
+        try {
+          const reqClone1 = request.clone()
+          const reqClone2 = request.clone()
 
-        const body = await reqClone1.json()
-        const force_reget = parseBoolLoose(body.force_reget)
-        const id = body.target_id ? body.target_id : body.id
+          const body = await reqClone1.json()
+          const force_reget = parseBoolLoose(body.force_reget)
+          const id = body.target_id ? body.target_id : body.id
 
-        const data_type = new URL(request.url).pathname.replace('/api/get_', '')
-        const cacheKey = `/cache/api/${data_type}/${id}`
+          const data_type = new URL(request.url).pathname.replace('/api/get_', '')
+          const cacheKey = `/cache/api/${data_type}/${id}`
 
-        const kyou_cache = await caches.open('gkill-post-kyou-cache')
-        if (!force_reget) {
-          const cached = await kyou_cache.match(cacheKey)
-          if (cached) return cached
+          const kyou_cache = await caches.open('gkill-post-kyou-cache')
+          if (!force_reget) {
+            const cached = await kyou_cache.match(cacheKey)
+            if (cached) return cached
+          }
+
+          const response = await fetch(reqClone2)
+          kyou_cache.put(cacheKey, response.clone())
+          return response
+
+        } catch (err: any) {
+          if ((err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            return Response.error()
+          } else {
+            // abort以外はエラー出力する
+            console.error('[SW] fetch handler error', err)
+            try { return await fetch(request.clone()) } catch { return Response.error() }
+          }
         }
-
-        const response = await fetch(reqClone2)
-        kyou_cache.put(cacheKey, response.clone())
-        return response
       })()
     )
   } else if (request.method === 'POST' && (
@@ -93,24 +104,34 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     url.pathname === '/api/get_mi_board_list')) {
     event.respondWith(
       (async () => {
-        const reqClone0 = request.clone()
-        const reqClone1 = request.clone()
+        try {
+          const reqClone0 = request.clone()
+          const reqClone1 = request.clone()
 
-        const body = await reqClone0.json()
-        const force_reget = parseBoolLoose(body.force_reget)
+          const body = await reqClone0.json()
+          const force_reget = parseBoolLoose(body.force_reget)
 
-        const data_type = new URL(request.url).pathname.replace('/api/get_', '')
-        const cacheKey = `/cache/api/${data_type}`
+          const data_type = new URL(request.url).pathname.replace('/api/get_', '')
+          const cacheKey = `/cache/api/${data_type}`
 
-        const config_cache = await caches.open('gkill-post-config-cache')
-        if (!force_reget) {
-          const cached = await config_cache.match(cacheKey)
-          if (cached) return cached
+          const config_cache = await caches.open('gkill-post-config-cache')
+          if (!force_reget) {
+            const cached = await config_cache.match(cacheKey)
+            if (cached) return cached
+          }
+
+          const response = await fetch(reqClone1)
+          config_cache.put(cacheKey, response.clone())
+          return response
+        } catch (err: any) {
+          if ((err.message.includes("signal is aborted without reason") || err.message.includes("user aborted a request"))) {
+            return Response.error()
+          } else {
+            // abort以外はエラー出力する
+            console.error('[SW] fetch handler error', err)
+            try { return await fetch(request.clone()) } catch { return Response.error() }
+          }
         }
-
-        const response = await fetch(reqClone1)
-        config_cache.put(cacheKey, response.clone())
-        return response
       })()
     )
   }
