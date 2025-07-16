@@ -1626,40 +1626,28 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 
 		// すでに最新が入っていそうだったらそのままいれる RepNameは運用都合でチェックしない
 		if currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) {
-			latestKyousMap[id] = currentKyou
+			latestKyousMap[id] = []*reps.Kyou{currentKyou[0]}
 			continue
 		}
 
 		// Plaingで最新が入っていなかったら消す
-		if findCtx.ParsedFindQuery.UsePlaing != nil && *(findCtx.ParsedFindQuery.UsePlaing) && findCtx.ParsedFindQuery.PlaingTime != nil {
+		isUsePlaing := findCtx.ParsedFindQuery.UsePlaing != nil && *(findCtx.ParsedFindQuery.UsePlaing) && findCtx.ParsedFindQuery.PlaingTime != nil
+		if isUsePlaing {
 			continue
 		}
 
-		latestKyousMap[id] = currentKyou
-
 		// 最新が入っていなかったらもらってくる。
-		for _, rep := range findCtx.Repositories.Reps {
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get rep name: %w", err)
-				return nil, err
-			}
-			if repName != latestData.LatestDataRepositoryName {
-				continue
-			}
-
-			kyouHistories, err := rep.GetKyouHistories(ctx, latestData.TargetID)
-			if err != nil {
-				err = fmt.Errorf("error at get kyou histories: %w", err)
-				return nil, err
-			}
-
-			// 削除されていればスキップ
-			if kyouHistories[0].IsDeleted {
-				continue
-			}
-			latestKyousMap[kyouHistories[0].ID] = kyouHistories
+		kyouHistories, err := findCtx.Repositories.Reps.GetKyouHistories(ctx, latestData.TargetID)
+		if err != nil {
+			err = fmt.Errorf("error at get kyou histories: %w", err)
+			return nil, err
 		}
+
+		// 削除されていればスキップ
+		if kyouHistories[0].IsDeleted {
+			continue
+		}
+		latestKyousMap[id] = []*reps.Kyou{kyouHistories[0]}
 	}
 	findCtx.MatchKyousCurrent = latestKyousMap
 	return nil, nil
