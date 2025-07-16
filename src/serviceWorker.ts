@@ -1,7 +1,11 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute } from 'workbox-precaching'
+import { clientsClaim } from 'workbox-core'
 import delete_gkill_kyou_cache from './classes/delete-gkill-cache';
 export default null
+
+self.skipWaiting()
+clientsClaim()
 declare let self: ServiceWorkerGlobalScope
 declare let clients: Clients;
 
