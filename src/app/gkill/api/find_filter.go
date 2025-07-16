@@ -1626,7 +1626,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 
 		// すでに最新が入っていそうだったらそのままいれる RepNameは運用都合でチェックしない
 		if currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) {
-			latestKyousMap[id] = []*reps.Kyou{currentKyou[0]}
+			latestKyousMap[id] = currentKyou
 			continue
 		}
 
@@ -1647,8 +1647,20 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		if kyouHistories[0].IsDeleted {
 			continue
 		}
-		latestKyousMap[id] = []*reps.Kyou{kyouHistories[0]}
+		latestKyousMap[id] = kyouHistories
 	}
+
+	// miの場合は最新以外消す
+	isForMi := findCtx.ParsedFindQuery.ForMi != nil && *findCtx.ParsedFindQuery.ForMi
+	if isForMi {
+		for id, kyous := range latestKyousMap {
+			sort.Slice(kyous, func(i, j int) bool {
+				return kyous[i].UpdateTime.After(kyous[j].UpdateTime)
+			})
+			latestKyousMap[id] = []*reps.Kyou{kyous[0]}
+		}
+	}
+
 	findCtx.MatchKyousCurrent = latestKyousMap
 	return nil, nil
 }
