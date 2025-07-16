@@ -1653,24 +1653,12 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 				err = fmt.Errorf("error at get kyou histories: %w", err)
 				return nil, err
 			}
-			if len(kyouHistories) == 0 {
-				continue
-			}
-			// RepとUpdateTimeだけ最新の情報を入れて返す（RelatedTimeはそのまま）
-			for i := range currentKyou {
-				latestKyou := currentKyou[i]
-				latestKyouContent := kyouHistories[0]
-				latestKyou.RepName = latestKyouContent.RepName
-				latestKyou.UpdateTime = latestKyouContent.UpdateTime
-				currentKyou[i] = latestKyou
-			}
-			latestKyou := currentKyou[0]
 
 			// 削除されていればスキップ
-			if latestKyou.IsDeleted {
+			if kyouHistories[0].IsDeleted {
 				continue
 			}
-			latestKyousMap[latestKyou.ID] = currentKyou
+			latestKyousMap[kyouHistories[0].ID] = kyouHistories
 		}
 	}
 	findCtx.MatchKyousCurrent = latestKyousMap
