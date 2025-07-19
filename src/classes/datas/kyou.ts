@@ -624,8 +624,8 @@ export class Kyou extends InfoBase {
         if (!content_only) {
             this.rep_name = latest_kyou.rep_name
             this.related_time = latest_kyou.related_time
-            this.update_time = latest_kyou.update_time
         }
+        this.update_time = latest_kyou.update_time
         this.data_type = latest_kyou.data_type
         this.create_time = latest_kyou.create_time
         this.create_app = latest_kyou.create_app
