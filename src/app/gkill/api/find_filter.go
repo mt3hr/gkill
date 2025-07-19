@@ -1618,6 +1618,9 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKyouContext, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
 	latestKyousMap := map[string][]*reps.Kyou{}
 
+	startTime := findCtx.ParsedFindQuery.CalendarStartDate
+	endTime := findCtx.ParsedFindQuery.CalendarEndDate
+
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
 		latestData, exist := latestDatas[id]
 		if !exist {
@@ -1645,6 +1648,14 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 
 		// 削除されていればスキップ
 		if kyouHistories[0].IsDeleted {
+			continue
+		}
+		
+
+		if startTime != nil && kyouHistories[0].RelatedTime.Before(*startTime) {
+			continue
+		}
+		if endTime != nil && kyouHistories[0].RelatedTime.After(*endTime) {
 			continue
 		}
 		latestKyousMap[id] = kyouHistories
