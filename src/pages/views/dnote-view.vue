@@ -18,7 +18,8 @@
                 <div class="align-center justify-center overlay_message">
                     {{ finished_aggregate_task }}/{{ estimate_aggregate_task }}
                 </div>
-                <div class="align-center justify-center overlay_message">{{ i18n.global.t('DNOTE_PLEASE_WAIT_MESSAGE') }}</div>
+                <div class="align-center justify-center overlay_message">{{ i18n.global.t('DNOTE_PLEASE_WAIT_MESSAGE')
+                    }}</div>
             </div>
         </v-overlay>
         <h1>
@@ -74,7 +75,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -137,11 +138,15 @@ const getted_kyous_count = ref(0)
 const estimate_aggregate_task = ref(0)
 const finished_aggregate_task = ref(0)
 
-const start_date_str: Ref<string> = computed(() => !props.query.calendar_start_date ? "" : (moment(props.query.calendar_start_date ? props.query.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")))
-const end_date_str: Ref<string> = computed(() => !props.query.calendar_end_date ? "" : (moment(props.query.calendar_end_date ? props.query.calendar_end_date : moment().toDate()).format("YYYY-MM-DD")))
+const first_kyou_date_str = ref("")
+const last_kyou_date_str = ref("")
+const start_date_str: Ref<string> = computed(() => props.query.use_calendar? (moment(props.query.calendar_start_date ? props.query.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")) : first_kyou_date_str.value)
+const end_date_str: Ref<string> = computed(() => props.query.use_calendar? (moment(props.query.calendar_end_date ? props.query.calendar_end_date : moment().toDate()).format("YYYY-MM-DD")) : last_kyou_date_str.value)
 
 async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
     is_loading.value = true
+    first_kyou_date_str.value = kyous && kyous.length > 0 ? moment(kyous[kyous.length - 1].related_time).format("YYYY-MM-DD") : ""
+    last_kyou_date_str.value = kyous && kyous.length > 0 ? moment(kyous[0].related_time).format("YYYY-MM-DD") : ""
 
     reset_view()
     if (dnote_item_table_view_data.value.length === 0) {
