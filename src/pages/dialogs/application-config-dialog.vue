@@ -4,8 +4,8 @@
             :app_content_height="app_content_height" :app_content_width="app_content_width"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_application_config="emits('requested_reload_application_config', application_config)"
-            @requested_close_dialog="hide" ref="application_config_view" />
+            @requested_reload_application_config="reload_page()" @requested_close_dialog="hide"
+            ref="application_config_view" />
     </v-dialog>
 </template>
 
@@ -16,6 +16,7 @@ import { defineProps } from 'vue'
 import type { ApplicationConfigDialogProps } from './application-config-dialog-props'
 import type { ApplicationConfigDialogEmits } from './application-config-dialog-emits'
 import ApplicationConfigView from '../views/application-config-view.vue'
+import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 
 const application_config_view = ref<InstanceType<typeof ApplicationConfigView> | null>(null);
 
@@ -31,5 +32,9 @@ async function show(): Promise<void> {
 }
 async function hide(): Promise<void> {
     is_show_dialog.value = false
+}
+async function reload_page(): Promise<void> {
+    is_show_dialog.value = false
+    window.location.reload()
 }
 </script>
