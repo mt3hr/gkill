@@ -35,5 +35,5 @@ var (
 		"id.db-wal",
 	}
 
-	ThreadPool = 1000 - 1
+	GoroutinePool = 4000
 )
