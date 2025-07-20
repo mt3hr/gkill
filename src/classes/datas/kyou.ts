@@ -343,7 +343,7 @@ export class Kyou extends InfoBase {
     async load_typed_timeis(): Promise<Array<GkillError>> {
         const req = new GetTimeisRequest()
         req.abort_controller = this.abort_controller
-        req.rep_name = this.rep_name
+        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_timeis(req)
@@ -611,9 +611,11 @@ export class Kyou extends InfoBase {
         if (!is_updated_info) {
             req.update_time = this.update_time
             req.rep_name = this.rep_name
+            // } else {
+            // req.force_reget = true
         }
-
         req.id = this.id
+
         const res = await GkillAPI.get_gkill_api().get_kyou(req)
         if (res.errors && res.errors.length != 0) {
             return res.errors

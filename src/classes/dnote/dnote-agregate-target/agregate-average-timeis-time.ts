@@ -3,6 +3,7 @@ import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteAgregateTarget from "../dnote-agregate-target";
 import { i18n } from "@/i18n";
 import AverageInfo from "./average-info";
+import { format_duration } from "@/classes/format-date-time";
 
 export default class AgregateAverageTimeisTime implements DnoteAgregateTarget {
     static from_json(_json: any): DnoteAgregateTarget {
@@ -26,7 +27,6 @@ export default class AgregateAverageTimeisTime implements DnoteAgregateTarget {
 
             if ((start_time_trimed.getTime() < end_time_trimed.getTime())) {
                 duration_milli_second = Math.abs(end_time_trimed.getTime() - start_time_trimed.getTime())
-
             } else {
                 duration_milli_second = 0
             }
@@ -41,50 +41,8 @@ export default class AgregateAverageTimeisTime implements DnoteAgregateTarget {
         if (average_value === 0) {
             return ""
         }
-        let diff_str = ""
-        const offset_in_locale_milli_second = new Date().getTimezoneOffset().valueOf() * 60000
         const diff = average_value
-        const diff_date = new Date(diff + offset_in_locale_milli_second)
-        if (diff_date.getFullYear() - 1970 !== 0) {
-            if (diff_str !== "") {
-                diff_str += " "
-            }
-            diff_str += diff_date.getFullYear() - 1970 + i18n.global.t("YEAR_SUFFIX")
-        }
-        if (diff_date.getMonth() !== 0) {
-            if (diff_str !== "") {
-                diff_str += " "
-            }
-            diff_str += (diff_date.getMonth() + 1) + i18n.global.t("MONTH_SUFFIX")
-        }
-        if ((diff_date.getDate() - 1) !== 0) {
-            if (diff_str !== "") {
-                diff_str += " "
-            }
-            diff_str += (diff_date.getDate() - 1) + i18n.global.t("DAY_SUFFIX")
-        }
-        if (diff_date.getHours() !== 0) {
-            if (diff_str !== "") {
-                diff_str += " "
-            }
-            diff_str += (diff_date.getHours()) + i18n.global.t("HOUR_SUFFIX")
-        }
-        if (diff_date.getMinutes() !== 0) {
-            if (diff_str !== "") {
-                diff_str += " "
-            }
-            diff_str += diff_date.getMinutes() + i18n.global.t("MINUTE_SUFFIX")
-        }
-        if (diff_str === "") {
-            diff_str += diff_date.getSeconds() + i18n.global.t("SECOND_SUFFIX")
-        }
-        if (diff_str !== "") {
-            if (diff_str !== "") {
-                diff_str += " "
-            }
-            diff_str += "<br>（" + (diff / 3600000).toFixed(2) + i18n.global.t("HOUR_SUFFIX") + "）"
-        }
-        return diff_str
+        return format_duration(diff)
     }
     to_json(): any {
         return {
