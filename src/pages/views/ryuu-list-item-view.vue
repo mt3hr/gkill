@@ -160,7 +160,8 @@ async function load_related_kyou(): Promise<void> {
         return
     }
     const clone = true
-    const kyous = await load_kyous(props.abort_controller, res.kyous, clone)
+    const get_latest_data = true
+    const kyous = await load_kyous(props.abort_controller, res.kyous, get_latest_data, clone)
 
     const kyou_is_loaded = true
     const limit_count = 1

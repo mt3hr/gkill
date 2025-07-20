@@ -15,7 +15,8 @@ export class DnoteAgregator {
 
     public async agregate(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<{ result_string: string, match_kyous: Array<Kyou> }> {
         // 渡されたデータの全項目を取得
-        const cloned_kyous = await load_kyous(abort_controller, kyous, !kyou_is_loaded)
+        const get_latest_data = false
+        const cloned_kyous = await load_kyous(abort_controller, kyous, get_latest_data, !kyou_is_loaded)
 
         // predicateにマッチしたKyouを抽出
         const match_kyous = new Array<Kyou>()

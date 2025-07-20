@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	if err := AppCmd.Execute(); err != nil {
+	if err := ServerCmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -18,17 +18,18 @@ func main() {
 func init() {
 	common.AppName = "gkill_server"
 	cobra.MousetrapHelpText = "" // Windowsでマウスから起動しても怒られないようにする
-	AppCmd.PersistentFlags().StringVar(&gkill_options.GkillHomeDir, "gkill_home_dir", gkill_options.GkillHomeDir, "")
-	AppCmd.PersistentFlags().BoolVar(&gkill_options.IsOutputLog, "log", gkill_options.IsOutputLog, "")
-	AppCmd.PersistentFlags().BoolVar(&gkill_options.DisableTLSForce, "disable_tls", gkill_options.DisableTLSForce, "")
-	AppCmd.PersistentFlags().BoolVar(&gkill_options.IsCacheInMemory, "cache_in_memory", gkill_options.IsCacheInMemory, "")
-	AppCmd.AddCommand(common.IDFCmd)
-	AppCmd.AddCommand(common.DVNFCmd)
-	AppCmd.AddCommand(common.VersionCommand)
+	ServerCmd.PersistentFlags().StringVar(&gkill_options.GkillHomeDir, "gkill_home_dir", gkill_options.GkillHomeDir, "")
+	ServerCmd.PersistentFlags().BoolVar(&gkill_options.IsOutputLog, "log", gkill_options.IsOutputLog, "")
+	ServerCmd.PersistentFlags().BoolVar(&gkill_options.DisableTLSForce, "disable_tls", gkill_options.DisableTLSForce, "")
+	ServerCmd.PersistentFlags().BoolVar(&gkill_options.IsCacheInMemory, "cache_in_memory", gkill_options.IsCacheInMemory, "")
+	ServerCmd.PersistentFlags().IntVar(&gkill_options.GoroutinePool, "goroutine_pool", gkill_options.GoroutinePool, "")
+	ServerCmd.AddCommand(common.IDFCmd)
+	ServerCmd.AddCommand(common.DVNFCmd)
+	ServerCmd.AddCommand(common.VersionCommand)
 }
 
 var (
-	AppCmd = &cobra.Command{
+	ServerCmd = &cobra.Command{
 		Use: "gkill_server",
 		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			common.InitGkillOptions()

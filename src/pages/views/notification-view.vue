@@ -41,12 +41,9 @@ import { i18n } from '@/i18n'
 import AttachedNotification from './attached-notification.vue';
 import type { KyouViewEmits } from './kyou-view-emits'
 import moment from 'moment';
+import { format_time } from '@/classes/format-date-time'
 import type { NotificationViewProps } from './notification-view-props';
 
 defineProps<NotificationViewProps>()
 const emits = defineEmits<KyouViewEmits>()
-
-function format_time(time: Date): string {
-    return moment(time).format("yyyy-MM-DD HH:mm:ss")
-}
 </script>

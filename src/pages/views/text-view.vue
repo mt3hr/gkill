@@ -37,16 +37,11 @@
     </v-row>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { TextViewProps } from './text-view-props'
 import AttachedText from './attached-text.vue';
-import moment from 'moment';
+import { format_time } from '@/classes/format-date-time'
 
 defineProps<TextViewProps>()
 const emits = defineEmits<KyouViewEmits>()
-
-function format_time(time: Date): string {
-    return moment(time).format("yyyy-MM-DD HH:mm:ss")
-}
 </script>

@@ -3,11 +3,11 @@ package threads
 import "github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 
 var (
-	threadPool = make(chan struct{}, gkill_options.ThreadPool)
+	threadPool = make(chan struct{}, gkill_options.GoroutinePool)
 )
 
 func init() {
-	for i := 0; i < gkill_options.ThreadPool; i++ {
+	for i := 0; i < gkill_options.GoroutinePool; i++ {
 		threadPool <- struct{}{}
 	}
 }

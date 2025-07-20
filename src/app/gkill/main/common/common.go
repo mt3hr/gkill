@@ -119,6 +119,7 @@ func InitGkillOptions() {
 	gkill_options.TLSCertFileDefault = fmt.Sprintf("%s/tls/cert.cer", gkill_options.GkillHomeDir)
 	gkill_options.TLSKeyFileDefault = fmt.Sprintf("%s/tls/key.pem", gkill_options.GkillHomeDir)
 	gkill_options.DataDirectoryDefault = fmt.Sprintf("%s/datas", gkill_options.GkillHomeDir)
+	gkill_options.GoroutinePool = 1000 - 1
 }
 
 func fixTimezone() {
