@@ -68,6 +68,7 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import TimeIsContextMenu from './time-is-context-menu.vue'
 import moment from 'moment';
 import EndTimeIsPlaingDialog from '../dialogs/end-time-is-plaing-dialog.vue';
+import { format_duration, format_time } from '@/classes/format-date-time'
 
 const context_menu = ref<InstanceType<typeof TimeIsContextMenu> | null>(null);
 const end_timeis_plaing_dialog = ref<InstanceType<typeof EndTimeIsPlaingDialog> | null>(null);
@@ -80,56 +81,10 @@ const duration = computed(() => {
     let time1 = props.timeis.start_time
     let time2 = props.timeis.end_time
 
-    let diff_str = ""
     time2 = time2 ? time2 : moment().toDate()
-    const offset_in_locale_milli_second = new Date().getTimezoneOffset().valueOf() * 60000
     const diff = Math.abs(time2.getTime() - time1.getTime())
-    const diff_date = moment(diff + offset_in_locale_milli_second).toDate()
-    if (diff_date.getFullYear() - 1970 !== 0) {
-        if (diff_str !== "") {
-            diff_str += " "
-        }
-        diff_str += diff_date.getFullYear() - 1970 + i18n.global.t("YEAR_SUFFIX")
-    }
-    if (diff_date.getMonth() !== 0) {
-        if (diff_str !== "") {
-            diff_str += " "
-        }
-        diff_str += (diff_date.getMonth() + 1) + i18n.global.t("MONTH_SUFFIX")
-    }
-    if ((diff_date.getDate() - 1) !== 0) {
-        if (diff_str !== "") {
-            diff_str += " "
-        }
-        diff_str += (diff_date.getDate() - 1) + i18n.global.t("DAY_SUFFIX")
-    }
-    if (diff_date.getHours() !== 0) {
-        if (diff_str !== "") {
-            diff_str += " "
-        }
-        diff_str += (diff_date.getHours()) + i18n.global.t("HOUR_SUFFIX")
-    }
-    if (diff_date.getMinutes() !== 0) {
-        if (diff_str !== "") {
-            diff_str += " "
-        }
-        diff_str += diff_date.getMinutes() + i18n.global.t("MINUTE_SUFFIX")
-    }
-    if (diff_str === "") {
-        diff_str += diff_date.getSeconds() + i18n.global.t("SECOND_SUFFIX")
-    }
-    if (diff_str !== "") {
-        if (diff_str !== "") {
-            diff_str += " "
-        }
-        diff_str += "（" + (diff / 3600000).toFixed(2) + i18n.global.t("HOUR_SUFFIX") + "）"
-    }
-    return diff_str
+    return format_duration(diff).replace("<br>", " ")
 })
-
-function format_time(time: Date): string {
-    return moment(time).format("yyyy-MM-DD HH:mm:ss")
-}
 
 function show_context_menu(e: PointerEvent): void {
     if (props.enable_context_menu) {

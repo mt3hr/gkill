@@ -69,6 +69,7 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { KyouViewEmits } from './kyou-view-emits'
+import { format_time } from '@/classes/format-date-time'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const context_menu = ref<InstanceType<typeof MiContextMenu> | null>(null);
@@ -100,10 +101,6 @@ async function load_cloned_kyou() {
     const kyou = props.kyou.clone()
     await kyou.load_typed_datas()
     cloned_kyou.value = kyou
-}
-
-function format_time(time: Date): string {
-    return moment(time).format("yyyy-MM-DD HH:mm:ss")
 }
 
 function show_context_menu(e: PointerEvent): void {

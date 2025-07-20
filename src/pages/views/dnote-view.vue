@@ -140,8 +140,8 @@ const finished_aggregate_task = ref(0)
 
 const first_kyou_date_str = ref("")
 const last_kyou_date_str = ref("")
-const start_date_str: Ref<string> = computed(() => props.query.use_calendar? (moment(props.query.calendar_start_date ? props.query.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")) : first_kyou_date_str.value)
-const end_date_str: Ref<string> = computed(() => props.query.use_calendar? (moment(props.query.calendar_end_date ? props.query.calendar_end_date : moment().toDate()).format("YYYY-MM-DD")) : last_kyou_date_str.value)
+const start_date_str: Ref<string> = computed(() => props.query.use_calendar ? (moment(props.query.calendar_start_date ? props.query.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")) : first_kyou_date_str.value)
+const end_date_str: Ref<string> = computed(() => props.query.use_calendar ? (moment(props.query.calendar_end_date ? props.query.calendar_end_date : moment().toDate()).format("YYYY-MM-DD")) : last_kyou_date_str.value)
 
 async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
     is_loading.value = true
@@ -170,7 +170,7 @@ async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
     }
     estimate_aggregate_task.value += dnote_list_item_table_view_data.value.length
 
-    const cloned_kyou = await load_kyous(abort_controller.value, trimed_kyous, true)
+    const cloned_kyou = await load_kyous(abort_controller.value, trimed_kyous, true, true)
     const kyou_is_loaded = true
     const waitPromises = new Array<Promise<any>>()
     waitPromises.push(load_aggregated_value(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
@@ -304,22 +304,30 @@ async function apply(): Promise<void> {
     emits('requested_close_dialog')
 }
 
-async function load_kyous(abort_controller: AbortController, kyous: Array<Kyou>, clone: boolean): Promise<Array<Kyou>> {
+// 進捗表示のためかか共通からコピー
+async function load_kyous(abort_controller: AbortController, kyous: Array<Kyou>, get_latest_data: boolean, clone: boolean): Promise<Array<Kyou>> {
     const cloned_kyous = new Array<Kyou>()
     for (let i = 0; i < kyous.length; i++) {
         let kyou: Kyou = kyous[i]
+        const waitPromises = []
         if (clone) {
             kyou = kyous[i].clone()
+            kyou.abort_controller = abort_controller
         }
-        kyou.abort_controller = abort_controller
-        await kyou.load_typed_datas()
-        await kyou.load_attached_tags()
+        if (get_latest_data) {
+            await kyou.reload(false, true)
+        }
+        if (clone || get_latest_data) {
+            waitPromises.push(kyou.load_typed_datas())
+            waitPromises.push(kyou.load_attached_tags())
+            waitPromises.push(kyou.load_attached_texts())
+        }
+        await Promise.all(waitPromises)
         cloned_kyous.push(kyou)
         getted_kyous_count.value++
     }
     return cloned_kyous
 }
-
 </script>
 <style lang="css" scoped>
 .position-fixed {

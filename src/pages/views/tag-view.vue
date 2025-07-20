@@ -42,11 +42,8 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import type { TagViewProps } from './tag-view-props'
 import moment from 'moment';
 import AttachedTag from './attached-tag.vue';
+import { format_time } from '@/classes/format-date-time'
 
 defineProps<TagViewProps>()
 const emits = defineEmits<KyouViewEmits>()
-
-function format_time(time: Date): string {
-    return moment(time).format("yyyy-MM-DD HH:mm:ss")
-}
 </script>
