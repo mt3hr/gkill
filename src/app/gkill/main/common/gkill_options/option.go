@@ -1,5 +1,7 @@
 package gkill_options
 
+import "math"
+
 var (
 	GkillHomeDir         = "$HOME/gkill"
 	LibDir               = "$HOME/gkill/lib/base_directory"
@@ -10,7 +12,7 @@ var (
 	TLSKeyFileDefault    = "$HOME/gkill/tls/key.pem"
 	DataDirectoryDefault = "$HOME/gkill/datas"
 
-	IsCacheInMemory = true
+	IsCacheInMemory = false
 	IsOutputLog     = false
 	DisableTLSForce = false
 
@@ -36,4 +38,6 @@ var (
 	}
 
 	GoroutinePool = 4000
+
+	CacheClearCountLimit = math.MaxInt
 )

@@ -12,4 +12,6 @@ type GetGkillInfoResponse struct {
 	Device string `json:"device"`
 
 	UserIsAdmin bool `json:"user_is_admin"`
+
+	CacheClearCountLimit int `json:"cache_clear_count_limit"`
 }

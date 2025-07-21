@@ -2761,11 +2761,14 @@ export class GkillAPI {
         }
 
         async delete_updated_gkill_caches(): Promise<void> {
+                const gkill_info_req = new GetGkillInfoRequest()
+                const gkill_info_res = await this.get_gkill_info(gkill_info_req)
+
                 const req = new GetUpdatedDatasByTimeRequest()
                 req.last_updated_time = new Date(this.get_last_cache_update_time())
                 const res = await this.get_updated_datas_by_time(req)
                 if (res.updated_ids) {
-                        if (res.updated_ids.length > 1000) {
+                        if (res.updated_ids.length > gkill_info_res.cache_clear_count_limit) {
                                 await delete_gkill_kyou_cache(null)
                         } else {
                                 for (let i = 1; i < res.updated_ids.length; i++) {

@@ -622,6 +622,35 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 	return true, nil
 }
 
+func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddressesData(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) error {
+	existlatestDataRepositoryAddresses, err := l.GetAllLatestDataRepositoryAddresses(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
+		return err
+	}
+
+	latestDataRepositoryAddressMap := map[string]*LatestDataRepositoryAddress{}
+	for _, latestDataRepositoryAddress := range existlatestDataRepositoryAddresses {
+		latestDataRepositoryAddressMap[latestDataRepositoryAddress.ContentHash()] = latestDataRepositoryAddress
+	}
+
+	// 内容が更新された（ハッシュ一が在しないデータのみを抽出する
+	notExistsLatestDataRepositoryAddresses := []*LatestDataRepositoryAddress{}
+	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
+		if _, exist := latestDataRepositoryAddressMap[latestDataRepositoryAddress.ContentHash()]; !exist {
+			notExistsLatestDataRepositoryAddresses = append(notExistsLatestDataRepositoryAddresses, latestDataRepositoryAddress)
+		}
+	}
+
+	// いれる
+	_, err = l.AddOrUpdateLatestDataRepositoryAddresses(ctx, notExistsLatestDataRepositoryAddresses)
+	if err != nil {
+		err = fmt.Errorf("error at add or update latest data repository addresses: %w", err)
+		return err
+	}
+	return nil
+}
+
 func (l *latestDataRepositoryAddressSQLite3Impl) Close(ctx context.Context) error {
 	if !gkill_options.IsCacheInMemory {
 		return l.db.Close()
