@@ -177,7 +177,7 @@ import type { UpdateDnoteJSONDataRequest } from "./req_res/update-dnote-json-dat
 import type { UpdateDnoteJSONDataResponse } from "./req_res/update-dnote-json-data-response"
 import { GetShareKyouListInfosResponse } from "./req_res/get-share-kyou-list-infos-response"
 import { GetUpdatedDatasByTimeRequest } from "./req_res/get-updated-datas-by-time-request"
-import type { GetUpdatedDatasByTimeResponse } from "./req_res/get-updated-datas-by-time-response"
+import { GetUpdatedDatasByTimeResponse } from "./req_res/get-updated-datas-by-time-response"
 import delete_gkill_kyou_cache, { delete_gkill_config_cache } from "../delete-gkill-cache"
 import type { CommitTXRequest } from "./req_res/commit-tx-request"
 import type { CommitTXResponse } from "./req_res/commit-tx-response"
@@ -3295,5 +3295,10 @@ export class GkillAPIForSharedKyou extends GkillAPI {
         }
         get_shared_id_from_cookie(): string {
                 return super.get_shared_id_from_cookie()
+        }
+
+        async get_updated_datas_by_time(_: GetUpdatedDatasByTimeRequest): Promise<GetUpdatedDatasByTimeResponse> {
+                const response: GetUpdatedDatasByTimeResponse = new GetUpdatedDatasByTimeResponse()
+                return response
         }
 }
