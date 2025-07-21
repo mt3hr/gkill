@@ -725,15 +725,9 @@ notificationsloop:
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 
-	_, err = g.LatestDataRepositoryAddressDAO.DeleteAllLatestDataRepositoryAddress(ctx)
+	err = g.LatestDataRepositoryAddressDAO.UpdateLatestDataRepositoryAddressesData(ctx, latestDataRepositoryAddresses)
 	if err != nil {
-		err = fmt.Errorf("error at delete all latest data repository address cache: %w", err)
-		return err
-	}
-
-	_, err = g.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, latestDataRepositoryAddresses)
-	if err != nil {
-		err = fmt.Errorf("error at add latest data repository address cache: %w", err)
+		err = fmt.Errorf("error at update latest data repository address cache data: %w", err)
 		return err
 	}
 	return nil
