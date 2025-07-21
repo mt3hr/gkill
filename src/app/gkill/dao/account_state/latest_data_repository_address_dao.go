@@ -17,5 +17,6 @@ type LatestDataRepositoryAddressDAO interface {
 	DeleteLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error)
 	DeleteAllLatestDataRepositoryAddress(ctx context.Context) (bool, error)
 	DeleteLatestDataRepositoryAddressInRep(ctx context.Context, repName string) (bool, error)
+	UpdateLatestDataRepositoryAddressesData(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) error
 	Close(ctx context.Context) error
 }
