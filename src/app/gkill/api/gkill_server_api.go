@@ -9927,6 +9927,7 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 	response.UserID = userID
 	response.Device = device
 	response.UserIsAdmin = account.IsAdmin
+	response.CacheClearCountLimit = gkill_options.CacheClearCountLimit
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetGkillInfoSuccessMessage,
 		Message:     "取得完了",
@@ -11955,7 +11956,7 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 		return
 	}
 
-	limit := 1001 // 1000はは超え画面側でキャッシュ全件強制正新
+	limit := 1000001 // 1000はは超え画面側でキャッシュ全件強制正新
 	updatedInfos, err := repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(r.Context(), request.LastUpdatedTime, limit)
 	if err != nil {
 		err = fmt.Errorf("error at get latest data repositories data user id = %s device = %s: %w", userID, device, err)
