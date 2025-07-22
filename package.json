@@ -14,9 +14,20 @@
     "go_install": "cd src/app/gkill/main/gkill_server && go install",
     "clean_app_embed": "rimraf src/app/gkill/api/embed/html",
     "copy_dist_to_app_embed": "mkdirp src/app/gkill/api/embed/html && copyfiles -u 1 \"dist/**/*\" src/app/gkill/api/embed/html",
-    "preparate_install": "npm run clean_app_embed && npm run build && npm run copy_dist_to_app_embed",
-    "install_app": "npm run preparate_install && cd src/app/gkill/main/gkill && go install -ldflags \"-H windowsgui\"",
-    "install_server": "npm run preparate_install && npm run go_install"
+    "prepare_install": "npm run clean_app_embed && npm run build && npm run copy_dist_to_app_embed",
+    "build_x_compile": "npm run build_windows_amd64_app && npm run build_windows_amd64 && npm run build_linux_amd64 && npm run build_linux_arm64 && npm run build_linux_arm && npm run build_android_arm && npm run build_android_arm64 && npm run build_android_apk",
+    "build_windows_amd64": "unset CC && mkdirp bin/windows_amd64 && cd src/app/gkill/main/gkill_server; CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o ../../../../../bin/windows_amd64/gkill_server.exe",
+    "build_windows_amd64_app": "unset CC && mkdirp bin/windows_amd64 && cd src/app/gkill/main/gkill/; CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -ldflags \"-H windowsgui\" -o ../../../../../bin/windows_amd64/gkill.exe",
+    "build_linux_amd64": "unset CC && mkdirp bin/linux_amd64 && cd src/app/gkill/main/gkill_server; CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o ../../../../../bin/linux_amd64/gkill_server",
+    "build_linux_arm64": "unset CC && mkdirp bin/linux_arm64 && cd src/app/gkill/main/gkill_server; CGO_ENABLED=1 GOOS=linux GOARCH=arm64 CC=aarch64-linux-gnu-gcc go build -o ../../../../../bin/linux_arm64/gkill_server",
+    "build_linux_arm": "unset CC && mkdirp bin/linux_arm && cd src/app/gkill/main/gkill_server; CGO_ENABLED=1 GOOS=linux GOARCH=arm CC=arm-linux-gnueabihf-gcc go build -o ../../../../../bin/linux_arm/gkill_server",
+    "build_android_arm": "unset CC && mkdirp bin/android_arm && cd src/app/gkill/main/gkill_server; CC=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang  CGO_ENABLED=1 GOOS=android GOARCH=arm go build -o ../../../../../bin/android_arm/gkill_server",
+    "build_android_arm64": "unset CC && mkdirp bin/android_arm64 && cd src/app/gkill/main/gkill_server; CC=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang  CGO_ENABLED=1 GOOS=android GOARCH=arm64 go build -o ../../../../../bin/android_arm64/gkill_server",
+    "copy_android_bin": "copyfiles bin/android_amr64/gkill src/android/app/src/main/assets/",
+    "build_android_apk": "mkdirp bin/android_apk && npm run copy_android_bin && cd src/android && gradlew assembleDebug && mv app/build/outputs/apk/debug/app-debug.apk ../../bin/android_apk/gkill.apk",
+    "release": "npm run build_x_compile && VERSION=$npm_package_version && 7za a -tzip -mx9 bin/windows_amd64_gkill_${VERSION}.zip bin/windows_amd64/gkill.exe && 7za a -tzip -mx9 bin/windows_amd64_gkill_server_${VERSION}.zip bin/windows_amd64/gkill_server.exe && 7za a -tzip -mx9 bin/linux_amd64_gkill_server_${VERSION}.zip bin/linux_amd64/gkill_server && 7za a -tzip -mx9 bin/linux_arm64_gkill_server_${VERSION}.zip bin/linux_arm64/gkill_server && 7za a -tzip -mx9 bin/linux_arm_gkill_server_${VERSION}.zip bin/linux_arm/gkill_server && 7za a -tzip -mx9 bin/android_arm_gkill_server_${VERSION}.zip bin/android_arm/gkill_server && 7za a -tzip -mx9 bin/android_arm64_gkill_server_${VERSION}.zip bin/android_arm64/gkill_server && cp bin/android_apk/gkill.apk bin/gkill_${VERSION}.apk",
+    "install_app": "npm run prepare_install && cd src/app/gkill/main/gkill && go install -ldflags \"-H windowsgui\"",
+    "install_server": "npm run prepare_install && npm run go_install"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
