@@ -698,6 +698,7 @@ notificationsloop:
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
 			IsDeleted:                              tag.IsDeleted,
 			TargetID:                               tag.ID,
+			TargetIDInData:                         &tag.TargetID,
 			LatestDataRepositoryName:               tag.RepName,
 			DataUpdateTime:                         tag.UpdateTime,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
@@ -708,6 +709,7 @@ notificationsloop:
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
 			IsDeleted:                              text.IsDeleted,
 			TargetID:                               text.ID,
+			TargetIDInData:                         &text.TargetID,
 			LatestDataRepositoryName:               text.RepName,
 			DataUpdateTime:                         text.UpdateTime,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
@@ -718,6 +720,7 @@ notificationsloop:
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
 			IsDeleted:                              notification.IsDeleted,
 			TargetID:                               notification.ID,
+			TargetIDInData:                         &notification.TargetID,
 			LatestDataRepositoryName:               notification.RepName,
 			DataUpdateTime:                         notification.UpdateTime,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
