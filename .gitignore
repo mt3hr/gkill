@@ -8,6 +8,8 @@ m_plus.conf
 
 **/assets/*
 
+/bin
+
 # Logs
 logs
 *.log
