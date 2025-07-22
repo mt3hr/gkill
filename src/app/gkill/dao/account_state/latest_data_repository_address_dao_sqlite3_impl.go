@@ -47,6 +47,7 @@ func NewLatestDataRepositoryAddressSQLite3Impl(userID string) (LatestDataReposit
 	sql := fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %s (
   IS_DELETED NOT NULL,
+  TARGET_ID_IN_DATA,
   TARGET_ID NOT NULL,
   LATEST_DATA_REPOSITORY_NAME NOT NULL,
   DATA_UPDATE_TIME NOT NULL,
@@ -102,6 +103,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) GetAllLatestDataRepositoryAddre
 SELECT 
   IS_DELETED,
   TARGET_ID,
+  TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
   DATA_UPDATE_TIME,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
@@ -135,6 +137,7 @@ FROM %s
 			err = rows.Scan(
 				&latestDataRepositoryAddress.IsDeleted,
 				&latestDataRepositoryAddress.TargetID,
+				&latestDataRepositoryAddress.TargetIDInData,
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
 				&dataUpdateTimeStr,
 				&latestDataRepositoryAddressUpdatedTimeStr,
@@ -169,6 +172,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddresse
 SELECT 
   IS_DELETED,
   TARGET_ID,
+  TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
   DATA_UPDATE_TIME,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
@@ -206,6 +210,7 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 			err = rows.Scan(
 				&latestDataRepositoryAddress.IsDeleted,
 				&latestDataRepositoryAddress.TargetID,
+				&latestDataRepositoryAddress.TargetIDInData,
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
 				&dataUpdateTimeStr,
 				&latestDataRepositoryAddressUpdatedTimeStr,
@@ -240,6 +245,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddress(
 SELECT 
   IS_DELETED,
   TARGET_ID,
+  TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
   DATA_UPDATE_TIME,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
@@ -277,6 +283,7 @@ WHERE TARGET_ID = ?
 			err = rows.Scan(
 				&latestDataRepositoryAddress.IsDeleted,
 				&latestDataRepositoryAddress.TargetID,
+				&latestDataRepositoryAddress.TargetIDInData,
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
 				&dataUpdateTimeStr,
 				&latestDataRepositoryAddressUpdatedTimeStr,
@@ -314,6 +321,7 @@ func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressB
 SELECT 
   IS_DELETED,
   TARGET_ID,
+  TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
   DATA_UPDATE_TIME,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
@@ -352,6 +360,7 @@ LIMIT %d
 			err = rows.Scan(
 				&latestDataRepositoryAddress.IsDeleted,
 				&latestDataRepositoryAddress.TargetID,
+				&latestDataRepositoryAddress.TargetIDInData,
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
 				&dataUpdateTimeStr,
 				&latestDataRepositoryAddressUpdatedTimeStr,
@@ -390,10 +399,12 @@ WHERE TARGET_ID = ?`, l.tableName)
 INSERT INTO %s (
   IS_DELETED,
   TARGET_ID,
+  TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
   DATA_UPDATE_TIME,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -431,6 +442,7 @@ INSERT INTO %s (
 	insertQueryArgs := []interface{}{
 		latestDataRepositoryAddress.IsDeleted,
 		latestDataRepositoryAddress.TargetID,
+		latestDataRepositoryAddress.TargetIDInData,
 		latestDataRepositoryAddress.LatestDataRepositoryName,
 		latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
 		latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime.Format(sqlite3impl.TimeLayout),
@@ -455,10 +467,12 @@ WHERE TARGET_ID = ?`, l.tableName)
 INSERT INTO %s (
   IS_DELETED,
   TARGET_ID,
+  TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
   DATA_UPDATE_TIME,
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -515,6 +529,7 @@ INSERT INTO %s (
 			insertQueryArgs := []interface{}{
 				latestDataRepositoryAddress.IsDeleted,
 				latestDataRepositoryAddress.TargetID,
+				latestDataRepositoryAddress.TargetIDInData,
 				latestDataRepositoryAddress.LatestDataRepositoryName,
 				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
 				latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime.Format(sqlite3impl.TimeLayout),
