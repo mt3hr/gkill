@@ -2771,7 +2771,7 @@ export class GkillAPI {
                         if (res.updated_ids.length > gkill_info_res.cache_clear_count_limit) {
                                 await delete_gkill_kyou_cache(null)
                         } else {
-                                for (let i = 1; i < res.updated_ids.length; i++) {
+                                for (let i = 0; i < res.updated_ids.length; i++) {
                                         await delete_gkill_kyou_cache(res.updated_ids[i])
                                 }
                         }

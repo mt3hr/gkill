@@ -11956,7 +11956,7 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 		return
 	}
 
-	limit := 1000001 // 1000はは超え画面側でキャッシュ全件強制正新
+	limit := gkill_options.CacheClearCountLimit + 1
 	updatedInfos, err := repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(r.Context(), request.LastUpdatedTime, limit)
 	if err != nil {
 		err = fmt.Errorf("error at get latest data repositories data user id = %s device = %s: %w", userID, device, err)

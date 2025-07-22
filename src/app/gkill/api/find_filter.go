@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -1627,14 +1628,17 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 			continue
 		}
 
+		isMiData := !strings.HasPrefix(currentKyou[0].DataType, "mi")
+		isUsePlaing := findCtx.ParsedFindQuery.UsePlaing != nil && *(findCtx.ParsedFindQuery.UsePlaing) && findCtx.ParsedFindQuery.PlaingTime != nil
+
 		// すでに最新が入っていそうだったらそのままいれる RepNameは運用都合でチェックしない
-		if currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) {
+		// Miはステータスを持つので例外
+		if currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) && isMiData {
 			latestKyousMap[id] = currentKyou
 			continue
 		}
 
 		// Plaingで最新が入っていなかったら消す
-		isUsePlaing := findCtx.ParsedFindQuery.UsePlaing != nil && *(findCtx.ParsedFindQuery.UsePlaing) && findCtx.ParsedFindQuery.PlaingTime != nil
 		if isUsePlaing {
 			continue
 		}
@@ -1650,7 +1654,6 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		if kyouHistories[0].IsDeleted {
 			continue
 		}
-		
 
 		if startTime != nil && kyouHistories[0].RelatedTime.Before(*startTime) {
 			continue
