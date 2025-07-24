@@ -158,6 +158,9 @@ function generate_query(query_id?: string): FindKyouQuery {
 
     find_query.is_focus_kyou_in_list_view = props.find_kyou_query ? props.find_kyou_query.is_focus_kyou_in_list_view : false
     find_query.is_image_only = props.find_kyou_query ? props.find_kyou_query.is_image_only : false
+    find_query.include_create_mi = true
+    find_query.include_check_mi = true
+    find_query.include_start_mi = true
 
     if (keyword_query.value) {
         find_query.use_words = keyword_query.value.get_use_words()
