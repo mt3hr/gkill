@@ -71,7 +71,26 @@ loop:
 					if _, exist := matchKyous[kyou.ID]; !exist {
 						matchKyous[kyou.ID] = []*Kyou{}
 					}
-					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
+					existStartTimeIs := false
+					existEndTimeIs := false
+					for i, existKyou := range matchKyous[kyou.ID] {
+						if existKyou.DataType == "timeis_start" && kyou.DataType == "timeis_start" {
+							existStartTimeIs = true
+							if existKyou.UpdateTime.Before(kyou.UpdateTime) {
+								matchKyous[kyou.ID][i] = kyou
+							}
+						} else if existKyou.DataType == "timeis_end" && kyou.DataType == "timeis_end" {
+							existEndTimeIs = true
+							if existKyou.UpdateTime.Before(kyou.UpdateTime) {
+								matchKyous[kyou.ID][i] = kyou
+							}
+						}
+					}
+					if !existStartTimeIs && kyou.DataType == "timeis_start" {
+						matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
+					} else if !existEndTimeIs && kyou.DataType == "timeis_end" {
+						matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
+					}
 				}
 			}
 		default:
