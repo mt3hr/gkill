@@ -352,7 +352,7 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 			}
 		}
 	} else {
-		typeMatchReps = repositories.Reps
+		typeMatchReps = append(typeMatchReps, repositories.Reps...)
 	}
 
 	targetRepNames := []string{}
@@ -360,19 +360,51 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 		targetRepNames = *findCtx.ParsedFindQuery.Reps
 	}
 
+	miReps := reps.MiRepositories{}
+	timeisReps := reps.TimeIsRepositories{}
+
 	for _, rep := range typeMatchReps {
 		repName, err := rep.GetRepName(ctx)
 		if err != nil {
 			return nil, err
 		}
 
+	rep_search:
 		for _, targetRepName := range targetRepNames {
 			if targetRepName == repName {
+				for _, miRep := range repositories.MiReps {
+					miRepName, err := miRep.GetRepName(ctx)
+					if err != nil {
+						return nil, err
+					}
+					if miRepName == repName {
+						miReps = append(miReps, miRep)
+						continue rep_search
+					}
+				}
+
+				for _, timeisRep := range repositories.TimeIsReps {
+					timeisRepName, err := timeisRep.GetRepName(ctx)
+					if err != nil {
+						return nil, err
+					}
+					if timeisRepName == repName {
+						timeisReps = append(timeisReps, timeisRep)
+						continue rep_search
+					}
+				}
+
 				if _, exist := findCtx.MatchReps[repName]; !exist {
 					findCtx.MatchReps[repName] = rep
 				}
 			}
 		}
+	}
+	if len(miReps) != 0 {
+		findCtx.MatchReps["Mi"] = miReps
+	}
+	if len(timeisReps) != 0 {
+		findCtx.MatchReps["TimeIs"] = timeisReps
 	}
 	return nil, nil
 }
@@ -1619,8 +1651,8 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKyouContext, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
 	latestKyousMap := map[string][]*reps.Kyou{}
 
-	startTime := findCtx.ParsedFindQuery.CalendarStartDate
-	endTime := findCtx.ParsedFindQuery.CalendarEndDate
+	// startTime := findCtx.ParsedFindQuery.CalendarStartDate
+	// endTime := findCtx.ParsedFindQuery.CalendarEndDate
 
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
 		latestData, exist := latestDatas[id]
@@ -1628,40 +1660,17 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 			continue
 		}
 
-		isMiData := !strings.HasPrefix(currentKyou[0].DataType, "mi")
+		isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi")
+		isTimeIsData := strings.HasPrefix(currentKyou[0].DataType, "timeis")
 		isUsePlaing := findCtx.ParsedFindQuery.UsePlaing != nil && *(findCtx.ParsedFindQuery.UsePlaing) && findCtx.ParsedFindQuery.PlaingTime != nil
 
 		// すでに最新が入っていそうだったらそのままいれる RepNameは運用都合でチェックしない
 		// Miもそのままいれる
-		if currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) || isMiData {
+		if ((currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) || isMiData || isTimeIsData) && !isUsePlaing) ||
+			(currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) && isUsePlaing) {
 			latestKyousMap[id] = currentKyou
 			continue
 		}
-
-		// Plaingで最新が入っていなかったら消す
-		if isUsePlaing {
-			continue
-		}
-
-		// 最新が入っていなかったらもらってくる。
-		kyouHistories, err := findCtx.Repositories.Reps.GetKyouHistories(ctx, latestData.TargetID)
-		if err != nil {
-			err = fmt.Errorf("error at get kyou histories: %w", err)
-			return nil, err
-		}
-
-		// 削除されていればスキップ
-		if kyouHistories[0].IsDeleted {
-			continue
-		}
-
-		if startTime != nil && kyouHistories[0].RelatedTime.Before(*startTime) {
-			continue
-		}
-		if endTime != nil && kyouHistories[0].RelatedTime.After(*endTime) {
-			continue
-		}
-		latestKyousMap[id] = kyouHistories
 	}
 
 	// miの場合は最新以外消す
