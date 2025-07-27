@@ -489,15 +489,13 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext, l
 
 	// タグの対象をリスト
 	for _, tag := range findCtx.AllTags {
-		/*
-			latestData, exist := latestDatas[tag.ID]
-			if !exist {
-				continue
-			}
-			if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(tag.UpdateTime) {
-				continue
-			}
-		*/
+		latestData, exist := latestDatas[tag.ID]
+		if !exist {
+			continue
+		}
+		if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
+			continue
+		}
 		if tag.IsDeleted {
 			continue
 		}
@@ -531,7 +529,7 @@ func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *F
 			if !exist {
 				continue
 			}
-			if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(hideTag.UpdateTime) {
+			if !latestData.DataUpdateTime.Equal(hideTag.UpdateTime) {
 				continue
 			}
 			if hideTag.IsDeleted {
@@ -597,15 +595,13 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 			return nil, err
 		}
 		for _, tag := range matchTags {
-			/*
-				latestData, exist := latestDatas[tag.ID]
-				if !exist {
-					continue
-				}
-				if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(tag.UpdateTime) {
-					continue
-				}
-			*/
+			latestData, exist := latestDatas[tag.ID]
+			if !exist {
+				continue
+			}
+			if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
+				continue
+			}
 			if tag.IsDeleted {
 				continue
 			}
@@ -631,15 +627,13 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext, lat
 		return nil, err
 	}
 	for _, tag := range matchTags {
-		/*
-			latestData, exist := latestDatas[tag.ID]
-			if !exist {
-				continue
-			}
-			if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(tag.UpdateTime) {
-				continue
-			}
-		*/
+		latestData, exist := latestDatas[tag.ID]
+		if !exist {
+			continue
+		}
+		if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
+			continue
+		}
 		if tag.IsDeleted {
 			continue
 		}
@@ -1228,15 +1222,13 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext, l
 		matchtimeissInRep := <-timeIssCh
 		for _, timeis := range matchtimeissInRep {
 			if existtimeis, exist := findCtx.MatchTimeIssAtFindTimeIs[timeis.ID]; exist {
-				/*
-					latestData, exist := latestDatas[timeis.ID]
-					if !exist {
-						continue
-					}
-					if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(timeis.UpdateTime) {
-						continue
-					}
-				*/
+				latestData, exist := latestDatas[timeis.ID]
+				if !exist {
+					continue
+				}
+				if !latestData.DataUpdateTime.Equal(timeis.UpdateTime) {
+					continue
+				}
 				if timeis.UpdateTime.After(existtimeis.UpdateTime) {
 					findCtx.MatchTimeIssAtFindTimeIs[timeis.ID] = timeis
 				}
@@ -1578,15 +1570,13 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext, la
 	for range lenOfTextReps {
 		matchTexts := <-textsCh
 		for _, text := range matchTexts {
-			/*
-				latestData, exist := latestDatas[text.ID]
-				if !exist {
-					continue
-				}
-				if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(text.UpdateTime) {
-					continue
-				}
-			*/
+			latestData, exist := latestDatas[text.ID]
+			if !exist {
+				continue
+			}
+			if !latestData.DataUpdateTime.Equal(text.UpdateTime) {
+				continue
+			}
 			if existText, exist := findCtx.MatchTexts[text.ID]; exist {
 				if text.UpdateTime.After(existText.UpdateTime) {
 					findCtx.MatchTexts[text.ID] = text
@@ -1687,15 +1677,13 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	for range lenOfTextReps {
 		matchTexts := <-textsCh
 		for _, text := range matchTexts {
-			/*
-				latestData, exist := latestDatas[text.ID]
-				if !exist {
-					continue
-				}
-				if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(text.UpdateTime) {
-					continue
-				}
-			*/
+			latestData, exist := latestDatas[text.ID]
+			if !exist {
+				continue
+			}
+			if !latestData.DataUpdateTime.Equal(text.UpdateTime) {
+				continue
+			}
 			if existText, exist := findCtx.MatchTimeIsTexts[text.ID]; exist {
 				if text.UpdateTime.After(existText.UpdateTime) {
 					findCtx.MatchTimeIsTexts[text.ID] = text
@@ -1729,6 +1717,8 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		if ((currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) || isMiData || isTimeIsData) && !isUsePlaing) ||
 			(currentKyou[0].UpdateTime.Equal(latestData.DataUpdateTime) && isUsePlaing) {
 			latestKyousMap[id] = currentKyou
+			continue
+		} else if isUsePlaing {
 			continue
 		}
 
