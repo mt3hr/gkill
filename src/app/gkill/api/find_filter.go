@@ -77,25 +77,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 	// キャッシュ更新終わったら、
 	// 最新のKyouがどのRepにあるかを取得
-	latestDatasWg := &sync.WaitGroup{}
-	latestDatasCh := make(chan map[string]*account_state.LatestDataRepositoryAddress, 1)
-	errCh := make(chan error, 1)
-	defer close(latestDatasCh)
-	defer close(errCh)
-	latestDatasWg.Add(1)
-	go func() {
-		defer latestDatasWg.Done()
-		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
-		select {
-		case <-ctx.Done():
-		default:
-			errCh <- err
-			latestDatasCh <- latestDatas
-		}
-	}()
+	latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
+		return nil, nil, err
+	}
 
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
-		gkillErr, err = f.getAllTags(ctx, findKyouContext)
+		gkillErr, err = f.getAllTags(ctx, findKyouContext, latestDatas)
 		if err != nil {
 			err = fmt.Errorf("error at get all tags: %w", err)
 			return nil, gkillErr, err
@@ -104,7 +93,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
-		gkillErr, err = f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device)
+		gkillErr, err = f.getAllHideTagsWhenUnChecked(ctx, findKyouContext, userID, device, latestDatas)
 		if err != nil {
 			err = fmt.Errorf("error at get hide tags when unchecked tags: %w", err)
 			return nil, gkillErr, err
@@ -113,7 +102,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
-		gkillErr, err = f.findTags(ctx, findKyouContext)
+		gkillErr, err = f.findTags(ctx, findKyouContext, latestDatas)
 		if err != nil {
 			err = fmt.Errorf("error at find tags: %w", err)
 			return nil, gkillErr, err
@@ -121,21 +110,21 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		gkill_log.Trace.Printf("finish findTags")
 		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}
-	gkillErr, err = f.findTexts(ctx, findKyouContext)
+	gkillErr, err = f.findTexts(ctx, findKyouContext, latestDatas)
 	if err != nil {
 		err = fmt.Errorf("error at find texts: %w", err)
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish findTexts")
 	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
-	gkillErr, err = f.findTimeIsTexts(ctx, findKyouContext)
+	gkillErr, err = f.findTimeIsTexts(ctx, findKyouContext, latestDatas)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis texts: %w", err)
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish findTimeIsTexts")
 	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
-	gkillErr, err = f.findTimeIs(ctx, findKyouContext)
+	gkillErr, err = f.findTimeIs(ctx, findKyouContext, latestDatas)
 	if err != nil {
 		err = fmt.Errorf("error at find timeis: %w", err)
 		return nil, gkillErr, err
@@ -143,7 +132,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
 		gkill_log.Trace.Printf("finish findTimeIs")
 		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
-		gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
+		gkillErr, err = f.findTimeIsTags(ctx, findKyouContext, latestDatas)
 		if err != nil {
 			err = fmt.Errorf("error at find timeis tags: %w", err)
 			return nil, gkillErr, err
@@ -234,13 +223,8 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 	gkill_log.Trace.Printf("finish waitLatestDataWg")
 	gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
-	latestDatasWg.Wait()
-	err = <-errCh
-	if err != nil {
-		return nil, nil, err
-	}
 
-	gkillErr, err = f.replaceLatestKyouInfos(ctx, findKyouContext, <-latestDatasCh)
+	gkillErr, err = f.replaceLatestKyouInfos(ctx, findKyouContext, latestDatas)
 	if err != nil {
 		err = fmt.Errorf("error at replace latest kyou infos: %w", err)
 		return nil, gkillErr, err
@@ -447,7 +431,7 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 	return nil, nil
 }
 
-func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
 	var err error
 
 	lenOfTagReps := len(findCtx.Repositories.TagReps)
@@ -505,6 +489,15 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 
 	// タグの対象をリスト
 	for _, tag := range findCtx.AllTags {
+		/*
+			latestData, exist := latestDatas[tag.ID]
+			if !exist {
+				continue
+			}
+			if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(tag.UpdateTime) {
+				continue
+			}
+		*/
 		if tag.IsDeleted {
 			continue
 		}
@@ -514,7 +507,7 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 	return nil, nil
 }
 
-func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *FindKyouContext, userID string, device string) ([]*message.GkillError, error) {
+func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *FindKyouContext, userID string, device string, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
 	tagStructs, err := findCtx.GkillDAOManager.ConfigDAOs.TagStructDAO.GetTagStructs(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get tag tag structs: %w", err)
@@ -534,6 +527,13 @@ func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *F
 			return nil, err
 		}
 		for _, hideTag := range hideTagsInReps {
+			latestData, exist := latestDatas[hideTag.ID]
+			if !exist {
+				continue
+			}
+			if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(hideTag.UpdateTime) {
+				continue
+			}
 			if hideTag.IsDeleted {
 				continue
 			}
@@ -581,7 +581,7 @@ func (f *FindFilter) getMatchHideTagsWhenUnckedTimeIs(ctx context.Context, findC
 	return nil, nil
 }
 
-func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContext, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
 	// タグを使わない場合は全タグを使う
 	if findCtx.ParsedFindQuery.UseTimeIsTags == nil || !(*findCtx.ParsedFindQuery.UseTimeIsTags) {
 		for _, tag := range findCtx.AllTags {
@@ -597,6 +597,15 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 			return nil, err
 		}
 		for _, tag := range matchTags {
+			/*
+				latestData, exist := latestDatas[tag.ID]
+				if !exist {
+					continue
+				}
+				if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(tag.UpdateTime) {
+					continue
+				}
+			*/
 			if tag.IsDeleted {
 				continue
 			}
@@ -606,7 +615,7 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 	return nil, nil
 }
 
-func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
 	trueValue := true
 	falseValue := false
 
@@ -622,6 +631,15 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext) ([]
 		return nil, err
 	}
 	for _, tag := range matchTags {
+		/*
+			latestData, exist := latestDatas[tag.ID]
+			if !exist {
+				continue
+			}
+			if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(tag.UpdateTime) {
+				continue
+			}
+		*/
 		if tag.IsDeleted {
 			continue
 		}
@@ -706,6 +724,12 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 
 		trimedKyousMap := map[int64]*reps.Kyou{}
 		for _, kyou := range kyous {
+			if findCtx.ParsedFindQuery.UseCalendar != nil && *findCtx.ParsedFindQuery.UseCalendar {
+				if (findCtx.ParsedFindQuery.CalendarStartDate != nil && kyou.RelatedTime.Before(*findCtx.ParsedFindQuery.CalendarStartDate)) ||
+					(findCtx.ParsedFindQuery.CalendarEndDate != nil && kyou.RelatedTime.After(*findCtx.ParsedFindQuery.CalendarEndDate)) {
+					continue
+				}
+			}
 			trimedKyousMap[kyou.RelatedTime.Unix()] = kyou
 		}
 
@@ -1126,7 +1150,7 @@ func (f *FindFilter) filterPlaingTimeIsKyous(ctx context.Context, findCtx *FindK
 	return nil, nil
 }
 
-func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
 	var err error
 	if findCtx.ParsedFindQuery.UseTimeIs == nil || !*findCtx.ParsedFindQuery.UseTimeIs {
 		return nil, nil
@@ -1204,6 +1228,15 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 		matchtimeissInRep := <-timeIssCh
 		for _, timeis := range matchtimeissInRep {
 			if existtimeis, exist := findCtx.MatchTimeIssAtFindTimeIs[timeis.ID]; exist {
+				/*
+					latestData, exist := latestDatas[timeis.ID]
+					if !exist {
+						continue
+					}
+					if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(timeis.UpdateTime) {
+						continue
+					}
+				*/
 				if timeis.UpdateTime.After(existtimeis.UpdateTime) {
 					findCtx.MatchTimeIssAtFindTimeIs[timeis.ID] = timeis
 				}
@@ -1379,7 +1412,16 @@ func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext
 	if findCtx.ParsedFindQuery.ForMi == nil || findCtx.ParsedFindQuery.MiSortType == nil || !*findCtx.ParsedFindQuery.ForMi {
 		// kyouとしてソート
 		sort.Slice(findCtx.ResultKyous, func(i, j int) bool {
-			return findCtx.ResultKyous[i].RelatedTime.After(findCtx.ResultKyous[j].RelatedTime)
+			iUnix := findCtx.ResultKyous[i].RelatedTime.Unix()
+			jUnix := findCtx.ResultKyous[j].RelatedTime.Unix()
+			if iUnix > jUnix {
+				return true
+			} else if iUnix < jUnix {
+				return false
+			} else if findCtx.ResultKyous[i].ID < findCtx.ResultKyous[j].ID {
+				return true
+			}
+			return false
 		})
 		return nil, nil
 	}
@@ -1467,7 +1509,7 @@ func (f *FindFilter) sortResultKyous(_ context.Context, findCtx *FindKyouContext
 	return nil, nil
 }
 
-func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
 	var err error
 
 	lenOfTextReps := 0
@@ -1536,6 +1578,15 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext) ([
 	for range lenOfTextReps {
 		matchTexts := <-textsCh
 		for _, text := range matchTexts {
+			/*
+				latestData, exist := latestDatas[text.ID]
+				if !exist {
+					continue
+				}
+				if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(text.UpdateTime) {
+					continue
+				}
+			*/
 			if existText, exist := findCtx.MatchTexts[text.ID]; exist {
 				if text.UpdateTime.After(existText.UpdateTime) {
 					findCtx.MatchTexts[text.ID] = text
@@ -1564,7 +1615,7 @@ func (f *FindFilter) filterImageKyous(ctx context.Context, findCtx *FindKyouCont
 	return nil, nil
 }
 
-func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
+func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouContext, latestDatas map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
 	var err error
 	if findCtx.ParsedFindQuery.UseTimeIs == nil || !*findCtx.ParsedFindQuery.UseTimeIs {
 		return nil, nil
@@ -1636,6 +1687,15 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	for range lenOfTextReps {
 		matchTexts := <-textsCh
 		for _, text := range matchTexts {
+			/*
+				latestData, exist := latestDatas[text.ID]
+				if !exist {
+					continue
+				}
+				if !latestData.LatestDataRepositoryAddressUpdatedTime.Equal(text.UpdateTime) {
+					continue
+				}
+			*/
 			if existText, exist := findCtx.MatchTimeIsTexts[text.ID]; exist {
 				if text.UpdateTime.After(existText.UpdateTime) {
 					findCtx.MatchTimeIsTexts[text.ID] = text
@@ -1671,6 +1731,13 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 			latestKyousMap[id] = currentKyou
 			continue
 		}
+
+		// はい入ってなかったら最新のKyouを取得する
+		latestKyou, err := findCtx.Repositories.Reps.GetKyou(ctx, latestData.TargetID, &latestData.DataUpdateTime)
+		if err != nil {
+			return nil, fmt.Errorf("error at get latest kyou: %w", err)
+		}
+		latestKyousMap[id] = []*reps.Kyou{latestKyou}
 	}
 
 	// miの場合は最新以外消す
