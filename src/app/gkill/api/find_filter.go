@@ -1270,17 +1270,17 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 
 	// 日付のnil解決 もしくは全部の日付
 	isAllDays := false
-	if startTime != nil && endTime == nil {
+	if (startTime != nil && endTime == nil) && findCtx.ParsedFindQuery.UseCalendar != nil && *findCtx.ParsedFindQuery.UseCalendar {
 		s := time.Time(*startTime)
 		e := time.Time(*startTime).Add(time.Hour*23 + time.Minute*59 + time.Second*59)
 		startTime = &s
 		endTime = &e
-	} else if startTime != nil && endTime != nil {
+	} else if (startTime != nil && endTime != nil) && findCtx.ParsedFindQuery.UseCalendar != nil && *findCtx.ParsedFindQuery.UseCalendar {
 		s := time.Time(*startTime)
 		e := time.Time(*endTime).Add(time.Hour*23 + time.Minute*59 + time.Second*59)
 		startTime = &s
 		endTime = &e
-	} else if startTime == nil && endTime == nil {
+	} else if (startTime == nil && endTime == nil) || (findCtx.ParsedFindQuery.UseCalendar == nil || !*findCtx.ParsedFindQuery.UseCalendar) {
 		isAllDays = true
 	}
 	// GPSLogを取得する
