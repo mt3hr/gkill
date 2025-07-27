@@ -186,9 +186,9 @@ WHERE
 	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
 	appendOrderBy := true
-	appendGroupBy := true
+
 	findWordUseLike := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -462,9 +462,9 @@ WHERE
 	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
 	appendOrderBy := false
-	appendGroupBy := false
+
 	findWordUseLike := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		err = fmt.Errorf("error at generate find sql common: %w", err)
 		return nil, err
@@ -620,9 +620,9 @@ WHERE
 	findWordTargetColumns := []string{"ID"}
 	ignoreFindWord := false
 	appendOrderBy := true
-	appendGroupBy := true
+
 	findWordUseLike := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return "", err
 	}
@@ -788,9 +788,9 @@ WHERE
 	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
 	appendOrderBy := true
-	appendGroupBy := true
+
 	findWordUseLike := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
 
 	if err != nil {
 		return nil, err
@@ -1029,9 +1029,9 @@ WHERE
 	findWordTargetColumns := []string{"ID"}
 	ignoreFindWord := false
 	appendOrderBy := false
-	appendGroupBy := false
+
 	findWordUseLike := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendGroupBy, appendOrderBy, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
