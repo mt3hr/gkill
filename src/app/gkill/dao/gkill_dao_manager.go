@@ -205,7 +205,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		return nil, err
 	}
 
-	ctx := context.TODO()
+	ctx := context.Background()
 	var err error
 
 	// nilだったら初期化する
@@ -765,7 +765,20 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				}
 			}
 		}
-		repositories.UpdateCache(ctx)
+
+		// キャッシュしたTagRep
+		cachedTagRep, err := reps.NewTagRepositoryCachedSQLite3Impl(ctx, repositories.TagReps, memory_db.MemoryDB, userID+"_TAG")
+		if err != nil {
+			err = fmt.Errorf("error at new cached tag rep: %w", err)
+			return nil, err
+		}
+		repositories.TagReps = []reps.TagRepository{cachedTagRep}
+
+		err = repositories.UpdateCache(ctx)
+		if err != nil {
+			err = fmt.Errorf("error at update cache in get repositories: %w", err)
+			return nil, err
+		}
 		g.gkillRepositories[userID][device] = repositories
 		repositories = repositoriesInUser[device]
 

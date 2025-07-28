@@ -415,10 +415,19 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	allNotifications := []*Notification{}
 
 	// UpdateCache並列処理
-	for _, rep := range g.Reps {
+	updateCacheTargets := []interface {
+		UpdateCache(ctx context.Context) error
+	}{}
+	updateCacheTargets = append(updateCacheTargets, g.Reps)
+	updateCacheTargets = append(updateCacheTargets, g.TagReps)
+	updateCacheTargets = append(updateCacheTargets, g.TextReps)
+	updateCacheTargets = append(updateCacheTargets, g.NotificationReps)
+	for _, rep := range updateCacheTargets {
 		wg.Add(1)
 		done := threads.AllocateThread()
-		go func(rep Repository) {
+		go func(rep interface {
+			UpdateCache(ctx context.Context) error
+		}) {
 			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
