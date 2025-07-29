@@ -3,9 +3,9 @@ package reps
 import (
 	"context"
 	"database/sql"
+	sqllib "database/sql"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -16,22 +16,17 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
-type kcRepositorySQLite3Impl struct {
-	filename string
-	db       *sql.DB
+type kcRepositoryCachedSQLite3Impl struct {
+	dbName   string
+	kcRep    KCRepository
+	cachedDB *sqllib.DB
 	m        *sync.Mutex
 }
 
-func NewKCRepositorySQLite3Impl(ctx context.Context, filename string) (KCRepository, error) {
+func NewKCRepositoryCachedSQLite3Impl(ctx context.Context, kcRep KCRepository, cacheDB *sql.DB, dbName string) (KCRepository, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
-	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
-		return nil, err
-	}
-
 	sql := `
-CREATE TABLE IF NOT EXISTS "kc" (
+CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TITLE NOT NULL,
@@ -44,12 +39,13 @@ CREATE TABLE IF NOT EXISTS "kc" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL 
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL 
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := db.PrepareContext(ctx, sql)
+	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create kc table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create kc table statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -57,15 +53,22 @@ CREATE TABLE IF NOT EXISTS "kc" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create kc table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create kc table to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_kc ON kc (ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create kc index statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create kc table to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, RELATED_TIME, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create kc index statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer indexStmt.Close()
@@ -73,26 +76,19 @@ CREATE TABLE IF NOT EXISTS "kc" (
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create kc index to %s: %w", filename, err)
+		err = fmt.Errorf("error at create kc index to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create kc table to %s: %w", filename, err)
-		return nil, err
-	}
-
-	return &kcRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
+	return &kcRepositoryCachedSQLite3Impl{
+		dbName:   dbName,
+		kcRep:    kcRep,
+		cachedDB: cacheDB,
 		m:        &sync.Mutex{},
 	}, nil
 }
 
-func (k *kcRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (k *kcRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -117,21 +113,14 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM ` + k.dbName + `
 WHERE
 `
 
-	repName, err := k.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at kc: %w", err)
-		return nil, err
-	}
-
 	dataType := "kc"
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -150,7 +139,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := k.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -172,7 +161,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(&kyou.IsDeleted,
@@ -219,7 +207,7 @@ WHERE
 	return kyous, nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+func (k *kcRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := k.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -245,13 +233,7 @@ func (k *kcRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 	return kyouHistories[0], nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	repName, err := k.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at kc: %w", err)
-		return nil, err
-	}
-
+func (k *kcRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	sql := `
 SELECT 
   IS_DELETED,
@@ -265,9 +247,9 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM ` + k.dbName + `
 WHERE 
 `
 	dataType := "kc"
@@ -279,7 +261,6 @@ WHERE
 		IDs:    &ids,
 	}
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -300,7 +281,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := k.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -322,7 +303,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(&kyou.IsDeleted,
@@ -365,31 +345,133 @@ WHERE
 	return kyous, nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return filepath.Abs(k.filename)
+func (k *kcRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return k.kcRep.GetPath(ctx, id)
 }
 
-func (k *kcRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	k.m.Lock()
+	defer k.m.Unlock()
+
+	trueValue := true
+	query := &find.FindQuery{
+		UpdateCache: &trueValue,
+	}
+
+	allKCs, err := k.kcRep.FindKC(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at get all kc at update cache: %w", err)
+		return err
+	}
+
+	tx, err := k.cachedDB.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin transaction for add kc: %w", err)
+		return err
+	}
+
+	sql := `DELETE FROM ` + k.dbName
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at create KC table statement %s: %w", "memory", err)
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at delete KC table: %w", err)
+		return err
+	}
+
+	sql = `
+INSERT INTO ` + k.dbName + ` (
+  IS_DELETED,
+  ID,
+  TITLE,
+  NUM_VALUE,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	for _, kc := range allKCs {
+		err = func() error {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			insertStmt, err := tx.PrepareContext(ctx, sql)
+			if err != nil {
+				err = fmt.Errorf("error at add kc sql: %w", err)
+				return err
+			}
+			defer insertStmt.Close()
+
+			queryArgs := []interface{}{
+				kc.IsDeleted,
+				kc.ID,
+				kc.Title,
+				kc.NumValue.String(),
+				kc.RelatedTime.Format(sqlite3impl.TimeLayout),
+				kc.CreateTime.Format(sqlite3impl.TimeLayout),
+				kc.CreateApp,
+				kc.CreateDevice,
+				kc.CreateUser,
+				kc.UpdateTime.Format(sqlite3impl.TimeLayout),
+				kc.UpdateApp,
+				kc.UpdateDevice,
+				kc.UpdateUser,
+				kc.RepName,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at insert in to kc %s: %w", kc.ID, err)
+				return err
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at commit transaction for add kmemo: %w", err)
+		return err
+	}
+
 	return nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := k.GetPath(ctx, "")
-	if err != nil {
-		err = fmt.Errorf("error at get path kc rep: %w", err)
-		return "", err
-	}
-	base := filepath.Base(path)
-	ext := filepath.Ext(base)
-	withoutExt := base[:len(base)-len(ext)]
-	return withoutExt, nil
+func (k *kcRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	return k.kcRep.GetRepName(ctx)
 }
 
-func (k *kcRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return k.db.Close()
+func (k *kcRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	_, err := k.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+k.dbName)
+	return err
 }
 
-func (k *kcRepositorySQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
+func (k *kcRepositoryCachedSQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -418,21 +500,14 @@ SELECT
   UPDATE_USER,
   TITLE,
   NUM_VALUE,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM ` + k.dbName + `
 WHERE
 `
-
-	repName, err := k.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at kc: %w", err)
-		return nil, err
-	}
 	dataType := "kc"
 
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -452,7 +527,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := k.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -474,7 +549,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kc := &KC{}
-			kc.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			numValueStr := ""
 
@@ -522,7 +596,7 @@ WHERE
 	return kcs, nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetKC(ctx context.Context, id string, updateTime *time.Time) (*KC, error) {
+func (k *kcRepositoryCachedSQLite3Impl) GetKC(ctx context.Context, id string, updateTime *time.Time) (*KC, error) {
 	// 最新のデータを返す
 	kcHistories, err := k.GetKCHistories(ctx, id)
 	if err != nil {
@@ -548,13 +622,7 @@ func (k *kcRepositorySQLite3Impl) GetKC(ctx context.Context, id string, updateTi
 	return kcHistories[0], nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
-	repName, err := k.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at kc: %w", err)
-		return nil, err
-	}
-
+func (k *kcRepositoryCachedSQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
 	sql := `
 SELECT 
   IS_DELETED,
@@ -570,9 +638,9 @@ SELECT
   UPDATE_USER,
   TITLE,
   NUM_VALUE,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM ` + k.dbName + `
 WHERE 
 `
 	trueValue := true
@@ -584,7 +652,6 @@ WHERE
 	dataType := "kc"
 
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -605,7 +672,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := k.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kc histories sql %s: %w", id, err)
 		return nil, err
@@ -627,7 +694,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kc := &KC{}
-			kc.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			numValueStr := ""
 
@@ -675,9 +741,9 @@ WHERE
 	return kcs, nil
 }
 
-func (k *kcRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc *KC) error {
+func (k *kcRepositoryCachedSQLite3Impl) AddKCInfo(ctx context.Context, kc *KC) error {
 	sql := `
-INSERT INTO kc (
+INSERT INTO ` + k.dbName + ` (
   IS_DELETED,
   ID,
   TITLE,
@@ -690,8 +756,10 @@ INSERT INTO kc (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -707,7 +775,7 @@ INSERT INTO kc (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := k.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add kc sql %s: %w", kc.ID, err)
 		return err
@@ -728,6 +796,7 @@ INSERT INTO kc (
 		kc.UpdateApp,
 		kc.UpdateDevice,
 		kc.UpdateUser,
+		kc.RepName,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
