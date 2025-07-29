@@ -3417,7 +3417,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 
 		// キャッシュに書き込み
 		if len(repositories.TagReps) == 1 && gkill_options.CacheTagReps {
-			err = repositories.TagReps.AddTagInfo(r.Context(), request.Tag)
+			err = repositories.TagReps[0].AddTagInfo(r.Context(), request.Tag)
 			if err != nil {
 				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
 				gkill_log.Debug.Println(err.Error())
@@ -13176,7 +13176,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		// キャッシュに書き込み
 		if len(repositories.TagReps) == 1 && gkill_options.CacheTagReps {
-			err = repositories.TagReps.AddTagInfo(r.Context(), tag)
+			err = repositories.TagReps[0].AddTagInfo(r.Context(), tag)
 			if err != nil {
 				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
 				gkill_log.Debug.Println(err.Error())
