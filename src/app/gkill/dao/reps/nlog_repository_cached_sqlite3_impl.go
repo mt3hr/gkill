@@ -3,10 +3,10 @@ package reps
 import (
 	"context"
 	"database/sql"
+	sqllib "database/sql"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
-	"strings"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,26 +16,22 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
-type kcRepositorySQLite3Impl struct {
-	filename string
-	db       *sql.DB
+type nlogRepositoryCachedSQLite3Impl struct {
+	dbName   string
+	nlogRep  NlogRepository
+	cachedDB *sqllib.DB
 	m        *sync.Mutex
 }
 
-func NewKCRepositorySQLite3Impl(ctx context.Context, filename string) (KCRepository, error) {
+func NewNlogRepositoryCachedSQLite3Impl(ctx context.Context, nlogRep NlogRepository, cacheDB *sql.DB, dbName string) (NlogRepository, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
-	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
-		return nil, err
-	}
-
 	sql := `
-CREATE TABLE IF NOT EXISTS "kc" (
+CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
+  SHOP NOT NULL,
   TITLE NOT NULL,
-  NUM_VALUE NOT NULL,
+  AMOUNT NOT NULL,
   RELATED_TIME NOT NULL,
   CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
@@ -47,9 +43,9 @@ CREATE TABLE IF NOT EXISTS "kc" (
   UPDATE_USER NOT NULL 
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := db.PrepareContext(ctx, sql)
+	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create kc table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create NLOG table statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -57,15 +53,22 @@ CREATE TABLE IF NOT EXISTS "kc" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create kc table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create NLOG table to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_kc ON kc (ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create kc index statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create NLOG table to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, RELATED_TIME, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create NLOG index statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer indexStmt.Close()
@@ -73,35 +76,28 @@ CREATE TABLE IF NOT EXISTS "kc" (
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create kc index to %s: %w", filename, err)
+		err = fmt.Errorf("error at create NLOG index to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create kc table to %s: %w", filename, err)
-		return nil, err
-	}
-
-	return &kcRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
+	return &nlogRepositoryCachedSQLite3Impl{
+		dbName:   dbName,
+		nlogRep:  nlogRep,
+		cachedDB: cacheDB,
 		m:        &sync.Mutex{},
 	}, nil
 }
-
-func (k *kcRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (n *nlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
-		err = k.UpdateCache(ctx)
+		err = n.UpdateCache(ctx)
 		if err != nil {
-			repName, _ := k.GetRepName(ctx)
+			repName, _ := n.GetRepName(ctx)
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
+
 	}
 
 	sql := `
@@ -117,40 +113,34 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM ` + n.dbName + `
 WHERE
 `
 
-	repName, err := k.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at kc: %w", err)
-		return nil, err
-	}
+	dataType := "nlog"
 
-	dataType := "kc"
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
 
 	findWordUseLike := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
+
 	if err != nil {
 		return nil, err
 	}
 	sql += commonWhereSQL
-
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -159,8 +149,9 @@ WHERE
 
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
+
 	if err != nil {
-		err = fmt.Errorf("error at select from kc: %w", err)
+		err = fmt.Errorf("error at select from NLOG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -172,7 +163,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(&kyou.IsDeleted,
@@ -190,26 +180,25 @@ WHERE
 				&kyou.DataType,
 			)
 			if err != nil {
-				err = fmt.Errorf("error at scan kc: %w", err)
+				err = fmt.Errorf("error at scan NLOG: %w", err)
 				return nil, err
 			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in kc: %w", relatedTimeStr, err)
+				err = fmt.Errorf("error at parse related time %s in NLOG: %w", relatedTimeStr, err)
 				return nil, err
 			}
 			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in kc: %w", createTimeStr, err)
+				err = fmt.Errorf("error at parse create time %s in NLOG: %w", createTimeStr, err)
 				return nil, err
 			}
 			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in kc: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse update time %s in NLOG: %w", updateTimeStr, err)
 				return nil, err
 			}
-
 			if _, exist := kyous[kyou.ID]; !exist {
 				kyous[kyou.ID] = []*Kyou{}
 			}
@@ -219,11 +208,11 @@ WHERE
 	return kyous, nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+func (n *nlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
-	kyouHistories, err := k.GetKyouHistories(ctx, id)
+	kyouHistories, err := n.GetKyouHistories(ctx, id)
 	if err != nil {
-		err = fmt.Errorf("error at get kyou histories from kc %s: %w", id, err)
+		err = fmt.Errorf("error at get kyou histories from NLOG%s: %w", id, err)
 		return nil, err
 	}
 
@@ -245,13 +234,7 @@ func (k *kcRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 	return kyouHistories[0], nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	repName, err := k.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at kc: %w", err)
-		return nil, err
-	}
-
+func (n *nlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	sql := `
 SELECT 
   IS_DELETED,
@@ -265,12 +248,11 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM ` + n.dbName + `
 WHERE 
 `
-	dataType := "kc"
 
 	trueValue := true
 	ids := []string{id}
@@ -278,29 +260,29 @@ WHERE
 		UseIDs: &trueValue,
 		IDs:    &ids,
 	}
+
+	dataType := "nlog"
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
-	appendOrderBy := false
+	appendOrderBy := true
 
 	findWordUseLike := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
+
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
-
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -310,7 +292,7 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from kc %s: %w", id, err)
+		err = fmt.Errorf("error at select from NLOG %s: %w", id, err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -322,7 +304,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(&kyou.IsDeleted,
@@ -340,23 +321,23 @@ WHERE
 				&kyou.DataType,
 			)
 			if err != nil {
-				err = fmt.Errorf("error at scan kc %s: %w", id, err)
+				err = fmt.Errorf("error at scan NLOG %s: %w", id, err)
 				return nil, err
 			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in kc: %w", relatedTimeStr, id, err)
+				err = fmt.Errorf("error at parse related time %s at %s in NLOG: %w", relatedTimeStr, id, err)
 				return nil, err
 			}
 			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in kc: %w", createTimeStr, id, err)
+				err = fmt.Errorf("error at parse create time %s at %s in NLOG: %w", createTimeStr, id, err)
 				return nil, err
 			}
 			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in kc: %w", updateTimeStr, id, err)
+				err = fmt.Errorf("error at parse update time %s at %s in NLOG: %w", updateTimeStr, id, err)
 				return nil, err
 			}
 			kyous = append(kyous, kyou)
@@ -365,43 +346,147 @@ WHERE
 	return kyous, nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return filepath.Abs(k.filename)
+func (n *nlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return n.nlogRep.GetPath(ctx, id)
 }
 
-func (k *kcRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	n.m.Lock()
+	defer n.m.Unlock()
+
+	trueValue := true
+	query := &find.FindQuery{
+		UpdateCache: &trueValue,
+	}
+
+	allNlogs, err := n.nlogRep.FindNlog(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at get all nlog at update cache: %w", err)
+		return err
+	}
+
+	tx, err := n.cachedDB.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin transaction for add nlog: %w", err)
+		return err
+	}
+
+	sql := `DELETE FROM ` + n.dbName
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at create NLOG table statement %s: %w", "memory", err)
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at delete NLOG table: %w", err)
+		return err
+	}
+
+	sql = `
+INSERT INTO ` + n.dbName + ` (
+  IS_DELETED,
+  ID,
+  SHOP,
+  TITLE,
+  AMOUNT,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	for _, nlog := range allNlogs {
+		err = func() error {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			insertStmt, err := tx.PrepareContext(ctx, sql)
+			if err != nil {
+				err = fmt.Errorf("error at add nlog sql: %w", err)
+				return err
+			}
+			defer insertStmt.Close()
+			queryArgs := []interface{}{
+				nlog.IsDeleted,
+				nlog.ID,
+				nlog.Shop,
+				nlog.Title,
+				nlog.Amount.String(),
+				nlog.RelatedTime.Format(sqlite3impl.TimeLayout),
+				nlog.CreateTime.Format(sqlite3impl.TimeLayout),
+				nlog.CreateApp,
+				nlog.CreateDevice,
+				nlog.CreateUser,
+				nlog.UpdateTime.Format(sqlite3impl.TimeLayout),
+				nlog.UpdateApp,
+				nlog.UpdateDevice,
+				nlog.UpdateUser,
+				nlog.RepName,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at insert in to NLOG %s: %w", nlog.ID, err)
+				return err
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at commit transaction for add nlogs: %w", err)
+		return err
+	}
 	return nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := k.GetPath(ctx, "")
-	if err != nil {
-		err = fmt.Errorf("error at get path kc rep: %w", err)
-		return "", err
-	}
-	base := filepath.Base(path)
-	ext := filepath.Ext(base)
-	withoutExt := base[:len(base)-len(ext)]
-	return withoutExt, nil
+func (n *nlogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	return n.nlogRep.GetRepName(ctx)
 }
 
-func (k *kcRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return k.db.Close()
+func (n *nlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	_, err := n.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+n.dbName)
+	return err
 }
 
-func (k *kcRepositorySQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
+func (n *nlogRepositoryCachedSQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
-		err = k.UpdateCache(ctx)
+		err = n.UpdateCache(ctx)
 		if err != nil {
-			repName, _ := k.GetRepName(ctx)
+			repName, _ := n.GetRepName(ctx)
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
-
 	}
+
+	dataType := "nlog"
 
 	sql := `
 SELECT 
@@ -416,30 +501,22 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  SHOP,
   TITLE,
-  NUM_VALUE,
+  AMOUNT,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM ` + n.dbName + `
 WHERE
 `
 
-	repName, err := k.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at kc: %w", err)
-		return nil, err
-	}
-	dataType := "kc"
-
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
-
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
 
@@ -448,11 +525,10 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -462,82 +538,83 @@ WHERE
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from kc: %w", err)
+		err = fmt.Errorf("error at select from NLOG: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
 
-	kcs := []*KC{}
+	nlogs := []*Nlog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kc := &KC{}
-			kc.RepName = repName
+			nlog := &Nlog{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			numValueStr := ""
+			amount := 0
 
-			err = rows.Scan(&kc.IsDeleted,
-				&kc.ID,
+			err = rows.Scan(&nlog.IsDeleted,
+				&nlog.ID,
 				&relatedTimeStr,
 				&createTimeStr,
-				&kc.CreateApp,
-				&kc.CreateDevice,
-				&kc.CreateUser,
+				&nlog.CreateApp,
+				&nlog.CreateDevice,
+				&nlog.CreateUser,
 				&updateTimeStr,
-				&kc.UpdateApp,
-				&kc.UpdateDevice,
-				&kc.UpdateUser,
-				&kc.Title,
-				&numValueStr,
-				&kc.RepName,
-				&kc.DataType,
+				&nlog.UpdateApp,
+				&nlog.UpdateDevice,
+				&nlog.UpdateUser,
+				&nlog.Shop,
+				&nlog.Title,
+				&amount,
+				&nlog.RepName,
+				&nlog.DataType,
 			)
-			if err != nil {
-				err = fmt.Errorf("error at scan kc: %w", err)
-				return nil, err
-			}
-			numValue := strings.ReplaceAll(numValueStr, ",", "")
-			kc.NumValue = json.Number(numValue)
 
-			kc.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in kc: %w", relatedTimeStr, err)
+				err = fmt.Errorf("error at scan NLOG: %w", err)
 				return nil, err
 			}
-			kc.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+
+			nlog.Amount = json.Number(strconv.Itoa(amount))
+
+			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in kc: %w", createTimeStr, err)
+				err = fmt.Errorf("error at parse related time %s in NLOG: %w", relatedTimeStr, err)
 				return nil, err
 			}
-			kc.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			nlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in kc: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse create time %s in NLOG: %w", createTimeStr, err)
 				return nil, err
 			}
-			kcs = append(kcs, kc)
+			nlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse update time %s in NLOG: %w", updateTimeStr, err)
+				return nil, err
+			}
+			nlogs = append(nlogs, nlog)
 		}
 	}
-	return kcs, nil
+	return nlogs, nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetKC(ctx context.Context, id string, updateTime *time.Time) (*KC, error) {
+func (n *nlogRepositoryCachedSQLite3Impl) GetNlog(ctx context.Context, id string, updateTime *time.Time) (*Nlog, error) {
 	// 最新のデータを返す
-	kcHistories, err := k.GetKCHistories(ctx, id)
+	nlogHistories, err := n.GetNlogHistories(ctx, id)
 	if err != nil {
-		err = fmt.Errorf("error at get kc histories from kc %s: %w", id, err)
+		err = fmt.Errorf("error at get nlog histories from NLOG%s: %w", id, err)
 		return nil, err
 	}
 
 	// なければnilを返す
-	if len(kcHistories) == 0 {
+	if len(nlogHistories) == 0 {
 		return nil, nil
 	}
 
 	// updateTimeが指定されていれば一致するものを返す
 	if updateTime != nil {
-		for _, kyou := range kcHistories {
+		for _, kyou := range nlogHistories {
 			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
 				return kyou, nil
 			}
@@ -545,16 +622,10 @@ func (k *kcRepositorySQLite3Impl) GetKC(ctx context.Context, id string, updateTi
 		return nil, nil
 	}
 
-	return kcHistories[0], nil
+	return nlogHistories[0], nil
 }
 
-func (k *kcRepositorySQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
-	repName, err := k.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at kc: %w", err)
-		return nil, err
-	}
-
+func (n *nlogRepositoryCachedSQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
 	sql := `
 SELECT 
   IS_DELETED,
@@ -568,11 +639,12 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  SHOP,
   TITLE,
-  NUM_VALUE,
-  ? AS REP_NAME,
+  AMOUNT,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM ` + n.dbName + `
 WHERE 
 `
 	trueValue := true
@@ -581,33 +653,31 @@ WHERE
 		UseIDs: &trueValue,
 		IDs:    &ids,
 	}
-	dataType := "kc"
 
+	dataType := "nlog"
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
 	whereCounter := 0
-	onlyLatestData := true
+	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
-	findWordTargetColumns := []string{"TITLE"}
+	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
-	appendOrderBy := false
+	appendOrderBy := true
 
 	findWordUseLike := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
+
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
-
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at get kc histories sql %s: %w", id, err)
+		err = fmt.Errorf("error at get nlog histories sql %s: %w", id, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -620,68 +690,69 @@ WHERE
 	}
 	defer rows.Close()
 
-	kcs := []*KC{}
+	nlogs := []*Nlog{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			kc := &KC{}
-			kc.RepName = repName
+			nlog := &Nlog{}
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			numValueStr := ""
+			amount := 0
 
-			err = rows.Scan(&kc.IsDeleted,
-				&kc.ID,
+			err = rows.Scan(&nlog.IsDeleted,
+				&nlog.ID,
 				&relatedTimeStr,
 				&createTimeStr,
-				&kc.CreateApp,
-				&kc.CreateDevice,
-				&kc.CreateUser,
+				&nlog.CreateApp,
+				&nlog.CreateDevice,
+				&nlog.CreateUser,
 				&updateTimeStr,
-				&kc.UpdateApp,
-				&kc.UpdateDevice,
-				&kc.UpdateUser,
-				&kc.Title,
-				&numValueStr,
-				&kc.RepName,
-				&kc.DataType,
+				&nlog.UpdateApp,
+				&nlog.UpdateDevice,
+				&nlog.UpdateUser,
+				&nlog.Shop,
+				&nlog.Title,
+				&amount,
+				&nlog.RepName,
+				&nlog.DataType,
 			)
 			if err != nil {
-				err = fmt.Errorf("error at scan kc %s: %w", id, err)
+				err = fmt.Errorf("error at scan NLOG %s: %w", id, err)
 				return nil, err
 			}
-			numValue := strings.ReplaceAll(numValueStr, ",", "")
-			kc.NumValue = json.Number(numValue)
 
-			kc.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			nlog.Amount = json.Number(strconv.Itoa(amount))
+
+			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in kc: %w", relatedTimeStr, id, err)
+				err = fmt.Errorf("error at parse related time %s at %s in NLOG: %w", relatedTimeStr, id, err)
 				return nil, err
 			}
-			kc.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
+			nlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in kc: %w", createTimeStr, id, err)
+				err = fmt.Errorf("error at parse create time %s at %s in NLOG: %w", createTimeStr, id, err)
 				return nil, err
 			}
-			kc.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
+			nlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in kc: %w", updateTimeStr, id, err)
+				err = fmt.Errorf("error at parse update time %s at %s in NLOG: %w", updateTimeStr, id, err)
 				return nil, err
 			}
-			kcs = append(kcs, kc)
+			nlogs = append(nlogs, nlog)
 		}
 	}
-	return kcs, nil
+	return nlogs, nil
 }
 
-func (k *kcRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc *KC) error {
+func (n *nlogRepositoryCachedSQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
 	sql := `
-INSERT INTO kc (
+INSERT INTO ` + n.dbName + ` (
   IS_DELETED,
   ID,
+  SHOP,
   TITLE,
-  NUM_VALUE,
+  AMOUNT,
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
@@ -690,8 +761,11 @@ INSERT INTO kc (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME
 ) VALUES (
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -707,33 +781,35 @@ INSERT INTO kc (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := n.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at add kc sql %s: %w", kc.ID, err)
+		err = fmt.Errorf("error at add nlog sql %s: %w", nlog.ID, err)
 		return err
 	}
 	defer stmt.Close()
 
 	queryArgs := []interface{}{
-		kc.IsDeleted,
-		kc.ID,
-		kc.Title,
-		kc.NumValue.String(),
-		kc.RelatedTime.Format(sqlite3impl.TimeLayout),
-		kc.CreateTime.Format(sqlite3impl.TimeLayout),
-		kc.CreateApp,
-		kc.CreateDevice,
-		kc.CreateUser,
-		kc.UpdateTime.Format(sqlite3impl.TimeLayout),
-		kc.UpdateApp,
-		kc.UpdateDevice,
-		kc.UpdateUser,
+		nlog.IsDeleted,
+		nlog.ID,
+		nlog.Shop,
+		nlog.Title,
+		nlog.Amount.String(),
+		nlog.RelatedTime.Format(sqlite3impl.TimeLayout),
+		nlog.CreateTime.Format(sqlite3impl.TimeLayout),
+		nlog.CreateApp,
+		nlog.CreateDevice,
+		nlog.CreateUser,
+		nlog.UpdateTime.Format(sqlite3impl.TimeLayout),
+		nlog.UpdateApp,
+		nlog.UpdateDevice,
+		nlog.UpdateUser,
+		nlog.RepName,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at insert in to kc %s: %w", kc.ID, err)
+		err = fmt.Errorf("error at insert in to NLOG %s: %w", nlog.ID, err)
 		return err
 	}
 	return nil

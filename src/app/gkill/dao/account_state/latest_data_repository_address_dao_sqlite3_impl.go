@@ -91,7 +91,6 @@ CREATE TABLE IF NOT EXISTS %s (
 		err = fmt.Errorf("error at create %s index: %w", latestDataRepositoryAddress.tableName, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
 
 	return latestDataRepositoryAddress, nil
 }

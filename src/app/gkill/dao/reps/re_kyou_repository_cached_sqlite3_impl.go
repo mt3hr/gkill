@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	"database/sql"
+	sqllib "database/sql"
 	"fmt"
 	"path/filepath"
 	"sync"
@@ -14,23 +15,18 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
-type reKyouRepositorySQLite3Impl struct {
-	filename          string
-	db                *sql.DB
+type reKyouRepositoryCachedSQLite3Impl struct {
+	dbName            string
+	rekyouRep         ReKyouRepository
+	cachedDB          *sqllib.DB
 	m                 *sync.Mutex
 	gkillRepositories *GkillRepositories
 }
 
-func NewReKyouRepositorySQLite3Impl(ctx context.Context, filename string, reps *GkillRepositories) (ReKyouRepository, error) {
+func NewReKyouRepositoryCachedSQLite3Impl(ctx context.Context, rekyouRep ReKyouRepository, gkillRepositories *GkillRepositories, cacheDB *sql.DB, dbName string) (ReKyouRepository, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
-	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
-		return nil, err
-	}
-
 	sql := `
-CREATE TABLE IF NOT EXISTS "REKYOU" (
+CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TARGET_ID NOT NULL,
@@ -42,12 +38,13 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL 
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := db.PrepareContext(ctx, sql)
+	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create REKYOU table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create REKYOU table statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -55,15 +52,22 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create REKYOU table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create REKYOU table to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_REKYOU ON REKYOU (ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create REKYOU index statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create REKYOU table to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, RELATED_TIME, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create REKYOU index statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer indexStmt.Close()
@@ -71,26 +75,19 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create REKYOU index to %s: %w", filename, err)
+		err = fmt.Errorf("error at create REKYOU index to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create REKYOU table to %s: %w", filename, err)
-		return nil, err
-	}
-
-	return &reKyouRepositorySQLite3Impl{
-		filename:          filename,
-		db:                db,
+	return &reKyouRepositoryCachedSQLite3Impl{
+		dbName:            dbName,
+		rekyouRep:         rekyouRep,
+		cachedDB:          cacheDB,
 		m:                 &sync.Mutex{},
-		gkillRepositories: reps,
+		gkillRepositories: gkillRepositories,
 	}, nil
 }
-func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	matchKyous := map[string][]*Kyou{}
 
 	// 未削除ReKyouを抽出
@@ -169,7 +166,7 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 	return matchKyous, nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+func (r *reKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := r.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -195,13 +192,7 @@ func (r *reKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 	return kyouHistories[0], nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	repName, err := r.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at rekyou: %w", err)
-		return nil, err
-	}
-
+func (r *reKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	sql := `
 SELECT 
   IS_DELETED,
@@ -215,9 +206,9 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM REKYOU
+FROM ` + r.dbName + `
 WHERE 
 `
 	dataType := "rekyou"
@@ -229,7 +220,6 @@ WHERE
 		IDs:    &ids,
 	}
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -249,7 +239,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := r.db.PrepareContext(ctx, sql)
+	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -271,7 +261,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(&kyou.IsDeleted,
@@ -314,31 +303,125 @@ WHERE
 	return kyous, nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return filepath.Abs(r.filename)
+func (r *reKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return r.rekyouRep.GetPath(ctx, id)
 }
 
-func (r *reKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	r.m.Lock()
+	defer r.m.Unlock()
+
+	trueValue := true
+	query := &find.FindQuery{
+		UpdateCache: &trueValue,
+	}
+
+	allReKyous, err := r.rekyouRep.FindReKyou(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at get all rekyou at update cache: %w", err)
+		return err
+	}
+
+	tx, err := r.cachedDB.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin transaction for add rekyou: %w", err)
+		return err
+	}
+
+	sql := `DELETE FROM ` + r.dbName
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at create REKYOU table statement %s: %w", "memory", err)
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at delete REKYOU table: %w", err)
+		return err
+	}
+
+	sql = `
+INSERT INTO ` + r.dbName + ` (
+  IS_DELETED,
+  ID,
+  TARGET_ID,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	for _, rekyou := range allReKyous {
+		err = func() error {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			insertStmt, err := tx.PrepareContext(ctx, sql)
+			if err != nil {
+				err = fmt.Errorf("error at add rekyou sql: %w", err)
+				return err
+			}
+			defer insertStmt.Close()
+			queryArgs := []interface{}{
+				rekyou.IsDeleted,
+				rekyou.ID,
+				rekyou.TargetID,
+				rekyou.RelatedTime.Format(sqlite3impl.TimeLayout),
+				rekyou.CreateTime.Format(sqlite3impl.TimeLayout),
+				rekyou.CreateApp,
+				rekyou.CreateDevice,
+				rekyou.CreateUser,
+				rekyou.UpdateTime.Format(sqlite3impl.TimeLayout),
+				rekyou.UpdateApp,
+				rekyou.UpdateDevice,
+				rekyou.UpdateUser,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at insert in to REKYOU %s: %w", rekyou.ID, err)
+				return err
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at commit transaction for add rekyou: %w", err)
+		return err
+	}
 	return nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := r.GetPath(ctx, "")
-	if err != nil {
-		err = fmt.Errorf("error at get path rekyou rep: %w", err)
-		return "", err
-	}
-	base := filepath.Base(path)
-	ext := filepath.Ext(base)
-	withoutExt := base[:len(base)-len(ext)]
-	return withoutExt, nil
+func (r *reKyouRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	return r.rekyouRep.GetRepName(ctx)
 }
 
-func (r *reKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return r.db.Close()
+func (r *reKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	_, err := r.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+r.dbName)
+	return err
 }
 
-func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
+func (r *reKyouRepositoryCachedSQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
 	matchReKyous := []*ReKyou{}
 
 	// 未削除ReKyouを抽出
@@ -381,7 +464,7 @@ func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *fin
 	return matchReKyous, nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetReKyou(ctx context.Context, id string, updateTime *time.Time) (*ReKyou, error) {
+func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyou(ctx context.Context, id string, updateTime *time.Time) (*ReKyou, error) {
 	// 最新のデータを返す
 	reKyouHistories, err := r.GetReKyouHistories(ctx, id)
 	if err != nil {
@@ -407,7 +490,7 @@ func (r *reKyouRepositorySQLite3Impl) GetReKyou(ctx context.Context, id string, 
 	return reKyouHistories[0], nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
+func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
 	var err error
 
 	sql := `
@@ -424,17 +507,11 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM REKYOU
+FROM ` + r.dbName + `
 WHERE  
 `
-	repName, err := r.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at rekyou: %w", err)
-		return nil, err
-	}
-
 	dataType := "rekyou"
 
 	trueValue := true
@@ -444,7 +521,6 @@ WHERE
 		IDs:    &ids,
 	}
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -464,7 +540,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := r.db.PrepareContext(ctx, sql)
+	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou histories sql: %w", err)
 		return nil, err
@@ -530,9 +606,9 @@ WHERE
 	return reKyous, nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
+func (r *reKyouRepositoryCachedSQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
 	sql := `
-INSERT INTO REKYOU (
+INSERT INTO ` + r.dbName + ` (
   IS_DELETED,
   ID,
   TARGET_ID,
@@ -544,8 +620,10 @@ INSERT INTO REKYOU (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -560,7 +638,7 @@ INSERT INTO REKYOU (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := r.db.PrepareContext(ctx, sql)
+	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add rekyou sql %s: %w", rekyou.ID, err)
 		return err
@@ -580,6 +658,7 @@ INSERT INTO REKYOU (
 		rekyou.UpdateApp,
 		rekyou.UpdateDevice,
 		rekyou.UpdateUser,
+		rekyou.RepName,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -590,7 +669,7 @@ INSERT INTO REKYOU (
 	return nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
+func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
 	var err error
 
 	sql := `
@@ -607,22 +686,15 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM REKYOU
+FROM ` + r.dbName + `
 WHERE 
 `
-
-	repName, err := r.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at rekyou: %w", err)
-		return nil, err
-	}
 
 	dataType := "rekyou"
 
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 	query := &find.FindQuery{}
@@ -642,7 +714,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := r.db.PrepareContext(ctx, sql)
+	stmt, err := r.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all rekyous sql: %w", err)
 		return nil, err
@@ -708,7 +780,7 @@ WHERE
 	return reKyous, nil
 }
 
-func (r *reKyouRepositorySQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error) {
+func (r *reKyouRepositoryCachedSQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error) {
 	withoutRekyouReps := Repositories{}
 	for _, rep := range r.gkillRepositories.Reps {
 		repIsRekyouRep := false

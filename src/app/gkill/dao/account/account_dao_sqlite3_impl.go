@@ -63,7 +63,6 @@ CREATE TABLE IF NOT EXISTS "ACCOUNT" (
 		err = fmt.Errorf("error at create ACCOUNT index to %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
 
 	accountDAO := &accountDAOSQLite3Impl{
 		filename: filename,

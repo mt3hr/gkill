@@ -67,7 +67,6 @@ CREATE TABLE IF NOT EXISTS "REP_STRUCT" (
 		err = fmt.Errorf("error at create REP_STRUCT index to %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
