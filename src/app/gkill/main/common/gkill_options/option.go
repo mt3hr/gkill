@@ -40,4 +40,17 @@ var (
 	GoroutinePool = 4000
 
 	CacheClearCountLimit = math.MaxInt
+
+	CacheKmemoReps        = false
+	CacheKCReps           = false
+	CacheURLogReps        = false
+	CacheNlogReps         = false
+	CacheTimeIsReps       = false
+	CacheMiReps           = false
+	CacheLantanaReps      = false
+	CacheIDFKyouReps      = false
+	CacheTagReps          = true
+	CacheTextReps         = false
+	CacheNotificationReps = false
+	CacheReKyouReps       = false
 )

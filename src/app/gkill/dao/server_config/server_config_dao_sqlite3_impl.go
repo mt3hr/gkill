@@ -63,7 +63,6 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 		err = fmt.Errorf("error at create SERVER_CONFIG index to %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
 
 	return &serverConfigDAOSQLite3Impl{
 		filename: filename,

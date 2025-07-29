@@ -67,7 +67,6 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 		err = fmt.Errorf("error at create REKYOU index to %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
