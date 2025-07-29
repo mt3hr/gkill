@@ -22,7 +22,10 @@ type timeIsRepositoryCachedSQLite3Impl struct {
 	m         *sync.Mutex
 }
 
-func NewTimeIsRepositoryCachedSQLite3Impl(ctx context.Context, timeisRep TimeIsRepository, cacheDB *sql.DB, dbName string) (TimeIsRepository, error) {
+func NewTimeIsRepositoryCachedSQLite3Impl(ctx context.Context, timeisRep TimeIsRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (TimeIsRepository, error) {
+	if m == nil {
+		m = &sync.Mutex{}
+	}
 	var err error
 
 	sql := `
@@ -84,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		timeisRep: timeisRep,
 		dbName:    dbName,
 		cachedDB:  cacheDB,
-		m:         &sync.Mutex{},
+		m:         m,
 	}, nil
 }
 func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
@@ -480,6 +483,12 @@ INSERT INTO ` + t.dbName + `(
   ?
 )`
 	for _, timeis := range allTimeiss {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		default:
+		}
 		err = func() error {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			insertStmt, err := tx.PrepareContext(ctx, sql)

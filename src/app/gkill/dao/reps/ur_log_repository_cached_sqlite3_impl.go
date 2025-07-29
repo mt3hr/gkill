@@ -20,7 +20,10 @@ type urlogRepositoryCachedSQLite3Impl struct {
 	m        *sync.Mutex
 }
 
-func NewURLogRepositoryCachedSQLite3Impl(ctx context.Context, urlogRepository URLogRepository, cacheDB *sql.DB, dbName string) (URLogRepository, error) {
+func NewURLogRepositoryCachedSQLite3Impl(ctx context.Context, urlogRepository URLogRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (URLogRepository, error) {
+	if m == nil {
+		m = &sync.Mutex{}
+	}
 	var err error
 
 	sql := `
@@ -430,6 +433,12 @@ INSERT INTO ` + u.dbName + ` (
   ?
 )`
 	for _, urlog := range allURLogs {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		default:
+		}
 		err = func() error {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			insertStmt, err := tx.PrepareContext(ctx, sql)

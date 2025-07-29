@@ -20,7 +20,10 @@ type tagRepositoryCachedSQLite3Impl struct {
 	m        *sync.Mutex
 }
 
-func NewTagRepositoryCachedSQLite3Impl(ctx context.Context, tagRep TagRepository, cacheDB *sql.DB, dbName string) (TagRepository, error) {
+func NewTagRepositoryCachedSQLite3Impl(ctx context.Context, tagRep TagRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (TagRepository, error) {
+	if m == nil {
+		m = &sync.Mutex{}
+	}
 	var err error
 	sql := `
 CREATE TABLE IF NOT EXISTS "` + dbName + `" (
@@ -74,7 +77,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		tagRep:   tagRep,
 		dbName:   dbName,
 		cachedDB: cacheDB,
-		m:        &sync.Mutex{},
+		m:        m,
 	}
 	return cachedTagrepository, nil
 }
@@ -532,6 +535,12 @@ INSERT INTO "` + t.dbName + `" (
 )`
 
 	for _, tag := range allTags {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		default:
+		}
 		func() error {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			insertStmt, err := tx.PrepareContext(ctx, sql)
