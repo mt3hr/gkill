@@ -23,7 +23,10 @@ type kcRepositoryCachedSQLite3Impl struct {
 	m        *sync.Mutex
 }
 
-func NewKCRepositoryCachedSQLite3Impl(ctx context.Context, kcRep KCRepository, cacheDB *sql.DB, dbName string) (KCRepository, error) {
+func NewKCRepositoryCachedSQLite3Impl(ctx context.Context, kcRep KCRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (KCRepository, error) {
+	if m == nil {
+		m = &sync.Mutex{}
+	}
 	var err error
 	sql := `
 CREATE TABLE IF NOT EXISTS "` + dbName + `" (
@@ -84,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		dbName:   dbName,
 		kcRep:    kcRep,
 		cachedDB: cacheDB,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 
@@ -416,6 +419,12 @@ INSERT INTO ` + k.dbName + ` (
   ?
 )`
 	for _, kc := range allKCs {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		default:
+		}
 		err = func() error {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			insertStmt, err := tx.PrepareContext(ctx, sql)

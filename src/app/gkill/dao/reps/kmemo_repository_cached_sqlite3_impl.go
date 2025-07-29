@@ -21,7 +21,10 @@ type kmemoRepositoryCachedSQLite3Impl struct {
 	m        *sync.Mutex
 }
 
-func NewKmemoRepositoryCachedSQLite3Impl(ctx context.Context, kmemoRep KmemoRepository, cacheDB *sql.DB, dbName string) (KmemoRepository, error) {
+func NewKmemoRepositoryCachedSQLite3Impl(ctx context.Context, kmemoRep KmemoRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (KmemoRepository, error) {
+	if m == nil {
+		m = &sync.Mutex{}
+	}
 	var err error
 	sql := `
 CREATE TABLE IF NOT EXISTS "` + dbName + `" (
@@ -81,7 +84,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		kmemoRep: kmemoRep,
 		dbName:   dbName,
 		cachedDB: cacheDB,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 
@@ -411,6 +414,12 @@ INSERT INTO ` + k.dbName + ` (
   ?
 )`
 	for _, kmemo := range allKmemos {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		default:
+		}
 		err = func() error {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			insertStmt, err := tx.PrepareContext(ctx, sql)
