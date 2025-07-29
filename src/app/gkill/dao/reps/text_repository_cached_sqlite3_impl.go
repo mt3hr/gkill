@@ -20,7 +20,10 @@ type textRepositoryCachedSQLite3Impl struct {
 	m        *sync.Mutex
 }
 
-func NewTextRepositoryCachedSQLite3Impl(ctx context.Context, textRep TextRepository, cacheDB *sql.DB, dbName string) (TextRepository, error) {
+func NewTextRepositoryCachedSQLite3Impl(ctx context.Context, textRep TextRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (TextRepository, error) {
+	if m == nil {
+		m = &sync.Mutex{}
+	}
 	var err error
 
 	sql := `
@@ -82,7 +85,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		dbName:   dbName,
 		textRep:  textRep,
 		cachedDB: cacheDB,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 func (t *textRepositoryCachedSQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
@@ -430,6 +433,12 @@ INSERT INTO ` + t.dbName + ` (
   ?
 )`
 	for _, text := range allTexts {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		default:
+		}
 		err = func() error {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			insertStmt, err := tx.PrepareContext(ctx, sql)
