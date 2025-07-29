@@ -22,7 +22,10 @@ type miRepositoryCachedSQLite3Impl struct {
 	m        *sync.Mutex
 }
 
-func NewMiRepositoryCachedSQLite3Impl(ctx context.Context, miRep MiRepository, cacheDB *sql.DB, dbName string) (MiRepository, error) {
+func NewMiRepositoryCachedSQLite3Impl(ctx context.Context, miRep MiRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (MiRepository, error) {
+	if m == nil {
+		m = &sync.Mutex{}
+	}
 	var err error
 
 	sql := `
@@ -87,7 +90,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		dbName:   dbName,
 		miRep:    miRep,
 		cachedDB: cacheDB,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
@@ -840,6 +843,12 @@ INSERT INTO ` + m.dbName + ` (
   ?
 )`
 	for _, mi := range allMis {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		default:
+		}
 		err = func() error {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			insertStmt, err := tx.PrepareContext(ctx, sql)

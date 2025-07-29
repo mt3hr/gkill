@@ -3,12 +3,14 @@ package memory_db
 import (
 	"database/sql"
 	"fmt"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 var (
+	Mutex    = &sync.Mutex{}
 	MemoryDB *sql.DB
 )
 
