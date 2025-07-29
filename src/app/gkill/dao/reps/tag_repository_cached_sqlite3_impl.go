@@ -36,7 +36,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL 
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -68,7 +69,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create TAG index to %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
 
 	cachedTagrepository := &tagRepositoryCachedSQLite3Impl{
 		tagRep:   tagRep,
@@ -106,19 +106,13 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
 FROM ` + t.dbName + `
 WHERE
 `
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at tag: %w", err)
-		return nil, err
-	}
 	dataType := "tag"
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -206,9 +200,8 @@ WHERE
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
-	// memoryDB閉じたら困るので何もしない
-	// return t.cachedDB.Close()
-	return nil
+	_, err := t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+t.dbName)
+	return err
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
@@ -255,17 +248,12 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
 FROM ` + t.dbName + `
 WHERE 
 `
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at tag: %w", err)
-		return nil, err
-	}
 	dataType := "tag"
 
 	trueValue := true
@@ -276,7 +264,6 @@ WHERE
 		Words:    &words,
 	}
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -381,17 +368,11 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
 FROM ` + t.dbName + `
 WHERE 
 `
-
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at tag: %w", err)
-		return nil, err
-	}
 
 	dataType := "tag"
 
@@ -402,7 +383,6 @@ WHERE
 		Words:    &targetIDs,
 	}
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -532,8 +512,10 @@ INSERT INTO "` + t.dbName + `" (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -549,37 +531,44 @@ INSERT INTO "` + t.dbName + `" (
   ?
 )`
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err = tx.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at add tag sql %s: %w", sql, err)
-		return err
-	}
-	defer stmt.Close()
-
 	for _, tag := range allTags {
-		queryArgs := []interface{}{
-			tag.IsDeleted,
-			tag.ID,
-			tag.Tag,
-			tag.TargetID,
-			tag.RelatedTime.Format(sqlite3impl.TimeLayout),
-			tag.CreateTime.Format(sqlite3impl.TimeLayout),
-			tag.CreateApp,
-			tag.CreateDevice,
-			tag.CreateUser,
-			tag.UpdateTime.Format(sqlite3impl.TimeLayout),
-			tag.UpdateApp,
-			tag.UpdateDevice,
-			tag.UpdateUser,
-		}
-		gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
-		_, err = stmt.ExecContext(ctx, queryArgs...)
+		func() error {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			insertStmt, err := tx.PrepareContext(ctx, sql)
+			if err != nil {
+				err = fmt.Errorf("error at add tag sql %s: %w", sql, err)
+				return err
+			}
+			defer insertStmt.Close()
+
+			queryArgs := []interface{}{
+				tag.IsDeleted,
+				tag.ID,
+				tag.Tag,
+				tag.TargetID,
+				tag.RelatedTime.Format(sqlite3impl.TimeLayout),
+				tag.CreateTime.Format(sqlite3impl.TimeLayout),
+				tag.CreateApp,
+				tag.CreateDevice,
+				tag.CreateUser,
+				tag.UpdateTime.Format(sqlite3impl.TimeLayout),
+				tag.UpdateApp,
+				tag.UpdateDevice,
+				tag.UpdateUser,
+				tag.RepName,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at insert in to TAG %s: %w", tag.ID, err)
+				return err
+			}
+			defer stmt.Close()
+			return nil
+		}()
 		if err != nil {
-			err = fmt.Errorf("error at insert in to TAG %s: %w", tag.ID, err)
 			return err
 		}
-		defer stmt.Close()
 	}
 
 	err = tx.Commit()
@@ -616,17 +605,12 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
 FROM ` + t.dbName + `
 WHERE 
 `
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at tag: %w", err)
-		return nil, err
-	}
 	dataType := "tag"
 
 	trueValue := true
@@ -636,7 +620,6 @@ WHERE
 		IDs:    &ids,
 	}
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -725,11 +708,6 @@ WHERE
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) AddTagInfo(ctx context.Context, tag *Tag) error {
-	err := t.tagRep.AddTagInfo(ctx, tag)
-	if err != nil {
-		err = fmt.Errorf("error at add tag info: %w", err)
-		return err
-	}
 	sql := `
 INSERT INTO ` + t.dbName + ` (
   IS_DELETED,
@@ -744,8 +722,10 @@ INSERT INTO ` + t.dbName + ` (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -782,6 +762,7 @@ INSERT INTO ` + t.dbName + ` (
 		tag.UpdateApp,
 		tag.UpdateDevice,
 		tag.UpdateUser,
+		tag.RepName,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -857,22 +838,16 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
 FROM ` + t.dbName + `
 WHERE 
 `
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at tag: %w", err)
-		return nil, err
-	}
 	dataType := "tag"
 
 	query := &find.FindQuery{}
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 

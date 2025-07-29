@@ -66,7 +66,6 @@ CREATE TABLE IF NOT EXISTS APPLICATION_CONFIG (
 		err = fmt.Errorf("error at create APPLICATION_CONFIG index to %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
 
 	return &applicationConfigDAOSQLite3Impl{
 		filename: filename,

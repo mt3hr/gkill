@@ -3,8 +3,9 @@ package reps
 import (
 	"context"
 	"database/sql"
+	sqllib "database/sql"
 	"fmt"
-	"path/filepath"
+	"math"
 	"sync"
 	"time"
 
@@ -14,22 +15,17 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
-type notificationRepositorySQLite3Impl struct {
-	filename string
-	db       *sql.DB
-	m        *sync.Mutex
+type notificationRepositoryCachedSQLite3Impl struct {
+	dbName          string
+	notificationRep NotificationRepository
+	cachedDB        *sqllib.DB
+	m               *sync.Mutex
 }
 
-func NewNotificationRepositorySQLite3Impl(ctx context.Context, filename string) (NotificationRepository, error) {
+func NewNotificationRepositoryCachedSQLite3Impl(ctx context.Context, notificationRep NotificationRepository, cacheDB *sql.DB, dbName string) (NotificationRepository, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
-	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
-		return nil, err
-	}
-
 	sql := `
-CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
+CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TARGET_ID NOT NULL,
@@ -43,12 +39,13 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL 
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := db.PrepareContext(ctx, sql)
+	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create NOTIFICATION table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create NOTIFICATION table statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -56,15 +53,22 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create NOTIFICATION table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create NOTIFICATION table to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_NOTIFICATION ON NOTIFICATION (ID, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create NOTIFICATION index statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create NOTIFICATION table to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create NOTIFICATION index statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer indexStmt.Close()
@@ -72,25 +76,18 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create NOTIFICATION index to %s: %w", filename, err)
+		err = fmt.Errorf("error at create NOTIFICATION index to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create NOTIFICATION table to %s: %w", filename, err)
-		return nil, err
-	}
-
-	return &notificationRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
-		m:        &sync.Mutex{},
+	return &notificationRepositoryCachedSQLite3Impl{
+		dbName:          dbName,
+		cachedDB:        cacheDB,
+		notificationRep: notificationRep,
+		m:               &sync.Mutex{},
 	}, nil
 }
-func (t *notificationRepositorySQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
+func (t *notificationRepositoryCachedSQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -120,20 +117,14 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM NOTIFICATION
+FROM ` + t.dbName + `
 WHERE 
 `
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at notification: %w", err)
-		return nil, err
-	}
 	dataType := "notification"
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -152,7 +143,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get NOTIFICATION histories sql: %w", err)
 		return nil, err
@@ -222,11 +213,12 @@ WHERE
 	return notifications, nil
 }
 
-func (t *notificationRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return t.db.Close()
+func (t *notificationRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	_, err := t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+t.dbName)
+	return err
 }
 
-func (t *notificationRepositorySQLite3Impl) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
+func (t *notificationRepositoryCachedSQLite3Impl) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {
 	// 最新のデータを返す
 	notificationHistories, err := t.GetNotificationHistories(ctx, id)
 	if err != nil {
@@ -252,7 +244,7 @@ func (t *notificationRepositorySQLite3Impl) GetNotification(ctx context.Context,
 	return notificationHistories[0], nil
 }
 
-func (t *notificationRepositorySQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
+func (t *notificationRepositoryCachedSQLite3Impl) GetNotificationsByTargetID(ctx context.Context, target_id string) ([]*Notification, error) {
 	var err error
 
 	sql := `
@@ -271,17 +263,11 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM NOTIFICATION
+FROM ` + t.dbName + `
 WHERE 
 `
-
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at notification: %w", err)
-		return nil, err
-	}
 
 	dataType := "notification"
 
@@ -292,7 +278,6 @@ WHERE
 		Words:    &targetIDs,
 	}
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -312,7 +297,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get notification histories sql: %w", err)
 		return nil, err
@@ -382,7 +367,7 @@ WHERE
 	return notifications, nil
 }
 
-func (t *notificationRepositorySQLite3Impl) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]*Notification, error) {
+func (t *notificationRepositoryCachedSQLite3Impl) GetNotificationsBetweenNotificationTime(ctx context.Context, startTime time.Time, endTime time.Time) ([]*Notification, error) {
 	var err error
 
 	sql := `
@@ -401,24 +386,17 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM NOTIFICATION
+FROM ` + t.dbName + `
 WHERE 
 `
 	sql += " (datetime(NOTIFICATION_TIME, 'localtime') BETWEEN datetime(?, 'localtime') AND datetime(?, 'localtime')) "
-
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at text: %w", err)
-		return nil, err
-	}
 
 	dataType := "notification"
 
 	query := &find.FindQuery{}
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 		startTime.Format(sqlite3impl.TimeLayout),
 		endTime.Format(sqlite3impl.TimeLayout),
@@ -440,7 +418,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get notification between notification time sql: %w", err)
 		return nil, err
@@ -510,27 +488,123 @@ WHERE
 	return notifications, nil
 }
 
-func (t *notificationRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (t *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
+
+	allNotifications, err := t.notificationRep.GetNotificationsBetweenNotificationTime(ctx, time.Unix(0, 0), time.Unix(math.MaxInt64, 0))
+	if err != nil {
+		err = fmt.Errorf("error at get all notifications at update cache: %w", err)
+		return err
+	}
+
+	tx, err := t.cachedDB.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin transaction for add notifications: %w", err)
+		return err
+	}
+
+	sql := `DELETE FROM ` + t.dbName
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at create NOTIFICATION table statement %s: %w", "memory", err)
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at delete NOTIFICATION table: %w", err)
+		return err
+	}
+
+	sql = `
+INSERT INTO ` + t.dbName + ` (
+  IS_DELETED,
+  ID,
+  NOTIFICATION_TIME,
+  CONTENT,
+  TARGET_ID,
+  IS_NOTIFICATED,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	for _, notification := range allNotifications {
+		err = func() error {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			insertStmt, err := tx.PrepareContext(ctx, sql)
+			if err != nil {
+				err = fmt.Errorf("error at add NOTIFICATION sql: %w", err)
+				return err
+			}
+			defer insertStmt.Close()
+			queryArgs := []interface{}{
+				notification.IsDeleted,
+				notification.ID,
+				notification.NotificationTime.Format(sqlite3impl.TimeLayout),
+				notification.Content,
+				notification.TargetID,
+				notification.IsNotificated,
+				notification.CreateTime.Format(sqlite3impl.TimeLayout),
+				notification.CreateApp,
+				notification.CreateDevice,
+				notification.CreateUser,
+				notification.UpdateTime.Format(sqlite3impl.TimeLayout),
+				notification.UpdateApp,
+				notification.UpdateDevice,
+				notification.UpdateUser,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at insert in to NOTIFICATION %s: %w", notification.ID, err)
+				return err
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at commit transaction for add notifications: %w", err)
+		return err
+	}
 	return nil
 }
 
-func (t *notificationRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return filepath.Abs(t.filename)
+func (t *notificationRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return t.notificationRep.GetPath(ctx, id)
 }
 
-func (t *notificationRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := t.GetPath(ctx, "")
-	if err != nil {
-		err = fmt.Errorf("error at get path notification rep: %w", err)
-		return "", err
-	}
-	base := filepath.Base(path)
-	ext := filepath.Ext(base)
-	withoutExt := base[:len(base)-len(ext)]
-	return withoutExt, nil
+func (t *notificationRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	return t.notificationRep.GetRepName(ctx)
 }
 
-func (t *notificationRepositorySQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
+func (t *notificationRepositoryCachedSQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
 	var err error
 
 	sql := `
@@ -549,9 +623,9 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM NOTIFICATION
+FROM ` + t.dbName + `
 WHERE 
 `
 
@@ -589,7 +663,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get notification histories sql: %w", err)
 		return nil, err
@@ -658,9 +732,9 @@ WHERE
 	}
 	return notifications, nil
 }
-func (t *notificationRepositorySQLite3Impl) AddNotificationInfo(ctx context.Context, notification *Notification) error {
+func (t *notificationRepositoryCachedSQLite3Impl) AddNotificationInfo(ctx context.Context, notification *Notification) error {
 	sql := `
-INSERT INTO NOTIFICATION (
+INSERT INTO ` + t.dbName + ` (
   IS_DELETED,
   ID,
   NOTIFICATION_TIME,
@@ -674,8 +748,10 @@ INSERT INTO NOTIFICATION (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -692,7 +768,7 @@ INSERT INTO NOTIFICATION (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add NOTIFICATION sql %s: %w", notification.ID, err)
 		return err
@@ -714,6 +790,7 @@ INSERT INTO NOTIFICATION (
 		notification.UpdateApp,
 		notification.UpdateDevice,
 		notification.UpdateUser,
+		notification.RepName,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)

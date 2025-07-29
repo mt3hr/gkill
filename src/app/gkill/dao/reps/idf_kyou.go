@@ -38,4 +38,6 @@ type IDFKyou struct {
 	IsVideo bool `json:"is_video"`
 
 	IsAudio bool `json:"is_audio"`
+
+	ContentPath string `json:"-"`
 }
