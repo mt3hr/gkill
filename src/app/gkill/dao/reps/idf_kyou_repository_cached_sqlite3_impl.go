@@ -3,9 +3,9 @@ package reps
 import (
 	"context"
 	"database/sql"
+	sqllib "database/sql"
 	"fmt"
 	"io"
-	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,54 +14,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
-type idfKyouRepositorySQLite3Impl struct {
-	repositoriesRef *GkillRepositories
-	idDBFile        string
-	contentDir      string
-	rootAddress     string
-	r               *mux.Router
-
-	autoIDF   *bool
-	idfIgnore *[]string
-
-	db *sql.DB
-	m  *sync.Mutex
+type idfKyouRepositoryCachedSQLite3Impl struct {
+	dbName   string
+	idfRep   IDFKyouRepository
+	cachedDB *sqllib.DB
+	m        *sync.Mutex
 }
 
-const DUIDLayout = "20060102T150405-0700"
-
-type fileinfo struct {
-	Filename string
-	Lastmod  time.Time
-}
-
-// NewIDFDirRep .
-// id.dbと関連づいたディレクトリによるrykv.Repの実装
-// dir: ディレクトリ
-// idBDFile: ディレクトリと関連付けられたid.DBファイル。（通常は dir/.kyou/id.db を指定する）
-// r: ファイルサーバーをハンドルするrouter。 /files/filepath.Base(dir)/ でハンドルされる
-// autoIDF: trueにするとGetAllKyous()が呼び出されるたびにidfする
-// idfIgnore: autoIDFが有効なとき、idfの対象にしないファイル名パターン
-// idfRecurse: autoIDFが有効なとき、サブディレクトリなどに対してもidfをする場合はtrueを指定する
-func NewIDFDirRep(ctx context.Context, dir, dbFilename string, r *mux.Router, autoIDF *bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
-	filename := dbFilename
-
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
-	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
-		return nil, err
-	}
-
+func NewIDFCachedRep(ctx context.Context, idfRep IDFKyouRepository, cacheDB *sql.DB, dbName string) (IDFKyouRepository, error) {
 	sql := `
-CREATE TABLE IF NOT EXISTS "IDF" (
+CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TARGET_REP_NAME,
@@ -74,14 +42,15 @@ CREATE TABLE IF NOT EXISTS "IDF" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL 
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL
 )
 `
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := db.PrepareContext(ctx, sql)
+	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create IDF table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create IDF table statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -89,15 +58,22 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create IDF table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create IDF table to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_IDF ON IDF (ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create IDF index statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create IDF table to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, RELATED_TIME, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create IDF index statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer indexStmt.Close()
@@ -105,37 +81,20 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create IDF index to %s: %w", filename, err)
+		err = fmt.Errorf("error at create IDF index to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create IDF table to %s: %w", filename, err)
-		return nil, err
+	rep := &idfKyouRepositoryCachedSQLite3Impl{
+		dbName:   dbName,
+		idfRep:   idfRep,
+		cachedDB: cacheDB,
+		m:        &sync.Mutex{},
 	}
-
-	rep := &idfKyouRepositorySQLite3Impl{
-		repositoriesRef: repositoriesRef,
-		idDBFile:        dbFilename,
-		contentDir:      dir,
-		rootAddress:     "/files/" + filepath.Base(dir) + "/",
-		r:               r,
-		autoIDF:         autoIDF,
-		idfIgnore:       idfIgnore,
-		db:              db,
-		m:               &sync.Mutex{},
-	}
-
-	r.PathPrefix(rep.rootAddress).
-		Handler(http.StripPrefix(rep.rootAddress, http.FileServer(http.Dir(dir))))
-
 	return rep, nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (i *idfKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -162,20 +121,13 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
 FROM IDF
 WHERE
 `
-	repName, err := i.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at idf : %w", err)
-		return nil, err
-	}
-
 	dataType := "idf"
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -194,7 +146,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyou sql: %w", err)
 		return nil, err
@@ -216,7 +168,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			idf := &IDFKyou{}
-			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
 
@@ -239,12 +190,6 @@ WHERE
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan from idf: %w", err)
-				return nil, err
-			}
-
-			idf.ContentPath, err = i.GetPath(ctx, idf.ID)
-			if err != nil {
-				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
 			}
 
@@ -274,23 +219,8 @@ WHERE
 
 			// 判定OKであれば追加する
 			// ファイルの内容を取得する
-			var targetRep Repository
-			if targetRepName == "" || targetRepName == repName {
-				targetRep = i
-			} else {
-				for _, rep := range i.repositoriesRef.Reps {
-					repName, err := rep.GetRepName(ctx)
-					if err != nil {
-						err = fmt.Errorf("error at get rep name: %w", err)
-						return nil, err
-					}
-					if repName == targetRepName {
-						targetRep = rep
-					}
-				}
-			}
 			fileContentText := ""
-			filename, err := targetRep.GetPath(ctx, idf.ID)
+			filename := idf.ContentPath
 			if err != nil {
 				// err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				// return nil, err
@@ -393,7 +323,7 @@ WHERE
 	return kyous, nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := i.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -419,7 +349,7 @@ func (i *idfKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, u
 	return kyouHistories[0], nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	var err error
 	sql := `
 SELECT 
@@ -436,21 +366,14 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
 FROM IDF
 WHERE
 `
 
-	repName, err := i.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at idf : %w", err)
-		return nil, err
-	}
-
 	dataType := "idf"
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -479,7 +402,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -501,7 +424,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			idf := &IDFKyou{}
-			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
 
@@ -524,12 +446,6 @@ WHERE
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan from idf: %w", err)
-				return nil, err
-			}
-
-			idf.ContentPath, err = i.GetPath(ctx, idf.ID)
-			if err != nil {
-				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
 			}
 
@@ -581,13 +497,46 @@ WHERE
 	return kyous, nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	if id == "" {
-		return i.contentDir, nil
+func (i *idfKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return i.idfRep.GetPath(ctx, id)
+}
+
+func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	i.m.Lock()
+	defer i.m.Unlock()
+
+	trueValue := true
+	query := &find.FindQuery{
+		UpdateCache: &trueValue,
 	}
-	var err error
-	sql := `
-SELECT 
+
+	allIDFKyous, err := i.idfRep.FindIDFKyou(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at get all idf kyou at update cache: %w", err)
+		return err
+	}
+
+	tx, err := i.cachedDB.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin transaction for add idf kyou: %w", err)
+		return err
+	}
+
+	sql := `DELETE FROM ` + i.dbName
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at create idf kyou table statement %s: %w", "memory", err)
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at delete idf kyou table: %w", err)
+		return err
+	}
+
+	sql = `
+INSERT INTO ` + i.dbName + ` (
   IS_DELETED,
   ID,
   TARGET_REP_NAME,
@@ -595,160 +544,86 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_DEVICE,
   CREATE_USER,
+  CREATE_DEVICE,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
-  ? AS DATA_TYPE
-FROM IDF
-WHERE
-`
-	repName, err := i.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at idf : %w", err)
-		return "", err
-	}
-
-	dataType := "idf"
-
-	trueValue := true
-	ids := []string{id}
-	query := &find.FindQuery{
-		UseIDs: &trueValue,
-		IDs:    &ids,
-	}
-	queryArgs := []interface{}{
-		repName,
-		dataType,
-	}
-
-	whereCounter := 0
-	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
-	findWordTargetColumns := []string{"ID"}
-	ignoreFindWord := false
-	appendOrderBy := true
-
-	findWordUseLike := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
-	if err != nil {
-		return "", err
-	}
-
-	sql += commonWhereSQL
-
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at get kyou histories sql: %w", err)
-		return "", err
-	}
-	defer stmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-	rows, err := stmt.QueryContext(ctx, queryArgs...)
-	if err != nil {
-		err = fmt.Errorf("error at select from idf: %w", err)
-		return "", err
-	}
-	defer rows.Close()
-
-	idfKyous := []*IDFKyou{}
-	for rows.Next() {
-		select {
-		case <-ctx.Done():
-			return "", ctx.Err()
-		default:
-			idf := &IDFKyou{}
-			idf.RepName = repName
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			targetRepName := ""
-
-			err = rows.Scan(&idf.IsDeleted,
-				&idf.ID,
-				&targetRepName,
-				&idf.TargetFile,
-				&relatedTimeStr,
-				&createTimeStr,
-				&idf.CreateApp,
-				&idf.CreateDevice,
-				&idf.CreateUser,
-				&updateTimeStr,
-				&idf.UpdateApp,
-				&idf.UpdateDevice,
-				&idf.UpdateUser,
-				&idf.RepName,
-				&idf.DataType,
-			)
+  REP_NAME
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+);`
+	for _, idfKyou := range allIDFKyous {
+		err = func() error {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			insertStmt, err := tx.PrepareContext(ctx, sql)
 			if err != nil {
-				err = fmt.Errorf("error at scan from idf: %w", err)
-				_ = err
-				return "", nil
+				err = fmt.Errorf("error at add idf sql: %w", err)
+				return err
+			}
+			defer insertStmt.Close()
+
+			queryArgs := []interface{}{
+				idfKyou.IsDeleted,
+				idfKyou.ID,
+				idfKyou.RepName,
+				idfKyou.TargetFile,
+				idfKyou.RelatedTime.Format(sqlite3impl.TimeLayout),
+				idfKyou.CreateTime.Format(sqlite3impl.TimeLayout),
+				idfKyou.CreateApp,
+				idfKyou.CreateDevice,
+				idfKyou.CreateUser,
+				idfKyou.UpdateTime.Format(sqlite3impl.TimeLayout),
+				idfKyou.UpdateApp,
+				idfKyou.UpdateDevice,
+				idfKyou.UpdateUser,
+				idfKyou.RepName,
 			}
 
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
-
-			// 画像であるか判定
-			idf.IsImage = isImage(idf.TargetFile)
-			idf.IsVideo = isVideo(idf.TargetFile)
-			idf.IsAudio = isAudio(idf.TargetFile)
-
-			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
+			gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in idf: %w", relatedTimeStr, err)
-				return "", err
+				err = fmt.Errorf("error at insert in to idf %s: %w", idfKyou.ID, err)
+				return err
 			}
-			idf.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in idf: %w", createTimeStr, err)
-				return "", err
-			}
-			idf.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in idf: %w", updateTimeStr, err)
-				return "", err
-			}
-
-			idfKyous = append(idfKyous, idf)
-		}
-	}
-	sort.Slice(idfKyous, func(i, j int) bool {
-		return idfKyous[i].UpdateTime.After(idfKyous[j].UpdateTime)
-	})
-	if len(idfKyous) == 0 {
-		repName, _ := i.GetRepName(ctx)
-		err := fmt.Errorf("not found %s in %s", id, repName)
-		return "", err
-	}
-
-	filename := filepath.Join(i.contentDir, idfKyous[0].TargetFile)
-	return filename, nil
-}
-
-func (i *idfKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
-	if *i.autoIDF {
-		err := i.IDF(ctx)
+			return nil
+		}()
 		if err != nil {
-			repName, _ := i.GetRepName(ctx)
-			err = fmt.Errorf("error at idf %s: %w", repName, err)
 			return err
 		}
 	}
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at commit transaction for add idf kyous: %w", err)
+		return err
+	}
+
 	return nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	return filepath.Base(i.contentDir), nil
+func (i *idfKyouRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	return i.idfRep.GetRepName(ctx)
 }
 
-func (i *idfKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return i.db.Close()
+func (i *idfKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	return i.cachedDB.Close()
 }
 
-func (i *idfKyouRepositorySQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
+func (i *idfKyouRepositoryCachedSQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -776,20 +651,13 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
 FROM IDF
 WHERE
 `
-	repName, err := i.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at idf : %w", err)
-		return nil, err
-	}
-
 	dataType := "idf"
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -810,7 +678,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyou sql: %w", err)
 		return nil, err
@@ -832,7 +700,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			idf := &IDFKyou{}
-			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
 
@@ -882,13 +749,9 @@ WHERE
 				return nil, err
 			}
 
-			// 判定OKであれば追加する
 			// ファイルの内容を取得する
-			if idf.RepName != repName && idf.RepName != "" {
-				continue
-			}
 			fileContentText := ""
-			filename, err := i.GetPath(ctx, idf.ID)
+			filename := idf.ContentPath
 			if err != nil {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
@@ -966,7 +829,7 @@ WHERE
 	return idfKyous, nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error) {
+func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyou(ctx context.Context, id string, updateTime *time.Time) (*IDFKyou, error) {
 	// 最新のデータを返す
 	idfHistories, err := i.GetIDFKyouHistories(ctx, id)
 	if err != nil {
@@ -992,7 +855,7 @@ func (i *idfKyouRepositorySQLite3Impl) GetIDFKyou(ctx context.Context, id string
 	return idfHistories[0], nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
+func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
 	var err error
 	sql := `
 SELECT 
@@ -1009,7 +872,7 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
 FROM IDF
 WHERE 
@@ -1022,15 +885,8 @@ WHERE
 		IDs:    &ids,
 	}
 
-	repName, err := i.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at idf : %w", err)
-		return nil, err
-	}
-
 	dataType := "idf"
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -1051,7 +907,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get idf histories sql: %w", err)
 		return nil, err
@@ -1073,7 +929,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			idf := &IDFKyou{}
-			idf.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			targetRepName := ""
 
@@ -1096,12 +951,6 @@ WHERE
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan from idf: %w", err)
-				return nil, err
-			}
-
-			idf.ContentPath, err = i.GetPath(ctx, idf.ID)
-			if err != nil {
-				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
 			}
 
@@ -1137,146 +986,11 @@ WHERE
 	return idfKyous, nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
-	allIDFKyous, err := i.FindIDFKyou(ctx, &find.FindQuery{})
-	if err != nil {
-		err = fmt.Errorf("error at find idf kyou: %w", err)
-		return err
-	}
-
-	contentDirAbs, err := filepath.Abs(i.contentDir)
-	if err != nil {
-		err = fmt.Errorf("error at get abs path %s: %w", i.contentDir, err)
-		return err
-	}
-	contentDirAbs = filepath.Clean(contentDirAbs)
-	contentDirAbs = filepath.ToSlash(contentDirAbs)
-	// 対象内のファイルfullPath
-	existFileInfos := map[string]*fileinfo{}
-	err = filepath.WalkDir(contentDirAbs, fs.WalkDirFunc(func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		path = filepath.ToSlash(path)
-		path = strings.TrimPrefix(path, contentDirAbs+"/")
-		for _, ignore := range *i.idfIgnore {
-			if filepath.Base(path) == ignore {
-				return nil
-			}
-		}
-		info, err := d.Info()
-		if err != nil {
-			return err
-		}
-		info.ModTime()
-		existFileInfos[path] = &fileinfo{
-			Filename: path,
-			Lastmod:  info.ModTime(),
-		}
-		return nil
-	}))
-	if err != nil {
-		err = fmt.Errorf("error at walk dir at %s: %w", contentDirAbs, err)
-		return err
-	}
-
-	// まだidfされていないやつをリストアップする
-	idfTargetList := map[string]struct{}{}
-	for _, existFileInfo := range existFileInfos {
-		path := existFileInfo.Filename
-		exist := false
-		for _, existIDF := range allIDFKyous {
-			if existIDF.TargetFile == path {
-				exist = true
-				break
-			}
-		}
-		if !exist {
-			idfTargetList[path] = struct{}{}
-		}
-	}
-
-	// 対象をidfする
-	idfKyous := []*IDFKyou{}
-	now := time.Now()
-	repName, err := i.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name: %w", err)
-		return err
-	}
-
-	for idfTargetFileName := range idfTargetList {
-		lastMod := now
-		for _, existFileInfo := range existFileInfos {
-			if existFileInfo.Filename == idfTargetFileName {
-				lastMod = existFileInfo.Lastmod
-			}
-		}
-
-		trimedFileName := filepath.Clean(idfTargetFileName)
-		trimedFileName = filepath.ToSlash(trimedFileName)
-		trimedFileName = strings.TrimPrefix(trimedFileName, contentDirAbs)
-		trimedFileName = strings.TrimPrefix(trimedFileName, "/")
-		if trimedFileName == "" {
-			continue
-		}
-		if i.isDUID(trimedFileName) {
-			id, time, err := i.parseDUID(trimedFileName)
-			if err != nil {
-				err = fmt.Errorf("error at parseDUID %s:%w", trimedFileName, err)
-				return err
-			}
-
-			idf := &IDFKyou{}
-			idf.IsDeleted = false
-			idf.ID = id.String()
-			idf.RepName = repName
-			idf.RelatedTime = time
-			idf.DataType = "idf"
-			idf.CreateTime = now
-			idf.CreateApp = "idf"
-			idf.CreateDevice = ""
-			idf.CreateUser = "idf"
-			idf.UpdateTime = now
-			idf.UpdateApp = "idf"
-			idf.UpdateUser = ""
-			idf.UpdateDevice = "idf"
-			idf.TargetFile = trimedFileName
-			idfKyous = append(idfKyous, idf)
-		} else {
-			idf := &IDFKyou{}
-			idf.IsDeleted = false
-			idf.ID = sqlite3impl.GenerateNewID()
-			idf.RepName = repName
-			idf.RelatedTime = lastMod
-			idf.DataType = "idf"
-			idf.CreateTime = now
-			idf.CreateApp = "idf"
-			idf.CreateDevice = ""
-			idf.CreateUser = "idf"
-			idf.UpdateTime = now
-			idf.UpdateApp = "idf"
-			idf.UpdateUser = ""
-			idf.UpdateDevice = "idf"
-			idf.TargetFile = trimedFileName
-			idfKyous = append(idfKyous, idf)
-		}
-	}
-
-	for _, idf := range idfKyous {
-		err := i.AddIDFKyouInfo(ctx, idf)
-		if err != nil {
-			err = fmt.Errorf("error at add idf kyou info %s: %w", idf.ID, err)
-			return err
-		}
-	}
-	return nil
+func (i *idfKyouRepositoryCachedSQLite3Impl) IDF(ctx context.Context) error {
+	panic("not implemented")
 }
 
-func (i *idfKyouRepositorySQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
+func (i *idfKyouRepositoryCachedSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
 	sql := `
 INSERT INTO IDF (
   IS_DELETED,
@@ -1291,8 +1005,10 @@ INSERT INTO IDF (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -1308,7 +1024,7 @@ INSERT INTO IDF (
   ?
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := i.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add idf sql %s: %w", idfKyou.ID, err)
 		return err
@@ -1329,6 +1045,7 @@ INSERT INTO IDF (
 		idfKyou.UpdateApp,
 		idfKyou.UpdateDevice,
 		idfKyou.UpdateUser,
+		idfKyou.RepName,
 	}
 
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
@@ -1340,138 +1057,6 @@ INSERT INTO IDF (
 	return nil
 }
 
-func (i *idfKyouRepositorySQLite3Impl) isDUID(filename string) bool {
-	base := filepath.Base(filename)
-	ext := filepath.Ext(base)
-	withoutExt := base[:len(base)-len(ext)]
-	_, _, err := i.parseDUID(withoutExt)
-	return err == nil
-}
-
-func (i *idfKyouRepositorySQLite3Impl) parseDUID(str string) (id uuid.UUID, t time.Time, err error) {
-	if len(str) != len(DUIDLayout)+36*len("_") {
-		err := fmt.Errorf("%s is not duid", str)
-		return uuid.UUID{}, time.Time{}, err
-	}
-	timestr := str[:len(DUIDLayout)]
-	idstr := str[len("_")+len(DUIDLayout):]
-
-	id, err = uuid.Parse(idstr)
-	if err != nil {
-		err = fmt.Errorf("failed to parse uuid %s: %w", idstr, err)
-		return uuid.UUID{}, time.Time{}, err
-	}
-	t, err = time.Parse(DUIDLayout, timestr)
-	if err != nil {
-		err = fmt.Errorf("failed to parse time %s: %w", timestr, err)
-		return uuid.UUID{}, time.Time{}, err
-	}
-	return id, t, nil
-}
-
-func (i *idfKyouRepositorySQLite3Impl) HandleFileServe(w http.ResponseWriter, r *http.Request) {
-	http.FileServer(http.Dir(i.contentDir)).ServeHTTP(w, r)
-}
-
-func isImage(filename string) bool {
-	ext := strings.ToLower(filepath.Ext(filename))
-	switch ext {
-	case ".apng",
-		".avif",
-		".gif",
-		".jpg",
-		".jpeg",
-		".jfif",
-		".pjpeg",
-		".pjp",
-		".png",
-		".svg",
-		".webp",
-		".bmp",
-		".ico",
-		".cur",
-		".tif",
-		".tiff",
-		".tga",
-		".dds",
-		".heif",
-		".heic",
-		".jpe",
-		".jif",
-		".jfi",
-		".jp2",
-		".j2k",
-		".jpf",
-		".jpx",
-		".jpm",
-		".mj2",
-		".xpm",
-		".wbmp",
-		".xbm",
-		".pcx",
-		".pnm",
-		".pgm",
-		".pbm",
-		".ppm",
-		".pam",
-		".pfm":
-		return true
-	}
-	return false
-}
-
-func isVideo(filename string) bool {
-	ext := strings.ToLower(filepath.Ext(filename))
-	switch ext {
-	case ".mp4",
-		".webm",
-		".avi",
-		".mov",
-		".mpg",
-		".mkv",
-		".mwv",
-		".flv",
-		".asf",
-		".f4v",
-		".m4v",
-		".3gp",
-		".3g2",
-		".3gp2",
-		".3gpp",
-		".ogv",
-		".ogm",
-		".ts",
-		".vob",
-		".rm",
-		".rmvb",
-		".wmv",
-		".mks",
-		".mk3d":
-		return true
-	}
-	return false
-}
-
-func isAudio(filename string) bool {
-	ext := strings.ToLower(filepath.Ext(filename))
-	switch ext {
-	case
-		".mp3",
-		".aac",
-		".m4a",
-		".m4b",
-		".m4p",
-		".m4r",
-		".ogg",
-		".oga",
-		".spx",
-		".opus",
-		".flac",
-		".wav",
-		".weba",
-		".mka",
-		".wma":
-		return true
-	}
-	return false
+func (i *idfKyouRepositoryCachedSQLite3Impl) HandleFileServe(w http.ResponseWriter, r *http.Request) {
+	i.idfRep.HandleFileServe(w, r)
 }

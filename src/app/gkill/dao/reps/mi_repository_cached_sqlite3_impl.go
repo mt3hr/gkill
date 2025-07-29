@@ -3,10 +3,10 @@ package reps
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"sync"
 	"time"
 
+	"database/sql"
 	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -15,22 +15,18 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
-type miRepositorySQLite3Impl struct {
-	filename string
-	db       *sqllib.DB
+type miRepositoryCachedSQLite3Impl struct {
+	dbName   string
+	miRep    MiRepository
+	cachedDB *sqllib.DB
 	m        *sync.Mutex
 }
 
-func NewMiRepositorySQLite3Impl(ctx context.Context, filename string) (MiRepository, error) {
+func NewMiRepositoryCachedSQLite3Impl(ctx context.Context, miRep MiRepository, cacheDB *sql.DB, dbName string) (MiRepository, error) {
 	var err error
-	db, err := sqllib.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
-	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
-		return nil, err
-	}
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "MI" (
+CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TITLE NOT NULL,
@@ -46,12 +42,13 @@ CREATE TABLE IF NOT EXISTS "MI" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := db.PrepareContext(ctx, sql)
+	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create MI table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create MI table statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -59,15 +56,22 @@ CREATE TABLE IF NOT EXISTS "MI" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create MI table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create MI table to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_MI ON MI (ID, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create MI index statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create MI table to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create MI index statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer indexStmt.Close()
@@ -75,25 +79,18 @@ CREATE TABLE IF NOT EXISTS "MI" (
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create MI index to %s: %w", filename, err)
+		err = fmt.Errorf("error at create MI index to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create MI table to %s: %w", filename, err)
-		return nil, err
-	}
-
-	return &miRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
+	return &miRepositoryCachedSQLite3Impl{
+		dbName:   dbName,
+		miRep:    miRep,
+		cachedDB: cacheDB,
 		m:        &sync.Mutex{},
 	}, nil
 }
-func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -103,12 +100,6 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
-	}
-
-	repName, err := m.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at MI: %w", err)
-		return nil, err
 	}
 
 	sqlCreateMi := `
@@ -124,9 +115,9 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_create' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlCheckMi := `
@@ -142,9 +133,9 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_check' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlLimitMi := `
@@ -160,9 +151,9 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_limit' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 	sqlStartMi := `
 		SELECT
@@ -177,9 +168,9 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_start' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlEndMi := `
@@ -195,9 +186,9 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_end' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	// 検索対象のデータ抽出用WHERE
@@ -245,9 +236,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		sqlWhereFilterEndMi = " 1 = 0 " // false
 	}
 
-	queryArgsForCreate := []interface{}{
-		repName,
-	}
+	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "CREATE_TIME"
@@ -267,9 +256,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
-	queryArgsForCheck := []interface{}{
-		repName,
-	}
+	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "RELATED_TIME"
@@ -288,9 +275,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
-	queryArgsForLimit := []interface{}{
-		repName,
-	}
+	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "LIMIT_TIME"
@@ -309,9 +294,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
-	queryArgsForStart := []interface{}{
-		repName,
-	}
+	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_START_TIME"
@@ -330,9 +313,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
-	queryArgsForEnd := []interface{}{
-		repName,
-	}
+	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_END_TIME"
@@ -354,7 +335,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
@@ -383,7 +364,6 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(
@@ -430,7 +410,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	return kyous, nil
 }
 
-func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := m.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -456,7 +436,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 	return kyouHistories[0], nil
 }
 
-func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	var err error
 
 	trueValue := true
@@ -478,12 +458,6 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		}
 	}
 
-	repName, err := m.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at MI: %w", err)
-		return nil, err
-	}
-
 	sqlCreateMi := `
 		SELECT
 		  IS_DELETED,
@@ -497,9 +471,9 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_create' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlCheckMi := `
@@ -515,9 +489,9 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_check' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlLimitMi := `
@@ -533,9 +507,9 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_limit' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 	sqlStartMi := `
 		SELECT
@@ -550,9 +524,9 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_start' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlEndMi := `
@@ -568,9 +542,9 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_end' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	// 検索対象のデータ抽出用WHERE
@@ -618,9 +592,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		sqlWhereFilterEndMi = " 1 = 0 " // false
 	}
 
-	queryArgsForCreate := []interface{}{
-		repName,
-	}
+	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "CREATE_TIME"
@@ -640,9 +612,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
-	queryArgsForCheck := []interface{}{
-		repName,
-	}
+	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "RELATED_TIME"
@@ -661,9 +631,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
-	queryArgsForLimit := []interface{}{
-		repName,
-	}
+	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "LIMIT_TIME"
@@ -682,9 +650,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
-	queryArgsForStart := []interface{}{
-		repName,
-	}
+	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_START_TIME"
@@ -703,9 +669,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
-	queryArgsForEnd := []interface{}{
-		repName,
-	}
+	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_END_TIME"
@@ -727,7 +691,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
@@ -756,7 +720,6 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(
@@ -800,31 +763,159 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 	return kyous, nil
 }
 
-func (m *miRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return filepath.Abs(m.filename)
+func (m *miRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return m.miRep.GetPath(ctx, id)
 }
 
-func (m *miRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	m.m.Lock()
+	defer m.m.Unlock()
+
+	trueValue := true
+	query := &find.FindQuery{
+		UpdateCache: &trueValue,
+	}
+
+	allMis, err := m.miRep.FindMi(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at get all mis at update cache: %w", err)
+		return err
+	}
+
+	tx, err := m.cachedDB.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin transaction for add mi: %w", err)
+		return err
+	}
+
+	sql := `DELETE FROM ` + m.dbName
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at create MI table statement %s: %w", "memory", err)
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at delete MI table: %w", err)
+		return err
+	}
+
+	sql = `
+INSERT INTO ` + m.dbName + ` (
+  IS_DELETED,
+  ID,
+  TITLE,
+  IS_CHECKED,
+  BOARD_NAME,
+  LIMIT_TIME,
+  ESTIMATE_START_TIME,
+  ESTIMATE_END_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_USER,
+  CREATE_DEVICE,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	for _, mi := range allMis {
+		err = func() error {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			insertStmt, err := tx.PrepareContext(ctx, sql)
+			if err != nil {
+				err = fmt.Errorf("error at add mi sql: %w", err)
+				return err
+			}
+			defer insertStmt.Close()
+			var limitTimeStr interface{}
+			if mi.LimitTime == nil {
+				limitTimeStr = nil
+			} else {
+				limitTimeStr = mi.LimitTime.Format(sqlite3impl.TimeLayout)
+			}
+			var startTimeStr interface{}
+			if mi.EstimateStartTime == nil {
+				startTimeStr = nil
+			} else {
+				startTimeStr = mi.EstimateStartTime.Format(sqlite3impl.TimeLayout)
+			}
+			var endTimeStr interface{}
+			if mi.EstimateEndTime == nil {
+				endTimeStr = nil
+			} else {
+				endTimeStr = mi.EstimateEndTime.Format(sqlite3impl.TimeLayout)
+			}
+
+			queryArgs := []interface{}{
+				mi.IsDeleted,
+				mi.ID,
+				mi.Title,
+				mi.IsChecked,
+				mi.BoardName,
+				limitTimeStr,
+				startTimeStr,
+				endTimeStr,
+				mi.CreateTime.Format(sqlite3impl.TimeLayout),
+				mi.CreateApp,
+				mi.CreateDevice,
+				mi.CreateUser,
+				mi.UpdateTime.Format(sqlite3impl.TimeLayout),
+				mi.UpdateApp,
+				mi.UpdateDevice,
+				mi.UpdateUser,
+				mi.RepName,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at insert in to mi %s: %w", mi.ID, err)
+				return err
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at commit transaction for add timeiss: %w", err)
+		return err
+	}
 	return nil
 }
 
-func (m *miRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := m.GetPath(ctx, "")
-	if err != nil {
-		err = fmt.Errorf("error at get path mi rep: %w", err)
-		return "", err
-	}
-	base := filepath.Base(path)
-	ext := filepath.Ext(base)
-	withoutExt := base[:len(base)-len(ext)]
-	return withoutExt, nil
+func (m *miRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	return m.miRep.GetRepName(ctx)
 }
 
-func (m *miRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return m.db.Close()
+func (m *miRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	_, err := m.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+m.dbName)
+	return err
 }
 
-func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
+func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
 	var err error
 	if query.UpdateCache != nil && *query.UpdateCache {
 		err = m.UpdateCache(ctx)
@@ -833,12 +924,6 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 			err = fmt.Errorf("error at update cache %s: %w", repName, err)
 			return nil, err
 		}
-	}
-
-	repName, err := m.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at MI: %w", err)
-		return nil, err
 	}
 
 	sqlCreateMi := `
@@ -859,9 +944,9 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_create' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlCheckMi := `
@@ -882,9 +967,9 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_check' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlLimitMi := `
@@ -905,9 +990,9 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_limit' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 	sqlStartMi := `
 		SELECT
@@ -927,9 +1012,9 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_start' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlEndMi := `
@@ -950,9 +1035,9 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_end' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	// 検索対象のデータ抽出用WHERE
@@ -1000,9 +1085,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		sqlWhereFilterEndMi = " 1 = 0 " // false
 	}
 
-	queryArgsForCreate := []interface{}{
-		repName,
-	}
+	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "CREATE_TIME"
@@ -1022,9 +1105,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
-	queryArgsForCheck := []interface{}{
-		repName,
-	}
+	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "CREATE_TIME"
@@ -1043,9 +1124,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
-	queryArgsForLimit := []interface{}{
-		repName,
-	}
+	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "LIMIT_TIME"
@@ -1064,9 +1143,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
-	queryArgsForStart := []interface{}{
-		repName,
-	}
+	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_START_TIME"
@@ -1085,9 +1162,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
-	queryArgsForEnd := []interface{}{
-		repName,
-	}
+	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_END_TIME"
@@ -1109,7 +1184,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
@@ -1138,7 +1213,6 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 			return nil, ctx.Err()
 		default:
 			mi := &Mi{}
-			mi.RepName = repName
 			createTimeStr, updateTimeStr := "", ""
 			limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
 
@@ -1195,7 +1269,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	return mis, nil
 }
 
-func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTime *time.Time) (*Mi, error) {
+func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, updateTime *time.Time) (*Mi, error) {
 	// 最新のデータを返す
 	miHistories, err := m.GetMiHistories(ctx, id)
 	if err != nil {
@@ -1221,7 +1295,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 	return miHistories[0], nil
 }
 
-func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
+func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
 	var err error
 
 	trueValue := true
@@ -1231,12 +1305,6 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		IncludeCreateMi: &trueValue,
 		IncludeStartMi:  &trueValue,
 		IncludeCheckMi:  &trueValue,
-	}
-
-	repName, err := m.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at MI: %w", err)
-		return nil, err
 	}
 
 	sqlCreateMi := `
@@ -1257,9 +1325,9 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_create' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlCheckMi := `
@@ -1280,9 +1348,9 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_check' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlLimitMi := `
@@ -1303,9 +1371,9 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_limit' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 	sqlStartMi := `
 		SELECT
@@ -1325,9 +1393,9 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_start' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	sqlEndMi := `
@@ -1348,9 +1416,9 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
-		  ? AS REP_NAME,
+		  REP_NAME,
 		  'mi_end' AS DATA_TYPE
-		FROM MI
+		FROM ` + m.dbName + `
 		`
 
 	// 検索対象のデータ抽出用WHERE
@@ -1398,9 +1466,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		sqlWhereFilterEndMi = " 1 = 0 " // false
 	}
 
-	queryArgsForCreate := []interface{}{
-		repName,
-	}
+	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "CREATE_TIME"
@@ -1420,9 +1486,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
-	queryArgsForCheck := []interface{}{
-		repName,
-	}
+	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "CREATE_TIME"
@@ -1441,9 +1505,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
-	queryArgsForLimit := []interface{}{
-		repName,
-	}
+	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "LIMIT_TIME"
@@ -1462,9 +1524,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
-	queryArgsForStart := []interface{}{
-		repName,
-	}
+	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_START_TIME"
@@ -1483,9 +1543,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
-	queryArgsForEnd := []interface{}{
-		repName,
-	}
+	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_END_TIME"
@@ -1507,7 +1565,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
@@ -1536,7 +1594,6 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 			return nil, ctx.Err()
 		default:
 			mi := &Mi{}
-			mi.RepName = repName
 			createTimeStr, updateTimeStr := "", ""
 			limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
 
@@ -1594,9 +1651,9 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 
 }
 
-func (m *miRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi) error {
+func (m *miRepositoryCachedSQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi) error {
 	sql := `
-INSERT INTO MI (
+INSERT INTO ` + m.dbName + ` (
   IS_DELETED,
   ID,
   TITLE,
@@ -1612,8 +1669,10 @@ INSERT INTO MI (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -1632,7 +1691,7 @@ INSERT INTO MI (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mi sql %s: %w", mi.ID, err)
 		return err
@@ -1675,6 +1734,7 @@ INSERT INTO MI (
 		mi.UpdateApp,
 		mi.UpdateDevice,
 		mi.UpdateUser,
+		mi.RepName,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -1685,13 +1745,13 @@ INSERT INTO MI (
 	return nil
 }
 
-func (m *miRepositorySQLite3Impl) GetBoardNames(ctx context.Context) ([]string, error) {
+func (m *miRepositoryCachedSQLite3Impl) GetBoardNames(ctx context.Context) ([]string, error) {
 	var err error
 
 	sql := `
 SELECT 
   DISTINCT BOARD_NAME
-FROM MI
+FROM ` + m.dbName + `
 WHERE
 `
 	query := &find.FindQuery{}
@@ -1712,7 +1772,7 @@ WHERE
 
 	sql = fmt.Sprintf("%s %s", sql, sqlWhereForCreate)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get board names sql: %w", err)
 		return nil, err

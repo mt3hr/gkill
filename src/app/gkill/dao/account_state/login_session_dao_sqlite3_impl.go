@@ -68,7 +68,6 @@ CREATE TABLE IF NOT EXISTS "LOGIN_SESSION" (
 		err = fmt.Errorf("error at create LOGIN_SESSION index to %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
 
 	return &loginSessionDAOSQLite3Impl{
 		filename: filename,

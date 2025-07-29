@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -14,22 +13,18 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
-type urlogRepositorySQLite3Impl struct {
-	filename string
-	db       *sql.DB
+type urlogRepositoryCachedSQLite3Impl struct {
+	dbName   string
+	urlogRep URLogRepository
+	cachedDB *sql.DB
 	m        *sync.Mutex
 }
 
-func NewURLogRepositorySQLite3Impl(ctx context.Context, filename string) (URLogRepository, error) {
+func NewURLogRepositoryCachedSQLite3Impl(ctx context.Context, urlogRepository URLogRepository, cacheDB *sql.DB, dbName string) (URLogRepository, error) {
 	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
-	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
-		return nil, err
-	}
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "URLOG" (
+CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   URL NOT NULL,
@@ -45,12 +40,13 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := db.PrepareContext(ctx, sql)
+	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create URLOG table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create URLOG table statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -58,15 +54,18 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create URLOG table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create URLOG table to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_URLOG ON URLOG (ID, RELATED_TIME, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
+
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, RELATED_TIME, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
-		err = fmt.Errorf("error at create URLOG index statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create URLOG index statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer indexStmt.Close()
@@ -74,26 +73,24 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create URLOG index to %s: %w", filename, err)
+		err = fmt.Errorf("error at create URLOG index to %s: %w", dbName, err)
 		return nil, err
 	}
-
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
 
 	if err != nil {
-		err = fmt.Errorf("error at create URLOG table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create URLOG table to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	return &urlogRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
+	return &urlogRepositoryCachedSQLite3Impl{
+		dbName:   dbName,
+		urlogRep: urlogRepository,
+		cachedDB: cacheDB,
 		m:        &sync.Mutex{},
 	}, nil
 }
 
-func (u *urlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (u *urlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -120,21 +117,15 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM URLOG
+FROM ` + u.dbName + `
 WHERE
 `
 
-	repName, err := u.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at urlog: %w", err)
-		return nil, err
-	}
 	dataType := "urlog"
 
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -153,7 +144,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := u.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -176,7 +167,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(
@@ -223,7 +213,7 @@ WHERE
 	return kyous, nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+func (u *urlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := u.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -249,13 +239,7 @@ func (u *urlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, upd
 	return kyouHistories[0], nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	repName, err := u.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
-		return nil, err
-	}
-
+func (u *urlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	sql := `
 SELECT 
   IS_DELETED,
@@ -269,9 +253,9 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM URLOG 
+FROM ` + u.dbName + `
 WHERE 
 `
 	dataType := "urlog"
@@ -284,7 +268,6 @@ WHERE
 	}
 
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -304,7 +287,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := u.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -327,7 +310,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(
@@ -371,32 +353,141 @@ WHERE
 	return kyous, nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return filepath.Abs(u.filename)
+func (u *urlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return u.urlogRep.GetPath(ctx, id)
 }
 
-func (u *urlogRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	u.m.Lock()
+	defer u.m.Unlock()
+
+	trueValue := true
+	query := &find.FindQuery{
+		UpdateCache: &trueValue,
+	}
+
+	allURLogs, err := u.urlogRep.FindURLog(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at get all urlogs at update cache: %w", err)
+		return err
+	}
+
+	tx, err := u.cachedDB.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin transaction for add urlogs: %w", err)
+		return err
+	}
+
+	sql := `DELETE FROM ` + u.dbName
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at create URLOG table statement %s: %w", "memory", err)
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at delete URLOG table: %w", err)
+		return err
+	}
+
+	sql = `
+INSERT INTO ` + u.dbName + ` (
+  IS_DELETED,
+  ID,
+  URL,
+  TITLE,
+  DESCRIPTION,
+  FAVICON_IMAGE,
+  THUMBNAIL_IMAGE,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	for _, urlog := range allURLogs {
+		err = func() error {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			insertStmt, err := tx.PrepareContext(ctx, sql)
+			if err != nil {
+				err = fmt.Errorf("error at add urlog sql: %w", err)
+				return err
+			}
+			defer insertStmt.Close()
+
+			queryArgs := []interface{}{
+				urlog.IsDeleted,
+				urlog.ID,
+				urlog.URL,
+				urlog.Title,
+				urlog.Description,
+				urlog.FaviconImage,
+				urlog.ThumbnailImage,
+				urlog.RelatedTime.Format(sqlite3impl.TimeLayout),
+				urlog.CreateTime.Format(sqlite3impl.TimeLayout),
+				urlog.CreateApp,
+				urlog.CreateDevice,
+				urlog.CreateUser,
+				urlog.UpdateTime.Format(sqlite3impl.TimeLayout),
+				urlog.UpdateApp,
+				urlog.UpdateDevice,
+				urlog.UpdateUser,
+				urlog.RepName,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at insert in to URLog %s: %w", urlog.ID, err)
+				return err
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at commit transaction for add urlogs: %w", err)
+		return err
+	}
 	return nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := u.GetPath(ctx, "")
-	if err != nil {
-		err = fmt.Errorf("error at get path urlog rep: %w", err)
-		return "", err
-	}
-	base := filepath.Base(path)
-	ext := filepath.Ext(base)
-	withoutExt := base[:len(base)-len(ext)]
-	return withoutExt, nil
-
+func (u *urlogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	return u.urlogRep.GetRepName(ctx)
 }
 
-func (u *urlogRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return u.db.Close()
+func (u *urlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	_, err := u.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+u.dbName)
+	return err
 }
 
-func (u *urlogRepositorySQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
+func (u *urlogRepositoryCachedSQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -428,21 +519,15 @@ SELECT
   DESCRIPTION,
   FAVICON_IMAGE,
   THUMBNAIL_IMAGE,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM URLOG
+FROM ` + u.dbName + `
 WHERE
 `
 
-	repName, err := u.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
-		return nil, err
-	}
 	dataType := "urlog"
 
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -461,7 +546,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := u.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -484,7 +569,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			urlog := &URLog{}
-			urlog.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(
@@ -533,7 +617,7 @@ WHERE
 	return urlogs, nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetURLog(ctx context.Context, id string, updateTime *time.Time) (*URLog, error) {
+func (u *urlogRepositoryCachedSQLite3Impl) GetURLog(ctx context.Context, id string, updateTime *time.Time) (*URLog, error) {
 	// 最新のデータを返す
 	urlogHistories, err := u.GetURLogHistories(ctx, id)
 	if err != nil {
@@ -559,7 +643,7 @@ func (u *urlogRepositorySQLite3Impl) GetURLog(ctx context.Context, id string, up
 	return urlogHistories[0], nil
 }
 
-func (u *urlogRepositorySQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
+func (u *urlogRepositoryCachedSQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
 	repName, err := u.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
@@ -584,9 +668,9 @@ SELECT
   DESCRIPTION,
   FAVICON_IMAGE,
   THUMBNAIL_IMAGE,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM URLOG
+FROM ` + u.dbName + `
 WHERE
 `
 
@@ -599,7 +683,6 @@ WHERE
 	dataType := "urlog"
 
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -619,7 +702,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := u.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog histories sql %s: %w", id, err)
 		return nil, err
@@ -692,9 +775,9 @@ WHERE
 	return urlogs, nil
 }
 
-func (u *urlogRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog) error {
+func (u *urlogRepositoryCachedSQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog) error {
 	sql := `
-INSERT INTO URLOG (
+INSERT INTO ` + u.dbName + ` (
   IS_DELETED,
   ID,
   URL,
@@ -710,8 +793,10 @@ INSERT INTO URLOG (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -730,7 +815,7 @@ INSERT INTO URLOG (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := u.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add urlog sql %s: %w", urlog.ID, err)
 		return err
@@ -754,6 +839,7 @@ INSERT INTO URLOG (
 		urlog.UpdateApp,
 		urlog.UpdateDevice,
 		urlog.UpdateUser,
+		urlog.RepName,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)

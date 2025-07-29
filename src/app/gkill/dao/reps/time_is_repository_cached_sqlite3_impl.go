@@ -3,10 +3,10 @@ package reps
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"sync"
 	"time"
 
+	"database/sql"
 	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -15,22 +15,18 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
-type timeIsRepositorySQLite3Impl struct {
-	filename string
-	db       *sqllib.DB
-	m        *sync.Mutex
+type timeIsRepositoryCachedSQLite3Impl struct {
+	dbName    string
+	timeisRep TimeIsRepository
+	cachedDB  *sqllib.DB
+	m         *sync.Mutex
 }
 
-func NewTimeIsRepositorySQLite3Impl(ctx context.Context, filename string) (TimeIsRepository, error) {
+func NewTimeIsRepositoryCachedSQLite3Impl(ctx context.Context, timeisRep TimeIsRepository, cacheDB *sql.DB, dbName string) (TimeIsRepository, error) {
 	var err error
-	db, err := sqllib.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
-	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
-		return nil, err
-	}
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "TIMEIS" (
+CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TITLE NOT NULL,
@@ -43,12 +39,13 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := db.PrepareContext(ctx, sql)
+	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -56,15 +53,22 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create TIMEIS table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create TIMEIS table to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_TIMEIS ON TIMEIS (ID, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := db.PrepareContext(ctx, indexSQL)
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = stmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create TIMEIS index statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create TIMEIS table to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create TIMEIS index statement %s: %w", dbName, err)
 		return nil, err
 	}
 	defer indexStmt.Close()
@@ -72,25 +76,18 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create TIMEIS index to %s: %w", filename, err)
+		err = fmt.Errorf("error at create TIMEIS index to %s: %w", dbName, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create TIMEIS table to %s: %w", filename, err)
-		return nil, err
-	}
-
-	return &timeIsRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
-		m:        &sync.Mutex{},
+	return &timeIsRepositoryCachedSQLite3Impl{
+		timeisRep: timeisRep,
+		dbName:    dbName,
+		cachedDB:  cacheDB,
+		m:         &sync.Mutex{},
 	}, nil
 }
-func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -117,9 +114,9 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   'timeis_start' AS DATA_TYPE
-FROM TIMEIS 
+FROM ` + t.dbName + `
 `
 	sqlEndTimeIs := `
 SELECT 
@@ -134,9 +131,9 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   'timeis_end' AS DATA_TYPE
-FROM TIMEIS 
+FROM ` + t.dbName + `
 `
 
 	sqlWhereFilterEndTimeIs := ""
@@ -146,15 +143,7 @@ FROM TIMEIS
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
-		return nil, err
-	}
-
-	queryArgsForStart := []interface{}{
-		repName,
-	}
+	queryArgsForStart := []interface{}{}
 
 	whereCounter := 0
 	onlyLatestData := true
@@ -178,9 +167,7 @@ FROM TIMEIS
 		whereCounter++
 	}
 
-	queryArgsForEnd := []interface{}{
-		repName,
-	}
+	queryArgsForEnd := []interface{}{}
 
 	whereCounter = 0
 	onlyLatestData = true
@@ -207,7 +194,7 @@ FROM TIMEIS
 	sql += " ORDER BY RELATED_TIME DESC"
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous sql: %w", err)
 		return nil, err
@@ -229,7 +216,6 @@ FROM TIMEIS
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			kyou.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 
 			err = rows.Scan(
@@ -277,7 +263,7 @@ FROM TIMEIS
 	return kyous, nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+func (t *timeIsRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	// 最新のデータを返す
 	kyouHistories, err := t.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -303,7 +289,7 @@ func (t *timeIsRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 	return kyouHistories[0], nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
@@ -324,9 +310,9 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   'timeis_start' AS DATA_TYPE
-FROM TIMEIS 
+FROM ` + t.dbName + `
 WHERE 
 `
 	trueValue := true
@@ -336,9 +322,7 @@ WHERE
 		IDs:    &ids,
 	}
 
-	queryArgs := []interface{}{
-		repName,
-	}
+	queryArgs := []interface{}{}
 
 	whereCounter := 0
 	onlyLatestData := false
@@ -356,7 +340,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -425,31 +409,139 @@ WHERE
 	return kyous, nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return filepath.Abs(t.filename)
+func (t *timeIsRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	return t.timeisRep.GetPath(ctx, id)
 }
 
-func (t *timeIsRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
+
+	trueValue := true
+	query := &find.FindQuery{
+		UpdateCache: &trueValue,
+	}
+
+	allTimeiss, err := t.timeisRep.FindTimeIs(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at get all timeis at update cache: %w", err)
+		return err
+	}
+
+	tx, err := t.cachedDB.Begin()
+	if err != nil {
+		err = fmt.Errorf("error at begin transaction for add timeis: %w", err)
+		return err
+	}
+
+	sql := `DELETE FROM ` + t.dbName
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", "memory", err)
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at delete TIMEIS table: %w", err)
+		return err
+	}
+
+	sql = `
+INSERT INTO ` + t.dbName + `(
+  IS_DELETED,
+  ID,
+  TITLE,
+  START_TIME,
+  END_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+)`
+	for _, timeis := range allTimeiss {
+		err = func() error {
+			gkill_log.TraceSQL.Printf("sql: %s", sql)
+			insertStmt, err := tx.PrepareContext(ctx, sql)
+			if err != nil {
+				err = fmt.Errorf("error at add timeis sql: %w", err)
+				return err
+			}
+			defer insertStmt.Close()
+
+			var endTimeStr interface{}
+			if timeis.EndTime == nil {
+				endTimeStr = nil
+			} else {
+				endTimeStr = timeis.EndTime.Format(sqlite3impl.TimeLayout)
+			}
+
+			queryArgs := []interface{}{
+				timeis.IsDeleted,
+				timeis.ID,
+				timeis.Title,
+				timeis.StartTime.Format(sqlite3impl.TimeLayout),
+				endTimeStr,
+				timeis.CreateTime.Format(sqlite3impl.TimeLayout),
+				timeis.CreateApp,
+				timeis.CreateDevice,
+				timeis.CreateUser,
+				timeis.UpdateTime.Format(sqlite3impl.TimeLayout),
+				timeis.UpdateApp,
+				timeis.UpdateDevice,
+				timeis.UpdateUser,
+				timeis.RepName,
+			}
+			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
+			if err != nil {
+				err = fmt.Errorf("error at insert in to timeis %s: %w", timeis.ID, err)
+				return err
+			}
+			return nil
+		}()
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at commit transaction for add timeiss: %w", err)
+		return err
+	}
 	return nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error) {
-	path, err := t.GetPath(ctx, "")
-	if err != nil {
-		err = fmt.Errorf("error at get path timeis rep: %w", err)
-		return "", err
-	}
-	base := filepath.Base(path)
-	ext := filepath.Ext(base)
-	withoutExt := base[:len(base)-len(ext)]
-	return withoutExt, nil
+func (t *timeIsRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string, error) {
+	return t.timeisRep.GetRepName(ctx)
 }
 
-func (t *timeIsRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return t.db.Close()
+func (t *timeIsRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	_, err := t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+t.dbName)
+	return err
 }
 
-func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
+func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -479,9 +571,9 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   'timeis_start' AS DATA_TYPE
-FROM TIMEIS 
+FROM ` + t.dbName + `
 `
 	sqlEndTimeIs := `
 SELECT 
@@ -499,9 +591,9 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   'timeis_end' AS DATA_TYPE
-FROM TIMEIS 
+FROM ` + t.dbName + `
 `
 
 	sqlWhereFilterEndTimeIs := ""
@@ -511,15 +603,7 @@ FROM TIMEIS
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
 
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
-		return nil, err
-	}
-
-	queryArgsForStart := []interface{}{
-		repName,
-	}
+	queryArgsForStart := []interface{}{}
 
 	whereCounter := 0
 	onlyLatestData := true
@@ -543,9 +627,7 @@ FROM TIMEIS
 		whereCounter++
 	}
 
-	queryArgsForEnd := []interface{}{
-		repName,
-	}
+	queryArgsForEnd := []interface{}{}
 
 	whereCounter = 0
 	onlyLatestData = true
@@ -572,7 +654,7 @@ FROM TIMEIS
 	sql += " ORDER BY RELATED_TIME DESC"
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous sql: %w", err)
 		return nil, err
@@ -594,7 +676,6 @@ FROM TIMEIS
 			return nil, ctx.Err()
 		default:
 			timeis := &TimeIs{}
-			timeis.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			startTimeStr, endTime := "", sqllib.NullString{}
 
@@ -646,7 +727,7 @@ FROM TIMEIS
 	return timeiss, nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error) {
+func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error) {
 	// 最新のデータを返す
 	timeisHistories, err := t.GetTimeIsHistories(ctx, id)
 	if err != nil {
@@ -672,7 +753,7 @@ func (t *timeIsRepositorySQLite3Impl) GetTimeIs(ctx context.Context, id string, 
 	return timeisHistories[0], nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
+func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
 	var err error
 
 	sql := `
@@ -691,17 +772,11 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
-FROM TIMEIS 
+FROM ` + t.dbName + `
 WHERE
 `
-	repName, err := t.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
-		return nil, err
-	}
-
 	trueValue := true
 	ids := []string{id}
 	query := &find.FindQuery{
@@ -712,7 +787,6 @@ WHERE
 	dataType := "timeis"
 
 	queryArgs := []interface{}{
-		repName,
 		dataType,
 	}
 
@@ -741,7 +815,7 @@ WHERE
 	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
 	sql += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get time is histories sql: %w", err)
 		return nil, err
@@ -764,7 +838,6 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			timeis := &TimeIs{}
-			timeis.RepName = repName
 			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
 			startTimeStr, endTime := "", sqllib.NullString{}
 
@@ -816,9 +889,9 @@ WHERE
 	return timeiss, nil
 }
 
-func (t *timeIsRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
+func (t *timeIsRepositoryCachedSQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
 	sql := `
-INSERT INTO TIMEIS (
+INSERT INTO ` + t.dbName + `(
   IS_DELETED,
   ID,
   TITLE,
@@ -831,8 +904,10 @@ INSERT INTO TIMEIS (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -848,7 +923,7 @@ INSERT INTO TIMEIS (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add timeis sql %s: %w", timeis.ID, err)
 		return err
@@ -876,6 +951,7 @@ INSERT INTO TIMEIS (
 		timeis.UpdateApp,
 		timeis.UpdateDevice,
 		timeis.UpdateUser,
+		timeis.RepName,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)

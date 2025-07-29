@@ -72,7 +72,6 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		err = fmt.Errorf("error at create IDF index to %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -320,10 +319,9 @@ AND DEVICE = ?
 			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
 
 			// 画像であるか判定
-			impl := idfKyouRepositorySQLite3Impl(*i)
-			idf.IsImage = impl.isImage(idf.TargetFile)
-			idf.IsVideo = impl.isVideo(idf.TargetFile)
-			idf.IsAudio = impl.isAudio(idf.TargetFile)
+			idf.IsImage = isImage(idf.TargetFile)
+			idf.IsVideo = isVideo(idf.TargetFile)
+			idf.IsAudio = isAudio(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
@@ -458,10 +456,9 @@ AND DEVICE = ?
 			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
 
 			// 画像であるか判定
-			impl := idfKyouRepositorySQLite3Impl(*i)
-			idf.IsImage = impl.isImage(idf.TargetFile)
-			idf.IsVideo = impl.isVideo(idf.TargetFile)
-			idf.IsAudio = impl.isAudio(idf.TargetFile)
+			idf.IsImage = isImage(idf.TargetFile)
+			idf.IsVideo = isVideo(idf.TargetFile)
+			idf.IsAudio = isAudio(idf.TargetFile)
 
 			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {

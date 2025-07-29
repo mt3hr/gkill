@@ -70,7 +70,6 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 		err = fmt.Errorf("error at create URLOG index to %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)

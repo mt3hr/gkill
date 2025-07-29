@@ -766,13 +766,114 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			}
 		}
 
-		// キャッシュしたTagRep
-		cachedTagRep, err := reps.NewTagRepositoryCachedSQLite3Impl(ctx, repositories.TagReps, memory_db.MemoryDB, userID+"_TAG")
-		if err != nil {
-			err = fmt.Errorf("error at new cached tag rep: %w", err)
-			return nil, err
+		// キャッシュしたRep
+		if gkill_options.CacheKmemoReps {
+			cachedKmemoRep, err := reps.NewKmemoRepositoryCachedSQLite3Impl(ctx, repositories.KmemoReps, memory_db.MemoryDB, userID+"_KMEMO")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.KmemoReps = []reps.KmemoRepository{cachedKmemoRep}
 		}
-		repositories.TagReps = []reps.TagRepository{cachedTagRep}
+
+		if gkill_options.CacheURLogReps {
+			cachedURLogRep, err := reps.NewURLogRepositoryCachedSQLite3Impl(ctx, repositories.URLogReps, memory_db.MemoryDB, userID+"_URLOG")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.URLogReps = []reps.URLogRepository{cachedURLogRep}
+		}
+
+		if gkill_options.CacheKCReps {
+			cachedKCRep, err := reps.NewKCRepositoryCachedSQLite3Impl(ctx, repositories.KCReps, memory_db.MemoryDB, userID+"_KC")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.KCReps = []reps.KCRepository{cachedKCRep}
+		}
+
+		if gkill_options.CacheIDFKyouReps {
+			cachedIDFKyouRep, err := reps.NewIDFCachedRep(ctx, repositories.IDFKyouReps, memory_db.MemoryDB, userID+"_IDF")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.IDFKyouReps = []reps.IDFKyouRepository{cachedIDFKyouRep}
+		}
+
+		if gkill_options.CacheLantanaReps {
+			cachedLantanaRep, err := reps.NewLantanaRepositoryCachedSQLite3Impl(ctx, repositories.LantanaReps, memory_db.MemoryDB, userID+"_LANTANA")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.LantanaReps = []reps.LantanaRepository{cachedLantanaRep}
+		}
+
+		if gkill_options.CacheTimeIsReps {
+			cachedTimeIsRep, err := reps.NewTimeIsRepositoryCachedSQLite3Impl(ctx, repositories.TimeIsReps, memory_db.MemoryDB, userID+"_TIMEIS")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.TimeIsReps = []reps.TimeIsRepository{cachedTimeIsRep}
+		}
+
+		if gkill_options.CacheMiReps {
+			cachedMiRep, err := reps.NewMiRepositoryCachedSQLite3Impl(ctx, repositories.MiReps, memory_db.MemoryDB, userID+"_MI")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.MiReps = []reps.MiRepository{cachedMiRep}
+		}
+
+		if gkill_options.CacheNlogReps {
+			cachedNlogRep, err := reps.NewNlogRepositoryCachedSQLite3Impl(ctx, repositories.NlogReps, memory_db.MemoryDB, userID+"_NLOG")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.NlogReps = []reps.NlogRepository{cachedNlogRep}
+		}
+
+		if gkill_options.CacheTagReps {
+			cachedTagRep, err := reps.NewTagRepositoryCachedSQLite3Impl(ctx, repositories.TagReps, memory_db.MemoryDB, userID+"_TAG")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.TagReps = []reps.TagRepository{cachedTagRep}
+		}
+
+		if gkill_options.CacheTextReps {
+			cachedTextRep, err := reps.NewTextRepositoryCachedSQLite3Impl(ctx, repositories.TextReps, memory_db.MemoryDB, userID+"_TEXT")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.TextReps = []reps.TextRepository{cachedTextRep}
+		}
+
+		if gkill_options.CacheNotificationReps {
+			cachedNotificationRep, err := reps.NewNotificationRepositoryCachedSQLite3Impl(ctx, repositories.NotificationReps, memory_db.MemoryDB, userID+"_NOTIFICATION")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.NotificationReps = []reps.NotificationRepository{cachedNotificationRep}
+		}
+		if gkill_options.CacheReKyouReps {
+			rekyouRepositories := reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{&repositories.ReKyouReps}, GkillRepositories: repositories}
+			cachedReKyouRep, err := reps.NewReKyouRepositoryCachedSQLite3Impl(ctx, &rekyouRepositories, repositories, memory_db.MemoryDB, userID+"_REKYOU")
+			if err != nil {
+				err = fmt.Errorf("error at new cached tag rep: %w", err)
+				return nil, err
+			}
+			repositories.ReKyouReps = reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{cachedReKyouRep}, GkillRepositories: repositories}
+		}
 
 		err = repositories.UpdateCache(ctx)
 		if err != nil {
