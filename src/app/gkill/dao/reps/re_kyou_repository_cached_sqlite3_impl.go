@@ -23,7 +23,10 @@ type reKyouRepositoryCachedSQLite3Impl struct {
 	gkillRepositories *GkillRepositories
 }
 
-func NewReKyouRepositoryCachedSQLite3Impl(ctx context.Context, rekyouRep ReKyouRepository, gkillRepositories *GkillRepositories, cacheDB *sql.DB, dbName string) (ReKyouRepository, error) {
+func NewReKyouRepositoryCachedSQLite3Impl(ctx context.Context, rekyouRep ReKyouRepository, gkillRepositories *GkillRepositories, cacheDB *sql.DB, m *sync.Mutex, dbName string) (ReKyouRepository, error) {
+	if m == nil {
+		m = &sync.Mutex{}
+	}
 	var err error
 	sql := `
 CREATE TABLE IF NOT EXISTS "` + dbName + `" (
@@ -83,7 +86,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		dbName:            dbName,
 		rekyouRep:         rekyouRep,
 		cachedDB:          cacheDB,
-		m:                 &sync.Mutex{},
+		m:                 m,
 		gkillRepositories: gkillRepositories,
 	}, nil
 }
@@ -370,6 +373,12 @@ INSERT INTO ` + r.dbName + ` (
   ?
 )`
 	for _, rekyou := range allReKyous {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		default:
+		}
 		err = func() error {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			insertStmt, err := tx.PrepareContext(ctx, sql)

@@ -27,7 +27,10 @@ type idfKyouRepositoryCachedSQLite3Impl struct {
 	m        *sync.Mutex
 }
 
-func NewIDFCachedRep(ctx context.Context, idfRep IDFKyouRepository, cacheDB *sql.DB, dbName string) (IDFKyouRepository, error) {
+func NewIDFCachedRep(ctx context.Context, idfRep IDFKyouRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (IDFKyouRepository, error) {
+	if m == nil {
+		m = &sync.Mutex{}
+	}
 	sql := `
 CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
@@ -89,7 +92,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		dbName:   dbName,
 		idfRep:   idfRep,
 		cachedDB: cacheDB,
-		m:        &sync.Mutex{},
+		m:        m,
 	}
 	return rep, nil
 }
@@ -568,6 +571,12 @@ INSERT INTO ` + i.dbName + ` (
   ?
 );`
 	for _, idfKyou := range allIDFKyous {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		default:
+		}
 		err = func() error {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			insertStmt, err := tx.PrepareContext(ctx, sql)

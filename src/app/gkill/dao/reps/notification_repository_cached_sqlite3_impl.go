@@ -22,7 +22,10 @@ type notificationRepositoryCachedSQLite3Impl struct {
 	m               *sync.Mutex
 }
 
-func NewNotificationRepositoryCachedSQLite3Impl(ctx context.Context, notificationRep NotificationRepository, cacheDB *sql.DB, dbName string) (NotificationRepository, error) {
+func NewNotificationRepositoryCachedSQLite3Impl(ctx context.Context, notificationRep NotificationRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (NotificationRepository, error) {
+	if m == nil {
+		m = &sync.Mutex{}
+	}
 	var err error
 	sql := `
 CREATE TABLE IF NOT EXISTS "` + dbName + `" (
@@ -84,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		dbName:          dbName,
 		cachedDB:        cacheDB,
 		notificationRep: notificationRep,
-		m:               &sync.Mutex{},
+		m:               m,
 	}, nil
 }
 func (t *notificationRepositoryCachedSQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
@@ -552,6 +555,12 @@ INSERT INTO ` + t.dbName + ` (
   ?
 )`
 	for _, notification := range allNotifications {
+		select {
+		case <-ctx.Done():
+			err = ctx.Err()
+			return err
+		default:
+		}
 		err = func() error {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
 			insertStmt, err := tx.PrepareContext(ctx, sql)
