@@ -473,8 +473,8 @@ WHERE
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// t.m.Lock()
-	// defer t.m.Unlock()
+	t.m.Lock()
+	defer t.m.Unlock()
 
 	allTags, err := t.tagRep.GetAllTags(ctx)
 	if err != nil {
@@ -482,7 +482,7 @@ func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error 
 		return err
 	}
 
-	tx, err := t.cachedDB.Begin()
+	tx, err := t.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add tags: %w", err)
 		return err

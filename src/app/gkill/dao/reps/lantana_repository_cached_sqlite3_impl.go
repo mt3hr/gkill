@@ -364,7 +364,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		return err
 	}
 
-	tx, err := l.cachedDB.Begin()
+	tx, err := l.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add lantana: %w", err)
 		return err
