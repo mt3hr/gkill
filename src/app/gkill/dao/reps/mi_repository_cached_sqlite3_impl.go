@@ -771,8 +771,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) 
 }
 
 func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	m.m.Lock()
-	defer m.m.Unlock()
+	// m.m.Lock()
+	// defer m.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -845,6 +845,7 @@ INSERT INTO ` + m.dbName + ` (
 	for _, mi := range allMis {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -904,6 +905,7 @@ INSERT INTO ` + m.dbName + ` (
 			return nil
 		}()
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}

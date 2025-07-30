@@ -505,8 +505,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id str
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	i.m.Lock()
-	defer i.m.Unlock()
+	// i.m.Lock()
+	// defer i.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -573,6 +573,7 @@ INSERT INTO ` + i.dbName + ` (
 	for _, idfKyou := range allIDFKyous {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -612,6 +613,7 @@ INSERT INTO ` + i.dbName + ` (
 			return nil
 		}()
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}

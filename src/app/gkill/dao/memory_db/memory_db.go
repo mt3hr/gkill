@@ -15,8 +15,12 @@ var (
 )
 
 func init() {
+	InitMemoryDB()
+}
+
+func InitMemoryDB() {
 	var err error
-	MemoryDB, err = sql.Open("sqlite3", "file::memory:?_timeout=6000&_synchronous=1&mode=memory&_mutex=full")
+	MemoryDB, err = sql.Open("sqlite3", "file::memory:?_timeout=6000&mode=memory")
 	if err != nil {
 		err = fmt.Errorf("error at open memory database: %w", err)
 		gkill_log.Debug.Fatal(err)

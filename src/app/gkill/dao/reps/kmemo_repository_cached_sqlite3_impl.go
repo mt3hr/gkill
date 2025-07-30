@@ -350,8 +350,8 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id strin
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	k.m.Lock()
-	defer k.m.Unlock()
+	// k.m.Lock()
+	// defer k.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -416,6 +416,7 @@ INSERT INTO ` + k.dbName + ` (
 	for _, kmemo := range allKmemos {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -453,7 +454,8 @@ INSERT INTO ` + k.dbName + ` (
 			return nil
 		}()
 		if err != nil {
-			return nil
+			tx.Rollback()
+			return err
 		}
 	}
 	err = tx.Commit()
