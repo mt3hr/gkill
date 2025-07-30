@@ -354,8 +354,8 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	n.m.Lock()
-	defer n.m.Unlock()
+	// n.m.Lock()
+	// defer n.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -424,6 +424,7 @@ INSERT INTO ` + n.dbName + ` (
 	for _, nlog := range allNlogs {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -462,6 +463,7 @@ INSERT INTO ` + n.dbName + ` (
 			return nil
 		}()
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}
