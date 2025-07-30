@@ -353,8 +353,8 @@ func (k *kcRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) 
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// k.m.Lock()
-	// defer k.m.Unlock()
+	k.m.Lock()
+	defer k.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -367,7 +367,7 @@ func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 		return err
 	}
 
-	tx, err := k.cachedDB.Begin()
+	tx, err := k.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add kc: %w", err)
 		return err

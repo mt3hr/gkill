@@ -375,7 +375,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 		return err
 	}
 
-	tx, err := u.cachedDB.Begin()
+	tx, err := u.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add urlogs: %w", err)
 		return err

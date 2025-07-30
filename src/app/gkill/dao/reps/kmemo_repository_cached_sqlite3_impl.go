@@ -364,7 +364,7 @@ func (k *kmemoRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 		return err
 	}
 
-	tx, err := k.cachedDB.Begin()
+	tx, err := k.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add kmemo: %w", err)
 		return err

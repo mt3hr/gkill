@@ -785,7 +785,7 @@ func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 		return err
 	}
 
-	tx, err := m.cachedDB.Begin()
+	tx, err := m.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add mi: %w", err)
 		return err
