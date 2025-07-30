@@ -353,8 +353,8 @@ func (k *kcRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) 
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	k.m.Lock()
-	defer k.m.Unlock()
+	// k.m.Lock()
+	// defer k.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -421,6 +421,7 @@ INSERT INTO ` + k.dbName + ` (
 	for _, kc := range allKCs {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -459,6 +460,7 @@ INSERT INTO ` + k.dbName + ` (
 			return nil
 		}()
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}

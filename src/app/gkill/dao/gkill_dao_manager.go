@@ -931,6 +931,12 @@ func (g *GkillDAOManager) Close() error {
 		err = fmt.Errorf("error at close file rep watch cache updater. : %w : %w", e, err)
 	}
 
+	if e := memory_db.MemoryDB.Close(); e != nil {
+		e = fmt.Errorf("error at close memory db: %w", err)
+		return e
+	}
+	memory_db.InitMemoryDB()
+
 	for userID, repInDevices := range g.gkillRepositories {
 		for repName, repInDevice := range repInDevices {
 			err = repInDevice.Close(ctx)
