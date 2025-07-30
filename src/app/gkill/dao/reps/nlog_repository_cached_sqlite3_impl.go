@@ -368,7 +368,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error
 		return err
 	}
 
-	tx, err := n.cachedDB.Begin()
+	tx, err := n.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add nlog: %w", err)
 		return err

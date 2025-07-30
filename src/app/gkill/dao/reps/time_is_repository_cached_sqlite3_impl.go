@@ -431,7 +431,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		return err
 	}
 
-	tx, err := t.cachedDB.Begin()
+	tx, err := t.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add timeis: %w", err)
 		return err

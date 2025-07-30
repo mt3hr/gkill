@@ -519,7 +519,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		return err
 	}
 
-	tx, err := i.cachedDB.Begin()
+	tx, err := i.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add idf kyou: %w", err)
 		return err

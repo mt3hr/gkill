@@ -501,7 +501,7 @@ func (t *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 		return err
 	}
 
-	tx, err := t.cachedDB.Begin()
+	tx, err := t.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add notifications: %w", err)
 		return err
