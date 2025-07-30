@@ -311,8 +311,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	r.m.Lock()
-	defer r.m.Unlock()
+	// r.m.Lock()
+	// defer r.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -375,6 +375,7 @@ INSERT INTO ` + r.dbName + ` (
 	for _, rekyou := range allReKyous {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -410,6 +411,7 @@ INSERT INTO ` + r.dbName + ` (
 			return nil
 		}()
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}

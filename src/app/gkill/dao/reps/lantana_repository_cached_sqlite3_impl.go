@@ -350,8 +350,8 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id str
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -416,6 +416,7 @@ INSERT INTO ` + l.dbName + ` (
 	for _, lantana := range allLantanas {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -452,6 +453,7 @@ INSERT INTO ` + l.dbName + ` (
 			return nil
 		}()
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}

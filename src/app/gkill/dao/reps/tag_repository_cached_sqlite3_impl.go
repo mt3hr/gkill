@@ -473,8 +473,8 @@ WHERE
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	t.m.Lock()
-	defer t.m.Unlock()
+	// t.m.Lock()
+	// defer t.m.Unlock()
 
 	allTags, err := t.tagRep.GetAllTags(ctx)
 	if err != nil {
@@ -537,6 +537,7 @@ INSERT INTO "` + t.dbName + `" (
 	for _, tag := range allTags {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -576,6 +577,7 @@ INSERT INTO "` + t.dbName + `" (
 			return nil
 		}()
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}

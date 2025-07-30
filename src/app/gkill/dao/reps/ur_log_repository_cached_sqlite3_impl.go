@@ -361,8 +361,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id strin
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	u.m.Lock()
-	defer u.m.Unlock()
+	// u.m.Lock()
+	// defer u.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -435,6 +435,7 @@ INSERT INTO ` + u.dbName + ` (
 	for _, urlog := range allURLogs {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -476,6 +477,7 @@ INSERT INTO ` + u.dbName + ` (
 			return nil
 		}()
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}
