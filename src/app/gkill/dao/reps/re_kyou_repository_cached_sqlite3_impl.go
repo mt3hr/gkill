@@ -311,8 +311,8 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// r.m.Lock()
-	// defer r.m.Unlock()
+	r.m.Lock()
+	defer r.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -325,7 +325,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		return err
 	}
 
-	tx, err := r.cachedDB.Begin()
+	tx, err := r.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add rekyou: %w", err)
 		return err

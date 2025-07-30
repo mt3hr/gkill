@@ -15,6 +15,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 const (
@@ -424,7 +425,9 @@ func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) 
 	// 並列処理
 	for _, rep := range findCtx.MatchReps {
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(rep reps.Repository) {
+			defer done()
 			defer wg.Done()
 			err = rep.UpdateCache(ctx)
 			if err != nil {
@@ -471,7 +474,9 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext, l
 	// 並列処理
 	for _, rep := range findCtx.Repositories.TagReps {
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(tagRep reps.TagRepository) {
+			defer done()
 			defer wg.Done()
 			tags, err := tagRep.FindTags(ctx, findTagsQuery)
 			if err != nil {
@@ -1203,7 +1208,9 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext, l
 	// 並列処理
 	for _, rep := range findCtx.Repositories.TimeIsReps {
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(rep reps.TimeIsRepository) {
+			defer done()
 			defer wg.Done()
 			timeiss, err := rep.FindTimeIs(ctx, timeisFindKyouQuery)
 			if err != nil {
@@ -1318,7 +1325,9 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 	// 並列処理
 	for _, rep := range findCtx.Repositories.GPSLogReps {
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(rep reps.GPSLogRepository) {
+			defer done()
 			defer wg.Done()
 			// repで検索
 			gpsLogs := []*reps.GPSLog{}
@@ -1562,7 +1571,9 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext, la
 	// 並列処理
 	for _, rep := range findCtx.Repositories.TextReps {
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(textRep reps.TextRepository) {
+			defer done()
 			defer wg.Done()
 			texts, err := textRep.FindTexts(ctx, findTextsQuery)
 			if err != nil {
@@ -1669,7 +1680,9 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	// 並列処理
 	for _, rep := range findCtx.Repositories.TextReps {
 		wg.Add(1)
+		done := threads.AllocateThread()
 		go func(textRep reps.TextRepository) {
+			defer done()
 			defer wg.Done()
 			texts, err := textRep.FindTexts(ctx, findTextsQuery)
 			if err != nil {
