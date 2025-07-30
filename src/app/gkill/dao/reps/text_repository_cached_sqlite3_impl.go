@@ -381,7 +381,7 @@ func (t *textRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error
 		return err
 	}
 
-	tx, err := t.cachedDB.Begin()
+	tx, err := t.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin transaction for add texts: %w", err)
 		return err
