@@ -533,6 +533,13 @@ INSERT INTO "` + t.dbName + `" (
   ?,
   ?
 )`
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	insertStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add tag sql %s: %w", sql, err)
+		return err
+	}
+	defer insertStmt.Close()
 
 	for _, tag := range allTags {
 		select {
@@ -543,14 +550,6 @@ INSERT INTO "` + t.dbName + `" (
 		default:
 		}
 		func() error {
-			gkill_log.TraceSQL.Printf("sql: %s", sql)
-			insertStmt, err := tx.PrepareContext(ctx, sql)
-			if err != nil {
-				err = fmt.Errorf("error at add tag sql %s: %w", sql, err)
-				return err
-			}
-			defer insertStmt.Close()
-
 			queryArgs := []interface{}{
 				tag.IsDeleted,
 				tag.ID,
@@ -573,7 +572,6 @@ INSERT INTO "` + t.dbName + `" (
 				err = fmt.Errorf("error at insert in to TAG %s: %w", tag.ID, err)
 				return err
 			}
-			defer stmt.Close()
 			return nil
 		}()
 		if err != nil {
