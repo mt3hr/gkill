@@ -492,8 +492,8 @@ WHERE
 }
 
 func (t *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	t.m.Lock()
-	defer t.m.Unlock()
+	// t.m.Lock()
+	// defer t.m.Unlock()
 
 	allNotifications, err := t.notificationRep.GetNotificationsBetweenNotificationTime(ctx, time.Unix(0, 0), time.Unix(math.MaxInt64, 0))
 	if err != nil {
@@ -557,6 +557,7 @@ INSERT INTO ` + t.dbName + ` (
 	for _, notification := range allNotifications {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -594,6 +595,7 @@ INSERT INTO ` + t.dbName + ` (
 			return nil
 		}()
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}

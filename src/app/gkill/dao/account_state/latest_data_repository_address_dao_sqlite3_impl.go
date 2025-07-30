@@ -96,8 +96,8 @@ CREATE TABLE IF NOT EXISTS %s (
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetAllLatestDataRepositoryAddresses(ctx context.Context) (map[string]*LatestDataRepositoryAddress, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -165,8 +165,8 @@ FROM %s
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressesByRepName(ctx context.Context, repName string) (map[string]*LatestDataRepositoryAddress, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -238,8 +238,8 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, targetID string) (*LatestDataRepositoryAddress, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -314,8 +314,8 @@ WHERE TARGET_ID = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx context.Context, updateTime time.Time, limit int) (map[string]*LatestDataRepositoryAddress, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -388,8 +388,8 @@ LIMIT %d
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) AddOrUpdateLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	deleteSQL := fmt.Sprintf(`
 DELETE FROM %s
 WHERE TARGET_ID = ?`, l.tableName)
@@ -456,8 +456,8 @@ INSERT INTO %s (
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) AddOrUpdateLatestDataRepositoryAddresses(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) (bool, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	deleteSQL := fmt.Sprintf(`
 DELETE FROM %s
 WHERE TARGET_ID = ?`, l.tableName)
@@ -560,8 +560,8 @@ INSERT INTO %s (
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) DeleteLatestDataRepositoryAddress(ctx context.Context, latestDataRepositoryAddress *LatestDataRepositoryAddress) (bool, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 DELETE FROM %s
 WHERE TARGET_ID = ?
@@ -587,8 +587,8 @@ WHERE TARGET_ID = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) DeleteAllLatestDataRepositoryAddress(ctx context.Context) (bool, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 DELETE FROM %s
 `, l.tableName)
@@ -610,8 +610,8 @@ DELETE FROM %s
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) DeleteLatestDataRepositoryAddressInRep(ctx context.Context, repName string) (bool, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 DELETE FROM %s
 WHERE LATEST_DATA_REPOSITORY_NAME  = ?

@@ -417,8 +417,8 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	t.m.Lock()
-	defer t.m.Unlock()
+	// t.m.Lock()
+	// defer t.m.Unlock()
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -485,6 +485,7 @@ INSERT INTO ` + t.dbName + `(
 	for _, timeis := range allTimeiss {
 		select {
 		case <-ctx.Done():
+			tx.Rollback()
 			err = ctx.Err()
 			return err
 		default:
@@ -530,6 +531,7 @@ INSERT INTO ` + t.dbName + `(
 			return nil
 		}()
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 	}
