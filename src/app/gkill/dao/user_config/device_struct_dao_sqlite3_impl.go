@@ -254,13 +254,13 @@ INSERT INTO DEVICE_STRUCT (
 }
 
 func (d *deviceStructDAOSQLite3Impl) AddDeviceStructs(ctx context.Context, deviceStructs []*DeviceStruct) (bool, error) {
-	tx, err := d.db.Begin()
+	tx, err := d.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
-	for _, deviceStruct := range deviceStructs {
-		sql := `
+
+	sql := `
 INSERT INTO DEVICE_STRUCT (
   ID,
   USER_ID,
@@ -283,18 +283,20 @@ INSERT INTO DEVICE_STRUCT (
   ?
 )
 `
-		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at add device struct sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add device struct sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
 		}
-		defer stmt.Close()
+		return false, err
+	}
+	defer stmt.Close()
 
+	for _, deviceStruct := range deviceStructs {
+
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
 		queryArgs := []interface{}{
 			deviceStruct.ID,
 			deviceStruct.UserID,

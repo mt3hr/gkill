@@ -496,7 +496,7 @@ INSERT INTO SHARE_KYOU_INFO (
   ?
 )
 `
-	tx, err := m.db.Begin()
+	tx, err := m.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
@@ -544,27 +544,28 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		"IS_SHARE_WITH_TIMEISS":   kyouShareInfo.IsShareWithTimeIss,
 		"IS_SHARE_WITH_LOCATIONS": kyouShareInfo.IsShareWithLocations,
 	}
+
+	optionsStmt, err := tx.PrepareContext(ctx, optionsSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add share kyou info options sql: %w", err)
+		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer optionsStmt.Close()
+
 	for key, value := range insertValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", optionsSQL)
-		stmt, err := tx.PrepareContext(ctx, optionsSQL)
-		if err != nil {
-			err = fmt.Errorf("error at add share kyou info options sql: %w", err)
-			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
-		}
-		defer stmt.Close()
-
 		queryArgs := []interface{}{
 			kyouShareInfo.ShareID,
 			key,
 			value,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", optionsSQL, queryArgs)
-		_, err = stmt.ExecContext(ctx, queryArgs...)
+		_, err = optionsStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at add share kyou info options sql: %w", err)
 			err = fmt.Errorf("error at query :%w", err)
@@ -599,7 +600,7 @@ UPDATE SHARE_KYOU_INFO SET
   VIEW_TYPE = ?
 WHERE SHARE_ID = ?
 `
-	tx, err := m.db.Begin()
+	tx, err := m.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
@@ -653,6 +654,17 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
   ?
 )
 `
+	checkExistStmt, err := tx.PrepareContext(ctx, checkExistSQL)
+	if err != nil {
+		err = fmt.Errorf("error at pre get share kyou info options sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer checkExistStmt.Close()
+
 	insertValuesMap := map[string]interface{}{
 		"IS_SHARE_TIME_ONLY":      kyouShareInfo.IsShareTimeOnly,
 		"IS_SHARE_WITH_TAGS":      kyouShareInfo.IsShareWithTags,
@@ -661,26 +673,27 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		"IS_SHARE_WITH_LOCATIONS": kyouShareInfo.IsShareWithLocations,
 	}
 
+	insertStmt, err := tx.PrepareContext(ctx, insertSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add share kyou info sql: %w", err)
+		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer insertStmt.Close()
+
 	// レコード自体が存在しなかったらいれる
 	for key, value := range insertValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, checkExistSQL)
-		if err != nil {
-			err = fmt.Errorf("error at pre get share kyou info options sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
-		}
-		defer stmt.Close()
-
 		queryArgs := []interface{}{
 			kyouShareInfo.ShareID,
 			key,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", checkExistSQL, queryArgs)
-		row := stmt.QueryRowContext(ctx, queryArgs...)
+		row := checkExistStmt.QueryRowContext(ctx, queryArgs...)
 		err = row.Err()
 		if err != nil {
 			if err != nil {
@@ -705,25 +718,13 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		}
 		if recordCount == 0 {
 			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
-			stmt, err := tx.PrepareContext(ctx, insertSQL)
-			if err != nil {
-				err = fmt.Errorf("error at add share kyou info sql: %w", err)
-				err = fmt.Errorf("error at query :%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
-				return false, err
-			}
-			defer stmt.Close()
-
 			queryArgs := []interface{}{
 				kyouShareInfo.ShareID,
 				key,
 				value,
 			}
 			gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
-			_, err = stmt.ExecContext(ctx, queryArgs...)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
 				err = fmt.Errorf("error at add share kyou info options sql: %w", err)
@@ -740,18 +741,6 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	// 更新する
 	for key, value := range insertValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", optionsSQL)
-		stmt, err := tx.PrepareContext(ctx, optionsSQL)
-		if err != nil {
-			err = fmt.Errorf("error at update share kyou info options sql: %w", err)
-			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
-		}
-		defer stmt.Close()
-
 		queryArgs := []interface{}{
 			value,
 			kyouShareInfo.ShareID,
@@ -787,7 +776,7 @@ func (m *shareKyouInfoDAOSQLite3Impl) DeleteKyouShareInfo(ctx context.Context, s
 DELETE FROM SHARE_KYOU_INFO
 WHERE SHARE_ID = ?
 `
-	tx, err := m.db.Begin()
+	tx, err := m.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err

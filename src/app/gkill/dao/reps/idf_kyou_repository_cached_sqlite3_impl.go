@@ -570,6 +570,14 @@ INSERT INTO ` + i.dbName + ` (
   ?,
   ?
 );`
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	insertStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add idf sql: %w", err)
+		return err
+	}
+	defer insertStmt.Close()
+
 	for _, idfKyou := range allIDFKyous {
 		select {
 		case <-ctx.Done():
@@ -579,14 +587,6 @@ INSERT INTO ` + i.dbName + ` (
 		default:
 		}
 		err = func() error {
-			gkill_log.TraceSQL.Printf("sql: %s", sql)
-			insertStmt, err := tx.PrepareContext(ctx, sql)
-			if err != nil {
-				err = fmt.Errorf("error at add idf sql: %w", err)
-				return err
-			}
-			defer insertStmt.Close()
-
 			queryArgs := []interface{}{
 				idfKyou.IsDeleted,
 				idfKyou.ID,
