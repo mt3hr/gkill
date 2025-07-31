@@ -1,9 +1,5 @@
 package gkill_options
 
-import (
-	"math"
-)
-
 var (
 	GkillHomeDir         = "$HOME/gkill"
 	LibDir               = "$HOME/gkill/lib/base_directory"
@@ -41,7 +37,7 @@ var (
 
 	GoroutinePool = 100
 
-	CacheClearCountLimit = math.MaxInt
+	CacheClearCountLimit = 9007199254740991 // javascriptのNumber上限値
 
 	CacheKmemoReps        = false
 	CacheKCReps           = false
