@@ -213,7 +213,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 }
 
 func (r *repositoryDAOSQLite3Impl) DeleteWriteRepositories(ctx context.Context, userID string, repositories []*Repository) (bool, error) {
-	tx, err := r.db.Begin()
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
@@ -244,8 +244,7 @@ WHERE USER_ID = ?
 		return false, err
 	}
 
-	for _, repository := range repositories {
-		sql := `
+	insertSQL := `
 INSERT INTO REPOSITORY (
   ID,
   USER_ID,
@@ -269,17 +268,19 @@ INSERT INTO REPOSITORY (
 )
 `
 
-		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at add repositories sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
+	insertStmt, err := tx.PrepareContext(ctx, insertSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add repositories sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
 		}
-		defer stmt.Close()
+		return false, err
+	}
+	defer insertStmt.Close()
+
+	for _, repository := range repositories {
+		gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
 
 		queryArgs := []interface{}{
 			repository.ID,
@@ -292,8 +293,8 @@ INSERT INTO REPOSITORY (
 			repository.IsWatchTargetForUpdateRep,
 			repository.IsEnable,
 		}
-		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-		_, err = stmt.ExecContext(ctx, queryArgs...)
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
+		_, err = insertStmt.ExecContext(ctx, queryArgs...)
 
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
@@ -350,7 +351,7 @@ INSERT INTO REPOSITORY (
   ?
 )
 `
-	tx, err := r.db.Begin()
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin update repository: %w", err)
 		return false, err
@@ -398,14 +399,13 @@ INSERT INTO REPOSITORY (
 }
 
 func (r *repositoryDAOSQLite3Impl) AddRepositories(ctx context.Context, repositories []*Repository) (bool, error) {
-	tx, err := r.db.Begin()
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
 
-	for _, repository := range repositories {
-		sql := `
+	sql := `
 INSERT INTO REPOSITORY (
   ID,
   USER_ID,
@@ -429,18 +429,19 @@ INSERT INTO REPOSITORY (
 )
 `
 
-		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at add repositories sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add repositories sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
 		}
-		defer stmt.Close()
+		return false, err
+	}
+	defer stmt.Close()
 
+	for _, repository := range repositories {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
 		queryArgs := []interface{}{
 			repository.ID,
 			repository.UserID,
@@ -500,7 +501,7 @@ UPDATE REPOSITORY SET
   CHECK_WHEN_INITED = ?
 WHERE ID = ?
 `
-	tx, err := r.db.Begin()
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin update repository: %w", err)
 		return false, err
@@ -621,20 +622,7 @@ SELECT DEVICE FROM REPOSITORY WHERE USER_ID = ? GROUP BY DEVICE
 	}
 	defer rows.Close()
 
-	devices := []string{}
-	for rows.Next() {
-		device := ""
-		err := rows.Scan(
-			&device,
-		)
-		if err != nil {
-			return err
-		}
-		devices = append(devices, device)
-	}
-
-	for _, targetDevice := range devices {
-		sql := `
+	selectSQL := `
 WITH TYPE_AND_DEVICE AS (SELECT ? AS USER_ID, ? AS DEVICE)
 SELECT TYPE, COUNT FROM (
 SELECT 'directory' AS TYPE, DEVICE, COUNT(*) AS COUNT
@@ -743,20 +731,34 @@ AND IS_ENABLE = TRUE
 )
 GROUP BY TYPE, DEVICE
 `
-		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
+	selectStmt, err := tx.PrepareContext(ctx, selectSQL)
+	if err != nil {
+		err = fmt.Errorf("error at get use to write repository count sql: %w", err)
+		return err
+	}
+	defer selectStmt.Close()
+
+	devices := []string{}
+	for rows.Next() {
+		device := ""
+		err := rows.Scan(
+			&device,
+		)
 		if err != nil {
-			err = fmt.Errorf("error at get use to write repository count sql: %w", err)
 			return err
 		}
-		defer stmt.Close()
+		devices = append(devices, device)
+	}
+
+	for _, targetDevice := range devices {
+		gkill_log.TraceSQL.Printf("sql: %s", selectSQL)
 
 		queryArgs := []interface{}{
 			userID,
 			targetDevice,
 		}
-		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-		rows, err := stmt.QueryContext(ctx, queryArgs...)
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", selectSQL, queryArgs)
+		rows, err := selectStmt.QueryContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
 			return err

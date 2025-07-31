@@ -372,6 +372,15 @@ INSERT INTO ` + r.dbName + ` (
   ?,
   ?
 )`
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	insertStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add rekyou sql: %w", err)
+		return err
+	}
+	defer insertStmt.Close()
+
 	for _, rekyou := range allReKyous {
 		select {
 		case <-ctx.Done():
@@ -381,13 +390,6 @@ INSERT INTO ` + r.dbName + ` (
 		default:
 		}
 		err = func() error {
-			gkill_log.TraceSQL.Printf("sql: %s", sql)
-			insertStmt, err := tx.PrepareContext(ctx, sql)
-			if err != nil {
-				err = fmt.Errorf("error at add rekyou sql: %w", err)
-				return err
-			}
-			defer insertStmt.Close()
 			queryArgs := []interface{}{
 				rekyou.IsDeleted,
 				rekyou.ID,

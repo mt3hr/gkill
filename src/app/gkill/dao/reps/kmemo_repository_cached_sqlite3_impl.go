@@ -413,6 +413,14 @@ INSERT INTO ` + k.dbName + ` (
   ?,
   ?
 )`
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	insertStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add kmemo sql: %w", err)
+		return err
+	}
+	defer insertStmt.Close()
+
 	for _, kmemo := range allKmemos {
 		select {
 		case <-ctx.Done():
@@ -422,14 +430,6 @@ INSERT INTO ` + k.dbName + ` (
 		default:
 		}
 		err = func() error {
-			gkill_log.TraceSQL.Printf("sql: %s", sql)
-			insertStmt, err := tx.PrepareContext(ctx, sql)
-			if err != nil {
-				err = fmt.Errorf("error at add kmemo sql: %w", err)
-				return err
-			}
-			defer insertStmt.Close()
-
 			queryArgs := []interface{}{
 				kmemo.IsDeleted,
 				kmemo.ID,
