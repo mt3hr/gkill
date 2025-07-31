@@ -614,7 +614,7 @@ INSERT INTO SERVER_CONFIG (
   ?
 )
 `
-	tx, err := s.db.Begin()
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
@@ -638,20 +638,20 @@ INSERT INTO SERVER_CONFIG (
 		"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
 	}
 
+	stmt, err := s.db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add server config sql: %w", err)
+		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer stmt.Close()
+
 	for key, value := range insertValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := s.db.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at add server config sql: %w", err)
-			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
-		}
-		defer stmt.Close()
-
 		queryArgs := []interface{}{
 			serverConfig.Device,
 			key,
@@ -674,25 +674,25 @@ INSERT INTO SERVER_CONFIG (
 }
 
 func (s *serverConfigDAOSQLite3Impl) UpdateServerConfigs(ctx context.Context, serverConfigs []*ServerConfig) (bool, error) {
-	tx, err := s.db.Begin()
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
-	for _, serverConfig := range serverConfigs {
-		sql := `
+
+	sql := `
 UPDATE SERVER_CONFIG SET
 VALUE = ?
 WHERE DEVICE = ?
 AND KEY = ?
 `
-		checkExistSQL := `
+	checkExistSQL := `
 SELECT COUNT(*)
 FROM SERVER_CONFIG
 WHERE DEVICE = ?
 AND KEY = ?
 `
-		insertSQL := `
+	insertSQL := `
 INSERT INTO SERVER_CONFIG (
   DEVICE,
   KEY,
@@ -703,6 +703,42 @@ INSERT INTO SERVER_CONFIG (
   ?
 )
 `
+
+	checkExistStmt, err := tx.PrepareContext(ctx, checkExistSQL)
+	if err != nil {
+		err = fmt.Errorf("error at pre get server config sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer checkExistStmt.Close()
+
+	countStmt, err := tx.PrepareContext(ctx, insertSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add server config sql: %w", err)
+		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer countStmt.Close()
+
+	updateStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at update server config sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer updateStmt.Close()
+
+	for _, serverConfig := range serverConfigs {
 		updateValuesMap := map[string]interface{}{
 			"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
 			"IS_LOCAL_ONLY_ACCESS":           serverConfig.IsLocalOnlyAccess,
@@ -721,27 +757,15 @@ INSERT INTO SERVER_CONFIG (
 			"USE_GKILL_NOTIFICATION":         serverConfig.UseGkillNotification,
 			"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
 		}
-
 		// レコード自体が存在しなかったらいれる
 		for key, value := range updateValuesMap {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
-			stmt, err := tx.PrepareContext(ctx, checkExistSQL)
-			if err != nil {
-				err = fmt.Errorf("error at pre get server config sql: %w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
-				return false, err
-			}
-			defer stmt.Close()
-
 			queryArgs := []interface{}{
 				serverConfig.Device,
 				key,
 			}
 			gkill_log.TraceSQL.Printf("sql: %s query: %#v", checkExistSQL, queryArgs)
-			row := stmt.QueryRowContext(ctx, queryArgs...)
+			row := checkExistStmt.QueryRowContext(ctx, queryArgs...)
 			err = row.Err()
 			if err != nil {
 				if err != nil {
@@ -766,25 +790,13 @@ INSERT INTO SERVER_CONFIG (
 			}
 			if recordCount == 0 {
 				gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
-				stmt, err := tx.PrepareContext(ctx, insertSQL)
-				if err != nil {
-					err = fmt.Errorf("error at add server config sql: %w", err)
-					err = fmt.Errorf("error at query :%w", err)
-					rollbackErr := tx.Rollback()
-					if rollbackErr != nil {
-						err = fmt.Errorf("%w: %w", err, rollbackErr)
-					}
-					return false, err
-				}
-				defer stmt.Close()
-
 				queryArgs := []interface{}{
 					serverConfig.Device,
 					key,
 					value,
 				}
 				gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
-				_, err = stmt.ExecContext(ctx, queryArgs...)
+				_, err = countStmt.ExecContext(ctx, queryArgs...)
 
 				if err != nil {
 					err = fmt.Errorf("error at add server config sql: %w", err)
@@ -801,24 +813,13 @@ INSERT INTO SERVER_CONFIG (
 		// 更新する
 		for key, value := range updateValuesMap {
 			gkill_log.TraceSQL.Printf("sql: %s", sql)
-			stmt, err := tx.PrepareContext(ctx, sql)
-			if err != nil {
-				err = fmt.Errorf("error at update server config sql: %w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
-				return false, err
-			}
-			defer stmt.Close()
-
 			queryArgs := []interface{}{
 				value,
 				serverConfig.Device,
 				key,
 			}
 			gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-			_, err = stmt.ExecContext(ctx, queryArgs...)
+			_, err = updateStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
@@ -907,7 +908,7 @@ GROUP BY DEVICE
 }
 
 func (s *serverConfigDAOSQLite3Impl) UpdateServerConfig(ctx context.Context, serverConfig *ServerConfig) (bool, error) {
-	tx, err := s.db.Begin()
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
@@ -954,20 +955,32 @@ INSERT INTO SERVER_CONFIG (
 		"GOOGLE_MAP_API_KEY":             serverConfig.GoogleMapAPIKey,
 	}
 
+	stmt, err := tx.PrepareContext(ctx, checkExistSQL)
+	if err != nil {
+		err = fmt.Errorf("error at pre get server config sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer stmt.Close()
+
+	countStmt, err := tx.PrepareContext(ctx, insertSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add server config sql: %w", err)
+		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer countStmt.Close()
+
 	// レコード自体が存在しなかったらいれる
 	for key, value := range updateValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, checkExistSQL)
-		if err != nil {
-			err = fmt.Errorf("error at pre get server config sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
-		}
-		defer stmt.Close()
-
 		queryArgs := []interface{}{
 			serverConfig.Device,
 			key,
@@ -998,25 +1011,13 @@ INSERT INTO SERVER_CONFIG (
 		}
 		if recordCount == 0 {
 			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
-			stmt, err := tx.PrepareContext(ctx, insertSQL)
-			if err != nil {
-				err = fmt.Errorf("error at add server config sql: %w", err)
-				err = fmt.Errorf("error at query :%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
-				return false, err
-			}
-			defer stmt.Close()
-
 			queryArgs := []interface{}{
 				serverConfig.Device,
 				key,
 				value,
 			}
 			gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
-			_, err = stmt.ExecContext(ctx, queryArgs...)
+			_, err = countStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
 				err = fmt.Errorf("error at add server config sql: %w", err)
@@ -1030,26 +1031,26 @@ INSERT INTO SERVER_CONFIG (
 		}
 	}
 
+	updateStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at update server config sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer updateStmt.Close()
+
 	for key, value := range updateValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at update server config sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
-		}
-		defer stmt.Close()
-
 		queryArgs := []interface{}{
 			value,
 			serverConfig.Device,
 			key,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-		_, err = stmt.ExecContext(ctx, queryArgs...)
+		_, err = updateStmt.ExecContext(ctx, queryArgs...)
 
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
@@ -1168,7 +1169,7 @@ func (s *serverConfigDAOSQLite3Impl) DeleteWriteServerConfigs(ctx context.Contex
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	tx, err := s.db.Begin()
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
@@ -1207,6 +1208,13 @@ INSERT INTO SERVER_CONFIG (
 )
 `
 
+	insertStmt, err := tx.PrepareContext(ctx, insertSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add server config sql: %w", err)
+		return false, err
+	}
+	defer insertStmt.Close()
+
 	for _, serverConfig := range serverConfigs {
 		insertValuesMap := map[string]interface{}{
 			"ENABLE_THIS_DEVICE":             serverConfig.EnableThisDevice,
@@ -1234,16 +1242,8 @@ INSERT INTO SERVER_CONFIG (
 				value,
 			}
 			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
-
-			stmt, err := tx.PrepareContext(ctx, insertSQL)
-			if err != nil {
-				err = fmt.Errorf("error at add server config sql: %w", err)
-				return false, err
-			}
-			defer stmt.Close()
-
 			gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
-			_, err = stmt.ExecContext(ctx, queryArgs...)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at query :%w", err)
 				return false, err

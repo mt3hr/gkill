@@ -256,13 +256,13 @@ INSERT INTO KFTL_TEMPLATE (
 }
 
 func (k *kftlTemplateDAOSQLite3Impl) AddKFTLTemplates(ctx context.Context, kftlTemplates []*KFTLTemplate) (bool, error) {
-	tx, err := k.db.Begin()
+	tx, err := k.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
-	for _, kftlTemplate := range kftlTemplates {
-		sql := `
+
+	sql := `
 INSERT INTO KFTL_TEMPLATE (
   ID,
   USER_ID,
@@ -285,18 +285,21 @@ INSERT INTO KFTL_TEMPLATE (
   ?
 )
 `
-		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at add kftl template sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
-		}
-		defer stmt.Close()
 
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add kftl template sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer stmt.Close()
+
+	for _, kftlTemplate := range kftlTemplates {
+
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
 		queryArgs := []interface{}{
 			kftlTemplate.ID,
 			kftlTemplate.UserID,

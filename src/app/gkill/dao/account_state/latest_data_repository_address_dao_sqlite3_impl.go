@@ -23,11 +23,11 @@ type latestDataRepositoryAddressSQLite3Impl struct {
 	tableName string
 }
 
-func NewLatestDataRepositoryAddressSQLite3Impl(userID string) (LatestDataRepositoryAddressDAO, error) {
+func NewLatestDataRepositoryAddressSQLite3Impl(userID string, mutex *sync.Mutex) (LatestDataRepositoryAddressDAO, error) {
 	var err error
 
 	latestDataRepositoryAddress := &latestDataRepositoryAddressSQLite3Impl{
-		m:         memory_db.Mutex,
+		m:         mutex,
 		userID:    userID,
 		tableName: fmt.Sprintf("LATEST_DATA_REPOSITORY_ADDRESS_%s", userID),
 	}
@@ -314,8 +314,8 @@ WHERE TARGET_ID = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx context.Context, updateTime time.Time, limit int) (map[string]*LatestDataRepositoryAddress, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -326,8 +326,8 @@ SELECT
   LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
 FROM %s
 WHERE datetime(LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME, 'localtime') >= datetime(?, 'localtime')
-LIMIT %d
-`, l.tableName, limit)
+LIMIT ?
+`, l.tableName)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := l.db.PrepareContext(ctx, sql)
 	if err != nil {
@@ -338,6 +338,7 @@ LIMIT %d
 
 	queryArgs := []interface{}{
 		updateTime.Format(sqlite3impl.TimeLayout),
+		limit,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s queryArgs: %v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -458,9 +459,27 @@ INSERT INTO %s (
 func (l *latestDataRepositoryAddressSQLite3Impl) AddOrUpdateLatestDataRepositoryAddresses(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) (bool, error) {
 	l.m.Lock()
 	defer l.m.Unlock()
+
+	tx, err := l.db.BeginTx(ctx, nil)
+	if err != nil {
+		err = fmt.Errorf("error at begin: %w", err)
+		return false, err
+	}
+
 	deleteSQL := fmt.Sprintf(`
 DELETE FROM %s
 WHERE TARGET_ID = ?`, l.tableName)
+
+	deleteStmt, err := tx.PrepareContext(ctx, deleteSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add or update latest data repoisitory address delete sql: %w", err)
+		errTx := tx.Rollback()
+		if errTx != nil {
+			err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
+		}
+		return false, err
+	}
+	defer deleteStmt.Close()
 
 	insertSQL := fmt.Sprintf(`
 INSERT INTO %s (
@@ -479,27 +498,20 @@ INSERT INTO %s (
   ?
 )
 `, l.tableName)
-
-	tx, err := l.db.BeginTx(ctx, nil)
+	insertStmt, err := tx.PrepareContext(ctx, insertSQL)
 	if err != nil {
-		err = fmt.Errorf("error at begin: %w", err)
+		err = fmt.Errorf("error at add or update latest data repoisitory address insert sql: %w", err)
+		errTx := tx.Rollback()
+		if errTx != nil {
+			err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
+		}
 		return false, err
 	}
+	defer insertStmt.Close()
 
 	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 		_, err := func() (bool, error) {
 			gkill_log.TraceSQL.Printf("sql: %s", deleteSQL)
-			deleteStmt, err := tx.PrepareContext(ctx, deleteSQL)
-			if err != nil {
-				err = fmt.Errorf("error at add or update latest data repoisitory address delete sql: %w", err)
-				errTx := tx.Rollback()
-				if errTx != nil {
-					err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
-				}
-				return false, err
-			}
-			defer deleteStmt.Close()
-
 			deleteQueryArgs := []interface{}{
 				latestDataRepositoryAddress.TargetID,
 			}
@@ -515,16 +527,6 @@ INSERT INTO %s (
 			}
 
 			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
-			insertStmt, err := tx.PrepareContext(ctx, insertSQL)
-			if err != nil {
-				err = fmt.Errorf("error at add or update latest data repoisitory address insert sql: %w", err)
-				errTx := tx.Rollback()
-				if errTx != nil {
-					err = fmt.Errorf("error at rollback: %w: %w", err, errTx)
-				}
-				return false, err
-			}
-			defer insertStmt.Close()
 			insertQueryArgs := []interface{}{
 				latestDataRepositoryAddress.IsDeleted,
 				latestDataRepositoryAddress.TargetID,
@@ -645,13 +647,17 @@ func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddre
 
 	latestDataRepositoryAddressMap := map[string]*LatestDataRepositoryAddress{}
 	for _, latestDataRepositoryAddress := range existlatestDataRepositoryAddresses {
-		latestDataRepositoryAddressMap[latestDataRepositoryAddress.ContentHash()] = latestDataRepositoryAddress
+		latestDataRepositoryAddressMap[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
 	}
 
 	// 内容が更新された（ハッシュ一が在しないデータのみを抽出する
 	notExistsLatestDataRepositoryAddresses := []*LatestDataRepositoryAddress{}
 	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-		if _, exist := latestDataRepositoryAddressMap[latestDataRepositoryAddress.ContentHash()]; !exist {
+		if existLatestDataRepositoryAddress, exist := latestDataRepositoryAddressMap[latestDataRepositoryAddress.TargetID]; exist {
+			if existLatestDataRepositoryAddress.DataUpdateTime.Before(latestDataRepositoryAddress.DataUpdateTime) {
+				notExistsLatestDataRepositoryAddresses = append(notExistsLatestDataRepositoryAddresses, latestDataRepositoryAddress)
+			}
+		} else {
 			notExistsLatestDataRepositoryAddresses = append(notExistsLatestDataRepositoryAddresses, latestDataRepositoryAddress)
 		}
 	}

@@ -432,6 +432,15 @@ INSERT INTO ` + t.dbName + ` (
   ?,
   ?
 )`
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	insertStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add text sql: %w", err)
+		return err
+	}
+	defer insertStmt.Close()
+
 	for _, text := range allTexts {
 		select {
 		case <-ctx.Done():
@@ -441,14 +450,6 @@ INSERT INTO ` + t.dbName + ` (
 		default:
 		}
 		err = func() error {
-			gkill_log.TraceSQL.Printf("sql: %s", sql)
-			insertStmt, err := tx.PrepareContext(ctx, sql)
-			if err != nil {
-				err = fmt.Errorf("error at add text sql: %w", err)
-				return err
-			}
-			defer insertStmt.Close()
-
 			queryArgs := []interface{}{
 				text.IsDeleted,
 				text.ID,

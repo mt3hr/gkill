@@ -554,6 +554,14 @@ INSERT INTO ` + t.dbName + ` (
   ?,
   ?
 )`
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	insertStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add NOTIFICATION sql: %w", err)
+		return err
+	}
+	defer insertStmt.Close()
 	for _, notification := range allNotifications {
 		select {
 		case <-ctx.Done():
@@ -563,13 +571,6 @@ INSERT INTO ` + t.dbName + ` (
 		default:
 		}
 		err = func() error {
-			gkill_log.TraceSQL.Printf("sql: %s", sql)
-			insertStmt, err := tx.PrepareContext(ctx, sql)
-			if err != nil {
-				err = fmt.Errorf("error at add NOTIFICATION sql: %w", err)
-				return err
-			}
-			defer insertStmt.Close()
 			queryArgs := []interface{}{
 				notification.IsDeleted,
 				notification.ID,
