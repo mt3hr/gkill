@@ -1,6 +1,8 @@
 package gkill_options
 
-import "math"
+import (
+	"math"
+)
 
 var (
 	GkillHomeDir         = "$HOME/gkill"
@@ -37,7 +39,7 @@ var (
 		"id.db-wal",
 	}
 
-	GoroutinePool = 4000
+	GoroutinePool = 100
 
 	CacheClearCountLimit = math.MaxInt
 
