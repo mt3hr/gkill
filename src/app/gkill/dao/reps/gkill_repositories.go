@@ -13,6 +13,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/memory_db"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
@@ -99,7 +100,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	}
 
 	// メモリ上でやる
-	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(userID)
+	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(userID, memory_db.Mutex)
 	if err != nil {
 		err = fmt.Errorf("error at get latest data repository address dao. user id = %s: %w", userID, err)
 		return nil, err

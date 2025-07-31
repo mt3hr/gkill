@@ -842,6 +842,15 @@ INSERT INTO ` + m.dbName + ` (
   ?,
   ?
 )`
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	insertStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add mi sql: %w", err)
+		return err
+	}
+	defer insertStmt.Close()
+
 	for _, mi := range allMis {
 		select {
 		case <-ctx.Done():
@@ -851,13 +860,6 @@ INSERT INTO ` + m.dbName + ` (
 		default:
 		}
 		err = func() error {
-			gkill_log.TraceSQL.Printf("sql: %s", sql)
-			insertStmt, err := tx.PrepareContext(ctx, sql)
-			if err != nil {
-				err = fmt.Errorf("error at add mi sql: %w", err)
-				return err
-			}
-			defer insertStmt.Close()
 			var limitTimeStr interface{}
 			if mi.LimitTime == nil {
 				limitTimeStr = nil

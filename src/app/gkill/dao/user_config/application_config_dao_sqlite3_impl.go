@@ -533,11 +533,25 @@ INSERT INTO APPLICATION_CONFIG (
   ?
 )
 `
-	tx, err := a.db.Begin()
+
+	tx, err := a.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
+
+	insertStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add application config sql: %w", err)
+		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer insertStmt.Close()
+
 	insertValuesMap := map[string]interface{}{
 		"USE_DARK_THEME":                applicationConfig.UseDarkTheme,
 		"GOOGLE_MAP_API_KEY":            applicationConfig.GoogleMapAPIKey,
@@ -553,18 +567,6 @@ INSERT INTO APPLICATION_CONFIG (
 	}
 	for key, value := range insertValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at add application config sql: %w", err)
-			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
-		}
-		defer stmt.Close()
-
 		queryArgs := []interface{}{
 			applicationConfig.UserID,
 			applicationConfig.Device,
@@ -572,7 +574,7 @@ INSERT INTO APPLICATION_CONFIG (
 			value,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-		_, err = stmt.ExecContext(ctx, queryArgs...)
+		_, err = insertStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at add application config sql: %w", err)
 			err = fmt.Errorf("error at query :%w", err)
@@ -626,7 +628,7 @@ INSERT INTO APPLICATION_CONFIG (
 )
 `
 
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
@@ -645,27 +647,50 @@ INSERT INTO APPLICATION_CONFIG (
 		"RYUU_JSON_DATA":                applicationConfig.RyuuJSONData,
 	}
 
+	checkExistStmt, err := tx.PrepareContext(ctx, checkExistSQL)
+	if err != nil {
+		err = fmt.Errorf("error at pre get application config sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer checkExistStmt.Close()
+
+	insertStmt, err := tx.PrepareContext(ctx, insertSQL)
+	if err != nil {
+		err = fmt.Errorf("error at add application config sql: %w", err)
+		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer insertStmt.Close()
+
+	updateStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer updateStmt.Close()
+
 	// レコード自体が存在しなかったらいれる
 	for key, value := range updateValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, checkExistSQL)
-		if err != nil {
-			err = fmt.Errorf("error at pre get application config sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
-		}
-		defer stmt.Close()
-
 		queryArgs := []interface{}{
 			applicationConfig.UserID,
 			applicationConfig.Device,
 			key,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", checkExistSQL, queryArgs)
-		row := stmt.QueryRowContext(ctx, queryArgs...)
+		row := checkExistStmt.QueryRowContext(ctx, queryArgs...)
 		err = row.Err()
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
@@ -690,18 +715,6 @@ INSERT INTO APPLICATION_CONFIG (
 		}
 		if recordCount == 0 {
 			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
-			stmt, err := tx.PrepareContext(ctx, insertSQL)
-			if err != nil {
-				err = fmt.Errorf("error at add application config sql: %w", err)
-				err = fmt.Errorf("error at query :%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
-				return false, err
-			}
-			defer stmt.Close()
-
 			queryArgs := []interface{}{
 				applicationConfig.UserID,
 				applicationConfig.Device,
@@ -709,7 +722,7 @@ INSERT INTO APPLICATION_CONFIG (
 				value,
 			}
 			gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
-			_, err = stmt.ExecContext(ctx, queryArgs...)
+			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
 				err = fmt.Errorf("error at add application config sql: %w", err)
@@ -726,17 +739,6 @@ INSERT INTO APPLICATION_CONFIG (
 	// 更新する
 	for key, value := range updateValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at query :%w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
-		}
-		defer stmt.Close()
-
 		queryArgs := []interface{}{
 			value,
 			applicationConfig.UserID,
@@ -744,7 +746,7 @@ INSERT INTO APPLICATION_CONFIG (
 			key,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
-		_, err = stmt.ExecContext(ctx, queryArgs...)
+		_, err = updateStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at query :%w", err)
 			rollbackErr := tx.Rollback()
