@@ -2762,8 +2762,13 @@ export class GkillAPI {
 
         async delete_updated_gkill_caches(): Promise<void> {
                 const cache = await caches.open('gkill-post-kyou-cache')
-                if ((await cache.keys()).length === 0) {
-                        return
+                try {
+                        if ((await cache.keys()).length === 0) {
+                                return
+                        }
+                } catch (e: any) {
+                        // でかすぎると例外が飛ぶ。無視する。
+                        // 例外は無視する
                 }
 
                 const gkill_info_req = new GetGkillInfoRequest()

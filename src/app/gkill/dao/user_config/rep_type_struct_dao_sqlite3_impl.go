@@ -256,13 +256,13 @@ INSERT INTO REP_TYPE_STRUCT (
 }
 
 func (r *repTypeStructDAOSQLite3Impl) AddRepTypeStructs(ctx context.Context, repTypeStructs []*RepTypeStruct) (bool, error) {
-	tx, err := r.db.Begin()
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
-	for _, repTypeStruct := range repTypeStructs {
-		sql := `
+
+	sql := `
 INSERT INTO REP_TYPE_STRUCT (
   ID,
   USER_ID,
@@ -285,18 +285,19 @@ INSERT INTO REP_TYPE_STRUCT (
   ?
 )
 `
-		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at add rep type struct sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add rep type struct sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
 		}
-		defer stmt.Close()
+		return false, err
+	}
+	defer stmt.Close()
 
+	for _, repTypeStruct := range repTypeStructs {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
 		queryArgs := []interface{}{
 			repTypeStruct.ID,
 			repTypeStruct.UserID,

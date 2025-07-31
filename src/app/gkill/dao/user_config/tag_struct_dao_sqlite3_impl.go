@@ -262,13 +262,13 @@ INSERT INTO TAG_STRUCT (
 }
 
 func (t *tagStructDAOSQLite3Impl) AddTagStructs(ctx context.Context, tagStructs []*TagStruct) (bool, error) {
-	tx, err := t.db.Begin()
+	tx, err := t.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
 		return false, err
 	}
-	for _, tagStruct := range tagStructs {
-		sql := `
+
+	sql := `
 INSERT INTO TAG_STRUCT (
   ID,
   USER_ID,
@@ -293,18 +293,19 @@ INSERT INTO TAG_STRUCT (
   ?
 )
 `
-		gkill_log.TraceSQL.Printf("sql: %s", sql)
-		stmt, err := tx.PrepareContext(ctx, sql)
-		if err != nil {
-			err = fmt.Errorf("error at add tag struct sql: %w", err)
-			rollbackErr := tx.Rollback()
-			if rollbackErr != nil {
-				err = fmt.Errorf("%w: %w", err, rollbackErr)
-			}
-			return false, err
+	stmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add tag struct sql: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
 		}
-		defer stmt.Close()
+		return false, err
+	}
+	defer stmt.Close()
 
+	for _, tagStruct := range tagStructs {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
 		queryArgs := []interface{}{
 			tagStruct.ID,
 			tagStruct.UserID,

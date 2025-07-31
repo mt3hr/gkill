@@ -1736,7 +1736,7 @@ func newAllDataDB(db *sql.DB, userName string) (*allDataDB, error) {
 }
 
 func (a *allDataDB) insertNlogsFromOldDB(nlogs []*Nlog) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2036,7 +2036,7 @@ FROM
 }
 
 func (a *allDataDB) insertKmemosFromOldDB(kmemos []*Kmemo) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2074,7 +2074,7 @@ func (a *allDataDB) insertKmemosFromOldDB(kmemos []*Kmemo) error {
 }
 
 func (a *allDataDB) insertURLogsFromOldDB(urlogs []*URLog) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2124,7 +2124,7 @@ func (a *allDataDB) insertURLogsFromOldDB(urlogs []*URLog) error {
 }
 
 func (a *allDataDB) insertLantanasFromOldDB(lantanas []*Lantana) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2162,7 +2162,7 @@ func (a *allDataDB) insertLantanasFromOldDB(lantanas []*Lantana) error {
 }
 
 func (a *allDataDB) insertIDFKyousFromOldDB(idfKyous []*IDFKyou) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2204,7 +2204,7 @@ func (a *allDataDB) insertIDFKyousFromOldDB(idfKyous []*IDFKyou) error {
 }
 
 func (a *allDataDB) insertTagsFromOldDB(tags []*Tag) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2246,7 +2246,7 @@ func (a *allDataDB) insertTagsFromOldDB(tags []*Tag) error {
 }
 
 func (a *allDataDB) insertTextsFromOldDB(texts []*Text) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2287,7 +2287,7 @@ func (a *allDataDB) insertTextsFromOldDB(texts []*Text) error {
 }
 
 func (a *allDataDB) insertTimeisStartsFromOldDB(timeisStarts []*TimeIsStart) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2326,7 +2326,7 @@ func (a *allDataDB) insertTimeisStartsFromOldDB(timeisStarts []*TimeIsStart) err
 }
 
 func (a *allDataDB) insertTimeisEndsFromOldDB(timeisEnds []*TimeIsEnd) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2371,7 +2371,7 @@ func (a *allDataDB) insertTimeisEndsFromOldDB(timeisEnds []*TimeIsEnd) error {
 }
 
 func (a *allDataDB) insertMiTasksFromOldDB(miTasks []*MiTask) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2407,7 +2407,7 @@ func (a *allDataDB) insertMiTasksFromOldDB(miTasks []*MiTask) error {
 }
 
 func (a *allDataDB) insertMiCheckStatesFromOldDB(miCheckStateInfos []*MiCheckStateInfo) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2449,7 +2449,7 @@ func (a *allDataDB) insertMiCheckStatesFromOldDB(miCheckStateInfos []*MiCheckSta
 }
 
 func (a *allDataDB) insertMiTaskTitlesFromOldDB(miTaskTitleInfos []*MiTaskTitleInfo) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2491,7 +2491,7 @@ func (a *allDataDB) insertMiTaskTitlesFromOldDB(miTaskTitleInfos []*MiTaskTitleI
 }
 
 func (a *allDataDB) insertMiLimitsFromOldDB(miLimitInfos []*MiLimitInfo) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2539,7 +2539,7 @@ func (a *allDataDB) insertMiLimitsFromOldDB(miLimitInfos []*MiLimitInfo) error {
 }
 
 func (a *allDataDB) insertMiStartsFromOldDB(miStartInfos []*MiStartInfo) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2587,7 +2587,7 @@ func (a *allDataDB) insertMiStartsFromOldDB(miStartInfos []*MiStartInfo) error {
 }
 
 func (a *allDataDB) insertMiEndsFromOldDB(miEndInfos []*MiEndInfo) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2635,7 +2635,7 @@ func (a *allDataDB) insertMiEndsFromOldDB(miEndInfos []*MiEndInfo) error {
 }
 
 func (a *allDataDB) insertMiBoardsFromOldDB(miBoardInfos []*MiBoardInfo) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2677,7 +2677,7 @@ func (a *allDataDB) insertMiBoardsFromOldDB(miBoardInfos []*MiBoardInfo) error {
 }
 
 func (a *allDataDB) insertBarometricPressurs(barometricPressurs []*BarometricPressure) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2746,7 +2746,7 @@ func (a *allDataDB) insertBarometricPressurs(barometricPressurs []*BarometricPre
 }
 
 func (a *allDataDB) insertCO2Concentrations(co2Concentrations []*CO2Concentration) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2815,7 +2815,7 @@ func (a *allDataDB) insertCO2Concentrations(co2Concentrations []*CO2Concentratio
 }
 
 func (a *allDataDB) insertHumiditys(humiditys []*Humidity) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2884,7 +2884,7 @@ func (a *allDataDB) insertHumiditys(humiditys []*Humidity) error {
 }
 
 func (a *allDataDB) insertTVOCs(tvocs []*TVOC) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -2952,7 +2952,7 @@ func (a *allDataDB) insertTVOCs(tvocs []*TVOC) error {
 	return nil
 }
 func (a *allDataDB) insertTemperatures(tempratures []*Temperature) error {
-	tx, err := a.db.Begin()
+	tx, err := a.db.BeginTx(context.Background(), nil)
 	if err != nil {
 		return err
 	}

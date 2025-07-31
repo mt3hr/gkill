@@ -421,6 +421,15 @@ INSERT INTO ` + n.dbName + ` (
   ?,
   ?
 )`
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	insertStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add nlog sql: %w", err)
+		return err
+	}
+	defer insertStmt.Close()
+
 	for _, nlog := range allNlogs {
 		select {
 		case <-ctx.Done():
@@ -430,13 +439,6 @@ INSERT INTO ` + n.dbName + ` (
 		default:
 		}
 		err = func() error {
-			gkill_log.TraceSQL.Printf("sql: %s", sql)
-			insertStmt, err := tx.PrepareContext(ctx, sql)
-			if err != nil {
-				err = fmt.Errorf("error at add nlog sql: %w", err)
-				return err
-			}
-			defer insertStmt.Close()
 			queryArgs := []interface{}{
 				nlog.IsDeleted,
 				nlog.ID,
