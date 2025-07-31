@@ -20,7 +20,7 @@ type LatestDataRepositoryAddress struct {
 }
 
 func (l *LatestDataRepositoryAddress) ContentHash() string {
-	seed := []byte(fmt.Sprintf("%t_%s_%v_%s_%s", l.IsDeleted, l.TargetID, l.TargetIDInData, l.LatestDataRepositoryName, l.DataUpdateTime.Format(sqlite3impl.TimeLayout)))
+	seed := []byte(fmt.Sprintf("%t_%s_%v_%s", l.IsDeleted, l.TargetID, l.TargetIDInData, l.DataUpdateTime.Format(sqlite3impl.TimeLayout)))
 	sum := sha256.Sum256(seed)
 	return hex.EncodeToString(sum[:])
 }
