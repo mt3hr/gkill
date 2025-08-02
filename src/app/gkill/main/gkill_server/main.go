@@ -24,6 +24,7 @@ func init() {
 	ServerCmd.PersistentFlags().BoolVar(&gkill_options.IsCacheInMemory, "cache_in_memory", gkill_options.IsCacheInMemory, "")
 	// ServerCmd.PersistentFlags().IntVar(&gkill_options.GoroutinePool, "goroutine_pool", gkill_options.GoroutinePool, "")
 	ServerCmd.PersistentFlags().IntVar(&gkill_options.CacheClearCountLimit, "cache_clear_count_limit", gkill_options.CacheClearCountLimit, "")
+	ServerCmd.PersistentFlags().DurationVar(&gkill_options.CacheUpdateCycle, "cache_update_cycle", gkill_options.CacheUpdateCycle, "")
 	ServerCmd.AddCommand(common.IDFCmd)
 	ServerCmd.AddCommand(common.DVNFCmd)
 	ServerCmd.AddCommand(common.VersionCommand)
