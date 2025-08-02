@@ -3,6 +3,8 @@ package user_config
 import (
 	"context"
 	"database/sql"
+	sql_lib "database/sql"
+	"encoding/json"
 	"fmt"
 	"sync"
 
@@ -161,16 +163,18 @@ WHERE USER_ID = ?
 			return nil, ctx.Err()
 		default:
 			dnoteData := &DnoteData{}
+			dnoteJSONDataRaw := &sql_lib.NullString{}
 			err = rows.Scan(
 				&dnoteData.ID,
 				&dnoteData.UserID,
 				&dnoteData.Device,
-				&dnoteData.DnoteJSONData,
+				dnoteJSONDataRaw,
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan dnote data: %w", err)
 				return nil, err
 			}
+			dnoteData.DnoteJSONData = json.RawMessage(dnoteJSONDataRaw.String)
 			dnoteDatas = append(dnoteDatas, dnoteData)
 		}
 	}

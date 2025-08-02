@@ -80,9 +80,11 @@ type GkillRepositories struct {
 
 	LatestDataRepositoryAddressDAO account_state.LatestDataRepositoryAddressDAO
 
-	cancelPreFunc context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
+	LatestDataRepositoryAddresses map[string]*account_state.LatestDataRepositoryAddress
+	LastFindTime                  time.Time
 
-	m sync.Mutex
+	cancelPreFunc context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
+	m             sync.Mutex
 }
 
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
@@ -118,6 +120,9 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		cancelPreFunc: context.CancelFunc(func() {}),
 
 		m: sync.Mutex{},
+
+		LatestDataRepositoryAddresses: nil,
+		LastFindTime:                  time.Unix(0, 0),
 	}, nil
 }
 
