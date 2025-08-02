@@ -78,16 +78,13 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 	// キャッシュ更新終わったら、
 	// 最新のKyouがどのRepにあるかを取得
-	latestDatas := map[string]*account_state.LatestDataRepositoryAddress{}
-	latestDataRepositoryAddresses := map[string]*account_state.LatestDataRepositoryAddress{}
-
+	var latestDatas map[string]*account_state.LatestDataRepositoryAddress
 	if findKyouContext.Repositories.LatestDataRepositoryAddresses == nil {
 		latestDatas, err = findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
 		if err != nil {
 			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
 			return nil, nil, err
 		}
-		latestDataRepositoryAddresses = latestDatas
 	} else {
 		updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, findKyouContext.Repositories.LastFindTime, math.MaxInt)
 		if err != nil {
@@ -97,7 +94,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		for _, latestData := range updatedLatestDatas {
 			findKyouContext.Repositories.LatestDataRepositoryAddresses[latestData.TargetID] = latestData
 		}
-		latestDatas = latestDataRepositoryAddresses
+		latestDatas = findKyouContext.Repositories.LatestDataRepositoryAddresses
 	}
 	findKyouContext.Repositories.LastFindTime = time.Now()
 
