@@ -1,5 +1,7 @@
 package gkill_options
 
+import "time"
+
 var (
 	GkillHomeDir         = "$HOME/gkill"
 	LibDir               = "$HOME/gkill/lib/base_directory"
@@ -37,6 +39,7 @@ var (
 
 	GoroutinePool = 100
 
+	CacheUpdateCycle     = 30 * time.Second
 	CacheClearCountLimit = 9007199254740991 // javascriptのNumber上限値
 
 	CacheKmemoReps        = false
