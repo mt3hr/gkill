@@ -4,13 +4,20 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
+
+var (
+	// 全体で1つだけ起動されるように考慮
+	updateThreadPool = make(chan interface{}, 1)
+)
+
+func init() {
+	updateThreadPool <- struct{}{}
+}
 
 type latestRepositoryAddressCacheUpdater struct {
 	repository      CacheUpdatable
@@ -21,17 +28,11 @@ type latestRepositoryAddressCacheUpdater struct {
 
 	cancelPreFunc context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
 
-	updateCycleDucation time.Duration
-	ticker              *time.Ticker
-	isUpdateNextTick    bool
-	isClosed            bool
-
 	m sync.Mutex
 }
 
 func NewLatestRepositoryAddressCacheUpdater(rep CacheUpdatable, gkillRepoisitory *reps.GkillRepositories, enableUpdateRepsCache bool, enableUpdateLatestDataRepositoryCache bool) CacheUpdatable {
-	updateCycleDucation := gkill_options.CacheUpdateCycle
-	latestRepositoryAddressCacheUpdater := &latestRepositoryAddressCacheUpdater{
+	return &latestRepositoryAddressCacheUpdater{
 		repository:      rep,
 		gkillRepository: gkillRepoisitory,
 
@@ -40,45 +41,11 @@ func NewLatestRepositoryAddressCacheUpdater(rep CacheUpdatable, gkillRepoisitory
 
 		cancelPreFunc: context.CancelFunc(func() {}),
 
-		updateCycleDucation: updateCycleDucation,
-		ticker:              time.NewTicker(updateCycleDucation),
-		isClosed:            false,
-
 		m: sync.Mutex{},
 	}
-
-	go func() {
-		for !latestRepositoryAddressCacheUpdater.isClosed {
-			<-latestRepositoryAddressCacheUpdater.ticker.C
-			if latestRepositoryAddressCacheUpdater.isUpdateNextTick {
-				latestRepositoryAddressCacheUpdater.UpdateCacheImpl(context.Background())
-			}
-			latestRepositoryAddressCacheUpdater.isUpdateNextTick = false
-		}
-	}()
-
-	return latestRepositoryAddressCacheUpdater
 }
 
 func (l *latestRepositoryAddressCacheUpdater) UpdateCache(ctx context.Context) error {
-	l.isUpdateNextTick = true
-	return nil
-}
-
-func (l *latestRepositoryAddressCacheUpdater) GetRepName(ctx context.Context) (string, error) {
-	return l.repository.GetRepName(ctx)
-}
-
-func (l *latestRepositoryAddressCacheUpdater) GetPath(ctx context.Context, id string) (string, error) {
-	return l.repository.GetPath(ctx, id)
-}
-
-func (l *latestRepositoryAddressCacheUpdater) Close() error {
-	l.ticker.Stop()
-	return nil
-}
-
-func (l *latestRepositoryAddressCacheUpdater) UpdateCacheImpl(ctx context.Context) {
 	func() {
 		l.m.Lock()
 		defer l.m.Unlock()
@@ -102,15 +69,31 @@ func (l *latestRepositoryAddressCacheUpdater) UpdateCacheImpl(ctx context.Contex
 				return
 			}
 		}
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 
+		<-updateThreadPool
 		if l.enableUpdateLatestDataRepositoryCache {
-			err := l.gkillRepository.UpdateCache(ctx)
+			defer func() { updateThreadPool <- struct{}{} }()
+			err := l.gkillRepository.UpdateCache(context.Background())
 			if err != nil {
-				repName, _ := l.repository.GetRepName(ctx)
+				repName, _ := l.repository.GetRepName(context.Background())
 				err = fmt.Errorf("error at update latest repositoryh address dao. repname = %s: %w", repName, err)
 				gkill_log.Debug.Print(err)
 				return
 			}
 		}
 	}()
+	return nil
+}
+
+func (l *latestRepositoryAddressCacheUpdater) GetRepName(ctx context.Context) (string, error) {
+	return l.repository.GetRepName(ctx)
+}
+
+func (l *latestRepositoryAddressCacheUpdater) GetPath(ctx context.Context, id string) (string, error) {
+	return l.repository.GetPath(ctx, id)
 }

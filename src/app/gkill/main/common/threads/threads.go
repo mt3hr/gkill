@@ -11,31 +11,21 @@ var (
 )
 
 func init() {
-	/*
-		for i := 0; i < gkill_options.GoroutinePool; i++ {
-			threadPool <- struct{}{}
-			threadCount++
-		}
-	*/
+	for i := 0; i < gkill_options.GoroutinePool; i++ {
+		threadPool <- struct{}{}
+		threadCount++
+	}
 }
 
 func AllocateThread() func() {
-	threadCount++
 	gkill_log.Trace.Printf("threadCount: %d\n", threadCount)
-	/*
-		gkill_log.Trace.Printf("threadCount: %d\n", threadCount)
-		threadCount--
-		<-threadPool
-	*/
+	threadCount--
+	<-threadPool
 	return func() {
-		threadCount--
-		gkill_log.Trace.Printf("threadCount: %d\n", threadCount)
-		/*
-			go func() {
-				threadCount++
-				gkill_log.Trace.Printf("threadCount: %d\n", threadCount)
-				threadPool <- struct{}{}
-			}()
-		*/
+		go func() {
+			threadCount++
+			gkill_log.Trace.Printf("threadCount: %d\n", threadCount)
+			threadPool <- struct{}{}
+		}()
 	}
 }
