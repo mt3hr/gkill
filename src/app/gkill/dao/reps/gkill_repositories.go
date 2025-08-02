@@ -100,7 +100,11 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	}
 
 	// メモリ上でやる
-	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(userID, memory_db.Mutex)
+	mutex := memory_db.Mutex
+	if !gkill_options.IsCacheInMemory {
+		mutex = &sync.Mutex{}
+	}
+	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(userID, mutex)
 	if err != nil {
 		err = fmt.Errorf("error at get latest data repository address dao. user id = %s: %w", userID, err)
 		return nil, err
