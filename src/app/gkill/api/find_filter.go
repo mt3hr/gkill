@@ -23,11 +23,6 @@ const (
 	R      = math.Pi / 180
 )
 
-var (
-	LatestDataRepositoryAddresses = map[string]*account_state.LatestDataRepositoryAddress{}
-	lastFindTime                  = time.Unix(0, 0)
-)
-
 type FindFilter struct {
 }
 
@@ -84,26 +79,27 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	// キャッシュ更新終わったら、
 	// 最新のKyouがどのRepにあるかを取得
 	latestDatas := map[string]*account_state.LatestDataRepositoryAddress{}
+	latestDataRepositoryAddresses := map[string]*account_state.LatestDataRepositoryAddress{}
 
-	if LatestDataRepositoryAddresses == nil {
+	if findKyouContext.Repositories.LatestDataRepositoryAddresses == nil {
 		latestDatas, err = findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
 		if err != nil {
 			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
 			return nil, nil, err
 		}
-		LatestDataRepositoryAddresses = latestDatas
+		latestDataRepositoryAddresses = latestDatas
 	} else {
-		updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, lastFindTime, math.MaxInt)
+		updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, findKyouContext.Repositories.LastFindTime, math.MaxInt)
 		if err != nil {
 			err = fmt.Errorf("error at get updated latest data repository addresses: %w", err)
 			return nil, nil, err
 		}
 		for _, latestData := range updatedLatestDatas {
-			LatestDataRepositoryAddresses[latestData.TargetID] = latestData
+			findKyouContext.Repositories.LatestDataRepositoryAddresses[latestData.TargetID] = latestData
 		}
-		latestDatas = LatestDataRepositoryAddresses
+		latestDatas = latestDataRepositoryAddresses
 	}
-	lastFindTime = time.Now()
+	findKyouContext.Repositories.LastFindTime = time.Now()
 
 	if findQuery.UseTags != nil && *(findQuery.UseTags) {
 		gkillErr, err = f.getAllTags(ctx, findKyouContext, latestDatas)
