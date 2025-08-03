@@ -10,15 +10,6 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
-var (
-	// 全体で1つだけ起動されるように考慮
-	updateThreadPool = make(chan interface{}, 1)
-)
-
-func init() {
-	updateThreadPool <- struct{}{}
-}
-
 type latestRepositoryAddressCacheUpdater struct {
 	repository      CacheUpdatable
 	gkillRepository *reps.GkillRepositories
@@ -75,16 +66,8 @@ func (l *latestRepositoryAddressCacheUpdater) UpdateCache(ctx context.Context) e
 		default:
 		}
 
-		<-updateThreadPool
 		if l.enableUpdateLatestDataRepositoryCache {
-			defer func() { updateThreadPool <- struct{}{} }()
-			err := l.gkillRepository.UpdateCache(context.Background())
-			if err != nil {
-				repName, _ := l.repository.GetRepName(context.Background())
-				err = fmt.Errorf("error at update latest repositoryh address dao. repname = %s: %w", repName, err)
-				gkill_log.Debug.Print(err)
-				return
-			}
+			l.gkillRepository.UpdateCacheNextTick()
 		}
 	}()
 	return nil
