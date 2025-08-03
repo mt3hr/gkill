@@ -188,10 +188,10 @@ self.addEventListener('fetch', event => {
         self.registration.showNotification('gkill', {
           body: '保存しました',
         })
-      } else if (isUrl(shared_text)) {
+      } else if (isUrl(shared_title)) {
         const req = new AddURLogRequest()
         req.session_id = session_id
-        req.urlog.url = shared_text
+        req.urlog.url = shared_title
         req.urlog.id = gkill_api.generate_uuid()
         req.urlog.related_time = now
         req.urlog.create_app = "gkill_share"
@@ -208,20 +208,37 @@ self.addEventListener('fetch', event => {
           body: '保存しました',
         })
       } else if (shared_text) {
-        const req = new AddKmemoRequest()
-        req.session_id = session_id
-        req.kmemo.content = shared_text
-        req.kmemo.id = gkill_api.generate_uuid()
-        req.kmemo.related_time = now
-        req.kmemo.create_app = "gkill_share"
-        req.kmemo.create_device = gkill_info_res.device
-        req.kmemo.create_time = now
-        req.kmemo.create_user = gkill_info_res.user_id
-        req.kmemo.update_app = "gkill_share"
-        req.kmemo.update_device = gkill_info_res.device
-        req.kmemo.update_time = now
-        req.kmemo.update_user = gkill_info_res.user_id
-        await gkill_api.add_kmemo(req)
+        if (isUrl(shared_text)) {
+          const req = new AddURLogRequest()
+          req.session_id = session_id
+          req.urlog.url = shared_text
+          req.urlog.id = gkill_api.generate_uuid()
+          req.urlog.related_time = now
+          req.urlog.create_app = "gkill_share"
+          req.urlog.create_device = gkill_info_res.device
+          req.urlog.create_time = now
+          req.urlog.create_user = gkill_info_res.user_id
+          req.urlog.update_app = "gkill_share"
+          req.urlog.update_device = gkill_info_res.device
+          req.urlog.update_time = now
+          req.urlog.update_user = gkill_info_res.user_id
+          await gkill_api.add_urlog(req)
+        } else {
+          const req = new AddKmemoRequest()
+          req.session_id = session_id
+          req.kmemo.content = shared_text
+          req.kmemo.id = gkill_api.generate_uuid()
+          req.kmemo.related_time = now
+          req.kmemo.create_app = "gkill_share"
+          req.kmemo.create_device = gkill_info_res.device
+          req.kmemo.create_time = now
+          req.kmemo.create_user = gkill_info_res.user_id
+          req.kmemo.update_app = "gkill_share"
+          req.kmemo.update_device = gkill_info_res.device
+          req.kmemo.update_time = now
+          req.kmemo.update_user = gkill_info_res.user_id
+          await gkill_api.add_kmemo(req)
+        }
 
         self.registration.showNotification('gkill', {
           body: '保存しました',
