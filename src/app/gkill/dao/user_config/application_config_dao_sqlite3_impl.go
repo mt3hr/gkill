@@ -512,7 +512,23 @@ HAVING USER_ID = ? AND DEVICE = ?
 		}
 	}
 	if len(applicationConfigs) == 0 {
-		return nil, nil
+		// なかっデフォ値を返す。
+		application_config := &ApplicationConfig{
+			UserID:                    userID,
+			Device:                    device,
+			UseDarkTheme:              (applicationConfigDefaultValue["USE_DARK_THEME"]).(bool),
+			GoogleMapAPIKey:           (applicationConfigDefaultValue["GOOGLE_MAP_API_KEY"]).(string),
+			RykvImageListColumnNumber: (applicationConfigDefaultValue["RYKV_IMAGE_LIST_COLUMN_NUMBER"]).(int),
+			RykvHotReload:             (applicationConfigDefaultValue["RYKV_HOT_RELOAD"]).(bool),
+			MiDefaultBoard:            (applicationConfigDefaultValue["MI_DEFAULT_BOARD"]).(string),
+			RykvDefaultPeriod:         json.Number((applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"]).(string)),
+			MiDefaultPeriod:           json.Number((applicationConfigDefaultValue["MI_DEFAULT_PERIOD"]).(string)),
+			IsShowShareFooter:         (applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"]).(bool),
+			DefaultPage:               (applicationConfigDefaultValue["DEFAULT_PAGE"]).(string),
+			ShowTagsInList:            (applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"]).(bool),
+			RyuuJSONData:              json.RawMessage((applicationConfigDefaultValue["RYUU_JSON_DATA"]).([]byte)),
+		}
+		return application_config, nil
 	} else if len(applicationConfigs) == 1 {
 		return applicationConfigs[0], nil
 	}
