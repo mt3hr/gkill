@@ -526,7 +526,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 			IsShowShareFooter:         (applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"]).(bool),
 			DefaultPage:               (applicationConfigDefaultValue["DEFAULT_PAGE"]).(string),
 			ShowTagsInList:            (applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"]).(bool),
-			RyuuJSONData:              json.RawMessage((applicationConfigDefaultValue["RYUU_JSON_DATA"]).([]byte)),
+			RyuuJSONData:              ((applicationConfigDefaultValue["RYUU_JSON_DATA"]).(json.RawMessage)),
 		}
 		return application_config, nil
 	} else if len(applicationConfigs) == 1 {
