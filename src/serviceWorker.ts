@@ -6,7 +6,7 @@ import { GkillAPI } from './classes/api/gkill-api';
 import { AddURLogRequest } from './classes/api/req_res/add-ur-log-request';
 import { AddKmemoRequest } from './classes/api/req_res/add-kmemo-request';
 import { GetGkillInfoRequest } from './classes/api/req_res/get-gkill-info-request';
-import { looksLikeUrl } from './classes/looks-like-url';
+import { isUrl, looksLikeUrl } from './classes/looks-like-url';
 export default null
 
 self.skipWaiting()
@@ -166,7 +166,7 @@ self.addEventListener('fetch', event => {
       const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
 
 
-      if (looksLikeUrl(shared_url)) {
+      if (isUrl(shared_url)) {
         const req = new AddURLogRequest()
         req.session_id = session_id
         req.urlog.url = shared_url
@@ -188,7 +188,7 @@ self.addEventListener('fetch', event => {
         self.registration.showNotification('gkill', {
           body: '保存しました',
         })
-      } else if (looksLikeUrl(shared_text)) {
+      } else if (isUrl(shared_text)) {
         const req = new AddURLogRequest()
         req.session_id = session_id
         req.urlog.url = shared_text
