@@ -31,10 +31,23 @@ export default defineConfig({
           sizes: "144x144",
           type: "image/png",
           purpose: "any"
-        }]
+        }],
+        share_target: {
+          action: '/share-target',
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url'
+          }
+        }
       } as any,
       injectManifest: {
         maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
+        plugins: [
+          vue(),
+        ]
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
