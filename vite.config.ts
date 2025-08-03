@@ -45,9 +45,6 @@ export default defineConfig({
       } as any,
       injectManifest: {
         maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
-        plugins: [
-          vue(),
-        ]
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
