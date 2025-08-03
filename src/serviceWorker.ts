@@ -6,7 +6,7 @@ import { GkillAPI } from './classes/api/gkill-api';
 import { AddURLogRequest } from './classes/api/req_res/add-ur-log-request';
 import { AddKmemoRequest } from './classes/api/req_res/add-kmemo-request';
 import { GetGkillInfoRequest } from './classes/api/req_res/get-gkill-info-request';
-import { isUrl, looksLikeUrl } from './classes/looks-like-url';
+import { isUrl } from './classes/looks-like-url';
 export default null
 
 self.skipWaiting()
