@@ -15,9 +15,19 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/memory_db"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
+
+var (
+	// 全体で1つだけ起動されるように考慮。
+	updateCacheThreadPool = make(chan interface{}, 1)
+)
+
+func init() {
+	updateCacheThreadPool <- struct{}{}
+}
 
 type GkillRepositories struct {
 	userID string
@@ -83,6 +93,10 @@ type GkillRepositories struct {
 	LatestDataRepositoryAddresses map[string]*account_state.LatestDataRepositoryAddress
 	LastFindTime                  time.Time
 
+	IsUpdateCacheNextTick bool
+	updateCacheTicker     *time.Ticker
+	isClosed              bool
+
 	cancelPreFunc context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
 	m             sync.Mutex
 }
@@ -112,7 +126,10 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		return nil, err
 	}
 
-	return &GkillRepositories{
+	// UpdateCacheNextTick用のTicker。キャッシュ更新（ファイル監視起動用）
+	ticker := time.NewTicker(gkill_options.CacheUpdateDuration)
+
+	repositories := &GkillRepositories{
 		Reps:                           Repositories{},
 		userID:                         userID,
 		LatestDataRepositoryAddressDAO: latestDataRepositoryAddressDAO,
@@ -121,9 +138,25 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 
 		m: sync.Mutex{},
 
+		updateCacheTicker:             ticker,
 		LatestDataRepositoryAddresses: nil,
 		LastFindTime:                  time.Unix(0, 0),
-	}, nil
+	}
+
+	go func() {
+		for !repositories.isClosed {
+			<-ticker.C
+			if repositories.IsUpdateCacheNextTick {
+				err := repositories.UpdateCache(context.Background())
+				if err != nil {
+					gkill_log.Error.Println(err.Error())
+					continue
+				}
+				repositories.IsUpdateCacheNextTick = false
+			}
+		}
+	}()
+	return repositories, nil
 }
 
 func (g *GkillRepositories) GetUserID(ctx context.Context) (string, error) {
@@ -131,6 +164,8 @@ func (g *GkillRepositories) GetUserID(ctx context.Context) (string, error) {
 }
 
 func (g *GkillRepositories) Close(ctx context.Context) error {
+	g.isClosed = true
+	g.updateCacheTicker.Stop()
 	for _, rep := range g.TagReps {
 		err := rep.Close(ctx)
 		if err != nil {
@@ -389,7 +424,10 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 }
 
 func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
+
+	<-updateCacheThreadPool
 	func() {
+		defer func() { updateCacheThreadPool <- struct{}{} }()
 		g.m.Lock()
 		defer g.m.Unlock()
 
@@ -753,6 +791,10 @@ notificationsloop:
 		return err
 	}
 	return nil
+}
+
+func (g *GkillRepositories) UpdateCacheNextTick() {
+	g.IsUpdateCacheNextTick = true
 }
 
 func (g *GkillRepositories) GetPath(ctx context.Context, id string) (string, error) {
