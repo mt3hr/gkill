@@ -188,13 +188,10 @@ self.addEventListener('fetch', event => {
         self.registration.showNotification('gkill', {
           body: '保存しました',
         })
-      } else if (looksLikeUrl(shared_title)) {
+      } else if (looksLikeUrl(shared_text)) {
         const req = new AddURLogRequest()
         req.session_id = session_id
-        req.urlog.url = shared_title
-        if (shared_title) {
-          req.urlog.title = shared_title
-        }
+        req.urlog.url = shared_text
         req.urlog.id = gkill_api.generate_uuid()
         req.urlog.related_time = now
         req.urlog.create_app = "gkill_share"
