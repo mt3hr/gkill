@@ -125,7 +125,6 @@ import type { UploadFilesResponse } from "./req_res/upload-files-response"
 import type { UploadGPSLogFilesRequest } from "./req_res/upload-gps-log-files-request"
 import type { UploadGPSLogFilesResponse } from "./req_res/upload-gps-log-files-response"
 import type { GkillAPIResponse } from "./gkill-api-response"
-import router from "@/router"
 import type { GetRepositoriesResponse } from "./req_res/get-repositories-response"
 import type { GetRepositoriesRequest } from "./req_res/get-repositories-request"
 import { GetAllRepNamesRequest } from "./req_res/get-all-rep-names-request"
@@ -610,6 +609,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddTagResponse = json
@@ -625,6 +625,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddTextResponse = json
@@ -640,6 +641,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddNotificationResponse = json
@@ -655,6 +657,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddKmemoResponse = json
@@ -670,6 +673,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddKCResponse = json
@@ -685,6 +689,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddURLogResponse = json
@@ -700,6 +705,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddNlogResponse = json
@@ -715,6 +721,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddTimeisResponse = json
@@ -730,6 +737,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddMiResponse = json
@@ -745,6 +753,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddLantanaResponse = json
@@ -760,6 +769,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddReKyouResponse = json
@@ -1960,6 +1970,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 const response: AddAccountResponse = json
@@ -2084,6 +2095,7 @@ export class GkillAPI {
                         },
                         body: JSON.stringify(req),
                         signal: req.abort_controller?.signal,
+                        credentials: 'include',
                 })
                 const json = await res.json()
                 // Response型に合わせる（そのままキャストするとメソッドが生えないため）
@@ -2506,6 +2518,16 @@ export class GkillAPI {
                 return session_id
         }
 
+        async get_session_id_from_cookie_store(): Promise<string> {
+                if (typeof cookieStore !== 'undefined') {
+                        const session_id = await cookieStore.get(this.gkill_session_id_cookie_key)
+                        if (session_id) {
+                                return session_id.value
+                        }
+                }
+                return ""
+        }
+
         set_session_id(session_id: string): void {
                 if (session_id === "") {
                         document.cookie = this.gkill_session_id_cookie_key + "=" + session_id + "; max-age=0"
@@ -2560,15 +2582,15 @@ export class GkillAPI {
                                 switch (error.error_code) {
                                         case "ERR000013": // AccountSessionNotFoundError
                                                 this.set_session_id("")
-                                                router.replace("/")
+                                                window.location.replace("/")
                                                 break
                                         case "ERR000002": // AccountNotFoundError
                                                 this.set_session_id("")
-                                                router.replace("/")
+                                                window.location.replace("/")
                                                 break
                                         case "ERR000238": // AccountDisabledError
                                                 this.set_session_id("")
-                                                router.replace("/")
+                                                window.location.replace("/")
                                                 break
                                 }
                         })
