@@ -2,6 +2,9 @@
 import { precacheAndRoute } from 'workbox-precaching'
 import { clientsClaim } from 'workbox-core'
 import delete_gkill_kyou_cache from './classes/delete-gkill-cache';
+import { GkillAPI } from './classes/api/gkill-api';
+import { AddURLogRequest } from './classes/api/req_res/add-ur-log-request';
+import { AddKmemoRequest } from './classes/api/req_res/add-kmemo-request';
 export default null
 
 self.skipWaiting()
@@ -140,3 +143,44 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     )
   }
 })
+
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method === 'POST' &&
+    new URL(req.url).pathname === '/share-target') {
+
+    event.respondWith((async () => {
+      const form = await req.formData();
+      const shared_url = form.get('url') as string | null;
+      const shared_text = form.get('text') as string | null;
+      const shared_title = form.get('title') as string | null;
+
+      const gkill_api = GkillAPI.get_instance()
+      if (shared_url) {
+        const req = new AddURLogRequest()
+        req.urlog.url = shared_url
+        if (shared_title) {
+          req.urlog.title = shared_title
+        }
+        await gkill_api.add_urlog(req)
+
+        self.registration.showNotification('gkill', {
+          body: '保存しました',
+          data: { url: shared_url }
+        })
+
+      } else if (shared_text) {
+        const req = new AddKmemoRequest()
+        req.kmemo.content = shared_text
+        await gkill_api.add_kmemo(req)
+
+        self.registration.showNotification('gkill', {
+          body: '保存しました',
+          data: { url: shared_text }
+        })
+      }
+
+      return Response.redirect('/#/share-complete', 303);
+    })());
+  }
+});
