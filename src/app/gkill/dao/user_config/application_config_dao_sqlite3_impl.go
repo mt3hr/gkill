@@ -87,7 +87,7 @@ var applicationConfigDefaultValue = map[string]interface{}{
 	"IS_SHOW_SHARE_FOOTER":          false,
 	"DEFAULT_PAGE":                  "rykv",
 	"SHOW_TAGS_IN_LIST":             true,
-	"RYUU_JSON_DATA":                json.RawMessage{},
+	"RYUU_JSON_DATA":                nil, //json.RawMessage{}
 }
 
 func (a *applicationConfigDAOSQLite3Impl) GetAllApplicationConfigs(ctx context.Context) ([]*ApplicationConfig, error) {
@@ -526,7 +526,7 @@ HAVING USER_ID = ? AND DEVICE = ?
 			IsShowShareFooter:         (applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"]).(bool),
 			DefaultPage:               (applicationConfigDefaultValue["DEFAULT_PAGE"]).(string),
 			ShowTagsInList:            (applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"]).(bool),
-			RyuuJSONData:              ((applicationConfigDefaultValue["RYUU_JSON_DATA"]).(json.RawMessage)),
+			RyuuJSONData:              (applicationConfigDefaultValue["RYUU_JSON_DATA"]).(json.RawMessage),
 		}
 		return application_config, nil
 	} else if len(applicationConfigs) == 1 {
