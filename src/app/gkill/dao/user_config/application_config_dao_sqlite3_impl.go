@@ -87,7 +87,7 @@ var applicationConfigDefaultValue = map[string]interface{}{
 	"IS_SHOW_SHARE_FOOTER":          false,
 	"DEFAULT_PAGE":                  "rykv",
 	"SHOW_TAGS_IN_LIST":             true,
-	"RYUU_JSON_DATA":                nil, //json.RawMessage{}
+	"RYUU_JSON_DATA":                json.RawMessage(nil),
 }
 
 func (a *applicationConfigDAOSQLite3Impl) GetAllApplicationConfigs(ctx context.Context) ([]*ApplicationConfig, error) {
