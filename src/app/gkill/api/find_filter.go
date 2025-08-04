@@ -1735,7 +1735,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 			continue
 		}
 
-		isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi")
+		isMiData := strings.HasPrefix(currentKyou[0].DataType, "mi") && findCtx.ParsedFindQuery.ForMi != nil && *findCtx.ParsedFindQuery.ForMi
 		isTimeIsData := strings.HasPrefix(currentKyou[0].DataType, "timeis")
 		isUsePlaing := findCtx.ParsedFindQuery.UsePlaing != nil && *(findCtx.ParsedFindQuery.UsePlaing) && findCtx.ParsedFindQuery.PlaingTime != nil
 

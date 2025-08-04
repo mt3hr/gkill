@@ -622,7 +622,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		repName,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	onlyLatestData := false
 	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -644,7 +644,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		repName,
 	}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "RELATED_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -665,7 +665,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		repName,
 	}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "LIMIT_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -686,7 +686,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		repName,
 	}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "ESTIMATE_START_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -707,7 +707,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		repName,
 	}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "ESTIMATE_END_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1402,7 +1402,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		repName,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	onlyLatestData := false
 	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -1424,7 +1424,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		repName,
 	}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "CREATE_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1445,7 +1445,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		repName,
 	}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "LIMIT_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1466,7 +1466,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		repName,
 	}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "ESTIMATE_START_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1487,7 +1487,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		repName,
 	}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "ESTIMATE_END_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
