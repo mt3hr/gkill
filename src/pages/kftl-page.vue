@@ -36,7 +36,7 @@
             </div>
             <kftlView :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
-                @received_messages="write_messages" />
+                @received_messages="write_messages" ref="kftl_view" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :is_show="is_show_application_config_dialog" @received_errors="write_errors"
@@ -76,6 +76,7 @@ import { useTheme } from 'vuetify'
 const theme = useTheme()
 
 const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialog> | null>(null);
+const kftl_view = ref<InstanceType<typeof kftlView> | null>(null);
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)
@@ -177,7 +178,7 @@ window.addEventListener('resize', () => {
 })
 
 resize_content()
-load_application_config()
+load_application_config().then(() => kftl_view.value?.focus_kftl_text_area())
 
 // プッシュ通知登録用
 async function subscribe(vapidPublicKey: string) {
