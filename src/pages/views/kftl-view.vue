@@ -89,6 +89,7 @@ const is_requested_submit: Ref<boolean> = ref(true)
 
 const props = defineProps<KFTLProps>()
 const emits = defineEmits<KFTLViewEmits>()
+defineExpose({ focus_kftl_text_area })
 
 if (props.application_config.is_loaded) {
     is_requested_submit.value = false
@@ -265,6 +266,9 @@ function paste_template(template: KFTLTemplateElementData): void {
     kftl_template_dialog.value?.hide()
 }
 
+async function focus_kftl_text_area(): Promise<void> {
+    document.getElementById("kftl_text_area")?.focus()
+}
 
 window.addEventListener("resize", () => {
     resize()

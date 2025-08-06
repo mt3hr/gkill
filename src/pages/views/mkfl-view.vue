@@ -6,7 +6,7 @@
             @received_messages="(messages) => emits('received_messages', messages)" @saved_kyou_by_kftl="(last_added_request_time: Date) => {
                 plaing_timeis_view?.set_last_added_request_time(last_added_request_time)
                 reload_plaing_timeis_view()
-            }" />
+            }" ref="kftl_view" />
         <PlaingTimeisView :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height.valueOf() / 2" :app_content_width="app_content_width"
             @received_errors="(errors) => emits('received_errors', errors)"
