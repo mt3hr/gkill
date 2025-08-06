@@ -5,10 +5,12 @@ import vuetify from "./plugins/vuetify"
 import '@mdi/font/css/materialdesignicons.css'
 import { registerSW } from 'virtual:pwa-register'
 import { i18n } from "./i18n"
+import { vLongPress } from "./classes/long-press"
 
 registerSW()
 
 const app = createApp(App)
+app.directive('long-press', vLongPress)
 app.use(i18n)
 app.use(router)
 app.use(vuetify)
