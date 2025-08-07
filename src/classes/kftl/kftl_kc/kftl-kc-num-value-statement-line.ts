@@ -30,7 +30,7 @@ export class KFTLKCNumValueStatementLine extends KFTLStatementLine {
     }
     private parse_num_value(): number {
         try {
-            const num_value = Number.parseInt(this.get_context().get_this_statement_line_text().trim()).valueOf()
+            const num_value = Number.parseFloat(this.get_context().get_this_statement_line_text().trim()).valueOf()
             if (!num_value) {
                 throw new Error("数値が変です")
             }
