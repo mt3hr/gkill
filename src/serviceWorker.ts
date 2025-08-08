@@ -212,9 +212,9 @@ self.addEventListener('fetch', event => {
           silent: true,
         })
       } else if (shared_text) {
-        const shared_text_lines = String(shared_text).split("\n")
-        const shared_text_line_at1 = shared_text_lines.length >= 1 ? shared_text_lines[0] : null
-        const shared_text_line_at2 = shared_text_lines.length >= 2 ? shared_text_lines[1] : null
+        const shared_text_lines = String(shared_text).split("http")
+        const shared_text_lines_without_last_line = shared_text_lines.filter((_value: string, index: number) => index !== shared_text_lines.length - 1).join("http")
+        const shared_text_lines_last_line = "http" + shared_text_lines[shared_text.length >= 2 ? shared_text_lines.length - 1 : 0]
         if (isUrl(shared_text)) {
           const req = new AddURLogRequest()
           req.session_id = session_id
@@ -239,12 +239,12 @@ self.addEventListener('fetch', event => {
             tag: 'auto-close',
             silent: true,
           })
-        } else if (isUrl(shared_text_line_at2)) { // AndroidのGoogleアプリだと2行目にURLが入っていることがある
+        } else if (isUrl(shared_text_lines_last_line)) { // AndroidのGoogleアプリだと2行目にURLが入っていることがある
           const req = new AddURLogRequest()
           req.session_id = session_id
-          req.urlog.url = shared_text_line_at2
-          if (shared_text_line_at1) {
-            req.urlog.title = shared_text_line_at1
+          req.urlog.url = shared_text_lines_last_line
+          if (shared_text_lines_without_last_line) {
+            req.urlog.title = shared_text_lines_last_line
           }
           req.urlog.id = gkill_api.generate_uuid()
           req.urlog.related_time = now
@@ -290,6 +290,7 @@ self.addEventListener('fetch', event => {
       await new Promise(res => setTimeout(res, 2500));
       const list = await self.registration.getNotifications({ tag: 'auto-close' });
       list.forEach(n => n.close());
+
       return Response.redirect('/saihate', 303);
     })());
   }
