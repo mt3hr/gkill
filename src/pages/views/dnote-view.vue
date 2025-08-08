@@ -19,15 +19,23 @@
                     {{ finished_aggregate_task }}/{{ estimate_aggregate_task }}
                 </div>
                 <div class="align-center justify-center overlay_message">{{ i18n.global.t('DNOTE_PLEASE_WAIT_MESSAGE')
-                    }}</div>
+                }}</div>
             </div>
         </v-overlay>
         <h1>
-            <span>{{ start_date_str }}</span>
-            <span v-if="end_date_str !== '' && start_date_str != end_date_str">～</span>
-            <span v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span>
-            <span v-if="start_date_str === '' && !(end_date_str !== '' && start_date_str != end_date_str)">{{
-                i18n.global.t("DNOTE_WHOLE_PERIOD_TITLE") }}</span>
+            <v-row>
+                <v-col cols="auto">
+                    <span>{{ start_date_str }}</span>
+                    <span v-if="end_date_str !== '' && start_date_str != end_date_str">～</span>
+                    <span v-if="end_date_str !== '' && start_date_str != end_date_str">{{ end_date_str }}</span>
+                    <span v-if="start_date_str === '' && !(end_date_str !== '' && start_date_str != end_date_str)">{{
+                        i18n.global.t("DNOTE_WHOLE_PERIOD_TITLE") }}</span>
+                </v-col>
+                <v-spacer />
+                <v-col cols="auto">
+                    <v-btn :disabled="!loaded_kyous" icon="mdi-download-circle-outline" @click="download_kyous_json" />
+                </v-col>
+            </v-row>
         </h1>
         <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
             v-model="dnote_item_table_view_data" @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)"
@@ -75,7 +83,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -110,6 +118,7 @@ import { type DnoteEmits } from '@/pages/views/dnote-emits';
 import regist_dictionary, { build_dnote_aggregate_target_from_json, build_dnote_key_getter_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary';
 import { UpdateDnoteJSONDataRequest } from '@/classes/api/req_res/update-dnote-json-data-request';
 import moment from 'moment';
+import { saveAs } from '@/classes/save-as';
 
 const dnote_item_table_view = ref<InstanceType<typeof DnoteItemTableView> | null>(null);
 const dnote_list_table_view = ref<InstanceType<typeof DnoteListTableView> | null>(null);
@@ -143,7 +152,10 @@ const last_kyou_date_str = ref("")
 const start_date_str: Ref<string> = computed(() => props.query.use_calendar ? (moment(props.query.calendar_start_date ? props.query.calendar_start_date : moment().toDate()).format("YYYY-MM-DD")) : first_kyou_date_str.value)
 const end_date_str: Ref<string> = computed(() => props.query.use_calendar ? (moment(props.query.calendar_end_date ? props.query.calendar_end_date : moment().toDate()).format("YYYY-MM-DD")) : last_kyou_date_str.value)
 
+const loaded_kyous: Ref<Array<Kyou> | null> = ref(null)
+
 async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
+    loaded_kyous.value = null
     is_loading.value = true
     first_kyou_date_str.value = kyous && kyous.length > 0 ? moment(kyous[kyous.length - 1].related_time).format("YYYY-MM-DD") : ""
     last_kyou_date_str.value = kyous && kyous.length > 0 ? moment(kyous[0].related_time).format("YYYY-MM-DD") : ""
@@ -177,6 +189,7 @@ async function reload(kyous: Array<Kyou>, query: FindKyouQuery): Promise<void> {
     waitPromises.push(load_aggregate_grouping_list(abort_controller.value, cloned_kyou, query, kyou_is_loaded))
     await Promise.all(waitPromises)
     is_loading.value = false
+    loaded_kyous.value = cloned_kyou
 }
 
 async function reset_view(): Promise<void> {
@@ -327,6 +340,18 @@ async function load_kyous(abort_controller: AbortController, kyous: Array<Kyou>,
         getted_kyous_count.value++
     }
     return cloned_kyous
+}
+
+async function download_kyous_json(): Promise<void> {
+    if (!loaded_kyous.value) {
+        return
+    }
+    JSON.stringify(loaded_kyous.value)
+    const json_str = JSON.stringify(loaded_kyous.value, null, 2)
+
+    const blob = new Blob([json_str], { type: 'application/json;charset=utf-8' })
+    const filename = `gkill_kyou_${new Date().toISOString().slice(0, 10)}.json`
+    saveAs(blob, filename)
 }
 </script>
 <style lang="css" scoped>
