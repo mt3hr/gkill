@@ -147,7 +147,7 @@ const app_content_width: Ref<Number> = ref(0)
 async function show_dialog(): Promise<void> {
     const dialog = new URL(location.href).searchParams.get('dialog')
     const is_saved = new URL(location.href).searchParams.get('is_saved')
-    if (parseBoolLoose(is_saved)) {
+    if (is_saved && parseBoolLoose(is_saved)) {
         const message = new GkillMessage()
         message.message = i18n.global.t("SAVED_MESSAGE")
         message.message_code = GkillMessageCodes.saved_shared_data
