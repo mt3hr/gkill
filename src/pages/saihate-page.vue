@@ -103,7 +103,7 @@ import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
+import { GkillMessage } from '@/classes/api/gkill-message'
 
 import { Kyou } from '@/classes/datas/kyou'
 import AddKCDialog from './dialogs/add-kc-dialog.vue'
@@ -116,6 +116,7 @@ import kftlDialog from './dialogs/kftl-dialog.vue'
 import mkflDialog from './dialogs/mkfl-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import { useTheme } from 'vuetify'
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 
 
 
@@ -145,6 +146,13 @@ const app_content_width: Ref<Number> = ref(0)
 
 async function show_dialog(): Promise<void> {
     const dialog = new URL(location.href).searchParams.get('dialog')
+    const is_saved = new URL(location.href).searchParams.get('saved')
+    if (parseBoolLoose(is_saved)) {
+        const message = new GkillMessage()
+        message.message = i18n.global.t("SAVED_MESSAGE")
+        message.message_code = GkillMessageCodes.saved_shared_data
+        write_messages([message])
+    }
     switch (dialog) {
         case 'kc':
             show_add_kc_dialog()
@@ -320,6 +328,17 @@ function show_urlog_dialog(): void {
 
 function show_upload_file_dialog(): void {
     upload_file_dialog.value?.show()
+}
+
+function parseBoolLoose(value: unknown): boolean {
+    if (typeof value === "boolean") return value
+    if (typeof value === "number") return value !== 0
+    if (typeof value === "string") {
+        const v = value.trim().toLowerCase()
+        if (["true", "1", "yes", "y"].includes(v)) return true
+        if (["false", "0", "no", "n"].includes(v)) return false
+    }
+    throw new SyntaxError(`Boolean expected, got ${JSON.stringify(value)}`)
 }
 
 </script>
