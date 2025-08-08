@@ -17,4 +17,5 @@ export enum GkillMessageCodes {
     copied_urlog_id = "MSG900016",
     added_account = "MSG900017",
     copied_kc_id = "MSG900018",
+    saved_shared_data = "MSG900019",
 }
