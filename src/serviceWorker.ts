@@ -185,8 +185,10 @@ self.addEventListener('fetch', event => {
         req.urlog.update_user = gkill_info_res.user_id
         await gkill_api.add_urlog(req)
 
-        self.registration.showNotification('gkill', {
-          body: '保存しました',
+        self.registration.showNotification('保存しました', {
+          body: 'gkill ブックマーク',
+          tag: 'auto-close',
+          silent: true,
         })
       } else if (isUrl(shared_title)) {
         const req = new AddURLogRequest()
@@ -204,14 +206,22 @@ self.addEventListener('fetch', event => {
         req.urlog.update_user = gkill_info_res.user_id
         await gkill_api.add_urlog(req)
 
-        self.registration.showNotification('gkill', {
-          body: '保存しました',
+        self.registration.showNotification('保存しました', {
+          body: 'gkill ブックマーク',
+          tag: 'auto-close',
+          silent: true,
         })
       } else if (shared_text) {
+        const shared_text_lines = String(shared_text).split("\n")
+        const shared_text_line_at1 = shared_text_lines.length >= 1 ? shared_text_lines[0] : null
+        const shared_text_line_at2 = shared_text_lines.length >= 2 ? shared_text_lines[1] : null
         if (isUrl(shared_text)) {
           const req = new AddURLogRequest()
           req.session_id = session_id
           req.urlog.url = shared_text
+          if (shared_title) {
+            req.urlog.title = shared_title
+          }
           req.urlog.id = gkill_api.generate_uuid()
           req.urlog.related_time = now
           req.urlog.create_app = "gkill_share"
@@ -223,6 +233,36 @@ self.addEventListener('fetch', event => {
           req.urlog.update_time = now
           req.urlog.update_user = gkill_info_res.user_id
           await gkill_api.add_urlog(req)
+
+          self.registration.showNotification('保存しました', {
+            body: 'gkill ブックマーク',
+            tag: 'auto-close',
+            silent: true,
+          })
+        } else if (isUrl(shared_text_line_at2)) { // AndroidのGoogleアプリだと2行目にURLが入っていることがある
+          const req = new AddURLogRequest()
+          req.session_id = session_id
+          req.urlog.url = shared_text_line_at2
+          if (shared_text_line_at1) {
+            req.urlog.title = shared_text_line_at1
+          }
+          req.urlog.id = gkill_api.generate_uuid()
+          req.urlog.related_time = now
+          req.urlog.create_app = "gkill_share"
+          req.urlog.create_device = gkill_info_res.device
+          req.urlog.create_time = now
+          req.urlog.create_user = gkill_info_res.user_id
+          req.urlog.update_app = "gkill_share"
+          req.urlog.update_device = gkill_info_res.device
+          req.urlog.update_time = now
+          req.urlog.update_user = gkill_info_res.user_id
+          await gkill_api.add_urlog(req)
+
+          self.registration.showNotification('保存しました', {
+            body: 'gkill ブックマーク',
+            tag: 'auto-close',
+            silent: true,
+          })
         } else {
           const req = new AddKmemoRequest()
           req.session_id = session_id
@@ -238,13 +278,18 @@ self.addEventListener('fetch', event => {
           req.kmemo.update_time = now
           req.kmemo.update_user = gkill_info_res.user_id
           await gkill_api.add_kmemo(req)
-        }
 
-        self.registration.showNotification('gkill', {
-          body: '保存しました',
-        })
+          self.registration.showNotification('保存しました', {
+            body: 'gkill メモ',
+            tag: 'auto-close',
+            silent: true,
+          })
+        }
       }
 
+      await new Promise(res => setTimeout(res, 2500));
+      const list = await self.registration.getNotifications({ tag: 'auto-close' });
+      list.forEach(n => n.close());
       return Response.redirect('/saihate', 303);
     })());
   }
