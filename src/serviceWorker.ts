@@ -165,6 +165,7 @@ self.addEventListener('fetch', event => {
       gkill_info_req.session_id = session_id
       const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
 
+      let is_saved = false
 
       if (isUrl(shared_url)) {
         const req = new AddURLogRequest()
@@ -184,13 +185,7 @@ self.addEventListener('fetch', event => {
         req.urlog.update_time = now
         req.urlog.update_user = gkill_info_res.user_id
         await gkill_api.add_urlog(req)
-
-        self.registration.showNotification('保存しました', {
-          body: 'gkill ブックマーク',
-          tag: 'auto-close',
-          silent: true,
-          requireInteraction: false,
-        })
+        is_saved = true
       } else if (isUrl(shared_title)) {
         const req = new AddURLogRequest()
         req.session_id = session_id
@@ -206,13 +201,7 @@ self.addEventListener('fetch', event => {
         req.urlog.update_time = now
         req.urlog.update_user = gkill_info_res.user_id
         await gkill_api.add_urlog(req)
-
-        self.registration.showNotification('保存しました', {
-          body: 'gkill ブックマーク',
-          tag: 'auto-close',
-          silent: true,
-          requireInteraction: false,
-        })
+        is_saved = true
       } else if (shared_text) {
         const shared_text_lines = String(shared_text).split("http")
         const shared_text_lines_last_line = "http" + shared_text_lines[shared_text.length >= 2 ? shared_text_lines.length - 1 : 0]
@@ -234,13 +223,7 @@ self.addEventListener('fetch', event => {
           req.urlog.update_time = now
           req.urlog.update_user = gkill_info_res.user_id
           await gkill_api.add_urlog(req)
-
-          self.registration.showNotification('保存しました', {
-            body: 'gkill ブックマーク',
-            tag: 'auto-close',
-            silent: true,
-            requireInteraction: false,
-          })
+          is_saved = true
         } else if (isUrl(shared_text_lines_last_line)) { // AndroidのGoogleアプリだと末尾にURLが入っていることがある
           const req = new AddURLogRequest()
           req.session_id = session_id
@@ -256,13 +239,7 @@ self.addEventListener('fetch', event => {
           req.urlog.update_time = now
           req.urlog.update_user = gkill_info_res.user_id
           await gkill_api.add_urlog(req)
-
-          self.registration.showNotification('保存しました', {
-            body: 'gkill ブックマーク',
-            tag: 'auto-close',
-            silent: true,
-            requireInteraction: false,
-          })
+          is_saved = true
         } else {
           const req = new AddKmemoRequest()
           req.session_id = session_id
@@ -278,21 +255,11 @@ self.addEventListener('fetch', event => {
           req.kmemo.update_time = now
           req.kmemo.update_user = gkill_info_res.user_id
           await gkill_api.add_kmemo(req)
-
-          self.registration.showNotification('保存しました', {
-            body: 'gkill メモ',
-            tag: 'auto-close',
-            silent: true,
-            requireInteraction: false,
-          })
+          is_saved = true
         }
       }
 
-      // await new Promise(res => setTimeout(res, 2500));
-      // const list = await self.registration.getNotifications({ tag: 'auto-close' });
-      // list.forEach(n => n.close());
-
-      return Response.redirect('/saihate', 303);
+      return Response.redirect('/saihate?is_saved=' + is_saved, 303);
     })());
   }
 });
