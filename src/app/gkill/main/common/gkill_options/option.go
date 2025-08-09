@@ -39,8 +39,8 @@ var (
 
 	GoroutinePool = 1000
 
-	CacheClearCountLimit = 9007199254740991 // javascriptのNumber上限値
-	CacheUpdateDuration  = 1 * time.Minute
+	CacheClearCountLimit int64 = int64(9007199254740991) // javascriptのNumber上限値
+	CacheUpdateDuration        = 1 * time.Minute
 
 	CacheKmemoReps        = false
 	CacheKCReps           = false
