@@ -1,6 +1,6 @@
 {
   "name": "gkill",
-  "version": "1.0.7-dev",
+  "version": "1.0.7",
   "private": true,
   "type": "module",
   "scripts": {
