@@ -7922,10 +7922,12 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			// ファイル書き込み
 			defer wg.Done()
 			var gkillError *message.GkillError
-			base64Reader := bufio.NewReader(strings.NewReader(strings.SplitN(base64Data, ",", 2)[1]))
-			decoder := base64.NewDecoder(base64.RawStdEncoding, base64Reader)
+			parts := strings.SplitN(base64Data, ",", 2)
+			encoded := parts[len(parts)-1]
+			base64Reader := bufio.NewReader(strings.NewReader(encoded))
+			decoder := base64.NewDecoder(base64.StdEncoding, base64Reader)
 
-			file, err := os.OpenFile(filename, os.O_CREATE, os.ModePerm)
+			file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 			if err != nil {
 				err := fmt.Errorf("error at open file filename= %s: %w", filename, err)
 				gkill_log.Debug.Println(err.Error())
@@ -8319,7 +8321,7 @@ loop:
 				gkillErrorCh2 <- gkillError
 				return
 			}
-			file, err := os.OpenFile(filename, os.O_CREATE|os.O_TRUNC, os.ModePerm)
+			file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 			if err != nil {
 				err := fmt.Errorf("error at open file filename= %s: %w", filename, err)
 				gkill_log.Debug.Println(err.Error())
