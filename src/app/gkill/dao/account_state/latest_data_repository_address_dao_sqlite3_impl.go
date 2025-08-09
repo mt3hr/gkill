@@ -313,7 +313,7 @@ WHERE TARGET_ID = ?
 	return latestDataRepositoryAddresses[0], nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx context.Context, updateTime time.Time, limit int) (map[string]*LatestDataRepositoryAddress, error) {
+func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx context.Context, updateTime time.Time, limit int64) (map[string]*LatestDataRepositoryAddress, error) {
 	// l.m.Lock()
 	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
