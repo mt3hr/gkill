@@ -1,5 +1,5 @@
 <template>
-    <div class="mi_view_wrap">
+    <div class="mi_view_wrap" ref="mi_root">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-app-bar-nav-icon @click.stop="() => { if (inited) { drawer = !drawer } }" />
             <v-toolbar-title>
@@ -78,7 +78,7 @@
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                            }}</v-card-title>
+                                }}</v-card-title>
                             <KyouListView :kyou_height="56 + 35" :width="400"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
@@ -330,6 +330,7 @@ import AddUrlogDialog from '../dialogs/add-urlog-dialog.vue'
 import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import moment from 'moment'
 import { deepEquals } from '@/classes/deep-equals'
+import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
@@ -345,6 +346,7 @@ const add_kc_dialog = ref<InstanceType<typeof AddKCDialog> | null>(null);
 const mkfl_dialog = ref<InstanceType<typeof mkflDialog> | null>(null);
 const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
 const kyou_list_views = ref();
+const mi_root = ref<HTMLElement | null>(null);
 
 const querys: Ref<Array<FindKyouQuery>> = ref([new FindKyouQuery()])
 const querys_backup: Ref<Array<FindKyouQuery>> = ref(new Array<FindKyouQuery>()) // 更新検知用バックアップ
@@ -758,6 +760,9 @@ function show_urlog_dialog(): void {
 function show_upload_file_dialog(): void {
     upload_file_dialog.value?.show()
 }
+
+const enable_enter_shortcut = ref(true)
+useScopedEnterForKFTL(mi_root, show_kftl_dialog, enable_enter_shortcut);
 </script>
 <style lang="css" scoped>
 .kyou_detail_view.dummy {

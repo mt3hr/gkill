@@ -1,5 +1,5 @@
 <template>
-    <div class="saihate_view_wrap">
+    <div class="saihate_view_wrap" ref="saihate_root">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-btn icon="mdi-menu" :ripple="false" link="false" :style="{ opacity: 0, cursor: 'unset', }" />
             <v-toolbar-title>{{ i18n.global.t("SAIHATE_PAGE_TITLE") }}</v-toolbar-title>
@@ -117,6 +117,7 @@ import mkflDialog from './dialogs/mkfl-dialog.vue'
 import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import { useTheme } from 'vuetify'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 
 
 
@@ -131,6 +132,7 @@ const kftl_dialog = ref<InstanceType<typeof kftlDialog> | null>(null);
 const add_kc_dialog = ref<InstanceType<typeof AddKCDialog> | null>(null);
 const mkfl_dialog = ref<InstanceType<typeof mkflDialog> | null>(null);
 const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
+const saihate_root = ref<HTMLElement | null>(null);
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(false)
@@ -344,6 +346,8 @@ function parseBoolLoose(value: unknown): boolean {
     throw new SyntaxError(`Boolean expected, got ${JSON.stringify(value)}`)
 }
 
+const enable_enter_shortcut = ref(true)
+useScopedEnterForKFTL(saihate_root, show_kftl_dialog, enable_enter_shortcut);
 </script>
 <style lang="css">
 /* 不要なスクロールバーを消す */
