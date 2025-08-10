@@ -1,5 +1,5 @@
 <template>
-    <div class="rykv_view_wrap">
+    <div class="rykv_view_wrap" ref="rykv_root">
         <v-app-bar :height="app_title_bar_height.valueOf()" class="app_bar" color="primary" app flat>
             <v-app-bar-nav-icon v-if="!is_shared_rykv_view" @click.stop="() => { if (inited) { drawer = !drawer } }" />
             <v-toolbar-title>
@@ -413,6 +413,7 @@ import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import moment from 'moment'
 import { deepEquals } from '@/classes/deep-equals'
 import RyuuListView from './ryuu-list-view.vue'
+import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
@@ -429,6 +430,7 @@ const mkfl_dialog = ref<InstanceType<typeof mkflDialog> | null>(null);
 const upload_file_dialog = ref<InstanceType<typeof UploadFileDialog> | null>(null);
 const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
 const kyou_list_views = ref();
+const rykv_root = ref<HTMLElement | null>(null);
 
 const querys: Ref<Array<FindKyouQuery>> = ref([new FindKyouQuery()])
 const querys_backup: Ref<Array<FindKyouQuery>> = ref(new Array<FindKyouQuery>()) // 更新検知用バックアップ
@@ -846,6 +848,9 @@ function show_urlog_dialog(): void {
 function show_upload_file_dialog(): void {
     upload_file_dialog.value?.show()
 }
+
+const enable_enter_shortcut = ref(true)
+useScopedEnterForKFTL(rykv_root, show_kftl_dialog, enable_enter_shortcut);
 
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 </script>
