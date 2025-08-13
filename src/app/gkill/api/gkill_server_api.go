@@ -5020,7 +5020,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if existLantana == nil {
+	if request.TXID == nil {
 		err = repositories.WriteLantanaRep.AddLantanaInfo(r.Context(), request.Lantana)
 		if err != nil {
 			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
@@ -5209,7 +5209,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if existIDFKyou == nil {
+	if request.TXID == nil {
 		err = repositories.WriteIDFKyouRep.AddIDFKyouInfo(r.Context(), request.IDFKyou)
 		if err != nil {
 			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
