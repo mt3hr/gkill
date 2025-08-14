@@ -11189,7 +11189,7 @@ func (g *GkillServerAPI) initializeNewUserReps(ctx context.Context, account *acc
 		return err
 	}
 
-	userDataRootDirectory := filepath.Join(serverConfig.UserDataDirectory, account.UserID)
+	userDataRootDirectory := filepath.Join(os.ExpandEnv(serverConfig.UserDataDirectory), account.UserID)
 	if _, err := os.Stat(os.ExpandEnv(userDataRootDirectory)); err == nil {
 		err := fmt.Errorf("error at initialize new user reps. user root directory aleady exist %s: %w", userDataRootDirectory, err)
 		return err
