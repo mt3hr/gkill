@@ -100,16 +100,20 @@ func init() {
 		os.Setenv("HOME", os.Getenv("HOMEPATH"))
 	}
 	fixTimezone()
-	done := threads.AllocateThread()
-	defer done()
-	go func() {
-		http.ListenAndServe("localhost:6060", nil) // pprof用
-	}()
+
+	/*
+		done := threads.AllocateThread()
+		defer done()
+		go func() {
+			http.ListenAndServe("localhost:6060", nil) // pprof用
+		}()
+	*/
 
 	IDFCmd.PersistentFlags().StringArrayVarP(&gkill_options.IDFIgnore, "ignore", "i", gkill_options.IDFIgnore, "ignore files")
 }
 
 func InitGkillOptions() {
+	os.Setenv("GKILL_HOME", filepath.Clean(os.ExpandEnv(gkill_options.GkillHomeDir)))
 	gkill_options.LibDir = fmt.Sprintf("%s/lib/base_directory", gkill_options.GkillHomeDir)
 	gkill_options.CacheDir = fmt.Sprintf("%s/caches", gkill_options.GkillHomeDir)
 	gkill_options.LogDir = fmt.Sprintf("%s/logs", gkill_options.GkillHomeDir)
@@ -135,6 +139,7 @@ func fixTimezone() {
 
 func InitGkillServerAPI() error {
 	var err error
+
 	gkillServerAPI, err = api.NewGkillServerAPI()
 	if err != nil {
 		return err
