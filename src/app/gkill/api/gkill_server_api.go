@@ -13596,5 +13596,5 @@ func (g *GkillServerAPI) PrintStartedMessage() {
 	}
 
 	os.Stdout.WriteString("gkill server started.\n")
-	os.Stdout.WriteString(fmt.Sprintf("Access your record space at : %s://localhost:%s\n", protocol, port))
+	os.Stdout.WriteString(fmt.Sprintf("Access your record space at : %s://localhost%s\n", protocol, port))
 }
