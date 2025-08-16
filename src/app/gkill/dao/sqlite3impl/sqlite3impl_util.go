@@ -15,8 +15,14 @@ func EscapeSQLite(str string) string {
 	return strings.ReplaceAll(str, "'", "''")
 }
 
-func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, findWordUseLike bool, ignoreFindWord bool, appendOrderBy bool, queryArgs *[]interface{}) (string, error) {
+func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, findWordUseLike bool, ignoreFindWord bool, appendOrderBy bool, ignoreCase bool, queryArgs *[]interface{}) (string, error) {
 	sql := ""
+
+	// CASE無視（大文字小文字無視）の場合はLOWERをいれる
+	lower := ""
+	if ignoreCase {
+		lower = "LOWER"
+	}
 
 	// WHERE
 	// id検索である場合のSQL追記
@@ -105,10 +111,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 								sql += " AND "
 							}
 							if findWordUseLike {
-								sql += fmt.Sprintf("LOWER(%s) LIKE LOWER(?)", findWordTargetColumnName)
+								sql += fmt.Sprintf("%s(%s) LIKE %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
 							} else {
-								sql += fmt.Sprintf("LOWER(%s) = LOWER(?)", findWordTargetColumnName)
+								sql += fmt.Sprintf("%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, word)
 							}
 							if i == len(*query.Words)-1 {
@@ -140,10 +146,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 								sql += " OR "
 							}
 							if findWordUseLike {
-								sql += fmt.Sprintf("LOWER(%s) LIKE LOWER(?)", findWordTargetColumnName)
+								sql += fmt.Sprintf("%s(%s) LIKE %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, "%"+word+"%")
 							} else {
-								sql += fmt.Sprintf("LOWER(%s) = LOWER(?)", findWordTargetColumnName)
+								sql += fmt.Sprintf("%s(%s) = %s(?)", lower, findWordTargetColumnName, lower)
 								*queryArgs = append(*queryArgs, word)
 							}
 							if i == len(*query.Words)-1 {
@@ -178,10 +184,10 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 							sql += " AND "
 						}
 						if findWordUseLike {
-							sql += fmt.Sprintf("LOWER(%s) NOT LIKE LOWER(?)", findWordTargetColumnName)
+							sql += fmt.Sprintf("%s(%s) NOT LIKE %s(?)", lower, findWordTargetColumnName, lower)
 							*queryArgs = append(*queryArgs, "%"+notWord+"%")
 						} else {
-							sql += fmt.Sprintf("LOWER(%s) <> LOWER(?)", findWordTargetColumnName)
+							sql += fmt.Sprintf("%s(%s) <> %s(?)", lower, findWordTargetColumnName, lower)
 							*queryArgs = append(*queryArgs, notWord)
 						}
 						if i == len(*query.NotWords)-1 {
