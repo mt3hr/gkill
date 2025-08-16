@@ -75,11 +75,56 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	_, err = stmt.ExecContext(ctx)
-
 	if err != nil {
-		err = fmt.Errorf("error at create TAG table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create TAG index statement %s: %w", filename, err)
+		return nil, err
+	}
+
+	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG_TARGET_ID ON TAG (TARGET_ID, UPDATE_TIME DESC);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	indexTargetIDStmt, err := db.PrepareContext(ctx, indexTargetIDSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG_TARGET_ID index statement %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexTargetIDStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	_, err = indexTargetIDStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG_TARGET_ID index to %s: %w", filename, err)
+		return nil, err
+	}
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", filename, err)
+		return nil, err
+	}
+
+	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG_ID_UPDATE_TIME ON TAG (ID, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
+	indexIDUpdateTimeStmt, err := db.PrepareContext(ctx, indexIDUpdateTimeSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", filename, err)
+		return nil, err
+	}
+	defer indexIDUpdateTimeStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
+	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index to %s: %w", filename, err)
+		return nil, err
+	}
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME table to %s: %w", filename, err)
 		return nil, err
 	}
 
@@ -112,8 +157,8 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -142,7 +187,8 @@ WHERE
 	appendOrderBy := true
 
 	findWordUseLike := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -259,8 +305,8 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -298,7 +344,8 @@ WHERE
 	appendOrderBy := true
 
 	findWordUseLike := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -385,8 +432,8 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -424,7 +471,8 @@ WHERE
 	appendOrderBy := true
 
 	findWordUseLike := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
+	ignoreCase := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -531,8 +579,8 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -569,7 +617,8 @@ WHERE
 	appendOrderBy := false
 
 	findWordUseLike := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
+	ignoreCase := true
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -767,8 +816,8 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -800,7 +849,8 @@ WHERE
 	appendOrderBy := true
 
 	findWordUseLike := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, &queryArgs)
+	ignoreCase := false
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
