@@ -173,7 +173,7 @@ async function save(): Promise<void> {
         if (title.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kc_title_is_blank
-            error.error_message = i18n.global.t("KC_title_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("KC_TITLE_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -195,7 +195,7 @@ async function save(): Promise<void> {
         if (related_date_string.value === "" || related_time_string.value === "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kc_related_time_is_blank
-            error.error_message = i18n.global.t("KC_title_IS_BLANK_MESSAGE")
+            error.error_message = i18n.global.t("KC_TITLE_IS_BLANK_MESSAGE")
             const errors = new Array<GkillError>()
             errors.push(error)
             emits('received_errors', errors)
@@ -203,7 +203,7 @@ async function save(): Promise<void> {
         }
 
         // 更新がなかったらエラーメッセージを出力する
-        if (kc.title === title.value) {
+        if (kc.title === title.value && kc.num_value === num_value.value) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kc_is_no_update
             error.error_message = i18n.global.t("KC_IS_NO_UPDATE_MESSAGE")
