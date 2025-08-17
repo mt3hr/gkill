@@ -51,11 +51,11 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT ON TEXT (ID, RELATED_TIME, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT ON TEXT(ID, RELATED_TIME, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
-		err = fmt.Errorf("error at create TEXT index statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create TEXT index statement %s: %w", "TEXT", err)
 		return nil, err
 	}
 	defer indexStmt.Close()
@@ -63,15 +63,60 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create TEXT index to %s: %w", filename, err)
+		err = fmt.Errorf("error at create TEXT index to %s: %w", "TEXT", err)
+		return nil, err
+	}
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT index statement %s: %w", "TEXT", err)
+		return nil, err
+	}
+
+	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT_TARGET_ID ON TEXT(TARGET_ID, UPDATE_TIME DESC);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	indexTargetIDStmt, err := db.PrepareContext(ctx, indexTargetIDSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_TARGET_ID index statement %s: %w", "TEXT", err)
+		return nil, err
+	}
+	defer indexTargetIDStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	_, err = indexTargetIDStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_TARGET_ID index to %s: %w", "TEXT", err)
+		return nil, err
+	}
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index statement %s: %w", "TEXT", err)
+		return nil, err
+	}
+
+	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT_ID_UPDATE_TIME ON ` + "TEXT" + `(ID, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
+	indexIDUpdateTimeStmt, err := db.PrepareContext(ctx, indexIDUpdateTimeSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index statement %s: %w", "TEXT", err)
+		return nil, err
+	}
+	defer indexIDUpdateTimeStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
+	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index to %s: %w", "TEXT", err)
 		return nil, err
 	}
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
+	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create TEXT table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME table to %s: %w", "TEXT", err)
 		return nil, err
 	}
 
