@@ -1,6 +1,7 @@
 # ライフログアプリケーション「gkill」
 gkill is not a lifelogger.  
 gkillはライフログアプリケーションじゃないです。  
+![gkill_sample_view](https://github.com/mt3hr/gkill/blob/main/documents/resources/gkill_sample_view.png?raw=true)
 
 ## これはなに？ What's this?  
 gkillはライフログアプリケーションです...（葛藤）   
@@ -51,6 +52,7 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 
 ## ダウンロード・インストール
 [gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
+（[gkill利用例サンサンプルデータ](https://github.com/mt3hr/gkill/releases/tag/v1.0.8-dev)） 
 
 【Windowsユーザ向け】  
 ①Assetsから「windows_amd64_gkill_vX.X.X.zip」をダウンロード  
@@ -133,7 +135,7 @@ npm run install_server
 
 000% 2025-06-16 完了目標 v1.1.0リリース  
 
-000% 2025-08-16 完了目標 マニュアル用サンプルデータ取得  
+100% 2025-08-16 対応完了 マニュアル用サンプルデータ取得  
 
 000% 2025-10-05 完了目標 マニュアル&ヘルプ同梱版リリース  
 
@@ -174,4 +176,31 @@ Android：termux上でgkill_serverを起動、GoogleChromeからインストー�
 通知機能は環境に依存します。  <br>
 ざっくりの時間でしか通知されないことがありますのでご承知おきください  <br>
 
+<h3>AI分析依頼用プロンプト</h3>
+ライフログデータを添付します。分析をお願いします。  <br>
+添付するデータの型と依頼の内容を以下に示します。<br>
+<br>
+【分析の目的】 <br>
+★入力★<br>
+<br>
+【各種データ型の定義】<br>
+※共通ルール1：historiesの長さが2以上ある場合、histories[0]以外のデータは無視して良い（更新前のデータであるため）<br>
+※共通ルール2：related_timeが実際の時間である（create_time, update_timeは実際にユーザが記録/更新したタイミングである）<br>
+<br>
+・typed_kmemo：テキストメモ。contentに内容が入っています。<br>
+・typed_timeis：打刻情報。titleにタイトル、start_timeに開始日時、end_timeに終了日時が入っています。<br>
+・typed_idf_kyou：ファイル。（ファイル内容は添付しないので捜査対象外としてください）<br>
+・typed_nlog：支出情報。titleに商品名、shopに店名、amountに金額が入っています。（金額に関して、出費は負の値、収入は正の値で表現。日本円です。）<br>
+・typed_urlog：ブックマーク。titleにページ名、urlにページURLが入っています。<br>
+・typed_kc：汎用数値記録。titleにタイトル、num_valueに実数が入っています。（単位情報は記録なしです）<br>
+・typed_mi：タスク情報。titleにタイトル、estimate_start_timeに予定開始日時、estimate_end_timeに予定終了日時、limit_timeに期日、is_checkedにチェック済みであるかどうかが入っています。<br>
+・typed_lantana：気分値記録。moodに気分値が記録されています。（最小値は0、最大値は10、大きいほど気分がよいものとします）<br>
+・typed_git_commit_log：Gitのコミットログ。commit_messageにコミットメッセージ、additionに追加行数、deletionに削除行数が入っています。<br>
+<br>
+【運用について】<br>
+タグ運用<br>
+★入力★<br>
+<br>
+【出力フォーマット】<br>
+対象についての分析結果を、日本語の文書にて詳細にお願いします。 <br>
 </details>
