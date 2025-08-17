@@ -14,10 +14,12 @@ import (
 )
 
 type textRepositoryCachedSQLite3Impl struct {
-	dbName   string
-	textRep  TextRepository
-	cachedDB *sql.DB
-	m        *sync.Mutex
+	dbName                 string
+	textRep                TextRepository
+	cachedDB               *sql.DB
+	getTextsByTargetIDSQL  string
+	getTextsByTargetIDStmt *sql.Stmt
+	m                      *sync.Mutex
 }
 
 func NewTextRepositoryCachedSQLite3Impl(ctx context.Context, textRep TextRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (TextRepository, error) {
@@ -35,8 +37,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   RELATED_TIME NOT NULL,
   CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
-  CREATE_USER NOT NULL,
   CREATE_DEVICE NOT NULL,
+  CREATE_USER NOT NULL,
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
@@ -65,7 +67,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, RELATED_TIME, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + `(ID, RELATED_TIME, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -81,11 +83,100 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
+	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT index statement %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + `_TARGET_ID ON ` + dbName + `(TARGET_ID, UPDATE_TIME DESC);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	indexTargetIDStmt, err := cacheDB.PrepareContext(ctx, indexTargetIDSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_TARGET_ID index statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexTargetIDStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	_, err = indexTargetIDStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_TARGET_ID index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	_, err = stmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index statement %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + `_ID_UPDATE_TIME ON ` + dbName + `(ID, UPDATE_TIME);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
+	indexIDUpdateTimeStmt, err := cacheDB.PrepareContext(ctx, indexIDUpdateTimeSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexIDUpdateTimeStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
+	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME table to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	getTextsByTargetIDSQL := `
+SELECT 
+  IS_DELETED,
+  ID,
+  TARGET_ID,
+  TEXT,
+  RELATED_TIME,
+  CREATE_TIME,
+  CREATE_APP,
+  CREATE_DEVICE,
+  CREATE_USER,
+  UPDATE_TIME,
+  UPDATE_APP,
+  UPDATE_DEVICE,
+  UPDATE_USER,
+  REP_NAME,
+  ? AS DATA_TYPE
+FROM ` + dbName + ` AS TEXT1
+WHERE TEXT1.TARGET_ID = ?
+  AND NOT EXISTS (
+    SELECT 1
+    FROM ` + dbName + ` AS TEXT2
+    WHERE TEXT2.ID = TEXT1.ID
+      AND TEXT2.UPDATE_TIME > TEXT1.UPDATE_TIME
+  )
+ORDER BY TEXT1.UPDATE_TIME DESC
+`
+	gkill_log.TraceSQL.Printf("sql: %s", getTextsByTargetIDSQL)
+	getTextsByTargetIDStmt, err := cacheDB.PrepareContext(ctx, getTextsByTargetIDSQL)
+	if err != nil {
+		err = fmt.Errorf("error at get get target id sql: %w", err)
+		return nil, err
+	}
+
 	return &textRepositoryCachedSQLite3Impl{
-		dbName:   dbName,
-		textRep:  textRep,
-		cachedDB: cacheDB,
-		m:        m,
+		dbName:                 dbName,
+		textRep:                textRep,
+		cachedDB:               cacheDB,
+		getTextsByTargetIDSQL:  getTextsByTargetIDSQL,
+		getTextsByTargetIDStmt: getTextsByTargetIDStmt,
+		m:                      m,
 	}, nil
 }
 func (t *textRepositoryCachedSQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
@@ -116,8 +207,8 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
@@ -218,6 +309,7 @@ WHERE
 }
 
 func (t *textRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	t.getTextsByTargetIDStmt.Close()
 	_, err := t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+t.dbName)
 	return err
 }
@@ -250,66 +342,15 @@ func (t *textRepositoryCachedSQLite3Impl) GetText(ctx context.Context, id string
 
 func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
 	var err error
-
-	sql := `
-SELECT 
-  IS_DELETED,
-  ID,
-  TARGET_ID,
-  TEXT,
-  RELATED_TIME,
-  CREATE_TIME,
-  CREATE_APP,
-  CREATE_USER,
-  CREATE_DEVICE,
-  UPDATE_TIME,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
-  REP_NAME,
-  ? AS DATA_TYPE
-FROM ` + t.dbName + `
-WHERE 
-`
-
 	dataType := "text"
 
-	trueValue := true
-	targetIDs := []string{target_id}
-	query := &find.FindQuery{
-		UseWords: &trueValue,
-		Words:    &targetIDs,
-	}
 	queryArgs := []interface{}{
 		dataType,
+		target_id,
 	}
 
-	whereCounter := 0
-	onlyLatestData := true
-	relatedTimeColumnName := "UPDATE_TIME"
-	findWordTargetColumns := []string{"TARGET_ID"}
-	ignoreFindWord := false
-	appendOrderBy := false
-
-	findWordUseLike := false
-	ignoreCase := false
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
-	if err != nil {
-		return nil, err
-	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
-	sql += commonWhereSQL
-
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at get text histories sql: %w", err)
-		return nil, err
-	}
-	defer stmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
-	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", t.getTextsByTargetIDSQL, queryArgs)
+	rows, err := t.getTextsByTargetIDStmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
 		err = fmt.Errorf("error at select from TEXT: %w", err)
@@ -510,8 +551,8 @@ SELECT
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
