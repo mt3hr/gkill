@@ -51,7 +51,7 @@ var (
 	CacheLantanaReps      = false
 	CacheIDFKyouReps      = false
 	CacheTagReps          = true
-	CacheTextReps         = false
+	CacheTextReps         = true
 	CacheNotificationReps = false
 	CacheReKyouReps       = false
 )
