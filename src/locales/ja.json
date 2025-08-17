@@ -476,5 +476,9 @@
     "DELETE_RELATED_KYOU_QUERY": "削除",
     "DEFAULT_VIEW_TITLE": "起動時の画面",
     "GKILL_APP_TITLE": "gkill",
-    "SHOW_TAGS_IN_LIST": "リスト上でタグを表示"
+    "SHOW_TAGS_IN_LIST": "リスト上でタグを表示",
+    "KC_TITLE_IS_BLANK_MESSAGE": "タイトルが入力されていません",
+    "KC_IS_NO_UPDATE_MESSAGE": "KCが更新されていません",
+    "KC_NUM_VALUE_IS_BLANK_MESSAGE": "数値が入力されていません",
+    "CLIENT_KC_IS_NULL_MESSAGE": "クライアントのデータが変です"
 }
