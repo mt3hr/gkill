@@ -37,7 +37,7 @@ func NewLatestDataRepositoryAddressSQLite3Impl(userID string, mutex *sync.Mutex)
 	if gkill_options.IsCacheInMemory {
 		latestDataRepositoryAddress.db = memory_db.MemoryDB
 	} else {
-		latestDataRepositoryAddress.db, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, latestDataRepositoryAddress.tableName+".db?_timeout=6000&_synchronous=2&_journal=DELETE")))
+		latestDataRepositoryAddress.db, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, latestDataRepositoryAddress.tableName+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
 		if err != nil {
 			err = fmt.Errorf("error at open database: %w", err)
 			return nil, err
