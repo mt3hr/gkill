@@ -127,7 +127,7 @@ function load_from_json(json: any): Array<RelatedKyouQuery> {
         related_kyou_query.suffix = json[i].suffix
         related_kyou_query.predicate = build_dnote_predicate_from_json(json[i].predicate)
         related_kyou_query.related_time_match_type = json[i].related_time_match_type
-        related_kyou_query.find_kyou_query = FindKyouQuery.parse_find_kyou_query(json[i].find_kyou_query)
+        related_kyou_query.find_kyou_query = json[i].find_kyou_query ? FindKyouQuery.parse_find_kyou_query(json[i].find_kyou_query): null
         related_kyou_query.find_duration_hour = json[i].find_duration_hour
         related_kyou_queries.push(related_kyou_query)
     }
