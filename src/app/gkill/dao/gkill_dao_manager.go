@@ -258,14 +258,37 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			err = fmt.Errorf("error at get repositories user=%s device=%s: %w", userID, device, err)
 			return nil, err
 		}
+
+		// disableはあとから除外する
+		disableReps := []string{}
+		for _, rep := range repositoriesDefine {
+			if rep.IsEnable {
+				continue
+			}
+			disableReps = append(disableReps, filepath.Clean(os.ExpandEnv(rep.File)))
+		}
+
 		for _, rep := range repositoriesDefine {
 			if !rep.IsEnable {
 				continue
 			}
 			rep.File = os.ExpandEnv(rep.File)
+
 			matchFiles, _ := zglob.Glob(rep.File)
 			sort.Strings(matchFiles)
 			for _, filename := range matchFiles {
+				filename = filepath.Clean(filename)
+				isSkipLoop := false
+				for _, disableRep := range disableReps {
+					if match, _ := zglob.Match(disableRep, filename); match {
+						isSkipLoop = true
+						break
+					}
+				}
+				if isSkipLoop {
+					continue
+				}
+
 				parentDir := filepath.Dir(filename)
 				err := os.MkdirAll(os.ExpandEnv(parentDir), os.ModePerm)
 				if err != nil {
