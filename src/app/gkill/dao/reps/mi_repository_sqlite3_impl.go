@@ -245,6 +245,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		sqlWhereFilterEndMi = " 1 = 0 " // false
 	}
 
+	tableName := "MI"
+	tableNameAlias := "MI"
 	queryArgsForCreate := []interface{}{
 		repName,
 	}
@@ -254,10 +256,9 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-
 	findWordUseLike := true
 	ignoreCase := true
-	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -268,6 +269,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForCheck := []interface{}{
 		repName,
 	}
@@ -278,7 +281,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
+	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -289,6 +292,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForLimit := []interface{}{
 		repName,
 	}
@@ -299,7 +304,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
+	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -310,6 +315,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForStart := []interface{}{
 		repName,
 	}
@@ -320,7 +327,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
@@ -331,6 +338,8 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForEnd := []interface{}{
 		repName,
 	}
@@ -341,7 +350,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
+	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -619,6 +628,8 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		sqlWhereFilterEndMi = " 1 = 0 " // false
 	}
 
+	tableName := "MI"
+	tableNameAlias := "MI"
 	queryArgsForCreate := []interface{}{
 		repName,
 	}
@@ -628,10 +639,9 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-
 	findWordUseLike := true
 	ignoreCase := true
-	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -642,6 +652,8 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForCheck := []interface{}{
 		repName,
 	}
@@ -652,7 +664,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
+	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -663,6 +675,8 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForLimit := []interface{}{
 		repName,
 	}
@@ -673,7 +687,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
+	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -684,6 +698,8 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForStart := []interface{}{
 		repName,
 	}
@@ -694,7 +710,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
@@ -705,6 +721,8 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForEnd := []interface{}{
 		repName,
 	}
@@ -715,7 +733,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
+	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -1002,6 +1020,8 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		sqlWhereFilterEndMi = " 1 = 0 " // false
 	}
 
+	tableName := "MI"
+	tableNameAlias := "MI"
 	queryArgsForCreate := []interface{}{
 		repName,
 	}
@@ -1011,10 +1031,9 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-
 	findWordUseLike := true
 	ignoreCase := true
-	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -1025,6 +1044,8 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForCheck := []interface{}{
 		repName,
 	}
@@ -1035,7 +1056,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
+	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -1046,6 +1067,8 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForLimit := []interface{}{
 		repName,
 	}
@@ -1056,7 +1079,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
+	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -1067,6 +1090,8 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForStart := []interface{}{
 		repName,
 	}
@@ -1077,7 +1102,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
@@ -1088,6 +1113,8 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForEnd := []interface{}{
 		repName,
 	}
@@ -1098,7 +1125,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
+	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -1401,6 +1428,8 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		sqlWhereFilterEndMi = " 1 = 0 " // false
 	}
 
+	tableName := "MI"
+	tableNameAlias := "MI"
 	queryArgsForCreate := []interface{}{
 		repName,
 	}
@@ -1410,10 +1439,9 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-
 	findWordUseLike := true
 	ignoreCase := true
-	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
 	}
@@ -1424,6 +1452,8 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForCheck := []interface{}{
 		repName,
 	}
@@ -1434,7 +1464,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
+	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
 	if err != nil {
 		return nil, err
 	}
@@ -1445,6 +1475,8 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForLimit := []interface{}{
 		repName,
 	}
@@ -1455,7 +1487,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
+	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -1466,6 +1498,8 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForStart := []interface{}{
 		repName,
 	}
@@ -1476,7 +1510,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
@@ -1487,6 +1521,8 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
+	tableName = "MI"
+	tableNameAlias = "MI"
 	queryArgsForEnd := []interface{}{
 		repName,
 	}
@@ -1497,7 +1533,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 	ignoreFindWord = false
 	appendOrderBy = false
 	findWordUseLike = true
-	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
+	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -1699,18 +1735,19 @@ FROM MI
 WHERE
 `
 	query := &find.FindQuery{}
-	queryArgs := []interface{}{}
 
+	tableName := "MI"
+	tableNameAlias := "MI"
+	queryArgs := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := false
-
 	findWordUseLike := true
 	ignoreCase := true
-	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}

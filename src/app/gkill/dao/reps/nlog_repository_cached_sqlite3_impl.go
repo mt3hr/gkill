@@ -128,16 +128,17 @@ WHERE
 		dataType,
 	}
 
+	tableName := n.dbName
+	tableNameAlias := n.dbName
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
-
 	findWordUseLike := true
 	ignoreCase := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 
 	if err != nil {
 		return nil, err
@@ -270,16 +271,17 @@ WHERE
 		dataType,
 	}
 
+	tableName := n.dbName
+	tableNameAlias := n.dbName
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
-
 	findWordUseLike := true
 	ignoreCase := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 
 	if err != nil {
 		return nil, err
@@ -528,16 +530,17 @@ WHERE
 	queryArgs := []interface{}{
 		dataType,
 	}
+	tableName := n.dbName
+	tableNameAlias := n.dbName
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
-
 	findWordUseLike := true
 	ignoreCase := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -674,17 +677,17 @@ WHERE
 	queryArgs := []interface{}{
 		dataType,
 	}
-
+	tableName := n.dbName
+	tableNameAlias := n.dbName
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
-
 	findWordUseLike := true
 	ignoreCase := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 
 	if err != nil {
 		return nil, err
