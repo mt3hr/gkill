@@ -15,7 +15,7 @@ func EscapeSQLite(str string) string {
 	return strings.ReplaceAll(str, "'", "''")
 }
 
-func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, findWordUseLike bool, ignoreFindWord bool, appendOrderBy bool, ignoreCase bool, queryArgs *[]interface{}) (string, error) {
+func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAlias string, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, findWordUseLike bool, ignoreFindWord bool, appendOrderBy bool, ignoreCase bool, queryArgs *[]interface{}) (string, error) {
 	sql := ""
 
 	// CASE無視（大文字小文字無視）の場合はLOWERをいれる
@@ -56,45 +56,33 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 	*whereCounter++
 
 	// 最新のレコードのみ取得ではなければそのまかえす
-	if !onlyLatestData {
+	if onlyLatestData {
+		if *whereCounter != 0 {
+			sql += " AND "
+		}
+		sql += fmt.Sprintf(" UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
+		*whereCounter++
+	} else {
 		if appendOrderBy {
 			sql += fmt.Sprintf(" ORDER BY %s DESC ", relatedTimeColumnName)
 		}
 		return sql, nil
 	}
 
-	// GROUP BY
-	groupByCounter := 0
-	sql += " GROUP BY "
-
-	// IDでGROUP BYする。
-	if groupByCounter != 0 {
-		sql += ", "
-	}
-	sql += " ID, DATA_TYPE "
-	groupByCounter++
-
-	// HAVING
-	havingCount := 0
-	sql += " HAVING "
-
 	// ワードand検索である場合のSQL追記
-	if havingCount != 0 {
-		sql += " AND "
-	}
 	if query.UseWords != nil && *query.UseWords {
 		// ワード指定ありで検索対象列がない場合は全部false
 		if ignoreFindWord && len(findWordTargetColumns) == 0 {
-			if havingCount != 0 {
+			if *whereCounter != 0 {
 				sql += " AND "
 			}
 			sql += " 1 = 0 "
-			havingCount++
+			*whereCounter++
 		} else {
 
 			if query.Words != nil && len(*query.Words) != 0 {
 				if query.WordsAnd != nil && *query.WordsAnd {
-					if havingCount != 0 {
+					if *whereCounter != 0 {
 						sql += " AND "
 					}
 					for j, findWordTargetColumnName := range findWordTargetColumns {
@@ -120,7 +108,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 							if i == len(*query.Words)-1 {
 								sql += " ) "
 							}
-							havingCount++
+							*whereCounter++
 						}
 
 						if j == len(findWordTargetColumns)-1 {
@@ -129,7 +117,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 					}
 				} else {
 					// ワードor検索である場合のSQL追記
-					if havingCount != 0 {
+					if *whereCounter != 0 {
 						sql += " AND "
 					}
 					for j, findWordTargetColumnName := range findWordTargetColumns {
@@ -155,7 +143,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 							if i == len(*query.Words)-1 {
 								sql += " ) "
 							}
-							havingCount++
+							*whereCounter++
 						}
 
 						if j == len(findWordTargetColumns)-1 {
@@ -167,7 +155,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 
 			if query.NotWords != nil && len(*query.NotWords) != 0 {
 				// notワードを除外するSQLを追記
-				if havingCount != 0 {
+				if *whereCounter != 0 {
 					sql += " AND "
 				}
 				for j, findWordTargetColumnName := range findWordTargetColumns {
@@ -193,7 +181,7 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 						if i == len(*query.NotWords)-1 {
 							sql += " ) "
 						}
-						havingCount++
+						*whereCounter++
 					}
 
 					if j == len(findWordTargetColumns)-1 {
@@ -221,63 +209,40 @@ func GenerateFindSQLCommon(query *find.FindQuery, whereCounter *int, onlyLatestD
 	// UPDATE_TIMEか、Calendarの条件をSQLに追記
 	if query.UseUpdateTime != nil && *query.UseUpdateTime && query.UpdateTime != nil {
 		if query.UpdateTime != nil {
-			if havingCount != 0 {
+			if *whereCounter != 0 {
 				sql += " AND "
 			}
 			sql += fmt.Sprintf("datetime(%s, 'localtime') = datetime(?, 'localtime')", "UPDATE_TIME")
 			*queryArgs = append(*queryArgs, ((*query.UpdateTime).Format(TimeLayout)))
-			havingCount++
+			*whereCounter++
 		}
 	} else if useCalendar {
 		// 開始日時を指定するSQLを追記
 		if calendarStartDate != nil {
-			if havingCount != 0 {
+			if *whereCounter != 0 {
 				sql += " AND "
 			}
 			sql += fmt.Sprintf("datetime(%s, 'localtime') >= datetime(?, 'localtime')", relatedTimeColumnName)
 			*queryArgs = append(*queryArgs, calendarStartDate.Format(TimeLayout))
-			havingCount++
+			*whereCounter++
 		}
 
 		// 終了日時を指定するSQLを追記
 		if calendarEndDate != nil {
-			if havingCount != 0 {
+			if *whereCounter != 0 {
 				sql += " AND "
 			}
 			sql += fmt.Sprintf("datetime(%s, 'localtime') <= datetime(?, 'localtime')", relatedTimeColumnName)
 			*queryArgs = append(*queryArgs, calendarEndDate.Format(TimeLayout))
-			havingCount++
+			*whereCounter++
 		}
-	}
-
-	if onlyLatestData {
-		if havingCount != 0 {
-			sql += " AND "
-		}
-		sql += " datetime(UPDATE_TIME, 'localtime') = datetime(MAX(UPDATE_TIME), 'localtime') "
-		havingCount++
 	}
 
 	// 削除済みであるかどうかのSQL追記
 	// Repをまたぐことがあるのでここでは判定しない
 	// FindFilterで判定する
-	/*
-		isDeleted := false
-		if query.IsDeleted != nil {
-			isDeleted = *query.IsDeleted
-		}
-		if havingCount != 0 {
-			sql += "AND "
-		}
-		sql += " IS_DELETED = ? "
-		if isDeleted {
-			*queryArgs = append(*queryArgs, true)
-		} else {
-			*queryArgs = append(*queryArgs, false)
-		}
-	*/
 
-	if havingCount == 0 {
+	if *whereCounter == 0 {
 		sql += " 0 = 0 "
 	}
 
