@@ -152,22 +152,22 @@ FROM TIMEIS
 		return nil, err
 	}
 
+	tableName := "TIMEIS"
+	tableNameAlias := "TIMEIS"
 	queryArgsForStart := []interface{}{
 		repName,
 	}
-
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-
 	findWordUseLike := true
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	ignoreCase := true
-	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
@@ -179,10 +179,11 @@ FROM TIMEIS
 		whereCounter++
 	}
 
+	tableName = "TIMEIS"
+	tableNameAlias = "TIMEIS"
 	queryArgsForEnd := []interface{}{
 		repName,
 	}
-
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "RELATED_TIME"
@@ -193,7 +194,7 @@ FROM TIMEIS
 	queryArgsForPlaingEnd := []interface{}{}
 	sqlWhereFilterPlaingTimeisEnd := ""
 	ignoreCase = true
-	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
+	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -341,17 +342,17 @@ WHERE
 	queryArgs := []interface{}{
 		repName,
 	}
-
+	tableName := "TIMEIS"
+	tableNameAlias := "TIMEIS"
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-
 	findWordUseLike := true
 	ignoreCase := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -520,22 +521,22 @@ FROM TIMEIS
 		return nil, err
 	}
 
+	tableName := "TIMEIS"
+	tableNameAlias := "TIMEIS"
 	queryArgsForStart := []interface{}{
 		repName,
 	}
-
 	whereCounter := 0
 	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-
 	findWordUseLike := true
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	ignoreCase := true
-	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
+	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
 	}
@@ -547,10 +548,11 @@ FROM TIMEIS
 		whereCounter++
 	}
 
+	tableName = "TIMEIS"
+	tableNameAlias = "TIMEIS"
 	queryArgsForEnd := []interface{}{
 		repName,
 	}
-
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "RELATED_TIME"
@@ -561,7 +563,7 @@ FROM TIMEIS
 	queryArgsForPlaingEnd := []interface{}{}
 	sqlWhereFilterPlaingTimeisEnd := ""
 	ignoreCase = true
-	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
+	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -716,23 +718,23 @@ WHERE
 
 	dataType := "timeis"
 
+	tableName := "TIMEIS"
+	tableNameAlias := "TIMEIS"
 	queryArgs := []interface{}{
 		repName,
 		dataType,
 	}
-
 	whereCounter := 0
 	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
-
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	findWordUseLike := true
 	ignoreCase := true
-	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
+	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
 	}
