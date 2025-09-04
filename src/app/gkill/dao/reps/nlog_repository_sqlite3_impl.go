@@ -444,7 +444,7 @@ WHERE
 		dataType,
 	}
 	whereCounter := 0
-	onlyLatestData := false
+	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
