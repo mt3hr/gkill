@@ -55,20 +55,6 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	}
 	*whereCounter++
 
-	// 最新のレコードのみ取得ではなければそのまかえす
-	if onlyLatestData {
-		if *whereCounter != 0 {
-			sql += " AND "
-		}
-		sql += fmt.Sprintf(" UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
-		*whereCounter++
-	} else {
-		if appendOrderBy {
-			sql += fmt.Sprintf(" ORDER BY %s DESC ", relatedTimeColumnName)
-		}
-		return sql, nil
-	}
-
 	// ワードand検索である場合のSQL追記
 	if query.UseWords != nil && *query.UseWords {
 		// ワード指定ありで検索対象列がない場合は全部false
@@ -236,6 +222,15 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 			*queryArgs = append(*queryArgs, calendarEndDate.Format(TimeLayout))
 			*whereCounter++
 		}
+	}
+
+	// 最新のレコード判定
+	if onlyLatestData {
+		if *whereCounter != 0 {
+			sql += " AND "
+		}
+		sql += fmt.Sprintf(" UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
+		*whereCounter++
 	}
 
 	// 削除済みであるかどうかのSQL追記
