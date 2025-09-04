@@ -610,12 +610,6 @@ export class Kyou extends InfoBase {
         req.abort_controller = this.abort_controller
         if (!is_updated_info) {
             req.update_time = this.update_time
-            if (!(this.data_type.startsWith("mi") || this.data_type.startsWith("timeis"))) {
-                req.rep_name = this.rep_name
-            }
-            // } else {
-            // req.force_reget = true
-            // }
         }
         req.id = this.id
 
