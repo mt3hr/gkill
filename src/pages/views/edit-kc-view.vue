@@ -224,6 +224,7 @@ async function save(): Promise<void> {
         // 更新後KC情報を用意する
         const updated_kc = await kc.clone()
         updated_kc.title = title.value
+        updated_kc.num_value= num_value.value
         updated_kc.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         updated_kc.update_app = "gkill"
         updated_kc.update_device = gkill_info_res.device
