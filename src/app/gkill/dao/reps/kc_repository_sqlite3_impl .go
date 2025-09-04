@@ -443,7 +443,7 @@ WHERE
 	tableName := "KC"
 	tableNameAlias := "KC"
 	whereCounter := 0
-	onlyLatestData := false
+	onlyLatestData := true
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -597,7 +597,7 @@ WHERE
 	tableName := "KC"
 	tableNameAlias := "KC"
 	whereCounter := 0
-	onlyLatestData := true
+	onlyLatestData := false
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
