@@ -64,11 +64,6 @@ watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
 const skip_emits_this_tick = ref(false)
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
-    const errors = await cloned_application_config.value.load_all()
-    if (errors !== null && errors.length !== 0) {
-        emits('received_errors', errors)
-        return
-    }
     if (props.inited) {
         skip_emits_this_tick.value = true
         nextTick(() => skip_emits_this_tick.value = false)
@@ -81,6 +76,7 @@ watch(() => props.application_config, async () => {
             tags.push(tag.tag_name)
         }
     })
+    await nextTick(() => {})
     await update_check(tags, CheckState.checked, true)
     const checked_items = foldable_struct.value?.get_selected_items()
     if (checked_items) {

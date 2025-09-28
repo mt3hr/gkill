@@ -34,9 +34,11 @@ type GkillRepositories struct {
 
 	Reps Repositories
 
-	TagReps TagRepositories
+	TagReps            TagRepositories
+	TagRepsWatchTarget TagRepositories // 監視解除用
 
-	TextReps TextRepositories
+	TextReps            TextRepositories
+	TextRepsWatchTarget TextRepositories // 監視解除用
 
 	NotificationReps NotificationRepositories
 
@@ -169,92 +171,92 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 	for _, rep := range g.TagReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.TextReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.NotificationReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.KmemoReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.KCReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.URLogReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 
 	for _, rep := range g.NlogReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.TimeIsReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.MiReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.LantanaReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.IDFKyouReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.ReKyouReps.ReKyouRepositories {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	for _, rep := range g.GitCommitLogReps {
 		err := rep.Close(ctx)
 		if err != nil {
-			return err
+			gkill_log.Error.Println(err.Error())
 		}
 	}
 	err := g.LatestDataRepositoryAddressDAO.Close(ctx)
 	if err != nil {
-		return err
+		gkill_log.Error.Println(err.Error())
 	}
 
 	/*
 		for _, rep := range g.GPSLogReps {
 			err := rep.Close(ctx)
 			if err != nil {
-				return err
+			gkill_log.Error.Println(err.Error())
 			}
 		}
 	*/
