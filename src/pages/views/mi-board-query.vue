@@ -17,7 +17,7 @@ import type { miBoardQueryEmits } from './mi-board-query-emits'
 import type { miBoardQueryProps } from './mi-board-query-props'
 import { nextTick, type Ref, ref, watch } from 'vue'
 import FoldableStruct from './foldable-struct.vue'
-import type { ApplicationConfig } from '@/classes/datas/config/application-config'
+import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { CheckState } from './check-state'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 
@@ -28,7 +28,7 @@ const emits = defineEmits<miBoardQueryEmits>()
 defineExpose({ get_board_name })
 
 const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
-const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
+const cloned_application_config: Ref<ApplicationConfig> = ref(new ApplicationConfig())
 const board_name: Ref<string> = ref(i18n.global.t("MI_ALL_TITLE"))
 
 const use_board = ref(true)
@@ -36,11 +36,6 @@ const use_board = ref(true)
 const skip_emits_this_tick = ref(false)
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
-    const errors = await cloned_application_config.value.load_all()
-    if (errors !== null && errors.length !== 0) {
-        emits('received_errors', errors)
-        return
-    }
     if (props.inited) {
         skip_emits_this_tick.value = true
         nextTick(() => skip_emits_this_tick.value = false)

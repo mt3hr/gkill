@@ -576,6 +576,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.TagReps = append(repositories.TagReps, tagRep)
+					repositories.TagRepsWatchTarget = append(repositories.TagReps, tagRep)
 					if rep.UseToWrite {
 						newPath, _ := tagRep.GetPath(ctx, "")
 						if repositories.WriteTagRep != nil {
@@ -614,6 +615,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.TextReps = append(repositories.TextReps, textRep)
+					repositories.TextRepsWatchTarget = append(repositories.TextReps, textRep)
 					if rep.UseToWrite {
 						newPath, _ := textRep.GetPath(ctx, "")
 						if repositories.WriteTextRep != nil {
@@ -1100,10 +1102,10 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 	for _, rep := range reps.Reps {
 		removeWatchTargetReps = append(removeWatchTargetReps, rep)
 	}
-	for _, tagRep := range reps.TagReps {
+	for _, tagRep := range reps.TagRepsWatchTarget {
 		removeWatchTargetReps = append(removeWatchTargetReps, tagRep)
 	}
-	for _, textRep := range reps.TextReps {
+	for _, textRep := range reps.TextRepsWatchTarget {
 		removeWatchTargetReps = append(removeWatchTargetReps, textRep)
 	}
 	for _, notificationRep := range reps.NotificationReps {
@@ -1135,6 +1137,7 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 		err = fmt.Errorf("error at close repositories: %w", err)
 		gkill_log.Debug.Println(err.Error())
 	}
+	delete(g.gkillRepositories[userID], device)
 	delete(g.gkillRepositories, userID)
 	return true, nil
 }
