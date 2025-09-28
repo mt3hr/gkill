@@ -102,10 +102,6 @@ watch(() => loading.value, async (new_value: boolean, old_value: boolean) => {
 const skip_emits_this_tick = ref(false)
 watch(() => props.application_config, async (_new_application_config: ApplicationConfig, _old_application_config: ApplicationConfig) => {
     cloned_application_config.value = props.application_config.clone()
-    const errors = await cloned_application_config.value.load_all()
-    if (errors !== null && errors.length !== 0) {
-        emits('received_errors', errors)
-    }
     if (props.inited) {
         skip_emits_this_tick.value = true
         nextTick(() => skip_emits_this_tick.value = false)
