@@ -83,17 +83,23 @@ export class ApplicationConfig {
         application_config.kftl_template_struct = this.kftl_template_struct
         application_config.account_is_admin = this.account_is_admin
         application_config.dnote_json_data = this.dnote_json_data
-        application_config.ryuu_json_data= this.ryuu_json_data
+        application_config.ryuu_json_data = this.ryuu_json_data
         application_config.mi_board_struct = this.mi_board_struct
         application_config.session_is_local = this.session_is_local
         application_config.rykv_default_period = this.rykv_default_period
         application_config.mi_default_period = this.mi_default_period
         application_config.is_show_share_footer = this.is_show_share_footer
-        application_config.show_tags_in_list= this.show_tags_in_list
+        application_config.show_tags_in_list = this.show_tags_in_list
         application_config.default_page = this.default_page
+        application_config.parsed_tag_struct = this.parsed_tag_struct
+        application_config.parsed_rep_struct = this.parsed_rep_struct
+        application_config.parsed_rep_type_struct = this.parsed_rep_type_struct
+        application_config.parsed_device_struct = this.parsed_device_struct
+        application_config.parsed_kftl_template = this.parsed_kftl_template
+        application_config.parsed_mi_boad_struct = this.parsed_mi_boad_struct
         return application_config
     }
-    async load_all(): Promise<Array<GkillError>> {
+    async append_not_found_infos(): Promise<Array<GkillError>> {
         const errors = Array<GkillError>()
         errors.concat(await this.append_not_found_reps())
         errors.concat(await this.append_not_found_devices())
@@ -103,6 +109,11 @@ export class ApplicationConfig {
         errors.concat(await this.append_no_devices())
         errors.concat(await this.append_no_tags())
         errors.concat(await this.append_all_mi_board())
+        return errors
+    }
+    async load_all(): Promise<Array<GkillError>> {
+        const errors = Array<GkillError>()
+        errors.concat(await this.append_not_found_infos())
         errors.concat(await this.parse_template_and_struct())
         return errors
     }

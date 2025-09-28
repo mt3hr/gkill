@@ -256,7 +256,6 @@ defineExpose({ reload_cloned_application_config })
 
 watch(() => props.application_config, async () => {
     cloned_application_config.value = props.application_config.clone()
-    await cloned_application_config.value.load_all()
 })
 
 const is_loading = ref(false)
