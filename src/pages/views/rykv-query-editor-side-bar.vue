@@ -113,8 +113,6 @@ const inited = computed(() => {
 
 watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
     if (old_value !== new_value && new_value) {
-        default_query.value = generate_query().clone()
-        default_query.value.query_id = props.gkill_api.generate_uuid()
         nextTick(() => { emits('inited') })
     }
 })
@@ -132,6 +130,10 @@ watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyo
         return
     }
     query.value = new_value
+})
+
+watch(() => props.application_config, () => {
+    default_query.value = FindKyouQuery.generate_default_query(props.application_config)
 })
 
 function get_default_query(): FindKyouQuery {
@@ -287,8 +289,6 @@ function emits_cleard_calendar_query(): void {
 async function emits_default_query(): Promise<void> {
     const find_query = get_default_query().clone()
     find_query.query_id = props.gkill_api.generate_uuid()
-    await tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
-    await timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
     query.value = find_query
     emits('updated_query_clear', find_query)
 }
