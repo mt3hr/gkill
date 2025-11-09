@@ -251,6 +251,9 @@ function emits_cleard_rep_query(): void {
     find_query.devices_in_sidebar = get_default_query().devices_in_sidebar.concat()
     find_query.rep_types_in_sidebar = get_default_query().rep_types_in_sidebar.concat()
     query.value = find_query
+    rep_query.value?.update_check_devices(find_query.devices_in_sidebar, CheckState.checked, true)
+    rep_query.value?.update_check_rep_types(find_query.rep_types_in_sidebar, CheckState.checked, true)
+    rep_query.value?.update_check_reps(find_query.reps, CheckState.checked, true)
     emits('updated_query_clear', find_query)
 }
 
@@ -290,6 +293,11 @@ async function emits_default_query(): Promise<void> {
     const find_query = get_default_query().clone()
     find_query.query_id = props.gkill_api.generate_uuid()
     query.value = find_query
+    timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
+    rep_query.value?.update_check_devices(find_query.devices_in_sidebar, CheckState.checked, true)
+    rep_query.value?.update_check_rep_types(find_query.rep_types_in_sidebar, CheckState.checked, true)
+    rep_query.value?.update_check_reps(find_query.reps, CheckState.checked, true)
+    tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
     emits('updated_query_clear', find_query)
 }
 
