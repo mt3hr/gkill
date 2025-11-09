@@ -1,7 +1,11 @@
 'use strict'
 
+import type { ApplicationConfig } from "@/classes/datas/config/application-config"
 import { MiCheckState } from "./mi-check-state"
 import { MiSortType } from "./mi-sort-type"
+import type { RepStructElementData } from "@/classes/datas/config/rep-struct-element-data"
+import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
+import moment from "moment"
 
 export class FindKyouQuery {
     query_id: string
@@ -286,4 +290,110 @@ export class FindKyouQuery {
         this.timeis_words = timeis_words
         this.timeis_not_words = timeis_not_words
     }
+
+    // ApplicationConfigから、デフォルトの検索条件を生成する。
+    static generate_default_query(application_config: ApplicationConfig): FindKyouQuery {
+        const query = new FindKyouQuery()
+
+        // 対象はの3つ。ほかは初期値
+        // RepのSummary, Detail
+        // Tag
+        // Calendar
+
+        // RepのSummary, Detail
+        query.devices_in_sidebar = application_config.device_struct.filter(device => device.check_when_inited).map(device => device.device_name)
+        query.rep_types_in_sidebar = application_config.rep_type_struct.filter(rep_type => rep_type.check_when_inited).map(rep_type => rep_type.rep_type_name)
+        query.apply_rep_summary_to_detaul(application_config)
+
+        // Tag
+        query.tags = application_config.tag_struct.filter(tag => tag.check_when_inited).map(tag => tag.tag_name)
+
+        // Calendar
+        if (application_config.rykv_default_period !== -1) {
+            query.use_calendar = true
+            query.calendar_start_date = moment(moment().add(-application_config.rykv_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
+            query.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
+        }
+
+        return query
+    }
+
+    // この検索条件に対して、RepのSummaryをDetailに適用する
+    // rep_types, devicesから、repsを算出する
+    apply_rep_summary_to_detaul(application_config: ApplicationConfig): void {
+        const reps = application_config.parsed_rep_struct.children
+        const rep_types = application_config.parsed_rep_type_struct.children
+        const devices = application_config.parsed_device_struct.children
+
+        if (!reps || !devices || !rep_types) {
+            return
+        }
+
+        const check_target_rep_names = new Array<string>()
+        let walk_rep = (_rep: RepStructElementData): void => { }
+        walk_rep = (rep: RepStructElementData): void => {
+            rep.is_checked = false
+            const rep_struct = this.rep_to_struct(rep)
+
+            let type_is_match = false
+            let device_is_match = false
+            let walk = (_struct: FoldableStructModel): void => { }
+
+            walk = (struct: FoldableStructModel): void => {
+                struct.indeterminate = false
+                if (struct.is_checked && struct.key == rep_struct.type) {
+                    if (!type_is_match) {
+                        type_is_match = true
+                    }
+                }
+                if (struct.children) {
+                    struct.children.forEach(child => walk(child))
+                }
+            }
+            rep_types.forEach(rep_type => walk(rep_type))
+
+            walk = (struct: FoldableStructModel): void => {
+                struct.indeterminate = false
+                if (struct.is_checked && struct.key == rep_struct.device) {
+                    if (!device_is_match) {
+                        device_is_match = true
+                    }
+                }
+                if (struct.children) {
+                    struct.children.forEach(child => walk(child))
+                }
+            }
+            devices.forEach(device => walk(device))
+
+            if (type_is_match && device_is_match && !rep.ignore_check_rep_rykv) {
+                check_target_rep_names.push(rep.rep_name)
+            }
+
+            if (rep.children) {
+                rep.children.forEach(child_rep => walk_rep(child_rep))
+            }
+        }
+        reps.forEach(child_rep => walk_rep(child_rep))
+
+        this.reps = check_target_rep_names
+    }
+
+    // 引数のrep.nameから{type: "", device: "", time: ""}なオブジェクトを作ります。
+    // rep.nameがdvnf形式ではない場合は、{type: rep.name, device: 'なし', time: ''}が作成されます。
+    /* private */ rep_to_struct(rep: RepStructElementData): { type: string, device: string, time: string } {
+        const spl = rep.rep_name.split('_')
+        if (spl.length !== 3) {
+            return {
+                type: rep.rep_name,
+                device: 'なし',
+                time: ''
+            }
+        }
+        return {
+            type: spl[0],
+            device: spl[1],
+            time: spl[2]
+        }
+    }
+
 }
