@@ -128,16 +128,6 @@ watch(() => props.application_config, async (_new_application_config: Applicatio
             rep_types.push(rep_type.rep_type_name)
         }
     })
-    await update_check_devices(devices, CheckState.checked, true)
-    await update_check_reps(rep_types, CheckState.checked, true)
-
-    const calclated_reps = calc_reps_by_types_and_devices()
-    if (!calclated_reps) {
-        await update_check_reps(reps, CheckState.checked, true)
-    } else {
-        await update_check_reps(calclated_reps, CheckState.checked, true)
-    }
-    emits('request_update_checked_reps', reps, true)
     if (!props.inited) {
         emits('inited')
     }

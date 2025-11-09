@@ -76,12 +76,6 @@ watch(() => props.application_config, async () => {
             tags.push(tag.tag_name)
         }
     })
-    await nextTick(() => {})
-    await update_check(tags, CheckState.checked, true)
-    const checked_items = foldable_struct.value?.get_selected_items()
-    if (checked_items) {
-        emits('request_update_checked_tags', checked_items, false)
-    }
     if (!props.inited) {
         emits('inited')
     }

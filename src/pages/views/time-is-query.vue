@@ -20,8 +20,9 @@
                     @click="cloned_query.timeis_words_and = !cloned_query.timeis_words_and; emits('request_update_and_search_timeis_word', cloned_query.timeis_words_and)" />
             </v-col>
             <v-col cols="10" class="pa-0 ma-0">
-                <v-text-field v-model="cloned_query.timeis_keywords" :label="i18n.global.t('PLAING_TIMEIS_QUERY_KEYWORD_TITLE')"
-                    hide-details @change="emits('request_update_timeis_keywords', cloned_query.timeis_keywords)" />
+                <v-text-field v-model="cloned_query.timeis_keywords"
+                    :label="i18n.global.t('PLAING_TIMEIS_QUERY_KEYWORD_TITLE')" hide-details
+                    @change="emits('request_update_timeis_keywords', cloned_query.timeis_keywords)" />
             </v-col>
         </v-row>
         <v-row v-show="cloned_query.use_timeis" class="pa-0 ma-0">
@@ -95,12 +96,6 @@ watch(() => props.application_config, async () => {
             tags.push(tag.tag_name)
         }
     })
-    await nextTick(() => {})
-    await update_check(tags, CheckState.checked, true)
-    const checked_items = foldable_struct.value?.get_selected_items()
-    if (checked_items) {
-        emits('request_update_checked_timeis_tags', checked_items, false)
-    }
     if (!props.inited) {
         emits('inited')
     }
