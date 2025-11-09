@@ -97,11 +97,11 @@ async function clicked_items(e: MouseEvent, items: Array<string>, is_checked: Ch
     update_check(items, is_checked, true)
 }
 
-async function update_check_state(items: Array<string>, is_checked: CheckState): Promise<void> {
-    await update_check(items, is_checked, false)
+function update_check_state(items: Array<string>, is_checked: CheckState) {
+    update_check(items, is_checked, false)
 }
 
-async function update_check(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean, disable_emits?: boolean): Promise<void> {
+function update_check(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean, disable_emits?: boolean){
     if (pre_uncheck_all) {
         let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
