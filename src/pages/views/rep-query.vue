@@ -159,31 +159,31 @@ function calc_reps_by_types_and_devices(): Array<string> | null {
     return query_for_apply_summary_to_detail.reps
 }
 
-async function clicked_reps(e: MouseEvent, items: Array<string>, is_checked: CheckState): Promise<void> {
-    return update_check_reps(items, is_checked, true)
+function clicked_reps(e: MouseEvent, items: Array<string>, is_checked: CheckState) {
+    update_check_reps(items, is_checked, true)
 }
 
-async function update_reps(items: Array<string>, is_checked: CheckState): Promise<void> {
-    return update_check_reps(items, is_checked, false)
+function update_reps(items: Array<string>, is_checked: CheckState) {
+    update_check_reps(items, is_checked, false)
 }
 
-async function clicked_devices(e: MouseEvent, items: Array<string>, is_checked: CheckState): Promise<void> {
-    return update_check_devices(items, is_checked, true)
+function clicked_devices(e: MouseEvent, items: Array<string>, is_checked: CheckState) {
+    update_check_devices(items, is_checked, true)
 }
 
-async function update_devices(items: Array<string>, is_checked: CheckState): Promise<void> {
-    return update_check_devices(items, is_checked, false)
+function update_devices(items: Array<string>, is_checked: CheckState) {
+    update_check_devices(items, is_checked, false)
 }
 
-async function clicked_rep_types(e: MouseEvent, items: Array<string>, is_checked: CheckState): Promise<void> {
-    return update_check_rep_types(items, is_checked, true)
+function clicked_rep_types(e: MouseEvent, items: Array<string>, is_checked: CheckState) {
+    update_check_rep_types(items, is_checked, true)
 }
 
-async function update_rep_types(items: Array<string>, is_checked: CheckState): Promise<void> {
-    return update_check_rep_types(items, is_checked, false)
+function update_rep_types(items: Array<string>, is_checked: CheckState) {
+    update_check_rep_types(items, is_checked, false)
 }
 
-async function update_check_reps(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
+function update_check_reps(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean){
     if (pre_uncheck_all) {
         let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
@@ -231,7 +231,7 @@ async function update_check_reps(items: Array<string>, is_checked: CheckState, p
     foldable_struct_reps.value?.update_check()
 }
 
-async function update_check_devices(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
+function update_check_devices(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean){
     if (pre_uncheck_all) {
         let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
@@ -286,7 +286,7 @@ async function update_check_devices(items: Array<string>, is_checked: CheckState
     foldable_struct_devices.value?.update_check()
 }
 
-async function update_check_rep_types(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean): Promise<void> {
+function update_check_rep_types(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean) {
     if (pre_uncheck_all) {
         let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
