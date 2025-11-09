@@ -53,13 +53,6 @@
                         return
                     }
                     search(focused_column_index, new_query)
-                }" @updated_query_clear="(new_query: FindKyouQuery) => {
-                    if (skip_search_this_tick || !application_config.rykv_hot_reload) {
-                        nextTick(() => skip_search_this_tick = false)
-                        return
-                    }
-                    skip_search_this_tick = true // 使い方違うけど
-                    search(focused_column_index, new_query)
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
                 @request_open_focus_board="(board_name: string) => open_or_focus_board(board_name)"
                 @received_errors="(errors) => emits('received_errors', errors)"
@@ -78,7 +71,7 @@
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                                }}</v-card-title>
+                            }}</v-card-title>
                             <KyouListView :kyou_height="56 + 35" :width="400"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
@@ -95,40 +88,50 @@
                                     }
                                 }" @clicked_list_view="() => {
                                     skip_search_this_tick = true
+                                    focused_column_index = index
                                     focused_query = querys[index]
-
+                                    focused_column_index = index
                                     if (is_show_kyou_count_calendar) {
                                         update_focused_kyous_list(index)
                                     }
-                                    focused_column_index = index
                                     nextTick(() => skip_search_this_tick = false)
                                 }" @clicked_kyou="(kyou) => {
+                                    focused_column_index = index
                                     skip_search_this_tick = true
                                     focused_query = querys[index]
                                     clicked_kyou_in_list_view(index, kyou)
                                 }" @received_errors="(errors) => emits('received_errors', errors)"
                                 @received_messages="(messages) => emits('received_messages', messages)"
                                 @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
-                                @requested_reload_list="() => nextTick(() => reload_list(index))"
+                                @requested_reload_list="() => reload_list(index)"
                                 @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
                                 @requested_change_focus_kyou="(is_focus_kyou) => {
-                                    skip_search_this_tick = true
                                     focused_column_index = index
-
+                                    skip_search_this_tick = true
                                     const query = querys[index].clone()
                                     query.is_focus_kyou_in_list_view = is_focus_kyou
                                     querys.splice(index, 1, query)
                                     querys_backup.splice(index, 1, query)
                                 }" @requested_search="() => {
                                     focused_column_index = index
-                                    nextTick(() => search(focused_column_index, querys[focused_column_index], true))
+                                    skip_search_this_tick = true
+                                    const query = querys[index].clone()
+                                    query.query_id = gkill_api.generate_uuid()
+                                    querys[index] = query
+                                    querys.splice(index, 1, query)
+                                    querys_backup.splice(index, 1, query)
+                                    reload_list(index)
                                 }" ref="kyou_list_views" @requested_change_is_image_only_view="(is_image_only_view: boolean) => {
                                     focused_column_index = index
+                                    skip_search_this_tick = true
                                     focused_kyous_list = match_kyous_list[index]
                                     const query = querys[index].clone()
+                                    query.query_id = gkill_api.generate_uuid()
                                     query.is_image_only = is_image_only_view
                                     querys[index] = query
-                                    search(index, query, true)
+                                    querys.splice(index, 1, query)
+                                    querys_backup.splice(index, 1, query)
+                                    reload_list(index)
                                 }" @requested_close_column="close_list_view(index)"
                                 @deleted_kyou="(deleted_kyou) => { reload_list(index); reload_kyou(deleted_kyou); focused_kyou?.reload(false, true) }"
                                 @deleted_tag="(deleted_tag) => { }" @deleted_text="(deleted_text) => { }"
@@ -416,7 +419,7 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
                 const kyou_in_list = kyous_list[j]
                 if (kyou.id === kyou_in_list.id) {
                     const updated_kyou = kyou.clone()
-                    await updated_kyou.reload(false, true)
+                    await updated_kyou.reload(false, false)
                     await updated_kyou.load_all()
                     kyous_list.splice(j, 1, updated_kyou)
                     break
@@ -615,18 +618,15 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             match_kyous_list.value[column_index] = []
         }
 
-        const kyou_list_view = kyou_list_views.value[column_index] as any
-        if (kyou_list_view && inited.value) {
-            kyou_list_view.scroll_to(0)
-        }
-        await nextTick(async () => {
-            const kyou_list_view = kyou_list_views.value[column_index] as any
-            if (!kyou_list_view) {
-                return
+        await nextTick(() => { })
+
+        const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
+        if (kyou_list_view) {
+            if (inited.value) {
+                kyou_list_view.scroll_to(0)
             }
-            kyou_list_view.set_loading(true)
-            return nextTick(() => { }) // loading表記切り替え待ち
-        })
+            ((async () => kyou_list_view.set_loading(true))());
+        }
 
         const req = new GetKyousRequest()
         abort_controllers.value[column_index] = req.abort_controller
@@ -665,13 +665,13 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         }
 
         await nextTick(() => {
-            const kyou_list_view = kyou_list_views.value[column_index] as any
-            if (!kyou_list_view) {
-                return
+            const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
+            if (kyou_list_view) {
+                ((async () => kyou_list_view.set_loading(false))());
             }
+
             if (inited.value) {
                 kyou_list_view.scroll_to(0)
-                kyou_list_view.set_loading(false)
                 skip_search_this_tick.value = false
             }
         })
@@ -683,6 +683,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         }
     }
 }
+
 
 function open_or_focus_board(board_name: string): void {
     if (board_name === "") {

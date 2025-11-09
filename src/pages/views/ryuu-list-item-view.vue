@@ -147,6 +147,7 @@ async function load_related_kyou(): Promise<void> {
     const matcher_for_after = new DnoteMatcher(predicate_for_after)
     const find_kyou_query = model_value.value?.find_kyou_query ? model_value.value.find_kyou_query : props.find_kyou_query_default
     find_kyou_query.use_calendar = true
+    find_kyou_query.apply_rep_summary_to_detaul(props.application_config)
     find_kyou_query.calendar_start_date = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
     find_kyou_query.calendar_end_date = new Date(related_time.getTime() + (model_value.value!.find_duration_hour * 60 * 60 * 1000))
 
