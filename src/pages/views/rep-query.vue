@@ -71,7 +71,7 @@ const foldable_struct_rep_types = ref<InstanceType<typeof FoldableStruct> | null
 
 const props = defineProps<RepQueryProps>()
 const emits = defineEmits<RepQueryEmits>()
-defineExpose({ get_checked_reps, get_checked_devices, get_checked_rep_types })
+defineExpose({ get_checked_reps, get_checked_devices, get_checked_rep_types, update_check_devices, update_check_rep_types, update_check_reps })
 
 const old_cloned_query: Ref<FindKyouQuery | null> = ref(null)
 const cloned_query: Ref<FindKyouQuery> = ref(props.find_kyou_query.clone())
@@ -154,77 +154,9 @@ watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: F
 
 // 現在チェックされているdevices, typesに該当するrep.nameを抽出してthis.repsを更新し、emitします。
 function calc_reps_by_types_and_devices(): Array<string> | null {
-    const reps = cloned_application_config.value.parsed_rep_struct.children
-    const rep_types = cloned_application_config.value.parsed_rep_type_struct.children
-    const devices = cloned_application_config.value.parsed_device_struct.children
-
-    if (!reps || !devices || !rep_types) {
-        return null
-    }
-
-    const check_target_rep_names = new Array<string>()
-    let walk_rep = (_rep: RepStructElementData): void => { }
-    walk_rep = (rep: RepStructElementData): void => {
-        rep.is_checked = false
-        const rep_struct = rep_to_struct(rep)
-
-        let type_is_match = false
-        let device_is_match = false
-        let walk = (_struct: FoldableStructModel): void => { }
-
-        walk = (struct: FoldableStructModel): void => {
-            struct.indeterminate = false
-            if (struct.is_checked && struct.key == rep_struct.type) {
-                if (!type_is_match) {
-                    type_is_match = true
-                }
-            }
-            if (struct.children) {
-                struct.children.forEach(child => walk(child))
-            }
-        }
-        rep_types.forEach(rep_type => walk(rep_type))
-
-        walk = (struct: FoldableStructModel): void => {
-            struct.indeterminate = false
-            if (struct.is_checked && struct.key == rep_struct.device) {
-                if (!device_is_match) {
-                    device_is_match = true
-                }
-            }
-            if (struct.children) {
-                struct.children.forEach(child => walk(child))
-            }
-        }
-        devices.forEach(device => walk(device))
-
-        if (type_is_match && device_is_match && !rep.ignore_check_rep_rykv) {
-            check_target_rep_names.push(rep.rep_name)
-        }
-
-        if (rep.children) {
-            rep.children.forEach(child_rep => walk_rep(child_rep))
-        }
-    }
-    reps.forEach(child_rep => walk_rep(child_rep))
-    return check_target_rep_names
-}
-// 引数のrep.nameから{type: "", device: "", time: ""}なオブジェクトを作ります。
-// rep.nameがdvnf形式ではない場合は、{type: rep.name, device: 'なし', time: ''}が作成されます。
-function rep_to_struct(rep: RepStructElementData): { type: string, device: string, time: string } {
-    const spl = rep.rep_name.split('_')
-    if (spl.length !== 3) {
-        return {
-            type: rep.rep_name,
-            device: 'なし',
-            time: ''
-        }
-    }
-    return {
-        type: spl[0],
-        device: spl[1],
-        time: spl[2]
-    }
+    const query_for_apply_summary_to_detail = cloned_query.value.clone()
+    query_for_apply_summary_to_detail.apply_rep_summary_to_detaul(cloned_application_config.value)
+    return query_for_apply_summary_to_detail.reps
 }
 
 async function clicked_reps(e: MouseEvent, items: Array<string>, is_checked: CheckState): Promise<void> {
