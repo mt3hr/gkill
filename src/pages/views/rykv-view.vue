@@ -66,17 +66,6 @@
                         gps_log_map_start_time = new_query.calendar_start_date
                         gps_log_map_end_time = new_query.calendar_end_date
                     }
-                }" @updated_query_clear="(new_query) => {
-                    if (skip_search_this_tick || !application_config.rykv_hot_reload) {
-                        nextTick(() => skip_search_this_tick = false)
-                        return
-                    }
-                    skip_search_this_tick = true // 使い方違うけど
-                    search(focused_column_index, new_query)
-                    if (new_query.use_calendar && new_query.calendar_start_date && new_query.calendar_end_date) {
-                        gps_log_map_start_time = new_query.calendar_start_date
-                        gps_log_map_end_time = new_query.calendar_end_date
-                    }
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
                 @received_errors="(errors) => emits('received_errors', errors)"
                 @received_messages="(messages) => emits('received_messages', messages)" ref="query_editor_sidebar" />
@@ -110,7 +99,6 @@
                                 }
                                 skip_search_this_tick = true
                                 focused_query = querys[index]
-
                                 if (is_show_kyou_count_calendar || is_show_dnote) {
                                     update_focused_kyous_list(index)
                                 }
@@ -118,6 +106,7 @@
                                 nextTick(() => skip_search_this_tick = false)
                             }" @clicked_kyou="(kyou) => {
                                 skip_search_this_tick = true
+                                focused_column_index = index
                                 focused_query = querys[index]
                                 clicked_kyou_in_list_view(index, kyou)
                                 gps_log_map_start_time = kyou.related_time
@@ -125,25 +114,36 @@
                                 gps_log_map_marker_time = kyou.related_time
                             }" @received_errors="(errors) => emits('received_errors', errors)"
                             @received_messages="(messages) => emits('received_messages', messages)"
-                            @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
-                            @requested_reload_list="() => nextTick(() => reload_list(index))"
-                            @requested_change_focus_kyou="(is_focus_kyou) => {
-                                skip_search_this_tick = true
+                            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => {
+                                const query = querys[index].clone()
+                                query.query_id = gkill_api.generate_uuid()
+                                querys[index] = query
+                                reload_list(index)
+                            }" @requested_change_focus_kyou="(is_focus_kyou) => {
                                 focused_column_index = index
-
+                                skip_search_this_tick = true
                                 const query = querys[index].clone()
                                 query.is_focus_kyou_in_list_view = is_focus_kyou
                                 querys.splice(index, 1, query)
                                 querys_backup.splice(index, 1, query)
                             }" @requested_search="() => {
                                 focused_column_index = index
-                                nextTick(() => search(focused_column_index, querys[focused_column_index], true))
+                                skip_search_this_tick = true
+                                const query = querys[index].clone()
+                                query.query_id = gkill_api.generate_uuid()
+                                querys[index] = query
+                                querys.splice(index, 1, query)
+                                querys_backup.splice(index, 1, query)
+                                reload_list(index)
                             }" ref="kyou_list_views" @requested_change_is_image_only_view="(is_image_only_view: boolean) => {
                                 focused_column_index = index
-                                focused_kyous_list = match_kyous_list[index]
+                                skip_search_this_tick = true
                                 const query = querys[index].clone()
+                                query.query_id = gkill_api.generate_uuid()
                                 query.is_image_only = is_image_only_view
                                 querys[index] = query
+                                querys.splice(index, 1, query)
+                                querys_backup.splice(index, 1, query)
                                 search(index, query, true)
                             }" @requested_close_column="close_list_view(index)"
                             @deleted_kyou="(deleted_kyou) => { reload_list(index); reload_kyou(deleted_kyou); focused_kyou?.reload(true, false) }"
@@ -737,18 +737,15 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             match_kyous_list.value[column_index] = []
         }
 
-        const kyou_list_view = kyou_list_views.value[column_index] as any
-        if (kyou_list_view && inited.value) {
-            kyou_list_view.scroll_to(0)
-        }
-        await nextTick(async () => {
-            const kyou_list_view = kyou_list_views.value[column_index] as any
-            if (!kyou_list_view) {
-                return
+        await nextTick(() => { })
+
+        const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
+        if (kyou_list_view) {
+            if (inited.value) {
+                kyou_list_view.scroll_to(0)
             }
-            kyou_list_view.set_loading(true)
-            return nextTick(() => { }) // loading表記切り替え待ち
-        })
+            ((async () => kyou_list_view.set_loading(true))());
+        }
 
         const req = new GetKyousRequest()
         abort_controllers.value[column_index] = req.abort_controller
@@ -787,13 +784,13 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         }
 
         await nextTick(() => {
-            const kyou_list_view = kyou_list_views.value[column_index] as any
-            if (!kyou_list_view) {
-                return
+            const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
+            if (kyou_list_view) {
+                ((async () => kyou_list_view.set_loading(false))());
             }
+
             if (inited.value) {
                 kyou_list_view.scroll_to(0)
-                kyou_list_view.set_loading(false)
                 skip_search_this_tick.value = false
             }
             dnote_view.value?.reload(focused_kyous_list.value, focused_query.value)
