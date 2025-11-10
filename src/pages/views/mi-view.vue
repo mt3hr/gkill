@@ -71,7 +71,7 @@
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                                }}</v-card-title>
+                            }}</v-card-title>
                             <KyouListView :kyou_height="56 + 35" :width="400"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
@@ -419,7 +419,7 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
                 const kyou_in_list = kyous_list[j]
                 if (kyou.id === kyou_in_list.id) {
                     const updated_kyou = kyou.clone()
-                    await updated_kyou.reload(false, true)
+                    await updated_kyou.reload(false, true, querys.value[i])
                     await updated_kyou.load_all()
                     kyous_list.splice(j, 1, updated_kyou)
                     break
@@ -430,7 +430,7 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
     (async (): Promise<void> => {
         if (focused_kyou.value && focused_kyou.value.id === kyou.id) {
             const updated_kyou = kyou.clone()
-            await updated_kyou.reload(false, false)
+            await updated_kyou.reload(false, true)
             await updated_kyou.load_all()
             focused_kyou.value = updated_kyou
         }
