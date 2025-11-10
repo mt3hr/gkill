@@ -719,6 +719,7 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
                 return
             }
         }
+
         querys.value[column_index] = query
         querys_backup.value[column_index] = query
         focused_query.value = query
@@ -737,15 +738,15 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             match_kyous_list.value[column_index] = []
         }
 
-        await nextTick(() => { })
-
-        const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
-        if (kyou_list_view) {
-            if (inited.value) {
-                kyou_list_view.scroll_to(0)
+        nextTick(() => {
+            const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
+            if (kyou_list_view) {
+                if (inited.value) {
+                    kyou_list_view.scroll_to(0)
+                }
+                ((async () => kyou_list_view.set_loading(true))());
             }
-            ((async () => kyou_list_view.set_loading(true))());
-        }
+        })
 
         const req = new GetKyousRequest()
         abort_controllers.value[column_index] = req.abort_controller
