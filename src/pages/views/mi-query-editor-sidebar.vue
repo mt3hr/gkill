@@ -133,12 +133,15 @@ const inited = computed(() => {
 
 watch(() => inited.value, async (new_value: boolean, old_value: boolean) => {
     if (old_value !== new_value && new_value) {
-        default_query.value = generate_query().clone()
-        default_query.value.query_id = props.gkill_api.generate_uuid()
-        default_query.value.use_mi_board_name = false
-        default_query.value.mi_board_name = "すべて"
         nextTick(() => { emits('inited') })
     }
+})
+
+watch(() => props.application_config, () => {
+    default_query.value = FindKyouQuery.generate_default_query(props.application_config)
+    default_query.value.query_id = props.gkill_api.generate_uuid()
+    default_query.value.use_mi_board_name = false
+    default_query.value.mi_board_name = "すべて"
 })
 
 const inited_sidebar_header_for_query_sidebar = ref(true)
@@ -182,7 +185,7 @@ function generate_query(query_id?: string): FindKyouQuery {
     find_query.for_mi = true
 
     find_query.is_focus_kyou_in_list_view = props.find_kyou_query ? props.find_kyou_query.is_focus_kyou_in_list_view : false
-    find_query.is_image_only = props.find_kyou_query ? props.find_kyou_query.is_image_only : false
+    find_query.is_image_only = query.value.is_image_only
 
     if (keyword_query.value) {
         find_query.use_words = keyword_query.value.get_use_words()
@@ -267,14 +270,14 @@ function emits_cleard_sort_type_query(): void {
     const find_query = generate_query()
     find_query.query_id = props.gkill_api.generate_uuid()
     find_query.mi_sort_type = get_default_query().mi_sort_type
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_check_state(): void {
     const find_query = generate_query()
     find_query.query_id = props.gkill_api.generate_uuid()
     find_query.mi_check_state = get_default_query().mi_check_state
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_keyword_query(): void {
@@ -284,7 +287,7 @@ function emits_cleard_keyword_query(): void {
     find_query.keywords = get_default_query().keywords.concat()
     find_query.words_and = get_default_query().words_and
     query.value = find_query
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_timeis_query(): void {
@@ -299,7 +302,7 @@ function emits_cleard_timeis_query(): void {
     find_query.timeis_tags_and = get_default_query().timeis_tags_and
     query.value = find_query
     timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_tag_query(): void {
@@ -309,7 +312,7 @@ function emits_cleard_tag_query(): void {
     find_query.tags_and = get_default_query().tags_and
     query.value = find_query
     tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_map_query(): void {
@@ -321,7 +324,7 @@ function emits_cleard_map_query(): void {
     find_query.is_enable_map_circle_in_sidebar = get_default_query().is_enable_map_circle_in_sidebar
     find_query.map_radius = get_default_query().map_radius
     query.value = find_query
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_calendar_query(): void {
@@ -331,7 +334,7 @@ function emits_cleard_calendar_query(): void {
     find_query.calendar_start_date = get_default_query().calendar_start_date
     find_query.calendar_end_date = get_default_query().calendar_end_date
     query.value = find_query
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 async function emits_default_query(): Promise<void> {
@@ -340,9 +343,9 @@ async function emits_default_query(): Promise<void> {
     find_query.query_id = props.gkill_api.generate_uuid()
     find_query.use_mi_board_name = false
     find_query.mi_board_name = board_name
-    await tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
-    await timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
-    emits('updated_query_clear', find_query)
+    timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
+    tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
+    emits('updated_query', find_query)
 }
 
 async function show_manage_share_kyou_dialog(): Promise<void> {
