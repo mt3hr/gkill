@@ -159,7 +159,7 @@ function generate_query(query_id?: string): FindKyouQuery {
     }
 
     find_query.is_focus_kyou_in_list_view = props.find_kyou_query ? props.find_kyou_query.is_focus_kyou_in_list_view : false
-    find_query.is_image_only = props.find_kyou_query ? props.find_kyou_query.is_image_only : false
+    find_query.is_image_only = query.value.is_image_only
     find_query.include_create_mi = true
     find_query.include_check_mi = true
     find_query.include_start_mi = true
@@ -226,7 +226,7 @@ function emits_cleard_keyword_query(): void {
     find_query.keywords = get_default_query().keywords.concat()
     find_query.words_and = get_default_query().words_and
     query.value = find_query
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_timeis_query(): void {
@@ -241,7 +241,7 @@ function emits_cleard_timeis_query(): void {
     find_query.timeis_tags_and = get_default_query().timeis_tags_and
     query.value = find_query
     timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_rep_query(): void {
@@ -254,7 +254,7 @@ function emits_cleard_rep_query(): void {
     rep_query.value?.update_check_devices(find_query.devices_in_sidebar, CheckState.checked, true)
     rep_query.value?.update_check_rep_types(find_query.rep_types_in_sidebar, CheckState.checked, true)
     rep_query.value?.update_check_reps(find_query.reps, CheckState.checked, true)
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_tag_query(): void {
@@ -264,7 +264,7 @@ function emits_cleard_tag_query(): void {
     find_query.tags_and = get_default_query().tags_and
     query.value = find_query
     tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_map_query(): void {
@@ -276,7 +276,7 @@ function emits_cleard_map_query(): void {
     find_query.is_enable_map_circle_in_sidebar = get_default_query().is_enable_map_circle_in_sidebar
     find_query.map_radius = get_default_query().map_radius
     query.value = find_query
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 function emits_cleard_calendar_query(): void {
@@ -286,20 +286,19 @@ function emits_cleard_calendar_query(): void {
     find_query.calendar_start_date = get_default_query().calendar_start_date
     find_query.calendar_end_date = get_default_query().calendar_end_date
     query.value = find_query
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 async function emits_default_query(): Promise<void> {
     const find_query = get_default_query().clone()
     find_query.query_id = props.gkill_api.generate_uuid()
-    find_query.is_image_only = false
     query.value = find_query
     timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
     rep_query.value?.update_check_devices(find_query.devices_in_sidebar, CheckState.checked, true)
     rep_query.value?.update_check_rep_types(find_query.rep_types_in_sidebar, CheckState.checked, true)
     rep_query.value?.update_check_reps(find_query.reps, CheckState.checked, true)
     tag_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
-    emits('updated_query_clear', find_query)
+    emits('updated_query', find_query)
 }
 
 async function show_manage_share_kyou_dialog(): Promise<void> {
