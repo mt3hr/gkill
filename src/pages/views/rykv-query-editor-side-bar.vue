@@ -292,6 +292,7 @@ function emits_cleard_calendar_query(): void {
 async function emits_default_query(): Promise<void> {
     const find_query = get_default_query().clone()
     find_query.query_id = props.gkill_api.generate_uuid()
+    find_query.is_image_only = false
     query.value = find_query
     timeis_query.value?.update_check(find_query.tags, CheckState.checked, true, true)
     rep_query.value?.update_check_devices(find_query.devices_in_sidebar, CheckState.checked, true)
