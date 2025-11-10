@@ -152,7 +152,7 @@ const kyou_height_px = computed(() => props.kyou_height ? props.kyou_height.toSt
 
 const footer_height = computed(() => props.show_footer ? 48 : 0)
 
-watch(() => props.query.is_image_only, () => reload())
+watch(() => props.query, () => reload())
 watch(() => props.matched_kyous, () => reload())
 
 async function reload(): Promise<void> {
