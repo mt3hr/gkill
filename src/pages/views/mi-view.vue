@@ -71,7 +71,7 @@
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                            }}</v-card-title>
+                                }}</v-card-title>
                             <KyouListView :kyou_height="56 + 35" :width="400"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
@@ -419,7 +419,7 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
                 const kyou_in_list = kyous_list[j]
                 if (kyou.id === kyou_in_list.id) {
                     const updated_kyou = kyou.clone()
-                    await updated_kyou.reload(false, false)
+                    await updated_kyou.reload(false, true)
                     await updated_kyou.load_all()
                     kyous_list.splice(j, 1, updated_kyou)
                     break
@@ -618,15 +618,15 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             match_kyous_list.value[column_index] = []
         }
 
-        await nextTick(() => { })
-
-        const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
-        if (kyou_list_view) {
-            if (inited.value) {
-                kyou_list_view.scroll_to(0)
+        nextTick(() => {
+            const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
+            if (kyou_list_view) {
+                if (inited.value) {
+                    kyou_list_view.scroll_to(0)
+                }
+                ((async () => kyou_list_view.set_loading(true))());
             }
-            ((async () => kyou_list_view.set_loading(true))());
-        }
+        })
 
         const req = new GetKyousRequest()
         abort_controllers.value[column_index] = req.abort_controller
