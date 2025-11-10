@@ -50,14 +50,14 @@
             <v-row class="pa-0 ma-0" @contextmenu.prevent="async (e: any) => show_context_menu(e as PointerEvent)"
                 :class="kyou_class">
                 <v-col v-if="show_related_time" class="kyou_related_time pa-0 ma-0" cols="auto">
-                    {{ format_time(cloned_kyou.related_time) }}
+                    {{ related_time }}
                 </v-col>
                 <v-col v-if="show_update_time" class="kyou_update_time pa-0 ma-0" cols="auto">
-                    {{ format_time(cloned_kyou.update_time) }}
+                    {{ update_time }}
                 </v-col>
                 <v-spacer />
                 <v-col v-if="show_rep_name" class="kyou_rep_name pa-0 ma-0" cols="auto">
-                    <span>{{ cloned_kyou.rep_name }}</span>
+                    <span>{{ rep_name }}</span>
                 </v-col>
             </v-row>
         </div>
@@ -405,6 +405,10 @@ onUnmounted(() => {
     cloned_kyou.value.abort_controller.abort()
     cloned_kyou.value.abort_controller = new AbortController()
 })
+
+const related_time = computed(() => format_time(props.kyou.related_time))
+const update_time = computed(() => format_time(props.kyou.update_time))
+const rep_name = computed(() => props.kyou.rep_name)
 
 watch(() => props.kyou, async () => {
     cloned_kyou.value.abort_controller.abort()
