@@ -133,7 +133,7 @@ watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyo
 })
 
 watch(() => props.application_config, () => {
-    default_query.value = FindKyouQuery.generate_default_query(props.application_config)
+    default_query.value = FindKyouQuery.generate_default_query_for_rykv(props.application_config)
 })
 
 function get_default_query(): FindKyouQuery {
