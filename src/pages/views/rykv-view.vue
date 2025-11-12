@@ -491,7 +491,9 @@ watch(() => is_show_kyou_count_calendar.value, () => {
 
 watch(() => is_show_dnote.value, async () => {
     dnote_view.value?.abort()
-    focused_kyous_list.value.splice(0)
+    if (!is_show_kyou_count_calendar.value) {
+        focused_kyous_list.value.splice(0)
+    }
     if (is_show_dnote.value) {
         update_focused_kyous_list(focused_column_index.value)
 
