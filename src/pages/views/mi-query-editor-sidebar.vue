@@ -138,7 +138,7 @@ watch(() => inited.value, async (new_value: boolean, old_value: boolean) => {
 })
 
 watch(() => props.application_config, () => {
-    default_query.value = FindKyouQuery.generate_default_query(props.application_config)
+    default_query.value = FindKyouQuery.generate_default_query_for_mi(props.application_config)
     default_query.value.query_id = props.gkill_api.generate_uuid()
     default_query.value.use_mi_board_name = false
     default_query.value.mi_board_name = "すべて"

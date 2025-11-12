@@ -291,8 +291,9 @@ export class FindKyouQuery {
         this.timeis_not_words = timeis_not_words
     }
 
-    // ApplicationConfigから、デフォルトの検索条件を生成する。
-    static generate_default_query(application_config: ApplicationConfig): FindKyouQuery {
+
+    // ApplicationConfigから、デフォルトの検索条件を生成する。（rykv用）
+    static generate_default_query_for_rykv(application_config: ApplicationConfig): FindKyouQuery {
         const query = new FindKyouQuery()
 
         // 対象はの3つ。ほかは初期値
@@ -314,6 +315,29 @@ export class FindKyouQuery {
             query.calendar_start_date = moment(moment().add(-application_config.rykv_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
             query.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
         }
+
+        return query
+    }
+
+    // ApplicationConfigから、デフォルトの検索条件を生成する。（mi用）
+    static generate_default_query_for_mi(application_config: ApplicationConfig): FindKyouQuery {
+        const query = new FindKyouQuery()
+
+        // 対象はの3つ。ほかは初期値
+        // RepのSummary, Detail
+        // Tag
+        // Calendar
+
+        // RepはQuery時点では全部入れる。（サーバサイドでMiのRepのみに絞る考慮が入っている）
+        query.reps = application_config.rep_struct.map(rep => rep.rep_name)
+
+        // Tag
+        query.tags = application_config.tag_struct.filter(tag => tag.check_when_inited).map(tag => tag.tag_name)
+
+        // Calendarはない。
+
+        // Mi
+        query.for_mi = true
 
         return query
     }
