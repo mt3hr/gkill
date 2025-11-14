@@ -403,6 +403,7 @@ body::-webkit-scrollbar {
 .v-dialog .v-card::-webkit-scrollbar {
     margin-left: 1px;
     width: 8px;
+    height: 8px;
 }
 
 .tag_struct_root::-webkit-scrollbar-thumb,
@@ -430,6 +431,11 @@ table,
 tr,
 td {
     border-spacing: 0 !important;
+}
+
+.gkill_context_menu_list {
+    max-height: 70vh;
+    overflow-y: scroll;
 }
 </style>
 <style lang="css" scoped>

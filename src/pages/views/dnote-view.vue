@@ -32,7 +32,7 @@
                         i18n.global.t("DNOTE_WHOLE_PERIOD_TITLE") }}</span>
                 </v-col>
                 <v-spacer />
-                <v-col cols="auto">
+                <v-col cols="auto" v-if="!editable">
                     <v-btn :disabled="!loaded_kyous" icon="mdi-download-circle-outline" @click="download_kyous_json" />
                 </v-col>
             </v-row>

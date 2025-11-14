@@ -13,7 +13,7 @@
                 <v-col cols="auto">
                     <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{
                         i18n.global.t("SAVE_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -99,7 +99,10 @@ watch(() => props.application_config, () => {
         is_requested_submit.value = false
     }
 })
-watch(() => text_area_content.value, () => {
+watch(() => text_area_content.value, (new_value, old_value) => {
+    if (new_value === old_value) {
+        return
+    }
     update_line_labels()
     save_content_to_localstorage()
 })

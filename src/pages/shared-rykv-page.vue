@@ -2,7 +2,8 @@
     <div>
         <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
-            :is_shared_rykv_view="true" :share_title="share_title" @received_errors="write_errors" @received_messages="write_messages" />
+            :is_shared_rykv_view="true" :share_title="share_title" @received_errors="write_errors"
+            @received_messages="write_messages" />
         <div class="alert_container">
             <v-slide-y-transition group>
                 <v-alert v-for="message in messages" theme="dark" :key="message.id">
@@ -147,6 +148,7 @@ body::-webkit-scrollbar {
 .v-dialog .v-card::-webkit-scrollbar {
     margin-left: 1px;
     width: 8px;
+    height: 8px;
 }
 
 .tag_struct_root::-webkit-scrollbar-thumb,
@@ -174,5 +176,10 @@ table,
 tr,
 td {
     border-spacing: 0 !important;
+}
+
+.gkill_context_menu_list {
+    max-height: 70vh;
+    overflow-y: scroll;
 }
 </style>
