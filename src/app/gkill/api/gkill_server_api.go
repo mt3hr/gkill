@@ -12225,13 +12225,15 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	}
 
 	content := &struct {
-		Content string    `json:"content"`
-		URL     string    `json:"url"`
-		Time    time.Time `json:"time"`
+		Content        string    `json:"content"`
+		URL            string    `json:"url"`
+		Time           time.Time `json:"time"`
+		IsNotification bool      `json:"is_notification"`
 	}{
-		Content: urlog.Title,
-		URL:     "/kyou?kyou_id=" + urlog.ID,
-		Time:    urlog.CreateTime,
+		Content:        urlog.Title,
+		URL:            "/kyou?kyou_id=" + urlog.ID,
+		Time:           urlog.CreateTime,
+		IsNotification: true,
 	}
 	contentJSONb, err := json.Marshal(content)
 	if err != nil {
@@ -12254,10 +12256,17 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 			err = fmt.Errorf("error at send gkill notification: %w", err)
 			gkill_log.Debug.Println(err.Error())
 		}
-		if resp.Body == nil {
-			return
+		if resp.Body != nil {
+			defer resp.Body.Close()
 		}
-		defer resp.Body.Close()
+		// 登録解除されていたらDBから消す
+		if resp.Status == "410 Gone" {
+			_, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.DeleteGkillNotificationTarget(r.Context(), notificationTarget.ID)
+			if err != nil {
+				err = fmt.Errorf("error at delete gkill notification target after got 410 Gone: %w", err)
+				gkill_log.Debug.Println(err.Error())
+			}
+		}
 	}
 }
 
@@ -12529,10 +12538,17 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 			err = fmt.Errorf("error at send gkill notification: %w", err)
 			gkill_log.Debug.Println(err.Error())
 		}
-		if resp.Body == nil {
-			return
+		if resp.Body != nil {
+			defer resp.Body.Close()
 		}
-		defer resp.Body.Close()
+		// 登録解除されていたらDBから消す
+		if resp.Status == "410 Gone" {
+			_, err := g.GkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.DeleteGkillNotificationTarget(ctx, notificationTarget.ID)
+			if err != nil {
+				err = fmt.Errorf("error at delete gkill notification target after got 410 Gone: %w", err)
+				gkill_log.Debug.Println(err.Error())
+			}
+		}
 	}
 }
 

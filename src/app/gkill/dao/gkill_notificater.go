@@ -129,10 +129,17 @@ func (n *notificator) waitAndNotify() {
 			err = fmt.Errorf("error at send gkill notification: %w", err)
 			gkill_log.Debug.Println(err.Error())
 		}
-		if resp.Body == nil {
-			return
+		if resp.Body != nil {
+			defer resp.Body.Close()
 		}
-		defer resp.Body.Close()
+		// 登録解除されていたらDBから消す
+		if resp.Status == "410 Gone" {
+			_, err := n.gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.DeleteGkillNotificationTarget(notificationCtx, notificationTarget.ID)
+			if err != nil {
+				err = fmt.Errorf("error at delete gkill notification target after got 410 Gone: %w", err)
+				gkill_log.Debug.Println(err.Error())
+			}
+		}
 	}
 }
 
