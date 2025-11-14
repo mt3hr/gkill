@@ -70,7 +70,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
 }
 
 .highlighted_text {
-    background-color: var(--v-highlight-base);
+    background-color: rgb(var(--v-theme-highlight));
     border: dashed 1px;
     margin: 8px;
     padding: 8px;

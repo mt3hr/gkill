@@ -88,7 +88,7 @@ function format_time(time: Date) {
 }
 
 .highlighted_notification {
-    background-color: var(--v-highlight-base);
+    background-color: rgb(var(--v-theme-highlight));
     border: solid 1px;
     margin: 8px;
     padding: 8px;
