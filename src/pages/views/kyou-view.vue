@@ -64,7 +64,7 @@
         <div :class="kyou_class">
             <KmemoView v-if="cloned_kyou.typed_kmemo" :kmemo="cloned_kyou.typed_kmemo"
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
-                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
+                :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width" :max-width="width"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
                 @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
                 @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"

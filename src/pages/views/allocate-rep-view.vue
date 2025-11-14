@@ -8,12 +8,13 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_add_rep_dialog(account)">{{ i18n.global.t("ADD_TITLE") }}</v-btn>
+                    <v-btn dark color="primary" @click="show_add_rep_dialog(account)">{{ i18n.global.t("ADD_TITLE")
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
-        <v-card>
-            <table>
+        <v-card class="allocate_rep_list_view_card">
+            <table class="allocate_rep_list_view">
                 <tr v-for="repository in repositories" :key="repository.id">
                     <td>
                         <v-checkbox :label="i18n.global.t('ENABLE_TITLE')" v-model="repository.is_enable" />
@@ -30,13 +31,16 @@
                             v-model="repository.is_watch_target_for_update_rep" />
                     </td>
                     <td>
-                        <v-select ::label="i18n.global.t('DEVICE_NAME_TITLE')" v-model="repository.device" :items="devices" />
+                        <v-select ::label="i18n.global.t('DEVICE_NAME_TITLE')" v-model="repository.device"
+                            :items="devices" />
                     </td>
                     <td>
-                        <v-select v-model="repository.type" readonly :items="rep_types" :label="i18n.global.t('REP_TYPE_TITLE')" />
+                        <v-select v-model="repository.type" readonly :items="rep_types"
+                            :label="i18n.global.t('REP_TYPE_TITLE')" />
                     </td>
                     <td>
-                        <v-text-field :width="600" :label="i18n.global.t('FILE_PATH_TITLE')" v-model="repository.file" />
+                        <v-text-field :width="600" :label="i18n.global.t('FILE_PATH_TITLE')"
+                            v-model="repository.file" />
                     </td>
                     <td>
                         <v-btn dark color="secondary" @click="show_confirm_delete_rep_dialog(repository)">{{
@@ -172,3 +176,13 @@ async function apply(): Promise<void> {
     emits('requested_close_dialog')
 }
 </script>
+
+<style lang="css" scoped>
+.allocate_rep_list_view_card {
+    overflow-x: scroll;
+}
+
+.allocate_rep_list_view {
+    width: max-content;
+}
+</style>
