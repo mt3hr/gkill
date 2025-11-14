@@ -86,7 +86,7 @@ async function show_context_menu(e: PointerEvent): Promise<void> {
     padding: 0 6px 0 2px;
     font-size: small;
     border-radius: 0 1em 1em 0;
-    background: var(--v-highlight-base);
+    background: rgb(var(--v-theme-highlight));
     display: inline-flex;
 }
 
