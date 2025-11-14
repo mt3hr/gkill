@@ -84,6 +84,7 @@ export enum GkillErrorCodes {
     kc_is_no_update = "ERR900083",
     kc_title_is_blank = "ERR900084",
     kc_num_value_is_blank = "ERR900085",
+    requeired_certificate = "ERR900086",
 }
 
 

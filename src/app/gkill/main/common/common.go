@@ -165,7 +165,7 @@ func LaunchGkillServerAPI() error {
 		if err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
 				err = nil
-				continue
+				// サーバが正常に閉じられた場合はスルーして立ち上げ直す
 			} else {
 				gkill_log.Error.Printf("error at gkill server api serve: %v", err)
 				return err

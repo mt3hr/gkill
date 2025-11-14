@@ -80,42 +80,53 @@ async function check_logined(): Promise<void> {
 
 async function try_login(user_id: string, password_sha256: Promise<string>): Promise<boolean> {
     // 未入力チェック
-    if (user_id === "") {
+    try {
+        if (user_id === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.user_id_is_blank
+            error.error_message = i18n.global.t("REQUEST_INPUT_USER_ID_MESSAGE")
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return false
+        }
+        if (password.value === "") {
+            const error = new GkillError()
+            error.error_code = GkillErrorCodes.password_is_blank
+            error.error_message = i18n.global.t("REQUEST_INPUT_PASSWORD_MESSAGE")
+            const errors = new Array<GkillError>()
+            errors.push(error)
+            emits('received_errors', errors)
+            return false
+        }
+
+        // request作成
+        const req = new LoginRequest()
+        req.user_id = user_id
+        req.password_sha256 = (await password_sha256.then((value) => value))
+
+        // ログインとエラーチェック
+        const res = await props.gkill_api.login(req)
+        if (res.errors && res.errors.length !== 0) {
+            emits('received_errors', res.errors)
+            return false
+        }
+        if (res.messages && res.messages.length !== 0) {
+            emits('received_messages', res.messages)
+        }
+
+        emits('successed_login', res.session_id)
+        return true
+    } catch (e) {
+        // TLSの場合、サーバ証明書が入っていないとログインできない
         const error = new GkillError()
-        error.error_code = GkillErrorCodes.user_id_is_blank
-        error.error_message = i18n.global.t("REQUEST_INPUT_USER_ID_MESSAGE")
+        error.error_code = GkillErrorCodes.requeired_certificate
+        error.error_message = i18n.global.t("REQUEST_CERTIFICATE_REQUIRED_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
         return false
     }
-    if (password.value === "") {
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.password_is_blank
-        error.error_message = i18n.global.t("REQUEST_INPUT_PASSWORD_MESSAGE")
-        const errors = new Array<GkillError>()
-        errors.push(error)
-        emits('received_errors', errors)
-        return false
-    }
-
-    // request作成
-    const req = new LoginRequest()
-    req.user_id = user_id
-    req.password_sha256 = (await password_sha256.then((value) => value))
-
-    // ログインとエラーチェック
-    const res = await props.gkill_api.login(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return false
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-
-    emits('successed_login', res.session_id)
-    return true
 }
 
 </script>
