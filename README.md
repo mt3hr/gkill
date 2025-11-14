@@ -52,7 +52,7 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 
 ## ダウンロード・インストール
 [gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
-（[gkill利用例サンサンプルデータ](https://github.com/mt3hr/gkill/releases/tag/v1.0.8-dev)） 
+（[gkill利用例サンサンプルデータ](https://github.com/mt3hr/gkill/releases/latest)） 
 
 【Windowsユーザ向け】  
 ①Assetsから「windows_amd64_gkill_vX.X.X.zip」をダウンロード  
