@@ -96,6 +96,11 @@ resize_content()
 html {
     overflow-y: hidden !important;
 }
+
+.gkill_context_menu_list {
+    max-height: 70vh;
+    overflow-y: scroll;
+}
 </style>
 <style lang="css" scoped>
 .main {

@@ -97,9 +97,6 @@ function show_kyou_dialog(): void {
 .plaing {
     /* タグとの合わせ */
     position: relative;
-    top: 6px;
-
-
     display: inline-flex;
     border: solid rgb(var(--v-theme-background)) 2px;
     border-left: 0px;
@@ -128,8 +125,6 @@ function show_kyou_dialog(): void {
 .highlighted_plaing {
     /* タグとの合わせ */
     position: relative;
-    top: 6px;
-
     display: inline-flex;
     border: solid rgb(var(--v-theme-background)) 2px;
     border-left: 0px;

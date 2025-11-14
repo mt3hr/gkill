@@ -1,6 +1,6 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
-        <v-card>
+        <v-card class="edit_ryuu_dialog_view">
             <RyuuListView v-model="model_value" :application_config="application_config" :gkill_api="gkill_api"
                 :editable="true" :find_kyou_query_default="new FindKyouQuery()" :related_time="new Date(Date.now())"
                 @received_errors="(errors) => emits('received_errors', errors)"
@@ -35,3 +35,9 @@ async function hide(): Promise<void> {
     is_show_dialog.value = false
 }
 </script>
+
+<style scoped lang="css">
+.edit_ryuu_dialog_view {
+    overflow-x: scroll;
+}
+</style>

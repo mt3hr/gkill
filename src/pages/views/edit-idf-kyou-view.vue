@@ -278,6 +278,7 @@ body::-webkit-scrollbar {
 .v-dialog .v-card::-webkit-scrollbar {
     margin-left: 1px;
     width: 8px;
+    height: 8px;
 }
 
 .v-navigation-drawer__content::-webkit-scrollbar-thumb,
