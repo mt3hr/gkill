@@ -3,7 +3,7 @@
         <v-list class="gkill_context_menu_list">
             <v-list-item v-if="gkill_api.get_saved_last_added_tag() !== ''" @click="add_last_added_tag()">
                 <v-list-item-title>{{ i18n.global.t("ADD_TAG_TITLE") }} 「{{ gkill_api.get_saved_last_added_tag()
-                    }}」</v-list-item-title>
+                }}」</v-list-item-title>
             </v-list-item>
             <v-list-item @click="show_add_tag_dialog()">
                 <v-list-item-title>{{ i18n.global.t("ADD_TAG_TITLE") }}</v-list-item-title>
@@ -211,7 +211,7 @@ defineExpose({ show })
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
-const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(document.defaultView!.innerHeight * (1 - 0.7), position_y.value.valueOf())}px; }`)
+const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * (8 + (props.gkill_api.get_saved_last_added_tag() !== "" ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
 
 async function show(e: PointerEvent): Promise<void> {
     position_x.value = e.clientX
