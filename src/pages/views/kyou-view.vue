@@ -505,7 +505,7 @@ function show_kyou_dialog(): void {
 </script>
 <style lang="css" scoped>
 .highlighted_kyou>* {
-    background-color: var(--v-highlight-base);
+    background-color: rgb(var(--v-theme-highlight));
 }
 
 .kyou_related_time,
