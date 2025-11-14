@@ -9403,6 +9403,37 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			return
 		}
 
+		// TLS設定値がTRUEで設定されるとき、証明書ファイルが実在しない場合はエラー
+		for _, serverConfig := range request.ServerConfigs {
+			if serverConfig.EnableThisDevice {
+				if !serverConfig.EnableTLS {
+					continue
+				}
+				_, err := os.Stat(os.ExpandEnv(serverConfig.TLSCertFile))
+				if err != nil {
+					err = fmt.Errorf("not found tls cert file user id = %s device = %s: %w", userID, device, err)
+					gkill_log.Debug.Println(err.Error())
+					gkillError := &message.GkillError{
+						ErrorCode:    message.NotFoundTLSCertFileError,
+						ErrorMessage: "証明書ファイルが作成されていません",
+					}
+					response.Errors = append(response.Errors, gkillError)
+					return
+				}
+				_, err = os.Stat(os.ExpandEnv(serverConfig.TLSKeyFile))
+				if err != nil {
+					err = fmt.Errorf("not found tls key file user id = %s device = %s: %w", userID, device, err)
+					gkill_log.Debug.Println(err.Error())
+					gkillError := &message.GkillError{
+						ErrorCode:    message.NotFoundTLSCertFileError,
+						ErrorMessage: "証明書ファイルが作成されていません",
+					}
+					response.Errors = append(response.Errors, gkillError)
+					return
+				}
+			}
+		}
+
 		// mi通知用キーが空のものは登録する
 		for _, serverConfig := range request.ServerConfigs {
 			if serverConfig.GkillNotificationPrivateKey == "" {
