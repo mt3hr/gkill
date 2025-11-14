@@ -1,6 +1,6 @@
 <template>
     <v-menu v-model="is_show" :style="context_menu_style">
-        <v-list>
+        <v-list class="gkill_context_menu_list">
             <v-list-item @click="emits('requested_edit_dnote_item_list', id)">
                 <v-list-item-title>{{ i18n.global.t("EDIT_TITLE") }}</v-list-item-title>
             </v-list-item>
@@ -24,7 +24,7 @@ const id: Ref<string> = ref("")
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
-const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(document.defaultView!.innerHeight - (props.application_config.session_is_local ? 500 : 400), position_y.value.valueOf())}px; }`)
+const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${position_y.value.valueOf()}px; }`)
 
 async function show(e: MouseEvent, dnote_item_id: string): Promise<void> {
     id.value = dnote_item_id

@@ -130,4 +130,9 @@ html {
     grid-gap: .5em;
     z-index: 99;
 }
+
+.gkill_context_menu_list {
+    max-height: 70vh;
+    overflow-y: scroll;
+}
 </style>
