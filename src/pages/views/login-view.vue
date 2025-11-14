@@ -100,6 +100,9 @@ async function try_login(user_id: string, password_sha256: Promise<string>): Pro
             return false
         }
 
+        // クッキーとかキャッシュの削除
+        await props.gkill_api.clear_browser_datas()
+
         // request作成
         const req = new LoginRequest()
         req.user_id = user_id
