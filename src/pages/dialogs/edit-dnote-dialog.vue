@@ -1,6 +1,6 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
-        <v-card>
+        <v-card class="edit_dnote_dialog_view">
             <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :query="new FindKyouQuery()"
                 :checked_kyous="[]" :last_added_tag="''" :editable="true"
@@ -34,3 +34,9 @@ async function hide(): Promise<void> {
     is_show_dialog.value = false
 }
 </script>
+
+<style lang="css" scoped>
+.edit_dnote_dialog_view {
+    overflow-x: scroll;
+}
+</style>

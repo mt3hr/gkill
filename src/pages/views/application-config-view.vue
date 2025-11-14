@@ -46,16 +46,17 @@
                             :label="i18n.global.t('SHOW_SHARE_FOOTER')" />
                     </td>
                 </tr>
+            </table>
+            <table>
                 <tr>
                     <td>
                         <v-checkbox v-model="is_checked_use_rykv_period" hide-detail
                             :label="i18n.global.t('RYKV_DEFAULT_PERIOD_TITLE')" />
                     </td>
                     <td v-show="rykv_default_period !== -1">
-                        <v-text-field type="number" min="-1" width="400" v-model="rykv_default_period" />
+                        <v-text-field type="number" min="-1" v-model="rykv_default_period" />
                     </td>
                 </tr>
-
                 <tr>
                     <td>
                         {{ i18n.global.t("DEFAULT_VIEW_TITLE") }}
@@ -74,8 +75,7 @@
                         {{ i18n.global.t("RYKV_IMAGE_LIST_COLUMN_NUMBER_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field type="number" min="1" max="10" width="400"
-                            v-model="rykv_image_list_column_number" />
+                        <v-text-field type="number" min="1" max="10" v-model="rykv_image_list_column_number" />
                     </td>
                 </tr>
                 <tr>
@@ -100,7 +100,7 @@
                         {{ i18n.global.t("URLOG_BOOKMARKLET_ADDRESS_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="urlog_bookmarklet" readonly
+                        <v-text-field v-model="urlog_bookmarklet" readonly
                             @focus="$event.target.select()"></v-text-field>
                     </td>
                 </tr>
@@ -109,7 +109,7 @@
                         {{ i18n.global.t("GOOGLE_MAP_API_KEY_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="google_map_api_key"></v-text-field>
+                        <v-text-field v-model="google_map_api_key"></v-text-field>
                     </td>
                 </tr>
             </table>

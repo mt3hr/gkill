@@ -12,7 +12,7 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="show_manage_account_dialog">{{
                         i18n.global.t("MANAGE_ACCOUNT_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -57,7 +57,7 @@
                         {{ i18n.global.t("ADDRESS_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="server_config.address"></v-text-field>
+                        <v-text-field v-model="server_config.address"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -65,7 +65,7 @@
                         {{ i18n.global.t("TLS_CERT_FILE_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="server_config.tls_cert_file"></v-text-field>
+                        <v-text-field v-model="server_config.tls_cert_file"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -73,7 +73,7 @@
                         {{ i18n.global.t("TLS_KEY_FILE_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="server_config.tls_key_file"></v-text-field>
+                        <v-text-field v-model="server_config.tls_key_file"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -81,7 +81,7 @@
                         {{ i18n.global.t("OPEN_DIRECTORY_COMMAND_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="server_config.open_directory_command"></v-text-field>
+                        <v-text-field v-model="server_config.open_directory_command"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -89,7 +89,7 @@
                         {{ i18n.global.t("OPEN_FILE_COMMAND_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="server_config.open_file_command"></v-text-field>
+                        <v-text-field v-model="server_config.open_file_command"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -97,8 +97,7 @@
                         {{ i18n.global.t("URLOG_TIMEOUT_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field width="400" type="number" min="5"
-                            v-model="server_config.urlog_timeout"></v-text-field>
+                        <v-text-field type="number" min="5" v-model="server_config.urlog_timeout"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -106,7 +105,7 @@
                         {{ i18n.global.t("URLOG_USERAGENT_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="server_config.urlog_useragent"></v-text-field>
+                        <v-text-field v-model="server_config.urlog_useragent"></v-text-field>
                     </td>
                 </tr>
                 <tr>
@@ -114,7 +113,7 @@
                         {{ i18n.global.t("USER_DATA_DIRECTORY_TITLE") }}
                     </td>
                     <td>
-                        <v-text-field width="400" v-model="server_config.user_data_directory"></v-text-field>
+                        <v-text-field v-model="server_config.user_data_directory"></v-text-field>
                     </td>
                 </tr>
             </table>
@@ -128,7 +127,7 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CANCEL_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>

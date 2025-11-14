@@ -1,6 +1,6 @@
 <template>
     <v-menu v-model="is_show" :style="context_menu_style">
-        <v-list>
+        <v-list class="gkill_context_menu_list">
             <v-list-item @click="show_edit_timeis_dialog()">
                 <v-list-item-title>{{ i18n.global.t("TIMEIS_CONTEXTMENU_EDIT_TIMEIS") }}</v-list-item-title>
             </v-list-item>
@@ -110,7 +110,7 @@ reload_cloned_timeis_kyou()
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
-const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(document.defaultView!.innerHeight - (props.application_config.session_is_local ? 500 : 400), position_y.value.valueOf())}px; }`)
+const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(document.defaultView!.innerHeight * (1 - 0.7), position_y.value.valueOf())}px; }`)
 
 function reload_cloned_timeis_kyou(): void {
     cloned_timeis_kyou.value = props.timeis_kyou.clone()
