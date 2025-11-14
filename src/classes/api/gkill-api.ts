@@ -2521,7 +2521,7 @@ export class GkillAPI {
         async get_session_id_from_cookie_store(): Promise<string> {
                 if (typeof cookieStore !== 'undefined') {
                         const session_id = await cookieStore.get(this.gkill_session_id_cookie_key)
-                        if (session_id) {
+                        if (session_id && session_id.value) {
                                 return session_id.value
                         }
                 }
@@ -2809,6 +2809,19 @@ export class GkillAPI {
                         }
                 }
                 this.set_last_cache_update_time(new Date(Date.now()))
+        }
+
+        async clear_browser_datas(): Promise<void> {
+                localStorage.clear()
+                const cookies = document.cookie.split(';')
+                for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i]
+                        const pos = cookie.indexOf('=')
+                        const name = pos > -1 ? cookie.substr(0, pos) : cookie
+                        document.cookie = name + '=;max-age=0'
+                }
+                await delete_gkill_config_cache()
+                await delete_gkill_kyou_cache(null)
         }
 }
 
