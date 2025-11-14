@@ -480,5 +480,6 @@
     "KC_TITLE_IS_BLANK_MESSAGE": "タイトルが入力されていません",
     "KC_IS_NO_UPDATE_MESSAGE": "KCが更新されていません",
     "KC_NUM_VALUE_IS_BLANK_MESSAGE": "数値が入力されていません",
-    "CLIENT_KC_IS_NULL_MESSAGE": "クライアントのデータが変です"
+    "CLIENT_KC_IS_NULL_MESSAGE": "クライアントのデータが変です",
+    "REQUEST_CERTIFICATE_REQUIRED_MESSAGE": "サーバ証明書をインストールしてください"
 }

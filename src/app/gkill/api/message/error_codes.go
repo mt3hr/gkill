@@ -348,4 +348,6 @@ const (
 	CommitTxDeleteTextError                                          = "ERR000343"
 	CommitTxDeleteTimeIsError                                        = "ERR000344"
 	CommitTxDeleteURLogError                                         = "ERR000345"
+	NotFoundTLSCertFileError                                         = "ERR000346"
+	NotFoundTLSKeyFileError                                          = "ERR000347"
 )

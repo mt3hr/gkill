@@ -10,7 +10,8 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="show_manage_account_dialog">{{ i18n.global.t("MANAGE_ACCOUNT_TITLE")
+                    <v-btn dark color="primary" @click="show_manage_account_dialog">{{
+                        i18n.global.t("MANAGE_ACCOUNT_TITLE")
                     }}</v-btn>
                 </v-col>
             </v-row>
@@ -30,7 +31,8 @@
                                 </td>
                                 <td>
                                     <v-btn color="secondary" v-if="cloned_server_configs.length >= 2"
-                                        @click="delete_current_server_config()" dark>{{ i18n.global.t("DELETE_TITLE") }}</v-btn>
+                                        @click="delete_current_server_config()" dark>{{ i18n.global.t("DELETE_TITLE")
+                                        }}</v-btn>
                                 </td>
                             </tr>
                         </table>
@@ -44,7 +46,8 @@
                 </tr>
                 <tr>
                     <td>
-                        <v-checkbox v-model="server_config.enable_tls" hide-detail :label="i18n.global.t('ENABLE_TLS_TITLE')" />
+                        <v-checkbox v-model="server_config.enable_tls" hide-detail
+                            :label="i18n.global.t('ENABLE_TLS_TITLE')" />
                     </td>
                     <v-btn dark color="primary" @click="show_confirm_generate_tls_files_dialog">{{
                         i18n.global.t("GENERATE_OREORE_TLS_TITLE") }}</v-btn>
@@ -123,7 +126,8 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
+                        i18n.global.t("CANCEL_TITLE")
                     }}</v-btn>
                 </v-col>
             </v-row>
@@ -271,6 +275,7 @@ async function update_server_config(): Promise<void> {
     const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
     if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
         emits('received_errors', gkill_info_res.errors)
+        is_loading.value = false
         return
     }
     if (gkill_info_res.messages && gkill_info_res.messages.length !== 0) {
@@ -283,6 +288,7 @@ async function update_server_config(): Promise<void> {
     const res = await props.gkill_api.update_server_config(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
+        is_loading.value = false
         return
     }
     if (res.messages && res.messages.length !== 0) {
