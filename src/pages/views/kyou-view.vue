@@ -335,6 +335,7 @@
         <kyouDialog :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="cloned_kyou" :last_added_tag="last_added_tag"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+            :is_readonly_mi_check="is_readonly_mi_check" :show_timeis_plaing_end_button="show_timeis_plaing_end_button"
             @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
             @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
             @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
