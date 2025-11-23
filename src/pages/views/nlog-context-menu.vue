@@ -223,7 +223,7 @@ async function copy_id(): Promise<void> {
     navigator.clipboard.writeText(props.kyou.id)
     const message = new GkillMessage()
     message.message_code = GkillMessageCodes.copied_nlog_id
-    message.message = "NlogIDをコピーしました"
+    message.message = i18n.global.t("COPIED_KYOU_ID_MESSAGE")
     const messages = new Array<GkillMessage>()
     messages.push(message)
     emits('received_messages', messages)

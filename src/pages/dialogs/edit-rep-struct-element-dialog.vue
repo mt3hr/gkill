@@ -1,7 +1,7 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <EditRepStructElementView :application_config="application_config" :gkill_api="gkill_api"
-            :folder_name="'記録保管場所'" :struct_obj="rep_struct"
+            :folder_name="i18n.global.t('REP_TITLE')" :struct_obj="rep_struct"
             @received_errors="(errors) => emits('received_errors', errors)"
             @received_messages="(messages) => emits('received_messages', messages)"
             @requested_update_rep_struct="(rep_struct) => emits('requested_update_rep_struct', rep_struct)"
