@@ -1,16 +1,17 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <v-card>
-            <v-card-title>板名追加</v-card-title>
+            <v-card-title>{{ i18n.global.t("ADD_MI_BOARD_TITLE") }}</v-card-title>
             <v-row class="ma-0 pa-0">
                 <v-col cols="13" class="ma-0 pa-0">
-                    <v-text-field v-model="board_name" label="板名" />
+                    <v-text-field v-model="board_name" :label="i18n.global.t('MI_BOARD_NAME_TITLE')" />
                 </v-col>
             </v-row>
             <v-row class="ma-0 pa-0">
                 <v-spacer />
                 <v-col cols="auto" class="ma-0 pa-0">
-                    <v-btn color="primary" @click="emits_board_name" dark>板名追加</v-btn>
+                    <v-btn color="primary" @click="emits_board_name" dark>{{ i18n.global.t('ADD_MI_BOARD_TITLE')
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card>

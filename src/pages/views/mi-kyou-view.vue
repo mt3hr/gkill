@@ -125,7 +125,7 @@ async function clicked_mi_check(): Promise<void> {
     if (!mi) {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.client_mi_is_null
-        error.error_message = "クライアントのデータが変です"
+        error.error_message = i18n.global.t("CLIENT_MI_IS_NULL_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)
@@ -136,7 +136,7 @@ async function clicked_mi_check(): Promise<void> {
     if (mi.is_checked === is_checked_mi.value) {
         const error = new GkillError()
         error.error_code = GkillErrorCodes.mi_is_no_update
-        error.error_message = "miが更新されていません"
+        error.error_message = i18n.global.t("MI_IS_NO_UPDATE_MESSAGE")
         const errors = new Array<GkillError>()
         errors.push(error)
         emits('received_errors', errors)

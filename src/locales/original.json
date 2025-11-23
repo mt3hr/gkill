@@ -481,5 +481,13 @@
     "KC_IS_NO_UPDATE_MESSAGE": "KCが更新されていません",
     "KC_NUM_VALUE_IS_BLANK_MESSAGE": "数値が入力されていません",
     "CLIENT_KC_IS_NULL_MESSAGE": "クライアントのデータが変です",
-    "REQUEST_CERTIFICATE_REQUIRED_MESSAGE": "サーバ証明書をインストールしてください"
+    "REQUEST_CERTIFICATE_REQUIRED_MESSAGE": "サーバ証明書をインストールしてください",
+    "MONTH_TITLE": "月",
+    "MI_ALL_BOARD_NAME_TITLE": "すべて",
+    "REGISTERED_ACCOUNT_MESAGE": "登録が完了しました",
+    "COPIED_LAN_SHARE_KYOU_LINK_MESSAGE": "コピーしました",
+    "COPIED_LAN_SHARE_KYOU_OVER_LINK_MESSAGE": "コピーしました",
+    "ADD_MI_BOARD_TITLE": "板名追加",
+    "MANAGE_SHARE_KYOU_TITLE": "共有管理",
+    "RANGE_TITLE": "範囲"
 }

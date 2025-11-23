@@ -4,11 +4,11 @@
             <v-card-title>
                 <v-row class="pa-0 ma-0">
                     <v-col cols="auto" class="pa-0 ma-0">
-                        <span>タグ履歴</span>
+                        <span>{{ i18n.global.t('TAG_CONTEXTMENU_HISTORIES') }}</span>
                     </v-col>
                     <v-spacer />
                     <v-col cols="auto" class="pa-0 ma-0">
-                        <v-checkbox v-model="show_kyou" label="対象表示" hide-details color="primary" />
+                        <v-checkbox v-model="show_kyou" :label="i18n.global.t('SHOW_TARGET_KYOU_TITLE')" hide-details color="primary" />
                     </v-col>
                 </v-row>
             </v-card-title>

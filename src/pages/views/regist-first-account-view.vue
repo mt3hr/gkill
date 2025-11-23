@@ -288,7 +288,7 @@ async function try_regist_account(): Promise<boolean> {
         // eslint-disable-next-line no-fallthrough
         case RegistStatus.reseted_account_password: {
             const message = new GkillMessage()
-            message.message = "登録が完了しました"
+            message.message = i18n.global.t("REGISTERED_ACCOUNT_MESAGE")
             message.message_code = GkillMessageCodes.added_account
             emits('received_messages', [message])
             regist_state.value = RegistStatus.done
