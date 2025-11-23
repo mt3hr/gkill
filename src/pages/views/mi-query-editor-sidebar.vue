@@ -141,7 +141,7 @@ watch(() => props.application_config, () => {
     default_query.value = FindKyouQuery.generate_default_query_for_mi(props.application_config)
     default_query.value.query_id = props.gkill_api.generate_uuid()
     default_query.value.use_mi_board_name = false
-    default_query.value.mi_board_name = "すべて"
+    default_query.value.mi_board_name = i18n.global.t("MI_ALL_BOARD_NAME_TITLE")
 })
 
 const inited_sidebar_header_for_query_sidebar = ref(true)
@@ -204,7 +204,7 @@ function generate_query(query_id?: string): FindKyouQuery {
 
     if (board_query.value) {
         find_query.mi_board_name = board_query.value.get_board_name()
-        if (find_query.mi_board_name !== "すべて") {
+        if (find_query.mi_board_name !== i18n.global.t("MI_ALL_BOARD_NAME_TITLE")) {
             find_query.use_mi_board_name = true
         } else {
             find_query.use_mi_board_name = false

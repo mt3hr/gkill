@@ -9,7 +9,8 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary"
-                    @click="() => { emits('requested_delete_share_kyou_link_info', share_kyou_list_info); emits('requested_close_dialog') }">削除</v-btn>
+                    @click="() => { emits('requested_delete_share_kyou_link_info', share_kyou_list_info); emits('requested_close_dialog') }">{{
+                        i18n.global.t('DELETE_TITLE') }}</v-btn>
             </v-col>
         </v-row>
     </v-card>

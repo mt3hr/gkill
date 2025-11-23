@@ -1,16 +1,17 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <v-card>
-            <v-card-title>プロファイル追加</v-card-title>
+            <v-card-title>{{ i18n.global.t('ADD_DEVICE_TITLE') }}</v-card-title>
             <v-row class="ma-0 pa-0">
                 <v-col cols="13" class="ma-0 pa-0">
-                    <v-text-field v-model="device_name" label="プロファイル名" />
+                    <v-text-field v-model="device_name" :label="i18n.global.t('DEVICE_NAME_TITLE')" />
                 </v-col>
             </v-row>
             <v-row class="ma-0 pa-0">
                 <v-spacer />
                 <v-col cols="auto" class="ma-0 pa-0">
-                    <v-btn color="primary" @click="emits_board_name" dark>プロファイル追加</v-btn>
+                    <v-btn color="primary" @click="emits_board_name" dark>{{ i18n.global.t('ADD_DEVICE_TITLE')
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card>

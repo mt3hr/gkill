@@ -99,7 +99,7 @@ nextTick(() => {
                         return
                     }
                     let year = year_month_element.textContent?.substring(0, 4)
-                    let month = year_month_element.textContent?.substring(5, 7).replace("月", "")
+                    let month = ("0" + year_month_element.textContent?.substring(5, 7).replace(i18n.global.t("MONTH_TITLE"), "")).substring(-2)
                     let date: string | null = ""
                     element.querySelectorAll(calendar_date_text_selector).forEach(date_text_element => date = ("0" + date_text_element.textContent).slice(-2))
                     clicked_date(moment(year + "-" + month + "-" + date).toDate())
