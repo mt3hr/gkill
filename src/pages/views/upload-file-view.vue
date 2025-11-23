@@ -2,7 +2,7 @@
     <div v-show="target_rep_name_for_file !== '' && target_rep_name_for_gps_file !== ''">
         <v-card>
             <v-card-title>
-                ファイルアップロード
+                {{ i18n.global.t("UPLOAD_FILE_TITLE") }}
             </v-card-title>
             <v-tabs v-model="tab">
                 <v-tab key="file">{{ i18n.global.t("FILE_TITLE") }}</v-tab>

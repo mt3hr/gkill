@@ -68,7 +68,7 @@ function copy_lan_share_kyou_link(): void {
     navigator.clipboard.writeText(lan_share_url.value);
     const message = new GkillMessage()
     message.message_code = GkillErrorCodes.copied_lan_share_kyou_link
-    message.message = "コピーしました"
+    message.message = i18n.global.t("COPIED_LAN_SHARE_KYOU_LINK_MESSAGE")
     emits('received_messages', [message])
 }
 
@@ -76,7 +76,7 @@ function copy_over_lan_share_kyou_link(): void {
     navigator.clipboard.writeText(over_lan_share_url.value);
     const message = new GkillMessage()
     message.message_code = GkillErrorCodes.copied_over_lan_share_kyou_link
-    message.message = "コピーしました"
+    message.message = i18n.global.t("COPIED_LAN_SHARE_KYOU_OVER_LINK_MESSAGE")
     emits('received_messages', [message])
 }
 
