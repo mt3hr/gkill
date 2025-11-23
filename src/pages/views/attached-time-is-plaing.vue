@@ -28,6 +28,7 @@
     <KyouDialog v-if="timeis_kyou" :application_config="application_config" :gkill_api="gkill_api"
         :highlight_targets="[]" :kyou="timeis_kyou" :last_added_tag="''" :enable_context_menu="enable_context_menu"
         :enable_dialog="enable_dialog" @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
+        :is_readonly_mi_check="false" :show_timeis_plaing_end_button="false"
         @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
         @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
         @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
