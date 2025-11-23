@@ -56,7 +56,6 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
                 await updated_kyou.reload(false, true)
                 await updated_kyou.load_all()
                 kyous_list.splice(j, 1, updated_kyou)
-                break
             }
         }
     })();
