@@ -6,7 +6,8 @@
         </v-col>
         <v-spacer class="pa-0 ma-0" />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
-            <v-btn dark color="secondary" @click="emits('request_clear_map_query')">{{ i18n.global.t("CLEAR_TITLE") }}</v-btn>
+            <v-btn dark color="secondary" @click="emits('request_clear_map_query')">{{ i18n.global.t("CLEAR_TITLE")
+                }}</v-btn>
         </v-col>
     </v-row>
     <v-sheet v-show="query.use_map">
@@ -22,7 +23,7 @@
         </GoogleMap>
     </v-sheet>
     <v-sheet v-show="query.use_map">
-        <v-slider min="0" max="10000" v-model="radius" :label="'範囲'" />
+        <v-slider min="0" max="10000" v-model="radius" :label="i18n.global.t('RANGE_TITLE')" />
     </v-sheet>
 </template>
 <script lang="ts" setup>
