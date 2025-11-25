@@ -85,7 +85,7 @@
                             :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
                             :is_focused_list="focused_column_index === index" :closable="querys.length !== 1"
                             :enable_context_menu="!is_shared_rykv_view" :enable_dialog="!is_shared_rykv_view"
-                            :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="!is_shared_rykv_view"
+                            :is_readonly_mi_check="false" :show_checkbox="true" :show_footer="!is_shared_rykv_view"
                             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true"
                             :show_rep_name="!is_shared_rykv_view" :force_show_latest_kyou_info="true"
                             :show_content_only="false" :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
