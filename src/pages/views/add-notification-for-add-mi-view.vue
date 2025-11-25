@@ -26,7 +26,7 @@
                                         v-bind="props" />
                                 </template>
                                 <v-time-picker v-model="notification_time_string" format="24hr"
-                                    @update:model-value="show_notification_time_menu = false" />
+                                    @update:minute="show_notification_time_menu = false" />
                             </v-menu>
                         </td>
                         <td>
