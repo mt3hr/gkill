@@ -80,7 +80,7 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 （2025年中にマニュアル・ヘルプ作ります）  
 
 ## 資料（準備中）
-[マニュアル](.) （準備中 2025年中完了目標）  
+[説明書](https://github.com/mt3hr/gkill/raw/refs/heads/main/documents/gkill_user_document.xlsx)   
 [要件書・設計書](https://github.com/mt3hr/gkill/tree/main/documents)  
 [仕様書](.) （準備中 2025年中完了目標）  
 
@@ -155,11 +155,11 @@ npm run install_server
 
 000% C-2 主要プログラム仕様説明書  
 
-000% D-1 サンプルデータ  
+100% D-1 サンプルデータ  
 
-000% D-2 ユーザマニュアル  
+100% D-2 ユーザ展開用資料  
 
-000% E-1 README  
+100% E-1 README  
 
 </details>
 <details>
