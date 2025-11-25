@@ -55,7 +55,7 @@
                                         v-bind="props" />
                                 </template>
                                 <v-time-picker v-model="mi_estimate_start_time_string" format="24hr"
-                                    @update:model-value="show_start_time_menu = false" />
+                                    @update:minute="show_start_time_menu = false" />
                             </v-menu>
                         </td>
                     </tr>
@@ -103,7 +103,7 @@
                                         v-bind="props" />
                                 </template>
                                 <v-time-picker v-model="mi_estimate_end_time_string" format="24hr"
-                                    @update:model-value="show_end_time_menu = false" />
+                                    @update:minute="show_end_time_menu = false" />
                             </v-menu>
                         </td>
                     </tr>
@@ -151,7 +151,7 @@
                                         v-bind="props" />
                                 </template>
                                 <v-time-picker v-model="mi_limit_time_string" format="24hr"
-                                    @update:model-value="show_limit_time_menu = false" />
+                                    @update:minute="show_limit_time_menu = false" />
                             </v-menu>
                         </td>
                     </tr>
