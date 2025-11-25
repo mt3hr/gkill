@@ -136,7 +136,7 @@ const confirm_rekyou_dialog = ref<InstanceType<typeof ConfirmReKyouDialog> | nul
 const is_show: Ref<boolean> = ref(false)
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)
-const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * (5 + (props.gkill_api.get_saved_last_added_tag() !== "" ? (1 + (1/* 多分コンテキストメニューの最大高さ未満だから足さないとダメっぽい */)) : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
+const context_menu_style = computed(() => `{ position: absolute; left: ${Math.min(document.defaultView!.innerWidth - 130, position_x.value.valueOf())}px; top: ${Math.min(Math.max(50, document.defaultView!.innerHeight - ( + 8 + (48 * (5 + (props.gkill_api.get_saved_last_added_tag() !== "" ? 1 : 0) + (props.application_config.session_is_local ? 2 : 0))))), position_y.value.valueOf())}px; }`)
 
 async function show(e: PointerEvent): Promise<void> {
     position_x.value = e.clientX
