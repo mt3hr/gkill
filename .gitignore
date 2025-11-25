@@ -8,7 +8,7 @@ m_plus.conf
 
 **/assets/*
 
-/bin
+/release/*
 
 # Logs
 logs
