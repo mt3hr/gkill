@@ -1,10 +1,10 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ConfirmDeleteDeviceStructView :application_config="application_config" :gkill_api="gkill_api"
-            :device_struct="device_struct" @received_errors="(errors) => emits('received_errors', errors)"
+            :device_struct="device_struct" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @requested_close_dialog="hide"
-            @requested_delete_device="(id) => { emits('requested_delete_device', id); hide() }"
-            @received_messages="(messages) => emits('received_messages', messages)" />
+            @requested_delete_device="(...id: any[]) => { emits('requested_delete_device', id[0] as string); hide() }"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
     </v-dialog>
 </template>
 <script setup lang="ts">
@@ -14,6 +14,8 @@ import ConfirmDeleteDeviceStructView from '../views/confirm-delete-device-struct
 import type { ConfirmDeleteDeviceStructDialogEmits } from './confirm-delete-device-struct-dialog-emits.ts';
 import type { ConfirmDeleteDeviceStructDialogProps } from './confirm-delete-device-struct-dialog-props.ts';
 import { DeviceStruct } from '@/classes/datas/config/device-struct';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
 
 defineProps<ConfirmDeleteDeviceStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteDeviceStructDialogEmits>()

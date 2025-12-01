@@ -3,7 +3,7 @@
         <AddDnoteItemView :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
             @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-            @requested_add_dnote_item="(dnote_item) => emits('requested_add_dnote_item', dnote_item)"
+            @requested_add_dnote_item="(...dnote_item :any[]) => emits('requested_add_dnote_item', dnote_item[0] as DnoteItem)"
             @requested_close_dialog="hide" />
     </v-dialog>
 </template>
@@ -16,6 +16,7 @@ import type { GkillMessage } from '../../classes/api/gkill-message';
 import type AddDnoteItemDialogEmits from './add-dnote-item-dialog-emits';
 import type AddDnoteItemDialogProps from './add-dnote-item-dialog-props';
 import AddDnoteItemView from '@/pages/views/add-dnote-item-view.vue';
+import type DnoteItem from '@/classes/dnote/dnote-item';
 const is_show_dialog: Ref<boolean> = ref(false)
 
 defineExpose({ show, hide })

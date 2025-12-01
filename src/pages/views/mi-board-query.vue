@@ -6,8 +6,8 @@
                 :is_open="true" :struct_obj="cloned_application_config.parsed_mi_boad_struct" :is_editable="false"
                 :is_root="true" :is_show_checkbox="false"
                 @clicked_items="(event: MouseEvent, items: string[], check_state: CheckState, is_by_user: boolean) => { if (is_by_user && check_state === CheckState.checked) { items.forEach((board) => { board_name = board; emits('request_open_focus_board', board) }) } }"
-                @requested_update_check_state="[]" @received_errors="(errors) => emits('received_errors', errors)"
-                @received_messages="(messages) => emits('received_messages', messages)" ref="foldable_struct" />
+                @requested_update_check_state="[]" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" ref="foldable_struct" />
         </table>
     </div>
 </template>
@@ -20,6 +20,8 @@ import FoldableStruct from './foldable-struct.vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { CheckState } from './check-state'
 import type { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const foldable_struct = ref<InstanceType<typeof FoldableStruct> | null>(null)
 

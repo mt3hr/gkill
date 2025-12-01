@@ -23,22 +23,22 @@
                                 :enable_dialog="false" :show_content_only="false"
                                 :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
                                 :show_rep_name="false" :force_show_latest_kyou_info="false"
-                                @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
-                                @clicked_kyou="(kyou) => { focused_kyou = kyou }"
-                                @received_errors="(errors) => emits('received_errors', errors)"
-                                @received_messages="(messages) => emits('received_messages', messages)"
-                                @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
-                                @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
-                                @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
-                                @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
-                                @registered_kyou="(registered_kyou) => emits('registered_kyou', registered_kyou)"
-                                @registered_tag="(registered_tag) => emits('registered_tag', registered_tag)"
-                                @registered_text="(registered_text) => emits('registered_text', registered_text)"
-                                @registered_notification="(registered_notification) => emits('registered_notification', registered_notification)"
-                                @updated_kyou="(updated_kyou) => emits('updated_kyou', updated_kyou)"
-                                @updated_tag="(updated_tag) => emits('updated_tag', updated_tag)"
-                                @updated_text="(updated_text) => emits('updated_text', updated_text)"
-                                @updated_notification="(updated_notification) => emits('updated_notification', updated_notification)"
+                                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                                @clicked_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
+                                @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                                @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                                @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+                                @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
+                                @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"
+                                @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
+                                @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
+                                @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
+                                @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
+                                @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
+                                @updated_kyou="(...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou)"
+                                @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
+                                @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
+                                @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
                                 ref="kyou_list_view" />
                         </v-card>
                     </td>
@@ -49,7 +49,7 @@
                                     <KyouCountCalendar v-show="is_show_kyou_count_calendar"
                                         :application_config="application_config" :gkill_api="gkill_api"
                                         :kyous="match_kyous" :for_mi="true" class="kyou_list_calendar_in_share_mi_view"
-                                        @requested_focus_time="(time) => { focused_time = time }" />
+                                        @requested_focus_time="(...time: any[]) => { focused_time = time[0] as Date}" />
                                 </td>
                             </tr>
                             <tr>
@@ -68,8 +68,8 @@
                                             :enable_dialog="false" :show_update_time="false" :show_related_time="true"
                                             class="kyou_detail_view" :show_attached_tags="true"
                                             :show_attached_texts="true" :show_attached_notifications="true"
-                                            @received_errors="(errors) => emits('received_errors', errors)"
-                                            @received_messages="(messages) => emits('received_messages', messages)" />
+                                            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                                            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
                                     </div>
                                 </td>
                             </tr>
@@ -92,6 +92,11 @@ import KyouCountCalendar from './kyou-count-calendar.vue'
 import type { Kyou } from '@/classes/datas/kyou'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
+import type { Tag } from '@/classes/datas/tag';
+import type { Text } from '@/classes/datas/text';
+import type { Notification } from '@/classes/datas/notification';
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const kyou_list_view = ref();
 

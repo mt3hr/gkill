@@ -1,9 +1,9 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ConfirmDeleteRepStructView :application_config="application_config" :gkill_api="gkill_api"
-            :rep_struct="rep_struct" @received_errors="(errors) => emits('received_errors', errors)"
-            @requested_close_dialog="hide" @requested_delete_rep="(id) => { if (id) emits('requested_delete_rep', id); hide() }"
-            @received_messages="(messages) => emits('received_messages', messages)" />
+            :rep_struct="rep_struct" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @requested_close_dialog="hide" @requested_delete_rep="(...id :any[]) => { if (id) emits('requested_delete_rep', id[0] as string); hide() }"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
     </v-dialog>
 </template>
 <script setup lang="ts">
@@ -13,6 +13,8 @@ import ConfirmDeleteRepStructView from '../views/confirm-delete-rep-struct-view.
 import type { ConfirmDeleteRepStructDialogEmits } from './confirm-delete-rep-struct-dialog-emits.ts';
 import type { ConfirmDeleteRepStructDialogProps } from './confirm-delete-rep-struct-dialog-props.ts';
 import { RepStruct } from '@/classes/datas/config/rep-struct';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
 
 defineProps<ConfirmDeleteRepStructDialogProps>()
 const emits = defineEmits<ConfirmDeleteRepStructDialogEmits>()

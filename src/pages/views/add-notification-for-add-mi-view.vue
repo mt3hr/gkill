@@ -52,7 +52,7 @@ import moment from 'moment'
 import type { AddNotificationForAddMiViewProps } from './add-notification-for-add-mi-view-props'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
-import { VTimePicker } from 'vuetify/labs/components'
+import { VTimePicker } from 'vuetify/components'
 
 const props = defineProps<AddNotificationForAddMiViewProps>()
 const emits = defineEmits<KyouViewEmits>()

@@ -51,8 +51,8 @@
                                             :is_readonly_mi_check="true" :show_rep_name="false"
                                             :force_show_latest_kyou_info="true" :show_attached_tags="true"
                                             :show_attached_texts="true" :show_attached_notifications="true"
-                                            @received_errors="(errors) => emits('received_errors', errors)"
-                                            @received_messages="(messages) => emits('received_messages', messages)" />
+                                            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                                            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
                                     </td>
                                     <td>
                                         <span>{{ model_value?.suffix }}</span>
@@ -67,28 +67,29 @@
         <KyouDialog v-if="match_kyou" :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="[]" :kyou="match_kyou" :last_added_tag="''" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog" :is_readonly_mi_check="false" :show_timeis_plaing_end_button="true"
-            @deleted_kyou="(deleted_kyou) => emits('deleted_kyou', deleted_kyou)"
-            @deleted_tag="(deleted_tag) => emits('deleted_tag', deleted_tag)"
-            @deleted_text="(deleted_text) => emits('deleted_text', deleted_text)"
-            @deleted_notification="(deleted_notification) => emits('deleted_notification', deleted_notification)"
-            @registered_kyou="(registered_kyou) => emits('registered_kyou', registered_kyou)"
-            @registered_tag="(registered_tag) => emits('registered_tag', registered_tag)"
-            @registered_text="(registered_text) => emits('registered_text', registered_text)"
-            @registered_notification="(registered_notification) => emits('registered_notification', registered_notification)"
-            @updated_kyou="(updated_kyou) => emits('updated_kyou', updated_kyou)"
-            @updated_tag="(updated_tag) => emits('updated_tag', updated_tag)"
-            @updated_text="(updated_text) => emits('updated_text', updated_text)"
-            @updated_notification="(updated_notification) => emits('updated_notification', updated_notification)"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(cloned_kyou) => emits('requested_reload_kyou', cloned_kyou)"
+            @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
+            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
+            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
+            @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
+            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
+            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
+            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
+            @updated_kyou="(...updated_kyou: any[]) => emits('updated_kyou', updated_kyou[0] as Kyou)"
+            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
+            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
+            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_reload_kyou="(...cloned_kyou: any[]) => emits('requested_reload_kyou', cloned_kyou[0] as Kyou)"
             @requested_reload_list="emits('requested_reload_list')"
-            @requested_update_check_kyous="(cloned_kyous, is_checked) => emits('requested_update_check_kyous', cloned_kyous, is_checked)"
+            @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
             ref="kyou_dialog" />
         <RyuuListItemContextMenu :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
-            @requested_delete_related_kyou_query="(id) => emits('requested_delete_related_kyou_list_query', id)"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="contextmenu" />
+            @requested_delete_related_kyou_query="(...id: any[]) => emits('requested_delete_related_kyou_list_query', id[0] as string)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            ref="contextmenu" />
         <EditRyuuItemDialog :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
             ref="edit_related_kyou_query_dialog" />
     </v-card>
@@ -118,6 +119,11 @@ import type RelatedKyouQuery from '../../classes/dnote/related-kyou-query';
 import RyuuListItemContextMenu from './ryuu-list-item-context-menu.vue';
 import type Predicate from '@/classes/dnote/predicate';
 import type PredicateGroupType from '@/classes/dnote/predicate-group-type';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
+import type { Tag } from '@/classes/datas/tag';
+import type { Text } from '@/classes/datas/text';
+import type { Notification } from '@/classes/datas/notification';
 
 const kyou_dialog = ref<InstanceType<typeof KyouDialog> | null>(null);
 const contextmenu = ref<InstanceType<typeof RyuuListItemContextMenu> | null>(null);

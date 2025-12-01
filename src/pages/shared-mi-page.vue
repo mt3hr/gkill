@@ -2,8 +2,8 @@
     <div>
         <sharedMiTaskView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :app_title_bar_height="app_title_bar_height" :share_id="share_kyou_id" :share_title="share_title"
-            :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
-            @received_messages="write_messages" />
+            :application_config="application_config" :gkill_api="gkill_api" @received_errors="(...errors :any[]) => write_errors(errors)"
+            @received_messages="(...messages :any[]) => write_messages(messages)" />
         <div class="alert_container">
             <v-slide-y-transition group>
                 <v-alert v-for="message in messages" theme="dark" :key="message.id">

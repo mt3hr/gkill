@@ -88,7 +88,7 @@ import type { AddLantanaViewProps } from './add-lantana-view-props'
 import { AddLantanaRequest } from '@/classes/api/req_res/add-lantana-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
-import { VTimePicker } from 'vuetify/labs/components'
+import { VTimePicker } from 'vuetify/components'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const edit_lantana_flowers = ref<InstanceType<typeof LantanaFlowersView> | null>(null);
