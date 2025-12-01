@@ -7,11 +7,11 @@
         <v-spacer class="pa-0 ma-0" />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
             <v-btn dark color="secondary" @click="emits('request_clear_map_query')">{{ i18n.global.t("CLEAR_TITLE")
-                }}</v-btn>
+            }}</v-btn>
         </v-col>
     </v-row>
     <v-sheet v-show="query.use_map">
-        <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key" @click="($event) => {
+        <GoogleMap ref="gmap" :center="center" :zoom="zoom" :apiKey="google_map_api_key" @click="($event: any) => {
             is_enable_circle = true;
             latitude = $event.latLng.lat();
             longitude = $event.latLng.lng();

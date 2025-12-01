@@ -133,7 +133,7 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
-import { VTimePicker } from 'vuetify/labs/components'
+import { VTimePicker } from 'vuetify/components'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const is_requested_submit = ref(false)

@@ -44,9 +44,10 @@
         <DecideRelatedTimeUploadedFileDialog :app_content_height="app_content_height"
             :app_content_width="app_content_width" :application_config="application_config" :gkill_api="gkill_api"
             :uploaded_kyous="uploaded_kyous" :last_added_tag="last_added_tag"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_kyou="(kyou) => reload_kyou(kyou)" ref="decide_related_time_uploaded_file_dialog" />
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+            ref="decide_related_time_uploaded_file_dialog" />
     </div>
 </template>
 <script setup lang="ts">
@@ -63,6 +64,8 @@ import { FileData } from '@/classes/api/file-data'
 import { UploadFilesRequest } from '@/classes/api/req_res/upload-files-request'
 import { GetRepositoriesRequest } from '@/classes/api/req_res/get-repositories-request'
 import type { Repository } from '@/classes/datas/config/repository'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const decide_related_time_uploaded_file_dialog = ref<InstanceType<typeof DecideRelatedTimeUploadedFileDialog> | null>(null);
 
@@ -77,8 +80,8 @@ const target_rep_name_for_file: Ref<string> = ref("")
 const target_rep_names_for_gps_file: Ref<Array<string>> = ref(new Array<string>())
 const target_rep_name_for_gps_file: Ref<string> = ref("")
 
-const gps_log_files: Ref<FileList | null> = ref(null)
-const files: Ref<FileList | null> = ref(null)
+const gps_log_files: Ref<File | File[] | null> = ref(null)
+const files: Ref<File | File[] | null> = ref(null)
 
 const uploaded_kyous: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 
@@ -116,12 +119,16 @@ async function upload_files() {
     if (!files.value) {
         return
     }
+    let files_value = files.value
+    if (files_value instanceof File) {
+        files_value = [files_value]
+    }
     const req = new UploadFilesRequest()
     req.conflict_behavior = conflict_behavior_file.value
     req.target_rep_name = target_rep_name_for_file.value
     req.files = new Array<FileData>()
-    for (let i = 0; i < files.value.length; i++) {
-        const file = files.value[i]
+    for (let i = 0; i < files_value.length; i++) {
+        const file = files_value[i]
         const filedata = new FileData()
         filedata.data_base64 = await to_base64(file)
         filedata.file_name = file.name
@@ -152,12 +159,16 @@ async function upload_gps_log_files() {
     if (!gps_log_files.value) {
         return
     }
+    let gps_log_files_value = gps_log_files.value
+    if (gps_log_files_value instanceof File) {
+        gps_log_files_value = [gps_log_files_value]
+    }
     const req = new UploadGPSLogFilesRequest()
     req.conflict_behavior = conflict_behavior_gps_file.value
     req.target_rep_name = target_rep_name_for_gps_file.value
     req.gps_log_files = new Array<FileData>()
-    for (let i = 0; i < gps_log_files.value.length; i++) {
-        const gps_log_file = gps_log_files.value[i]
+    for (let i = 0; i < gps_log_files_value.length; i++) {
+        const gps_log_file = gps_log_files_value[i]
         const filedata = new FileData()
         filedata.data_base64 = await to_base64(gps_log_file)
         filedata.file_name = gps_log_file.name

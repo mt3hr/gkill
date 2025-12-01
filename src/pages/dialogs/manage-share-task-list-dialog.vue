@@ -5,14 +5,14 @@
             @requested_show_confirm_delete_share_kyou_list_dialog="show_confirm_delete_share_kyou_list_dialog"
             @requested_show_share_kyou_link_dialog="show_share_kyou_list_link_dialog" />
         <ShareKyousListLinkDialog :share_kyou_list_info="share_kyou_list" :application_config="application_config"
-            :gkill_api="gkill_api" @received_errors="(errors) => emits('received_errors', errors)"
+            :gkill_api="gkill_api" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @updated_share_kyou_list_info="reload_share_kyou_list_infos()"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="share_kyou_list_link_dialog" />
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" ref="share_kyou_list_link_dialog" />
         <ConfirmDeleteShareKyousListDialog :share_kyou_list_info="share_kyou_link"
             :application_config="application_config" :gkill_api="gkill_api"
             @requested_delete_share_kyou_link_info="(share_kyou_list_infos: ShareKyousInfo) => delete_share_kyou_link_info(share_kyou_list_infos)"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             ref="confirm_delete_share_kyou_list_dialog" />
     </v-dialog>
 </template>
@@ -27,6 +27,8 @@ import ConfirmDeleteShareKyousListDialog from './confirm-delete-share-kyou-list-
 import { ShareKyousInfo } from '@/classes/datas/share-kyous-info'
 import { DeleteShareKyouListInfosRequest } from '@/classes/api/req_res/delete-share-kyou-list-infos-request'
 import { GetShareKyouListInfosRequest } from '@/classes/api/req_res/get-share-kyou-list-infos-request'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const share_kyou_list_link_dialog = ref<InstanceType<typeof ShareKyousListLinkDialog> | null>(null)
 const confirm_delete_share_kyou_list_dialog = ref<InstanceType<typeof ConfirmDeleteShareKyousListDialog> | null>(null)

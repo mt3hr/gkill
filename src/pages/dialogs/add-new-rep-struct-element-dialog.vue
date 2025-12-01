@@ -1,9 +1,9 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <AddNewRepStructElementView :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" @requested_close_dialog="hide"
-            @requested_add_rep_struct_element="(rep_struct_element) => emits('requested_add_rep_struct_element', rep_struct_element)" />
+            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" @requested_close_dialog="hide"
+            @requested_add_rep_struct_element="(...rep_struct_element :any[]) => emits('requested_add_rep_struct_element', rep_struct_element[0] as RepStructElementData)" />
     </v-dialog>
 </template>
 <script lang="ts" setup>
@@ -12,6 +12,9 @@ import { type Ref, ref } from 'vue'
 import type { AddNewRepStructElementDialogEmits } from './add-new-rep-struct-element-dialog-emits'
 import type { AddNewRepStructElementDialogProps } from './add-new-rep-struct-element-dialog-props'
 import AddNewRepStructElementView from '../views/add-new-rep-struct-element-view.vue'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
 
 const add_new_rep_struct_element_view = ref<InstanceType<typeof AddNewRepStructElementView> | null>(null);
 

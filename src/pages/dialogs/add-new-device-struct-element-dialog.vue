@@ -1,9 +1,10 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <AddNewDeviceStructElementView :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" @requested_close_dialog="hide"
-            @requested_add_device_struct_element="(device_struct_element) => emits('requested_add_device_struct_element', device_struct_element)" />
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_close_dialog="hide"
+            @requested_add_device_struct_element="(...device_struct_element: any[]) => emits('requested_add_device_struct_element', device_struct_element[0] as DeviceStructElementData)" />
     </v-dialog>
 </template>
 <script lang="ts" setup>
@@ -12,6 +13,10 @@ import { type Ref, ref } from 'vue'
 import type { AddNewDeviceStructElementDialogEmits } from './add-new-device-struct-element-dialog-emits'
 import type { AddNewDeviceStructElementDialogProps } from './add-new-device-struct-element-dialog-props'
 import AddNewDeviceStructElementView from '../views/add-new-device-struct-element-view.vue'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { FoldableStructModel } from '../views/foldable-struct-model'
+import type { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data'
 
 const add_new_device_struct_element_view = ref<InstanceType<typeof AddNewDeviceStructElementView> | null>(null);
 

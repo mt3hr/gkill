@@ -22,8 +22,8 @@
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="false"
                         :struct_obj="cloned_application_config.parsed_device_struct"
                         @requested_update_check_state="update_devices"
-                        @received_errors="(errors) => emits('received_errors', errors)"
-                        @received_messages="(messages) => emits('received_messages', messages)"
+                        @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                        @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                         @clicked_items="clicked_devices" ref="foldable_struct_devices" />
                 </table>
                 <h2>{{ i18n.global.t("REP_QUERY_TYPES_TITLE") }}</h2>
@@ -32,8 +32,8 @@
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true"
                         :struct_obj="cloned_application_config.parsed_rep_type_struct"
                         @requested_update_check_state="update_rep_types"
-                        @received_errors="(errors) => emits('received_errors', errors)"
-                        @received_messages="(messages) => emits('received_messages', messages)"
+                        @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                        @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                         @clicked_items="clicked_rep_types" ref="foldable_struct_rep_types" />
                 </table>
             </v-window-item>
@@ -44,8 +44,8 @@
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true"
                         :struct_obj="cloned_application_config.parsed_rep_struct"
                         @requested_update_check_state="update_reps"
-                        @received_errors="(errors) => emits('received_errors', errors)"
-                        @received_messages="(messages) => emits('received_messages', messages)"
+                        @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                        @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                         @clicked_items="clicked_reps" ref="foldable_struct_reps" />
                 </table>
             </v-window-item>
@@ -64,6 +64,11 @@ import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-
 import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
 import { deepEquals } from '@/classes/deep-equals'
+import type { Tag } from '@/classes/datas/tag';
+import type { Text } from '@/classes/datas/text';
+import type { Notification } from '@/classes/datas/notification';
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const foldable_struct_reps = ref<InstanceType<typeof FoldableStruct> | null>(null)
 const foldable_struct_devices = ref<InstanceType<typeof FoldableStruct> | null>(null)

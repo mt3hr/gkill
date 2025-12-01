@@ -12,9 +12,9 @@
     <EditRyuuItemDialog :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
         ref="edit_related_kyou_query_dialog" />
     <ConfirmDeleteRyuuListItemDialog :application_config="application_config" :gkill_api="gkill_api"
-        @requested_delete_related_kyou_query="(id) => emits('requested_delete_related_kyou_query', id)"
-        @received_errors="(errors) => emits('received_errors', errors)"
-        @received_messages="(messages) => emits('received_messages', messages)"
+        @requested_delete_related_kyou_query="(...id: any[]) => emits('requested_delete_related_kyou_query', id[0] as string)"
+        @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+        @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
         ref="confirm_delete_ryuu_list_item_dialog" />
 </template>
 <script lang="ts" setup>
@@ -25,6 +25,8 @@ import EditRyuuItemDialog from '../dialogs/edit-ryuu-item-dialog.vue'
 import type { RyuuListItemContextMenuProps } from './ryuu-list-item-context-menu-props'
 import type { RyuuListItemContextMenuEmits } from './ryuu-list-item-context-menu-emits'
 import RelatedKyouQuery from '@/classes/dnote/related-kyou-query'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const edit_related_kyou_query_dialog = ref<InstanceType<typeof EditRyuuItemDialog> | null>(null);
 const confirm_delete_ryuu_list_item_dialog = ref<InstanceType<typeof ConfirmDeleteRyuuListItemDialog> | null>(null);

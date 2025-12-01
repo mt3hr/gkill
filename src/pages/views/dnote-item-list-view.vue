@@ -2,20 +2,22 @@
     <div>
         <DnoteItemView v-for="dnote_item in model_value" v-model="dnote_item!" :key="dnote_item.id" :editable="editable"
             :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_delete_dnote_item="(id) => delete_dnote_item(id)"
-            @requested_update_dnote_item="(dnote_item) => update_dnote_item(dnote_item)"
-            @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)" @deleted_tag="(tag) => emits('deleted_tag', tag)"
-            @deleted_text="(text) => emits('deleted_text', text)"
-            @deleted_notification="(notification) => emits('deleted_notification', notification)"
-            @registered_kyou="(kyou) => emits('registered_kyou', kyou)"
-            @registered_tag="(tag) => emits('registered_tag', tag)"
-            @registered_text="(text) => emits('registered_text', text)"
-            @registered_notification="(notification) => emits('registered_notification', notification)"
-            @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
-            @updated_text="(text) => emits('updated_text', text)"
-            @updated_notification="(notification) => emits('updated_notification', notification)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_delete_dnote_item="(...id: any[]) => delete_dnote_item(id[0] as string)"
+            @requested_update_dnote_item="(...dnote_item: any[]) => update_dnote_item(dnote_item[0] as DnoteItem)"
+            @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
+            @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
+            @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
+            @deleted_notification="(...notification: any[]) => emits('deleted_notification', notification[0] as Notification)"
+            @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou)"
+            @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0] as Tag)"
+            @registered_text="(...text: any[]) => emits('registered_text', text[0] as Text)"
+            @registered_notification="(...notification: any[]) => emits('registered_notification', notification[0] as Notification)"
+            @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou)"
+            @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
+            @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
+            @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
             @finish_a_aggregate_task="emits('finish_a_aggregate_task')" ref="dnote_item_views" />
     </div>
 </template>
@@ -27,8 +29,13 @@ import type DnoteItemListViewProps from './dnote-item-list-view-props';
 import DnoteItemView from './dnote-item-view.vue';
 import type { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
 import type { Kyou } from '../../classes/datas/kyou';
+import type { Text } from '@/classes/datas/text';
+import type { Tag } from '@/classes/datas/tag';
+import type { Notification } from '@/classes/datas/notification';
 import type DnoteItem from '../../classes/dnote/dnote-item';
 import type DnoteItemListViewEmits from './dnote-item-list-view-emits';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
 
 const dnote_item_views = ref()
 
