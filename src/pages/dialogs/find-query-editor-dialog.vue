@@ -3,10 +3,11 @@
         <v-card>
             <FindQueryEditorView v-if="model_value" :application_config="received_application_config"
                 :gkill_api="gkill_api" :find_kyou_query="model_value" :inited="inited"
-                @updated_query="(query) => model_value = query" @inited="inited = true"
-                @received_errors="(errors) => emits('received_errors', errors)"
-                @received_messages="(messages) => emits('received_messages', messages)" @requested_close_dialog="hide()"
-                @requested_apply="(find_kyou_query) => model_value = find_kyou_query" ref="find_query_editor_view" />
+                @updated_query="(...query: any[]) => model_value = (query[0] as FindKyouQuery)" @inited="inited = true"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_close_dialog="hide()" @requested_apply="(...find_kyou_query :any[])  => model_value = find_kyou_query[0] as FindKyouQuery"
+                ref="find_query_editor_view" />
         </v-card>
     </v-dialog>
 </template>
@@ -19,6 +20,8 @@ import type FindQueryEditorDialogProps from './find-query-editor-dialog-props';
 import type FindQueryEditorDialogEmits from './find-query-editor-dialog-emits';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 import { ApplicationConfig } from '@/classes/datas/config/application-config';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
 const is_show_dialog: Ref<boolean> = ref(false)
 const inited = ref(false)
 

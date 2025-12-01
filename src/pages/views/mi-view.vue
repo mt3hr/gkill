@@ -55,8 +55,9 @@
                     search(focused_column_index, new_query)
                 }" @inited="() => { if (!received_init_request) { init() }; received_init_request = true }"
                 @request_open_focus_board="(board_name: string) => open_or_focus_board(board_name)"
-                @received_errors="(errors) => emits('received_errors', errors)"
-                @received_messages="(messages) => emits('received_messages', messages)" ref="query_editor_sidebar" />
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                ref="query_editor_sidebar" />
         </v-navigation-drawer>
         <v-main class="main" :class="(drawer_mode_is_mobile) ? 'scroll_snap_container' : ''">
             <div class="overlay_target">
@@ -71,7 +72,7 @@
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                            }}</v-card-title>
+                                }}</v-card-title>
                             <KyouListView :kyou_height="56 + 35" :width="400"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
@@ -81,8 +82,8 @@
                                 :is_readonly_mi_check="false" :show_checkbox="false" :show_footer="true"
                                 :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
                                 :show_rep_name="false" :force_show_latest_kyou_info="true" :show_content_only="false"
-                                :show_timeis_plaing_end_button="false" @scroll_list="(scroll_top: number) => {
-                                    match_kyous_list_top_list[index] = scroll_top
+                                :show_timeis_plaing_end_button="false" @scroll_list="(...scroll_top: any[]) => {
+                                    match_kyous_list_top_list[index] = scroll_top[0] as number
                                     if (inited) {
                                         props.gkill_api.set_saved_mi_scroll_indexs(match_kyous_list_top_list)
                                     }
@@ -95,21 +96,21 @@
                                         update_focused_kyous_list(index)
                                     }
                                     nextTick(() => skip_search_this_tick = false)
-                                }" @clicked_kyou="(kyou) => {
+                                }" @clicked_kyou="(...kyou: any[]) => {
                                     focused_column_index = index
                                     skip_search_this_tick = true
                                     focused_query = querys[index]
-                                    clicked_kyou_in_list_view(index, kyou)
-                                }" @received_errors="(errors) => emits('received_errors', errors)"
-                                @received_messages="(messages) => emits('received_messages', messages)"
-                                @requested_reload_kyou="(kyou) => reload_kyou(kyou)"
+                                    clicked_kyou_in_list_view(index, kyou[0] as Kyou)
+                                }" @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
                                 @requested_reload_list="() => reload_list(index)"
-                                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
-                                @requested_change_focus_kyou="(is_focus_kyou) => {
+                                @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
+                                @requested_change_focus_kyou="(...is_focus_kyou: any[]) => {
                                     focused_column_index = index
                                     skip_search_this_tick = true
                                     const query = querys[index].clone()
-                                    query.is_focus_kyou_in_list_view = is_focus_kyou
+                                    query.is_focus_kyou_in_list_view = is_focus_kyou[0] as boolean
                                     querys.splice(index, 1, query)
                                     querys_backup.splice(index, 1, query)
                                 }" @requested_search="() => {
@@ -121,27 +122,30 @@
                                     querys.splice(index, 1, query)
                                     querys_backup.splice(index, 1, query)
                                     reload_list(index)
-                                }" ref="kyou_list_views" @requested_change_is_image_only_view="(is_image_only_view: boolean) => {
+                                }" ref="kyou_list_views" @requested_change_is_image_only_view="(...is_image_only_view: any[]) => {
                                     focused_column_index = index
                                     skip_search_this_tick = true
                                     focused_kyous_list = match_kyous_list[index]
                                     const query = querys[index].clone()
                                     query.query_id = gkill_api.generate_uuid()
-                                    query.is_image_only = is_image_only_view
+                                    query.is_image_only = is_image_only_view[0] as boolean
                                     querys[index] = query
                                     querys.splice(index, 1, query)
                                     querys_backup.splice(index, 1, query)
                                     reload_list(index)
                                 }" @requested_close_column="close_list_view(index)"
-                                @deleted_kyou="(deleted_kyou) => { reload_list(index); reload_kyou(deleted_kyou); focused_kyou?.reload(false, true) }"
-                                @deleted_tag="(deleted_tag) => { }" @deleted_text="(deleted_text) => { }"
-                                @deleted_notification="(deleted_notification) => { }"
-                                @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
-                                @registered_text="(registered_text) => { }"
-                                @registered_notification="(registered_notification) => { }"
-                                @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)"
-                                @updated_tag="(updated_tag) => { }" @updated_text="(updated_text) => { }"
-                                @updated_notification="(updated_notification) => { }" />
+                                @deleted_kyou="(...deleted_kyou: any[]) => { reload_list(index); reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(false, true) }"
+                                @deleted_tag="(...deleted_tag: any[]) => { }"
+                                @deleted_text="(...deleted_text: any[]) => { }"
+                                @deleted_notification="(...deleted_notification: any[]) => { }"
+                                @registered_kyou="(...registered_kyou: any[]) => { }"
+                                @registered_tag="(...registered_tag: any[]) => { }"
+                                @registered_text="(...registered_text: any[]) => { }"
+                                @registered_notification="(...registered_notification: any[]) => { }"
+                                @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
+                                @updated_tag="(...updated_tag: any[]) => { }"
+                                @updated_text="(...updated_text: any[]) => { }"
+                                @updated_notification="(...updated_notification: any[]) => { }" />
                         </v-card>
                     </td>
                     <td valign="top" v-if="is_show_kyou_detail_view"
@@ -159,115 +163,158 @@
                                 :enable_dialog="enable_dialog" :show_attached_timeis="true" class="kyou_detail_view"
                                 :show_attached_tags="false" :show_attached_texts="false"
                                 :show_attached_notifications="false"
-                                @received_errors="(errors) => emits('received_errors', errors)"
-                                @received_messages="(messages) => emits('received_messages', messages)"
-                                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)" />
+                                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                                @requested_reload_list="() => { }"
+                                @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)" />
                         </div>
                     </td>
                     <td valign="top" :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <KyouCountCalendar v-show="is_show_kyou_count_calendar" :application_config="application_config"
                             :gkill_api="gkill_api" :kyous="focused_kyous_list" :for_mi="true"
-                            @requested_focus_time="(time) => { focused_time = time }" />
+                            @requested_focus_time="(...time: any[]) => { focused_time = time[0] as Date }" />
                     </td>
                 </tr>
             </table>
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @received_messages="(messages) => emits('received_messages', messages)" ref="add_kc_dialog" />
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                ref="add_kc_dialog" />
             <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(false, true) }"
-                @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-                @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
-                @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
-                @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
-                @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0]); focused_kyou?.reload(false, true) }"
+                @deleted_text="(...deleted_text: any[]) => { }"
+                @deleted_notification="(...deleted_notification: any[]) => { }"
+                @registered_kyou="(...registered_kyou: any[]) => { }"
+                @registered_tag="(...registered_tag: any[]) => { }"
+                @registered_text="(...registered_text: any[]) => { }"
+                @registered_notification="(...registered_notification: any[]) => { }"
+                @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
+                @updated_tag="(...updated_tag: any[]) => { }" @updated_text="(...updated_text: any[]) => { }"
+                @updated_notification="(...updated_notification: any[]) => { }"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(false, true) }"
-                @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-                @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
-                @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
-                @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
-                @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0]); focused_kyou?.reload(false, true) }"
+                @deleted_text="(...deleted_text: any[]) => { }"
+                @deleted_notification="(...deleted_notification: any[]) => { }"
+                @registered_kyou="(...registered_kyou: any[]) => { }"
+                @registered_tag="(...registered_tag: any[]) => { }"
+                @registered_text="(...registered_text: any[]) => { }"
+                @registered_notification="(...registered_notification: any[]) => { }"
+                @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
+                @updated_tag="(...updated_tag: any[]) => { }" @updated_text="(...updated_text: any[]) => { }"
+                @updated_notification="(...updated_notification: any[]) => { }"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="add_lantana_dialog" />
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(false, true) }"
-                @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-                @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
-                @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
-                @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
-                @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0]); focused_kyou?.reload(false, true) }"
+                @deleted_text="(...deleted_text: any[]) => { }"
+                @deleted_notification="(...deleted_notification: any[]) => { }"
+                @registered_kyou="(...registered_kyou: any[]) => { }"
+                @registered_tag="(...registered_tag: any[]) => { }"
+                @registered_text="(...registered_text: any[]) => { }"
+                @registered_notification="(...registered_notification: any[]) => { }"
+                @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
+                @updated_tag="(...updated_tag: any[]) => { }" @updated_text="(...updated_text: any[]) => { }"
+                @updated_notification="(...updated_notification: any[]) => { }"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="add_urlog_dialog" />
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(false, true) }"
-                @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-                @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
-                @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
-                @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
-                @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0]); focused_kyou?.reload(false, true) }"
+                @deleted_text="(...deleted_text: any[]) => { }"
+                @deleted_notification="(...deleted_notification: any[]) => { }"
+                @registered_kyou="(...registered_kyou: any[]) => { }"
+                @registered_tag="(...registered_tag: any[]) => { }"
+                @registered_text="(...registered_text: any[]) => { }"
+                @registered_notification="(...registered_notification: any[]) => { }"
+                @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
+                @updated_tag="(...updated_tag: any[]) => { }" @updated_text="(...updated_text: any[]) => { }"
+                @updated_notification="(...updated_notification: any[]) => { }"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="add_mi_dialog" />
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(errors) => emits('received_errors', errors)"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(false, true) }"
-                @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-                @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
-                @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
-                @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
-                @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @requested_reload_kyou="(kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0]); focused_kyou?.reload(false, true) }"
+                @deleted_text="(...deleted_text: any[]) => { }"
+                @deleted_notification="(...deleted_notification: any[]) => { }"
+                @registered_kyou="(...registered_kyou: any[]) => { }"
+                @registered_tag="(...registered_tag: any[]) => { }"
+                @registered_text="(...registered_text: any[]) => { }"
+                @registered_notification="(...registered_notification: any[]) => { }"
+                @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
+                @updated_tag="(...updated_tag: any[]) => { }" @updated_text="(...updated_text: any[]) => { }"
+                @updated_notification="(...updated_notification: any[]) => { }"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="add_nlog_dialog" />
             <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
-                @registered_tag="(registered_tag) => { }" @registered_text="(registered_text) => { }"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                :app_content_width="app_content_width"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @registered_tag="(...registered_tag: any[]) => { }"
+                @registered_text="(...registered_text: any[]) => { }"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="last_added_tag" :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                :app_content_width="app_content_width" @received_errors="(errors) => emits('received_errors', errors)"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @requested_reload_kyou="(kyou: Kyou) => reload_kyou(kyou)" @requested_reload_list="() => { }"
-                @requested_update_check_kyous="(kyous: Array<Kyou>, is_checked: boolean) => update_check_kyous(kyous, is_checked)"
+                :app_content_width="app_content_width"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
+                @requested_reload_list="() => { }"
+                @requested_update_check_kyous="(...params: any[]) => update_check_kyous(params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
-                @deleted_kyou="(deleted_kyou) => { reload_kyou(deleted_kyou); focused_kyou?.reload(false, true) }"
-                @deleted_text="(deleted_text) => { }" @deleted_notification="(deleted_notification) => { }"
-                @registered_kyou="(registered_kyou) => { }" @registered_tag="(registered_tag) => { }"
-                @registered_text="(registered_text) => { }" @registered_notification="(registered_notification) => { }"
-                @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
-                @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }"
-                @received_errors="(errors) => emits('received_errors', errors)"
-                @received_messages="(messages) => emits('received_messages', messages)" ref="upload_file_dialog" />
+                @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0]); focused_kyou?.reload(false, true) }"
+                @deleted_text="(...deleted_text: any[]) => { }"
+                @deleted_notification="(...deleted_notification: any[]) => { }"
+                @registered_kyou="(...registered_kyou: any[]) => { }"
+                @registered_tag="(...registered_tag: any[]) => { }"
+                @registered_text="(...registered_text: any[]) => { }"
+                @registered_notification="(...registered_notification: any[]) => { }"
+                @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
+                @updated_tag="(...updated_tag: any[]) => { }" @updated_text="(...updated_text: any[]) => { }"
+                @updated_notification="(...updated_notification: any[]) => { }"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                ref="upload_file_dialog" />
             <v-avatar :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
                 <v-menu :style="add_kyou_menu_style" transition="slide-x-transition">
                     <template v-slot:activator="{ props }">
@@ -334,6 +381,8 @@ import UploadFileDialog from '../dialogs/upload-file-dialog.vue'
 import moment from 'moment'
 import { deepEquals } from '@/classes/deep-equals'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)

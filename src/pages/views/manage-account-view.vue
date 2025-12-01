@@ -9,7 +9,7 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="show_create_account_dialog">{{
                         i18n.global.t("ADD_ACCOUNT_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -46,29 +46,34 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CLOSE_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
         <AllocateRepDialog :application_config="application_config" :gkill_api="gkill_api"
             :server_configs="server_configs"
             @requested_reload_server_config="() => emits('requested_reload_server_config')"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="allocate_rep_dialog" />
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            ref="allocate_rep_dialog" />
         <ConfirmResetPasswordDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_configs="server_configs" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_show_show_password_reset_dialog="(account) => show_show_password_reset_link_dialog(account)"
+            :server_configs="server_configs"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_show_show_password_reset_dialog="(...account: any[]) => show_show_password_reset_link_dialog(account[0] as Account)"
             @requested_reload_server_config="() => emits('requested_reload_server_config')"
             ref="confirm_reset_password_dialog" />
         <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_configs="server_configs" @added_account="(account) => show_show_password_reset_link_dialog(account)"
-            @received_errors="(errors) => emits('received_errors', errors)"
+            :server_configs="server_configs"
+            @added_account="(...account: any[]) => show_show_password_reset_link_dialog(account[0] as Account)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @requested_reload_server_config="() => emits('requested_reload_server_config')"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="create_account_dialog" />
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            ref="create_account_dialog" />
         <ShowPasswordResetLinkDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_configs="server_configs" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            :server_configs="server_configs"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             ref="show_password_reset_link_dialog" />
     </v-card>
 </template>
@@ -87,6 +92,7 @@ import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-config
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const allocate_rep_dialog = ref<InstanceType<typeof AllocateRepDialog> | null>(null);
 const confirm_reset_password_dialog = ref<InstanceType<typeof ConfirmResetPasswordDialog> | null>(null);

@@ -9,7 +9,7 @@
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="show_add_rep_dialog(account)">{{ i18n.global.t("ADD_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -63,13 +63,15 @@
         </v-card-action>
         <AddRepDialog :application_config="application_config" :gkill_api="gkill_api" :server_configs="server_configs"
             :account="account" @requested_add_rep="add_rep"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="add_rep_dialog" />
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            ref="add_rep_dialog" />
         <ConfirmDeleteRepDialog :application_config="application_config" :gkill_api="gkill_api"
             :rep_id="delete_target_rep ? delete_target_rep.id : ''" :server_configs="server_configs"
-            @requested_delete_rep="(rep) => delete_rep(rep)"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="confirm_delete_rep_dialog" />
+            @requested_delete_rep="(...rep: any) => delete_rep(rep as Repository)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            ref="confirm_delete_rep_dialog" />
     </v-card>
 </template>
 <script setup lang="ts">
@@ -82,6 +84,8 @@ import ConfirmDeleteRepDialog from '../dialogs/confirm-delete-rep-dialog.vue'
 import type { Repository } from '@/classes/datas/config/repository'
 import { Account } from '@/classes/datas/config/account'
 import { UpdateUserRepsRequest } from '@/classes/api/req_res/update-user-reps-request'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 const add_rep_dialog = ref<InstanceType<typeof AddRepDialog> | null>(null);
 const confirm_delete_rep_dialog = ref<InstanceType<typeof ConfirmDeleteRepDialog> | null>(null);
 

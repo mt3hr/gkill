@@ -15,7 +15,7 @@
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="reload_repositories()">{{ i18n.global.t("RELOAD_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="logout()" color="primary">{{ i18n.global.t("LOGOUT_TITLE") }}</v-btn>
@@ -118,13 +118,13 @@
                     <td>
                         <v-btn dark color="primary" @click="show_edit_tag_dialog">{{
                             i18n.global.t("EDIT_TAG_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_dialog">{{
                             i18n.global.t("EDIT_REP_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_device_dialog">{{
                             i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                             i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
                     </td>
@@ -145,65 +145,67 @@
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="update_application_config" color="primary">{{ i18n.global.t("APPLY_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CANCEL_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
         <EditDeviceStructDialog :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_update_device_struct_element="async () => emits('requested_reload_application_config')"
             ref="edit_device_struct_dialog" />
         <EditKFTLTemplateDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_application_config="() => emits('requested_reload_application_config')"
             ref="edit_kftl_template_dialog" />
         <EditRepStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_application_config="(application_config) => emits('requested_reload_application_config')"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_reload_application_config="(...application_config: any) => emits('requested_reload_application_config')"
             ref="edit_rep_struct_dialog" />
         <EditRepTypeStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_reload_application_config="(application_config) => emits('requested_reload_application_config')"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_reload_application_config="(...application_config: any) => emits('requested_reload_application_config')"
             ref="edit_rep_type_struct_dialog" />
         <EditTagStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_application_config="emits('requested_reload_application_config')"
             ref="edit_tag_struct_dialog" />
         <EditDnoteDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_application_config="emits('requested_reload_application_config')"
             ref="edit_dnote_dialog" />
         <EditRyuuDialog v-model="cloned_application_config" :app_content_height="app_content_height"
             :app_content_width="app_content_width" :application_config="cloned_application_config"
-            :gkill_api="gkill_api" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            :gkill_api="gkill_api"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_application_config="emits('requested_reload_application_config')"
             ref="edit_ryuu_dialog" />
         <NewBoardNameDialog :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
             ref="new_board_name_dialog" />
         <ServerConfigDialog :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="server_config_dialog" />
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            ref="server_config_dialog" />
     </v-card>
 </template>
 <script setup lang="ts">
@@ -230,6 +232,8 @@ import { ReloadRepositoriesRequest } from '@/classes/api/req_res/reload-reposito
 import { useTheme } from 'vuetify'
 import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
 import delete_gkill_kyou_cache, { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const theme = useTheme()
 

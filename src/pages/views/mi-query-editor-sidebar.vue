@@ -5,8 +5,8 @@
                 :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_open_manage_share_kyou_dialog="show_manage_share_kyou_dialog()"
                 @request_open_share_kyou_dialog="show_share_kyou_dialog()"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @received_errors="(errors) => emits('received_errors', errors)" />
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)" />
             <SidebarHeader class="sidebar_header" :application_config="application_config" :gkill_api="gkill_api"
                 :find_kyou_query="query" @requested_search="emits('requested_search', false)"
                 :inited="inited_sidebar_header_for_query_sidebar"
@@ -33,7 +33,7 @@
             <div> <v-divider /> </div>
             <miBoardQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 :inited="inited_board_query_for_query_sidebar" @inited="inited_board_query_for_query_sidebar = true"
-                @request_open_focus_board="(board_name) => emits('request_open_focus_board', board_name)"
+                @request_open_focus_board="(...board_name: any[]) => emits('request_open_focus_board', board_name[0] as string)"
                 ref="board_query" />
             <div> <v-divider /> </div>
             <TagQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
@@ -88,6 +88,8 @@ import { MiSortType } from '@/classes/api/find_query/mi-sort-type'
 import type MiBoardQuery from './mi-board-query.vue'
 import moment from 'moment'
 import { CheckState } from './check-state'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const sidebar_header = ref<InstanceType<typeof SidebarHeader> | null>(null);
 const keyword_query = ref<InstanceType<typeof KeywordQuery> | null>(null);

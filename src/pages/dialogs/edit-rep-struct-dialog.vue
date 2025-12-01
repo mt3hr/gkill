@@ -1,9 +1,9 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <EditRepStructView :application_config="application_config" :gkill_api="gkill_api"
-            @requested_reload_application_config="(application_config) => emits('requested_reload_application_config', application_config)"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" @requested_close_dialog="hide" />
+            @requested_reload_application_config="(...application_config :any[]) => emits('requested_reload_application_config', application_config[0] as ApplicationConfig)"
+            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" @requested_close_dialog="hide" />
     </v-dialog>
 </template>
 <script lang="ts" setup>
@@ -12,6 +12,9 @@ import { type Ref, ref } from 'vue'
 import type { EditRepStructDialogEmits } from './edit-rep-struct-dialog-emits'
 import type { EditRepStructDialogProps } from './edit-rep-struct-dialog-props'
 import EditRepStructView from '../views/edit-rep-struct-view.vue'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { ApplicationConfig } from '@/classes/datas/config/application-config'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 defineProps<EditRepStructDialogProps>()
 const emits = defineEmits<EditRepStructDialogEmits>()
