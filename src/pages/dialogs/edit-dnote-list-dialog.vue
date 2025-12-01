@@ -4,7 +4,7 @@
             :dnote_list_query="dnote_list_query"
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
             @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-            @requested_update_dnote_list_query="(dnote_list_query) => emits('requested_update_dnote_list_query', dnote_list_query)"
+            @requested_update_dnote_list_query="(...dnote_list_query :any[]) => emits('requested_update_dnote_list_query', dnote_list_query[0] as DnoteListQuery)"
             @requested_close_dialog="hide()" />
     </v-dialog>
 </template>
@@ -17,6 +17,7 @@ import type { GkillError } from '../../classes/api/gkill-error';
 import type { GkillMessage } from '../../classes/api/gkill-message';
 import type EditDnoteListDialogEmits from './edit-dnote-list-dialog-emits';
 import type EditDnoteListDialogProps from './edit-dnote-list-dialog-props';
+import type DnoteListQuery from '../views/dnote-list-query';
 const is_show_dialog: Ref<boolean> = ref(false)
 
 defineExpose({ show, hide })

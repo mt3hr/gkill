@@ -2,10 +2,10 @@
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ConfirmDeleteShareKyousListView v-if="share_kyou_list_info" :application_config="application_config"
             :gkill_api="gkill_api" :share_kyou_list_info="share_kyou_list_info"
-            @requested_delete_share_kyou_link_info="(share_kyou_link_info) => emits('requested_delete_share_kyou_link_info', share_kyou_link_info)"
+            @requested_delete_share_kyou_link_info="(...share_kyou_link_info: any[]) => emits('requested_delete_share_kyou_link_info', share_kyou_link_info[0] as ShareKyousInfo)"
             @requested_close_dialog="hide()"
-            @received_errors="(errors: GkillError[]) => emits('received_errors', errors)"
-            @received_messages="(messages: GkillMessage[]) => emits('received_messages', messages)" />
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
     </v-dialog>
 </template>
 

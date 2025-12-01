@@ -1,9 +1,9 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <EditKFTLTemplateStructElementView :application_config="application_config" :gkill_api="gkill_api"
-            :struct_obj="kftl_template_struct" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_update_kftl_template_struct="(kftl_template_struct) => emits('requested_update_kftl_template_struct', kftl_template_struct)"
+            :struct_obj="kftl_template_struct" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_update_kftl_template_struct="(...kftl_template_struct: any[]) => emits('requested_update_kftl_template_struct', kftl_template_struct[0] as KFTLTemplateStruct)"
             @requested_close_dialog="hide" />
     </v-dialog>
 </template>
@@ -14,6 +14,8 @@ import type { EditKFTLTemplateStructElementDialogEmits } from './edit-kftl-templ
 import type { EditKFTLTemplateStructElementDialogProps } from './edit-kftl-template-struct-element-dialog-props'
 import EditKFTLTemplateStructElementView from '../views/edit-kftl-template-struct-element-view.vue'
 import { KFTLTemplateStruct } from '@/classes/datas/config/kftl-template-struct';
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 defineProps<EditKFTLTemplateStructElementDialogProps>()
 const emits = defineEmits<EditKFTLTemplateStructElementDialogEmits>()

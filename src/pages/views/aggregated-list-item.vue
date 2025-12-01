@@ -30,18 +30,20 @@
             :enable_dialog="true" :is_readonly_mi_check="true" :show_checkbox="true" :show_footer="false"
             :is_show_doc_image_toggle_button="true" :is_show_arrow_button="true" :show_content_only="false"
             :show_rep_name="true" :force_show_latest_kyou_info="true" :show_timeis_plaing_end_button="false"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)" @deleted_tag="(tag) => emits('deleted_tag', tag)"
-            @deleted_text="(text) => emits('deleted_text', text)"
-            @deleted_notification="(notification) => emits('deleted_notification', notification)"
-            @registered_kyou="(kyou) => emits('registered_kyou', kyou)"
-            @registered_tag="(tag) => emits('registered_tag', tag)"
-            @registered_text="(text) => emits('registered_text', text)"
-            @registered_notification="(notification) => emits('registered_notification', notification)"
-            @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
-            @updated_text="(text) => emits('updated_text', text)"
-            @updated_notification="(notification) => emits('updated_notification', notification)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
+            @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
+            @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
+            @deleted_notification="(...notification: any[]) => emits('deleted_notification', notification[0] as Notification)"
+            @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou)"
+            @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0] as Tag)"
+            @registered_text="(...text: any[]) => emits('registered_text', text[0] as Text)"
+            @registered_notification="(...notification: any[]) => emits('registered_notification', notification[0] as Notification)"
+            @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou)"
+            @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
+            @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
+            @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
             ref="kyou_list_view_dialog" />
     </v-card>
 </template>
@@ -52,6 +54,12 @@ import type AggregatedListItemProps from './aggregated-list-item-props';
 import type AggregatedListItemViewEmits from './aggregated-list-item-view-emits';
 import KyouListViewDialog from '../dialogs/kyou-list-view-dialog.vue';
 import LantanaFlowersView from './lantana-flowers-view.vue';
+import type { Kyou } from '@/classes/datas/kyou';
+import type { Text } from '@/classes/datas/text';
+import type { Tag } from '@/classes/datas/tag';
+import type { Notification } from '@/classes/datas/notification';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
 
 const kyou_list_view_dialog = ref<InstanceType<typeof KyouListViewDialog> | null>(null);
 

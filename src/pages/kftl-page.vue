@@ -35,12 +35,12 @@
                 </v-overlay>
             </div>
             <kftlView :app_content_height="app_content_height" :app_content_width="app_content_width"
-                :application_config="application_config" :gkill_api="gkill_api" @received_errors="write_errors"
-                @received_messages="write_messages" ref="kftl_view" />
+                :application_config="application_config" :gkill_api="gkill_api" @received_errors="(...errors :any[]) => write_errors(errors)"
+                @received_messages="(...messages :any[]) => write_messages(messages)" ref="kftl_view" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
-                :is_show="is_show_application_config_dialog" @received_errors="write_errors"
-                @received_messages="write_messages" @requested_reload_application_config="load_application_config"
+                :is_show="is_show_application_config_dialog" @received_errors="(...errors :any[]) => write_errors(errors)"
+                @received_messages="(...messages :any[]) => write_messages(messages)" @requested_reload_application_config="load_application_config"
                 ref="application_config_dialog" />
         </v-main>
         <div class="alert_container">

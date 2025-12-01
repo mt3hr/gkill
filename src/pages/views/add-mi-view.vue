@@ -193,8 +193,8 @@
                         <AddNotificationForAddMiView :application_config="application_config" :gkill_api="gkill_api"
                             :enable_context_menu="false" :enable_dialog="true" :highlight_targets="[]" :kyou="kyou"
                             :last_added_tag="''" :default_notification="notification" ref="add_notification_views"
-                            @received_errors="(errors) => emits('received_errors', errors)"
-                            @received_messages="(messages) => emits('received_messages', messages)" />
+                            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
                     </v-col>
                 </v-row>
             </v-col>
@@ -213,8 +213,8 @@
             </v-col>
         </v-row>
         <NewBoardNameDialog v-if="mi" :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
             ref="new_board_name_dialog" />
     </v-card>
@@ -237,8 +237,9 @@ import { Notification } from '@/classes/datas/notification'
 import { AddNotificationRequest } from '@/classes/api/req_res/add-notification-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
-import { VTimePicker } from 'vuetify/labs/components'
+import { VTimePicker } from 'vuetify/components'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const new_board_name_dialog = ref<InstanceType<typeof NewBoardNameDialog> | null>(null);
 const add_notification_views = ref<any>(null);

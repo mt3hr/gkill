@@ -6,7 +6,7 @@
     </v-app-bar>
     <v-main class="main">
         <LoginView :gkill_api="gkill_api" :app_content_height="app_content_height"
-            :app_content_width="app_content_width" @received_errors="write_errors" @received_messages="write_messages"
+            :app_content_width="app_content_width" @received_errors="(...errors :any[]) => write_errors(errors)" @received_messages="(...messages :any[]) => write_messages(messages)"
             @successed_login="handle_success_login" />
         <div class="alert_container">
             <v-slide-y-transition group>
