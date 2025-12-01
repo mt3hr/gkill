@@ -11930,9 +11930,8 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		return
 	}
 
-	_, err = g.GkillDAOManager.CloseUserRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
-		panic(err)
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
@@ -11942,6 +11941,31 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.DeleteAllLatestDataRepositoryAddress(r.Context())
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "リロードに失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
+	_, err = g.GkillDAOManager.CloseUserRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: "リロードに失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	_, err = g.GkillDAOManager.GetRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
