@@ -4,9 +4,9 @@
             <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :query="new FindKyouQuery()"
                 :checked_kyous="[]" :last_added_tag="''" :editable="true"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @received_errors="(errors) => emits('received_errors', errors)" @requested_close_dialog="hide()"
-                @requested_reload_application_config="(application_config) => emits('requested_reload_application_config', application_config)"
+                @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)" @requested_close_dialog="hide()"
+                @requested_reload_application_config="(...application_config :any[]) => emits('requested_reload_application_config', application_config [0] as ApplicationConfig)"
                 ref="dnote_view" />
         </v-card>
     </v-dialog>
@@ -18,6 +18,9 @@ import Dnote from '../views/dnote-view.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import { type EditDnoteDialogProps } from './edit-dnote-dialog-props'
 import { type EditDnoteDialogEmits } from './edit-dnote-dialog-emits'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
+import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
 
 defineProps<EditDnoteDialogProps>()

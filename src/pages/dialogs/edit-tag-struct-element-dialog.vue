@@ -2,9 +2,9 @@
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <EditTagStructElementView :application_config="application_config" :gkill_api="gkill_api"
             :struct_obj="tag_struct"
-             @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
-            @requested_update_tag_struct="(tag_struct) => emits('requested_update_tag_struct', tag_struct)"
+             @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_update_tag_struct="(...tag_struct :any[]) => emits('requested_update_tag_struct', tag_struct[0] as TagStruct)"
             @requested_close_dialog="hide" />
     </v-dialog>
 </template>
@@ -15,6 +15,8 @@ import type { EditTagStructElementDialogEmits } from './edit-tag-struct-element-
 import type { EditTagStructElementDialogProps } from './edit-tag-struct-element-dialog-props'
 import EditTagStructElementView from '../views/edit-tag-struct-element-view.vue'
 import { TagStruct } from '@/classes/datas/config/tag-struct';
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 defineProps<EditTagStructElementDialogProps>()
 const emits = defineEmits<EditTagStructElementDialogEmits>()

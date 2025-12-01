@@ -44,8 +44,8 @@
             :is_open="true" :struct_obj="cloned_application_config.parsed_tag_struct" :is_editable="false"
             :is_root="true" :is_show_checkbox="true" @clicked_items="clicked_items"
             @requested_update_check_state="update_check_state"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="foldable_struct" />
+            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" ref="foldable_struct" />
     </table>
 </template>
 <script setup lang="ts">
@@ -59,6 +59,8 @@ import FoldableStruct from './foldable-struct.vue'
 import { CheckState } from './check-state'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { FoldableStructModel } from './foldable-struct-model'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const props = defineProps<TimeIsQueryProps>()
 const emits = defineEmits<TimeIsQueryEmits>()

@@ -3,7 +3,7 @@
         <EditDnoteItemView :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
             @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)"
             @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-            @requested_update_dnote_item="(dnote_item) => emits('requested_update_dnote_item', dnote_item)"
+            @requested_update_dnote_item="(...dnote_item: any[]) => emits('requested_update_dnote_item', dnote_item[0] as DnoteItem)"
             @requested_close_dialog="hide" />
     </v-dialog>
 </template>

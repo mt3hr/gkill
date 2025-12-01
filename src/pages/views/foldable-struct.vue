@@ -40,8 +40,8 @@
                     :folder_name="get_group_name(index)" :gkill_api="gkill_api" :is_open="get_group_open(index)"
                     :struct_obj="child_struct" :is_editable="is_editable" @clicked_items="emit_click_items_by_user"
                     :is_show_checkbox="is_show_checkbox" @click_items_by_user="emit_click_items_by_user"
-                    :is_root="false" @received_errors="(errors) => emits('received_errors', errors)"
-                    @received_messages="(messages) => emits('received_messages', messages)"
+                    :is_root="false" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                    @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                     @dblclicked_item="(e: MouseEvent, id: string | null) => emits('dblclicked_item', e, id)"
                     @contextmenu_item.prevent.stop="(e: MouseEvent, id: string | null) => emits('contextmenu_item', e, id)"
                     @requested_update_check_state="(items: Array<string>, check_state: CheckState) => emits('requested_update_check_state', items, check_state)"
@@ -60,6 +60,8 @@ import type { FoldableStructProps } from './foldable-struct-props'
 import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
 import { DropTypeFoldableStruct } from '@/classes/api/drop-type-foldable-struct'
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const child_foldable_structs = ref()
 

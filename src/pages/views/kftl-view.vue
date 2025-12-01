@@ -37,8 +37,8 @@
         </table>
         <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api"
             :template="application_config.parsed_kftl_template"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @clicked_template_element_leaf="paste_template" ref="kftl_template_dialog" />
     </v-card>
 </template>

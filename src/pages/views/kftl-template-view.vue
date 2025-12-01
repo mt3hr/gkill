@@ -16,9 +16,9 @@
                 :key="template.id!" @click="clicked_template_button(template, index)">
                 {{ template.title }}
                 <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api" :template="template"
-                    @received_errors="(errors) => emits('received_errors', errors)"
-                    @received_messages="(messages) => emits('received_messages', messages)"
-                    @clicked_template_element_leaf="(template) => emits('clicked_template_element_leaf', template)"
+                    @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                    @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                    @clicked_template_element_leaf="(...template: any[]) => emits('clicked_template_element_leaf', template[0] as KFTLTemplateElementData)"
                     @requested_close_dialog="emits('requested_close_dialog')" ref="child_template_dialogs" />
             </v-btn>
         </div>
@@ -31,6 +31,8 @@ import { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-d
 import KFTLTemplateDialog from '../dialogs/kftl-template-dialog.vue';
 import type { KFTLTemplateViewProps } from './kftl-template-view-props';
 import type { KFTLTemplateViewEmits } from './kftl-template-view-emits';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
 
 const child_template_dialogs: Ref<Array<any>> = ref(new Array<any>())
 

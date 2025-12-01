@@ -12,7 +12,7 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="show_manage_account_dialog">{{
                         i18n.global.t("MANAGE_ACCOUNT_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -127,24 +127,30 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CANCEL_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
         <ConfirmGenerateTLSFilesDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_config="server_config" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            :server_config="server_config"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             ref="confirm_generate_tls_files_dialog" />
         <CreateAccountDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_configs="server_configs" @received_errors="(errors) => emits('received_errors', errors)"
+            :server_configs="server_configs"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @requested_reload_server_config="() => emits('requested_reload_server_config')"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="create_account_dialog" />
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            ref="create_account_dialog" />
         <ManageAccountDialog :application_config="application_config" :gkill_api="gkill_api"
-            :server_configs="server_configs" @received_errors="(errors) => emits('received_errors', errors)"
+            :server_configs="server_configs"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @requested_reload_server_config="() => emits('requested_reload_server_config')"
-            @received_messages="(messages) => emits('received_messages', messages)" ref="manage_account_dialog" />
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            ref="manage_account_dialog" />
         <NewDeviceNameDialog :gkill_api="gkill_api" :application_config="application_config"
-            @setted_new_device_name="(device_name) => add_device(device_name)" ref="new_device_name_dialog" />
+            @setted_new_device_name="(...device_name: any[]) => add_device(device_name[0] as string)"
+            ref="new_device_name_dialog" />
     </v-card>
 </template>
 <script setup lang="ts">
@@ -161,6 +167,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { UpdateServerConfigsRequest } from '@/classes/api/req_res/update-server-configs-request'
 import NewDeviceNameDialog from '../dialogs/new-device-name-dialog.vue'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const confirm_generate_tls_files_dialog = ref<InstanceType<typeof ConfirmGenerateTLSFilesDialog> | null>(null);
 const manage_account_dialog = ref<InstanceType<typeof ManageAccountDialog> | null>(null);

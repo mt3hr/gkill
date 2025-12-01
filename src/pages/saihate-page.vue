@@ -49,41 +49,41 @@
             </v-avatar>
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors)" @received_messages="(...messages :any[]) => write_messages(messages)"
                 ref="add_kc_dialog" />
             <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors)" @received_messages="(...messages :any[]) => write_messages(messages)"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors)" @received_messages="(...messages :any[]) => write_messages(messages)"
                 ref="add_lantana_dialog" />
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors)" @received_messages="(...messages :any[]) => write_messages(messages)"
                 ref="add_urlog_dialog" />
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors)" @received_messages="(...messages :any[]) => write_messages(messages)"
                 ref="add_mi_dialog" />
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="write_errors" @received_messages="write_messages"
+                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors)" @received_messages="(...messages :any[]) => write_messages(messages)"
                 ref="add_nlog_dialog" />
             <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                :app_content_width="app_content_width" @received_errors="write_errors"
-                @received_messages="write_messages" ref="kftl_dialog" />
+                :app_content_width="app_content_width" @received_errors="(...errors :any[]) => write_errors(errors)"
+                @received_messages="(...messages :any[]) => write_messages(messages)" ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                :app_content_width="app_content_width" @received_errors="write_errors"
-                @received_messages="write_messages" ref="mkfl_dialog" />
+                :app_content_width="app_content_width" @received_errors="(...errors :any[]) => write_errors(errors)"
+                @received_messages="(...messages :any[]) => write_messages(messages)" ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
-                @received_errors="write_errors" @received_messages="write_messages" ref="upload_file_dialog" />
+                @received_errors="(...errors :any[]) => write_errors(errors)" @received_messages="(...messages :any[]) => write_messages(messages)" ref="upload_file_dialog" />
         </v-main>
         <div class="alert_container">
             <v-slide-y-transition group>

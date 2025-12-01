@@ -1,8 +1,8 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <EditDeviceStructView :application_config="application_config" :gkill_api="gkill_api"
-            :device_struct="application_config.device_struct" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            :device_struct="application_config.device_struct" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_application_config="emits('requested_reload_application_config')"
             @requested_close_dialog="hide" />
     </v-dialog>
@@ -13,6 +13,8 @@ import { type Ref, ref } from 'vue'
 import type { EditDeviceStructDialogEmits } from './edit-device-struct-dialog-emits.ts'
 import type { EditDeviceStructDialogProps } from './edit-device-struct-dialog-props.ts'
 import EditDeviceStructView from '../views/edit-device-struct-view.vue'
+import type { GkillError } from '@/classes/api/gkill-error.js'
+import type { GkillMessage } from '@/classes/api/gkill-message.js'
 
 defineProps<EditDeviceStructDialogProps>()
 const emits = defineEmits<EditDeviceStructDialogEmits>()

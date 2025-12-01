@@ -19,7 +19,7 @@
                     {{ finished_aggregate_task }}/{{ estimate_aggregate_task }}
                 </div>
                 <div class="align-center justify-center overlay_message">{{ i18n.global.t('DNOTE_PLEASE_WAIT_MESSAGE')
-                }}</div>
+                    }}</div>
             </div>
         </v-overlay>
         <h1>
@@ -38,28 +38,34 @@
             </v-row>
         </h1>
         <DnoteItemTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-            v-model="dnote_item_table_view_data" @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)"
-            @deleted_tag="(tag) => emits('deleted_tag', tag)" @deleted_text="(text) => emits('deleted_text', text)"
-            @deleted_notification="(notification) => emits('deleted_notification', notification)"
-            @registered_kyou="(kyou) => emits('registered_kyou', kyou)"
-            @registered_tag="(tag) => emits('registered_tag', tag)"
-            @registered_text="(text) => emits('registered_text', text)"
-            @registered_notification="(notification) => emits('registered_notification', notification)"
-            @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
-            @updated_text="(text) => emits('updated_text', text)"
-            @updated_notification="(notification) => emits('updated_notification', notification)"
+            v-model="dnote_item_table_view_data"
+            @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
+            @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
+            @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
+            @deleted_notification="(...notification: any[]) => emits('deleted_notification', notification[0] as Notification)"
+            @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou)"
+            @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0] as Tag)"
+            @registered_text="(...text: any[]) => emits('registered_text', text[0] as Text)"
+            @registered_notification="(...notification: any[]) => emits('registered_notification', notification[0] as Notification)"
+            @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou)"
+            @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
+            @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
+            @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
             @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_item_table_view" />
         <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-            v-model="dnote_list_item_table_view_data" @deleted_kyou="(kyou) => emits('deleted_kyou', kyou)"
-            @deleted_tag="(tag) => emits('deleted_tag', tag)" @deleted_text="(text) => emits('deleted_text', text)"
-            @deleted_notification="(notification) => emits('deleted_notification', notification)"
-            @registered_kyou="(kyou) => emits('registered_kyou', kyou)"
-            @registered_tag="(tag) => emits('registered_tag', tag)"
-            @registered_text="(text) => emits('registered_text', text)"
-            @registered_notification="(notification) => emits('registered_notification', notification)"
-            @updated_kyou="(kyou) => emits('updated_kyou', kyou)" @updated_tag="(tag) => emits('updated_tag', tag)"
-            @updated_text="(text) => emits('updated_text', text)"
-            @updated_notification="(notification) => emits('updated_notification', notification)"
+            v-model="dnote_list_item_table_view_data"
+            @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
+            @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
+            @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
+            @deleted_notification="(...notification: any[]) => emits('deleted_notification', notification[0] as Notification)"
+            @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou)"
+            @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0] as Tag)"
+            @registered_text="(...text: any[]) => emits('registered_text', text[0] as Text)"
+            @registered_notification="(...notification: any[]) => emits('registered_notification', notification[0] as Notification)"
+            @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou)"
+            @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
+            @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
+            @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
             @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_list_table_view" />
         <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
             <v-menu transition="slide-x-transition">
@@ -83,20 +89,22 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" @requested_add_dnote_list_query="(dnote_list_query) => {
-                dnote_list_item_table_view_data.push(dnote_list_query)
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_add_dnote_list_query="(...dnote_list_query: any[]) => {
+                dnote_list_item_table_view_data.push(dnote_list_query[0] as DnoteListQuery)
                 load_aggregated_value(abort_controller, [], new FindKyouQuery(), true);
                 load_aggregate_grouping_list(abort_controller, [], new FindKyouQuery(), true)
             }" ref="add_dnote_list_dialog" />
         <AddDnoteItemDialog :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)" @requested_add_dnote_item="(dnote_item) => {
-                dnote_item_table_view_data[0].push(dnote_item);
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_add_dnote_item="(...dnote_item: any[]) => {
+                dnote_item_table_view_data[0].push(dnote_item[0] as DnoteItem);
                 load_aggregated_value(abort_controller, [], new FindKyouQuery(), true);
                 load_aggregate_grouping_list(abort_controller, [], new FindKyouQuery(), true)
             }" ref="add_dnote_item_dialog" />
@@ -109,7 +117,6 @@ import DnoteItemTableView from './dnote-item-table-view.vue';
 import DnoteListTableView from './dnote-list-table-view.vue';
 import { computed, nextTick, ref, watch, type Ref } from 'vue';
 import { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
-import type { Kyou } from '../../classes/datas/kyou';
 import DnoteItem from '../../classes/dnote/dnote-item';
 import DnoteListQuery from './dnote-list-query';
 import AddDnoteListDialog from '../../pages/dialogs/add-dnote-list-dialog.vue';
@@ -119,6 +126,12 @@ import regist_dictionary, { build_dnote_aggregate_target_from_json, build_dnote_
 import { UpdateDnoteJSONDataRequest } from '@/classes/api/req_res/update-dnote-json-data-request';
 import moment from 'moment';
 import { saveAs } from '@/classes/save-as';
+import type { Kyou } from '../../classes/datas/kyou';
+import type { Text } from '@/classes/datas/text';
+import type { Tag } from '@/classes/datas/tag';
+import type { Notification } from '@/classes/datas/notification';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
 
 const dnote_item_table_view = ref<InstanceType<typeof DnoteItemTableView> | null>(null);
 const dnote_list_table_view = ref<InstanceType<typeof DnoteListTableView> | null>(null);

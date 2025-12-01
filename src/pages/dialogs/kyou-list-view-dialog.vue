@@ -8,16 +8,16 @@
                 :show_checkbox="true" :show_footer="false" :is_show_doc_image_toggle_button="true"
                 :is_show_arrow_button="true" :show_content_only="false" :show_timeis_plaing_end_button="false"
                 :show_rep_name="show_rep_name" :force_show_latest_kyou_info="force_show_latest_kyou_info"
-                @received_errors="(errors) => emits('received_errors', errors)"
-                @received_messages="(messages) => emits('received_messages', messages)"
-                @requested_reload_kyou="(kyou) => emits('requested_reload_kyou', kyou)" ref="kyou_list_views"
-                @deleted_kyou="(deleted_kyou) => { /* reload_list(index); reload_kyou(deleted_kyou); */ }"
-                @deleted_tag="(deleted_tag) => { }" @deleted_text="(deleted_text) => { }"
-                @deleted_notification="(deleted_notification) => { }" @registered_kyou="(registered_kyou) => { }"
-                @registered_tag="(registered_tag) => { }" @registered_text="(registered_text) => { }"
-                @registered_notification="(registered_notification) => { }"
-                @updated_kyou="(updated_kyou) => reload_kyou(updated_kyou)" @updated_tag="(updated_tag) => { }"
-                @updated_text="(updated_text) => { }" @updated_notification="(updated_notification) => { }" />
+                @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)" ref="kyou_list_views"
+                @deleted_kyou="(...deleted_kyou :any[]) => { /* reload_list(index); reload_kyou(deleted_kyou); */ }"
+                @deleted_tag="(...deleted_tag: any[]) => { }" @deleted_text="(...deleted_text :any[]) => { }"
+                @deleted_notification="(...deleted_notification :any[]) => { }" @registered_kyou="(...registered_kyou :any[]) => { }"
+                @registered_tag="(...registered_tag :any[]) => { }" @registered_text="(...registered_text: any[]) => { }"
+                @registered_notification="(...registered_notification: any[]) => { }"
+                @updated_kyou="(...updated_kyou :any[]) => reload_kyou(updated_kyou[0])" @updated_tag="(...updated_tag :any[]) => { }"
+                @updated_text="(...updated_text: any[]) => { }" @updated_notification="(...updated_notification :any[]) => { }" />
 
         </v-card>
     </v-dialog>
@@ -30,6 +30,8 @@ import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
 import type { Kyou } from '@/classes/datas/kyou';
 import type { KyouListViewDialogProps } from './kyou-list-view-dialog-props';
 import type { KyouListViewEmits } from '../views/kyou-list-view-emits';
+import type { GkillError } from '@/classes/api/gkill-error';
+import type { GkillMessage } from '@/classes/api/gkill-message';
 
 defineProps<KyouListViewDialogProps>()
 const model_value = defineModel<Array<Kyou>>()

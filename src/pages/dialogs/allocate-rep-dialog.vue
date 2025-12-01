@@ -1,8 +1,8 @@
 <template>
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <AllocateRepView :application_config="application_config" :gkill_api="gkill_api" :server_configs="server_configs"
-            :account="cloned_account" @received_errors="(errors) => emits('received_errors', errors)"
-            @received_messages="(messages) => emits('received_messages', messages)"
+            :account="cloned_account" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_server_config="() => emits('requested_reload_server_config')"
             @requested_close_dialog="hide" />
     </v-dialog>
@@ -14,6 +14,8 @@ import type { AllocateRepDialogEmits } from './allocate-rep-dialog-emits'
 import type { AllocateRepDialogProps } from './allocate-rep-dialog-props'
 import AllocateRepView from '../views/allocate-rep-view.vue'
 import { Account } from '@/classes/datas/config/account';
+import type { GkillError } from '@/classes/api/gkill-error'
+import type { GkillMessage } from '@/classes/api/gkill-message'
 
 defineProps<AllocateRepDialogProps>()
 const emits = defineEmits<AllocateRepDialogEmits>()
