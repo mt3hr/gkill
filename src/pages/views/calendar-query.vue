@@ -6,8 +6,8 @@
         </v-col>
         <v-spacer class="pa-0 ma-0" />
         <v-col cols="auto" class="pb-0 mb-0 pr-0">
-            <v-btn dark color="secondary" @click="clicked_clear_calendar_button"
-                hide-details>{{ i18n.global.t("CLEAR_TITLE") }}</v-btn>
+            <v-btn dark color="secondary" @click="clicked_clear_calendar_button" hide-details>{{
+                i18n.global.t("CLEAR_TITLE") }}</v-btn>
         </v-col>
     </v-row>
     <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates"
@@ -69,9 +69,9 @@ function clicked_date(recved_dates: any): void {
 // カレンダーでホイールが転がされた時、下ならカレンダーを次の年月へ、上ならカレンダーを前の年月へ
 function on_wheel(e: any) {
     if (0 < e.deltaY) {
-        document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(2)").forEach((el) => { (el as any).click() })
+        document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(3) > span.v-btn__content > i").forEach((el) => { (el as any).click() })
     } else {
-        document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(1)").forEach((el) => { (el as any).click() })
+        document.querySelectorAll("div.v-sheet.v-picker.v-date-picker.v-date-picker--month > div.v-picker__body > div.v-date-picker-controls > div.v-date-picker-controls__month > button:nth-child(1) > span.v-btn__content > i").forEach((el) => { (el as any).click() })
     }
 }
 
@@ -104,5 +104,9 @@ div.v-sheet.v-picker.v-date-picker.v-date-picker--year>div:nth-child(1),
 div.v-sheet.v-picker.v-date-picker.v-date-picker--month>div:nth-child(1),
 div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
     display: none;
+}
+
+.v-date-picker-month {
+    padding-left: 0px !important;
 }
 </style>
