@@ -36,10 +36,14 @@ watch(() => props.application_config, async () => {
 })
 
 watch(() => props.find_kyou_query, () => {
-    query.value = props.find_kyou_query.clone()
+    if (props.find_kyou_query) {
+        query.value = props.find_kyou_query.clone()
+    } else {
+        query.value = new FindKyouQuery()
+    }
 
-    const start_date = moment(props.find_kyou_query.calendar_start_date)
-    const end_date = moment(props.find_kyou_query.calendar_end_date)
+    const start_date = moment(query.value.calendar_start_date)
+    const end_date = moment(query.value.calendar_end_date)
     const date_list = Array<Date>()
     if (query.value.calendar_start_date && query.value.calendar_end_date) {
         for (let date = start_date; date.unix() <= end_date.unix(); date = date.add(1, 'day')) {
