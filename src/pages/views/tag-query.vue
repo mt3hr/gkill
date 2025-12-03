@@ -84,6 +84,9 @@ watch(() => props.application_config, async () => {
 })
 
 watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
+    if (!new_value) {
+        return
+    }
     loading.value = true
     old_cloned_query.value = old_value
     cloned_query.value = new_value.clone()

@@ -1,6 +1,6 @@
 <template>
-    <v-dialog :width="'fit-content'" v-model="is_show_dialog" class="kyou_dialog">
-        <v-card v-if="is_show_dialog" class="pa-2" :width="'fit-content'">
+    <v-dialog :width="'fit-content'" v-model="is_show_dialog" class="kyou_list_view_dialog kyou_dialog">
+        <v-card v-if="is_show_dialog" class="kyou_list_view_dialog_view pa-2" :width="'fit-content'">
             <KyouListView :kyou_height="180" :width="400" :list_height="list_height"
                 :application_config="application_config" :gkill_api="gkill_api" :matched_kyous="model_value!"
                 :query="new FindKyouQuery()" :last_added_tag="last_added_tag" :is_focused_list="true" :closable="false"
@@ -8,17 +8,28 @@
                 :show_checkbox="true" :show_footer="false" :is_show_doc_image_toggle_button="true"
                 :is_show_arrow_button="true" :show_content_only="false" :show_timeis_plaing_end_button="false"
                 :show_rep_name="show_rep_name" :force_show_latest_kyou_info="force_show_latest_kyou_info"
-                @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)" ref="kyou_list_views"
-                @deleted_kyou="(...deleted_kyou :any[]) => { /* reload_list(index); reload_kyou(deleted_kyou); */ }"
-                @deleted_tag="(...deleted_tag: any[]) => { }" @deleted_text="(...deleted_text :any[]) => { }"
-                @deleted_notification="(...deleted_notification :any[]) => { }" @registered_kyou="(...registered_kyou :any[]) => { }"
-                @registered_tag="(...registered_tag :any[]) => { }" @registered_text="(...registered_text: any[]) => { }"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
+                ref="kyou_list_views"
+                @deleted_kyou="(...deleted_kyou: any[]) => { /* reload_list(index); reload_kyou(deleted_kyou); */ }"
+                @deleted_tag="(...deleted_tag: any[]) => { }" @deleted_text="(...deleted_text: any[]) => { }"
+                @deleted_notification="(...deleted_notification: any[]) => { }"
+                @registered_kyou="(...registered_kyou: any[]) => { }"
+                @registered_tag="(...registered_tag: any[]) => { }"
+                @registered_text="(...registered_text: any[]) => { }"
                 @registered_notification="(...registered_notification: any[]) => { }"
-                @updated_kyou="(...updated_kyou :any[]) => reload_kyou(updated_kyou[0])" @updated_tag="(...updated_tag :any[]) => { }"
-                @updated_text="(...updated_text: any[]) => { }" @updated_notification="(...updated_notification :any[]) => { }" />
-
+                @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
+                @updated_tag="(...updated_tag: any[]) => { }" @updated_text="(...updated_text: any[]) => { }"
+                @updated_notification="(...updated_notification: any[]) => { }" />
+            <v-card :ripple="false" :link="false">
+                <v-row no-gutters>
+                    <v-col v-if="model_value && model_value.length" cols="auto" class="py-3">
+                        {{ model_value.length }}{{ i18n.global.t("N_COUNT_ITEMS_TITLE") }}
+                    </v-col>
+                    <v-spacer />
+                </v-row>
+            </v-card>
         </v-card>
     </v-dialog>
 </template>
@@ -63,3 +74,16 @@ async function reload_kyou(kyou: Kyou): Promise<void> {
     })();
 }
 </script>
+
+<style scoped lang="css">
+.kyou_list_view_dialog_view,
+.kyou_list_view_dialog {
+    overflow-y: hidden !important;
+}
+
+.kyou_detail_view,
+.kyou_list_view,
+.v-dialog .v-card {
+    overflow-y: hidden !important;
+}
+</style>
