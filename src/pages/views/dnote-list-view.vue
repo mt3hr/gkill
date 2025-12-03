@@ -1,7 +1,7 @@
 <template>
     <div>
         <h2>{{ model_value?.title ? model_value.title : "" }}</h2>
-        <v-virtual-scroll :items="aggregated_items" :height="'50vh'" :width="200 + 8"
+        <v-virtual-scroll class="dnote_list_view" :items="aggregated_items" :height="'50vh'" :width="200 + 8"
             @contextmenu.prevent.stop="(e: any) => { if (editable) { contextmenu?.show(e, model_value!.id) } }"
             ref=" list_view">
             <template v-slot:default="{ item }">
@@ -26,6 +26,14 @@
                     @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)" />
             </template>
         </v-virtual-scroll>
+        <v-card :ripple="false" :link="false">
+            <v-row no-gutters>
+                <v-col v-if="aggregated_items && aggregated_items.length" cols="auto" class="py-3">
+                    {{ aggregated_items.length }}{{ i18n.global.t("N_COUNT_ITEMS_TITLE") }}
+                </v-col>
+                <v-spacer />
+            </v-row>
+        </v-card>
         <DnoteListQueryContextMenu :application_config="application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
