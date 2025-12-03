@@ -6,8 +6,10 @@
                 :is_open="true" :struct_obj="cloned_application_config.parsed_mi_boad_struct" :is_editable="false"
                 :is_root="true" :is_show_checkbox="false"
                 @clicked_items="(event: MouseEvent, items: string[], check_state: CheckState, is_by_user: boolean) => { if (is_by_user && check_state === CheckState.checked) { items.forEach((board) => { board_name = board; emits('request_open_focus_board', board) }) } }"
-                @requested_update_check_state="[]" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" ref="foldable_struct" />
+                @requested_update_check_state="[]"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                ref="foldable_struct" />
         </table>
     </div>
 </template>
@@ -47,6 +49,9 @@ watch(() => props.application_config, async () => {
 })
 
 watch(() => props.find_kyou_query, async () => {
+    if (!props.find_kyou_query) {
+        return
+    }
     cloned_query.value = props.find_kyou_query.clone()
     board_name.value = cloned_query.value.mi_board_name
 })

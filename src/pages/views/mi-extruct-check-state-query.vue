@@ -28,6 +28,9 @@ const query = ref(props.find_kyou_query.clone())
 defineExpose({ get_update_extruct_check_state })
 
 watch(() => props.find_kyou_query, () => {
+    if (!props.find_kyou_query) {
+        return
+    }
     query.value = props.find_kyou_query.clone()
     load_check_state()
 })

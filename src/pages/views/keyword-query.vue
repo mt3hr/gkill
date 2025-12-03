@@ -39,6 +39,9 @@ defineExpose({ get_keywords, get_use_words, get_use_word_and_search })
 const cloned_find_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
 
 watch(() => props.find_kyou_query, () => {
+    if (!props.find_kyou_query) {
+        return
+    }
     cloned_find_query.value = props.find_kyou_query.clone()
     emits('inited')
 })

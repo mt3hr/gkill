@@ -1,6 +1,6 @@
 <template>
-    <v-card :ripple="false" :link="false" @click.prevent="emits('clicked_list_view')">
-        <v-card :ripple="false" :link="false">
+    <v-card class="kyou_list_view_card_wrap" :ripple="false" :link="false" @click.prevent="emits('clicked_list_view')">
+        <v-card class="kyou_list_view_card" :ripple="false" :link="false">
             <v-overlay v-model="is_loading" class="align-center justify-center" contained persistent>
                 <v-progress-circular indeterminate color="primary" />
             </v-overlay>
@@ -21,13 +21,14 @@
                         :show_rep_name="show_rep_name" :force_show_latest_kyou_info="force_show_latest_kyou_info"
                         :show_update_time="false"
                         :show_related_time="!(query.for_mi && item.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
-                        :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                        :enable_dialog="enable_dialog"
+                        @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                         :height="kyou_height.valueOf()" :show_attached_tags="application_config.show_tags_in_list"
                         :show_attached_texts="false" :show_attached_notifications="false"
-                        @clicked_kyou="(...kyou :any[]) => emits('clicked_kyou', kyou[0] as Kyou)"
-                        @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+                        @clicked_kyou="(...kyou: any[]) => emits('clicked_kyou', kyou[0] as Kyou)"
+                        @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
                         @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-                        @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"
+                        @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                         @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
                         @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
                         @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
@@ -37,7 +38,7 @@
                         @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
                         @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
                         @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-                        @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                        @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                         @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                         @requested_reload_list="emits('requested_reload_list')"
                         @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
@@ -66,9 +67,9 @@
                                     :show_related_time="!(query.for_mi && kyou.data_type === 'mi_create' && (query.include_start_mi || query.include_end_mi || query.include_limit_mi))"
                                     :show_attached_tags="false" :show_attached_texts="false"
                                     :show_attached_notifications="false"
-                                    @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+                                    @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
                                     @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-                                    @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"
+                                    @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                                     @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
                                     @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
                                     @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
@@ -78,9 +79,9 @@
                                     @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
                                     @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
                                     @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-                                    @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                                    @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                                     @clicked_kyou="(...kyou: any[]) => emits('clicked_kyou', kyou[0] as Kyou)"
-                                    @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                                    @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                                     @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                                     @requested_reload_list="emits('requested_reload_list')"
                                     @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
@@ -273,5 +274,10 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
 .focused_list>* {
     background-color: rgb(var(--v-theme-background-focused));
+}
+</style>
+<style lang="css" scoped>
+.kyou_list_view_card_wrap .kyou_list_view_card {
+    overflow-y: hidden !important;
 }
 </style>
