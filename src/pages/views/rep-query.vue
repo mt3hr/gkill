@@ -22,8 +22,8 @@
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="false"
                         :struct_obj="cloned_application_config.parsed_device_struct"
                         @requested_update_check_state="update_devices"
-                        @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                        @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                        @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                        @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                         @clicked_items="clicked_devices" ref="foldable_struct_devices" />
                 </table>
                 <h2>{{ i18n.global.t("REP_QUERY_TYPES_TITLE") }}</h2>
@@ -32,8 +32,8 @@
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true"
                         :struct_obj="cloned_application_config.parsed_rep_type_struct"
                         @requested_update_check_state="update_rep_types"
-                        @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                        @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                        @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                        @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                         @clicked_items="clicked_rep_types" ref="foldable_struct_rep_types" />
                 </table>
             </v-window-item>
@@ -44,8 +44,8 @@
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true"
                         :struct_obj="cloned_application_config.parsed_rep_struct"
                         @requested_update_check_state="update_reps"
-                        @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                        @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                        @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                        @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                         @clicked_items="clicked_reps" ref="foldable_struct_reps" />
                 </table>
             </v-window-item>
@@ -139,6 +139,9 @@ watch(() => props.application_config, async (_new_application_config: Applicatio
 })
 
 watch(() => props.find_kyou_query, async (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
+    if (!new_value) {
+        return
+    }
     loading.value = true
     cloned_query.value = new_value.clone()
     old_cloned_query.value = old_value
@@ -188,7 +191,7 @@ function update_rep_types(items: Array<string>, is_checked: CheckState) {
     update_check_rep_types(items, is_checked, false)
 }
 
-function update_check_reps(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean){
+function update_check_reps(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean) {
     if (pre_uncheck_all) {
         let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {
@@ -236,7 +239,7 @@ function update_check_reps(items: Array<string>, is_checked: CheckState, pre_unc
     foldable_struct_reps.value?.update_check()
 }
 
-function update_check_devices(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean){
+function update_check_devices(items: Array<string>, is_checked: CheckState, pre_uncheck_all: boolean) {
     if (pre_uncheck_all) {
         let f = (_struct: FoldableStructModel) => { }
         let func = (struct: FoldableStructModel) => {

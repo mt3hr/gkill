@@ -65,7 +65,7 @@ const circle = computed(() => {
 })
 
 watch(() => props.find_kyou_query, () => {
-    if (JSON.stringify(query.value) === JSON.stringify(props.find_kyou_query)) {
+    if (!props.find_kyou_query || JSON.stringify(query.value) === JSON.stringify(props.find_kyou_query)) {
         return
     }
     query.value = props.find_kyou_query.clone()

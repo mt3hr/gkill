@@ -58,6 +58,9 @@ update_events()
 
 function update_events(): void {
     events.value.splice(0)
+    if (!props.kyous) {
+        return
+    }
     const date_event_map: Map<string, Number> = new Map<string, Number>()
     for (let i = 0; i < props.kyous.length; i++) {
         const kyou = props.kyous[i]
@@ -131,8 +134,12 @@ function add_months(date: Date, diff: number) {
     width: unset !important
 }
 
-.v-calendar-weekly.v-calendar.v-calendar-events {
+.v-calendar-weekly.v-calendar {
     height: 430px !important;
+}
+
+.v-calendar-weekly__head {
+    width: 300px !important;
 }
 
 .calendar_date {

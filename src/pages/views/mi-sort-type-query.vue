@@ -2,7 +2,8 @@
     <div>
         <v-row class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-checkbox v-model="use_sort_type" hide-details class="pa-0 ma-0" readonly :label="i18n.global.t('SORT_TITLE')" />
+                <v-checkbox v-model="use_sort_type" hide-details class="pa-0 ma-0" readonly
+                    :label="i18n.global.t('SORT_TITLE')" />
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pb-0 mb-0 pr-0">
@@ -28,6 +29,9 @@ const query = ref(props.find_kyou_query.clone())
 defineExpose({ get_sort_type })
 
 watch(() => props.find_kyou_query, () => {
+    if (!props.find_kyou_query) {
+        return
+    }
     query.value = props.find_kyou_query.clone()
     load_sort_type()
 })
