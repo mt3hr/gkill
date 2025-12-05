@@ -76,10 +76,10 @@ export class ApplicationConfig {
         application_config.rykv_image_list_column_number = this.rykv_image_list_column_number
         application_config.rykv_hot_reload = this.rykv_hot_reload
         application_config.mi_default_board = this.mi_default_board
-        application_config.tag_struct = this.tag_struct
-        application_config.rep_struct = this.rep_struct
-        application_config.device_struct = this.device_struct
-        application_config.rep_type_struct = this.rep_type_struct
+        application_config.tag_struct = (JSON.parse(JSON.stringify(this.tag_struct)) as Array<TagStruct>)
+        application_config.rep_struct = (JSON.parse(JSON.stringify(this.rep_struct)) as Array<RepStruct>)
+        application_config.device_struct = (JSON.parse(JSON.stringify(this.device_struct)) as Array<DeviceStruct>)
+        application_config.rep_type_struct = (JSON.parse(JSON.stringify(this.rep_type_struct)) as Array<RepTypeStruct>)
         application_config.kftl_template_struct = this.kftl_template_struct
         application_config.account_is_admin = this.account_is_admin
         application_config.dnote_json_data = this.dnote_json_data
@@ -91,11 +91,11 @@ export class ApplicationConfig {
         application_config.is_show_share_footer = this.is_show_share_footer
         application_config.show_tags_in_list = this.show_tags_in_list
         application_config.default_page = this.default_page
-        application_config.parsed_tag_struct = this.parsed_tag_struct
-        application_config.parsed_rep_struct = this.parsed_rep_struct
-        application_config.parsed_rep_type_struct = this.parsed_rep_type_struct
-        application_config.parsed_device_struct = this.parsed_device_struct
-        application_config.parsed_kftl_template = this.parsed_kftl_template
+        application_config.parsed_tag_struct = JSON.parse(JSON.stringify(this.parsed_tag_struct))
+        application_config.parsed_rep_struct = JSON.parse(JSON.stringify(this.parsed_rep_struct))
+        application_config.parsed_rep_type_struct = JSON.parse(JSON.stringify(this.parsed_rep_type_struct))
+        application_config.parsed_device_struct = JSON.parse(JSON.stringify(this.parsed_device_struct))
+        application_config.parsed_kftl_template = JSON.parse(JSON.stringify(this.parsed_kftl_template))
         application_config.parsed_mi_boad_struct = this.parsed_mi_boad_struct
         return application_config
     }
