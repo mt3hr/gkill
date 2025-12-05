@@ -35,12 +35,12 @@
                 </v-overlay>
             </div>
             <MkflView :app_content_height="app_content_height" :app_content_width="app_content_width"
-                :application_config="application_config" :gkill_api="gkill_api" @received_errors="(...errors :any[]) => write_errors(errors)"
-                @received_messages="(...messages :any[]) => write_messages(messages)" />
+                :application_config="application_config" :gkill_api="gkill_api" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
-                :is_show="is_show_application_config_dialog" @received_errors="(...errors :any[]) => write_errors(errors)"
-                @received_messages="(...messages :any[]) => write_messages(messages)" @requested_reload_application_config="load_application_config"
+                :is_show="is_show_application_config_dialog" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)" @requested_reload_application_config="load_application_config"
                 ref="application_config_dialog" />
         </v-main>
         <div class="alert_container">

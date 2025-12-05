@@ -42,12 +42,12 @@
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :show_attached_timeis="true"
                 :show_update_time="false" :show_related_time="true" :width="'fit-content'" :is_readonly_mi_check="false"
                 :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
-                :show_rep_name="true" :force_show_latest_kyou_info="true" @received_errors="(...errors :any[]) => write_errors(errors)"
-                @received_messages="(...messages :any[]) => write_messages(messages)" />
+                :show_rep_name="true" :force_show_latest_kyou_info="true" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
-                :is_show="is_show_application_config_dialog" @received_errors="(...errors :any[]) => write_errors(errors)"
-                @received_messages="(...messages :any[]) => write_messages(messages)" @requested_reload_application_config="load_application_config"
+                :is_show="is_show_application_config_dialog" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)" @requested_reload_application_config="load_application_config"
                 ref="application_config_dialog" />
         </v-main>
         <div class="alert_container">
