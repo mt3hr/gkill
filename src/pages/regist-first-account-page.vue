@@ -6,8 +6,8 @@
     </v-app-bar>
     <v-main class="main">
         <RegistFirstAccountView :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="new ApplicationConfig()" :gkill_api="gkill_api" @received_errors="(...errors :any[]) => write_errors(errors)"
-            @received_messages="(...messages :any[]) => write_messages(messages)" />
+            :application_config="new ApplicationConfig()" :gkill_api="gkill_api" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)"
+            @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)" />
         <div class="alert_container">
             <v-slide-y-transition group>
                 <v-alert v-for="message in messages" theme="dark" :key="message.id">
