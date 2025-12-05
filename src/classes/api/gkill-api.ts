@@ -2445,7 +2445,6 @@ export class GkillAPI {
 
         async reload_repositories(req: ReloadRepositoriesRequest): Promise<ReloadRepositoriesResponse> {
                 await delete_gkill_kyou_cache(null)
-                this.set_last_cache_update_time(new Date(0))
                 const res = await fetch(this.reload_repositories_address, {
                         'method': this.reload_repositories_method,
                         headers: {
