@@ -490,5 +490,7 @@
     "ADD_MI_BOARD_TITLE": "板名追加",
     "MANAGE_SHARE_KYOU_TITLE": "共有管理",
     "RANGE_TITLE": "範囲",
-    "DAY_TITLE": "日"
+    "DAY_TITLE": "日",
+    "DO_RELOAD_TITLE": "再読込します",
+    "REQUESTED_RELOAD_TITLE": "再読込を開始します。しばらくお待ちください。"
 }
