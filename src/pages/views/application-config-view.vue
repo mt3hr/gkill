@@ -15,7 +15,7 @@
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="reload_repositories()">{{ i18n.global.t("RELOAD_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="logout()" color="primary">{{ i18n.global.t("LOGOUT_TITLE") }}</v-btn>
@@ -118,13 +118,13 @@
                     <td>
                         <v-btn dark color="primary" @click="show_edit_tag_dialog">{{
                             i18n.global.t("EDIT_TAG_STRUCT_TITLE")
-                        }}</v-btn>
+                            }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_dialog">{{
                             i18n.global.t("EDIT_REP_STRUCT_TITLE")
-                        }}</v-btn>
+                            }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_device_dialog">{{
                             i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
-                        }}</v-btn>
+                            }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                             i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
                     </td>
@@ -145,13 +145,13 @@
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="update_application_config" color="primary">{{ i18n.global.t("APPLY_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CANCEL_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -233,7 +233,8 @@ import { useTheme } from 'vuetify'
 import EditRyuuDialog from '../dialogs/edit-ryuu-dialog.vue'
 import delete_gkill_kyou_cache, { delete_gkill_config_cache } from '@/classes/delete-gkill-cache'
 import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
+import { GkillMessage } from '@/classes/api/gkill-message'
+import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 
 const theme = useTheme()
 
@@ -413,6 +414,11 @@ function show_server_config_dialog(): void {
 }
 
 async function reload_repositories(): Promise<void> {
+    const requested_reload_message = new GkillMessage()
+    requested_reload_message.message = i18n.global.t("REQUESTED_RELOAD_TITLE")
+    requested_reload_message.message_code = GkillMessageCodes.requested_reload
+    emits('received_messages', [requested_reload_message])
+
     is_loading.value = true
     const req = new ReloadRepositoriesRequest()
     const res = await props.gkill_api.reload_repositories(req)
@@ -426,6 +432,14 @@ async function reload_repositories(): Promise<void> {
         emits('received_messages', res.messages)
     }
     is_loading.value = false
+
+    const page_reload_message = new GkillMessage()
+    page_reload_message.message = i18n.global.t("DO_RELOAD_TITLE")
+    page_reload_message.message_code = GkillMessageCodes.do_reload
+    emits('received_messages', [message])
+    await sleep(1500)
+
+    location.reload()
 }
 
 const urlog_bookmarklet: Ref<string> = ref((`
