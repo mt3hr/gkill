@@ -18,4 +18,6 @@ export enum GkillMessageCodes {
     added_account = "MSG900017",
     copied_kc_id = "MSG900018",
     saved_shared_data = "MSG900019",
+    do_reload = "MSG900020",
+    requested_reload = "MSG9000021",
 }
