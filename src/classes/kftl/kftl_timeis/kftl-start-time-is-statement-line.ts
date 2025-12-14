@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLTimeIsRequest } from './kftl-time-is-request'
 import { KFTLTimeIsTitleStatementLine } from './kftl-time-is-title-statement-line'
+import { i18n } from '@/i18n'
 
 export class KFTLStartTimeIsStatementLine extends KFTLStatementLine {
 
@@ -23,11 +24,11 @@ export class KFTLStartTimeIsStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "timeis"
+        return i18n.global.t("KFTL_TIMEIS_TIMEIS_LABEL_TITLE")
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == "ーち"
+        return line_text == i18n.global.t("KFTL_TIMEIS_SPLITTER_TITLE")
     }
 
 }

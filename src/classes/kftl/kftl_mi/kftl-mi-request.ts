@@ -9,6 +9,7 @@ import { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { i18n } from '@/i18n'
 
 export class KFTLMiRequest extends KFTLRequest {
 
@@ -36,7 +37,7 @@ export class KFTLMiRequest extends KFTLRequest {
         if (this.title == "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.mi_title_is_blank
-            error.error_message = "タイトルが未入力です"
+            error.error_message = i18n.global.t("KFTL_MI_TITLE_BLANK_SKIP_SAVE_MESSAGE_TITLE")
             errors = errors.concat([error])
         }
 

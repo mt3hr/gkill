@@ -5,6 +5,7 @@ import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLKmemoRequest } from './kftl-kmemo-request'
+import { i18n } from '@/i18n'
 
 export class KFTLKmemoStatementLine extends KFTLStatementLine {
 
@@ -34,7 +35,7 @@ export class KFTLKmemoStatementLine extends KFTLStatementLine {
         if (this.prev_line_is_kmemo_statement()) {
             return ""
         }
-        return "kmemo"
+        return i18n.global.t("KFTL_KMEMO_LABEL_TITLE")
     }
 
     private prev_line_is_kmemo_statement(): boolean {

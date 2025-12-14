@@ -8,6 +8,7 @@ import { AddNlogRequest } from '@/classes/api/req_res/add-nlog-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { i18n } from '@/i18n'
 
 export class KFTLNlogRequest extends KFTLRequest {
 
@@ -34,7 +35,7 @@ export class KFTLNlogRequest extends KFTLRequest {
         if (this.titles.length != this.amounts.length) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.nlog_title_amount_count_not_equal
-            error.error_message = "タイトルと金額の個数が一致していません"
+            error.error_message = i18n.global.t("KFTL_NLOG_INVALID_RECORD_COUNT_MESSAGE_TITLE")
             errors.push(error)
             return errors
         }
@@ -44,7 +45,7 @@ export class KFTLNlogRequest extends KFTLRequest {
             if (memo == "" && amount == 0 && this.shop_name == "") {
                 const error = new GkillError()
                 error.error_code = GkillErrorCodes.skiped_no_content_nlog
-                error.error_message = "内容がないnlogの保存がスキップされました"
+                error.error_message = i18n.global.t("KFTL_NLOG_BLANK_SKIP_SAVE_MESSAGE_TITLE")
                 errors.push(error)
             }
             const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())

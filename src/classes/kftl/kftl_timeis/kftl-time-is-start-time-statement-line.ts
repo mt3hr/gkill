@@ -7,6 +7,7 @@ import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLPrototypeRequest } from '../kftl_prototype/kftl-prototype-request'
 import type { KFTLTimeIsRequest } from './kftl-time-is-request'
 import { KFTLTimeIsEndTimeStatementLine } from './kftl-time-is-end-time-statement-line'
+import { i18n } from '@/i18n'
 
 export class KFTLTimeIsStartTimeStatementLine extends KFTLStatementLine {
 
@@ -22,15 +23,15 @@ export class KFTLTimeIsStartTimeStatementLine extends KFTLStatementLine {
             request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
             request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLTimeIsRequest
         }
-        const time = moment(this.get_context().get_this_statement_line_text().replace("？", "")).toDate()
+        const time = moment(this.get_context().get_this_statement_line_text().replace(i18n.global.t("KFTL_TIMEIS_TIME_PREFIX"), "")).toDate()
         if (Number.isNaN(time.getTime())) {
-            throw new Error("日時の解釈に失敗しました")
+            throw new Error(i18n.global.t("KFTL_TIMEIS_INVALID_PARSE_TIME_ERROR_MESSAGE_TITLE"))
         }
         request.set_related_time(time)
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "開始日時"
+        return i18n.global.t("KFTL_TIMEIS_START_TIME_LABEL_TITLE")
     }
 }
 
