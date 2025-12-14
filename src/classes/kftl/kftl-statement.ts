@@ -102,7 +102,6 @@ export class KFTLStatement {
             context.set_add_second(prev_add_second)
 
             const line = this.generate_kftl_line(context)
-            lines.push(line)
 
             if (line.constructor.name == KFTLSplitAndNextSecondStatementLine.name) {
                 prev_add_second++
@@ -112,6 +111,7 @@ export class KFTLStatement {
             if (i != 0 && line_text == i18n.global.t("KFTL_SAVE_CHARACTOR")) {
                 break
             }
+            lines.push(line)
         }
         return lines
     }
