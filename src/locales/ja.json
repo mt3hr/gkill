@@ -568,5 +568,6 @@
     "KFTL_KC_INVALID_NUM_VALUE_MESSAGE_TITLE": "数値が変です",
     "KFTL_KC_TITLE_TITLE": "タイトル",
     "KFTL_KC_LABEL_TITLE": "数値記録",
-    "KFTL_KC_SPLITTER_TITLE": "ーか"
+    "KFTL_KC_SPLITTER_TITLE": "ーか",
+    "KFTL_SAVE_CHARACTOR": "！"
 }

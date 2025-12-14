@@ -37,8 +37,8 @@
         </table>
         <KFTLTemplateDialog :application_config="application_config" :gkill_api="gkill_api"
             :template="application_config.parsed_kftl_template"
-            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @clicked_template_element_leaf="paste_template" ref="kftl_template_dialog" />
     </v-card>
 </template>
@@ -177,7 +177,7 @@ async function update_line_labels(): Promise<void> {
 
     invalid_line_numbers.value = await statement.get_invalid_line_indexs()
 
-    if (text_area_content.value.endsWith("\n！\n") && !is_requested_submit.value) {
+    if (text_area_content.value.endsWith("\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n") && !is_requested_submit.value) {
         is_requested_submit.value = true
         submit()
     }

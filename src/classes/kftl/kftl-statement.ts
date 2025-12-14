@@ -1,5 +1,6 @@
 'use strict'
 
+import { i18n } from "@/i18n"
 import { GkillAPI } from "../api/gkill-api"
 import type { KFTLRequest } from "./kftl-request"
 import { KFTLRequestMap } from "./kftl-request-map"
@@ -100,10 +101,6 @@ export class KFTLStatement {
             const context: KFTLStatementLineContext = new KFTLStatementLineContext(tx_id, line_text, target_id, next_line_text, lines.slice(0, i), prototype_flag)
             context.set_add_second(prev_add_second)
 
-            if (i != 0 && line_text == "！") {
-                break
-            }
-
             const line = this.generate_kftl_line(context)
             lines.push(line)
 
@@ -111,6 +108,10 @@ export class KFTLStatement {
                 prev_add_second++
             }
             prev_context = context
+
+            if (i != 0 && line_text == i18n.global.t("KFTL_SAVE_CHARACTOR")) {
+                break
+            }
         }
         return lines
     }
