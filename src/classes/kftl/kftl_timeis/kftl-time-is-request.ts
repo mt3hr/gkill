@@ -8,6 +8,7 @@ import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-reques
 import { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { i18n } from '@/i18n'
 
 export class KFTLTimeIsRequest extends KFTLRequest {
 
@@ -41,7 +42,7 @@ export class KFTLTimeIsRequest extends KFTLRequest {
         if (this.title == "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.skiped_no_content_timeis
-            error.error_message = "内容がないtimeisの保存がスキップされました"
+            error.error_message = i18n.global.t("KFTL_TIMEIS_BLANK_SKIP_SAVE_MESSAGE_TITLE")
             errors.push(error)
             return errors
         }

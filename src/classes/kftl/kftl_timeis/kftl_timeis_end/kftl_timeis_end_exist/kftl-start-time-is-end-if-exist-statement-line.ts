@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../../../kftl-statement-line'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { KFTLTimeIsEndByTitleRequest } from '../kftl-time-is-end-by-title-request'
 import { KFTLTimeIsEndIfExistTitleStatementLine } from './kftl-time-is-end-if-exist-title-statement-line'
+import { i18n } from '@/i18n'
 
 export class KFTLStartTimeIsEndIfExistStatementLine extends KFTLStatementLine {
 
@@ -26,11 +27,11 @@ export class KFTLStartTimeIsEndIfExistStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "timeis"
+        return i18n.global.t("KFTL_TIMEIS_TIMEIS_LABEL_TITLE")
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == "ーいえ"
+        return line_text == i18n.global.t("KFTL_TIMEIS_END_END_SPLITTER_TITLE")
     }
 
 }

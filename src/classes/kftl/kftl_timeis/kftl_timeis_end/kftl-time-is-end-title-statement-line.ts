@@ -5,6 +5,7 @@ import { KFTLStatementLine } from '../../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../../kftl-statement-line-context'
 import { KFTLTimeIsEndByTitleRequest } from './kftl-time-is-end-by-title-request'
 import { KFTLStatementLineConstructorFactory } from '../../kftl-statement-line-constructor-factory'
+import { i18n } from '@/i18n'
 
 export class KFTLTimeIsEndTitleStatementLine extends KFTLStatementLine {
     constructor(line_text: string, context: KFTLStatementLineContext) {
@@ -21,7 +22,7 @@ export class KFTLTimeIsEndTitleStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "終了"
+        return i18n.global.t("KFTL_TIMEIS_TIMEIS_END_LABEL_TITLE")
     }
 }
 
