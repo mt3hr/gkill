@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLNlogRequest } from './kftl-nlog-request'
 import { KFTLNlogShopNameStatementLine } from './kftl-nlog-shop-name-statement-line'
+import { i18n } from '@/i18n'
 
 export class KFTLStartNlogStatementLine extends KFTLStatementLine {
 
@@ -24,11 +25,11 @@ export class KFTLStartNlogStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "nlog"
+        return i18n.global.t("KFTL_NLOG_NLOG_LABEL_TITLE")
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == "ーん"
+        return line_text == i18n.global.t("KFTL_NLOG_SPLITTER_TITLE")
     }
 
 }

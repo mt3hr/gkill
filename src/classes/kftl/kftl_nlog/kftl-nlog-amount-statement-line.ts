@@ -1,5 +1,6 @@
 'use strict'
 
+import { i18n } from '@/i18n'
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
@@ -24,16 +25,16 @@ export class KFTLNlogAmountStatementLine extends KFTLStatementLine {
         try {
             const line_text = this.get_context().get_this_statement_line_text()
             if (line_text == "" || line_text == "\n") {
-                return "金額"
+                return i18n.global.t("KFTL_NLOG_AMOUNT_LABEL_TITLE")
             }
             const amount = this.parse_amount()
             if (0 < amount) {
-                return "収入"
+                return i18n.global.t("KFTL_NLOG_IN_LABEL_TITLE")
             } else {
-                return "支出"
+                return i18n.global.t("KFTL_NLOG_OUT_LABEL_TITLE")
             }
         } catch (e: any) {
-            return "変な金額"
+            return i18n.global.t("KFTL_NLOG_INVALID_AMOUNT_LABEL_TITLE")
         }
     }
 
@@ -41,11 +42,11 @@ export class KFTLNlogAmountStatementLine extends KFTLStatementLine {
         try {
             const amount = Number.parseInt(this.get_context().get_this_statement_line_text().trim())
             if (Number.isNaN(amount)) {
-                throw new Error("金額が変です")
+                throw new Error(i18n.global.t("KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE"))
             }
             return amount
         } catch (e: any) {
-            throw new Error("金額が変です")
+            throw new Error(i18n.global.t("KFTL_NLOG_INVALID_AMOUNT_MESSAGE_TITLE"))
         }
     }
 

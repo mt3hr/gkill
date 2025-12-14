@@ -1,5 +1,6 @@
 'use strict'
 
+import { i18n } from '@/i18n'
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
@@ -22,8 +23,7 @@ export class KFTLURLogTitleStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "タイトル"
-
+        return i18n.global.t("KFTL_URLOG_TITLE_LABEL_TITLE")
     }
 
 }

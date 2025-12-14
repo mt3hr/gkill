@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import type { KFTLMiRequest } from './kftl-mi-request'
 import { KFTLMiEstimateEndTimeStatementLine } from './kftl-mi-estimate-end-time-statement-line'
+import { i18n } from '@/i18n'
 
 export class KFTLMiEstimateStartTimeStatementLine extends KFTLStatementLine {
     constructor(line_text: string, context: KFTLStatementLineContext) {
@@ -27,13 +28,13 @@ export class KFTLMiEstimateStartTimeStatementLine extends KFTLStatementLine {
     get_label_name(_context: KFTLStatementLineContext): string {
         const line_text = this.get_context().get_this_statement_line_text()
         if (line_text == "" || line_text == "\n") {
-            return "開始なし"
+            return i18n.global.t("KFTL_MI_NO_ESTIMATE_START_TIME_TITLE")
         }
         const time = moment(this.get_context().get_this_statement_line_text()).toDate()
         if (Number.isNaN(time.getTime())) {
-            return "変な開始"
+            return i18n.global.t("KFTL_MI_INVALID_ESTIMATE_START_TIME_TITLE")
         }
-        return "開始"
+        return i18n.global.t("KFTL_MI_ESTIMATE_START_TIME_TITLE")
     }
 }
 

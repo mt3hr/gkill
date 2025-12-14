@@ -9,6 +9,7 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { i18n } from '@/i18n'
 
 export class KFTLKmemoRequest extends KFTLRequest {
 
@@ -24,7 +25,7 @@ export class KFTLKmemoRequest extends KFTLRequest {
         if (this.kmemo_content == "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.skiped_no_content_kmemo
-            error.error_message = "内容がないKmemoの保存がスキップされました"
+            error.error_message = i18n.global.t("KFTL_KMEMO_BLANK_SKIP_SAVE_MESSAGE_TITLE")
             errors.push(error)
             return errors
         }

@@ -1,5 +1,6 @@
 'use strict'
 
+import { i18n } from '@/i18n'
 import type { KFTLRequest } from '../kftl-request'
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
@@ -25,11 +26,11 @@ export class KFTLEndTextStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "テキスト↑"
+        return i18n.global.t("KFTL_TEXT_END_LABEL_TITLE")
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == "ーー"
+        return line_text == i18n.global.t("KFTL_TEXT_SPLITTER_TITLE")
     }
 }
 
