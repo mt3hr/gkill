@@ -1001,6 +1001,54 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// URLogブックマークレット用のセッションがもしなければ作成する
+	loginSessions, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetAllLoginSessions(r.Context())
+	if err != nil {
+		if err != nil {
+			err = fmt.Errorf("error get login sessions = %s: %w", request.UserID, err)
+			gkill_log.Debug.Println(err.Error())
+		}
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetAccountSessionsError,
+			ErrorMessage: "ログインに失敗しました（サーバ内部エラー）",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	var urlogBookmarkletSession *account_state.LoginSession
+	for _, loginSession := range loginSessions {
+		if loginSession.ApplicationName == "urlog_bookmarklet" && loginSession.UserID == request.UserID {
+			urlogBookmarkletSession = loginSession
+			break
+		}
+	}
+	if urlogBookmarkletSession == nil {
+		loginSession := &account_state.LoginSession{
+			ID:              GenerateNewID(),
+			UserID:          request.UserID,
+			Device:          device,
+			ApplicationName: "urlog_bookmarklet",
+			SessionID:       GenerateNewID(),
+			ClientIPAddress: remoteHost,
+			LoginTime:       time.Now(),
+			ExpirationTime:  time.Now().Add(time.Hour * 24 * 30), // 1ヶ月
+			IsLocalAppUser:  isLocalAppUser,
+		}
+		ok, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.AddLoginSession(r.Context(), loginSession)
+		if !ok || err != nil {
+			if err != nil {
+				err = fmt.Errorf("error add login session = %s: %w", request.UserID, err)
+				gkill_log.Debug.Println(err.Error())
+			}
+			gkillError := &message.GkillError{
+				ErrorCode:    message.AddURLogLoginSessionError,
+				ErrorMessage: "ログインに失敗しました（サーバ内部エラー）",
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
 	response.SessionID = loginSession.SessionID
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.LoginSuccessMessage,
@@ -1049,7 +1097,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountLogoutInternalServerError,
-			ErrorMessage: "ログインに失敗しました（サーバ内部エラー）",
+			ErrorMessage: "ログアウトに失敗しました（サーバ内部エラー）",
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7648,6 +7696,24 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		return
 	}
 
+	sessions, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSessions(r.Context(), userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get login sessions session id = %s: %w", request.SessionID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetApplicationConfigError,
+			ErrorMessage: "ApplicationConfig取得に失敗しました",
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+	for _, session := range sessions {
+		if session.ApplicationName == "urlog_bookmarklet" {
+			applicationConfig.URLogBookmarkletSession = session.SessionID
+			break
+		}
+	}
+
 	var dnoteJSONDataValue json.RawMessage
 	if len(dnoteJSONData) != 0 {
 		dnoteJSONDataValue = dnoteJSONData[0].DnoteJSONData
@@ -11084,13 +11150,21 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 	})
 }
 
-func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID string) (*account.Account, *message.GkillError, error) {
+func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.Context, sessionID string, applicationName string) (*account.Account, *message.GkillError, error) {
 	loginSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, sessionID)
 	if loginSession == nil || err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", sessionID, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountSessionNotFoundError,
+			ErrorMessage: "アカウント認証に失敗しました",
+		}
+		return nil, gkillError, err
+	}
+	if loginSession.ApplicationName != applicationName {
+		err = fmt.Errorf("error at get account user id = %s: %w", loginSession.UserID, err)
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AccountNotFoundError,
 			ErrorMessage: "アカウント認証に失敗しました",
 		}
 		return nil, gkillError, err
@@ -11127,6 +11201,11 @@ func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID 
 	}
 
 	return account, nil, nil
+
+}
+
+func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID string) (*account.Account, *message.GkillError, error) {
+	return g.getAccountFromSessionIDWithApplicationName(ctx, sessionID, "gkill")
 }
 
 func GenerateNewID() string {
@@ -12035,7 +12114,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionIDWithApplicationName(r.Context(), request.SessionID, "urlog_bookmarklet")
 	if err != nil {
 		gkill_log.Debug.Println(err.Error())
 		_ = gkillError

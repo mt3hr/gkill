@@ -210,7 +210,7 @@
 </template>
 <script setup lang="ts">
 import { i18n } from '@/i18n'
-import { type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 
 import EditDeviceStructDialog from '../dialogs/edit-device-struct-dialog.vue'
 import EditKFTLTemplateDialog from '../dialogs/edit-kftl-template-struct-dialog.vue'
@@ -442,7 +442,8 @@ async function reload_repositories(): Promise<void> {
     location.reload()
 }
 
-const urlog_bookmarklet: Ref<string> = ref((`
+const urlog_bookmarklet = computed(() => {
+    return (`
 javascript: (function () {
 	function genURLog() {
 		let description = '';
@@ -486,7 +487,7 @@ javascript: (function () {
 			favicon_url: 'http://www.google.com/s2/favicons?domain=' + new URL(location.href).host,
 			description: description,
 			image_url: image_url,
-			session_id: '`+ props.gkill_api.get_session_id() + `',
+			session_id: '`+ props.application_config.urlog_bookmarklet_session + `',
 		};
 	};
 	function sendURLog() {
@@ -500,7 +501,8 @@ javascript: (function () {
 		)
 	};
 	addEventListener('onload', sendURLog());
-}());`).replace("\n", "").replace("\t", ""))
+}());`).split("\n").join("").split("\t").join("")
+})
 
 load_mi_board_names()
 
