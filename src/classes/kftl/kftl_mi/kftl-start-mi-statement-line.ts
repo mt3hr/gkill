@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLMiRequest } from './kftl-mi-request'
 import { KFTLMiTitleStatementLine } from './kftl-mi-title-statement-line'
+import { i18n } from '@/i18n'
 
 export class KFTLStartMiStatementLine extends KFTLStatementLine {
 
@@ -24,12 +25,11 @@ export class KFTLStartMiStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "mi"
-
+        return i18n.global.t("KFTL_MI_LABEL_TITLE")
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == "ーみ"
+        return line_text == i18n.global.t("KFTL_MI_SPLITTER_TITLE")
     }
 
 }

@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { KFTLLantanaRequest } from './kftl-lantana-request'
 import { KFTLLantanaMoodStatementLine } from './kftl-lantana-mood-statement-line'
+import { i18n } from '@/i18n'
 
 export class KFTLStartLantanaStatementLine extends KFTLStatementLine {
 
@@ -23,11 +24,11 @@ export class KFTLStartLantanaStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "lantana"
+        return i18n.global.t("KFTL_LANTANA_LABEL_TITLE")
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == "ーら"
+        return line_text == i18n.global.t("KFTL_LANTANA_SPLITTER_TITLE")
     }
 
 }

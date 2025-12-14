@@ -1,5 +1,6 @@
 'use strict'
 
+import { i18n } from '@/i18n'
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
@@ -20,7 +21,7 @@ export class KFTLKCTitleStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "タイトル"
+        return i18n.global.t("KFTL_KC_TITLE_TITLE")
     }
 
 }

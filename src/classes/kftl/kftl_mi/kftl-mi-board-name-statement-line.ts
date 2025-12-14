@@ -1,5 +1,6 @@
 'use strict'
 
+import { i18n } from '@/i18n'
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
@@ -21,7 +22,7 @@ export class KFTLMiBoardNameStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "板名"
+        return i18n.global.t("KFTL_MI_BOARD_NAME_TITLE")
     }
 
 }
