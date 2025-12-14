@@ -1733,8 +1733,8 @@ export class GkillAPI {
                 application_config.rykv_default_period = response.application_config.rykv_default_period
                 application_config.mi_default_period = response.application_config.mi_default_period
                 application_config.is_show_share_footer = response.application_config.is_show_share_footer
+                application_config.urlog_bookmarklet_session = response.application_config.urlog_bookmarklet_session
                 response.application_config = application_config
-
                 await response.application_config.load_all()
                 this.check_auth(response)
 

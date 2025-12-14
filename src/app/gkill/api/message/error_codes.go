@@ -350,4 +350,6 @@ const (
 	CommitTxDeleteURLogError                                         = "ERR000345"
 	NotFoundTLSCertFileError                                         = "ERR000346"
 	NotFoundTLSKeyFileError                                          = "ERR000347"
+	GetAccountSessionsError                                          = "ERR000348"
+	AddURLogLoginSessionError                                        = "ERR000349"
 )
