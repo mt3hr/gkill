@@ -44,4 +44,6 @@ type ApplicationConfig struct {
 	ShowTagsInList bool `json:"show_tags_in_list"`
 
 	SessionIsLocal bool `json:"session_is_local"`
+
+	URLogBookmarkletSession string `json:"urlog_bookmarklet_session"`
 }
