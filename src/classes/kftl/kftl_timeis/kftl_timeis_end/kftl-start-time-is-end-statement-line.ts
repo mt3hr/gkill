@@ -7,6 +7,7 @@ import { KFTLPrototypeRequest } from '../../kftl_prototype/kftl-prototype-reques
 import type { KFTLTimeIsRequest } from '../kftl-time-is-request'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { KFTLTimeIsEndTitleStatementLine } from './kftl-time-is-end-title-statement-line'
+import { i18n } from '@/i18n'
 
 export class KFTLStartTimeIsEndStatementLine extends KFTLStatementLine {
 
@@ -27,11 +28,11 @@ export class KFTLStartTimeIsEndStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "timeis"
+        return i18n.global.t("KFTL_TIMEIS_TIMEIS_LABEL_TITLE")
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text == "ーえ"
+        return line_text == i18n.global.t("KFTL_TIMEIS_END_SPLITTER_TITLE")
     }
 
 }

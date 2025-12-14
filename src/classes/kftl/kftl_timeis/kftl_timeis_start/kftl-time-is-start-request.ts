@@ -8,6 +8,7 @@ import { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { i18n } from '@/i18n'
 
 export class KFTLTimeIsStartRequest extends KFTLRequest {
 
@@ -19,7 +20,7 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
     }
 
     async get_label_name(_context: KFTLStatementLineContext): Promise<string> {
-        return "開始"
+        return i18n.global.t("KFTL_TIMEIS_TIMEIS_START_LABEL_TITLE")
     }
 
     async set_title(title: string): Promise<void> {
@@ -31,7 +32,7 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         if (this.title == "") {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.skiped_no_content_timeis
-            error.error_message = "内容がないtimeisの保存がスキップされました"
+            error.error_message = i18n.global.t("KFTL_TIMEIS_BLANK_SKIP_SAVE_MESSAGE_TITLE")
             errors.push(error)
             return errors
         }

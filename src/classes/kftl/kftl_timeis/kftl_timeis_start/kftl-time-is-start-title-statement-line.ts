@@ -1,5 +1,6 @@
 'use strict'
 
+import { i18n } from '@/i18n'
 import type { KFTLRequestMap } from '../../kftl-request-map'
 import { KFTLStatementLine } from '../../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '../../kftl-statement-line-constructor-factory'
@@ -20,7 +21,7 @@ export class KFTLTimeIsStartTitleStatementLine extends KFTLStatementLine {
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        return "開始"
+        return i18n.global.t("KFTL_TIMEIS_TIMEIS_START_LABEL_TITLE")
     }
 
 }

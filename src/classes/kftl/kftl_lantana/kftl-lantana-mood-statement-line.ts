@@ -1,5 +1,6 @@
 'use strict'
 
+import { i18n } from '@/i18n'
 import type { KFTLRequestMap } from '../kftl-request-map'
 import { KFTLStatementLine } from '../kftl-statement-line'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
@@ -23,23 +24,23 @@ export class KFTLLantanaMoodStatementLine extends KFTLStatementLine {
     get_label_name(_context: KFTLStatementLineContext): string {
         try {
             this.parse_mood()
-            return "気分値"
+            return i18n.global.t("KFTL_LANTANA_MOOD_VALUE_TITLE")
         } catch (e: any) {
-            return "変な気分値"
+            return i18n.global.t("KFTL_LANTANA_INVALID_MOOD_VALUE_TITLE")
         }
     }
     private parse_mood(): number {
         try {
             const mood = Number.parseInt(this.get_context().get_this_statement_line_text().trim()).valueOf()
             if (!mood) {
-                throw new Error("気分値が変です")
+                throw new Error(i18n.global.t("KFTL_LANTANA_INVALID_MOOD_VALUE_MESSAGE_TITLE"))
             }
             if (!(0 <= mood && mood <= 10)) {
-                throw new Error("気分値が範囲外です")
+                throw new Error(i18n.global.t("KFTL_LANTANA_OUT_OF_RANGE_MOOD_VALUE_MESSAGE_TITLE"))
             }
             return mood
         } catch (e: any) {
-            throw new Error("気分値が変です")
+            throw new Error(i18n.global.t("KFTL_LANTANA_INVALID_MOOD_VALUE_MESSAGE_TITLE"))
         }
     }
 }

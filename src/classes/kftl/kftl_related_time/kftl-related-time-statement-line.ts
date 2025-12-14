@@ -7,6 +7,7 @@ import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import type { KFTLRequest } from '../kftl-request'
 import { KFTLStatementLineConstructorFactory } from '../kftl-statement-line-constructor-factory'
 import { KFTLPrototypeRequest } from '../kftl_prototype/kftl-prototype-request'
+import { i18n } from '@/i18n'
 
 export class KFTLRelatedTimeStatementLine extends KFTLStatementLine {
 
@@ -27,24 +28,24 @@ export class KFTLRelatedTimeStatementLine extends KFTLStatementLine {
             request_map.set(this.get_context().get_this_statement_line_target_id(), new KFTLPrototypeRequest(this.get_context().get_this_statement_line_target_id(), this.get_context()))
             request = request_map.get(this.get_context().get_this_statement_line_target_id()) as KFTLRequest
         }
-        const time = moment(this.get_context().get_this_statement_line_text().replace("？", "")).toDate()
+        const time = moment(this.get_context().get_this_statement_line_text().replace(i18n.global.t("KFTL_RELATED_TIME_PREFIX"), "")).toDate()
         if (Number.isNaN(time.getTime())) {
-            throw new Error("日時の解釈に失敗しました")
+            throw new Error(i18n.global.t("KFTL_INVALID_PARSE_RELATED_TIME_ERROR_MESSAGE_TITLE"))
         }
         request.set_related_time(time)
         return new Promise<void>((resolve) => resolve())
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
-        const time = moment(this.get_context().get_this_statement_line_text().replace("？", "")).toDate()
+        const time = moment(this.get_context().get_this_statement_line_text().replace(i18n.global.t("KFTL_RELATED_TIME_PREFIX"), "")).toDate()
         if (Number.isNaN(time.getTime())) {
-            return "変な日時"
+            return i18n.global.t("KFTL_INVALID_RELATED_TIME_TITLE")
         }
-        return "日時"
+        return i18n.global.t("KFTL_RELATED_TIME_TITLE")
     }
 
     static is_this_type(line_text: string): boolean {
-        return line_text.startsWith("？")
+        return line_text.startsWith(i18n.global.t("KFTL_RELATED_TIME_PREFIX"))
     }
 
 }

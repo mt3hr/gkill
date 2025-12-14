@@ -11,6 +11,7 @@ import { GkillErrorCodes } from "@/classes/api/message/gkill_error"
 import generate_get_plaing_timeis_kyous_query from "@/classes/api/generate-get-plaing-timeis-kyous-query"
 import { GetKyousRequest } from "@/classes/api/req_res/get-kyous-request"
 import delete_gkill_kyou_cache from "@/classes/delete-gkill-cache"
+import { i18n } from "@/i18n"
 
 export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
 
@@ -36,7 +37,7 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
         if (this.target_tag_names.length == 0) {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.not_setted_timeis_end_tag
-            error.error_message = "TimeIs終了タグを指定してください"
+            error.error_message = i18n.global.t("KFTL_TIMEIS_END_REQUIRE_END_TAG_MESSAGE_TITLE")
             errors.push(error)
             return errors
         }
@@ -95,7 +96,7 @@ export class KFTLTimeIsEndByTagRequest extends KFTLRequest {
             }
             const error = new GkillError()
             error.error_code = GkillErrorCodes.not_found_end_timeis_target
-            error.error_message = "終了対象のTimeIsが存在しませんでした"
+            error.error_message = i18n.global.t("KFTL_TIMEIS_END_TARGET_NOT_FOUND_MESSAGE_TITLE")
             return [error]
         }
 

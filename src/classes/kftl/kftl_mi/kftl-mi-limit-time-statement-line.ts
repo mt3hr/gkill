@@ -6,6 +6,7 @@ import { KFTLStatementLine } from '../kftl-statement-line'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import type { KFTLMiRequest } from './kftl-mi-request'
 import { KFTLMiEstimateStartTimeStatementLine } from './kftl-mi-estimate-start-time-statement-line'
+import { i18n } from '@/i18n'
 
 export class KFTLMiLimitTimeStatementLine extends KFTLStatementLine {
 
@@ -26,13 +27,13 @@ export class KFTLMiLimitTimeStatementLine extends KFTLStatementLine {
     get_label_name(_context: KFTLStatementLineContext): string {
         const line_text = this.get_context().get_this_statement_line_text()
         if (line_text == "" || line_text == "\n") {
-            return "期日なし"
+            return i18n.global.t("KFTL_MI_NO_LIMIT_TIME_TITLE")
         }
         const time = moment(this.get_context().get_this_statement_line_text()).toDate()
         if (Number.isNaN(time.getTime())) {
-            return "変な期日"
+            return i18n.global.t("KFTL_MI_INVALID_LIMIT_TIME_TITLE")
         }
-        return "期日"
+        return i18n.global.t("KFTL_MI_LIMIT_TIME_TITLE")
     }
 
 }
