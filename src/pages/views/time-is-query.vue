@@ -39,7 +39,7 @@
             </v-col>
         </v-row>
     </div>
-    <table v-show="cloned_query.use_timeis_tags" class="taglist">
+    <table v-show="cloned_query.use_timeis && cloned_query.use_timeis_tags" class="taglist">
         <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
             :is_open="true" :struct_obj="cloned_application_config.parsed_tag_struct" :is_editable="false"
             :is_root="true" :is_show_checkbox="true" @clicked_items="clicked_items"
