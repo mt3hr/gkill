@@ -127,6 +127,11 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		err = fmt.Errorf("error at get latest data repository address dao. user id = %s: %w", userID, err)
 		return nil, err
 	}
+	latestDataRepositoryAddressDAO, err = account_state.NewCachedLatestDataRepositoryAddressSQLite3Impl(latestDataRepositoryAddressDAO)
+	if err != nil {
+		err = fmt.Errorf("error at get cached latest data repository address dao. user id = %s: %w", userID, err)
+		return nil, err
+	}
 
 	// UpdateCacheNextTick用のTicker。キャッシュ更新（ファイル監視起動用）
 	ticker := time.NewTicker(gkill_options.CacheUpdateDuration)
