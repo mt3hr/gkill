@@ -96,8 +96,8 @@ CREATE TABLE IF NOT EXISTS %s (
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetAllLatestDataRepositoryAddresses(ctx context.Context) (map[string]*LatestDataRepositoryAddress, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -165,8 +165,8 @@ FROM %s
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressesByRepName(ctx context.Context, repName string) (map[string]*LatestDataRepositoryAddress, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -238,8 +238,8 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, targetID string) (*LatestDataRepositoryAddress, error) {
-	l.m.Lock()
-	defer l.m.Unlock()
+	// l.m.Lock()
+	// defer l.m.Unlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
