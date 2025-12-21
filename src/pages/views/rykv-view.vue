@@ -114,7 +114,8 @@
                                 gps_log_map_start_time = typed_kyou.related_time
                                 gps_log_map_end_time = typed_kyou.related_time
                                 gps_log_map_marker_time = typed_kyou.related_time
-                            }" @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                            }"
+                            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                             @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
                             @requested_reload_list="() => {
@@ -901,7 +902,7 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
     resize: horizontal;
     overflow-x: hidden;
     overflow-y: scroll;
-    height: calc(v-bind('app_content_height.toString().concat("px")') - 100vh * 0.2);
+    height: calc(v-bind('app_content_height.toString().concat("px")') - v-bind('(!props.application_config.ryuu_json_data || props.application_config.ryuu_json_data.length === 0) ? "0px" : "100vh * 0.2"'));
     width: 400px;
     min-width: 400px;
 }
@@ -910,6 +911,7 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
     overflow-x: hidden;
     overflow-y: auto;
     height: calc(100vh * 0.2);
+    height: calc(v-bind('(!props.application_config.ryuu_json_data || props.application_config.ryuu_json_data.length === 0) ? "0px" : "100vh * 0.2"'));
 }
 
 .scroll_snap_container {
