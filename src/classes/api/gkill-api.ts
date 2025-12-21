@@ -2445,6 +2445,7 @@ export class GkillAPI {
 
         async reload_repositories(req: ReloadRepositoriesRequest): Promise<ReloadRepositoriesResponse> {
                 await delete_gkill_kyou_cache(null)
+                this.set_last_cache_update_time(null)
                 const res = await fetch(this.reload_repositories_address, {
                         'method': this.reload_repositories_method,
                         headers: {
@@ -2770,17 +2771,21 @@ export class GkillAPI {
         }
 
         private last_cache_update_time_cookie_key = "last_cache_update_time"
-        get_last_cache_update_time(): Date {
+        get_last_cache_update_time(): Date | null {
                 const cookies = document.cookie.split(';')
                 const last_cache_update_time_string = cookies.find(
                         (cookie) => cookie.split('=')[0].trim() === this.last_cache_update_time_cookie_key.trim()
                 )?.replace(this.last_cache_update_time_cookie_key + "=", "").trim()
-                const last_cache_update_time: number = last_cache_update_time_string ? Number.parseInt(last_cache_update_time_string) : Date.now()
-                return new Date(last_cache_update_time)
+                const last_cache_update_time = (last_cache_update_time_string && last_cache_update_time_string !== "") ? new Date(Number.parseInt(last_cache_update_time_string)) : null
+                return last_cache_update_time
         }
 
-        set_last_cache_update_time(time: Date): void {
-                document.cookie = this.last_cache_update_time_cookie_key + "=" + time.getTime() + "; path=/; max-age=" + 86400 * 400
+        set_last_cache_update_time(time: Date | null): void {
+                if (time) {
+                        document.cookie = this.last_cache_update_time_cookie_key + "=" + time.getTime() + "; path=/; max-age=" + 86400 * 400
+                } else {
+                        document.cookie = this.last_cache_update_time_cookie_key + "=; path=/; max-age=0"
+                }
         }
 
         async delete_updated_gkill_caches(): Promise<void> {
@@ -2797,15 +2802,18 @@ export class GkillAPI {
                 const gkill_info_req = new GetGkillInfoRequest()
                 const gkill_info_res = await this.get_gkill_info(gkill_info_req)
 
-                const req = new GetUpdatedDatasByTimeRequest()
-                req.last_updated_time = new Date(this.get_last_cache_update_time())
-                const res = await this.get_updated_datas_by_time(req)
-                if (res.updated_ids) {
-                        if (res.updated_ids.length > gkill_info_res.cache_clear_count_limit) {
-                                await delete_gkill_kyou_cache(null)
-                        } else {
-                                for (let i = 0; i < res.updated_ids.length; i++) {
-                                        await delete_gkill_kyou_cache(res.updated_ids[i])
+                const last_cache_update_time = this.get_last_cache_update_time()
+                if (last_cache_update_time) {
+                        const req = new GetUpdatedDatasByTimeRequest()
+                        req.last_updated_time = last_cache_update_time
+                        const res = await this.get_updated_datas_by_time(req)
+                        if (res.updated_ids) {
+                                if (res.updated_ids.length > gkill_info_res.cache_clear_count_limit) {
+                                        await delete_gkill_kyou_cache(null)
+                                } else {
+                                        for (let i = 0; i < res.updated_ids.length; i++) {
+                                                await delete_gkill_kyou_cache(res.updated_ids[i])
+                                        }
                                 }
                         }
                 }
