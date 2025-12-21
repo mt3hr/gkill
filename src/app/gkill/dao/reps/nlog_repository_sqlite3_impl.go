@@ -238,7 +238,7 @@ func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, upda
 	// updateTimeが指定されていれば一致するものを返す
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
-			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+			if kyou.UpdateTime.Unix() == updateTime.Unix() {
 				return kyou, nil
 			}
 		}
@@ -546,7 +546,7 @@ func (n *nlogRepositorySQLite3Impl) GetNlog(ctx context.Context, id string, upda
 	// updateTimeが指定されていれば一致するものを返す
 	if updateTime != nil {
 		for _, kyou := range nlogHistories {
-			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+			if kyou.UpdateTime.Unix() == updateTime.Unix() {
 				return kyou, nil
 			}
 		}
