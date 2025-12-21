@@ -331,7 +331,7 @@ func (t *textRepositoryCachedSQLite3Impl) GetText(ctx context.Context, id string
 	// updateTimeが指定されていれば一致するものを返す
 	if updateTime != nil {
 		for _, kyou := range textHistories {
-			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+			if kyou.UpdateTime.Unix() == updateTime.Unix() {
 				return kyou, nil
 			}
 		}

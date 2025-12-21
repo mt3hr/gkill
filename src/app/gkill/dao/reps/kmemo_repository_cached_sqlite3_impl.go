@@ -225,7 +225,7 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id strin
 	// updateTimeが指定されていれば一致するものを返す
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
-			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+			if kyou.UpdateTime.Unix() == updateTime.Unix() {
 				return kyou, nil
 			}
 		}
@@ -618,7 +618,7 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemo(ctx context.Context, id stri
 	// updateTimeが指定されていれば一致するものを返す
 	if updateTime != nil {
 		for _, kyou := range kmemoHistories {
-			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+			if kyou.UpdateTime.Unix() == updateTime.Unix() {
 				return kyou, nil
 			}
 		}

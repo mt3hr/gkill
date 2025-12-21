@@ -228,7 +228,7 @@ func (k *kcRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 	// updateTimeが指定されていれば一致するものを返す
 	if updateTime != nil {
 		for _, kyou := range kyouHistories {
-			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+			if kyou.UpdateTime.Unix() == updateTime.Unix() {
 				return kyou, nil
 			}
 		}
@@ -629,7 +629,7 @@ func (k *kcRepositoryCachedSQLite3Impl) GetKC(ctx context.Context, id string, up
 	// updateTimeが指定されていれば一致するものを返す
 	if updateTime != nil {
 		for _, kyou := range kcHistories {
-			if kyou.UpdateTime.Format(sqlite3impl.TimeLayout) == updateTime.Format(sqlite3impl.TimeLayout) {
+			if kyou.UpdateTime.Unix() == updateTime.Unix() {
 				return kyou, nil
 			}
 		}
