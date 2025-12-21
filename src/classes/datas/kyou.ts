@@ -172,7 +172,7 @@ export class Kyou extends InfoBase {
 
     async load_typed_kmemo(query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetKmemoRequest()
-        req.rep_name = this.rep_name
+        // req.rep_name = this.rep_name
         req.abort_controller = this.abort_controller
 
         req.id = this.id
@@ -216,7 +216,7 @@ export class Kyou extends InfoBase {
     async load_typed_kc(query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetKCRequest()
         req.abort_controller = this.abort_controller
-        req.rep_name = this.rep_name
+        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_kc(req)
@@ -259,7 +259,7 @@ export class Kyou extends InfoBase {
     async load_typed_urlog(query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetURLogRequest()
         req.abort_controller = this.abort_controller
-        req.rep_name = this.rep_name
+        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_urlog(req)
@@ -302,7 +302,7 @@ export class Kyou extends InfoBase {
     async load_typed_nlog(query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetNlogRequest()
         req.abort_controller = this.abort_controller
-        req.rep_name = this.rep_name
+        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_nlog(req)
@@ -430,7 +430,7 @@ export class Kyou extends InfoBase {
     async load_typed_lantana(query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetLantanaRequest()
         req.abort_controller = this.abort_controller
-        req.rep_name = this.rep_name
+        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_lantana(req)
@@ -473,7 +473,7 @@ export class Kyou extends InfoBase {
     async load_typed_idf_kyou(query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetIDFKyouRequest()
         req.abort_controller = this.abort_controller
-        req.rep_name = this.rep_name
+        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_idf_kyou(req)
@@ -552,7 +552,7 @@ export class Kyou extends InfoBase {
     async load_typed_rekyou(query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetReKyouRequest()
         req.abort_controller = this.abort_controller
-        req.rep_name = this.rep_name
+        // req.rep_name = this.rep_name
 
         req.id = this.id
         const res = await GkillAPI.get_gkill_api().get_rekyou(req)
