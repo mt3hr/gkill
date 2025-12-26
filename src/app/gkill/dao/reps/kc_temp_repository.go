@@ -35,4 +35,8 @@ type KCTempRepository interface {
 	GetKCsByTXID(ctx context.Context, txID string, userID string, device string) ([]*KC, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]KCTempRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

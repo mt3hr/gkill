@@ -158,6 +158,11 @@ FROM ` + t.dbName + `
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
@@ -172,8 +177,8 @@ FROM ` + t.dbName + `
 		whereCounter++
 	}
 
-	tableName = "TIMEIS"
-	tableNameAlias = "TIMEIS"
+	tableName = t.dbName
+	tableNameAlias = t.dbName
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -421,12 +426,11 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// t.m.Lock()
-	// defer t.m.Unlock()
-
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
-		UpdateCache: &trueValue,
+		UpdateCache:    &trueValue,
+		OnlyLatestData: &falseValue,
 	}
 
 	allTimeiss, err := t.timeisRep.FindTimeIs(ctx, query)
@@ -434,6 +438,9 @@ func (t *timeIsRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		err = fmt.Errorf("error at get all timeis at update cache: %w", err)
 		return err
 	}
+
+	t.m.Lock()
+	defer t.m.Unlock()
 
 	tx, err := t.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -630,6 +637,11 @@ FROM ` + t.dbName + `
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
@@ -645,8 +657,8 @@ FROM ` + t.dbName + `
 	}
 
 	queryArgsForEnd := []interface{}{}
-	tableName = "TIMEIS"
-	tableNameAlias = "TIMEIS"
+	tableName = t.dbName
+	tableNameAlias = t.dbName
 	whereCounter = 0
 	onlyLatestData = true
 	relatedTimeColumnName = "RELATED_TIME"
@@ -981,4 +993,12 @@ INSERT INTO ` + t.dbName + `(
 		return err
 	}
 	return nil
+}
+
+func (t *timeIsRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TimeIsRepository, error) {
+	return t.timeisRep.UnWrapTyped()
+}
+
+func (t *timeIsRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
+	return t.timeisRep.UnWrap()
 }

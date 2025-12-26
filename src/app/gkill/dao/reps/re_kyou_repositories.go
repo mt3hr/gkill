@@ -74,7 +74,12 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 			if _, exist := matchKyous[kyou.ID]; !exist {
 				matchKyous[kyou.ID] = []*Kyou{}
 			}
-			matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
+
+			key := kyou.ID
+			if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+				key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
+			}
+			matchKyous[key] = append(matchKyous[key], kyou)
 		}
 	}
 	return matchKyous, nil
@@ -227,8 +232,29 @@ loop:
 }
 
 func (r *ReKyouRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements ReKyouReps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	trueValue := true
+	ids := []string{id}
+	for _, rep := range r.ReKyouRepositories {
+		query := &find.FindQuery{
+			IDs:    &ids,
+			UseIDs: &trueValue,
+		}
+		kyous, err := rep.FindKyous(ctx, query)
+		if len(kyous) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
@@ -241,7 +267,6 @@ func (r *ReKyouRepositories) UpdateCache(ctx context.Context) error {
 	// 並列処理
 	for _, rep := range r.ReKyouRepositories {
 		wg.Add(1)
-
 		done := threads.AllocateThread()
 		go func(rep ReKyouRepository) {
 			defer done()
@@ -721,4 +746,28 @@ func (r *ReKyouRepositories) GetRepositoriesWithoutReKyouRep(ctx context.Context
 	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = &withoutRekyouGkillRepsValue
 	withoutRekyouGkillRepsValue.ReKyouReps.ReKyouRepositories = nil
 	return &withoutRekyouGkillRepsValue, nil
+}
+
+func (r *ReKyouRepositories) UnWrapTyped() ([]ReKyouRepository, error) {
+	unwraped := []ReKyouRepository{}
+	for _, rep := range r.ReKyouRepositories {
+		u, err := rep.UnWrapTyped()
+		if err != nil {
+			return nil, err
+		}
+		unwraped = append(unwraped, u...)
+	}
+	return unwraped, nil
+}
+
+func (r *ReKyouRepositories) UnWrap() ([]Repository, error) {
+	repositories := []Repository{}
+	for _, rep := range r.ReKyouRepositories {
+		unwraped, err := rep.UnWrap()
+		if err != nil {
+			return nil, err
+		}
+		repositories = append(repositories, unwraped...)
+	}
+	return repositories, nil
 }

@@ -29,4 +29,8 @@ type LantanaRepository interface {
 	GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error)
 
 	AddLantanaInfo(ctx context.Context, lantana *Lantana) error
+
+	UnWrapTyped() ([]LantanaRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

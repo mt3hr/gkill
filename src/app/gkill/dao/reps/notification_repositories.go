@@ -66,12 +66,17 @@ loop:
 				continue loop
 			}
 			for _, notification := range matchNotificationsInRep {
-				if existNotification, exist := matchNotifications[notification.ID]; exist {
+				key := notification.ID
+				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					key += fmt.Sprintf("%d", notification.UpdateTime.Unix())
+				}
+
+				if existNotification, exist := matchNotifications[key]; exist {
 					if notification.UpdateTime.After(existNotification.UpdateTime) {
-						matchNotifications[notification.ID] = notification
+						matchNotifications[key] = notification
 					}
 				} else {
-					matchNotifications[notification.ID] = notification
+					matchNotifications[key] = notification
 				}
 			}
 		default:
@@ -407,8 +412,29 @@ errloop:
 }
 
 func (t NotificationRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements NotificationReps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	trueValue := true
+	ids := []string{id}
+	for _, rep := range t {
+		query := &find.FindQuery{
+			IDs:    &ids,
+			UseIDs: &trueValue,
+		}
+		notifications, err := rep.FindNotifications(ctx, query)
+		if len(notifications) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (t NotificationRepositories) GetRepName(ctx context.Context) (string, error) {
@@ -591,4 +617,8 @@ loop:
 func (t NotificationRepositories) AddNotificationInfo(ctx context.Context, text *Notification) error {
 	err := fmt.Errorf("not implements NotificationReps.AddNotificationInfo")
 	return err
+}
+
+func (t NotificationRepositories) UnWrapTyped() ([]NotificationRepository, error) {
+	return t, nil
 }

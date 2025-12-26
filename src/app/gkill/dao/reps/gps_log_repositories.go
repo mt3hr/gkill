@@ -139,8 +139,23 @@ loop:
 }
 
 func (g GPSLogRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements GPSLogReps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	for _, rep := range g {
+		kyous, err := rep.GetPath(ctx, id)
+		if len(kyous) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (g GPSLogRepositories) GetRepName(ctx context.Context) (string, error) {

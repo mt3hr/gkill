@@ -67,10 +67,15 @@ loop:
 			}
 			for _, kyous := range matchKyousInRep {
 				for _, kyou := range kyous {
-					if _, exist := matchKyous[kyou.ID]; !exist {
-						matchKyous[kyou.ID] = []*Kyou{}
+					key := kyou.ID
+					if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
-					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
+
+					if _, exist := matchKyous[key]; !exist {
+						matchKyous[key] = []*Kyou{}
+					}
+					matchKyous[key] = append(matchKyous[key], kyou)
 				}
 			}
 		default:
@@ -227,8 +232,29 @@ loop:
 }
 
 func (l LantanaRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements LantanaReps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	trueValue := true
+	ids := []string{id}
+	for _, rep := range l {
+		query := &find.FindQuery{
+			IDs:    &ids,
+			UseIDs: &trueValue,
+		}
+		kyous, err := rep.FindKyous(ctx, query)
+		if len(kyous) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (l LantanaRepositories) UpdateCache(ctx context.Context) error {
@@ -371,12 +397,16 @@ loop:
 				continue loop
 			}
 			for _, kyou := range matchLantanasInRep {
-				if existLantana, exist := matchLantanas[kyou.ID]; exist {
+				key := kyou.ID
+				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
+				}
+				if existLantana, exist := matchLantanas[key]; exist {
 					if kyou.UpdateTime.After(existLantana.UpdateTime) {
-						matchLantanas[kyou.ID] = kyou
+						matchLantanas[key] = kyou
 					}
 				} else {
-					matchLantanas[kyou.ID] = kyou
+					matchLantanas[key] = kyou
 				}
 			}
 		default:
@@ -640,4 +670,28 @@ loop:
 func (l LantanaRepositories) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
 	err := fmt.Errorf("not implements LantanaReps.AddLantanaInfo")
 	return err
+}
+
+func (l LantanaRepositories) UnWrapTyped() ([]LantanaRepository, error) {
+	unwraped := []LantanaRepository{}
+	for _, rep := range l {
+		u, err := rep.UnWrapTyped()
+		if err != nil {
+			return nil, err
+		}
+		unwraped = append(unwraped, u...)
+	}
+	return unwraped, nil
+}
+
+func (l LantanaRepositories) UnWrap() ([]Repository, error) {
+	repositories := []Repository{}
+	for _, rep := range l {
+		unwraped, err := rep.UnWrap()
+		if err != nil {
+			return nil, err
+		}
+		repositories = append(repositories, unwraped...)
+	}
+	return repositories, nil
 }

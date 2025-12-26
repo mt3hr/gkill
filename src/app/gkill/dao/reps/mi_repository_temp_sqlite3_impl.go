@@ -508,3 +508,11 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (m *miTempRepositorySQLite3Impl) UnWrapTyped() ([]MiTempRepository, error) {
+	return []MiTempRepository{m}, nil
+}
+
+func (m *miTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{m}, nil
+}

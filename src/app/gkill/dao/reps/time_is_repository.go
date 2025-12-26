@@ -29,4 +29,8 @@ type TimeIsRepository interface {
 	GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error)
 
 	AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error
+
+	UnWrapTyped() ([]TimeIsRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

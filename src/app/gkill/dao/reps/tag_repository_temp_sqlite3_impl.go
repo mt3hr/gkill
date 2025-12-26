@@ -389,3 +389,7 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (t *tagTempRepositorySQLite3Impl) UnWrapTyped() ([]TagTempRepository, error) {
+	return []TagTempRepository{t}, nil
+}

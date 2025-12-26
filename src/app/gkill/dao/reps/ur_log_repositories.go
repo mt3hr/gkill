@@ -67,10 +67,14 @@ loop:
 			}
 			for _, kyous := range matchKyousInRep {
 				for _, kyou := range kyous {
-					if _, exist := matchKyous[kyou.ID]; !exist {
-						matchKyous[kyou.ID] = []*Kyou{}
+					key := kyou.ID
+					if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
-					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
+					if _, exist := matchKyous[key]; !exist {
+						matchKyous[key] = []*Kyou{}
+					}
+					matchKyous[key] = append(matchKyous[key], kyou)
 				}
 			}
 		default:
@@ -228,8 +232,29 @@ loop:
 }
 
 func (u URLogRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements URLogReps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	trueValue := true
+	ids := []string{id}
+	for _, rep := range u {
+		query := &find.FindQuery{
+			IDs:    &ids,
+			UseIDs: &trueValue,
+		}
+		kyous, err := rep.FindKyous(ctx, query)
+		if len(kyous) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (u URLogRepositories) UpdateCache(ctx context.Context) error {
@@ -372,12 +397,16 @@ loop:
 				continue loop
 			}
 			for _, kyou := range matchURLogsInRep {
-				if existURLog, exist := matchURLogs[kyou.ID]; exist {
+				key := kyou.ID
+				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
+				}
+				if existURLog, exist := matchURLogs[key]; exist {
 					if kyou.UpdateTime.After(existURLog.UpdateTime) {
-						matchURLogs[kyou.ID] = kyou
+						matchURLogs[key] = kyou
 					}
 				} else {
-					matchURLogs[kyou.ID] = kyou
+					matchURLogs[key] = kyou
 				}
 			}
 		default:
@@ -641,4 +670,28 @@ loop:
 func (u URLogRepositories) AddURLogInfo(ctx context.Context, urlog *URLog) error {
 	err := fmt.Errorf("not implements URLogReps.AddURLogInfo")
 	return err
+}
+
+func (u URLogRepositories) UnWrapTyped() ([]URLogRepository, error) {
+	unwraped := []URLogRepository{}
+	for _, rep := range u {
+		u, err := rep.UnWrapTyped()
+		if err != nil {
+			return nil, err
+		}
+		unwraped = append(unwraped, u...)
+	}
+	return unwraped, nil
+}
+
+func (u URLogRepositories) UnWrap() ([]Repository, error) {
+	repositories := []Repository{}
+	for _, rep := range u {
+		unwraped, err := rep.UnWrap()
+		if err != nil {
+			return nil, err
+		}
+		repositories = append(repositories, unwraped...)
+	}
+	return repositories, nil
 }

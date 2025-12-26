@@ -40,4 +40,8 @@ type IDFKyouTempRepository interface {
 	GetIDFKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*IDFKyou, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]IDFKyouTempRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

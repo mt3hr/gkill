@@ -34,4 +34,8 @@ type IDFKyouRepository interface {
 	AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error
 
 	HandleFileServe(w http.ResponseWriter, r *http.Request)
+
+	UnWrapTyped() ([]IDFKyouRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

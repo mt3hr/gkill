@@ -141,6 +141,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -498,14 +503,14 @@ WHERE
 }
 
 func (t *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// t.m.Lock()
-	// defer t.m.Unlock()
-
 	allNotifications, err := t.notificationRep.GetNotificationsBetweenNotificationTime(ctx, time.Unix(0, 0), time.Unix(math.MaxInt64, 0))
 	if err != nil {
 		err = fmt.Errorf("error at get all notifications at update cache: %w", err)
 		return err
 	}
+
+	t.m.Lock()
+	defer t.m.Unlock()
 
 	tx, err := t.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -820,4 +825,8 @@ INSERT INTO ` + t.dbName + ` (
 		return err
 	}
 	return nil
+}
+
+func (t *notificationRepositoryCachedSQLite3Impl) UnWrapTyped() ([]NotificationRepository, error) {
+	return []NotificationRepository{t.notificationRep}, nil
 }

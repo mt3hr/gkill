@@ -134,6 +134,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -354,12 +359,11 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id strin
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// k.m.Lock()
-	// defer k.m.Unlock()
-
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
-		UpdateCache: &trueValue,
+		UpdateCache:    &trueValue,
+		OnlyLatestData: &falseValue,
 	}
 
 	allKmemos, err := k.kmemoRep.FindKmemo(ctx, query)
@@ -367,6 +371,9 @@ func (k *kmemoRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 		err = fmt.Errorf("error at get all kmemo at update cache: %w", err)
 		return err
 	}
+
+	k.m.Lock()
+	defer k.m.Unlock()
 
 	tx, err := k.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -529,6 +536,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -806,4 +818,12 @@ INSERT INTO ` + k.dbName + ` (
 		return err
 	}
 	return nil
+}
+
+func (k *kmemoRepositoryCachedSQLite3Impl) UnWrapTyped() ([]KmemoRepository, error) {
+	return k.kmemoRep.UnWrapTyped()
+}
+
+func (k *kmemoRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
+	return k.kmemoRep.UnWrap()
 }

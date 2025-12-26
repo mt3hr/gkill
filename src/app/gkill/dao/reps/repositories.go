@@ -70,10 +70,14 @@ loop:
 
 			for _, kyous := range matchKyousInRep {
 				for _, kyou := range kyous {
-					if _, exist := matchKyous[kyou.ID]; !exist {
-						matchKyous[kyou.ID] = []*Kyou{}
+					key := kyou.ID
+					if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
-					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
+					if _, exist := matchKyous[key]; !exist {
+						matchKyous[key] = []*Kyou{}
+					}
+					matchKyous[key] = append(matchKyous[key], kyou)
 				}
 			}
 		default:
@@ -433,4 +437,16 @@ loop:
 	})
 
 	return kyouHistoriesList, nil
+}
+
+func (r Repositories) UnWrap() ([]Repository, error) {
+	repositories := []Repository{}
+	for _, rep := range r {
+		unwraped, err := rep.UnWrap()
+		if err != nil {
+			return nil, err
+		}
+		repositories = append(repositories, unwraped...)
+	}
+	return repositories, nil
 }
