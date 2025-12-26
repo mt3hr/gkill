@@ -31,4 +31,6 @@ type NotificationTempRepository interface {
 	GetNotificationsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Notification, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]NotificationTempRepository, error)
 }

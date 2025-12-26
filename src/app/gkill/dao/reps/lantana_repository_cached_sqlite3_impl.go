@@ -134,6 +134,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -355,12 +360,11 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id str
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// l.m.Lock()
-	// defer l.m.Unlock()
-
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
-		UpdateCache: &trueValue,
+		UpdateCache:    &trueValue,
+		OnlyLatestData: &falseValue,
 	}
 
 	allLantanas, err := l.lantanaRep.FindLantana(ctx, query)
@@ -368,6 +372,9 @@ func (l *lantanaRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		err = fmt.Errorf("error at get all lantanas at update cache: %w", err)
 		return err
 	}
+
+	l.m.Lock()
+	defer l.m.Unlock()
 
 	tx, err := l.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -531,6 +538,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -812,4 +824,12 @@ INSERT INTO ` + l.dbName + ` (
 		return err
 	}
 	return nil
+}
+
+func (l *lantanaRepositoryCachedSQLite3Impl) UnWrapTyped() ([]LantanaRepository, error) {
+	return l.lantanaRep.UnWrapTyped()
+}
+
+func (l *lantanaRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
+	return l.lantanaRep.UnWrap()
 }

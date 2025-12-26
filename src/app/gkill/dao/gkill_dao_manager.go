@@ -303,7 +303,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.KmemoReps = append(repositories.KmemoReps, kmemoRep)
-					repositories.Reps = append(repositories.Reps, kmemoRep)
 					if rep.UseToWrite {
 						newPath, _ := kmemoRep.GetPath(ctx, "")
 						if repositories.WriteKmemoRep != nil {
@@ -342,7 +341,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.KCReps = append(repositories.KCReps, kcRep)
-					repositories.Reps = append(repositories.Reps, kcRep)
 					if rep.UseToWrite {
 						newPath, _ := kcRep.GetPath(ctx, "")
 						if repositories.WriteKCRep != nil {
@@ -381,7 +379,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.URLogReps = append(repositories.URLogReps, urlogRep)
-					repositories.Reps = append(repositories.Reps, urlogRep)
 					if rep.UseToWrite {
 						newPath, _ := urlogRep.GetPath(ctx, "")
 						if repositories.WriteURLogRep != nil {
@@ -420,7 +417,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.TimeIsReps = append(repositories.TimeIsReps, timeisRep)
-					repositories.Reps = append(repositories.Reps, timeisRep)
 					if rep.UseToWrite {
 						newPath, _ := timeisRep.GetPath(ctx, "")
 						if repositories.WriteTimeIsRep != nil {
@@ -459,7 +455,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.MiReps = append(repositories.MiReps, miRep)
-					repositories.Reps = append(repositories.Reps, miRep)
 					if rep.UseToWrite {
 						newPath, _ := miRep.GetPath(ctx, "")
 						if repositories.WriteMiRep != nil {
@@ -498,7 +493,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.NlogReps = append(repositories.NlogReps, nlogRep)
-					repositories.Reps = append(repositories.Reps, nlogRep)
 					if rep.UseToWrite {
 						newPath, _ := nlogRep.GetPath(ctx, "")
 						if repositories.WriteNlogRep != nil {
@@ -537,7 +531,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.LantanaReps = append(repositories.LantanaReps, lantanaRep)
-					repositories.Reps = append(repositories.Reps, lantanaRep)
 					if rep.UseToWrite {
 						newPath, _ := lantanaRep.GetPath(ctx, "")
 						if repositories.WriteLantanaRep != nil {
@@ -692,7 +685,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.ReKyouReps.ReKyouRepositories = append(repositories.ReKyouReps.ReKyouRepositories, reKyouRep)
-					repositories.Reps = append(repositories.Reps, reKyouRep)
 					if rep.UseToWrite {
 						newPath, _ := reKyouRep.GetPath(ctx, "")
 						if repositories.WriteReKyouRep != nil {
@@ -740,7 +732,6 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.IDFKyouReps = append(repositories.IDFKyouReps, idfKyouRep)
-					repositories.Reps = append(repositories.Reps, idfKyouRep)
 					if rep.UseToWrite {
 						newPath, _ := idfKyouRep.GetPath(ctx, "")
 						if repositories.WriteIDFKyouRep != nil {
@@ -786,13 +777,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						return nil, err
 					}
 					repositories.GitCommitLogReps = append(repositories.GitCommitLogReps, gitCommitLogRep)
-					repositories.Reps = append(repositories.Reps, gitCommitLogRep)
 				}
 			}
 		}
 
 		// キャッシュしたRep
-		if gkill_options.CacheKmemoReps {
+		if *gkill_options.CacheKmemoReps {
 			cachedKmemoRep, err := reps.NewKmemoRepositoryCachedSQLite3Impl(ctx, repositories.KmemoReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_KMEMO")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -801,7 +791,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.KmemoReps = []reps.KmemoRepository{cachedKmemoRep}
 		}
 
-		if gkill_options.CacheURLogReps {
+		if *gkill_options.CacheURLogReps {
 			cachedURLogRep, err := reps.NewURLogRepositoryCachedSQLite3Impl(ctx, repositories.URLogReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_URLOG")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -810,7 +800,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.URLogReps = []reps.URLogRepository{cachedURLogRep}
 		}
 
-		if gkill_options.CacheKCReps {
+		if *gkill_options.CacheKCReps {
 			cachedKCRep, err := reps.NewKCRepositoryCachedSQLite3Impl(ctx, repositories.KCReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_KC")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -819,7 +809,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.KCReps = []reps.KCRepository{cachedKCRep}
 		}
 
-		if gkill_options.CacheIDFKyouReps {
+		if *gkill_options.CacheIDFKyouReps {
 			cachedIDFKyouRep, err := reps.NewIDFCachedRep(ctx, repositories.IDFKyouReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_IDF")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -828,7 +818,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.IDFKyouReps = []reps.IDFKyouRepository{cachedIDFKyouRep}
 		}
 
-		if gkill_options.CacheLantanaReps {
+		if *gkill_options.CacheLantanaReps {
 			cachedLantanaRep, err := reps.NewLantanaRepositoryCachedSQLite3Impl(ctx, repositories.LantanaReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_LANTANA")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -837,7 +827,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.LantanaReps = []reps.LantanaRepository{cachedLantanaRep}
 		}
 
-		if gkill_options.CacheTimeIsReps {
+		if *gkill_options.CacheTimeIsReps {
 			cachedTimeIsRep, err := reps.NewTimeIsRepositoryCachedSQLite3Impl(ctx, repositories.TimeIsReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_TIMEIS")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -846,7 +836,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.TimeIsReps = []reps.TimeIsRepository{cachedTimeIsRep}
 		}
 
-		if gkill_options.CacheMiReps {
+		if *gkill_options.CacheMiReps {
 			cachedMiRep, err := reps.NewMiRepositoryCachedSQLite3Impl(ctx, repositories.MiReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_MI")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -855,7 +845,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.MiReps = []reps.MiRepository{cachedMiRep}
 		}
 
-		if gkill_options.CacheNlogReps {
+		if *gkill_options.CacheNlogReps {
 			cachedNlogRep, err := reps.NewNlogRepositoryCachedSQLite3Impl(ctx, repositories.NlogReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_NLOG")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -864,7 +854,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.NlogReps = []reps.NlogRepository{cachedNlogRep}
 		}
 
-		if gkill_options.CacheTagReps {
+		if *gkill_options.CacheTagReps {
 			cachedTagRep, err := reps.NewTagRepositoryCachedSQLite3Impl(ctx, repositories.TagReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_TAG")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -873,7 +863,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.TagReps = []reps.TagRepository{cachedTagRep}
 		}
 
-		if gkill_options.CacheTextReps {
+		if *gkill_options.CacheTextReps {
 			cachedTextRep, err := reps.NewTextRepositoryCachedSQLite3Impl(ctx, repositories.TextReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_TEXT")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -882,7 +872,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.TextReps = []reps.TextRepository{cachedTextRep}
 		}
 
-		if gkill_options.CacheNotificationReps {
+		if *gkill_options.CacheNotificationReps {
 			cachedNotificationRep, err := reps.NewNotificationRepositoryCachedSQLite3Impl(ctx, repositories.NotificationReps, memory_db.MemoryDB, memory_db.Mutex, userID+"_NOTIFICATION")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -890,7 +880,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			}
 			repositories.NotificationReps = []reps.NotificationRepository{cachedNotificationRep}
 		}
-		if gkill_options.CacheReKyouReps {
+		if *gkill_options.CacheReKyouReps {
 			rekyouRepositories := reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{&repositories.ReKyouReps}, GkillRepositories: repositories}
 			cachedReKyouRep, err := reps.NewReKyouRepositoryCachedSQLite3Impl(ctx, &rekyouRepositories, repositories, memory_db.MemoryDB, memory_db.Mutex, userID+"_REKYOU")
 			if err != nil {
@@ -898,6 +888,38 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 				return nil, err
 			}
 			repositories.ReKyouReps = reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{cachedReKyouRep}, GkillRepositories: repositories}
+		}
+
+		// Repsへの追加
+		for _, rep := range repositories.KmemoReps {
+			repositories.Reps = append(repositories.Reps, rep)
+		}
+		for _, rep := range repositories.KCReps {
+			repositories.Reps = append(repositories.Reps, rep)
+		}
+		for _, rep := range repositories.URLogReps {
+			repositories.Reps = append(repositories.Reps, rep)
+		}
+		for _, rep := range repositories.TimeIsReps {
+			repositories.Reps = append(repositories.Reps, rep)
+		}
+		for _, rep := range repositories.MiReps {
+			repositories.Reps = append(repositories.Reps, rep)
+		}
+		for _, rep := range repositories.NlogReps {
+			repositories.Reps = append(repositories.Reps, rep)
+		}
+		for _, rep := range repositories.LantanaReps {
+			repositories.Reps = append(repositories.Reps, rep)
+		}
+		for _, rep := range repositories.IDFKyouReps {
+			repositories.Reps = append(repositories.Reps, rep)
+		}
+		for _, rep := range repositories.GitCommitLogReps {
+			repositories.Reps = append(repositories.Reps, rep)
+		}
+		for _, rep := range repositories.ReKyouReps.ReKyouRepositories {
+			repositories.Reps = append(repositories.Reps, rep)
 		}
 
 		err = repositories.UpdateCache(ctx)

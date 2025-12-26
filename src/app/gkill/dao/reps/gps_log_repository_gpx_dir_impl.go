@@ -203,3 +203,7 @@ func (g *gpsLogRepositoryDirectoryImpl) gpxFileToPoints(gpxfilename string) (gps
 	}
 	return gpsLogs, nil
 }
+
+func (g *gpsLogRepositoryDirectoryImpl) UnWrapTyped() ([]GPSLogRepository, error) {
+	return []GPSLogRepository{g}, nil
+}

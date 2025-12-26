@@ -21,4 +21,6 @@ type Repository interface {
 	UpdateCache(ctx context.Context) error
 
 	Close(ctx context.Context) error
+
+	UnWrap() ([]Repository, error)
 }

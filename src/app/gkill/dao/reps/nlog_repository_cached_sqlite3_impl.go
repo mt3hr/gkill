@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
-  UPDATE_USER NOT NULL 
+  UPDATE_USER NOT NULL,
+  REP_NAME NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -138,6 +139,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 
 	if err != nil {
@@ -358,12 +364,11 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// n.m.Lock()
-	// defer n.m.Unlock()
-
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
-		UpdateCache: &trueValue,
+		UpdateCache:    &trueValue,
+		OnlyLatestData: &falseValue,
 	}
 
 	allNlogs, err := n.nlogRep.FindNlog(ctx, query)
@@ -371,6 +376,9 @@ func (n *nlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error
 		err = fmt.Errorf("error at get all nlog at update cache: %w", err)
 		return err
 	}
+
+	n.m.Lock()
+	defer n.m.Unlock()
 
 	tx, err := n.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -833,4 +841,12 @@ INSERT INTO ` + n.dbName + ` (
 		return err
 	}
 	return nil
+}
+
+func (n *nlogRepositoryCachedSQLite3Impl) UnWrapTyped() ([]NlogRepository, error) {
+	return n.nlogRep.UnWrapTyped()
+}
+
+func (n *nlogRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
+	return n.nlogRep.UnWrap()
 }

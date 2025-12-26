@@ -3,6 +3,11 @@ package gkill_options
 import "time"
 
 var (
+	falseValue = false
+	trueValue  = true
+)
+
+var (
 	GkillHomeDir         = "$HOME/gkill"
 	LibDir               = "$HOME/gkill/lib/base_directory"
 	CacheDir             = "$HOME/gkill/caches"
@@ -12,7 +17,7 @@ var (
 	TLSKeyFileDefault    = "$HOME/gkill/tls/key.pem"
 	DataDirectoryDefault = "$HOME/gkill/datas"
 
-	IsCacheInMemory = false
+	IsCacheInMemory = true
 	IsOutputLog     = false
 	DisableTLSForce = false
 
@@ -39,19 +44,19 @@ var (
 
 	GoroutinePool = 1000
 
-	CacheClearCountLimit int64 = int64(9007199254740991) // javascriptのNumber上限値
+	CacheClearCountLimit int64 = 3000 // int64(9007199254740991) // javascriptのNumber上限値
 	CacheUpdateDuration        = 1 * time.Minute
 
-	CacheKmemoReps        = false
-	CacheKCReps           = false
-	CacheURLogReps        = false
-	CacheNlogReps         = false
-	CacheTimeIsReps       = false
-	CacheMiReps           = false
-	CacheLantanaReps      = false
-	CacheIDFKyouReps      = false
-	CacheTagReps          = true
-	CacheTextReps         = true
-	CacheNotificationReps = false
-	CacheReKyouReps       = false
+	CacheKmemoReps        = &IsCacheInMemory
+	CacheKCReps           = &IsCacheInMemory
+	CacheURLogReps        = &IsCacheInMemory
+	CacheNlogReps         = &IsCacheInMemory
+	CacheTimeIsReps       = &IsCacheInMemory
+	CacheMiReps           = &IsCacheInMemory
+	CacheLantanaReps      = &IsCacheInMemory
+	CacheIDFKyouReps      = &IsCacheInMemory
+	CacheTagReps          = &trueValue
+	CacheTextReps         = &trueValue
+	CacheNotificationReps = &falseValue // 未検証
+	CacheReKyouReps       = &falseValue // 未検証
 )

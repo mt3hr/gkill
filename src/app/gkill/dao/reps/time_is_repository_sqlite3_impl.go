@@ -167,6 +167,11 @@ FROM TIMEIS
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
@@ -194,6 +199,11 @@ FROM TIMEIS
 	queryArgsForPlaingEnd := []interface{}{}
 	sqlWhereFilterPlaingTimeisEnd := ""
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
@@ -536,6 +546,11 @@ FROM TIMEIS
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
@@ -893,4 +908,12 @@ INSERT INTO TIMEIS (
 		return err
 	}
 	return nil
+}
+
+func (t *timeIsRepositorySQLite3Impl) UnWrapTyped() ([]TimeIsRepository, error) {
+	return []TimeIsRepository{t}, nil
+}
+
+func (t *timeIsRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{t}, nil
 }

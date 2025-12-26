@@ -29,4 +29,8 @@ type KCRepository interface {
 	GetKCHistories(ctx context.Context, id string) ([]*KC, error)
 
 	AddKCInfo(ctx context.Context, kc *KC) error
+
+	UnWrapTyped() ([]KCRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

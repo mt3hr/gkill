@@ -376,3 +376,7 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (t *textTempRepositorySQLite3Impl) UnWrapTyped() ([]TextTempRepository, error) {
+	return []TextTempRepository{t}, nil
+}

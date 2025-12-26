@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
+  CONTENT_PATH NOT NULL,
   REP_NAME NOT NULL
 )
 `
@@ -124,9 +125,10 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  CONTENT_PATH,
   REP_NAME,
   ? AS DATA_TYPE
-FROM IDF
+FROM ` + i.dbName + `
 WHERE
 `
 	dataType := "idf"
@@ -144,6 +146,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := false
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -190,6 +197,7 @@ WHERE
 				&idf.UpdateApp,
 				&idf.UpdateDevice,
 				&idf.UpdateUser,
+				&idf.ContentPath,
 				&idf.RepName,
 				&idf.DataType,
 			)
@@ -226,7 +234,7 @@ WHERE
 			// ファイルの内容を取得する
 			fileContentText := ""
 			filename := idf.ContentPath
-			if err != nil {
+			if filename == "" {
 				// err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				// return nil, err
 
@@ -371,9 +379,10 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  CONTENT_PATH,
   REP_NAME,
   ? AS DATA_TYPE
-FROM IDF
+FROM ` + i.dbName + `
 WHERE
 `
 
@@ -448,6 +457,7 @@ WHERE
 				&idf.UpdateApp,
 				&idf.UpdateDevice,
 				&idf.UpdateUser,
+				&idf.ContentPath,
 				&idf.RepName,
 				&idf.DataType,
 			)
@@ -509,12 +519,11 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id str
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// i.m.Lock()
-	// defer i.m.Unlock()
-
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
-		UpdateCache: &trueValue,
+		UpdateCache:    &trueValue,
+		OnlyLatestData: &falseValue,
 	}
 
 	allIDFKyous, err := i.idfRep.FindIDFKyou(ctx, query)
@@ -522,6 +531,9 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		err = fmt.Errorf("error at get all idf kyou at update cache: %w", err)
 		return err
 	}
+
+	i.m.Lock()
+	defer i.m.Unlock()
 
 	tx, err := i.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -557,8 +569,10 @@ INSERT INTO ` + i.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  CONTENT_PATH,
   REP_NAME
 ) VALUES (
+  ?,
   ?,
   ?,
   ?,
@@ -605,6 +619,7 @@ INSERT INTO ` + i.dbName + ` (
 				idfKyou.UpdateApp,
 				idfKyou.UpdateDevice,
 				idfKyou.UpdateUser,
+				idfKyou.ContentPath,
 				idfKyou.RepName,
 			}
 
@@ -666,9 +681,10 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  CONTENT_PATH,
   REP_NAME,
   ? AS DATA_TYPE
-FROM IDF
+FROM ` + i.dbName + `
 WHERE
 `
 	dataType := "idf"
@@ -686,6 +702,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := false
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 
 	if err != nil {
@@ -734,6 +755,7 @@ WHERE
 				&idf.UpdateApp,
 				&idf.UpdateDevice,
 				&idf.UpdateUser,
+				&idf.ContentPath,
 				&idf.RepName,
 				&idf.DataType,
 			)
@@ -769,7 +791,7 @@ WHERE
 			// ファイルの内容を取得する
 			fileContentText := ""
 			filename := idf.ContentPath
-			if err != nil {
+			if filename == "" {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
 			}
@@ -889,9 +911,10 @@ SELECT
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  CONTENT_PATH,
   REP_NAME,
   ? AS DATA_TYPE
-FROM IDF
+FROM ` + i.dbName + `
 WHERE 
 `
 
@@ -965,6 +988,7 @@ WHERE
 				&idf.UpdateApp,
 				&idf.UpdateDevice,
 				&idf.UpdateUser,
+				&idf.ContentPath,
 				&idf.RepName,
 				&idf.DataType,
 			)
@@ -1025,6 +1049,7 @@ INSERT INTO IDF (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
+  CONTENT_PATH,
   REP_NAME
 ) VALUES (
   ?,
@@ -1078,4 +1103,11 @@ INSERT INTO IDF (
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) HandleFileServe(w http.ResponseWriter, r *http.Request) {
 	i.idfRep.HandleFileServe(w, r)
+}
+
+func (i *idfKyouRepositoryCachedSQLite3Impl) UnWrapTyped() ([]IDFKyouRepository, error) {
+	return i.idfRep.UnWrapTyped()
+}
+func (i *idfKyouRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
+	return i.idfRep.UnWrap()
 }

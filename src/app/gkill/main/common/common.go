@@ -101,13 +101,11 @@ func init() {
 	}
 	fixTimezone()
 
-	/*
-		done := threads.AllocateThread()
-		defer done()
-		go func() {
-			http.ListenAndServe("localhost:6060", nil) // pprof用
-		}()
-	*/
+	done := threads.AllocateThread()
+	defer done()
+	go func() {
+		http.ListenAndServe("localhost:6060", nil) // pprof用
+	}()
 
 	IDFCmd.PersistentFlags().StringArrayVarP(&gkill_options.IDFIgnore, "ignore", "i", gkill_options.IDFIgnore, "ignore files")
 }

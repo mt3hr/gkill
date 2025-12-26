@@ -35,4 +35,8 @@ type KmemoTempRepository interface {
 	GetKmemosByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kmemo, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]KmemoTempRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

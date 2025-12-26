@@ -39,4 +39,8 @@ type ReKyouTempRepository interface {
 	GetReKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*ReKyou, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]ReKyouTempRepository, error)
+
+	UnWrap() ([]Repository, error)
 }
