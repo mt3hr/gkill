@@ -195,6 +195,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -638,4 +643,8 @@ INSERT INTO TEXT (
 		return err
 	}
 	return nil
+}
+
+func (t *textRepositorySQLite3Impl) UnWrapTyped() ([]TextRepository, error) {
+	return []TextRepository{t}, nil
 }

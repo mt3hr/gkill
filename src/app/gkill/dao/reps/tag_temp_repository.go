@@ -35,4 +35,6 @@ type TagTempRepository interface {
 	GetTagsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Tag, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]TagTempRepository, error)
 }

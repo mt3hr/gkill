@@ -67,10 +67,14 @@ loop:
 			}
 			for _, kyous := range matchKyousInRep {
 				for _, kyou := range kyous {
-					if _, exist := matchKyous[kyou.ID]; !exist {
-						matchKyous[kyou.ID] = []*Kyou{}
+					key := kyou.ID
+					if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
-					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
+					if _, exist := matchKyous[key]; !exist {
+						matchKyous[key] = []*Kyou{}
+					}
+					matchKyous[key] = append(matchKyous[key], kyou)
 				}
 			}
 		default:
@@ -227,8 +231,29 @@ loop:
 }
 
 func (k KCRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements KCReps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	trueValue := true
+	ids := []string{id}
+	for _, rep := range k {
+		query := &find.FindQuery{
+			IDs:    &ids,
+			UseIDs: &trueValue,
+		}
+		kyous, err := rep.FindKyous(ctx, query)
+		if len(kyous) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (k KCRepositories) UpdateCache(ctx context.Context) error {
@@ -371,12 +396,16 @@ loop:
 				continue loop
 			}
 			for _, kyou := range matchKCsInRep {
-				if existKC, exist := matchKCs[kyou.ID]; exist {
+				key := kyou.ID
+				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
+				}
+				if existKC, exist := matchKCs[key]; exist {
 					if kyou.UpdateTime.After(existKC.UpdateTime) {
-						matchKCs[kyou.ID] = kyou
+						matchKCs[key] = kyou
 					}
 				} else {
-					matchKCs[kyou.ID] = kyou
+					matchKCs[key] = kyou
 				}
 			}
 		default:
@@ -640,4 +669,28 @@ loop:
 func (k KCRepositories) AddKCInfo(ctx context.Context, kc *KC) error {
 	err := fmt.Errorf("not implements KCReps.AddKCInfo")
 	return err
+}
+
+func (k KCRepositories) UnWrapTyped() ([]KCRepository, error) {
+	unwraped := []KCRepository{}
+	for _, rep := range k {
+		u, err := rep.UnWrapTyped()
+		if err != nil {
+			return nil, err
+		}
+		unwraped = append(unwraped, u...)
+	}
+	return unwraped, nil
+}
+
+func (k KCRepositories) UnWrap() ([]Repository, error) {
+	repositories := []Repository{}
+	for _, rep := range k {
+		unwraped, err := rep.UnWrap()
+		if err != nil {
+			return nil, err
+		}
+		repositories = append(repositories, unwraped...)
+	}
+	return repositories, nil
 }

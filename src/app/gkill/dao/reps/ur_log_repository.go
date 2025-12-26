@@ -29,4 +29,8 @@ type URLogRepository interface {
 	GetURLogHistories(ctx context.Context, id string) ([]*URLog, error)
 
 	AddURLogInfo(ctx context.Context, urlog *URLog) error
+
+	UnWrapTyped() ([]URLogRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

@@ -457,3 +457,11 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (r *reKyouTempRepositorySQLite3Impl) UnWrapTyped() ([]ReKyouTempRepository, error) {
+	return []ReKyouTempRepository{r}, nil
+}
+
+func (r *reKyouTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{r}, nil
+}

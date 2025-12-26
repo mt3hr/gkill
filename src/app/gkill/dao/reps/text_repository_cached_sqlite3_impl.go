@@ -234,6 +234,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -412,18 +417,21 @@ func (t *textRepositoryCachedSQLite3Impl) GetTextsByTargetID(ctx context.Context
 }
 
 func (t *textRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// t.m.Lock()
-	// defer t.m.Unlock()
-
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
-		UpdateCache: &trueValue,
+		UpdateCache:    &trueValue,
+		OnlyLatestData: &falseValue,
 	}
+
 	allTexts, err := t.textRep.FindTexts(ctx, query)
 	if err != nil {
 		err = fmt.Errorf("error at get all texts at update cache: %w", err)
 		return err
 	}
+
+	t.m.Lock()
+	defer t.m.Unlock()
 
 	tx, err := t.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -726,4 +734,8 @@ INSERT INTO ` + t.dbName + ` (
 		return err
 	}
 	return nil
+}
+
+func (m *textRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TextRepository, error) {
+	return []TextRepository{m.textRep}, nil
 }

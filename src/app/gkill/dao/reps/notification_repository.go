@@ -27,4 +27,6 @@ type NotificationRepository interface {
 	GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error)
 
 	AddNotificationInfo(ctx context.Context, notification *Notification) error
+
+	UnWrapTyped() ([]NotificationRepository, error)
 }

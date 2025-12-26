@@ -31,4 +31,6 @@ type TagRepository interface {
 	GetAllTagNames(ctx context.Context) ([]string, error)
 
 	GetAllTags(ctx context.Context) ([]*Tag, error)
+
+	UnWrapTyped() ([]TagRepository, error)
 }

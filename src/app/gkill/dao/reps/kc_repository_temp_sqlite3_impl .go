@@ -457,3 +457,11 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (k *kcTempRepositorySQLite3Impl) UnWrapTyped() ([]KCTempRepository, error) {
+	return []KCTempRepository{k}, nil
+}
+
+func (k *kcTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{k}, nil
+}

@@ -250,6 +250,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := false
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
@@ -261,8 +266,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -272,6 +277,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
 	if err != nil {
 		return nil, err
@@ -283,8 +293,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -294,6 +304,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
 	if err != nil {
 		return nil, err
@@ -305,8 +320,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -316,6 +331,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
@@ -327,8 +347,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -338,6 +358,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
@@ -620,6 +645,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := false
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
@@ -631,8 +661,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -642,6 +672,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
 	if err != nil {
 		return nil, err
@@ -653,8 +688,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -664,6 +699,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
 	if err != nil {
 		return nil, err
@@ -675,8 +715,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -686,6 +726,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
@@ -697,8 +742,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -708,6 +753,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
@@ -799,12 +849,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) 
 }
 
 func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// m.m.Lock()
-	// defer m.m.Unlock()
-
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
-		UpdateCache: &trueValue,
+		UpdateCache:    &trueValue,
+		OnlyLatestData: &falseValue,
 	}
 
 	allMis, err := m.miRep.FindMi(ctx, query)
@@ -812,6 +861,9 @@ func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 		err = fmt.Errorf("error at get all mis at update cache: %w", err)
 		return err
 	}
+
+	m.m.Lock()
+	defer m.m.Unlock()
 
 	tx, err := m.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -1137,6 +1189,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := false
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
@@ -1148,8 +1205,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -1159,6 +1216,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForCheck, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCheck)
 	if err != nil {
 		return nil, err
@@ -1170,8 +1232,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -1181,6 +1243,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForLimit, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForLimit)
 	if err != nil {
 		return nil, err
@@ -1192,8 +1259,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -1203,6 +1270,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err
@@ -1214,8 +1286,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
@@ -1225,6 +1297,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	appendOrderBy = false
 	findWordUseLike = true
 	ignoreCase = true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForEnd, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForEnd)
 	if err != nil {
 		return nil, err
@@ -1354,12 +1431,14 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	var err error
 
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
 		UseIDs:          &trueValue,
 		IDs:             &[]string{id},
 		IncludeCreateMi: &trueValue,
 		IncludeStartMi:  &trueValue,
 		IncludeCheckMi:  &trueValue,
+		OnlyLatestData:  &falseValue,
 	}
 
 	sqlCreateMi := `
@@ -1525,7 +1604,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	tableNameAlias := m.dbName
 	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
-	onlyLatestData := true
+	onlyLatestData := false
 	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -1543,11 +1622,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		queryArgsForCreate = append(queryArgsForCreate, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "CREATE_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1565,11 +1644,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		queryArgsForCheck = append(queryArgsForCheck, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "LIMIT_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1587,11 +1666,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		queryArgsForLimit = append(queryArgsForLimit, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "ESTIMATE_START_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1609,11 +1688,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		queryArgsForStart = append(queryArgsForStart, *query.MiBoardName)
 	}
 
-	tableName = "MI"
-	tableNameAlias = "MI"
+	tableName = m.dbName
+	tableNameAlias = m.dbName
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
+	onlyLatestData = false
 	relatedTimeColumnName = "ESTIMATE_END_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1874,4 +1953,12 @@ WHERE
 		}
 	}
 	return boardNames, nil
+}
+
+func (m *miRepositoryCachedSQLite3Impl) UnWrapTyped() ([]MiRepository, error) {
+	return m.miRep.UnWrapTyped()
+}
+
+func (m *miRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
+	return m.miRep.UnWrap()
 }

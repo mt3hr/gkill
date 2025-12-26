@@ -509,3 +509,11 @@ loop:
 	}
 	return matchGitCommitLog, nil
 }
+
+func (g *gitCommitLogRepositoryLocalImpl) UnWrapTyped() ([]GitCommitLogRepository, error) {
+	return []GitCommitLogRepository{g}, nil
+}
+
+func (g *gitCommitLogRepositoryLocalImpl) UnWrap() ([]Repository, error) {
+	return []Repository{g}, nil
+}

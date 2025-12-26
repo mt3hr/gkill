@@ -25,4 +25,8 @@ type GitCommitLogRepository interface {
 	FindGitCommitLog(ctx context.Context, query *find.FindQuery) ([]*GitCommitLog, error)
 
 	GetGitCommitLog(ctx context.Context, id string, updateTime *time.Time) (*GitCommitLog, error)
+
+	UnWrapTyped() ([]GitCommitLogRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

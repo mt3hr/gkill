@@ -473,3 +473,11 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (u *urlogTempRepositorySQLite3Impl) UnWrapTyped() ([]URLogTempRepository, error) {
+	return []URLogTempRepository{u}, nil
+}
+
+func (u *urlogTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{u}, nil
+}

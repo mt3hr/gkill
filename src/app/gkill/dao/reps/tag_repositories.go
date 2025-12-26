@@ -66,12 +66,17 @@ loop:
 				continue loop
 			}
 			for _, tag := range matchTagsInRep {
-				if existTag, exist := matchTags[tag.ID]; exist {
+				key := tag.ID
+				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					key += fmt.Sprintf("%d", tag.UpdateTime.Unix())
+				}
+
+				if existTag, exist := matchTags[key]; exist {
 					if tag.UpdateTime.After(existTag.UpdateTime) {
-						matchTags[tag.ID] = tag
+						matchTags[key] = tag
 					}
 				} else {
-					matchTags[tag.ID] = tag
+					matchTags[key] = tag
 				}
 			}
 		default:
@@ -413,8 +418,29 @@ errloop:
 }
 
 func (t TagRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements TagReps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	trueValue := true
+	ids := []string{id}
+	for _, rep := range t {
+		query := &find.FindQuery{
+			IDs:    &ids,
+			UseIDs: &trueValue,
+		}
+		tags, err := rep.FindTags(ctx, query)
+		if len(tags) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (t TagRepositories) GetRepName(ctx context.Context) (string, error) {
@@ -710,4 +736,16 @@ loop:
 	})
 
 	return allTagsList, nil
+}
+
+func (t TagRepositories) UnWrapTyped() ([]TagRepository, error) {
+	unwraped := []TagRepository{}
+	for _, rep := range t {
+		u, err := rep.UnWrapTyped()
+		if err != nil {
+			return nil, err
+		}
+		unwraped = append(unwraped, u...)
+	}
+	return unwraped, nil
 }

@@ -66,12 +66,17 @@ loop:
 				continue loop
 			}
 			for _, text := range matchTextsInRep {
-				if existText, exist := matchTexts[text.ID]; exist {
+				key := text.ID
+				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					key += fmt.Sprintf("%d", text.UpdateTime.Unix())
+				}
+
+				if existText, exist := matchTexts[key]; exist {
 					if text.UpdateTime.After(existText.UpdateTime) {
-						matchTexts[text.ID] = text
+						matchTexts[key] = text
 					}
 				} else {
-					matchTexts[text.ID] = text
+					matchTexts[key] = text
 				}
 			}
 		default:
@@ -327,8 +332,29 @@ errloop:
 }
 
 func (t TextRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements TextReps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	trueValue := true
+	ids := []string{id}
+	for _, rep := range t {
+		query := &find.FindQuery{
+			IDs:    &ids,
+			UseIDs: &trueValue,
+		}
+		texts, err := rep.FindTexts(ctx, query)
+		if len(texts) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (t TextRepositories) GetRepName(ctx context.Context) (string, error) {
@@ -511,4 +537,16 @@ loop:
 func (t TextRepositories) AddTextInfo(ctx context.Context, text *Text) error {
 	err := fmt.Errorf("not implements TextReps.AddTextInfo")
 	return err
+}
+
+func (t TextRepositories) UnWrapTyped() ([]TextRepository, error) {
+	unwraped := []TextRepository{}
+	for _, rep := range t {
+		u, err := rep.UnWrapTyped()
+		if err != nil {
+			return nil, err
+		}
+		unwraped = append(unwraped, u...)
+	}
+	return unwraped, nil
 }
