@@ -342,3 +342,7 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (t *notificationTempRepositorySQLite3Impl) UnWrapTyped() ([]NotificationTempRepository, error) {
+	return []NotificationTempRepository{t}, nil
+}

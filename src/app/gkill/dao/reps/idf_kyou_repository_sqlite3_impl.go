@@ -189,6 +189,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -242,6 +247,9 @@ WHERE
 			if err != nil {
 				err = fmt.Errorf("error at scan from idf: %w", err)
 				return nil, err
+			}
+			if targetRepName == "" || targetRepName == "." {
+				targetRepName = repName
 			}
 
 			idf.ContentPath, err = i.GetPath(ctx, idf.ID)
@@ -809,6 +817,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 
 	if err != nil {
@@ -895,7 +908,15 @@ WHERE
 			if idf.RepName != repName && idf.RepName != "" {
 				continue
 			}
+
+			idf.ContentPath, err = i.GetPath(ctx, idf.ID)
+			if err != nil {
+				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
+				return nil, err
+			}
+
 			fileContentText := ""
+
 			filename, err := i.GetPath(ctx, idf.ID)
 			if err != nil {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
@@ -1484,4 +1505,12 @@ func isAudio(filename string) bool {
 		return true
 	}
 	return false
+}
+
+func (i *idfKyouRepositorySQLite3Impl) UnWrapTyped() ([]IDFKyouRepository, error) {
+	return []IDFKyouRepository{i}, nil
+}
+
+func (i *idfKyouRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{i}, nil
 }

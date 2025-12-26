@@ -228,8 +228,23 @@ loop:
 }
 
 func (g GitCommitLogRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements GitCommitLogReps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	for _, rep := range g {
+		kyous, err := rep.GetPath(ctx, id)
+		if len(kyous) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (g GitCommitLogRepositories) UpdateCache(ctx context.Context) error {
@@ -462,4 +477,28 @@ loop:
 	}
 
 	return matchGitCommitLog, nil
+}
+
+func (g GitCommitLogRepositories) UnWrapTyped() ([]GitCommitLogRepository, error) {
+	unwraped := []GitCommitLogRepository{}
+	for _, rep := range g {
+		u, err := rep.UnWrapTyped()
+		if err != nil {
+			return nil, err
+		}
+		unwraped = append(unwraped, u...)
+	}
+	return unwraped, nil
+}
+
+func (g GitCommitLogRepositories) UnWrap() ([]Repository, error) {
+	repositories := []Repository{}
+	for _, rep := range g {
+		unwraped, err := rep.UnWrap()
+		if err != nil {
+			return nil, err
+		}
+		repositories = append(repositories, unwraped...)
+	}
+	return repositories, nil
 }

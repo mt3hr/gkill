@@ -445,3 +445,11 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (k *kmemoTempRepositorySQLite3Impl) UnWrapTyped() ([]KmemoTempRepository, error) {
+	return []KmemoTempRepository{k}, nil
+}
+
+func (k *kmemoTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{k}, nil
+}

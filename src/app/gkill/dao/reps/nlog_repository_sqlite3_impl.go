@@ -146,6 +146,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 
 	if err != nil {
@@ -451,6 +456,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -751,4 +761,12 @@ INSERT INTO NLOG (
 		return err
 	}
 	return nil
+}
+
+func (n *nlogRepositorySQLite3Impl) UnWrapTyped() ([]NlogRepository, error) {
+	return []NlogRepository{n}, nil
+}
+
+func (n *nlogRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{n}, nil
 }

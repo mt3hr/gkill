@@ -25,4 +25,6 @@ type TextRepository interface {
 	GetTextHistories(ctx context.Context, id string) ([]*Text, error)
 
 	AddTextInfo(ctx context.Context, text *Text) error
+
+	UnWrapTyped() ([]TextRepository, error)
 }

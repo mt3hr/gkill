@@ -15,4 +15,6 @@ type GPSLogRepository interface {
 	GetRepName(ctx context.Context) (string, error)
 
 	UpdateCache(ctx context.Context) error
+
+	UnWrapTyped() ([]GPSLogRepository, error)
 }

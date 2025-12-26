@@ -29,4 +29,8 @@ type NlogRepository interface {
 	GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error)
 
 	AddNlogInfo(ctx context.Context, nlog *Nlog) error
+
+	UnWrapTyped() ([]NlogRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

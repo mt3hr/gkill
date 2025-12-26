@@ -189,6 +189,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := false
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -928,4 +933,8 @@ WHERE
 		}
 	}
 	return tags, nil
+}
+
+func (t *tagRepositorySQLite3Impl) UnWrapTyped() ([]TagRepository, error) {
+	return []TagRepository{t}, nil
 }

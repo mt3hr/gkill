@@ -445,3 +445,11 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (l *lantanaTempRepositorySQLite3Impl) UnWrapTyped() ([]LantanaTempRepository, error) {
+	return []LantanaTempRepository{l}, nil
+}
+
+func (l *lantanaTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{l}, nil
+}

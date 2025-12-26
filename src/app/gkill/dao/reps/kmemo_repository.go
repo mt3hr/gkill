@@ -29,4 +29,8 @@ type KmemoRepository interface {
 	GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error)
 
 	AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error
+
+	UnWrapTyped() ([]KmemoRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

@@ -255,3 +255,7 @@ WHERE ID = ?
 func (m *gkillNotificateTargetDAOSQLite3Impl) Close(ctx context.Context) error {
 	return m.db.Close()
 }
+
+func (m *gkillNotificateTargetDAOSQLite3Impl) UnWrapTyped() ([]GkillNotificateTargetDAO, error) {
+	return []GkillNotificateTargetDAO{m}, nil
+}

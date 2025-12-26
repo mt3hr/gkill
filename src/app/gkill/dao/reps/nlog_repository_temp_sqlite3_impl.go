@@ -461,3 +461,11 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (n *nlogTempRepositorySQLite3Impl) UnWrapTyped() ([]NlogTempRepository, error) {
+	return []NlogTempRepository{n}, nil
+}
+
+func (n *nlogTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{n}, nil
+}

@@ -35,4 +35,8 @@ type TimeIsTempRepository interface {
 	GetTimeIssByTXID(ctx context.Context, txID string, userID string, device string) ([]*TimeIs, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]TimeIsTempRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

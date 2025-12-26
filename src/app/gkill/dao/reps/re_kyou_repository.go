@@ -33,4 +33,8 @@ type ReKyouRepository interface {
 	GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error)
 
 	GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error)
+
+	UnWrapTyped() ([]ReKyouRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

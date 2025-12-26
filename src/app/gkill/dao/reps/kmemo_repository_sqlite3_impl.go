@@ -142,6 +142,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -729,4 +734,12 @@ INSERT INTO KMEMO (
 		return err
 	}
 	return nil
+}
+
+func (k *kmemoRepositorySQLite3Impl) UnWrapTyped() ([]KmemoRepository, error) {
+	return []KmemoRepository{k}, nil
+}
+
+func (k *kmemoRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{k}, nil
 }

@@ -258,6 +258,11 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
@@ -1033,6 +1038,11 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForCreate)
 	if err != nil {
 		return nil, err
@@ -1255,12 +1265,14 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 	var err error
 
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
 		UseIDs:          &trueValue,
 		IDs:             &[]string{id},
 		IncludeCreateMi: &trueValue,
 		IncludeStartMi:  &trueValue,
 		IncludeCheckMi:  &trueValue,
+		OnlyLatestData:  &falseValue,
 	}
 
 	repName, err := m.GetRepName(ctx)
@@ -1785,4 +1797,12 @@ WHERE
 		}
 	}
 	return boardNames, nil
+}
+
+func (m *miRepositorySQLite3Impl) UnWrapTyped() ([]MiRepository, error) {
+	return []MiRepository{m}, nil
+}
+
+func (m *miRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{m}, nil
 }

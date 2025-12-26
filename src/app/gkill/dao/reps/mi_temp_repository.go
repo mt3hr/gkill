@@ -37,4 +37,8 @@ type MiTempRepository interface {
 	GetMisByTXID(ctx context.Context, txID string, userID string, device string) ([]*Mi, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]MiTempRepository, error)
+
+	UnWrap() ([]Repository, error)
 }
