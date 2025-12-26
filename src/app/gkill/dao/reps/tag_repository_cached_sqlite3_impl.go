@@ -524,14 +524,7 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	trueValue := true
-	falseValue := false
-	query := &find.FindQuery{
-		UpdateCache:    &trueValue,
-		OnlyLatestData: &falseValue,
-	}
-
-	allTags, err := t.tagRep.FindTags(ctx, query)
+	allTags, err := t.tagRep.GetAllTags(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags at update cache: %w", err)
 		return err
@@ -849,9 +842,12 @@ func (t *tagRepositoryCachedSQLite3Impl) GetAllTagNames(ctx context.Context) ([]
 SELECT 
   DISTINCT TAG
 FROM ` + t.dbName + `
-WHERE IS_DELETED = FALSE
-
 `
+	tableName := t.dbName
+	tableNameAlias := t.dbName
+	sql += fmt.Sprintf(" WHERE UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
+	sql += fmt.Sprintf(" GROUP BY TAG ")
+
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
@@ -868,7 +864,7 @@ WHERE IS_DELETED = FALSE
 	}
 	defer rows.Close()
 
-	tagNames := []string{}
+	tagNamesMap := map[string]struct{}{}
 	for rows.Next() {
 		select {
 		case <-ctx.Done():
@@ -883,8 +879,12 @@ WHERE IS_DELETED = FALSE
 				return nil, err
 			}
 
-			tagNames = append(tagNames, tagName)
+			tagNamesMap[tagName] = struct{}{}
 		}
+	}
+	tagNames := []string{}
+	for tagName := range tagNamesMap {
+		tagNames = append(tagNames, tagName)
 	}
 	return tagNames, nil
 }
