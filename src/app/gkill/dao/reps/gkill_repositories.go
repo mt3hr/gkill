@@ -800,8 +800,29 @@ func (g *GkillRepositories) UpdateCacheNextTick() {
 }
 
 func (g *GkillRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	trueValue := true
+	ids := []string{id}
+	for _, rep := range g.Reps {
+		query := &find.FindQuery{
+			IDs:    &ids,
+			UseIDs: &trueValue,
+		}
+		kyous, err := rep.FindKyous(ctx, query)
+		if len(kyous) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (g *GkillRepositories) GetRepName(ctx context.Context) (string, error) {
@@ -981,12 +1002,16 @@ loop:
 				continue loop
 			}
 			for _, tag := range matchTagsInRep {
-				if existTag, exist := matchTags[tag.ID]; exist {
+				key := tag.ID
+				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					key += fmt.Sprintf("%d", tag.UpdateTime.Unix())
+				}
+				if existTag, exist := matchTags[key]; exist {
 					if tag.UpdateTime.After(existTag.UpdateTime) {
-						matchTags[tag.ID] = tag
+						matchTags[key] = tag
 					}
 				} else {
-					matchTags[tag.ID] = tag
+					matchTags[key] = tag
 				}
 			}
 		default:
@@ -1279,19 +1304,24 @@ func (g *GkillRepositories) GetAllTagNames(ctx context.Context) ([]string, error
 }
 
 func (g *GkillRepositories) GetAllRepNames(ctx context.Context) ([]string, error) {
+	var err error
+	repImpls, err := g.Reps.UnWrap()
+	if err != nil {
+		err = fmt.Errorf("error at unwrap reps: %w", err)
+		return nil, err
+	}
+
 	repNames := map[string]struct{}{}
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
-	ch := make(chan string, len(g.Reps))
-	errch := make(chan error, len(g.Reps))
+	ch := make(chan string, len(repImpls))
+	errch := make(chan error, len(repImpls))
 	defer close(ch)
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range g.Reps {
+	for _, rep := range repImpls {
 		wg.Add(1)
-
 		done := threads.AllocateThread()
 		go func(rep Repository) {
 			defer done()
@@ -1436,12 +1466,16 @@ loop:
 				continue loop
 			}
 			for _, text := range matchTextsInRep {
-				if existText, exist := matchTexts[text.ID]; exist {
+				key := text.ID
+				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					key += fmt.Sprintf("%d", text.UpdateTime.Unix())
+				}
+				if existText, exist := matchTexts[key]; exist {
 					if text.UpdateTime.After(existText.UpdateTime) {
-						matchTexts[text.ID] = text
+						matchTexts[key] = text
 					}
 				} else {
-					matchTexts[text.ID] = text
+					matchTexts[key] = text
 				}
 			}
 		default:

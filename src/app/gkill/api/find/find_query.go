@@ -50,4 +50,5 @@ type FindQuery struct {
 	MiBoardName       *string       `json:"mi_board_name"`
 	MiCheckState      *MiCheckState `json:"mi_check_state"`
 	MiSortType        *MiSortType   `json:"mi_sort_type"`
+	OnlyLatestData    *bool         `json:"only_latest_data"`
 }

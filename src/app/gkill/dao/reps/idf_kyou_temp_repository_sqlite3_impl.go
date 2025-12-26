@@ -513,3 +513,11 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (i *idfKyouRepositoryTempSQLite3Impl) UnWrapTyped() ([]IDFKyouTempRepository, error) {
+	return []IDFKyouTempRepository{i}, nil
+}
+
+func (i *idfKyouRepositoryTempSQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{i}, nil
+}

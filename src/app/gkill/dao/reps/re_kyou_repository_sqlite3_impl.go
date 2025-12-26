@@ -716,30 +716,31 @@ WHERE
 
 func (r *reKyouRepositorySQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error) {
 	withoutRekyouReps := Repositories{}
-	for _, rep := range r.gkillRepositories.Reps {
-		repIsRekyouRep := false
-
-		repPath, err := rep.GetPath(ctx, "")
-		if err != nil {
-			err = fmt.Errorf("error at get reps path: %w", err)
-			return nil, err
-		}
-
-		for _, reKyouRep := range r.gkillRepositories.ReKyouReps.ReKyouRepositories {
-			rekyouRepPath, err := reKyouRep.GetPath(ctx, "")
-			if err != nil {
-				err = fmt.Errorf("error at get rekyous reps path: %w", err)
-				return nil, err
-			}
-
-			if filepath.ToSlash(repPath) == filepath.ToSlash(rekyouRepPath) {
-				repIsRekyouRep = true
-				break
-			}
-		}
-		if repIsRekyouRep {
-			continue
-		}
+	for _, rep := range *&r.gkillRepositories.KmemoReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.KCReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.URLogReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.NlogReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.TimeIsReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.MiReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.LantanaReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.IDFKyouReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.GitCommitLogReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
 
@@ -748,4 +749,12 @@ func (r *reKyouRepositorySQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx contex
 	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = &withoutRekyouGkillRepsValue
 	withoutRekyouGkillRepsValue.ReKyouReps.ReKyouRepositories = nil
 	return &withoutRekyouGkillRepsValue, nil
+}
+
+func (r *reKyouRepositorySQLite3Impl) UnWrapTyped() ([]ReKyouRepository, error) {
+	return []ReKyouRepository{r}, nil
+}
+
+func (r *reKyouRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{r}, nil
 }

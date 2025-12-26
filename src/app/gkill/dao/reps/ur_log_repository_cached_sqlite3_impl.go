@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		dbName:   dbName,
 		urlogRep: urlogRepository,
 		cachedDB: cacheDB,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 
@@ -129,7 +129,7 @@ WHERE
 	dataType := "urlog"
 
 	tableName := u.dbName
-	tableNameAlias := "URLOG"
+	tableNameAlias := u.dbName
 	queryArgs := []interface{}{
 		dataType,
 	}
@@ -141,6 +141,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -272,7 +277,7 @@ WHERE
 	}
 
 	tableName := u.dbName
-	tableNameAlias := "URLOG"
+	tableNameAlias := u.dbName
 	queryArgs := []interface{}{
 		dataType,
 	}
@@ -364,12 +369,11 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id strin
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	// u.m.Lock()
-	// defer u.m.Unlock()
-
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
-		UpdateCache: &trueValue,
+		UpdateCache:    &trueValue,
+		OnlyLatestData: &falseValue,
 	}
 
 	allURLogs, err := u.urlogRep.FindURLog(ctx, query)
@@ -377,6 +381,9 @@ func (u *urlogRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 		err = fmt.Errorf("error at get all urlogs at update cache: %w", err)
 		return err
 	}
+
+	u.m.Lock()
+	defer u.m.Unlock()
 
 	tx, err := u.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -543,7 +550,7 @@ WHERE
 	dataType := "urlog"
 
 	tableName := u.dbName
-	tableNameAlias := "URLOG"
+	tableNameAlias := u.dbName
 	queryArgs := []interface{}{
 		dataType,
 	}
@@ -555,6 +562,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -699,7 +711,7 @@ WHERE
 	dataType := "urlog"
 
 	tableName := u.dbName
-	tableNameAlias := "URLOG"
+	tableNameAlias := u.dbName
 	queryArgs := []interface{}{
 		dataType,
 	}
@@ -866,4 +878,12 @@ INSERT INTO ` + u.dbName + ` (
 		return err
 	}
 	return nil
+}
+
+func (u *urlogRepositoryCachedSQLite3Impl) UnWrapTyped() ([]URLogRepository, error) {
+	return u.urlogRep.UnWrapTyped()
+}
+
+func (u *urlogRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
+	return u.urlogRep.UnWrap()
 }

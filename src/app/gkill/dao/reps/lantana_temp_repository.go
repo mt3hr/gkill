@@ -35,4 +35,8 @@ type LantanaTempRepository interface {
 	GetLantanasByTXID(ctx context.Context, txID string, userID string, device string) ([]*Lantana, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]LantanaTempRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

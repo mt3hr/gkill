@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	sqllib "database/sql"
 	"fmt"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -236,6 +235,11 @@ WHERE
 	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := false
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -313,12 +317,11 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id stri
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	r.m.Lock()
-	defer r.m.Unlock()
-
 	trueValue := true
+	falseValue := false
 	query := &find.FindQuery{
-		UpdateCache: &trueValue,
+		UpdateCache:    &trueValue,
+		OnlyLatestData: &falseValue,
 	}
 
 	allReKyous, err := r.rekyouRep.FindReKyou(ctx, query)
@@ -326,6 +329,9 @@ func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) err
 		err = fmt.Errorf("error at get all rekyou at update cache: %w", err)
 		return err
 	}
+
+	r.m.Lock()
+	defer r.m.Unlock()
 
 	tx, err := r.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -801,30 +807,31 @@ WHERE
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error) {
 	withoutRekyouReps := Repositories{}
-	for _, rep := range r.gkillRepositories.Reps {
-		repIsRekyouRep := false
-
-		repPath, err := rep.GetPath(ctx, "")
-		if err != nil {
-			err = fmt.Errorf("error at get reps path: %w", err)
-			return nil, err
-		}
-
-		for _, reKyouRep := range r.gkillRepositories.ReKyouReps.ReKyouRepositories {
-			rekyouRepPath, err := reKyouRep.GetPath(ctx, "")
-			if err != nil {
-				err = fmt.Errorf("error at get rekyous reps path: %w", err)
-				return nil, err
-			}
-
-			if filepath.ToSlash(repPath) == filepath.ToSlash(rekyouRepPath) {
-				repIsRekyouRep = true
-				break
-			}
-		}
-		if repIsRekyouRep {
-			continue
-		}
+	for _, rep := range *&r.gkillRepositories.KmemoReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.KCReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.URLogReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.NlogReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.TimeIsReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.MiReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.LantanaReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.IDFKyouReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range *&r.gkillRepositories.GitCommitLogReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
 
@@ -833,4 +840,12 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx 
 	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = &withoutRekyouGkillRepsValue
 	withoutRekyouGkillRepsValue.ReKyouReps.ReKyouRepositories = nil
 	return &withoutRekyouGkillRepsValue, nil
+}
+
+func (r *reKyouRepositoryCachedSQLite3Impl) UnWrapTyped() ([]ReKyouRepository, error) {
+	return r.rekyouRep.UnWrapTyped()
+}
+
+func (r *reKyouRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
+	return r.rekyouRep.UnWrap()
 }

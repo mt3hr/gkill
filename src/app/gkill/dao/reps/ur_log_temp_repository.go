@@ -35,4 +35,8 @@ type URLogTempRepository interface {
 	GetURLogsByTXID(ctx context.Context, txID string, userID string, device string) ([]*URLog, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]URLogTempRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

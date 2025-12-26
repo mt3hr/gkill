@@ -220,6 +220,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := false
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -519,14 +524,21 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
-	t.m.Lock()
-	defer t.m.Unlock()
+	trueValue := true
+	falseValue := false
+	query := &find.FindQuery{
+		UpdateCache:    &trueValue,
+		OnlyLatestData: &falseValue,
+	}
 
-	allTags, err := t.tagRep.GetAllTags(ctx)
+	allTags, err := t.tagRep.FindTags(ctx, query)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags at update cache: %w", err)
 		return err
 	}
+
+	t.m.Lock()
+	defer t.m.Unlock()
 
 	tx, err := t.cachedDB.BeginTx(ctx, nil)
 	if err != nil {
@@ -991,4 +1003,8 @@ WHERE
 		}
 	}
 	return tags, nil
+}
+
+func (t *tagRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TagRepository, error) {
+	return []TagRepository{t.tagRep}, nil
 }

@@ -67,10 +67,14 @@ loop:
 			}
 			for _, kyous := range matchKyousInRep {
 				for _, kyou := range kyous {
-					if _, exist := matchKyous[kyou.ID]; !exist {
-						matchKyous[kyou.ID] = []*Kyou{}
+					key := kyou.ID
+					if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+						key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
 					}
-					matchKyous[kyou.ID] = append(matchKyous[kyou.ID], kyou)
+					if _, exist := matchKyous[key]; !exist {
+						matchKyous[key] = []*Kyou{}
+					}
+					matchKyous[key] = append(matchKyous[key], kyou)
 				}
 			}
 		default:
@@ -228,8 +232,29 @@ loop:
 }
 
 func (n NlogRepositories) GetPath(ctx context.Context, id string) (string, error) {
-	err := fmt.Errorf("not implements NlogReps.GetPath")
-	return "", err
+	// 並列処理
+	matchPaths := []string{}
+	trueValue := true
+	ids := []string{id}
+	for _, rep := range n {
+		query := &find.FindQuery{
+			IDs:    &ids,
+			UseIDs: &trueValue,
+		}
+		kyous, err := rep.FindKyous(ctx, query)
+		if len(kyous) == 0 || err != nil {
+			continue
+		}
+		matchPathInRep, err := rep.GetPath(ctx, id)
+		if err != nil {
+			continue
+		}
+		matchPaths = append(matchPaths, matchPathInRep)
+	}
+	if len(matchPaths) == 0 {
+		return "", fmt.Errorf("not found path for id: %s", id)
+	}
+	return matchPaths[0], nil
 }
 
 func (n NlogRepositories) UpdateCache(ctx context.Context) error {
@@ -372,12 +397,16 @@ loop:
 				continue loop
 			}
 			for _, kyou := range matchNlogsInRep {
-				if existNlog, exist := matchNlogs[kyou.ID]; exist {
+				key := kyou.ID
+				if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+					key += fmt.Sprintf("%d", kyou.UpdateTime.Unix())
+				}
+				if existNlog, exist := matchNlogs[key]; exist {
 					if kyou.UpdateTime.After(existNlog.UpdateTime) {
-						matchNlogs[kyou.ID] = kyou
+						matchNlogs[key] = kyou
 					}
 				} else {
-					matchNlogs[kyou.ID] = kyou
+					matchNlogs[key] = kyou
 				}
 			}
 		default:
@@ -641,4 +670,28 @@ loop:
 func (n NlogRepositories) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
 	err := fmt.Errorf("not implements NlogReps.AddNlogInfo")
 	return err
+}
+
+func (n NlogRepositories) UnWrapTyped() ([]NlogRepository, error) {
+	unwraped := []NlogRepository{}
+	for _, rep := range n {
+		u, err := rep.UnWrapTyped()
+		if err != nil {
+			return nil, err
+		}
+		unwraped = append(unwraped, u...)
+	}
+	return unwraped, nil
+}
+
+func (n NlogRepositories) UnWrap() ([]Repository, error) {
+	repositories := []Repository{}
+	for _, rep := range n {
+		unwraped, err := rep.UnWrap()
+		if err != nil {
+			return nil, err
+		}
+		repositories = append(repositories, unwraped...)
+	}
+	return repositories, nil
 }

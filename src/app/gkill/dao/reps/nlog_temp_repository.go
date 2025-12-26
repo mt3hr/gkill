@@ -35,4 +35,8 @@ type NlogTempRepository interface {
 	GetNlogsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Nlog, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]NlogTempRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

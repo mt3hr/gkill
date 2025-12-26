@@ -470,3 +470,11 @@ AND DEVICE = ?
 	}
 	return nil
 }
+
+func (t *timeIsTempRepositorySQLite3Impl) UnWrapTyped() ([]TimeIsTempRepository, error) {
+	return []TimeIsTempRepository{t}, nil
+}
+
+func (t *timeIsTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
+	return []Repository{t}, nil
+}

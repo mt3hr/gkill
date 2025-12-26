@@ -31,4 +31,8 @@ type MiRepository interface {
 	AddMiInfo(ctx context.Context, mi *Mi) error
 
 	GetBoardNames(ctx context.Context) ([]string, error)
+
+	UnWrapTyped() ([]MiRepository, error)
+
+	UnWrap() ([]Repository, error)
 }

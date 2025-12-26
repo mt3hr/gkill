@@ -147,6 +147,11 @@ WHERE
 	appendOrderBy := true
 	findWordUseLike := true
 	ignoreCase := true
+	if query.OnlyLatestData != nil {
+		onlyLatestData = *query.OnlyLatestData
+	} else {
+		onlyLatestData = false
+	}
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
 	if err != nil {
 		return nil, err
@@ -731,4 +736,8 @@ INSERT INTO NOTIFICATION (
 		return err
 	}
 	return nil
+}
+
+func (t *notificationRepositorySQLite3Impl) UnWrapTyped() ([]NotificationRepository, error) {
+	return []NotificationRepository{t}, nil
 }

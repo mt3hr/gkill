@@ -29,4 +29,6 @@ type TextTempRepository interface {
 	GetTextsByTXID(ctx context.Context, txID string, userID string, device string) ([]*Text, error)
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
+
+	UnWrapTyped() ([]TextTempRepository, error)
 }

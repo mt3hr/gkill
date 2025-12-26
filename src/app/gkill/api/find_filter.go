@@ -359,51 +359,27 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 		targetRepNames = *findCtx.ParsedFindQuery.Reps
 	}
 
-	miReps := reps.MiRepositories{}
-	timeisReps := reps.TimeIsRepositories{}
-
-	for _, rep := range typeMatchReps {
-		repName, err := rep.GetRepName(ctx)
+	for _, matchRep := range typeMatchReps {
+		repImpls, err := matchRep.UnWrap()
 		if err != nil {
 			return nil, err
 		}
+		for _, repImpl := range repImpls {
+			repName, err := repImpl.GetRepName(ctx)
+			if err != nil {
+				return nil, err
+			}
 
-	rep_search:
-		for _, targetRepName := range targetRepNames {
-			if targetRepName == repName {
-				for _, miRep := range repositories.MiReps {
-					miRepName, err := miRep.GetRepName(ctx)
-					if err != nil {
-						return nil, err
-					}
-					if miRepName == repName {
-						miReps = append(miReps, miRep)
+		rep_search:
+			for _, targetRepName := range targetRepNames {
+				if targetRepName == repName {
+					if _, exist := findCtx.MatchReps[repName]; !exist {
+						findCtx.MatchReps[repName] = repImpl
 						continue rep_search
 					}
-				}
-
-				for _, timeisRep := range repositories.TimeIsReps {
-					timeisRepName, err := timeisRep.GetRepName(ctx)
-					if err != nil {
-						return nil, err
-					}
-					if timeisRepName == repName {
-						timeisReps = append(timeisReps, timeisRep)
-						continue rep_search
-					}
-				}
-
-				if _, exist := findCtx.MatchReps[repName]; !exist {
-					findCtx.MatchReps[repName] = rep
 				}
 			}
 		}
-	}
-	if len(miReps) != 0 {
-		findCtx.MatchReps["Mi"] = miReps
-	}
-	if len(timeisReps) != 0 {
-		findCtx.MatchReps["TimeIs"] = timeisReps
 	}
 	return nil, nil
 }
