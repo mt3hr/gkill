@@ -6,4 +6,6 @@ type UpdateRepTypeStructRequest struct {
 	SessionID string `json:"session_id"`
 
 	RepTypeStruct []*user_config.RepTypeStruct `json:"rep_type_struct"`
+
+	LocaleName string `json:"locale_name"`
 }

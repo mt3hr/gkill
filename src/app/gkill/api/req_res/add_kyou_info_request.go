@@ -8,4 +8,6 @@ type AddKyouInfoRequest struct {
 	Kyou *reps.IDFKyou `json:"kyou"`
 
 	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }

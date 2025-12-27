@@ -49,6 +49,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/twpayne/go-gpx"
 )
 
@@ -665,7 +666,7 @@ func (g *GkillServerAPI) Serve() error {
 		g.HandleDiscardTX(w, r)
 	}).Methods(g.APIAddress.DiscardTXMethod)
 
-	gkillPage, err := fs.Sub(HTMLFS, "embed/html")
+	gkillPage, err := fs.Sub(EmbedFS, "embed/html")
 	if err != nil {
 		return err
 	}
@@ -870,7 +871,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidLoginResponseDataError,
-				ErrorMessage: "ログインに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -883,7 +884,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidLoginRequestDataError,
-			ErrorMessage: "ログインに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -896,7 +897,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "ログインに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -907,7 +908,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "ユーザIDまたはパスワードが違います",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INVALID_USER_ID_OR_PASSWORD"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -919,7 +920,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountIsNotEnableError,
-			ErrorMessage: "ログインに失敗しました。アカウントが無効化されています",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "ACCOUNT_DISABLED_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -931,7 +932,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountPasswordResetTokenIsNotNilError,
-			ErrorMessage: "パスワードリセットを完了してください",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "REQUESTED_PASSWORD_RESET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -943,7 +944,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidPasswordError,
-			ErrorMessage: "ログインに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -970,7 +971,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -995,7 +996,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountLoginInternalServerError,
-			ErrorMessage: "ログインに失敗しました（サーバ内部エラー）",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1010,7 +1011,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountSessionsError,
-			ErrorMessage: "ログインに失敗しました（サーバ内部エラー）",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1042,7 +1043,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			}
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddURLogLoginSessionError,
-				ErrorMessage: "ログインに失敗しました（サーバ内部エラー）",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGIN_INTERNAL_SERVER_ERROR_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1052,7 +1053,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	response.SessionID = loginSession.SessionID
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.LoginSuccessMessage,
-		Message:     "ログインしました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_LOGIN_MESSAGE"}),
 	})
 }
 
@@ -1070,7 +1071,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidLogoutResponseDataError,
-				ErrorMessage: "ログアウトに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGOUT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1083,7 +1084,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidLogoutRequestDataError,
-			ErrorMessage: "ログアウトに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGOUT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1097,7 +1098,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountLogoutInternalServerError,
-			ErrorMessage: "ログアウトに失敗しました（サーバ内部エラー）",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_LOGOUT_INTERNAL_SERVER_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1105,7 +1106,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.LogoutSuccessMessage,
-		Message:     "ログアウトしました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_LOGOUT_MESSAGE"}),
 	})
 }
 
@@ -1123,7 +1124,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidResetPasswordResponseDataError,
-				ErrorMessage: "パスワードリセット処理に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1136,7 +1137,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidResetPasswordRequestDataError,
-			ErrorMessage: "パスワードリセット処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1149,7 +1150,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountSessionNotFoundError,
-			ErrorMessage: "パスワードリセット処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1161,7 +1162,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "パスワードリセット処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1170,7 +1171,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 	if requesterAccount == nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "パスワードリセット処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1182,7 +1183,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotHasAdminError,
-			ErrorMessage: "パスワードリセット処理に失敗しました。権限がありません。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_NO_AUTH_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1195,7 +1196,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "パスワードリセット処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1203,7 +1204,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 	if targetAccount == nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "パスワードリセット処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1225,7 +1226,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInfoUpdateError,
-			ErrorMessage: "パスワードリセット処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1233,7 +1234,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.PasswordResetSuccessMessage,
-		Message:     "パスワードリセット処理を完了しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_PASSWORD_RESET_MESSAGE"}),
 	})
 	response.PasswordResetPathWithoutHost = *updateTargetAccount.PasswordResetToken
 }
@@ -1252,7 +1253,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidSetNewPasswordResponseDataError,
-				ErrorMessage: "パスワード設定に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1265,7 +1266,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidSetNewPasswordResponseDataError,
-			ErrorMessage: "パスワード設定に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1278,7 +1279,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "パスワード設定に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1286,7 +1287,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 	if targetAccount == nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "パスワードリセット処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1298,7 +1299,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidPasswordResetTokenError,
-			ErrorMessage: "パスワード設定に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1319,7 +1320,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInfoUpdateError,
-			ErrorMessage: "パスワード設定に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SET_NEW_PASSWORD_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1327,7 +1328,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.SetNewPasswordSuccessMessage,
-		Message:     "パスワード設定処理が完了しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_SET_NEW_PASSWORD_MESSAGE"}),
 	})
 }
 
@@ -1345,7 +1346,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddTagResponseDataError,
-				ErrorMessage: "タグ追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1358,14 +1359,14 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddTagRequestDataError,
-			ErrorMessage: "タグ追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1378,7 +1379,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1390,7 +1391,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "タグ追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1403,7 +1404,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagError,
-			ErrorMessage: "タグ追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1413,7 +1414,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistTagError,
-			ErrorMessage: "タグ追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1426,7 +1427,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTagError,
-				ErrorMessage: "タグ追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1439,7 +1440,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddTagError,
-					ErrorMessage: "タグ追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -1452,14 +1453,12 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTagError,
-				ErrorMessage: "タグ追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.ID)
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.TargetID)
 
 	repName, err := repositories.WriteTagRep.GetRepName(r.Context())
 	if err != nil {
@@ -1467,7 +1466,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagError,
-			ErrorMessage: "タグ追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1485,7 +1484,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagError,
-			ErrorMessage: "タグ追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1497,7 +1496,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagError,
-			ErrorMessage: "タグ追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1506,7 +1505,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 	response.AddedTag = tag
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddTagSuccessMessage,
-		Message:     "タグを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_TAG_MESSAGE"}),
 	})
 }
 
@@ -1524,7 +1523,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddTextResponseDataError,
-				ErrorMessage: "テキスト追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1537,14 +1536,14 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddTextRequestDataError,
-			ErrorMessage: "テキスト追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1557,7 +1556,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1569,7 +1568,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "テキスト追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1582,7 +1581,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextError,
-			ErrorMessage: "テキスト追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1592,7 +1591,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistTextError,
-			ErrorMessage: "テキスト追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1605,7 +1604,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTextError,
-				ErrorMessage: "テキスト追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1617,7 +1616,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddTextError,
-					ErrorMessage: "テキスト追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -1630,14 +1629,12 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTextError,
-				ErrorMessage: "テキスト追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.ID)
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.TargetID)
 
 	repName, err := repositories.WriteTextRep.GetRepName(r.Context())
 	if err != nil {
@@ -1645,7 +1642,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextError,
-			ErrorMessage: "テキスト追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1663,7 +1660,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextError,
-			ErrorMessage: "テキスト追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1675,7 +1672,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextError,
-			ErrorMessage: "テキスト追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1684,7 +1681,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 	response.AddedText = text
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddTextSuccessMessage,
-		Message:     "テキストを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_TEXT_MESSAGE"}),
 	})
 }
 
@@ -1702,7 +1699,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddNotificationResponseDataError,
-				ErrorMessage: "通知追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1715,14 +1712,14 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddNotificationRequestDataError,
-			ErrorMessage: "通知追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1735,7 +1732,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1747,7 +1744,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "通知追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1760,7 +1757,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1770,7 +1767,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistNotificationError,
-			ErrorMessage: "通知追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1783,7 +1780,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddNotificationError,
-				ErrorMessage: "通知追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1795,7 +1792,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddNotificationError,
-					ErrorMessage: "通知追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -1808,14 +1805,12 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddNotificationError,
-				ErrorMessage: "通知追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.ID)
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.TargetID)
 
 	repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
 	if err != nil {
@@ -1823,7 +1818,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1841,7 +1836,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1853,7 +1848,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1866,7 +1861,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificatorError,
-			ErrorMessage: "通知更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1877,7 +1872,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificatorError,
-			ErrorMessage: "通知更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1886,10 +1881,8 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 	response.AddedNotification = notification
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddNotificationSuccessMessage,
-		Message:     "通知を追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_NOTIFICATION_MESSAGE"}),
 	})
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.ID)
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.TargetID)
 
 	repName, err = repositories.WriteNotificationRep.GetRepName(r.Context())
 	if err != nil {
@@ -1897,7 +1890,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1915,7 +1908,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1924,7 +1917,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 	response.AddedNotification = notification
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddNotificationSuccessMessage,
-		Message:     "通知を追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_NOTIFICATION_MESSAGE"}),
 	})
 }
 
@@ -1942,7 +1935,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidAddKmemoResponseDataError,
-				ErrorMessage: "kmemo追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -1955,14 +1948,14 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidAddKmemoRequestDataError,
-			ErrorMessage: "kmemo追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1975,7 +1968,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -1987,7 +1980,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "kmemo追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2000,7 +1993,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: "Kmemo追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2010,7 +2003,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistKmemoError,
-			ErrorMessage: "Kmemo追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2023,7 +2016,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddKmemoError,
-				ErrorMessage: "Kmemo追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2035,7 +2028,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddKmemoError,
-					ErrorMessage: "Kmemo追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -2048,13 +2041,12 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddKmemoError,
-				ErrorMessage: "Kmemo追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Kmemo.ID)
 
 	repName, err := repositories.WriteKmemoRep.GetRepName(r.Context())
 	if err != nil {
@@ -2062,7 +2054,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: "Kmemo追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2079,7 +2071,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: "Kmemo追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2091,7 +2083,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: "kmemo追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2100,7 +2092,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 	response.AddedKmemo = kmemo
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddKmemoSuccessMessage,
-		Message:     "kmemoを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_KMEMO_MESSAGE"}),
 	})
 }
 
@@ -2118,7 +2110,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidAddKCResponseDataError,
-				ErrorMessage: "kc追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2131,14 +2123,14 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidAddKCRequestDataError,
-			ErrorMessage: "kc追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2151,7 +2143,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2163,7 +2155,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "kc追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2176,7 +2168,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: "KC追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2186,7 +2178,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistKCError,
-			ErrorMessage: "KC追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2199,7 +2191,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddKCError,
-				ErrorMessage: "KC追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2212,7 +2204,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddKCError,
-					ErrorMessage: "KC追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -2225,13 +2217,12 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddKCError,
-				ErrorMessage: "KC追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.KC.ID)
 
 	repName, err := repositories.WriteKCRep.GetRepName(r.Context())
 	if err != nil {
@@ -2239,7 +2230,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: "KC追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2256,7 +2247,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: "KC追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2268,7 +2259,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: "kc追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2277,7 +2268,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 	response.AddedKC = kc
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddKCSuccessMessage,
-		Message:     "kcを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_KC_MESSAGE"}),
 	})
 }
 
@@ -2295,7 +2286,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddURLogResponseDataError,
-				ErrorMessage: "URLog追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2308,14 +2299,14 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddURLogRequestDataError,
-			ErrorMessage: "URLog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2328,7 +2319,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2340,7 +2331,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "URLog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2353,7 +2344,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2363,7 +2354,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistURLogError,
-			ErrorMessage: "URLog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2376,7 +2367,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "ApplicationConfig取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2389,7 +2380,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: "ServerConfig取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2407,7 +2398,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddURLogError,
-				ErrorMessage: "URLog追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2420,7 +2411,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddURLogError,
-					ErrorMessage: "URLog追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -2433,13 +2424,12 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddURLogError,
-				ErrorMessage: "URLog追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.URLog.ID)
 
 	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
 	if err != nil {
@@ -2447,7 +2437,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2464,7 +2454,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2476,7 +2466,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2485,7 +2475,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 	response.AddedURLog = urlog
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddURLogSuccessMessage,
-		Message:     "URLogを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_URLOG_MESSAGE"}),
 	})
 }
 
@@ -2503,7 +2493,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddNlogResponseDataError,
-				ErrorMessage: "Nlog追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2516,14 +2506,14 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddNlogRequestDataError,
-			ErrorMessage: "Nlog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2536,7 +2526,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2548,7 +2538,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Nlog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2561,7 +2551,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: "Nlog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2571,7 +2561,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistNlogError,
-			ErrorMessage: "Nlog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2584,7 +2574,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddNlogError,
-				ErrorMessage: "Nlog追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2596,7 +2586,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddNlogError,
-					ErrorMessage: "Nlog追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -2609,13 +2599,12 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddNlogError,
-				ErrorMessage: "Nlog追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Nlog.ID)
 
 	repName, err := repositories.WriteNlogRep.GetRepName(r.Context())
 	if err != nil {
@@ -2623,7 +2612,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: "Nlog追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2640,7 +2629,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: "Nlog追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2652,7 +2641,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: "Nlog追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2661,7 +2650,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 	response.AddedNlog = nlog
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddNlogSuccessMessage,
-		Message:     "Nlogを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_NLOG_MESSAGE"}),
 	})
 }
 
@@ -2679,7 +2668,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddTimeIsResponseDataError,
-				ErrorMessage: "TimeIs追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2692,14 +2681,14 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddTimeIsRequestDataError,
-			ErrorMessage: "TimeIs追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2712,7 +2701,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2724,7 +2713,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "TimeIs追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2737,7 +2726,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: "TimeIs追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2747,7 +2736,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistTimeIsError,
-			ErrorMessage: "TimeIs追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2760,7 +2749,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTimeIsError,
-				ErrorMessage: "TimeIs追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2772,7 +2761,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddTimeIsError,
-					ErrorMessage: "TimeIs追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -2785,13 +2774,12 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTimeIsError,
-				ErrorMessage: "TimeIs追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.TimeIs.ID)
 
 	repName, err := repositories.WriteTimeIsRep.GetRepName(r.Context())
 	if err != nil {
@@ -2799,7 +2787,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: "TimeIs追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2816,7 +2804,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: "TimeIs追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2828,7 +2816,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: "TimeIs追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2837,7 +2825,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 	response.AddedTimeis = timeis
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddTimeIsSuccessMessage,
-		Message:     "TimeIsを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_TIMEIS_MESSAGE"}),
 	})
 }
 
@@ -2855,7 +2843,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddLantanaResponseDataError,
-				ErrorMessage: "Lantana追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2868,14 +2856,14 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddLantanaRequestDataError,
-			ErrorMessage: "Lantana追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2888,7 +2876,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2900,7 +2888,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Lantana追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2913,7 +2901,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2924,7 +2912,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistLantanaError,
-			ErrorMessage: "Lantana追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2937,7 +2925,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddLantanaError,
-				ErrorMessage: "Lantana追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2949,7 +2937,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddLantanaError,
-					ErrorMessage: "Lantana追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -2962,7 +2950,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddLantanaError,
-				ErrorMessage: "Lantana追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -2976,7 +2964,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -2993,7 +2981,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3005,7 +2993,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3014,7 +3002,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 	response.AddedLantana = lantana
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddLantanaSuccessMessage,
-		Message:     "Lantanaを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_LANTANA_MESSAGE"}),
 	})
 }
 
@@ -3032,7 +3020,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddMiResponseDataError,
-				ErrorMessage: "Mi追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3045,14 +3033,14 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddMiRequestDataError,
-			ErrorMessage: "Mi追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3065,7 +3053,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3077,7 +3065,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Mi追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3090,7 +3078,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3100,7 +3088,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistMiError,
-			ErrorMessage: "Mi追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3113,7 +3101,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddMiError,
-				ErrorMessage: "Mi追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3125,7 +3113,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddMiError,
-					ErrorMessage: "Mi追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -3138,13 +3126,12 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddMiError,
-				ErrorMessage: "Mi追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Mi.ID)
 
 	repName, err := repositories.WriteMiRep.GetRepName(r.Context())
 	if err != nil {
@@ -3152,7 +3139,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3169,7 +3156,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3181,7 +3168,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3190,7 +3177,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 	response.AddedMi = mi
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddMiSuccessMessage,
-		Message:     "Miを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_MI_MESSAGE"}),
 	})
 }
 
@@ -3208,7 +3195,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddReKyouResponseDataError,
-				ErrorMessage: "ReKyou追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3221,14 +3208,14 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddReKyouRequestDataError,
-			ErrorMessage: "ReKyou追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3241,7 +3228,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3253,7 +3240,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "ReKyou追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3266,7 +3253,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: "ReKyou追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3276,7 +3263,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistReKyouError,
-			ErrorMessage: "ReKyou追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3289,7 +3276,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddReKyouError,
-				ErrorMessage: "ReKyou追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3302,7 +3289,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddReKyouError,
-					ErrorMessage: "ReKyou追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -3315,13 +3302,12 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddReKyouError,
-				ErrorMessage: "ReKyou追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.ReKyou.ID)
 
 	repName, err := repositories.WriteReKyouRep.GetRepName(r.Context())
 	if err != nil {
@@ -3329,7 +3315,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: "ReKyou追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3347,7 +3333,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: "ReKyou追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3359,7 +3345,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: "ReKyou追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3368,7 +3354,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 	response.AddedReKyou = rekyou
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddReKyouSuccessMessage,
-		Message:     "ReKyouを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_REKYOU_MESSAGE"}),
 	})
 }
 
@@ -3386,7 +3372,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateTagResponseDataError,
-				ErrorMessage: "タグ更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3399,14 +3385,14 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateTagRequestDataError,
-			ErrorMessage: "タグ更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3419,7 +3405,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3431,7 +3417,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "タグ更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3444,7 +3430,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagError,
-			ErrorMessage: "タグ更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3457,7 +3443,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTagError,
-				ErrorMessage: "タグ更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3471,7 +3457,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddTagError,
-					ErrorMessage: "タグ追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -3484,14 +3470,12 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTagError,
-				ErrorMessage: "タグ更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.ID)
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Tag.TargetID)
 
 	repName, err := repositories.WriteTagRep.GetRepName(r.Context())
 	if err != nil {
@@ -3499,7 +3483,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagError,
-			ErrorMessage: "タグ更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3517,7 +3501,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagError,
-			ErrorMessage: "タグ更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3529,7 +3513,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagError,
-			ErrorMessage: "タグ追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3542,7 +3526,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagError,
-			ErrorMessage: "タグ更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3552,7 +3536,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundTagError,
-			ErrorMessage: "タグ更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3561,7 +3545,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 	response.UpdatedTag = tag
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateTagSuccessMessage,
-		Message:     "タグを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_TAG_MESSAGE"}),
 	})
 }
 
@@ -3579,7 +3563,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateTextResponseDataError,
-				ErrorMessage: "テキスト更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3592,14 +3576,14 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateTextRequestDataError,
-			ErrorMessage: "テキスト更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3612,7 +3596,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3624,7 +3608,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "テキスト更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3637,7 +3621,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextError,
-			ErrorMessage: "テキスト更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3650,7 +3634,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTextError,
-				ErrorMessage: "テキスト更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3663,7 +3647,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddTextError,
-					ErrorMessage: "テキスト更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -3676,14 +3660,12 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTextError,
-				ErrorMessage: "テキスト更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.ID)
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Text.TargetID)
 
 	repName, err := repositories.WriteTextRep.GetRepName(r.Context())
 	if err != nil {
@@ -3691,7 +3673,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextError,
-			ErrorMessage: "テキスト更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3709,7 +3691,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextError,
-			ErrorMessage: "テキスト更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3721,7 +3703,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextError,
-			ErrorMessage: "テキスト追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3734,7 +3716,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextError,
-			ErrorMessage: "テキスト更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3744,7 +3726,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundTextError,
-			ErrorMessage: "テキスト更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3753,7 +3735,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 	response.UpdatedText = text
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateTextSuccessMessage,
-		Message:     "テキストを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_TEXT_MESSAGE"}),
 	})
 }
 
@@ -3771,7 +3753,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateNotificationResponseDataError,
-				ErrorMessage: "通知更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3784,14 +3766,14 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateNotificationRequestDataError,
-			ErrorMessage: "通知更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3804,7 +3786,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3816,7 +3798,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "通知更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3829,7 +3811,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3842,7 +3824,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddNotificationError,
-				ErrorMessage: "通知更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3854,7 +3836,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddNotificationError,
-					ErrorMessage: "通知更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -3867,14 +3849,12 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddNotificationError,
-				ErrorMessage: "通知更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.ID)
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Notification.TargetID)
 
 	repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
 	if err != nil {
@@ -3882,7 +3862,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3900,7 +3880,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3912,7 +3892,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3925,7 +3905,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: "通知更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3935,7 +3915,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundNotificationError,
-			ErrorMessage: "通知更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3948,7 +3928,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificatorError,
-			ErrorMessage: "通知更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3959,7 +3939,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificatorError,
-			ErrorMessage: "通知更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -3968,7 +3948,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 	response.UpdatedNotification = notification
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateNotificationSuccessMessage,
-		Message:     "通知を更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_NOTIFICATION_MESSAGE"}),
 	})
 }
 
@@ -3986,7 +3966,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateKmemoResponseDataError,
-				ErrorMessage: "Kmemo更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -3999,14 +3979,14 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateKmemoRequestDataError,
-			ErrorMessage: "Kmemo更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4019,7 +3999,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4031,7 +4011,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Kmemo更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4044,7 +4024,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: "Kmemo更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4057,7 +4037,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddKmemoError,
-				ErrorMessage: "Kmemo更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4069,7 +4049,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddKmemoError,
-					ErrorMessage: "Kmemo更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -4082,13 +4062,12 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddKmemoError,
-				ErrorMessage: "Kmemo更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Kmemo.ID)
 
 	repName, err := repositories.WriteKmemoRep.GetRepName(r.Context())
 	if err != nil {
@@ -4096,7 +4075,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: "Kmemo更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4113,7 +4092,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: "Kmemo更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4125,7 +4104,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: "Kmemo追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4138,7 +4117,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: "Kmemo更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4148,7 +4127,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundKmemoError,
-			ErrorMessage: "Kmemo更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4157,7 +4136,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 	response.UpdatedKmemo = kmemo
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateKmemoSuccessMessage,
-		Message:     "Kmemoを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_KMEMO_MESSAGE"}),
 	})
 }
 
@@ -4175,7 +4154,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateKCResponseDataError,
-				ErrorMessage: "KC更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4188,14 +4167,14 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateKCRequestDataError,
-			ErrorMessage: "KC更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4208,7 +4187,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4220,7 +4199,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "KC更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4233,7 +4212,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: "KC更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4246,7 +4225,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddKCError,
-				ErrorMessage: "KC更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4258,7 +4237,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddKCError,
-					ErrorMessage: "KC更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -4271,13 +4250,12 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddKCError,
-				ErrorMessage: "KC更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.KC.ID)
 
 	repName, err := repositories.WriteKCRep.GetRepName(r.Context())
 	if err != nil {
@@ -4285,7 +4263,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: "KC更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4302,7 +4280,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: "KC更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4314,7 +4292,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: "KC追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4327,7 +4305,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: "KC更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4337,7 +4315,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundKCError,
-			ErrorMessage: "KC更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4346,7 +4324,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 	response.UpdatedKC = kc
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateKCSuccessMessage,
-		Message:     "KCを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_KC_MESSAGE"}),
 	})
 }
 
@@ -4364,7 +4342,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateURLogResponseDataError,
-				ErrorMessage: "URLog更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4377,14 +4355,14 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateURLogRequestDataError,
-			ErrorMessage: "URLog更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4397,7 +4375,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4409,7 +4387,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "URLog更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4422,7 +4400,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4436,7 +4414,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetServerConfigError,
-				ErrorMessage: "Kyouタスク通知登録に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4452,7 +4430,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetServerConfigError,
-				ErrorMessage: "ServerConfig取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4479,7 +4457,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			if err != nil {
 				gkillError := &message.GkillError{
 					ErrorCode:    message.GetApplicationConfigError,
-					ErrorMessage: "ApplicationConfig取得に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -4488,7 +4466,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			if err != nil {
 				gkillError := &message.GkillError{
 					ErrorCode:    message.GetApplicationConfigError,
-					ErrorMessage: "ApplicationConfig取得に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -4508,7 +4486,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddURLogError,
-				ErrorMessage: "URLog更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4520,7 +4498,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddURLogError,
-					ErrorMessage: "URLog更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -4533,13 +4511,12 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddURLogError,
-				ErrorMessage: "URLog更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.URLog.ID)
 
 	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
 	if err != nil {
@@ -4547,7 +4524,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4564,7 +4541,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4576,7 +4553,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4589,7 +4566,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4599,7 +4576,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundURLogError,
-			ErrorMessage: "URLog更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4608,7 +4585,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 	response.UpdatedURLog = urlog
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateURLogSuccessMessage,
-		Message:     "URLogを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_URLOG_MESSAGE"}),
 	})
 }
 
@@ -4626,7 +4603,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateNlogResponseDataError,
-				ErrorMessage: "Nlog更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4639,14 +4616,14 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateNlogRequestDataError,
-			ErrorMessage: "Nlog更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4659,7 +4636,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4671,7 +4648,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Nlog更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4684,7 +4661,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: "Nlog更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4697,7 +4674,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddNlogError,
-				ErrorMessage: "Nlog更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4709,7 +4686,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddNlogError,
-					ErrorMessage: "Nlog更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -4722,13 +4699,12 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddNlogError,
-				ErrorMessage: "Nlog更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Nlog.ID)
 
 	repName, err := repositories.WriteNlogRep.GetRepName(r.Context())
 	if err != nil {
@@ -4736,7 +4712,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: "Nlog更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4753,7 +4729,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: "Nlog更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4765,7 +4741,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: "Nlog追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4778,7 +4754,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: "Nlog更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4788,7 +4764,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundNlogError,
-			ErrorMessage: "Nlog更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4797,7 +4773,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 	response.UpdatedNlog = nlog
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateNlogSuccessMessage,
-		Message:     "Nlogを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_NLOG_MESSAGE"}),
 	})
 }
 
@@ -4815,7 +4791,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateTimeIsResponseDataError,
-				ErrorMessage: "TimeIs更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4828,14 +4804,14 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateTimeIsRequestDataError,
-			ErrorMessage: "TimeIs更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4848,7 +4824,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERRNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4860,7 +4836,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "TimeIs更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4873,7 +4849,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: "TimeIs更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4886,7 +4862,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTimeIsError,
-				ErrorMessage: "TimeIs更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -4898,7 +4874,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddTimeIsError,
-					ErrorMessage: "TimeIs更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -4911,13 +4887,12 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTimeIsError,
-				ErrorMessage: "TimeIs更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.TimeIs.ID)
 
 	repName, err := repositories.WriteTimeIsRep.GetRepName(r.Context())
 	if err != nil {
@@ -4925,7 +4900,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: "TimeIs更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4942,7 +4917,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: "TimeIs更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4954,7 +4929,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: "TimeIs追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4967,7 +4942,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: "TimeIs更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4977,7 +4952,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundTimeIsError,
-			ErrorMessage: "TimeIs更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -4986,7 +4961,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 	response.UpdatedTimeis = timeis
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateTimeIsSuccessMessage,
-		Message:     "TimeIsを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_TIMEIS_MESSAGE"}),
 	})
 }
 
@@ -5004,7 +4979,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateLantanaResponseDataError,
-				ErrorMessage: "Lantana更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5017,14 +4992,14 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateLantanaRequestDataError,
-			ErrorMessage: "Lantana更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5037,7 +5012,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5049,7 +5024,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Lantana更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5062,7 +5037,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5075,7 +5050,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddLantanaError,
-				ErrorMessage: "Lantana更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5087,7 +5062,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddLantanaError,
-					ErrorMessage: "Lantana更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -5100,13 +5075,12 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddLantanaError,
-				ErrorMessage: "Lantana更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Lantana.ID)
 
 	repName, err := repositories.WriteLantanaRep.GetRepName(r.Context())
 	if err != nil {
@@ -5114,7 +5088,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5131,7 +5105,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5143,7 +5117,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5156,7 +5130,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5166,7 +5140,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundLantanaError,
-			ErrorMessage: "Lantana更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5175,7 +5149,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 	response.UpdatedLantana = lantana
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateLantanaSuccessMessage,
-		Message:     "Lantanaを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_LANTANA_MESSAGE"}),
 	})
 }
 
@@ -5193,7 +5167,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateIDFKyouResponseDataError,
-				ErrorMessage: "IDFKyou更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5206,14 +5180,14 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateIDFKyouRequestDataError,
-			ErrorMessage: "IDFKyou更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5226,7 +5200,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5238,7 +5212,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "IDFKyou更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5251,7 +5225,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: "IDFKyou更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5264,7 +5238,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddIDFKyouError,
-				ErrorMessage: "IDFKyou更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5276,7 +5250,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddIDFKyouError,
-					ErrorMessage: "IDFKyou更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -5289,13 +5263,12 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddIDFKyouError,
-				ErrorMessage: "IDFKyou更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.IDFKyou.ID)
 
 	repName, err := repositories.WriteIDFKyouRep.GetRepName(r.Context())
 	if err != nil {
@@ -5303,7 +5276,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: "IDFKyou更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5320,7 +5293,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: "IDFKyou更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5332,7 +5305,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: "IDFKyou追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5345,7 +5318,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: "IDFKyou更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5355,7 +5328,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundIDFKyouError,
-			ErrorMessage: "IDFKyou更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5364,7 +5337,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 	response.UpdatedIDFKyou = idfKyou
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateIDFKyouSuccessMessage,
-		Message:     "IDFKyouを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_IDFKYOU_MESSAGE"}),
 	})
 }
 
@@ -5382,7 +5355,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateMiResponseDataError,
-				ErrorMessage: "Mi更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5395,14 +5368,14 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateMiRequestDataError,
-			ErrorMessage: "Mi更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5415,7 +5388,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5427,7 +5400,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Mi更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5440,7 +5413,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5450,7 +5423,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundMiError,
-			ErrorMessage: "Mi更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5463,7 +5436,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddMiError,
-				ErrorMessage: "Mi更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5475,7 +5448,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddMiError,
-					ErrorMessage: "Mi更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -5488,13 +5461,12 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddMiError,
-				ErrorMessage: "Mi更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.Mi.ID)
 
 	repName, err := repositories.WriteMiRep.GetRepName(r.Context())
 	if err != nil {
@@ -5502,7 +5474,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5519,7 +5491,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5531,7 +5503,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5540,7 +5512,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 	response.UpdatedMi = mi
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateMiSuccessMessage,
-		Message:     "Miを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_MI_MESSAGE"}),
 	})
 }
 
@@ -5558,7 +5530,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateReKyouResponseDataError,
-				ErrorMessage: "ReKyou更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5571,14 +5543,14 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateReKyouRequestDataError,
-			ErrorMessage: "ReKyou更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5591,7 +5563,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERRNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5603,7 +5575,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "ReKyou更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5616,7 +5588,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: "ReKyou更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5629,7 +5601,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddReKyouError,
-				ErrorMessage: "ReKyou更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5641,7 +5613,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddReKyouError,
-					ErrorMessage: "ReKyou更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -5654,13 +5626,12 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddReKyouError,
-				ErrorMessage: "ReKyou更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 	}
-	// defer g.WebPushUpdatedData(r.Context(), userID, device, request.ReKyou.ID)
 
 	repName, err := repositories.WriteReKyouRep.GetRepName(r.Context())
 	if err != nil {
@@ -5668,7 +5639,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: "ReKyou更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5686,7 +5657,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: "ReKyou更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5698,7 +5669,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: "ReKyou追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5711,7 +5682,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: "ReKyou更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5721,7 +5692,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundReKyouError,
-			ErrorMessage: "ReKyou更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5730,7 +5701,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 	response.UpdatedReKyou = rekyou
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateReKyouSuccessMessage,
-		Message:     "ReKyouを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_REKYOU_MESSAGE"}),
 	})
 }
 
@@ -5748,7 +5719,7 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetKyousResponseDataError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5761,7 +5732,7 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetKyousRequestDataError,
-			ErrorMessage: "Kyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOUS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5770,7 +5741,7 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 	request.Query.OnlyLatestData = &trueValue
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5783,7 +5754,7 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5802,7 +5773,7 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 	response.Kyous = kyous
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetKyousSuccessMessage,
-		Message:     "検索完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KYOUS_MESSAGE"}),
 	})
 }
 
@@ -5820,7 +5791,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetKyouResponseDataError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5833,14 +5804,14 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetKyouRequestDataError,
-			ErrorMessage: "Kyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5853,7 +5824,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5865,7 +5836,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Kyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5886,7 +5857,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKyouError,
-			ErrorMessage: "Kyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5895,7 +5866,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 	response.KyouHistories = kyouHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetKyouSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KYOU_MESSAGE"}),
 	})
 }
 
@@ -5913,7 +5884,7 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetKmemoResponseDataError,
-				ErrorMessage: "Kmemo取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KMEMO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -5926,14 +5897,14 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetKmemoRequestDataError,
-			ErrorMessage: "Kmemo取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5946,7 +5917,7 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5958,7 +5929,7 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Kmemo取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5970,7 +5941,7 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: "Kmemo取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5979,7 +5950,7 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 	response.KmemoHistories = kmemoHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetKmemoSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KMEMO_MESSAGE"}),
 	})
 }
 
@@ -5997,7 +5968,7 @@ func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetKCResponseDataError,
-				ErrorMessage: "KC取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KC_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6010,14 +5981,14 @@ func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetKCRequestDataError,
-			ErrorMessage: "KC取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6030,7 +6001,7 @@ func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6042,7 +6013,7 @@ func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "KC取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6054,7 +6025,7 @@ func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKCError,
-			ErrorMessage: "KC取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KC_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6063,7 +6034,7 @@ func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 	response.KCHistories = kcHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetKCSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KC_MESSAGE"}),
 	})
 }
 
@@ -6081,7 +6052,7 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetURLogResponseDataError,
-				ErrorMessage: "URLog取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_URLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6094,14 +6065,14 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetURLogRequestDataError,
-			ErrorMessage: "URLog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6114,7 +6085,7 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6126,7 +6097,7 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "URLog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6138,7 +6109,7 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_URLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6147,7 +6118,7 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 	response.URLogHistories = urlogHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetURLogSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_URLOG_MESSAGE"}),
 	})
 }
 
@@ -6165,7 +6136,7 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetNlogResponseDataError,
-				ErrorMessage: "Nlog取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6178,14 +6149,14 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetNlogRequestDataError,
-			ErrorMessage: "Nlog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6198,7 +6169,7 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6210,7 +6181,7 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Nlog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6222,7 +6193,7 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNlogError,
-			ErrorMessage: "Nlog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NLOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6231,7 +6202,7 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 	response.NlogHistories = nlogHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetNlogSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_NLOG_MESSAGE"}),
 	})
 }
 
@@ -6249,7 +6220,7 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetTimeIsResponseDataError,
-				ErrorMessage: "TimeIs取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TIMEIS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6262,14 +6233,14 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetTimeIsRequestDataError,
-			ErrorMessage: "TimeIs取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6282,7 +6253,7 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6294,7 +6265,7 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "TimeIs取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6306,7 +6277,7 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: "TimeIs取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TIMEIS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6315,7 +6286,7 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 	response.TimeisHistories = timeisHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetTimeIsSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_TIMEIS_MESSAGE"}),
 	})
 }
 
@@ -6333,7 +6304,7 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetMiResponseDataError,
-				ErrorMessage: "Mi取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6346,14 +6317,14 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiRequestDataError,
-			ErrorMessage: "Mi取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6366,7 +6337,7 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6378,7 +6349,7 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Mi取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6390,7 +6361,7 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiError,
-			ErrorMessage: "Mi取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MI_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6399,7 +6370,7 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 	response.MiHistories = miHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetMiSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_MI_MESSAGE"}),
 	})
 }
 
@@ -6417,7 +6388,7 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetLantanaResponseDataError,
-				ErrorMessage: "Lantana取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_LANTANA_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6430,14 +6401,14 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetLantanaRequestDataError,
-			ErrorMessage: "Lantana取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6450,7 +6421,7 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6462,7 +6433,7 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Lantana取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6474,7 +6445,7 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: "Lantana取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_LANTANA_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6483,7 +6454,7 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 	response.LantanaHistories = lantanaHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetLantanaSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_LANTANA_MESSAGE"}),
 	})
 }
 
@@ -6501,7 +6472,7 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetReKyouResponseDataError,
-				ErrorMessage: "rekyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6514,14 +6485,14 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetReKyouRequestDataError,
-			ErrorMessage: "rekyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6534,7 +6505,7 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6546,7 +6517,7 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "rekyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6558,7 +6529,7 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: "rekyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6567,7 +6538,7 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 	response.ReKyouHistories = rekyouHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetReKyouSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_REKYOU_MESSAGE"}),
 	})
 }
 
@@ -6585,7 +6556,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetGitCommitLogResponseDataError,
-				ErrorMessage: "GitCommitLog取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GIT_COMMIT_LOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6598,14 +6569,14 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetGitCommitLogRequestDataError,
-			ErrorMessage: "GitCommitLog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GIT_COMMIT_LOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6618,7 +6589,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6630,7 +6601,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "GitCommitLog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REPOSITORIES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6642,7 +6613,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetGitCommitLogError,
-			ErrorMessage: "GitCommitLog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GIT_COMMIT_LOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6651,7 +6622,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 	response.GitCommitLogHistories = []*reps.GitCommitLog{gitCommitLog}
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetGitCommitLogSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_GIT_COMMIT_LOG_MESSAGE"}),
 	})
 }
 
@@ -6669,7 +6640,7 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetIDFKyouResponseDataError,
-				ErrorMessage: "IDFKyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_IDFKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6682,14 +6653,14 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetIDFKyouRequestDataError,
-			ErrorMessage: "IDFKyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_IDFKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6702,7 +6673,7 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6714,7 +6685,7 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "IDFKyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_IDFKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6726,7 +6697,7 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: "IDFKyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_IDFKYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6735,7 +6706,7 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 	response.IDFKyouHistories = idfKyouHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetIDFKyouSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_IDFKYOU_MESSAGE"}),
 	})
 }
 
@@ -6753,7 +6724,7 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetMiBoardNamesResponseDataError,
-				ErrorMessage: "MiBoardList取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MIBOARD_NAMES_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6766,14 +6737,14 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiBoardNamesRequestDataError,
-			ErrorMessage: "MiBoardList取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MIBOARD_NAMES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6786,7 +6757,7 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6798,7 +6769,7 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "MiBoardList取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_MIBOARD_NAMES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6810,7 +6781,7 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiBoardNamesError,
-			ErrorMessage: "MiBoardList取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6819,7 +6790,7 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 	response.Boards = miBoardNames
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetMiBoardNamesSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_MIBOARD_NAMES_MESSAGE"}),
 	})
 }
 
@@ -6837,7 +6808,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetAllTagNamesResponseDataError,
-				ErrorMessage: "タグ名全件取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_TAG_NAMES_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6850,14 +6821,14 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetAllTagNamesRequestDataError,
-			ErrorMessage: "タグ名全件取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_TAG_NAMES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6870,7 +6841,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6882,7 +6853,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "タグ名全件取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_TAG_NAMES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6894,7 +6865,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAllTagNamesError,
-			ErrorMessage: "タグ名全件取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_TAG_NAMES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6903,7 +6874,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 	response.TagNames = allTagNames
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetAllTagNamesSuccessMessage,
-		Message:     "検索完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_ALL_TAG_NAMES_MESSAGE"}),
 	})
 }
 
@@ -6921,7 +6892,7 @@ func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetAllRepNamesResponseDataError,
-				ErrorMessage: "Rep名全件取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_REP_NAMES_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -6934,14 +6905,14 @@ func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetAllRepNamesRequestDataError,
-			ErrorMessage: "Rep名全件取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_REP_NAMES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6954,7 +6925,7 @@ func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6966,7 +6937,7 @@ func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Rep名全件取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_REP_NAMES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6978,7 +6949,7 @@ func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAllRepNamesError,
-			ErrorMessage: "Rep名全件取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_REP_NAMES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -6987,7 +6958,7 @@ func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Req
 	response.RepNames = allRepNames
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetAllRepNamesSuccessMessage,
-		Message:     "検索完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_ALL_REP_NAMES_MESSAGE"}),
 	})
 }
 
@@ -7005,7 +6976,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetTagsByTargetIDResponseDataError,
-				ErrorMessage: "タグ取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAGS_BY_TARGET_ID_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7018,14 +6989,14 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetTagsByTargetIDRequestDataError,
-			ErrorMessage: "タグ取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAGS_BY_TARGET_ID_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7038,7 +7009,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7050,7 +7021,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "タグ取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REPOSITORIES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7062,7 +7033,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagsByTargetIDError,
-			ErrorMessage: "タグ取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REPOSITORIES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7071,7 +7042,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 	response.Tags = tags
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetTagsByTargetIDSuccessMessage,
-		Message:     "タグ取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_TAGS_BY_TARGET_ID_MESSAGE"}),
 	})
 }
 
@@ -7089,7 +7060,7 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetTagHistoriesByTagIDResponseDataError,
-				ErrorMessage: "タグ取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAG_HISTORIES_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7102,14 +7073,14 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetTagHistoriesByTagIDRequestDataError,
-			ErrorMessage: "タグ取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAG_HISTORIES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7122,7 +7093,7 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7134,7 +7105,7 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "タグ取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAG_HISTORIES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7155,7 +7126,7 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagHistoriesByTagIDError,
-			ErrorMessage: "タグ取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAG_HISTORIES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7164,7 +7135,7 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 	response.TagHistories = tags
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetTagHistoriesByTagIDSuccessMessage,
-		Message:     "タグ取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_TAG_HISTORIES_MESSAGE"}),
 	})
 }
 
@@ -7182,7 +7153,7 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetTextsByTargetIDResponseDataError,
-				ErrorMessage: "テキスト取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7195,14 +7166,14 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetTextsByTargetIDRequestDataError,
-			ErrorMessage: "テキスト取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7215,7 +7186,7 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7227,7 +7198,7 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "テキスト取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7239,7 +7210,7 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextsByTargetIDError,
-			ErrorMessage: "テキスト取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7266,7 +7237,7 @@ func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter,
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetNotificationsByTargetIDResponseDataError,
-				ErrorMessage: "通知取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7279,14 +7250,14 @@ func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter,
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetNotificationsByTargetIDRequestDataError,
-			ErrorMessage: "通知取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7299,7 +7270,7 @@ func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter,
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7311,7 +7282,7 @@ func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter,
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "通知取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7323,7 +7294,7 @@ func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter,
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationsByTargetIDError,
-			ErrorMessage: "通知取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7350,7 +7321,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetTextHistoriesByTextIDResponseDataError,
-				ErrorMessage: "テキスト取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7363,14 +7334,14 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetTextHistoriesByTextIDRequestDataError,
-			ErrorMessage: "テキスト取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7383,7 +7354,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7395,7 +7366,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "テキスト取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7416,7 +7387,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTextHistoriesByTextIDError,
-			ErrorMessage: "テキスト取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7443,7 +7414,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetNotificationHistoriesByNotificationIDResponseDataError,
-				ErrorMessage: "通知取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7456,14 +7427,14 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetNotificationHistoriesByNotificationIDRequestDataError,
-			ErrorMessage: "通知取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7476,7 +7447,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7488,7 +7459,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "通知取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7509,7 +7480,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetNotificationHistoriesByNotificationIDError,
-			ErrorMessage: "通知取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7536,7 +7507,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetApplicationConfigResponseDataError,
-				ErrorMessage: "ApplicationConfig取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7549,14 +7520,14 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetApplicationConfigRequestDataError,
-			ErrorMessage: "ApplicationConfig取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7569,7 +7540,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7597,7 +7568,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		if err != nil {
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetApplicationConfigError,
-				ErrorMessage: "ApplicationConfig取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7606,7 +7577,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		if err != nil {
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetApplicationConfigError,
-				ErrorMessage: "ApplicationConfig取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7619,7 +7590,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKFTLTemplateError,
-			ErrorMessage: "KFTLTemplate取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KFTL_TEMPLATE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7631,7 +7602,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTagStructError,
-			ErrorMessage: "TagStruct取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAG_STRUCT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7643,7 +7614,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetRepStructError,
-			ErrorMessage: "RepStruct取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REP_STRUCT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7655,7 +7626,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceStructError,
-			ErrorMessage: "DeviceStruct取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_DEVICE_STRUCT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7667,7 +7638,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetRepTypeStructError,
-			ErrorMessage: "RepTypeStruct取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REP_TYPE_STRUCT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7679,7 +7650,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDnoteJSONDataError,
-			ErrorMessage: "集計条件情報取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_DNOTE_QUERY_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7691,7 +7662,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "ApplicationConfig取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7703,7 +7674,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "ApplicationConfig取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7749,7 +7720,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetServerConfigResponseDataError,
-				ErrorMessage: "ServerConfig取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7762,14 +7733,14 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetServerConfigRequestDataError,
-			ErrorMessage: "ServerConfig取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7782,7 +7753,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7794,7 +7765,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotHasAdminError,
-			ErrorMessage: "サーバコンフィグ取得処理二失敗しました。権限がありません。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_NO_AUTH_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7806,7 +7777,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: "ServerConfig取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7819,7 +7790,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetAllAccountConfigError,
-				ErrorMessage: "アカウント設定情報の取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ACCOUNT_CONFIG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7832,7 +7803,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetAllRepositoriesError,
-				ErrorMessage: "Repository全件取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ALL_REPOSITORIES_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7864,7 +7835,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUploadFilesResponseDataError,
-				ErrorMessage: "ファイルアップロードに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7877,7 +7848,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUploadFilesRequestDataError,
-			ErrorMessage: "ファイルアップロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7887,7 +7858,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 	defer g.GkillDAOManager.SetSkipIDF(false)
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7900,7 +7871,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7912,7 +7883,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "ファイルアップロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7927,7 +7898,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidStatusGetRepNameError,
-				ErrorMessage: "ファイルアップロードに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7943,7 +7914,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundTargetIDFRepError,
-			ErrorMessage: "ファイルアップロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7964,7 +7935,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetRepPathError,
-				ErrorMessage: "ファイルアップロードに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -7976,7 +7947,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetRepPathError,
-				ErrorMessage: "ファイルアップロードに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8000,7 +7971,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 				gkill_log.Debug.Println(err.Error())
 				gkillError = &message.GkillError{
 					ErrorCode:    message.GetRepPathError,
-					ErrorMessage: "ファイルアップロードに失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 				}
 				gkillErrorCh <- gkillError
 				return
@@ -8056,7 +8027,7 @@ errloop:
 		gkill_log.Debug.Println(err.Error())
 		gkillError = &message.GkillError{
 			ErrorCode:    message.GetRepPathError,
-			ErrorMessage: "ファイルアップロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8075,7 +8046,7 @@ loop:
 					gkill_log.Debug.Println(err.Error())
 					gkillError = &message.GkillError{
 						ErrorCode:    message.GetRepPathError,
-						ErrorMessage: "ファイルアップロードに失敗しました",
+						ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 					}
 					response.Errors = append(response.Errors, gkillError)
 					return
@@ -8094,7 +8065,7 @@ loop:
 					gkill_log.Debug.Println(err.Error())
 					gkillError = &message.GkillError{
 						ErrorCode:    message.UpdateRepositoryAddressError,
-						ErrorMessage: "ファイルアップロードに失敗しました",
+						ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
 					}
 					response.Errors = append(response.Errors, gkillError)
 					return
@@ -8113,7 +8084,7 @@ loop:
 			gkill_log.Debug.Println(err.Error())
 			gkillError = &message.GkillError{
 				ErrorCode:    message.GetRepPathError,
-				ErrorMessage: "ファイルアップロード後Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8146,7 +8117,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUploadGPSLogFilesResponseDataError,
-				ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8159,14 +8130,14 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUploadGPSLogFilesRequestDataError,
-			ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8179,7 +8150,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8191,7 +8162,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8206,7 +8177,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidStatusGetRepNameError,
-				ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8222,7 +8193,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotFoundTargetGPSLogRepError,
-			ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8243,7 +8214,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetRepPathError,
-				ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8263,7 +8234,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 				gkill_log.Debug.Println(err.Error())
 				gkillError = &message.GkillError{
 					ErrorCode:    message.ConvertGPSLogError,
-					ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 				}
 				gkillErrorCh <- gkillError
 				return
@@ -8277,7 +8248,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 				gkill_log.Debug.Println(err.Error())
 				gkillError = &message.GkillError{
 					ErrorCode:    message.ConvertGPSLogError,
-					ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 				}
 				gkillErrorCh <- gkillError
 				return
@@ -8343,7 +8314,7 @@ loop:
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetRepPathError,
-				ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8362,7 +8333,7 @@ loop:
 					gkill_log.Debug.Println(err.Error())
 					gkillError = &message.GkillError{
 						ErrorCode:    message.ConvertGPSLogError,
-						ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+						ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 					}
 					response.Errors = append(response.Errors, gkillError)
 				}
@@ -8383,7 +8354,7 @@ loop:
 				gkill_log.Debug.Println(err.Error())
 				gkillError = &message.GkillError{
 					ErrorCode:    message.GenerateGPXFileContentError,
-					ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 				}
 				gkillErrorCh2 <- gkillError
 				return
@@ -8394,7 +8365,7 @@ loop:
 				gkill_log.Debug.Println(err.Error())
 				gkillError = &message.GkillError{
 					ErrorCode:    message.GetRepPathError,
-					ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 				}
 				gkillErrorCh <- gkillError
 				return
@@ -8406,7 +8377,7 @@ loop:
 				gkill_log.Debug.Println(err.Error())
 				gkillError = &message.GkillError{
 					ErrorCode:    message.WriteGPXFileError,
-					ErrorMessage: "GPSLogファイルアップロードに失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_GPSLOG_FILE_MESSAGE"}),
 				}
 				gkillErrorCh <- gkillError
 				return
@@ -8452,7 +8423,7 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateTagStructResponseDataError,
-				ErrorMessage: "タグ構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8465,14 +8436,14 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateTagStructRequestDataError,
-			ErrorMessage: "タグ構造更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8485,7 +8456,7 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8498,7 +8469,7 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.TagStructInvalidUserID,
-				ErrorMessage: "タグ構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8514,7 +8485,7 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.DeleteUsersTagStructError,
-			ErrorMessage: "タグ構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8527,7 +8498,7 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddUsersTagStructError,
-			ErrorMessage: "タグ構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8539,7 +8510,7 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "タグ構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8565,7 +8536,7 @@ func (g *GkillServerAPI) HandleUpdateDnoteJSONData(w http.ResponseWriter, r *htt
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateDnoteJSONDataResponseDataError,
-				ErrorMessage: "集計ビュー条件情報更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8578,14 +8549,14 @@ func (g *GkillServerAPI) HandleUpdateDnoteJSONData(w http.ResponseWriter, r *htt
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateDnoteJSONDataRequestDataError,
-			ErrorMessage: "集計ビュー条件情報更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8598,7 +8569,7 @@ func (g *GkillServerAPI) HandleUpdateDnoteJSONData(w http.ResponseWriter, r *htt
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8613,7 +8584,7 @@ func (g *GkillServerAPI) HandleUpdateDnoteJSONData(w http.ResponseWriter, r *htt
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.DeleteUsersDnoteDataError,
-			ErrorMessage: "集計ビュー条件情報更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8631,7 +8602,7 @@ func (g *GkillServerAPI) HandleUpdateDnoteJSONData(w http.ResponseWriter, r *htt
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddUsersDnoteDataError,
-			ErrorMessage: "集計ビュー条件情報更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8643,7 +8614,7 @@ func (g *GkillServerAPI) HandleUpdateDnoteJSONData(w http.ResponseWriter, r *htt
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "集計ビュー条件情報更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8669,7 +8640,7 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateApplicationconfigResponseDataError,
-				ErrorMessage: "設定更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8682,14 +8653,14 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateApplicationConfigRequestDataError,
-			ErrorMessage: "設定更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8702,7 +8673,7 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8720,7 +8691,7 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.UpdateApplicationConfigError,
-			ErrorMessage: "設定更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8746,7 +8717,7 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateRepStructResponseDataError,
-				ErrorMessage: "Rep構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8759,14 +8730,14 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateRepStructRequestDataError,
-			ErrorMessage: "Rep構造更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8779,7 +8750,7 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8792,7 +8763,7 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.RepStructInvalidUserID,
-				ErrorMessage: "Rep構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8808,7 +8779,7 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.DeleteUsersRepStructError,
-			ErrorMessage: "Rep構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8821,7 +8792,7 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddUsersRepStructError,
-			ErrorMessage: "Rep構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8833,7 +8804,7 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "Rep構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8859,7 +8830,7 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateDeviceStructResponseDataError,
-				ErrorMessage: "Device構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8872,14 +8843,14 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateDeviceStructRequestDataError,
-			ErrorMessage: "Device構造更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8892,7 +8863,7 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8905,7 +8876,7 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.DeviceStructInvalidUserID,
-				ErrorMessage: "Device構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8921,7 +8892,7 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.DeleteUsersDeviceStructError,
-			ErrorMessage: "Device構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8934,7 +8905,7 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddUsersDeviceStructError,
-			ErrorMessage: "Device構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8946,7 +8917,7 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "Device構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -8972,7 +8943,7 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateRepTypeStructResponseDataError,
-				ErrorMessage: "RepType構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -8985,14 +8956,14 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateRepTypeStructRequestDataError,
-			ErrorMessage: "RepType構造更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9005,7 +8976,7 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9018,7 +8989,7 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.RepTypeStructInvalidUserID,
-				ErrorMessage: "RepType構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9034,7 +9005,7 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.DeleteUsersRepTypeStructError,
-			ErrorMessage: "RepType構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9047,7 +9018,7 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddUsersRepTypeStructError,
-			ErrorMessage: "RepType構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9059,7 +9030,7 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "RepType構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9085,7 +9056,7 @@ func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateKFTLTemplateResponseDataError,
-				ErrorMessage: "KFTLテンプレート構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9098,14 +9069,14 @@ func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateKFTLTemplateRequestDataError,
-			ErrorMessage: "KFTLテンプレート構造更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9118,7 +9089,7 @@ func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9131,7 +9102,7 @@ func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.KFTLTemplateStructInvalidUserID,
-				ErrorMessage: "KFTLテンプレート構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9147,7 +9118,7 @@ func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.DeleteUsersKFTLTemplateError,
-			ErrorMessage: "KFTLテンプレート構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9160,7 +9131,7 @@ func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddUsersKFTLTemplateError,
-			ErrorMessage: "KFTLテンプレート構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9172,7 +9143,7 @@ func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "KFTLテンプレート構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9198,7 +9169,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateAccountStatusResponseDataError,
-				ErrorMessage: "アカウントステータス構造更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_ACCOUNT_STATUS_STRUCT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9211,14 +9182,14 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateAccountStatusRequestDataError,
-			ErrorMessage: "アカウントステータス構造更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_ACCOUNT_STATUS_STRUCT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	requesterAccount, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	requesterAccount, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9231,7 +9202,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9243,7 +9214,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotHasAdminError,
-			ErrorMessage: "アカウントステータス更新処理に失敗しました。権限がありません。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_ACCOUNT_STATUS_NO_AUTH_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9256,7 +9227,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "パスワードリセット処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_PASSWORD_RESET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9278,7 +9249,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.UpdateUsersAccountStatusError,
-			ErrorMessage: "アカウントステータス構造更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_ACCOUNT_STATUS_STRUCT_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9304,7 +9275,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateUserRepsResponseDataError,
-				ErrorMessage: "Rep更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9317,14 +9288,14 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateUserRepsRequestDataError,
-			ErrorMessage: "Rep更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	requesterAccount, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	requesterAccount, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9336,7 +9307,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9348,7 +9319,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotHasAdminError,
-			ErrorMessage: "Rep更新に失敗しました。権限がありません",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_NO_AUTH_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9361,7 +9332,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "Rep更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9370,7 +9341,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	if targetAccount == nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "Rep更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9382,7 +9353,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 	if !ok || err != nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddUpdatedRepositoriesByUser,
-			ErrorMessage: fmt.Sprintf("Rep更新に失敗しました。%s", err.Error()),
+			ErrorMessage: fmt.Sprintf("%s%s", GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_WITH_ERROR_MESSAGE"}), err.Error()),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		if err != nil {
@@ -9419,7 +9390,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.InvalidUpdateServerConfigResponseDataError,
-					ErrorMessage: "設定更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -9432,14 +9403,14 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateServerConfigRequestDataError,
-				ErrorMessage: "設定更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
 
 		// アカウントを取得
-		account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+		account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 		if err != nil {
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9452,7 +9423,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
-				ErrorMessage: "内部エラー",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9464,7 +9435,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountNotHasAdminError,
-				ErrorMessage: "管理者権限を所有していません",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "NO_ADMIN_PRIVILEGE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9482,7 +9453,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 					gkill_log.Debug.Println(err.Error())
 					gkillError := &message.GkillError{
 						ErrorCode:    message.NotFoundTLSCertFileError,
-						ErrorMessage: "証明書ファイルが作成されていません",
+						ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "CERT_FILE_NOT_CREATED_MESSAGE"}),
 					}
 					response.Errors = append(response.Errors, gkillError)
 					return
@@ -9493,7 +9464,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 					gkill_log.Debug.Println(err.Error())
 					gkillError := &message.GkillError{
 						ErrorCode:    message.NotFoundTLSCertFileError,
-						ErrorMessage: "証明書ファイルが作成されていません",
+						ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "CERT_FILE_NOT_CREATED_MESSAGE"}),
 					}
 					response.Errors = append(response.Errors, gkillError)
 					return
@@ -9511,7 +9482,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 					gkill_log.Debug.Println(err.Error())
 					gkillError := &message.GkillError{
 						ErrorCode:    message.GenerateVAPIDKeysError,
-						ErrorMessage: "鍵生成エラー",
+						ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "KEY_GENERATION_ERROR_MESSAGE"}),
 					}
 					response.Errors = append(response.Errors, gkillError)
 					return
@@ -9528,7 +9499,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			}
 			gkillError := &message.GkillError{
 				ErrorCode:    message.UpdateServerConfigError,
-				ErrorMessage: "設定更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9542,7 +9513,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 			}
 			gkillError := &message.GkillError{
 				ErrorCode:    message.UpdateServerConfigError,
-				ErrorMessage: "設定更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SETTINGS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9572,7 +9543,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidAddAccountResponseDataError,
-				ErrorMessage: "account追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9585,14 +9556,14 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidAddAccountRequestDataError,
-			ErrorMessage: "account追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	requesterAccount, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	requesterAccount, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9605,7 +9576,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9617,7 +9588,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotHasAdminError,
-			ErrorMessage: "アカウント追加に失敗しました。権限がありません。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_NO_AUTH_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9630,7 +9601,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountError,
-			ErrorMessage: "Account追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9640,7 +9611,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistAccountError,
-			ErrorMessage: "Account追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9662,7 +9633,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddAccountError,
-			ErrorMessage: "Account追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9674,7 +9645,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountError,
-			ErrorMessage: "account追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9683,7 +9654,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	if requesterAccount == nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountError,
-			ErrorMessage: "account追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9707,7 +9678,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddApplicationConfig,
-			ErrorMessage: "account追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9720,7 +9691,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddAccountError,
-				ErrorMessage: "Account追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9748,7 +9719,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidGenerateTLSFileResponseDataError,
-				ErrorMessage: "TLSファイル作成処理に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9761,7 +9732,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidGenerateTLSFileRequestDataError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9774,7 +9745,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountSessionNotFoundError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9786,7 +9757,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9794,7 +9765,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	if requesterAccount == nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9806,7 +9777,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotHasAdminError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。権限がありません。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_NO_AUTH_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9818,7 +9789,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9830,7 +9801,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetTLSFileNamesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9846,7 +9817,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.RemoveCertFileError,
-				ErrorMessage: "TLSファイル作成処理に失敗しました。",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9859,7 +9830,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.RemovePemFileError,
-				ErrorMessage: "TLSファイル作成処理に失敗しました。",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9886,7 +9857,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9914,7 +9885,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9925,7 +9896,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9952,7 +9923,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GenerateTLSFilesError,
-				ErrorMessage: "TLSファイル作成処理に失敗しました。",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -9969,7 +9940,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10009,7 +9980,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10025,7 +9996,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10037,7 +10008,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10050,7 +10021,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10061,7 +10032,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10072,7 +10043,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10085,7 +10056,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10097,7 +10068,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10108,7 +10079,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10119,7 +10090,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GenerateTLSFilesError,
-			ErrorMessage: "TLSファイル作成処理に失敗しました。",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_CREATE_TLS_FILE_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10145,7 +10116,7 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetGPSLogResponseDataError,
-				ErrorMessage: "GPSLog取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GPS_LOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10158,14 +10129,14 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetGPSLogRequestDataError,
-			ErrorMessage: "GPSLog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GPS_LOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10178,7 +10149,7 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10190,7 +10161,7 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "GPSLog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GPS_LOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10202,7 +10173,7 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetGPSLogError,
-			ErrorMessage: "GPSLog取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GPS_LOG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10229,7 +10200,7 @@ func (g *GkillServerAPI) HandleGetKFTLTemplate(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetKFTLTemplateResponseDataError,
-				ErrorMessage: "kftlTemplate取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KFTL_TEMPLATE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10242,14 +10213,14 @@ func (g *GkillServerAPI) HandleGetKFTLTemplate(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetKFTLTemplateRequestDataError,
-			ErrorMessage: "kftlTemplate取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KFTL_TEMPLATE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10262,7 +10233,7 @@ func (g *GkillServerAPI) HandleGetKFTLTemplate(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10274,7 +10245,7 @@ func (g *GkillServerAPI) HandleGetKFTLTemplate(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetKFTLTemplateError,
-			ErrorMessage: "KFTLTemplate取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KFTL_TEMPLATE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10301,7 +10272,7 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetGkillInfoResponseDataError,
-				ErrorMessage: "GkillInfo取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GKILL_INFO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10314,14 +10285,14 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetGkillInfoRequestDataError,
-			ErrorMessage: "GkillInfo取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GKILL_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10334,7 +10305,7 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10364,7 +10335,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidAddShareKyouListInfoResponseDataError,
-				ErrorMessage: "ShareKyouListInfo追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10377,14 +10348,14 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidAddShareKyouListInfoRequestDataError,
-			ErrorMessage: "ShareKyouListInfo追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10397,7 +10368,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10410,7 +10381,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetShareKyouListInfoError,
-			ErrorMessage: "ShareKyouListInfo追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10420,7 +10391,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistShareKyouListInfoError,
-			ErrorMessage: "ShareKyouListInfo追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10449,7 +10420,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddShareKyouListInfoError,
-			ErrorMessage: "ShareKyouListInfo追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10461,7 +10432,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetShareKyouListInfoError,
-			ErrorMessage: "ShareKyouListInfo追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_SHARE_KYOU_LIST_INFO_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10488,7 +10459,7 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidUpdateShareKyouListInfoResponseDataError,
-				ErrorMessage: "ShareKyouListInfo更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10501,14 +10472,14 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidUpdateShareKyouListInfoRequestDataError,
-			ErrorMessage: "ShareKyouListInfo更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10521,7 +10492,7 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10534,7 +10505,7 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetShareKyouListInfoError,
-			ErrorMessage: "ShareKyouListInfo更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10544,7 +10515,7 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.NotExistShareKyouListInfoError,
-			ErrorMessage: "ShareKyouListInfo更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10573,7 +10544,7 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.UpdateShareKyouListInfoError,
-			ErrorMessage: "ShareKyouListInfo更新に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SHARE_KYOU_LIST_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10585,7 +10556,7 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetShareKyouListInfoError,
-			ErrorMessage: "ShareKyouListInfo更新後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_SHARE_KYOU_LIST_INFO_UPDATED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10612,7 +10583,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetShareKyouListInfosResponseDataError,
-				ErrorMessage: "ShareKyouListInfos取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10625,14 +10596,14 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetShareKyouListInfosRequestDataError,
-			ErrorMessage: "ShareKyouListInfos取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10645,7 +10616,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10657,7 +10628,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetShareKyouListInfosError,
-			ErrorMessage: "ShareKyouListInfos取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10684,7 +10655,7 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidDeleteShareKyouListInfosResponseDataError,
-				ErrorMessage: "ShareKyouListInfos削除に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_DELETE_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10697,14 +10668,14 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidDeleteShareKyouListInfosRequestDataError,
-			ErrorMessage: "ShareKyouListInfos削除に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_DELETE_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを削除
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10717,7 +10688,7 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10731,7 +10702,7 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 		}
 		gkillError := &message.GkillError{
 			ErrorCode:    message.DeleteShareKyouListInfosError,
-			ErrorMessage: "ShareKyouListInfos削除に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_DELETE_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10757,7 +10728,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetMiSharedTasksResponseDataError,
-				ErrorMessage: "ShareKyouListInfos取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10770,7 +10741,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiSharedTasksRequestDataError,
-			ErrorMessage: "ShareKyouListInfos取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10782,7 +10753,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetMiSharedTasksError,
-			ErrorMessage: "ShareKyouListInfos取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10797,7 +10768,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "Kyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10810,7 +10781,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiSharedTaskRequest,
-			ErrorMessage: "Kyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10826,7 +10797,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.FindKyousShareKyouError,
-			ErrorMessage: "Kyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10846,7 +10817,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.FindKyousShareKyouError,
-			ErrorMessage: "Kyou取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -10861,7 +10832,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10879,7 +10850,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.FindTagsShareKyouError,
-					ErrorMessage: "タグ取得に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAGS_BY_TARGET_ID_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -10904,7 +10875,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.FindTextsShareKyouError,
-					ErrorMessage: "テキスト取得に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -10932,7 +10903,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.FindTextsShareKyouError,
-					ErrorMessage: "TimeIs取得に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TIMEIS_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -10957,7 +10928,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10970,7 +10941,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10983,7 +10954,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -10996,7 +10967,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11009,7 +10980,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11022,7 +10993,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11035,7 +11006,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11048,7 +11019,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.FindKyousShareKyouError,
-				ErrorMessage: "Kyou取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11091,7 +11062,7 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetRepositoriesResponseDataError,
-				ErrorMessage: "Repositoriesの取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REPOSITORIES_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11104,14 +11075,14 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetRepositoriesRequestDataError,
-			ErrorMessage: "Repositoriesの取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REPOSITORIES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11124,7 +11095,7 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11136,7 +11107,7 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetRepositoriesError,
-			ErrorMessage: "Repositoriesの取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REPOSITORIES_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11152,14 +11123,14 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 	})
 }
 
-func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.Context, sessionID string, applicationName string) (*account.Account, *message.GkillError, error) {
+func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.Context, sessionID string, applicationName string, localeName string) (*account.Account, *message.GkillError, error) {
 	loginSession, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(ctx, sessionID)
 	if loginSession == nil || err != nil {
 		err = fmt.Errorf("error at get login session session id = %s: %w", sessionID, err)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountSessionNotFoundError,
-			ErrorMessage: "アカウント認証に失敗しました",
+			ErrorMessage: GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ACCOUNT_AUTH_MESSAGE"}),
 		}
 		return nil, gkillError, err
 	}
@@ -11167,7 +11138,7 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 		err = fmt.Errorf("error at get account user id = %s: %w", loginSession.UserID, err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "アカウント認証に失敗しました",
+			ErrorMessage: GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ACCOUNT_AUTH_MESSAGE"}),
 		}
 		return nil, gkillError, err
 	}
@@ -11178,7 +11149,7 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "アカウント認証に失敗しました",
+			ErrorMessage: GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ACCOUNT_AUTH_MESSAGE"}),
 		}
 		return nil, gkillError, err
 	}
@@ -11187,7 +11158,7 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 		err = fmt.Errorf("error at get account user id = %s: %w", loginSession.UserID, err)
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountNotFoundError,
-			ErrorMessage: "アカウント認証に失敗しました",
+			ErrorMessage: GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ACCOUNT_AUTH_MESSAGE"}),
 		}
 		return nil, gkillError, err
 	}
@@ -11197,7 +11168,7 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountDisabledError,
-			ErrorMessage: "アカウントが無効化されています",
+			ErrorMessage: GetLocalizer(localeName).MustLocalizeMessage(&i18n.Message{ID: "ACCOUNT_DISABLED_MESSAGE"}),
 		}
 		return nil, gkillError, err
 	}
@@ -11206,8 +11177,8 @@ func (g *GkillServerAPI) getAccountFromSessionIDWithApplicationName(ctx context.
 
 }
 
-func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID string) (*account.Account, *message.GkillError, error) {
-	return g.getAccountFromSessionIDWithApplicationName(ctx, sessionID, "gkill")
+func (g *GkillServerAPI) getAccountFromSessionID(ctx context.Context, sessionID string, localeName string) (*account.Account, *message.GkillError, error) {
+	return g.getAccountFromSessionIDWithApplicationName(ctx, sessionID, "gkill", localeName)
 }
 
 func GenerateNewID() string {
@@ -11468,7 +11439,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 	// NGであれば403でreturn
 	userID := ""
 	if sessionID != "" {
-		account, gkillError, err := g.getAccountFromSessionID(r.Context(), sessionID)
+		account, gkillError, err := g.getAccountFromSessionID(r.Context(), sessionID, "")
 		if account == nil || gkillError != nil || err != nil {
 			w.WriteHeader(http.StatusForbidden)
 			err = fmt.Errorf("error at handle file serve: %w", err)
@@ -11560,7 +11531,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetMiTaskNotificationPublicKeyResponseDataError,
-				ErrorMessage: "Miタスク通知登録に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11573,14 +11544,14 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetMiTaskNotificationPublicKeyRequestDataError,
-			ErrorMessage: "Miタスク通知登録に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11594,7 +11565,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11607,7 +11578,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: "Miタスク通知登録に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11623,7 +11594,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: "ServerConfig取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11645,7 +11616,7 @@ func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidRegisterMiTaskNotificationResponse,
-				ErrorMessage: "Miタスク通知登録に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11658,14 +11629,14 @@ func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidRegisterMiTaskNotificationRequest,
-			ErrorMessage: "Miタスク通知登録に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11686,7 +11657,7 @@ func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddGkillNotificationTargetError,
-			ErrorMessage: "Miタスク通知登録に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11711,7 +11682,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidRegisterOpenDirectoryResponse,
-				ErrorMessage: "フォルダを開けませんでした",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FOLDER_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11724,7 +11695,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidRegisterOpenDirectoryRequest,
-			ErrorMessage: "フォルダを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FOLDER_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11736,7 +11707,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.OpenFolderError,
-			ErrorMessage: "フォルダを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FOLDER_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11747,7 +11718,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.OpenFolderNotLocalAccountError,
-			ErrorMessage: "フォルダを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FOLDER_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11759,7 +11730,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11771,7 +11742,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: "フォルダを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FOLDER_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11783,7 +11754,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetRepositoriesError,
-			ErrorMessage: "フォルダを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FOLDER_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11795,7 +11766,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetRepPathError,
-			ErrorMessage: "フォルダを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FOLDER_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11820,7 +11791,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: "フォルダを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FOLDER_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11845,7 +11816,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidRegisterOpenFileResponse,
-				ErrorMessage: "ファイルを開けませんでした",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FILE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11858,7 +11829,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidRegisterOpenFileRequest,
-			ErrorMessage: "ファイルを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11870,7 +11841,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.OpenFolderError,
-			ErrorMessage: "ファイルを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11881,7 +11852,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.OpenFolderNotLocalAccountError,
-			ErrorMessage: "ファイルを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11893,7 +11864,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11905,7 +11876,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: "ファイルを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11917,7 +11888,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetRepositoriesError,
-			ErrorMessage: "ファイルを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11929,7 +11900,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetRepPathError,
-			ErrorMessage: "ファイルを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11954,7 +11925,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: "ファイルを開けませんでした",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_OPEN_FILE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -11979,7 +11950,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidReloadRepositoriesResponse,
-				ErrorMessage: "リロードに失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -11992,14 +11963,14 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidRegisterOpenFileRequest,
-			ErrorMessage: "リロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12012,7 +11983,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12024,7 +11995,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "リロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12036,7 +12007,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "リロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12048,7 +12019,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "リロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12060,7 +12031,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "リロードに失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12079,7 +12050,7 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAllAccountConfigError,
-			ErrorMessage: "アカウント設定情報の取得に失敗しました",
+			ErrorMessage: GetLocalizer("").MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_ACCOUNT_CONFIG_MESSAGE"}),
 		}
 		_ = gkillError
 		// response.Errors = append(response.Errors, gkillError)
@@ -12115,7 +12086,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidAddKmemoRequestDataError,
-			ErrorMessage: "URLog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		// response.Errors = append(response.Errors, gkillError)
 		_ = gkillError
@@ -12123,7 +12094,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionIDWithApplicationName(r.Context(), request.SessionID, "urlog_bookmarklet")
+	account, gkillError, err := g.getAccountFromSessionIDWithApplicationName(r.Context(), request.SessionID, "urlog_bookmarklet", request.LocaleName)
 	if err != nil {
 		gkill_log.Debug.Println(err.Error())
 		_ = gkillError
@@ -12138,7 +12109,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		_ = gkillError
 		// response.Errors = append(response.Errors, gkillError)
@@ -12151,7 +12122,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "URLog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		_ = gkillError
 		// response.Errors = append(response.Errors, gkillError)
@@ -12201,7 +12172,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		_ = gkillError
 		// response.Errors = append(response.Errors, gkillError)
@@ -12212,7 +12183,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AleadyExistURLogError,
-			ErrorMessage: "URLog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		_ = gkillError
 		// response.Errors = append(response.Errors, gkillError)
@@ -12226,7 +12197,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: "ApplicationConfig取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_APPLICATION_CONFIG_MESSAGE"}),
 		}
 		_ = gkillError
 		// response.Errors = append(response.Errors, gkillError)
@@ -12240,7 +12211,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetServerConfigError,
-			ErrorMessage: "ServerConfig取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
 		}
 		_ = gkillError
 		// response.Errors = append(response.Errors, gkillError)
@@ -12255,7 +12226,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AddURLogError,
-			ErrorMessage: "URLog追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 		}
 		_ = gkillError
 		// response.Errors = append(response.Errors, gkillError)
@@ -12270,7 +12241,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddURLogError,
-				ErrorMessage: "URLog追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 			}
 			_ = gkillError
 			// response.Errors = append(response.Errors, gkillError)
@@ -12284,7 +12255,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
 		}
 		_ = gkillError
 		// response.Errors = append(response.Errors, gkillError)
@@ -12302,7 +12273,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetURLogError,
-			ErrorMessage: "URLog追加後取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
 		}
 		_ = gkillError
 		// response.Errors = append(response.Errors, gkillError)
@@ -12400,7 +12371,7 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.InvalidGetUpdatedDatasByTimeResponse,
-				ErrorMessage: "最新情報の取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_LATEST_INFO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -12413,14 +12384,14 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.InvalidGetUpdatedDatasByTimeRequest,
-			ErrorMessage: "最新情報の取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_LATEST_INFO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, gkillError)
@@ -12434,7 +12405,7 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12446,7 +12417,7 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "最新情報取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_LATEST_INFO_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12459,7 +12430,7 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetLatestDataRepositoryAddressByUpdateTimeAfterError,
-			ErrorMessage: "最新情報取得に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_LATEST_INFO_MESSAGE2"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12545,7 +12516,7 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 		/*
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetDeviceError,
-				ErrorMessage: "内部エラー",
+			    ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 		*/
@@ -12561,7 +12532,7 @@ func (g *GkillServerAPI) filterLocalOnly(w http.ResponseWriter, r *http.Request)
 		/*
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetServerConfigError,
-				ErrorMessage: "ServerConfig取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_SERVER_CONFIG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 		*/
@@ -12678,7 +12649,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidCommitTxResponseDataError,
-				ErrorMessage: "保存に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SAVE_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -12691,14 +12662,14 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidCommitTxRequestDataError,
-			ErrorMessage: "保存に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_SAVE_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12711,7 +12682,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12723,7 +12694,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.RepositoriesGetError,
-			ErrorMessage: "kmemo追加に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12738,7 +12709,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetKmemoError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12749,7 +12720,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetKCError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12761,7 +12732,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetIDFKyouError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12773,7 +12744,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetLantanaError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12785,7 +12756,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetMiError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12797,7 +12768,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetNlogError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12809,7 +12780,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetNotificationError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12821,7 +12792,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetReKyouError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12833,7 +12804,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetTagError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12845,7 +12816,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetTextError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12857,7 +12828,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetTimeIsError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12869,7 +12840,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.CommitTxGetURLogError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -12882,7 +12853,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddIDFKyouError,
-				ErrorMessage: "IDFKyou更新に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -12895,7 +12866,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetIDFKyouError,
-				ErrorMessage: "IDFKyou更新後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -12907,7 +12878,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddIDFKyouError,
-					ErrorMessage: "IDFKyou更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -12925,7 +12896,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetIDFKyouError,
-				ErrorMessage: "IDFKyou更新後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -12939,7 +12910,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddKCError,
-				ErrorMessage: "KC追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -12952,7 +12923,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddKCError,
-					ErrorMessage: "KC追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -12965,7 +12936,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetKCError,
-				ErrorMessage: "KC追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -12982,7 +12953,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetKCError,
-				ErrorMessage: "KC追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -12996,7 +12967,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddKmemoError,
-				ErrorMessage: "Kmemo追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13009,7 +12980,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddKmemoError,
-					ErrorMessage: "Kmemo追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -13022,7 +12993,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetKmemoError,
-				ErrorMessage: "Kmemo追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13039,7 +13010,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetKmemoError,
-				ErrorMessage: "Kmemo追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13053,7 +13024,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddLantanaError,
-				ErrorMessage: "Lantana追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13066,7 +13037,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddLantanaError,
-					ErrorMessage: "Lantana追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -13079,7 +13050,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetLantanaError,
-				ErrorMessage: "Lantana追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13096,7 +13067,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetLantanaError,
-				ErrorMessage: "Lantana追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13110,7 +13081,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddMiError,
-				ErrorMessage: "Mi追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13123,7 +13094,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddMiError,
-					ErrorMessage: "Mi追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -13136,7 +13107,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetMiError,
-				ErrorMessage: "Mi追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13153,7 +13124,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetMiError,
-				ErrorMessage: "Mi追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13167,7 +13138,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddNlogError,
-				ErrorMessage: "Nlog追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13180,7 +13151,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddNlogError,
-					ErrorMessage: "Nlog追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -13193,7 +13164,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetNlogError,
-				ErrorMessage: "Nlog追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13210,7 +13181,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetNlogError,
-				ErrorMessage: "Nlog追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13224,7 +13195,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddNotificationError,
-				ErrorMessage: "通知追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13237,7 +13208,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddNotificationError,
-					ErrorMessage: "通知更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -13250,7 +13221,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetNotificationError,
-				ErrorMessage: "通知追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13268,7 +13239,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetNotificationError,
-				ErrorMessage: "通知追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13282,7 +13253,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddReKyouError,
-				ErrorMessage: "ReKyou追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13295,7 +13266,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddReKyouError,
-					ErrorMessage: "ReKyou更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -13308,7 +13279,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetReKyouError,
-				ErrorMessage: "ReKyou追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13326,7 +13297,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetReKyouError,
-				ErrorMessage: "ReKyou追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13340,7 +13311,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTagError,
-				ErrorMessage: "タグ追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13354,7 +13325,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddTagError,
-					ErrorMessage: "タグ追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -13367,7 +13338,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetTagError,
-				ErrorMessage: "タグ追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13385,7 +13356,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetTagError,
-				ErrorMessage: "タグ追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13399,7 +13370,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTextError,
-				ErrorMessage: "テキスト追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13411,7 +13382,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddTextError,
-					ErrorMessage: "テキスト追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -13424,7 +13395,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetTextError,
-				ErrorMessage: "テキスト追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13442,7 +13413,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetTextError,
-				ErrorMessage: "テキスト追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13456,7 +13427,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddTimeIsError,
-				ErrorMessage: "TimeIs追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13469,7 +13440,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddTimeIsError,
-					ErrorMessage: "TimeIs追加に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -13482,7 +13453,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetTimeIsError,
-				ErrorMessage: "TimeIs追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13499,7 +13470,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetTimeIsError,
-				ErrorMessage: "TimeIs追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13513,7 +13484,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AddURLogError,
-				ErrorMessage: "URLog追加に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13526,7 +13497,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 				gkillError := &message.GkillError{
 					ErrorCode:    message.AddURLogError,
-					ErrorMessage: "URLog更新に失敗しました",
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
 				}
 				response.Errors = append(response.Errors, gkillError)
 				return
@@ -13539,7 +13510,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetURLogError,
-				ErrorMessage: "URLog追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13556,7 +13527,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetURLogError,
-				ErrorMessage: "URLog追加後取得に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13582,7 +13553,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 			gkill_log.Debug.Println(err.Error())
 			gkillError := &message.GkillError{
 				ErrorCode:    message.AccountInvalidDiscardTxResponseDataError,
-				ErrorMessage: "トランザクション破棄に失敗しました",
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_DISCARD_TRANSACTION_MESSAGE"}),
 			}
 			response.Errors = append(response.Errors, gkillError)
 			return
@@ -13595,14 +13566,14 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.AccountInvalidDiscardTxRequestDataError,
-			ErrorMessage: "トランザクション破棄に失敗しました",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_DISCARD_TRANSACTION_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
 
 	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID)
+	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
 	if err != nil {
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -13615,7 +13586,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -13630,7 +13601,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteIDFKyouError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13640,7 +13611,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteKCError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13650,7 +13621,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteKmemoError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13660,7 +13631,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteLantanaError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13670,7 +13641,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteMiError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13680,7 +13651,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteNlogError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13690,7 +13661,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteNotificationError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13700,7 +13671,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteReKyouError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13710,7 +13681,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteTagError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13720,7 +13691,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteTextError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13730,7 +13701,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteTimeIsError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}
@@ -13740,7 +13711,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 		gkill_log.Debug.Println(err.Error())
 		response.Errors = append(response.Errors, &message.GkillError{
 			ErrorCode:    message.CommitTxDeleteURLogError,
-			ErrorMessage: "内部エラー",
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		})
 		return
 	}

@@ -8,4 +8,6 @@ type AddReKyouRequest struct {
 	ReKyou *reps.ReKyou `json:"rekyou"`
 
 	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }

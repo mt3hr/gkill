@@ -6,4 +6,6 @@ type AddAccountRequest struct {
 	AccountInfo *Account `json:"account_info"`
 
 	DoInitialize bool `json:"do_initialize"`
+
+	LocaleName string `json:"locale_name"`
 }

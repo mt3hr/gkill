@@ -4,4 +4,6 @@ type DiscardTxRequest struct {
 	SessionID string `json:"session_id"`
 
 	TXID string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }

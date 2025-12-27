@@ -10,4 +10,6 @@ type GetURLogRequest struct {
 	UpdateTime *time.Time `json:"update_time"`
 
 	RepName *string `json:"rep_name"`
+
+	LocaleName string `json:"locale_name"`
 }

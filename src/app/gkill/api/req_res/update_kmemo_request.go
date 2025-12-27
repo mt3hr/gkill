@@ -8,4 +8,6 @@ type UpdateKmemoRequest struct {
 	Kmemo *reps.Kmemo `json:"kmemo"`
 
 	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }
