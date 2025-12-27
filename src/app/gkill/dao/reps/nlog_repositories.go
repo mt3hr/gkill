@@ -304,14 +304,18 @@ func (n NlogRepositories) GetRepName(ctx context.Context) (string, error) {
 }
 
 func (n NlogRepositories) Close(ctx context.Context) error {
+	reps, err := n.UnWrapTyped()
+	if err != nil {
+		return err
+	}
+
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(n))
+	errch := make(chan error, len(reps))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range n {
+	for _, rep := range reps {
 		wg.Add(1)
 
 		done := threads.AllocateThread()

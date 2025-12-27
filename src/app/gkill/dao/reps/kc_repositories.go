@@ -303,14 +303,18 @@ func (k KCRepositories) GetRepName(ctx context.Context) (string, error) {
 }
 
 func (k KCRepositories) Close(ctx context.Context) error {
+	reps, err := k.UnWrapTyped()
+	if err != nil {
+		return err
+	}
+
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(k))
+	errch := make(chan error, len(reps))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range k {
+	for _, rep := range reps {
 		wg.Add(1)
 
 		done := threads.AllocateThread()
