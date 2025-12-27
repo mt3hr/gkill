@@ -294,14 +294,18 @@ func (g GitCommitLogRepositories) GetRepName(ctx context.Context) (string, error
 }
 
 func (g GitCommitLogRepositories) Close(ctx context.Context) error {
+	reps, err := g.UnWrapTyped()
+	if err != nil {
+		return err
+	}
+
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(g))
+	errch := make(chan error, len(reps))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range g {
+	for _, rep := range reps {
 		wg.Add(1)
 
 		done := threads.AllocateThread()
