@@ -1121,20 +1121,50 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 
 	// Reps, TagReps, TextReps, GPSLogRepsの監視をやめる
 	removeWatchTargetReps := []rep_cache_updater.CacheUpdatable{}
-	for _, rep := range reps.Reps {
-		removeWatchTargetReps = append(removeWatchTargetReps, rep)
+	for _, reps := range reps.Reps {
+		unwrapedReps, err := reps.UnWrap()
+		if err != nil {
+			return false, err
+		}
+		for _, unwrapedRep := range unwrapedReps {
+			removeWatchTargetReps = append(removeWatchTargetReps, unwrapedRep)
+		}
 	}
-	for _, tagRep := range reps.TagRepsWatchTarget {
-		removeWatchTargetReps = append(removeWatchTargetReps, tagRep)
+	for _, tagReps := range reps.TagRepsWatchTarget {
+		unwrapedTagReps, err := tagReps.UnWrapTyped()
+		if err != nil {
+			return false, err
+		}
+		for _, unwrapedTagRep := range unwrapedTagReps {
+			removeWatchTargetReps = append(removeWatchTargetReps, unwrapedTagRep)
+		}
 	}
-	for _, textRep := range reps.TextRepsWatchTarget {
-		removeWatchTargetReps = append(removeWatchTargetReps, textRep)
+	for _, textReps := range reps.TextRepsWatchTarget {
+		unwrapedTextReps, err := textReps.UnWrapTyped()
+		if err != nil {
+			return false, err
+		}
+		for _, unwrapedTextRep := range unwrapedTextReps {
+			removeWatchTargetReps = append(removeWatchTargetReps, unwrapedTextRep)
+		}
 	}
-	for _, notificationRep := range reps.NotificationReps {
-		removeWatchTargetReps = append(removeWatchTargetReps, notificationRep)
+	for _, notificationReps := range reps.NotificationReps {
+		unwrapedNotificationReps, err := notificationReps.UnWrapTyped()
+		if err != nil {
+			return false, err
+		}
+		for _, unwrapedNotificationRep := range unwrapedNotificationReps {
+			removeWatchTargetReps = append(removeWatchTargetReps, unwrapedNotificationRep)
+		}
 	}
-	for _, gpsLogRep := range reps.GPSLogReps {
-		removeWatchTargetReps = append(removeWatchTargetReps, gpsLogRep)
+	for _, gpsLogReps := range reps.GPSLogReps {
+		unwrapedGPSLogReps, err := gpsLogReps.UnWrapTyped()
+		if err != nil {
+			return false, err
+		}
+		for _, unwrapedGPSLogRep := range unwrapedGPSLogReps {
+			removeWatchTargetReps = append(removeWatchTargetReps, unwrapedGPSLogRep)
+		}
 	}
 
 	for _, rep := range removeWatchTargetReps {

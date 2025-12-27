@@ -12,6 +12,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type reKyouRepositoryCachedSQLite3Impl struct {
@@ -438,8 +439,22 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (str
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
-	_, err := r.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+r.dbName)
-	return err
+	err := r.rekyouRep.Close(ctx)
+	if err != nil {
+		return err
+	}
+	if gkill_options.CacheReKyouReps == nil || !*gkill_options.CacheReKyouReps {
+		err = r.cachedDB.Close()
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = r.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+r.dbName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {

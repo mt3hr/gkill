@@ -168,90 +168,55 @@ func (g *GkillRepositories) GetUserID(ctx context.Context) (string, error) {
 func (g *GkillRepositories) Close(ctx context.Context) error {
 	g.isClosed = true
 	g.updateCacheTicker.Stop()
-	for _, rep := range g.TagReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.TagReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
-	for _, rep := range g.TextReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.TextReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
-	for _, rep := range g.NotificationReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.KmemoReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
-	for _, rep := range g.KmemoReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.KCReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
-	for _, rep := range g.KCReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.NlogReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
-	for _, rep := range g.URLogReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.TimeIsReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
 
-	for _, rep := range g.NlogReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.MiReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
-	for _, rep := range g.TimeIsReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.IDFKyouReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
-	for _, rep := range g.MiReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.ReKyouReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
-	for _, rep := range g.LantanaReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.GitCommitLogReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
-	for _, rep := range g.IDFKyouReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
-	}
-	for _, rep := range g.ReKyouReps.ReKyouRepositories {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
-	}
-	for _, rep := range g.GitCommitLogReps {
-		err := rep.Close(ctx)
-		if err != nil {
-			gkill_log.Error.Println(err.Error())
-		}
+	if err := g.LantanaReps.Close(ctx); err != nil {
+		gkill_log.Error.Println(err.Error())
+		return err
 	}
 	err := g.LatestDataRepositoryAddressDAO.Close(ctx)
 	if err != nil {
 		gkill_log.Error.Println(err.Error())
 	}
-
 	/*
 		for _, rep := range g.GPSLogReps {
 			err := rep.Close(ctx)

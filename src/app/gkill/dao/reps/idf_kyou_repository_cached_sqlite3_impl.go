@@ -18,6 +18,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type idfKyouRepositoryCachedSQLite3Impl struct {
@@ -650,7 +651,22 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (st
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
-	return i.cachedDB.Close()
+	err := i.idfRep.Close(ctx)
+	if err != nil {
+		return err
+	}
+	if gkill_options.CacheIDFKyouReps == nil || !*gkill_options.CacheIDFKyouReps {
+		err = i.cachedDB.Close()
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = i.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+i.dbName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {

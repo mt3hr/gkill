@@ -14,6 +14,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type nlogRepositoryCachedSQLite3Impl struct {
@@ -494,8 +495,22 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (strin
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
-	_, err := n.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+n.dbName)
-	return err
+	err := n.nlogRep.Close(ctx)
+	if err != nil {
+		return err
+	}
+	if gkill_options.CacheNlogReps == nil || !*gkill_options.CacheNlogReps {
+		err = n.cachedDB.Close()
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = n.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+n.dbName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
