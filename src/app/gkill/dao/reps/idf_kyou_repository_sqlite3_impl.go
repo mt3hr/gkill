@@ -595,7 +595,7 @@ WHERE
 
 func (i *idfKyouRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
 	if id == "" {
-		return i.contentDir, nil
+		return i.idDBFile, nil
 	}
 	var err error
 	sql := `

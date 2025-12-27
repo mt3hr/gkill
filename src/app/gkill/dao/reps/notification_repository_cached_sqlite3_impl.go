@@ -13,6 +13,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type notificationRepositoryCachedSQLite3Impl struct {
@@ -224,8 +225,22 @@ WHERE
 }
 
 func (t *notificationRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
-	_, err := t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+t.dbName)
-	return err
+	err := t.notificationRep.Close(ctx)
+	if err != nil {
+		return err
+	}
+	if gkill_options.CacheNotificationReps == nil || !*gkill_options.CacheNotificationReps {
+		err = t.cachedDB.Close()
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+t.dbName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (t *notificationRepositoryCachedSQLite3Impl) GetNotification(ctx context.Context, id string, updateTime *time.Time) (*Notification, error) {

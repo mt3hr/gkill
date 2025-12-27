@@ -304,14 +304,18 @@ func (u URLogRepositories) GetRepName(ctx context.Context) (string, error) {
 }
 
 func (u URLogRepositories) Close(ctx context.Context) error {
+	reps, err := u.UnWrapTyped()
+	if err != nil {
+		return err
+	}
+
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(u))
+	errch := make(chan error, len(reps))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range u {
+	for _, rep := range reps {
 		wg.Add(1)
 
 		done := threads.AllocateThread()

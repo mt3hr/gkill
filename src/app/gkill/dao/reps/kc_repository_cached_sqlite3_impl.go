@@ -14,6 +14,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type kcRepositoryCachedSQLite3Impl struct {
@@ -489,8 +490,22 @@ func (k *kcRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string,
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
-	_, err := k.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+k.dbName)
-	return err
+	err := k.kcRep.Close(ctx)
+	if err != nil {
+		return err
+	}
+	if gkill_options.CacheKCReps == nil || !*gkill_options.CacheKCReps {
+		err = k.cachedDB.Close()
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = k.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+k.dbName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
