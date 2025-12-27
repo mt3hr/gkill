@@ -11,6 +11,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type textRepositoryCachedSQLite3Impl struct {
@@ -315,9 +316,22 @@ WHERE
 }
 
 func (t *textRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
-	t.getTextsByTargetIDStmt.Close()
-	_, err := t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+t.dbName)
-	return err
+	err := t.textRep.Close(ctx)
+	if err != nil {
+		return err
+	}
+	if gkill_options.CacheTextReps == nil || !*gkill_options.CacheTextReps {
+		err = t.cachedDB.Close()
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = t.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+t.dbName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (t *textRepositoryCachedSQLite3Impl) GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error) {

@@ -12,6 +12,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type kmemoRepositoryCachedSQLite3Impl struct {
@@ -482,8 +483,22 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (stri
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
-	_, err := k.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+k.dbName)
-	return err
+	err := k.kmemoRep.Close(ctx)
+	if err != nil {
+		return err
+	}
+	if gkill_options.CacheKmemoReps == nil || !*gkill_options.CacheKmemoReps {
+		err = k.cachedDB.Close()
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = k.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+k.dbName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {

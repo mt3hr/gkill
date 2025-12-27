@@ -88,14 +88,18 @@ loop:
 }
 
 func (r Repositories) Close(ctx context.Context) error {
+	reps, err := r.UnWrap()
+	if err != nil {
+		return err
+	}
+
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(r))
+	errch := make(chan error, len(reps))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range r {
+	for _, rep := range reps {
 		wg.Add(1)
 
 		done := threads.AllocateThread()

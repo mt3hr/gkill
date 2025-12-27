@@ -304,14 +304,18 @@ func (l LantanaRepositories) GetRepName(ctx context.Context) (string, error) {
 }
 
 func (l LantanaRepositories) Close(ctx context.Context) error {
+	reps, err := l.UnWrapTyped()
+	if err != nil {
+		return err
+	}
+
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(l))
+	errch := make(chan error, len(reps))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range l {
+	for _, rep := range reps {
 		wg.Add(1)
 
 		done := threads.AllocateThread()

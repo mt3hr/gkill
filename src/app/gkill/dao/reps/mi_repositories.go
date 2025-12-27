@@ -305,14 +305,18 @@ func (m MiRepositories) GetRepName(ctx context.Context) (string, error) {
 }
 
 func (m MiRepositories) Close(ctx context.Context) error {
+	reps, err := m.UnWrapTyped()
+	if err != nil {
+		return err
+	}
+
 	existErr := false
-	var err error
 	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(m))
+	errch := make(chan error, len(reps))
 	defer close(errch)
 
 	// 並列処理
-	for _, rep := range m {
+	for _, rep := range reps {
 		wg.Add(1)
 
 		done := threads.AllocateThread()

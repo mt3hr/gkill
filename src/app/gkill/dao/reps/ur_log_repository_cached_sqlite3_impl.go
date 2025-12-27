@@ -11,6 +11,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type urlogRepositoryCachedSQLite3Impl struct {
@@ -505,8 +506,22 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (stri
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
-	_, err := u.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+u.dbName)
-	return err
+	err := u.urlogRep.Close(ctx)
+	if err != nil {
+		return err
+	}
+	if gkill_options.CacheURLogReps == nil || !*gkill_options.CacheURLogReps {
+		err = u.cachedDB.Close()
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err = u.cachedDB.ExecContext(ctx, "DROP TABLE IF EXISTS "+u.dbName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
