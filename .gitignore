@@ -1,7 +1,8 @@
 .DS_Store
 node_modules
 /dist
-/**/html/*
+**/embed/html/**/*
+**/embed/i18n/**/*
 ~$*
 *.asta.lock
 m_plus.conf

@@ -8,4 +8,6 @@ type UpdateTagRequest struct {
 	Tag *reps.Tag `json:"tag"`
 
 	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }

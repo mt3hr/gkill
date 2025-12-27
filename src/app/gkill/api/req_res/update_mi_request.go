@@ -8,4 +8,6 @@ type UpdateMiRequest struct {
 	Mi *reps.Mi `json:"mi"`
 
 	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }

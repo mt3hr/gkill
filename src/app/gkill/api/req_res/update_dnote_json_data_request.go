@@ -6,4 +6,6 @@ type UpdateDnoteJSONDataRequest struct {
 	SessionID string `json:"session_id"`
 
 	DnoteJSONData json.RawMessage `json:"dnote_json_data"`
+
+	LocaleName string `json:"locale_name"`
 }

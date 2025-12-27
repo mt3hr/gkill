@@ -8,4 +8,6 @@ type UploadGPSLogFilesRequest struct {
 	TargetRepName string `json:"target_rep_name"`
 
 	ConflictBehavior FileUploadConflictBehavior `json:"conflict_behavior"`
+
+	LocaleName string `json:"locale_name"`
 }

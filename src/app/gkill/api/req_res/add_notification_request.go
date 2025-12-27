@@ -8,4 +8,6 @@ type AddNotificationRequest struct {
 	Notification *reps.Notification `json:"notification"`
 
 	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }
