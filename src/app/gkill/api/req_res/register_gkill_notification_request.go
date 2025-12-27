@@ -8,4 +8,6 @@ type RegisterGkillNotificationRequest struct {
 	Subscription share_kyou_info.JSONString `json:"subscription"`
 
 	PublicKey string `json:"public_key"`
+
+	LocaleName string `json:"locale_name"`
 }

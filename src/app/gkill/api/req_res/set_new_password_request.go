@@ -6,4 +6,6 @@ type SetNewPasswordRequest struct {
 	ResetToken string `json:"reset_token"`
 
 	NewPasswordSha256 string `json:"new_password_sha256"`
+
+	LocaleName string `json:"locale_name"`
 }

@@ -6,4 +6,6 @@ type UpdateDeviceStructRequest struct {
 	SessionID string `json:"session_id"`
 
 	DeviceStruct []*user_config.DeviceStruct `json:"device_struct"`
+
+	LocaleName string `json:"locale_name"`
 }

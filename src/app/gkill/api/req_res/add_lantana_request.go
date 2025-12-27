@@ -8,4 +8,6 @@ type AddLantanaRequest struct {
 	Lantana *reps.Lantana `json:"lantana"`
 
 	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }

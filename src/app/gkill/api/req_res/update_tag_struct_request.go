@@ -6,4 +6,6 @@ type UpdateTagStructRequest struct {
 	SessionID string `json:"session_id"`
 
 	TagStruct []*user_config.TagStruct `json:"tag_struct"`
+
+	LocaleName string `json:"locale_name"`
 }
