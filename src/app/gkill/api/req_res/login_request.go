@@ -4,4 +4,6 @@ type LoginRequest struct {
 	UserID string `json:"user_id"`
 
 	PasswordSha256 string `json:"password_sha256"`
+
+	LocaleName string `json:"locale_name"`
 }

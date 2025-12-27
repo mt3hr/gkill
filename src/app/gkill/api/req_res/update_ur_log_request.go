@@ -10,4 +10,6 @@ type UpdateURLogRequest struct {
 	ReGetURLogContent bool `json:"re_get_urlog_content"`
 
 	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }

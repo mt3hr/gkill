@@ -8,4 +8,6 @@ type UpdateIDFKyouRequest struct {
 	IDFKyou *reps.IDFKyou `json:"idf_kyou"`
 
 	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }

@@ -10,6 +10,8 @@ export class GkillAPIRequest {
 
     force_reget: boolean
 
+    locale_name: string
+
     constructor() {
         try {
             this.session_id = GkillAPI.get_instance().get_session_id()
@@ -19,5 +21,6 @@ export class GkillAPIRequest {
         }
         this.abort_controller = new AbortController()
         this.force_reget = false
+        this.locale_name = "ja"
     }
 }

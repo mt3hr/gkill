@@ -6,4 +6,6 @@ type UpdateAccountStatusRequest struct {
 	TargetUserID string `json:"target_user_id"`
 
 	Enable bool `json:"enable"`
+
+	LocaleName string `json:"locale_name"`
 }

@@ -6,4 +6,6 @@ type UpdateKFTLTemplateRequest struct {
 	SessionID string `json:"session_id"`
 
 	KFTLTemplates []*user_config.KFTLTemplate `json:"kftl_templates"`
+
+	LocaleName string `json:"locale_name"`
 }

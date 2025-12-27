@@ -6,4 +6,6 @@ type UpdateApplicationConfigRequest struct {
 	SessionID string `json:"session_id"`
 
 	ApplicationConfig user_config.ApplicationConfig `json:"application_config"`
+
+	LocaleName string `json:"locale_name"`
 }
