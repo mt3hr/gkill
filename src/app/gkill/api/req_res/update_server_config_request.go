@@ -6,4 +6,6 @@ type UpdateServerConfigsRequest struct {
 	SessionID string `json:"session_id"`
 
 	ServerConfigs []*server_config.ServerConfig `json:"server_configs"`
+
+	LocaleName string `json:"locale_name"`
 }

@@ -8,4 +8,6 @@ type UpdateTimeisRequest struct {
 	TimeIs *reps.TimeIs `json:"timeis"`
 
 	TXID *string `json:"tx_id"`
+
+	LocaleName string `json:"locale_name"`
 }

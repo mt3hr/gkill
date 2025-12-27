@@ -8,4 +8,6 @@ type GetGPSLogRequest struct {
 	StartDate time.Time `json:"start_date"`
 
 	EndDate time.Time `json:"end_date"`
+
+	LocaleName string `json:"locale_name"`
 }

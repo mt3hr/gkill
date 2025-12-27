@@ -8,4 +8,6 @@ type UpdateUserRepsRequest struct {
 	TargetUserID string `json:"target_user_id"`
 
 	UpdatedReps []*user_config.Repository `json:"updated_reps"`
+
+	LocaleName string `json:"locale_name"`
 }

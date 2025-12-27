@@ -200,7 +200,7 @@ func Openbrowser(url string) error {
 
 func GetVersion() (string, error) {
 	assetsDirName := "embed/html/assets"
-	files, err := api.HTMLFS.ReadDir(assetsDirName)
+	files, err := api.EmbedFS.ReadDir(assetsDirName)
 	if err != nil {
 		return "", err
 	}
@@ -215,7 +215,7 @@ func GetVersion() (string, error) {
 		return "", fmt.Errorf("not found gkill page js file.")
 	}
 
-	jsFile, err := api.HTMLFS.Open(assetsDirName + "/" + indexJSFile.Name())
+	jsFile, err := api.EmbedFS.Open(assetsDirName + "/" + indexJSFile.Name())
 	if err != nil {
 		return "", fmt.Errorf("error at open gkill page js file.")
 	}

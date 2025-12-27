@@ -8,4 +8,6 @@ type GetGitCommitLogRequest struct {
 	ID string `json:"id"`
 
 	UpdateTime *time.Time `json:"update_time"`
+
+	LocaleName string `json:"locale_name"`
 }
