@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/mt3hr/gkill/src/app/gkill/main/common"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/spf13/cobra"
 )
@@ -25,6 +27,7 @@ func init() {
 	ServerCmd.PersistentFlags().IntVar(&gkill_options.GoroutinePool, "goroutine_pool", gkill_options.GoroutinePool, "")
 	ServerCmd.PersistentFlags().Int64Var(&gkill_options.CacheClearCountLimit, "cache_clear_count_limit", gkill_options.CacheClearCountLimit, "")
 	ServerCmd.PersistentFlags().DurationVar(&gkill_options.CacheUpdateDuration, "cache_update_duration", gkill_options.CacheUpdateDuration, "")
+	ServerCmd.PersistentFlags().StringArrayVar(&gkill_options.PreLoadUserNames, "pre_load_users", gkill_options.PreLoadUserNames, "")
 	ServerCmd.AddCommand(common.IDFCmd)
 	ServerCmd.AddCommand(common.DVNFCmd)
 	ServerCmd.AddCommand(common.VersionCommand)
@@ -43,6 +46,22 @@ var (
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			go func() {
+				for _, preLoadUserNames := range gkill_options.PreLoadUserNames {
+					userID := preLoadUserNames
+					device, err := common.GetGkillServerAPI().GetDevice()
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					if err != nil {
+						err = fmt.Errorf("error at get device name: %w", err)
+						gkill_log.Debug.Fatal(err.Error())
+					}
+					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
+				}
+			}()
 
 			err = common.LaunchGkillServerAPI()
 			if err != nil {
