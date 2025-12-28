@@ -52,21 +52,26 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 
 ## ダウンロード・インストール
 [gkillダウンロード](https://github.com/mt3hr/gkill/releases/latest)  
-（[gkill利用例サンサンプルデータ](https://github.com/mt3hr/gkill/releases/latest)） 
 
-【Windowsユーザ向け】  
+【⭐️gkill体験】  
+Windows用の利用例サンプルデータがありあります。  
+まず [gkill_sample_data_vX.X.X.zip](https://github.com/mt3hr/gkill/releases/latest) で軽く試して体験してほしいです。  
+ダウンロード/展開後、LAUNCH_GKILL_SAMPLE_DATA.batを起動してください。  
+[説明書](https://github.com/mt3hr/gkill/raw/refs/heads/main/documents/gkill_user_document.pdf)に利用イメージがあります。   
+
+【💻️Windowsユーザ向け】  
 ①Assetsから「windows_amd64_gkill_vX.X.X.zip」をダウンロード  
 ②zipを解凍して「gkill.exe」を実行  
 ※初回起動には時間がかかります。コーヒーでも淹れてお待ち下さい。  
 
-【Androidユーザ向け】  
+【📱Androidユーザ向け】  
 ①Assetsから「gkill_vX.X.X.apk」をダウンロード  
 ②インストール  
 ③ホーム画面から起動  
 ※インストール時に警告が出ますが、「詳細」からインストールできます  
 ⇛警告理由：古いAndroidAPIを利用しているため  
 
-【上級者・サーバ構築派向け】  
+【😎上級者・サーバ構築派向け】  
 ①あなたの環境の「gkill_server_vX.X.X.zip」をダウンロード  
 ②適当な場所に展開して「gkill_server.exe」を実行  
 ③その後「[http://localhost:9999](http://localhost:9999)」にアクセス  
@@ -80,9 +85,9 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 （2025年中にマニュアル・ヘルプ作ります）  
 
 ## 資料（準備中）
-[説明書](https://github.com/mt3hr/gkill/raw/refs/heads/main/documents/gkill_user_document.xlsx)   
+[説明書](https://github.com/mt3hr/gkill/raw/refs/heads/main/documents/gkill_user_document.pdf)   
 [要件書・設計書](https://github.com/mt3hr/gkill/tree/main/documents)  
-[仕様書](.) （準備中 2025年中完了目標）  
+[仕様書](.) （準備中 いつかやります・・・）  
 
 <details>
 <summary>開発者向け</summary>
@@ -90,7 +95,7 @@ gkillは、打刻記録を用いて「状況」から検索することができ
 ### 開発環境
 
 ### セットアップ
-1. Golang バージョン1.22.4の開発環境を用意する  
+1. Golang バージョン1.25.5の開発環境を用意する  
 2. Cコンパイラを用意する（cgo使用のため）  
 3. Node.js バージョン20.15.1の開発環境を用意する  
 4. 以下のコマンドを実行する  
@@ -107,7 +112,7 @@ npm run install_server
 </details>
 
 <details>
-<summary>かいはつすけじゅーる</summary>
+<summary>かいはつすけじゅーる（完了）</summary>
 【開発フェーズ】（2025-02-01 リスケ）  
 
 100% 2024-07-18 対応完了 01.計画準備  
@@ -126,23 +131,23 @@ npm run install_server
 </details>
 
 <details>
-<summary>2025年中対応スケジュール</summary>
+<summary>2025年中対応スケジュール（完了）</summary>
 【保守性向上フェーズ】  
 
 100% 2025-05-17 対応完了 機能追加実装  
 
-000% 2025-06-08 完了目標 ソース保守性向上対応  
+<del>000% 2025-06-08 完了目標 ソース保守性向上対応</del>  
 
-000% 2025-06-16 完了目標 v1.1.0リリース  
+<del>000% 2025-06-16 完了目標 v1.1.0リリース </del>  
 
 100% 2025-08-16 対応完了 マニュアル用サンプルデータ取得  
 
-000% 2025-10-05 完了目標 マニュアル&ヘルプ同梱版リリース  
+100% 2025-11-28 完了目標 <del>ニュアル&ヘルプ同梱版リリース</del> ユーザ導入用資料の作成作成  
 
 </details>
 
 <details>
-<summary>資料整備しんちょく</summary>
+<summary>資料整備しんちょく（対応中）</summary>
 【資料整備フェーズ】  
 
 000% A-1 画面遷移仕様図  
