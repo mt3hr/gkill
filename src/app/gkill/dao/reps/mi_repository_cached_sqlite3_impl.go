@@ -1917,7 +1917,9 @@ SELECT
 FROM ` + m.dbName + `
 WHERE
 `
+	trueValue := true
 	query := &find.FindQuery{}
+	query.OnlyLatestData = &trueValue
 
 	tableName := m.dbName
 	tableNameAlias := m.dbName
