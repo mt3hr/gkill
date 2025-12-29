@@ -4824,7 +4824,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERRNAL_SERVER_ERROR_MESSAGE"}),
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -5563,7 +5563,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERRNAL_SERVER_ERROR_MESSAGE"}),
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -7219,7 +7219,7 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 	response.Texts = texts
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetTextsByTargetIDSuccessMessage,
-		Message:     "テキスト取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 	})
 }
 
@@ -7303,7 +7303,7 @@ func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter,
 	response.Notifications = notifications
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetNotificationsByTargetIDSuccessMessage,
-		Message:     "通知取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_NOTIFICATION_MESSAGE"}),
 	})
 }
 
@@ -7396,7 +7396,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 	response.TextHistories = texts
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetTextHistoriesByTextIDSuccessMessage,
-		Message:     "テキスト取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
 	})
 }
 
@@ -7489,7 +7489,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 	response.NotificationHistories = notifications
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetNotificationHistoriesByNotificationIDSuccessMessage,
-		Message:     "通知取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_NOTIFICATION_MESSAGE"}),
 	})
 }
 
@@ -7702,7 +7702,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 	response.ApplicationConfig = applicationConfig
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetApplicationConfigSuccessMessage,
-		Message:     "設定データ取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_APPLICATION_CONFIG_MESSAGE"}),
 	})
 }
 
@@ -7814,7 +7814,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 	response.ServerConfigs = serverConfigs
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetServerConfigSuccessMessage,
-		Message:     "サーバ設定データ取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_APPLICATION_CONFIG_MESSAGE"}),
 	})
 }
 
@@ -8099,7 +8099,7 @@ loop:
 	response.UploadedKyous = kyous
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UploadFilesSuccessMessage,
-		Message:     "ファイルアップロードが完了しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPLOAD_FILE_GET_KYOU_MESSAGE"}),
 	})
 }
 
@@ -8518,7 +8518,7 @@ func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Re
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateTagStructSuccessMessage,
-		Message:     "タグ構造を更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_TAG_STRUCT_UPDATED_GET_MESSAGE"}),
 	})
 }
 
@@ -8622,7 +8622,7 @@ func (g *GkillServerAPI) HandleUpdateDnoteJSONData(w http.ResponseWriter, r *htt
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateTagStructSuccessMessage,
-		Message:     "集計ビュー条件情報を更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
 	})
 }
 
@@ -8699,7 +8699,7 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateApplicationConfigSuccessMessage,
-		Message:     "設定を更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_SETTINGS_MESSAGE"}),
 	})
 }
 
@@ -8812,7 +8812,7 @@ func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Re
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateRepStructSuccessMessage,
-		Message:     "Rep構造を更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_REP_STRUCT_UPDATED_GET_MESSAGE"}),
 	})
 }
 
@@ -8925,7 +8925,7 @@ func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateDeviceStructSuccessMessage,
-		Message:     "Device構造を更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_DEVICE_STRUCT_UPDATED_GET_MESSAGE"}),
 	})
 }
 
@@ -9038,7 +9038,7 @@ func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *htt
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateRepTypeStructSuccessMessage,
-		Message:     "RepType構造を更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_REP_TYPE_STRUCT_UPDATED_GET_MESSAGE"}),
 	})
 }
 
@@ -9151,7 +9151,7 @@ func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateKFTLTemplateSuccessMessage,
-		Message:     "KFTLテンプレート構造を更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_KFTL_TEMPLATE_STRUCT_UPDATED_GET_MESSAGE"}),
 	})
 }
 
@@ -9257,7 +9257,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateAccountStatusSuccessMessage,
-		Message:     "アカウントステータス構造を更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_ACCOUNT_STATUS_STRUCT_UPDATED_GET_MESSAGE"}),
 	})
 }
 
@@ -9366,7 +9366,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateRepositoriesSuccessMessage,
-		Message:     "Rep更新に成功しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_REP_WITH_ERROR_MESSAGE"}),
 	})
 }
 
@@ -9520,11 +9520,11 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 		}
 		response.Messages = append(response.Messages, &message.GkillMessage{
 			MessageCode: message.UpdateServerConfigSuccessMessage,
-			Message:     "設定を更新しました",
+			Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_SETTINGS_MESSAGE"}),
 		})
 		response.Messages = append(response.Messages, &message.GkillMessage{
 			MessageCode: message.RebootingMessage,
-			Message:     "少し待ってリロードしてください",
+			Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "JUST_A_MOMENT_MESSAGE"}),
 		})
 	}()
 }
@@ -9701,7 +9701,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	response.AddedAccountInfo = requesterAccount
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddAccountSuccessMessage,
-		Message:     "accountを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_ACCOUNT_MESSAGE"}),
 	})
 }
 
@@ -10097,7 +10097,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 	}
 	message := &message.GkillMessage{
 		MessageCode: message.TLSFileCreateSuccessMessage,
-		Message:     "TLSファイル作成完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_CREATE_TLS_FILE_MESSAGE"}),
 	}
 	response.Messages = append(response.Messages, message)
 }
@@ -10182,7 +10182,7 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 	response.GPSLogs = gpsLogHistories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetGPSLogSuccessMessage,
-		Message:     "GPSLog取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_GPS_LOG_MESSAGE"}),
 	})
 }
 
@@ -10254,7 +10254,7 @@ func (g *GkillServerAPI) HandleGetKFTLTemplate(w http.ResponseWriter, r *http.Re
 	response.KFTLTemplates = kftlTemplates
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetApplicationConfigSuccessMessage,
-		Message:     "KFTLテンプレートデータ取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KFTL_TEMPLATE_MESSAGE"}),
 	})
 }
 
@@ -10317,7 +10317,7 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 	response.CacheClearCountLimit = gkill_options.CacheClearCountLimit
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetGkillInfoSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_GKILL_INFO_MESSAGE"}),
 	})
 }
 
@@ -10441,7 +10441,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 	response.ShareKyouListInfo = ShareKyouListInfo
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.AddShareKyouListInfoSuccessMessage,
-		Message:     "ShareKyouListInfoを追加しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_SHARE_KYOU_LIST_INFO_ADDED_GET_MESSAGE"}),
 	})
 }
 
@@ -10565,7 +10565,7 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 	response.ShareKyouListInfo = ShareKyouListInfo
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateShareKyouListInfoSuccessMessage,
-		Message:     "ShareKyouListInfoを更新しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_SHARE_KYOU_LIST_INFO_UPDATED_GET_MESSAGE"}),
 	})
 }
 
@@ -10637,7 +10637,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 	response.ShareKyouListInfos = ShareKyouList
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetShareKyouListInfosSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 	})
 }
 
@@ -10710,7 +10710,7 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.DeleteShareKyouListInfosSuccessMessage,
-		Message:     "削除完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_DELETE_SHARE_KYOU_LIST_INFOS_MESSAGE"}),
 	})
 }
 
@@ -11044,7 +11044,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	response.ViewType = sharedKyouInfo.ViewType
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetMiSharedTasksSuccessMessage,
-		Message:     "取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KYOU_MESSAGE"}),
 	})
 }
 
@@ -11119,7 +11119,7 @@ func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Re
 	response.Repositories = repositories
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetRepositoriesSuccessMessage,
-		Message:     "記録保存先データ取得完了",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_REPOSITORIES_MESSAGE"}),
 	})
 }
 
@@ -11664,7 +11664,7 @@ func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, 
 	}
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.UpdateTagSuccessMessage,
-		Message:     "通知登録が完了しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_REGIST_MI_TASK_NOTIFICATION_MESSAGE"}),
 	})
 }
 
@@ -11798,7 +11798,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 	}
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.OpenDirectorySuccessMessage,
-		Message:     "フォルダを開きました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_OPEN_FOLDER_MESSAGE"}),
 	})
 }
 
@@ -11932,7 +11932,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 	}
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.OpenFileSuccessMessage,
-		Message:     "ファイルを開きました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_OPEN_FILE_MESSAGE"}),
 	})
 }
 
@@ -12039,7 +12039,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.ReloadRepositoriesSuccessMessage,
-		Message:     "リロードしました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_RELOAD_MESSAGE"}),
 	})
 }
 
@@ -13536,7 +13536,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.CommitTxSuccessMessage,
-		Message:     "保存しました",
+		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_URLOG_ADDED_GET_MESSAGE"}),
 	})
 }
 func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request) {
