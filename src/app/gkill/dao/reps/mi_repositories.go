@@ -680,7 +680,10 @@ func (m MiRepositories) AddMiInfo(ctx context.Context, mi *Mi) error {
 func (m MiRepositories) GetBoardNames(ctx context.Context) ([]string, error) {
 	boardNames := map[string]interface{}{}
 
+	trueValue := true
+
 	findMiQuery := &find.FindQuery{}
+	findMiQuery.OnlyLatestData = &trueValue
 	mis, err := m.FindMi(ctx, findMiQuery)
 	if err != nil {
 		err = fmt.Errorf("error at find mi: %w", err)
