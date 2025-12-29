@@ -44,10 +44,10 @@ export default defineConfig({
         }
       } as any,
       injectManifest: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
+        maximumFileSizeToCacheInBytes: 10 * 1024 ** 2,
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
+        maximumFileSizeToCacheInBytes: 10 * 1024 ** 2,
         runtimeCaching: [
           {
             // eslint-disable-next-line no-useless-escape
