@@ -2770,6 +2770,25 @@ export class GkillAPI {
                 return default_page
         }
 
+        private locale_name_cookie_key = "gkill_locale_name"
+
+        set_locale_name_to_cookie(locale_name: string): void {
+                document.cookie = this.locale_name_cookie_key + "=" + locale_name + "; path=/; max-age=" + 86400 * 400
+        }
+
+        get_locale_name_from_cookie(): string {
+                const cookies = document.cookie.split(';')
+                const locale_name_string = cookies.find(
+                        (cookie) => cookie.split('=')[0].trim() === this.locale_name_cookie_key.trim()
+                )?.replace(this.locale_name_cookie_key + "=", "").trim()
+                const locale_name = locale_name_string ? locale_name_string : "ja"
+
+                if (!locale_name || locale_name === "") {
+                        this.set_locale_name_to_cookie("ja")
+                }
+                return locale_name
+        }
+
         private last_cache_update_time_cookie_key = "last_cache_update_time"
         get_last_cache_update_time(): Date | null {
                 const cookies = document.cookie.split(';')

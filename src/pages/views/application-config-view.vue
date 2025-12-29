@@ -26,6 +26,28 @@
             <table>
                 <tr>
                     <td>
+                        {{ i18n.global.t("LOCALE_TITLE") }}
+                    </td>
+                    <td>
+                        <v-row class="pa-0 ma-0">
+                            <v-col class="pa-0 ma-0">
+                                <v-select class="select" v-model="locale_name" :items="[
+                                    { locale_title: i18n.global.t('LOCALE_JA_TITLE'), locale_name: 'ja' },
+                                    { locale_title: i18n.global.t('LOCALE_EN_TITLE'), locale_name: 'en' },
+                                    { locale_title: i18n.global.t('LOCALE_ZH_TITLE'), locale_name: 'zh' },
+                                    { locale_title: i18n.global.t('LOCALE_KO_TITLE'), locale_name: 'ko' },
+                                    { locale_title: i18n.global.t('LOCALE_ES_TITLE'), locale_name: 'es' },
+                                    { locale_title: i18n.global.t('LOCALE_FR_TITLE'), locale_name: 'fr' },
+                                    { locale_title: i18n.global.t('LOCALE_DE_TITLE'), locale_name: 'de' },
+                                ]" item-title="locale_title" item-value="locale_name" />
+                            </v-col>
+                        </v-row>
+                    </td>
+                </tr>
+            </table>
+            <table>
+                <tr>
+                    <td>
                         <v-checkbox v-model="use_dark_theme" hide-detail :label="i18n.global.t('DARK_THEME_TITLE')" />
                     </td>
                 </tr>
@@ -266,6 +288,26 @@ watch(() => props.application_config, async () => {
 const is_loading = ref(false)
 
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
+
+const locale_name: Ref<'ja' | 'en' | 'zh' | 'ko' | 'es' | 'fr' | 'de'> = ref(i18n.global.locale)
+watch(() => locale_name.value, () => {
+    let locale: 'ja' | 'en' | 'zh' | 'ko' | 'es' | 'fr' | 'de' = 'ja'
+    switch (locale_name.value) {
+        case 'ja':
+        case 'en':
+        case 'zh':
+        case 'ko':
+        case 'es':
+        case 'fr':
+        case 'de':
+            locale = locale_name.value
+            break
+        default:
+            locale = 'ja'
+    }
+    props.gkill_api.set_locale_name_to_cookie(locale)
+    i18n.global.locale = locale
+})
 
 const google_map_api_key: Ref<string> = ref(cloned_application_config.value.google_map_api_key)
 const rykv_image_list_column_number: Ref<number> = ref(cloned_application_config.value.rykv_image_list_column_number)
