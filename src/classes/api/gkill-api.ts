@@ -182,6 +182,7 @@ import type { CommitTXRequest } from "./req_res/commit-tx-request"
 import type { CommitTXResponse } from "./req_res/commit-tx-response"
 import type { DiscardTXRequest } from "./req_res/discard-tx-request"
 import type { DiscardTXResponse } from "./req_res/discard-tx-response"
+import { i18n } from "@/i18n"
 
 export class GkillAPI {
         // 画面以外から参照されるやつ
@@ -2787,6 +2788,63 @@ export class GkillAPI {
                         this.set_locale_name_to_cookie("ja")
                 }
                 return locale_name
+        }
+
+        apply_locale(): void {
+                let locale: 'ja' | 'en' | 'zh' | 'ko' | 'es' | 'fr' | 'de' = 'ja'
+                const locale_in_cookie = this.get_locale_name_from_cookie()
+                switch (locale_in_cookie) {
+                        case 'ja':
+                        case 'en':
+                        case 'zh':
+                        case 'ko':
+                        case 'es':
+                        case 'fr':
+                        case 'de':
+                                locale = locale_in_cookie
+                                break
+                        default:
+                                switch (window.navigator.language) {
+                                        case 'ja':
+                                        case 'en':
+                                        case 'zh':
+                                        case 'ko':
+                                        case 'es':
+                                        case 'fr':
+                                        case 'de':
+                                                locale = window.navigator.language
+                                                break
+                                        default:
+                                                locale = 'ja'
+                                }
+                }
+
+                switch (locale_in_cookie) {
+                        case 'ja':
+                        case 'en':
+                        case 'zh':
+                        case 'ko':
+                        case 'es':
+                        case 'fr':
+                        case 'de':
+                                locale = locale_in_cookie
+                                break
+                        default:
+                                switch (window.navigator.language) {
+                                        case 'ja':
+                                        case 'en':
+                                        case 'zh':
+                                        case 'ko':
+                                        case 'es':
+                                        case 'fr':
+                                        case 'de':
+                                                locale = window.navigator.language
+                                                break
+                                        default:
+                                                locale = 'ja'
+                                }
+                }
+                i18n.global.locale = locale
         }
 
         private last_cache_update_time_cookie_key = "last_cache_update_time"
