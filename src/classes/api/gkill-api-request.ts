@@ -1,5 +1,6 @@
 'use strict'
 
+import { i18n } from "@/i18n"
 import { GkillAPI } from "./gkill-api"
 
 export class GkillAPIRequest {
@@ -21,6 +22,6 @@ export class GkillAPIRequest {
         }
         this.abort_controller = new AbortController()
         this.force_reget = false
-        this.locale_name = "ja"
+        this.locale_name = i18n.global.locale
     }
 }
