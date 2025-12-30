@@ -19,7 +19,7 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -84,6 +84,7 @@ load()
 
 async function load(): Promise<void> {
     cloned_tag.value = props.tag.clone()
+    cloned_tag.value.attached_histories[0]
     tag_name.value = cloned_tag.value.tag
 }
 
