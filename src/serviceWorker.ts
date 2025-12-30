@@ -1,20 +1,45 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute } from 'workbox-precaching'
-import { clientsClaim } from 'workbox-core'
 import delete_gkill_kyou_cache from './classes/delete-gkill-cache';
 import { GkillAPI } from './classes/api/gkill-api';
 import { AddURLogRequest } from './classes/api/req_res/add-ur-log-request';
 import { AddKmemoRequest } from './classes/api/req_res/add-kmemo-request';
 import { GetGkillInfoRequest } from './classes/api/req_res/get-gkill-info-request';
 import { isUrl } from './classes/looks-like-url';
+import { clientsClaim } from 'workbox-core'
+import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL, } from 'workbox-precaching'
+import { registerRoute, NavigationRoute } from 'workbox-routing'
+
 export default null
 
 self.skipWaiting()
 clientsClaim()
-declare let self: ServiceWorkerGlobalScope
 declare let clients: Clients;
+declare let self: ServiceWorkerGlobalScope
 
-precacheAndRoute(self.__WB_MANIFEST)
+cleanupOutdatedCaches()
+
+precacheAndRoute(self.__WB_MANIFEST, {
+  directoryIndex: (null as any),
+})
+
+// / は常にネットワーク（HTTP キャッシュも使わない）
+registerRoute(
+  ({ request, url }) => request.mode === 'navigate' && url.pathname === '/',
+  async ({ event }) => {
+    // no-store でブラウザHTTPキャッシュも回避
+    return fetch(new Request((event as any).request, { cache: 'no-store' }))
+  },
+)
+
+// SPA の app-shell (index.html) フォールバック。ただし / と /api/ は除外
+registerRoute(
+  new NavigationRoute(createHandlerBoundToURL('index.html'), {
+    denylist: [
+      /^\/$/,        // "/" は除外
+      /^\/api\/.*/,  // "/api/..." は除外
+    ],
+  }),
+)
 
 function parseBoolLoose(value: unknown): boolean {
   if (typeof value === "boolean") return value
