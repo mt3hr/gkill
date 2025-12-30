@@ -258,7 +258,7 @@
     "FOLDER_NAME_TITLE": "フォルダ名",
     "ADD_TITLE": "追加",
     "FOLDER_NAME_IS_BLANK_MESSAGE": "フォルダ名が入力されていません",
-    "DO_INITIALIZE_ADD_ACCOUNT_MESSAGE": "ユーザ用の各Repを作成し設定する",
+    "DO_INITIALIZE_ADD_ACCOUNT_MESSAGE": "アカウント作成のみを行う（保存先の設定は行わない）",
     "RESET_PASSWORD_MESSAGE": "下記アカウントのパスワードをリセットします",
     "GENERATE_OREORE_TLS_FILE_MESSAGE": "下記ファイルにTLS用ファイルを生成します。\n（すでに存在する場合は上書きされます）",
     "CREATE_TITLE": "作成",
