@@ -376,6 +376,9 @@ WHERE
 }
 
 func (n *nlogRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return n.filename, nil
+	}
 	return filepath.Abs(n.filename)
 }
 

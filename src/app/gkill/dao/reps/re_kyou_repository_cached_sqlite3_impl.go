@@ -314,7 +314,7 @@ WHERE
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
-	return r.rekyouRep.GetPath(ctx, id)
+	return r.dbName, nil
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
