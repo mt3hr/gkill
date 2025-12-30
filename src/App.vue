@@ -18,7 +18,7 @@ if (use_dark_theme) {
   theme.global.name.value = 'gkill_theme'
 }
 
-const locale: Ref<string> = ref(window.navigator.language)
+const locale: Ref<string> = ref(i18n.global.locale)
 </script>
 
 
