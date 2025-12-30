@@ -372,6 +372,9 @@ WHERE
 }
 
 func (k *kmemoRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return k.filename, nil
+	}
 	return filepath.Abs(k.filename)
 }
 

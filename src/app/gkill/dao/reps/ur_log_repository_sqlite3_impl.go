@@ -379,6 +379,9 @@ WHERE
 }
 
 func (u *urlogRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return u.filename, nil
+	}
 	return filepath.Abs(u.filename)
 }
 

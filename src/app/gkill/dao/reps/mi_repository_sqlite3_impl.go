@@ -826,6 +826,9 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 }
 
 func (m *miRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return m.filename, nil
+	}
 	return filepath.Abs(m.filename)
 }
 

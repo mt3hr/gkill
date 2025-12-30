@@ -317,6 +317,9 @@ WHERE
 }
 
 func (r *reKyouRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return r.filename, nil
+	}
 	return filepath.Abs(r.filename)
 }
 

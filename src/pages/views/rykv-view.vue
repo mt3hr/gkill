@@ -534,6 +534,9 @@ watch(() => is_show_kyou_count_calendar.value, () => {
 })
 
 watch(() => is_show_dnote.value, async () => {
+    if (props.is_shared_rykv_view) {
+        return
+    }
     dnote_view.value?.abort()
     if (!is_show_kyou_count_calendar.value) {
         focused_kyous_list.value.splice(0)
@@ -562,6 +565,11 @@ if (props.is_shared_rykv_view) {
         inited.value = true
         await props.gkill_api.delete_updated_gkill_caches()
         const kyous = (await props.gkill_api.get_kyous(new GetKyousRequest())).kyous
+        const wait_promises = new Array<Promise<any>>()
+        for (let i = 0; i < kyous.length; i++) {
+            wait_promises.push(kyous[i].load_all())
+        }
+        await Promise.all(wait_promises)
         match_kyous_list.value = [kyous]
         focused_kyous_list.value = kyous
         focused_column_index.value = 0
@@ -632,6 +640,9 @@ async function init(): Promise<void> {
 }
 
 function update_focused_kyous_list(column_index: number): void {
+    if (props.is_shared_rykv_view) {
+        return
+    }
     if (!match_kyous_list.value || match_kyous_list.value.length === 0) {
         return
     }
@@ -825,10 +836,11 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
         }
 
         match_kyous_list.value[column_index] = res.kyous
-        if (is_show_kyou_count_calendar.value || is_show_dnote.value) {
-            update_focused_kyous_list(column_index)
+        if (!props.is_shared_rykv_view) {
+            if (is_show_kyou_count_calendar.value || is_show_dnote.value) {
+                update_focused_kyous_list(column_index)
+            }
         }
-
         await nextTick(() => {
             const kyou_list_view = kyou_list_views.value.filter((kyou_list_view: any) => kyou_list_view.get_query_id() === query.query_id)[0] as any
             if (kyou_list_view) {

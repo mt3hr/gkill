@@ -544,7 +544,7 @@ SELECT
   SHOP,
   TITLE,
   AMOUNT,
-  ? AS REP_NAME,
+  REP_NAME,
   ? AS DATA_TYPE
 FROM ` + n.dbName + `
 WHERE
