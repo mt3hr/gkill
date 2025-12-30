@@ -192,6 +192,7 @@ load()
 
 async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
+    await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
     cloned_kyou.value.load_all()
     timeis_title.value = cloned_kyou.value.typed_timeis ? cloned_kyou.value.typed_timeis.title : ""

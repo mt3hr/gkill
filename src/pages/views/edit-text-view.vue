@@ -83,6 +83,7 @@ load()
 
 async function load(): Promise<void> {
     cloned_text.value = props.text.clone()
+    cloned_text.value.attached_histories[0]
     text_value.value = cloned_text.value.text
 }
 

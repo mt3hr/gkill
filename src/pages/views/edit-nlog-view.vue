@@ -154,6 +154,7 @@ load()
 
 async function load(): Promise<void> {
     cloned_kyou.value = props.kyou.clone()
+    await cloned_kyou.value.reload(false, true)
     await cloned_kyou.value.load_typed_datas()
     cloned_kyou.value.load_all()
     nlog_title_value.value = props.kyou.typed_nlog ? props.kyou.typed_nlog.title : ""
