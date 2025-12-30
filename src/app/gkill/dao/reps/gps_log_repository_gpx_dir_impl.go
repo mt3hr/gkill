@@ -126,6 +126,9 @@ func (g *gpsLogRepositoryDirectoryImpl) GetGPSLogs(ctx context.Context, startTim
 }
 
 func (g *gpsLogRepositoryDirectoryImpl) GetPath(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return g.dirname, nil
+	}
 	return filepath.Abs(g.dirname)
 }
 

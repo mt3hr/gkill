@@ -22,14 +22,14 @@
                                 :show_checkbox="false" :show_footer="false" :enable_context_menu="false"
                                 :enable_dialog="false" :show_content_only="false"
                                 :is_show_doc_image_toggle_button="false" :is_show_arrow_button="false"
-                                :show_rep_name="false" :force_show_latest_kyou_info="false"
+                                :show_rep_name="false" :force_show_latest_kyou_info="true"
                                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
                                 @clicked_kyou="(...kyou: any[]) => { focused_kyou = kyou[0] as Kyou }"
-                                @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                                @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-                                @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+                                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                                @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
                                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-                                @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"
+                                @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
                                 @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
                                 @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
@@ -49,7 +49,7 @@
                                     <KyouCountCalendar v-show="is_show_kyou_count_calendar"
                                         :application_config="application_config" :gkill_api="gkill_api"
                                         :kyous="match_kyous" :for_mi="true" class="kyou_list_calendar_in_share_mi_view"
-                                        @requested_focus_time="(...time: any[]) => { focused_time = time[0] as Date}" />
+                                        @requested_focus_time="(...time: any[]) => { focused_time = time[0] as Date }" />
                                 </td>
                             </tr>
                             <tr>
@@ -68,8 +68,8 @@
                                             :enable_dialog="false" :show_update_time="false" :show_related_time="true"
                                             class="kyou_detail_view" :show_attached_tags="true"
                                             :show_attached_texts="true" :show_attached_notifications="true"
-                                            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                                            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
+                                            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                                            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
                                     </div>
                                 </td>
                             </tr>
@@ -119,6 +119,11 @@ async function load_content(): Promise<void> {
     const get_kyous_req = new GetKyousRequest()
     await props.gkill_api.delete_updated_gkill_caches()
     const res = await props.gkill_api.get_kyous(get_kyous_req)
+    const wait_promises = new Array<Promise<any>>()
+    for (let i = 0; i < res.kyous.length; i++) {
+        wait_promises.push(res.kyous[i].load_all())
+    }
+    await Promise.all(wait_promises)
     match_kyous.value = res.kyous
     is_loading.value = false
 }
@@ -194,5 +199,10 @@ nextTick(() => load_content())
     position: absolute;
     min-height: calc(v-bind('app_content_height.toString().concat("px")'));
     min-width: calc(100vw);
+}
+</style>
+<style lang="css">
+.mi_view_wrap .v-calendar-weekly__head {
+    width: unset !important;
 }
 </style>
