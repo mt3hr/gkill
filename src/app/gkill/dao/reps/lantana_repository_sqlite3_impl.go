@@ -373,6 +373,9 @@ WHERE
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return l.filename, nil
+	}
 	return filepath.Abs(l.filename)
 }
 

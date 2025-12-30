@@ -526,6 +526,9 @@ func (t *notificationRepositorySQLite3Impl) UpdateCache(ctx context.Context) err
 }
 
 func (t *notificationRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return t.filename, nil
+	}
 	return filepath.Abs(t.filename)
 }
 

@@ -10787,6 +10787,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		return
 	}
 	trueValue := true
+	falseValue := false
 	findQuery.OnlyLatestData = &trueValue
 
 	// Kyou
@@ -10809,6 +10810,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	for _, kyou := range kyous {
 		*findQueryForKyouInstances.IDs = append(*findQueryForKyouInstances.IDs, kyou.ID)
 	}
+	findQueryForKyouInstances.OnlyLatestData = &falseValue
 
 	// Mi
 	mis, err := repositories.MiReps.FindMi(r.Context(), findQueryForKyouInstances)

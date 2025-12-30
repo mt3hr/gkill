@@ -560,6 +560,9 @@ func (t *tagRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 }
 
 func (t *tagRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return t.filename, nil
+	}
 	return filepath.Abs(t.filename)
 }
 
