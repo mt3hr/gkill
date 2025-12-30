@@ -47,7 +47,7 @@ watch(() => date.value, () => {
     })
 })
 
-watch(props.kyous, () => {
+watch(() => props.kyous, () => {
     update_events()
 })
 watch(() => slider_model.value, () => {
@@ -139,7 +139,7 @@ function add_months(date: Date, diff: number) {
 }
 
 .v-calendar-weekly__head {
-    width: 300px !important;
+    width: 300px;
 }
 
 .calendar_date {

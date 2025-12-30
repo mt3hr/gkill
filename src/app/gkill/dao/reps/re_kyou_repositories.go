@@ -3,7 +3,6 @@ package reps
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"sort"
 	"sync"
 	"time"
@@ -718,30 +717,31 @@ loop:
 
 func (r *ReKyouRepositories) GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error) {
 	withoutRekyouReps := Repositories{}
-	for _, rep := range r.GkillRepositories.Reps {
-		repIsRekyouRep := false
-
-		repPath, err := rep.GetPath(ctx, "")
-		if err != nil {
-			err = fmt.Errorf("error at get reps path: %w", err)
-			return nil, err
-		}
-
-		for _, reKyouRep := range r.GkillRepositories.ReKyouReps.ReKyouRepositories {
-			rekyouRepPath, err := reKyouRep.GetPath(ctx, "")
-			if err != nil {
-				err = fmt.Errorf("error at get rekyous reps path: %w", err)
-				return nil, err
-			}
-
-			if filepath.ToSlash(repPath) == filepath.ToSlash(rekyouRepPath) {
-				repIsRekyouRep = true
-				break
-			}
-		}
-		if repIsRekyouRep {
-			continue
-		}
+	for _, rep := range r.GkillRepositories.KmemoReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range r.GkillRepositories.KCReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range r.GkillRepositories.URLogReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range r.GkillRepositories.NlogReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range r.GkillRepositories.TimeIsReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range r.GkillRepositories.MiReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range r.GkillRepositories.LantanaReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range r.GkillRepositories.IDFKyouReps {
+		withoutRekyouReps = append(withoutRekyouReps, rep)
+	}
+	for _, rep := range r.GkillRepositories.GitCommitLogReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
 
