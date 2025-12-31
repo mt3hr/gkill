@@ -20,6 +20,8 @@ type GetSharedKyousResponse struct {
 
 	KCs []*reps.KC `json:"kcs"`
 
+	TimeIss []*reps.TimeIs `json:"timeiss"`
+
 	Mis []*reps.Mi `json:"mis"`
 
 	Nlogs []*reps.Nlog `json:"nlogs"`
@@ -41,4 +43,6 @@ type GetSharedKyousResponse struct {
 	AttachedTexts []*reps.Text `json:"attached_texts"`
 
 	AttachedTimeIss []*reps.TimeIs `json:"attached_timeiss"`
+
+	AttachedTimeIsKyous []*reps.Kyou `json:"attached_timeis_kyous"`
 }

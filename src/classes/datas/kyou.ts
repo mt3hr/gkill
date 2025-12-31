@@ -44,7 +44,7 @@ export class Kyou extends InfoBase {
     typed_git_commit_log: GitCommitLog | null
     typed_rekyou: ReKyou | null
 
-    async load_attached_histories(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_attached_histories(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         if (this.data_type.startsWith("git")) {
             return []
         }

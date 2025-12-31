@@ -184,7 +184,7 @@
                                 :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
                                 :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
-                                :show_timeis_plaing_end_button="true" :height="'auto'" :is_readonly_mi_check="false"
+                                :show_timeis_plaing_end_button="!is_shared_rykv_view" :height="'auto'" :is_readonly_mi_check="is_shared_rykv_view"
                                 :width="'auto'" :enable_context_menu="!is_shared_rykv_view"
                                 :enable_dialog="!is_shared_rykv_view" :show_attached_timeis="true" :show_rep_name="true"
                                 :force_show_latest_kyou_info="true" class="kyou_detail_view" :show_update_time="false"
