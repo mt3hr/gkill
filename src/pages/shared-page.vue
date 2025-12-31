@@ -66,6 +66,7 @@ async function load_gkill_api_and_application_config(): Promise<void> {
         gkill_api_for_shared_kyou.kyous = res.kyous
         gkill_api_for_shared_kyou.kmemos = res.kmemos
         gkill_api_for_shared_kyou.kcs = res.kcs
+        gkill_api_for_shared_kyou.timeiss= res.timeiss
         gkill_api_for_shared_kyou.mis = res.mis
         gkill_api_for_shared_kyou.nlogs = res.nlogs
         gkill_api_for_shared_kyou.lantanas = res.lantanas
@@ -77,6 +78,7 @@ async function load_gkill_api_and_application_config(): Promise<void> {
         gkill_api_for_shared_kyou.attached_tags = res.attached_tags
         gkill_api_for_shared_kyou.attached_texts = res.attached_texts
         gkill_api_for_shared_kyou.attached_timeiss = res.attached_timeiss
+        gkill_api_for_shared_kyou.attached_timeis_kyous= res.attached_timeis_kyous
         GkillAPI.set_gkill_api(gkill_api_for_shared_kyou)
         // GkillAPIForSharedKyouを設定ここまで
 

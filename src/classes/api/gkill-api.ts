@@ -70,7 +70,7 @@ import type { GetTextHistoryByTextIDRequest } from "./req_res/get-text-history-b
 import { GetTextHistoryByTextIDResponse } from "./req_res/get-text-history-by-text-id-response"
 import type { GetTextsByTargetIDRequest } from "./req_res/get-texts-by-target-id-request"
 import { GetTextsByTargetIDResponse } from "./req_res/get-texts-by-target-id-response"
-import type { GetTimeisRequest } from "./req_res/get-timeis-request"
+import { GetTimeisRequest } from "./req_res/get-timeis-request"
 import { GetTimeisResponse } from "./req_res/get-timeis-response"
 import type { GetURLogRequest } from "./req_res/get-ur-log-request"
 import { GetURLogResponse } from "./req_res/get-ur-log-response"
@@ -2212,6 +2212,20 @@ export class GkillAPI {
                                 response.kcs[i] = kc
                         }
                 }
+                if (json.timeiss) {
+                        for (let i = 0; i < json.timeiss.length; i++) {
+                                const timeis = new TimeIs()
+                                for (const key in json.timeiss[i]) {
+                                        (timeis as any)[key] = (json.timeiss[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (timeis as any)[key]) {
+                                                (timeis as any)[key] = new Date((timeis as any)[key])
+                                        }
+                                }
+                                response.timeiss[i] = timeis
+                        }
+                }
                 if (json.mis) {
                         for (let i = 0; i < json.mis.length; i++) {
                                 const mi = new Mi()
@@ -2364,6 +2378,20 @@ export class GkillAPI {
                                         }
                                 }
                                 response.attached_timeiss[i] = timeis
+                        }
+                }
+                if (json.attached_timeis_kyous) {
+                        for (let i = 0; i < json.attached_timeis_kyous.length; i++) {
+                                const timeis_kyou = new Kyou()
+                                for (const key in json.attached_timeis_kyous[i]) {
+                                        (timeis_kyou as any)[key] = (json.attached_timeis_kyous[i] as any)[key]
+
+                                        // 時刻はDate型に変換
+                                        if (key.endsWith("time") && (timeis_kyou as any)[key]) {
+                                                (timeis_kyou as any)[key] = new Date((timeis_kyou as any)[key])
+                                        }
+                                }
+                                response.attached_timeis_kyous[i] = timeis_kyou
                         }
                 }
                 return response
@@ -2933,6 +2961,7 @@ export class GkillAPIForSharedKyou extends GkillAPI {
         public attached_tags: Array<Tag> = []
         public attached_texts: Array<Text> = []
         public attached_timeiss: Array<TimeIs> = []
+        public attached_timeis_kyous: Array<Kyou> = []
 
         protected constructor() {
                 super()
@@ -3046,9 +3075,31 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                 throw new Error("not implements")
         }
 
-        async get_kyous(_req: GetKyousRequest): Promise<GetKyousResponse> {
+        async get_kyous(req: GetKyousRequest): Promise<GetKyousResponse> {
                 const res = new GetKyousResponse()
-                res.kyous = this.kyous
+                if (!req.query.use_plaing) {
+                        res.kyous = this.kyous
+                        return res
+                }
+                if (!req.query.plaing_time) {
+                        return res
+                }
+                const kyous = new Map<string, Kyou>()
+                for (let i = 0; i < this.attached_timeis_kyous.length; i++) {
+                        const timeis_kyou = this.attached_timeis_kyous[i]
+                        const timeis_req = new GetTimeisRequest()
+                        timeis_req.id = timeis_kyou.id
+                        const timeis_res = await this.get_timeis(timeis_req)
+                        const timeis_histories = timeis_res.timeis_histories
+                        if (!timeis_histories || timeis_histories.length === 0) {
+                                continue
+                        }
+                        const timeis = timeis_histories[0]
+                        if (timeis.start_time.getTime() < req.query.plaing_time.getTime() && (!timeis.end_time || timeis.end_time.getTime() > req.query.plaing_time.getTime())) {
+                                kyous.set(timeis_kyou.id, timeis_kyou)
+                        }
+                }
+                kyous.forEach(kyou => res.kyous.push(kyou))
                 return res
         }
 
@@ -3109,18 +3160,21 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         async get_timeis(req: GetTimeisRequest): Promise<GetTimeisResponse> {
                 const res = new GetTimeisResponse()
-                for (let i = 0; i < this.attached_timeiss.length; i++) {
-                        const timeis = this.attached_timeiss[i]
+                const timeiss = new Map<string, TimeIs>()
+
+                const all_timeiss = this.attached_timeiss.concat(this.timeiss)
+                for (let i = 0; i < all_timeiss.length; i++) {
+                        const timeis = all_timeiss[i]
                         if (req.id == timeis.id) {
-                                res.timeis_histories.push(timeis)
+                                const exist_timeis = timeiss.get(timeis.id)
+                                if (!exist_timeis || exist_timeis.update_time.getTime() < timeis.update_time.getTime()) {
+                                        timeiss.set(timeis.id, timeis)
+                                }
                         }
                 }
-                for (let i = 0; i < this.timeiss.length; i++) {
-                        const timeis = this.timeiss[i]
-                        if (req.id == timeis.id) {
-                                res.timeis_histories.push(timeis)
-                        }
-                }
+
+                timeiss.forEach(timeis => res.timeis_histories.push(timeis))
+                res.timeis_histories.sort((i, j) => i.update_time.getTime() - j.update_time.getTime())
                 return res
         }
 
@@ -3259,6 +3313,7 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         async get_application_config(_req: GetApplicationConfigRequest): Promise<GetApplicationConfigResponse> {
                 const res = new GetApplicationConfigResponse()
+                res.application_config.for_share_kyou = true
                 return res
         }
 
@@ -3387,14 +3442,14 @@ export class GkillAPIForSharedKyou extends GkillAPI {
 
         // 認証が通っていなかったらログイン画面に遷移する
         check_auth(_res: GkillAPIResponse): void {
-                throw new Error("not implements")
+                return
         }
 
-        set_saved_application_config(_application_config: ApplicationConfig): void {
-                throw new Error("not implements")
+        set_saved_application_config(application_config: ApplicationConfig): void {
+                super.set_saved_application_config(application_config)
         }
         get_saved_application_config(): ApplicationConfig | null {
-                return super.get_saved_application_config()
+                return null
         }
 
         set_saved_rykv_find_kyou_querys(_querys: Array<FindKyouQuery>): void {

@@ -52,6 +52,8 @@ export class ApplicationConfig {
     session_is_local: boolean
     urlog_bookmarklet_session: string
 
+    for_share_kyou: boolean
+
     async parse_template_and_struct(): Promise<Array<GkillError>> {
         const awaitPromises = new Array<Promise<any>>()
         awaitPromises.push(this.parse_tag_struct())
@@ -89,6 +91,7 @@ export class ApplicationConfig {
         application_config.mi_board_struct = this.mi_board_struct
         application_config.session_is_local = this.session_is_local
         application_config.urlog_bookmarklet_session = this.urlog_bookmarklet_session
+        application_config.for_share_kyou = this.for_share_kyou
         application_config.rykv_default_period = this.rykv_default_period
         application_config.mi_default_period = this.mi_default_period
         application_config.is_show_share_footer = this.is_show_share_footer
@@ -997,6 +1000,7 @@ export class ApplicationConfig {
         this.mi_board_struct = new Array<MiBoardStruct>()
         this.session_is_local = false
         this.urlog_bookmarklet_session = ""
+        this.for_share_kyou = false
         this.is_show_share_footer = false
         this.show_tags_in_list = true
         this.default_page = "rykv"
