@@ -3,6 +3,7 @@
 import { GkillAPI } from "../api/gkill-api"
 import { GkillError } from "../api/gkill-error"
 import { GkillErrorCodes } from "../api/message/gkill_error"
+import { GetApplicationConfigRequest } from "../api/req_res/get-application-config-request"
 import { GetKyousRequest } from "../api/req_res/get-kyous-request"
 import { GetNotificationsByTargetIDRequest } from "../api/req_res/get-notifications-by-target-id-request"
 import { GetTagsByTargetIDRequest } from "../api/req_res/get-tags-by-target-id-request"
@@ -81,32 +82,26 @@ export abstract class InfoBase {
 
     async load_attached_timeis(): Promise<Array<GkillError>> {
         const errors = new Array<GkillError>()
-
-        const application_config = GkillAPI.get_gkill_api().get_saved_application_config()
-        if (!application_config) {
-            const error = new GkillError()
-            error.error_code = GkillErrorCodes.incomplete_application_config_error
-            error.error_message = "設定読込が完了していません"
-            return errors
-        }
-
-        const reps = new Array<string>()
-        const tags = new Array<string>()
-        for (let i = 0; i < application_config.rep_struct.length; i++) {
-            reps.push(application_config.rep_struct[i].rep_name)
-        }
-        for (let i = 0; i < application_config.tag_struct.length; i++) {
-            tags.push(application_config.tag_struct[i].tag_name)
-        }
-
         const req = new GetKyousRequest()
         req.abort_controller = this.abort_controller
 
         req.query.use_tags = false
         req.query.use_plaing = true
         req.query.plaing_time = this.related_time
-        req.query.reps = reps
-        req.query.tags = tags
+
+        const application_config = (await GkillAPI.get_gkill_api().get_application_config(new GetApplicationConfigRequest())).application_config
+        if (!application_config.for_share_kyou) {
+            const reps = new Array<string>()
+            const tags = new Array<string>()
+            for (let i = 0; i < application_config.rep_struct.length; i++) {
+                reps.push(application_config.rep_struct[i].rep_name)
+            }
+            for (let i = 0; i < application_config.tag_struct.length; i++) {
+                tags.push(application_config.tag_struct[i].tag_name)
+            }
+            req.query.reps = reps
+            req.query.tags = tags
+        }
 
         const res = await GkillAPI.get_gkill_api().get_kyous(req)
         if (res.errors && res.errors.length !== 0) {

@@ -10311,14 +10311,119 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	privateIP, err := privateIPv4s()
+	if err != nil {
+		gkill_log.Debug.Printf("%w", err)
+	}
+	globalIP, err := globalIP(context.Background())
+	if err != nil {
+		gkill_log.Debug.Printf("%w", err)
+	}
+	privateIPStr := ""
+	if len(privateIP) != 0 {
+		privateIPStr = privateIP[0].String()
+	}
+
 	response.UserID = userID
 	response.Device = device
 	response.UserIsAdmin = account.IsAdmin
 	response.CacheClearCountLimit = gkill_options.CacheClearCountLimit
+	response.GlobalIP = globalIP.String()
+	response.PrivateIP = privateIPStr
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetGkillInfoSuccessMessage,
 		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_GKILL_INFO_MESSAGE"}),
 	})
+}
+func privateIPv4s() ([]net.IP, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+
+	var ips []net.IP
+	for _, iface := range ifaces {
+		// down / loopback は除外
+		if iface.Flags&net.FlagUp == 0 {
+			continue
+		}
+		if iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+
+		for _, a := range addrs {
+			var ip net.IP
+			switch v := a.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			default:
+				continue
+			}
+
+			ip4 := ip.To4()
+			if ip4 == nil {
+				continue // IPv4のみ
+			}
+
+			// 169.254.x.x (link-local) などは除外
+			if ip4.IsLinkLocalUnicast() {
+				continue
+			}
+
+			if isPrivateIPv4(ip4) {
+				ips = append(ips, ip4)
+			}
+		}
+	}
+	return ips, nil
+}
+
+func isPrivateIPv4(ip net.IP) bool {
+	// ip must be 4 bytes (To4済み想定)
+	// RFC1918: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+	switch {
+	case ip[0] == 10:
+		return true
+	case ip[0] == 172 && ip[1] >= 16 && ip[1] <= 31:
+		return true
+	case ip[0] == 192 && ip[1] == 168:
+		return true
+	default:
+		return false
+	}
+}
+
+func globalIP(ctx context.Context) (net.IP, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", "https://api.ipify.org", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	s := strings.TrimSpace(string(b))
+	ip := net.ParseIP(s)
+	if ip == nil {
+		return nil, fmt.Errorf("invalid ip response: %q", s)
+	}
+	return ip, nil
 }
 
 func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *http.Request) {
@@ -10806,6 +10911,12 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	findQueryValueForKyouInstances := *findQuery
 	findQueryForKyouInstances := &findQueryValueForKyouInstances
 	findQueryForKyouInstances.UseIDs = &trueValue
+	findQueryForKyouInstances.IncludeCreateMi = &trueValue
+	findQueryForKyouInstances.IncludeStartMi = &trueValue
+	findQueryForKyouInstances.IncludeCheckMi = &trueValue
+	findQueryForKyouInstances.IncludeEndMi = &trueValue
+	findQueryForKyouInstances.IncludeLimitMi = &trueValue
+	findQueryForKyouInstances.IncludeEndTimeIs = &trueValue
 	findQueryForKyouInstances.IDs = &[]string{}
 	for _, kyou := range kyous {
 		*findQueryForKyouInstances.IDs = append(*findQueryForKyouInstances.IDs, kyou.ID)
@@ -10841,81 +10952,9 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// AttachedTag
-	tags := []*reps.Tag{}
-	tagSet := map[string]*reps.Tag{}
-	if sharedKyouInfo.IsShareWithTags {
-		for _, kyou := range kyous {
-			tagsRelatedID, err := repositories.GetTagsByTargetID(r.Context(), kyou.ID)
-			if err != nil {
-				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
-				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.FindTagsShareKyouError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAGS_BY_TARGET_ID_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
-			}
-			for _, tag := range tagsRelatedID {
-				tagSet[tag.ID] = tag
-			}
-		}
-		for _, tag := range tagSet {
-			tags = append(tags, tag)
-		}
-	}
-
-	// AttachedText
-	texts := []*reps.Text{}
-	textSet := map[string]*reps.Text{}
-	if sharedKyouInfo.IsShareWithTexts {
-		for _, kyou := range kyous {
-			textsRelatedID, err := repositories.GetTextsByTargetID(r.Context(), kyou.ID)
-			if err != nil {
-				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
-				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.FindTextsShareKyouError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
-			}
-			for _, text := range textsRelatedID {
-				textSet[text.ID] = text
-			}
-		}
-		for _, text := range textSet {
-			texts = append(texts, text)
-		}
-	}
-
-	// AttachedTimeIs
-	timeiss := []*reps.TimeIs{}
-	if sharedKyouInfo.IsShareWithTimeIss {
-		trueValue := true
-		for _, kyou := range kyous {
-			findQueryForPlaingTimeIs := &find.FindQuery{}
-			findQueryForPlaingTimeIs.UsePlaing = &trueValue
-			findQueryForPlaingTimeIs.PlaingTime = &kyou.RelatedTime
-			plaingTimeIss, err := repositories.TimeIsReps.FindTimeIs(r.Context(), findQueryForPlaingTimeIs)
-			if err != nil {
-				err = fmt.Errorf("error at find plaing timeis user id = %s device = %s: %w", userID, device, err)
-				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.FindTextsShareKyouError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TIMEIS_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
-			}
-			timeiss = append(timeiss, plaingTimeIss...)
-		}
-	}
-
 	kmemos := []*reps.Kmemo{}
 	kcs := []*reps.KC{}
+	timeiss := []*reps.TimeIs{}
 	nlogs := []*reps.Nlog{}
 	lantanas := []*reps.Lantana{}
 	urlogs := []*reps.URLog{}
@@ -10938,6 +10977,19 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 
 		// KC
 		kcs, err = repositories.KCReps.FindKC(r.Context(), findQueryForKyouInstances)
+		if err != nil {
+			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.FindKyousShareKyouError,
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KYOU_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		// TimeIs
+		timeiss, err = repositories.TimeIsReps.FindTimeIs(r.Context(), findQueryForKyouInstances)
 		if err != nil {
 			err = fmt.Errorf("error at find Kyous user id = %s device = %s: %w", userID, device, err)
 			gkill_log.Debug.Println(err.Error())
@@ -11028,10 +11080,151 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		}
 	}
 
+	// AttachedTag
+	tags := []*reps.Tag{}
+	tagSet := map[string]*reps.Tag{}
+	if sharedKyouInfo.IsShareWithTags {
+		for _, kyou := range kyous {
+			tagsRelatedID, err := repositories.GetTagsByTargetID(r.Context(), kyou.ID)
+			if err != nil {
+				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
+				gkill_log.Debug.Println(err.Error())
+				gkillError := &message.GkillError{
+					ErrorCode:    message.FindTagsShareKyouError,
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAGS_BY_TARGET_ID_MESSAGE"}),
+				}
+				response.Errors = append(response.Errors, gkillError)
+				return
+			}
+			for _, tag := range tagsRelatedID {
+				tagSet[tag.ID] = tag
+			}
+		}
+		for _, tag := range tagSet {
+			tags = append(tags, tag)
+		}
+	}
+
+	// AttachedText
+	texts := []*reps.Text{}
+	textSet := map[string]*reps.Text{}
+	if sharedKyouInfo.IsShareWithTexts {
+		for _, kyou := range kyous {
+			textsRelatedID, err := repositories.GetTextsByTargetID(r.Context(), kyou.ID)
+			if err != nil {
+				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
+				gkill_log.Debug.Println(err.Error())
+				gkillError := &message.GkillError{
+					ErrorCode:    message.FindTextsShareKyouError,
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
+				}
+				response.Errors = append(response.Errors, gkillError)
+				return
+			}
+			for _, text := range textsRelatedID {
+				textSet[text.ID] = text
+			}
+		}
+		for _, text := range textSet {
+			texts = append(texts, text)
+		}
+	}
+
+	// AttachedTimeIs
+	attachedTimeisKyous := []*reps.Kyou{}
+	attachedTimeiss := []*reps.TimeIs{}
+	if sharedKyouInfo.IsShareWithTimeIss {
+		trueValue := true
+		attachedTimeIsKyousMap := map[string]*reps.Kyou{}
+		attachedTimeIssMap := map[string]*reps.TimeIs{}
+		queries := []*find.FindQuery{}
+
+		timeisQueryValue := *findQuery
+		timeisQuery := &timeisQueryValue
+		timeisQuery.UseRepTypes = &trueValue
+		timeisQuery.RepTypes = &[]string{"timeis"}
+		timeisQuery.OnlyLatestData = &trueValue
+		queries = append(queries, timeisQuery)
+
+		if timeisQuery.UseCalendar != nil && *timeisQuery.UseCalendar && timeisQuery.CalendarStartDate != nil {
+			timeisPlaingHeadQuery := &find.FindQuery{}
+			timeisPlaingHeadQuery.UsePlaing = &trueValue
+			timeisPlaingHeadQuery.PlaingTime = timeisQuery.CalendarStartDate
+			queries = append(queries, timeisPlaingHeadQuery)
+		}
+
+		if timeisQuery.UseCalendar != nil && *timeisQuery.UseCalendar && timeisQuery.CalendarEndDate != nil {
+			timeisPlaingHipQuery := &find.FindQuery{}
+			timeisPlaingHipQuery.UsePlaing = &trueValue
+			timeisPlaingHipQuery.PlaingTime = timeisQuery.CalendarEndDate
+			queries = append(queries, timeisPlaingHipQuery)
+		}
+
+		for _, query := range queries {
+			findFilter := &FindFilter{}
+			matchPlaingKyous, _, err := findFilter.FindKyous(r.Context(), userID, device, g.GkillDAOManager, query)
+			if err != nil {
+				err = fmt.Errorf("error at find tags user id = %s device = %s: %w", userID, device, err)
+				gkill_log.Debug.Println(err.Error())
+				gkillError := &message.GkillError{
+					ErrorCode:    message.FindTextsShareKyouError,
+					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TEXTS_BY_TARGET_ID_MESSAGE"}),
+				}
+				response.Errors = append(response.Errors, gkillError)
+				return
+			}
+			for _, timeisKyou := range matchPlaingKyous {
+				if existKyou, exist := attachedTimeIsKyousMap[timeisKyou.ID]; exist {
+					if timeisKyou.UpdateTime.After(existKyou.UpdateTime) {
+						attachedTimeIsKyousMap[timeisKyou.ID] = timeisKyou
+					}
+				} else {
+					attachedTimeIsKyousMap[timeisKyou.ID] = timeisKyou
+				}
+			}
+
+			ids := []string{}
+			for id := range attachedTimeIsKyousMap {
+				ids = append(ids, id)
+			}
+			if len(ids) != 0 {
+				plaingTimeIss, err := repositories.TimeIsReps.FindTimeIs(r.Context(), query)
+				if err != nil {
+					err = fmt.Errorf("error at find plaing timeis user id = %s device = %s: %w", userID, device, err)
+					gkill_log.Debug.Println(err.Error())
+					gkillError := &message.GkillError{
+						ErrorCode:    message.FindTextsShareKyouError,
+						ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TIMEIS_MESSAGE"}),
+					}
+					response.Errors = append(response.Errors, gkillError)
+					return
+				}
+				for _, timeis := range plaingTimeIss {
+					attachedTimeIssMap[timeis.ID] = timeis
+					if existTimeIs, exist := attachedTimeIssMap[timeis.ID]; exist {
+						if timeis.UpdateTime.After(existTimeIs.UpdateTime) {
+							attachedTimeIssMap[timeis.ID] = timeis
+						}
+					} else {
+						attachedTimeIssMap[timeis.ID] = timeis
+					}
+				}
+			}
+
+			for _, kyou := range attachedTimeIsKyousMap {
+				attachedTimeisKyous = append(attachedTimeisKyous, kyou)
+			}
+			for _, timeis := range attachedTimeIssMap {
+				attachedTimeiss = append(attachedTimeiss, timeis)
+			}
+		}
+	}
+
 	response.Kyous = kyous
 	response.Mis = mis
 	response.Kmemos = kmemos
 	response.KCs = kcs
+	response.TimeIss = timeiss
 	response.Nlogs = nlogs
 	response.Lantanas = lantanas
 	response.URLogs = urlogs
@@ -11041,9 +11234,10 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	response.GPSLogs = gpsLogs
 	response.AttachedTags = tags
 	response.AttachedTexts = texts
-	response.AttachedTimeIss = timeiss
 	response.Title = sharedKyouInfo.ShareTitle
 	response.ViewType = sharedKyouInfo.ViewType
+	response.AttachedTimeIss = attachedTimeiss
+	response.AttachedTimeIsKyous = attachedTimeisKyous
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetMiSharedTasksSuccessMessage,
 		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KYOU_MESSAGE"}),

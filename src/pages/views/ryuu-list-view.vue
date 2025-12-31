@@ -126,6 +126,9 @@ async function load_from_application_config(): Promise<void> {
 
 function load_from_json(json: any): Array<RelatedKyouQuery> {
     const related_kyou_queries = new Array<RelatedKyouQuery>()
+    if (!json) {
+        return related_kyou_queries
+    }
     for (let i = 0; i < json.length; i++) {
         const related_kyou_query = new RelatedKyouQuery()
         related_kyou_query.id = json[i].id

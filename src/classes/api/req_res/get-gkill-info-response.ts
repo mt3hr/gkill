@@ -12,12 +12,18 @@ export class GetGkillInfoResponse extends GkillAPIResponse {
 
     cache_clear_count_limit: number
 
+    global_ip: string
+
+    private_ip: string
+
     constructor() {
         super()
         this.user_id = ""
         this.device = ""
         this.user_is_admin = false
         this.cache_clear_count_limit = 1001
+        this.global_ip = ""
+        this.private_ip = ""
     }
 
 }
