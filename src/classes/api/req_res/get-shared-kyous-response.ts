@@ -22,10 +22,10 @@ export class GetSharedKyousResponse extends GkillAPIResponse {
     kyous: Array<Kyou>
     kmemos: Array<Kmemo>
     kcs: Array<KC>
+    timeiss: Array<TimeIs>
     mis: Array<Mi>
     nlogs: Array<Nlog>
     lantanas: Array<Lantana>
-    timeiss: Array<TimeIs>
     urlogs: Array<URLog>
     idf_kyous: Array<IDFKyou>
     rekyous: Array<ReKyou>
@@ -34,6 +34,7 @@ export class GetSharedKyousResponse extends GkillAPIResponse {
     attached_tags: Array<Tag>
     attached_texts: Array<Text>
     attached_timeiss: Array<TimeIs>
+    attached_timeis_kyous: Array<Kyou>
 
     constructor() {
         super()
@@ -54,6 +55,7 @@ export class GetSharedKyousResponse extends GkillAPIResponse {
         this.attached_tags = new Array<Tag>()
         this.attached_texts = new Array<Text>()
         this.attached_timeiss = new Array<TimeIs>()
+        this.attached_timeis_kyous = new Array<Kyou>()
     }
 }
 

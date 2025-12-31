@@ -10,8 +10,10 @@
         <v-checkbox v-model="is_share_with_texts" :label="i18n.global.t('SHARE_KYOU_SHARE_WITH_TEXTS')" />
         <v-checkbox v-model="is_share_with_timeiss" :label="i18n.global.t('SHARE_KYOU_SHARE_WITH_TIMEISS')" />
         <v-checkbox v-model="is_share_with_locations" :label="i18n.global.t('SHARE_KYOU_SHARE_WITH_LOCATIONS')" />
-        <v-text-field v-model="lan_share_url" :label="i18n.global.t('IN_LAN_TITLE')" readonly @click="copy_lan_share_kyou_link"
-            @focus="$event.target.select()" />
+        <v-text-field v-model="local_share_url" :label="i18n.global.t('LOCAL_TITLE')" readonly
+            @click="copy_local_share_kyou_link" @focus="$event.target.select()" />
+        <v-text-field v-model="lan_share_url" :label="i18n.global.t('IN_LAN_TITLE')" readonly
+            @click="copy_lan_share_kyou_link" @focus="$event.target.select()" />
         <v-text-field v-model="over_lan_share_url" :label="i18n.global.t('OVER_LAN_TITLE')" readonly
             @click="copy_over_lan_share_kyou_link" @focus="$event.target.select()" />
         <v-row class="pa-0 ma-0">
@@ -24,7 +26,7 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { computed, type Ref, ref, watch } from 'vue';
+import { computed, nextTick, type Ref, ref, watch } from 'vue';
 import type { ShareKyousLinkViewEmits } from './share-kyou-link-view-emits'
 import type { ShareKyousLinkViewProps } from './share-kyou-link-view-props'
 import { ShareKyousInfo } from '@/classes/datas/share-kyous-info';
@@ -32,6 +34,8 @@ import { GkillMessage } from '@/classes/api/gkill-message';
 import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 import { UpdateShareKyouListInfoRequest } from '@/classes/api/req_res/update-share-kyou-list-info-request';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
+import { GkillAPIResponse } from '@/classes/api/gkill-api-response';
+import { GetGkillInfoResponse } from '@/classes/api/req_res/get-gkill-info-response';
 
 const props = defineProps<ShareKyousLinkViewProps>()
 const emits = defineEmits<ShareKyousLinkViewEmits>()
@@ -56,15 +60,24 @@ const is_share_with_tags: Ref<boolean> = ref(cloned_share_kyou_info.value.is_sha
 const is_share_with_texts: Ref<boolean> = ref(cloned_share_kyou_info.value.is_share_with_texts)
 const is_share_with_timeiss: Ref<boolean> = ref(cloned_share_kyou_info.value.is_share_with_timeiss)
 const is_share_with_locations: Ref<boolean> = ref(cloned_share_kyou_info.value.is_share_with_locations)
-
-const lan_share_url = computed(() => {
-    return location.protocol + "//" + location.host + "/shared_page?share_id=" + cloned_share_kyou_info.value.share_id
-})
-const over_lan_share_url = computed(() => {
-    return location.protocol + "//" + location.host + "/shared_page?share_id=" + cloned_share_kyou_info.value.share_id
+const gkill_info = ref(new GetGkillInfoResponse())
+nextTick(async () => {
+    gkill_info.value = await props.gkill_api.get_gkill_info(new GetGkillInfoRequest())
 })
 
-function copy_lan_share_kyou_link(): void {
+const local_share_url = computed(() => (location.protocol + "//" + location.host + "/shared_page?share_id=" + cloned_share_kyou_info.value.share_id))
+const lan_share_url = computed(() => ((gkill_info.value.private_ip && gkill_info.value.private_ip !== "") ? location.protocol + "//" + gkill_info.value.private_ip + "/shared_page?share_id=" + cloned_share_kyou_info.value.share_id : ""))
+const over_lan_share_url = computed(() => ((gkill_info.value.global_ip && gkill_info.value.global_ip !== "") ? location.protocol + "//" + gkill_info.value.global_ip + "/shared_page?share_id=" + cloned_share_kyou_info.value.share_id : ""))
+
+async function copy_local_share_kyou_link(): Promise<void> {
+    navigator.clipboard.writeText(local_share_url.value);
+    const message = new GkillMessage()
+    message.message_code = GkillErrorCodes.copied_local_share_kyou_link
+    message.message = i18n.global.t("COPIED_LOCAL_SHARE_KYOU_LINK_MESSAGE")
+    emits('received_messages', [message])
+}
+
+async function copy_lan_share_kyou_link(): Promise<void> {
     navigator.clipboard.writeText(lan_share_url.value);
     const message = new GkillMessage()
     message.message_code = GkillErrorCodes.copied_lan_share_kyou_link
@@ -72,7 +85,7 @@ function copy_lan_share_kyou_link(): void {
     emits('received_messages', [message])
 }
 
-function copy_over_lan_share_kyou_link(): void {
+async function copy_over_lan_share_kyou_link(): Promise<void> {
     navigator.clipboard.writeText(over_lan_share_url.value);
     const message = new GkillMessage()
     message.message_code = GkillErrorCodes.copied_over_lan_share_kyou_link

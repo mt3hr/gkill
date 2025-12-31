@@ -111,7 +111,11 @@ loop:
 
 	resultKyous := map[string][]*Kyou{}
 	for _, matchTimeIs := range matchTimeIssList {
-		resultKyous[matchTimeIs.ID] = matchKyous[matchTimeIs.ID]
+		key := matchTimeIs.ID
+		if query.OnlyLatestData == nil || !*query.OnlyLatestData {
+			key += fmt.Sprintf("%d", matchTimeIs.UpdateTime.Unix())
+		}
+		resultKyous[matchTimeIs.ID] = matchKyous[key]
 	}
 
 	return resultKyous, nil

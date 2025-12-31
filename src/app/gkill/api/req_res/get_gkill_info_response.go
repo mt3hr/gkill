@@ -14,4 +14,8 @@ type GetGkillInfoResponse struct {
 	UserIsAdmin bool `json:"user_is_admin"`
 
 	CacheClearCountLimit int64 `json:"cache_clear_count_limit"`
+
+	GlobalIP string `json:"global_ip"`
+
+	PrivateIP string `json:"private_ip"`
 }
