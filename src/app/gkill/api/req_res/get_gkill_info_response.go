@@ -1,6 +1,10 @@
 package req_res
 
-import "github.com/mt3hr/gkill/src/app/gkill/api/message"
+import (
+	"time"
+
+	"github.com/mt3hr/gkill/src/app/gkill/api/message"
+)
 
 type GetGkillInfoResponse struct {
 	Messages []*message.GkillMessage `json:"messages"`
@@ -18,4 +22,10 @@ type GetGkillInfoResponse struct {
 	GlobalIP string `json:"global_ip"`
 
 	PrivateIP string `json:"private_ip"`
+
+	Version string `json:"version"`
+
+	BuildTime time.Time `json:"build_time"`
+
+	CommitHash string `json:"commit_hash"`
 }

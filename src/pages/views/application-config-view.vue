@@ -15,7 +15,7 @@
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="reload_repositories()">{{ i18n.global.t("RELOAD_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="logout()" color="primary">{{ i18n.global.t("LOGOUT_TITLE") }}</v-btn>
@@ -140,13 +140,13 @@
                     <td>
                         <v-btn dark color="primary" @click="show_edit_tag_dialog">{{
                             i18n.global.t("EDIT_TAG_STRUCT_TITLE")
-                        }}</v-btn>
+                            }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_dialog">{{
                             i18n.global.t("EDIT_REP_STRUCT_TITLE")
-                        }}</v-btn>
+                            }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_device_dialog">{{
                             i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
-                        }}</v-btn>
+                            }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                             i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
                     </td>
@@ -162,18 +162,24 @@
                     </td>
                 </tr>
             </table>
+            <a href="https://github.com/mt3hr/gkill" style="color:inherit;text-decoration:none;" target="_blank">
+                <p class="gkill_version_info">gkill v-{{ gkill_info.version }} ({{
+                    gkill_info.build_time.toLocaleString()
+                }})</p>
+                <p class="gkill_version_info">{{ gkill_info.commit_hash }}</p>
+            </a>
         </v-card>
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="update_application_config" color="primary">{{ i18n.global.t("APPLY_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CANCEL_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -232,7 +238,7 @@
 </template>
 <script setup lang="ts">
 import { i18n } from '@/i18n'
-import { computed, type Ref, ref, watch } from 'vue'
+import { computed, nextTick, type Ref, ref, watch } from 'vue'
 
 import EditDeviceStructDialog from '../dialogs/edit-device-struct-dialog.vue'
 import EditKFTLTemplateDialog from '../dialogs/edit-kftl-template-struct-dialog.vue'
@@ -257,6 +263,8 @@ import delete_gkill_kyou_cache, { delete_gkill_config_cache } from '@/classes/de
 import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
+import { GetGkillInfoResponse } from '@/classes/api/req_res/get-gkill-info-response'
+import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 
 const theme = useTheme()
 
@@ -276,6 +284,7 @@ const pages = ref([
     { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
     { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
 ])
+const gkill_info = ref(new GetGkillInfoResponse())
 
 const props = defineProps<ApplicationConfigViewProps>()
 const emits = defineEmits<ApplicationConfigViewEmits>()
@@ -547,6 +556,13 @@ javascript: (function () {
 })
 
 load_mi_board_names()
+nextTick(async () => gkill_info.value = await props.gkill_api.get_gkill_info(new GetGkillInfoRequest()))
 
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 </script>
+<style lang="css" scoped>
+.gkill_version_info {
+    text-align: right;
+    font-size: x-small;
+}
+</style>
