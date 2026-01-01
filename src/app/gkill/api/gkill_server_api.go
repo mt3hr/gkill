@@ -10324,12 +10324,27 @@ func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Reque
 		privateIPStr = privateIP[0].String()
 	}
 
+	version, err := GetVersion()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	response.UserID = userID
 	response.Device = device
 	response.UserIsAdmin = account.IsAdmin
 	response.CacheClearCountLimit = gkill_options.CacheClearCountLimit
 	response.GlobalIP = globalIP.String()
 	response.PrivateIP = privateIPStr
+	response.Version = version.Version
+	response.BuildTime = version.BuildTime
+	response.CommitHash = version.CommitHash
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetGkillInfoSuccessMessage,
 		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_GKILL_INFO_MESSAGE"}),

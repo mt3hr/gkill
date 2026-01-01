@@ -2057,7 +2057,15 @@ export class GkillAPI {
                         signal: req.abort_controller?.signal,
                 })
                 const json = await res.json()
+
                 const response: GetGkillInfoResponse = json
+                for (const key in json) {
+                        (response as any)[key] = (json as any)[key]
+                        // 時刻はDate型に変換
+                        if (key.endsWith("time") && (response as any)[key]) {
+                                (response as any)[key] = new Date((response as any)[key])
+                        }
+                }
                 this.check_auth(response)
                 return response
         }
