@@ -11,22 +11,26 @@
         </v-col>
     </v-row>
     <VDatePicker v-show="query.use_calendar" class="calendar_query_date_picker" :max-width="300" :model-value="dates"
-        :multible="true" :color="'primary'" :multiple="'range'" @wheel.prevent.stop="(e: any) => on_wheel(e)"
-        @update:model-value="clicked_date" />
+        :multible="true" :color="'primary'" :multiple="'range'" :year="calendar_year" :month="calendar_month"
+        @wheel.prevent.stop="(e: any) => on_wheel(e)" @update:model-value="clicked_date" ref="calendar" />
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
 import moment from 'moment';
 import type { CalendarQueryEmits } from './calendar-query-emits'
 import type { CalendarQueryProps } from './calendar-query-props'
-import { ref, type Ref, defineEmits, defineProps, watch } from 'vue'
+import { ref, type Ref, defineEmits, defineProps, watch, nextTick } from 'vue'
 import { VDatePicker } from 'vuetify/components';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
+const calendar = ref<InstanceType<typeof VDatePicker> | null>(null)
 
 const props = defineProps<CalendarQueryProps>()
 const emits = defineEmits<CalendarQueryEmits>()
 
 const query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
+const now = moment().toDate()
+const calendar_year = ref(now.getFullYear())
+const calendar_month = ref(now.getMonth())
 
 const dates: Ref<Array<Date>> = ref([])
 defineExpose({ get_use_calendar, get_start_date, get_end_date })
@@ -59,6 +63,16 @@ watch(() => props.find_kyou_query, () => {
     }
     dates.value = []
     dates.value = date_list
+
+    if (!props.inited) {
+        nextTick(() => {
+            if (props.find_kyou_query.calendar_end_date) {
+                const calendar_end_date = moment(props.find_kyou_query.calendar_end_date);
+                calendar_year.value = calendar_end_date.toDate().getFullYear()
+                calendar_month.value = calendar_end_date.toDate().getMonth()
+            }
+        })
+    }
 })
 
 // 日付がクリックされた時、日時を更新してclicked_timeをemitする
