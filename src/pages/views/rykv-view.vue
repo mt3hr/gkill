@@ -527,7 +527,6 @@ watch(() => is_show_kyou_count_calendar.value, () => {
     if (props.is_shared_rykv_view) {
         return
     }
-    focused_kyous_list.value.splice(0)
     if (is_show_kyou_count_calendar.value) {
         update_focused_kyous_list(focused_column_index.value)
     }
@@ -538,9 +537,6 @@ watch(() => is_show_dnote.value, async () => {
         return
     }
     dnote_view.value?.abort()
-    if (!is_show_kyou_count_calendar.value) {
-        focused_kyous_list.value.splice(0)
-    }
     if (is_show_dnote.value) {
         update_focused_kyous_list(focused_column_index.value)
 
@@ -646,7 +642,6 @@ function update_focused_kyous_list(column_index: number): void {
     if (!match_kyous_list.value || match_kyous_list.value.length === 0) {
         return
     }
-    focused_kyous_list.value.splice(0)
     focused_kyous_list.value = match_kyous_list.value[column_index]
 }
 
@@ -655,7 +650,6 @@ async function close_list_view(column_index: number): Promise<void> {
         skip_search_this_tick.value = true
         focused_column_index.value = -1
         focused_query.value = querys.value[focused_column_index.value]
-        focused_kyous_list.value.splice(0)
 
         querys.value.splice(column_index, 1)
         querys_backup.value.splice(column_index, 1)
