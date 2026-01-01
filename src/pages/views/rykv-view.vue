@@ -647,9 +647,7 @@ function update_focused_kyous_list(column_index: number): void {
         return
     }
     focused_kyous_list.value.splice(0)
-    for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
-        focused_kyous_list.value.push(match_kyous_list.value[column_index][i])
-    }
+    focused_kyous_list.value = match_kyous_list.value[column_index]
 }
 
 async function close_list_view(column_index: number): Promise<void> {
