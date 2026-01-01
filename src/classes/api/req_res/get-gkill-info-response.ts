@@ -16,6 +16,12 @@ export class GetGkillInfoResponse extends GkillAPIResponse {
 
     private_ip: string
 
+	version: string
+
+	build_time: Date
+
+	commit_hash: string
+
     constructor() {
         super()
         this.user_id = ""
@@ -24,6 +30,9 @@ export class GetGkillInfoResponse extends GkillAPIResponse {
         this.cache_clear_count_limit = 1001
         this.global_ip = ""
         this.private_ip = ""
+        this.version = ""
+        this.build_time = new Date(0)
+        this.commit_hash = ""
     }
 
 }
