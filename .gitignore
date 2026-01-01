@@ -1,15 +1,13 @@
 .DS_Store
-node_modules
+/node_modules
 /dist
-**/embed/html/**/*
-**/embed/i18n/**/*
+/release/*
+/**/embed/**/*
+/**/assets/*
+
 ~$*
 *.asta.lock
 m_plus.conf
-
-**/assets/*
-
-/release/*
 
 # Logs
 logs
