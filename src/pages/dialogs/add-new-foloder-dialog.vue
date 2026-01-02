@@ -23,7 +23,9 @@ defineProps<AddNewFoloderDialogProps>()
 const emits = defineEmits<AddNewFoloderDialogEmits>()
 defineExpose({ show, hide })
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 async function show(): Promise<void> {
     add_new_folder_view.value?.reset_folder_name()

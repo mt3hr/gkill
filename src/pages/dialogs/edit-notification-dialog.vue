@@ -45,7 +45,9 @@ const notification_highlight_targets = computed<Array<InfoIdentifier>>(() => {
     return [info_identifer]
 })
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 async function show(): Promise<void> {
     is_show_dialog.value = true
