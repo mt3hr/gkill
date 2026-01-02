@@ -23,7 +23,9 @@ defineProps<ConfirmResetPasswordDialogProps>()
 const emits = defineEmits<ConfirmResetPasswordDialogEmits>()
 defineExpose({ show, hide })
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 const cloned_account: Ref<Account> = ref(new Account())
 
 async function show(account: Account): Promise<void> {

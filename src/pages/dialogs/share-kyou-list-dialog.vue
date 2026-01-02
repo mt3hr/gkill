@@ -22,7 +22,9 @@ defineProps<ShareKyousListDialogProps>()
 const emits = defineEmits<ShareKyousListDialogEmits>()
 defineExpose({ show, hide })
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 async function show(): Promise<void> {
     is_show_dialog.value = true
