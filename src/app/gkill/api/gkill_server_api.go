@@ -805,6 +805,9 @@ func (g *GkillServerAPI) Serve() error {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
 		}
+		if g.ifRedirectResetAdminAccountIsNotFound(w, r) {
+			return
+		}
 		http.FileServer(http.FS(gkillPage)).ServeHTTP(w, r)
 	}))
 
