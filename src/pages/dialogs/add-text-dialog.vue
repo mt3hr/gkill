@@ -40,9 +40,9 @@ defineProps<AddTextDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
-useBackToCloseDialog(is_show_dialog)
+useDialogHistoryStack(is_show_dialog)
 
 async function show(): Promise<void> {
     is_show_dialog.value = true

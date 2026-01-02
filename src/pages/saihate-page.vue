@@ -118,7 +118,7 @@ import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import { useTheme } from 'vuetify'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
-
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 
 
 const theme = useTheme()

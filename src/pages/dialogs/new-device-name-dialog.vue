@@ -27,9 +27,9 @@ defineProps<NewDeviceNameDialogProps>()
 const emits = defineEmits<NewDeviceNameDialogEmits>()
 defineExpose({ show, hide })
 
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
-useBackToCloseDialog(is_show_dialog)
+useDialogHistoryStack(is_show_dialog)
 const device_name: Ref<string> = ref("")
 
 async function show(): Promise<void> {
