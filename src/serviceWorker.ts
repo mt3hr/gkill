@@ -37,6 +37,7 @@ registerRoute(
     denylist: [
       /^\/$/,        // "/" は除外
       /^\/api\/.*/,  // "/api/..." は除外
+      /^\/files\/.*/,  // "/files/..." は除外
     ],
   }),
 )
