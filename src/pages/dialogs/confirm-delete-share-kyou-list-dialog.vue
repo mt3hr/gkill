@@ -25,9 +25,9 @@ defineExpose({ show, hide })
 
 const share_kyou_list_info: Ref<ShareKyousInfo | null> = ref(null)
 
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
-useBackToCloseDialog(is_show_dialog)
+useDialogHistoryStack(is_show_dialog)
 
 async function show(share_kyou_list_info_: ShareKyousInfo): Promise<void> {
     share_kyou_list_info.value = share_kyou_list_info_

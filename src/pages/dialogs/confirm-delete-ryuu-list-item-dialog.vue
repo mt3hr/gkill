@@ -23,9 +23,9 @@ defineExpose({ show, hide })
 
 const related_kyou_query: Ref<RelatedKyouQuery> = ref(new RelatedKyouQuery())
 
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
-useBackToCloseDialog(is_show_dialog)
+useDialogHistoryStack(is_show_dialog)
 
 async function show(related_kyou_query_: RelatedKyouQuery): Promise<void> {
     related_kyou_query.value = related_kyou_query_

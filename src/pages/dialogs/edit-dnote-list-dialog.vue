@@ -18,9 +18,9 @@ import type { GkillMessage } from '../../classes/api/gkill-message';
 import type EditDnoteListDialogEmits from './edit-dnote-list-dialog-emits';
 import type EditDnoteListDialogProps from './edit-dnote-list-dialog-props';
 import type DnoteListQuery from '../views/dnote-list-query';
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
-useBackToCloseDialog(is_show_dialog)
+useDialogHistoryStack(is_show_dialog)
 
 defineExpose({ show, hide })
 defineProps<EditDnoteListDialogProps>()

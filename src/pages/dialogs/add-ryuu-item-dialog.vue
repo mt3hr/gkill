@@ -16,9 +16,9 @@ import type AddRyuuItemDialogEmits from './add-ryuu-item-dialog-emits';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 import type RelatedKyouQuery from '@/classes/dnote/related-kyou-query';
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
-useBackToCloseDialog(is_show_dialog)
+useDialogHistoryStack(is_show_dialog)
 
 defineExpose({ show, hide })
 defineProps<AddRyuuItemDialogProps>()
