@@ -1090,6 +1090,41 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if request.CloseDatabase {
+		account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
+		if err != nil {
+			if err != nil {
+				err = fmt.Errorf("error account from session id = %s: %w", request.SessionID, err)
+				gkill_log.Debug.Println(err.Error())
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+		device, err := g.GetDevice()
+		if err != nil {
+			err = fmt.Errorf("error at get device name: %w", err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetDeviceError,
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+
+		_, err = g.GkillDAOManager.CloseUserRepositories(account.UserID, device)
+		if err != nil {
+			err = fmt.Errorf("error at close repository user id = %s device = %s: %w", account.UserID, device, err)
+			gkill_log.Debug.Println(err.Error())
+			gkillError := &message.GkillError{
+				ErrorCode:    message.GetDeviceError,
+				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+			}
+			response.Errors = append(response.Errors, gkillError)
+			return
+		}
+	}
+
 	ok, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.DeleteLoginSession(r.Context(), request.SessionID)
 	if !ok || err != nil {
 		if err != nil {

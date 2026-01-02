@@ -672,7 +672,23 @@ func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddre
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) Close(ctx context.Context) error {
-	if !gkill_options.IsCacheInMemory {
+	if gkill_options.IsCacheInMemory {
+		sql := fmt.Sprintf(`DROP TABLE %s `, l.tableName)
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		stmt, err := l.db.PrepareContext(ctx, sql)
+		if err != nil {
+			err = fmt.Errorf("error at DROP TABLE LATEST_DATA_REPOSITORY_ADDRESS statement: %w", err)
+			return err
+		}
+		defer stmt.Close()
+
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		_, err = stmt.ExecContext(ctx)
+		if err != nil {
+			err = fmt.Errorf("error at drop table LATEST_DATA_REPOSITORY_ADDRESS table: %w", err)
+			return err
+		}
+	} else {
 		return l.db.Close()
 	}
 	return nil
