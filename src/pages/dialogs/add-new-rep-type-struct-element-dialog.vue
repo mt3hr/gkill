@@ -22,7 +22,9 @@ defineProps<AddNewRepTypeStructElementDialogProps>()
 const emits = defineEmits<AddNewRepTypeStructElementDialogEmits>()
 defineExpose({ show, hide })
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 async function show(): Promise<void> {
     add_new_rep_type_struct_element_view.value?.reset_rep_type_name()

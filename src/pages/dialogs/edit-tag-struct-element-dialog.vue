@@ -23,7 +23,9 @@ const emits = defineEmits<EditTagStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const tag_struct: Ref<TagStruct> = ref(new TagStruct())
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 async function show(tag_struct_obj: TagStruct): Promise<void> {
     tag_struct.value = tag_struct_obj

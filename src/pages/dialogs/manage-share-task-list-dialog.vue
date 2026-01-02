@@ -42,7 +42,9 @@ defineExpose({ show, hide })
 const share_kyou_list: Ref<ShareKyousInfo> = ref(new ShareKyousInfo())
 const share_kyou_link: Ref<ShareKyousInfo> = ref(new ShareKyousInfo())
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 async function show(): Promise<void> {
     reload_share_kyou_list_infos()

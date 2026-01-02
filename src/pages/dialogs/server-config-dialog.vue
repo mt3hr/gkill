@@ -24,7 +24,9 @@ defineExpose({ show, hide })
 
 const server_configs: Ref<Array<ServerConfig>> = ref(new Array<ServerConfig>())
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 async function show(): Promise<void> {
     load_server_configs()
