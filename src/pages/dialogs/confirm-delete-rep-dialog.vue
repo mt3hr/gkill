@@ -23,7 +23,9 @@ defineProps<ConfirmDeleteRepDialogProps>()
 const emits = defineEmits<ConfirmDeleteRepDialogEmits>()
 defineExpose({ show, hide })
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 const cloned_repository: Ref<Repository> = ref(new Repository())
 
 async function show(repository: Repository): Promise<void> {

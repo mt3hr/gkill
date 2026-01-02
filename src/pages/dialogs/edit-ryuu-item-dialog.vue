@@ -15,7 +15,9 @@ import type EditRyuuItemDialogProps from './edit-ryuu-item-dialog-props';
 import RelatedKyouQuery from '@/classes/dnote/related-kyou-query';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 const model_value = defineModel<RelatedKyouQuery>()
 defineExpose({ show, hide })
