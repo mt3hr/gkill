@@ -22,9 +22,9 @@ defineProps<AddNewKFTLTemplateStructElementDialogProps>()
 const emits = defineEmits<AddNewKFTLTemplateStructElementDialogEmits>()
 defineExpose({ show, hide })
 
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
-useBackToCloseDialog(is_show_dialog)
+useDialogHistoryStack(is_show_dialog)
 
 async function show(): Promise<void> {
     add_new_kftl_template_struct_element_view.value?.reset_kftl_template_name()

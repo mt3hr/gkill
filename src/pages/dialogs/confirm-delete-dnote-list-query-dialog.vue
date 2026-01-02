@@ -23,9 +23,9 @@ defineExpose({ show, hide })
 
 const dnote_list_query: Ref<DnoteListQuery> = ref(new DnoteListQuery())
 
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
-useBackToCloseDialog(is_show_dialog)
+useDialogHistoryStack(is_show_dialog)
 
 async function show(_dnote_item: DnoteListQuery): Promise<void> {
     dnote_list_query.value = _dnote_item

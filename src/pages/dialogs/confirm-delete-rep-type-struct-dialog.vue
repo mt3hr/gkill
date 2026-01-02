@@ -23,9 +23,9 @@ defineExpose({ show, hide })
 
 const rep_type_struct: Ref<RepTypeStruct> = ref(new RepTypeStruct())
 
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
-useBackToCloseDialog(is_show_dialog)
+useDialogHistoryStack(is_show_dialog)
 
 async function show(rep_type_struct_obj: RepTypeStruct): Promise<void> {
     rep_type_struct.value = rep_type_struct_obj

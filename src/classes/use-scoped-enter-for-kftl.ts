@@ -12,7 +12,7 @@ function isTextInput(el: Element | null): boolean {
 
 function isAnyBlockingModalOpen(): boolean {
     // ツールチップ/メニュー類は無視して、実モーダルっぽいものだけブロック
-    const overlays = Array.from(document.querySelectorAll('[role="dialog"][aria-modal="true"]'));
+    const overlays = Array.from(document.querySelectorAll('[role="dialog"][aria-modal="true"]:not(.kyou_dialog)'));
     return overlays.some((ov) => {
         const el = ov as HTMLElement;
         const cls = el.className + ' ' + (el.getAttribute('aria-label') || '');
