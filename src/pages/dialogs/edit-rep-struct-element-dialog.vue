@@ -23,9 +23,9 @@ const emits = defineEmits<EditRepStructElementDialogEmits>()
 defineExpose({ show, hide })
 
 const rep_struct: Ref<RepStruct> = ref(new RepStruct())
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 const is_show_dialog: Ref<boolean> = ref(false)
-useBackToCloseDialog(is_show_dialog)
+useDialogHistoryStack(is_show_dialog)
 
 async function show(rep_struct_obj: RepStruct): Promise<void> {
     rep_struct.value = rep_struct_obj

@@ -166,11 +166,11 @@ import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import generate_get_plaing_timeis_kyous_query from '@/classes/api/generate-get-plaing-timeis-kyous-query'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
-useBackToCloseDialog(enable_dialog)
+useDialogHistoryStack(enable_dialog)
 
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
 const add_nlog_dialog = ref<InstanceType<typeof AddNlogDialog> | null>(null);

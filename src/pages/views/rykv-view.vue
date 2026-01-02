@@ -458,11 +458,11 @@ import RyuuListView from './ryuu-list-view.vue'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
+import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
-useBackToCloseDialog(enable_dialog)
+useDialogHistoryStack(enable_dialog)
 
 const query_editor_sidebar = ref<InstanceType<typeof RykvQueryEditorSideBar> | null>(null);
 const add_mi_dialog = ref<InstanceType<typeof AddMiDialog> | null>(null);
