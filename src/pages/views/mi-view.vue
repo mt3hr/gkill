@@ -72,7 +72,7 @@
                         <v-card>
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                                }}</v-card-title>
+                            }}</v-card-title>
                             <KyouListView :kyou_height="56 + 35" :width="400"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
@@ -101,7 +101,8 @@
                                     skip_search_this_tick = true
                                     focused_query = querys[index]
                                     clicked_kyou_in_list_view(index, kyou[0] as Kyou)
-                                }" @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                                }"
+                                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                                 @requested_reload_kyou="(...kyou: any[]) => reload_kyou(kyou[0] as Kyou)"
                                 @requested_reload_list="() => reload_list(index)"
@@ -409,7 +410,7 @@ const focused_column_index: Ref<number> = ref(0)
 const focused_kyous_list: Ref<Array<Kyou>> = ref(new Array<Kyou>())
 const focused_kyou: Ref<Kyou | null> = ref(null)
 const focused_time: Ref<Date> = ref(moment().toDate())
-const is_show_kyou_detail_view: Ref<boolean> = ref(true)
+const is_show_kyou_detail_view: Ref<boolean> = ref(false)
 const is_show_kyou_count_calendar: Ref<boolean> = ref(false)
 const last_added_tag: Ref<string> = ref("")
 const drawer: Ref<boolean | null> = ref(false)
@@ -423,7 +424,6 @@ const props = defineProps<miViewProps>()
 const emits = defineEmits<miViewEmits>()
 
 watch(() => is_show_kyou_count_calendar.value, () => {
-    focused_kyous_list.value.splice(0)
     if (is_show_kyou_count_calendar.value) {
         update_focused_kyous_list(focused_column_index.value)
     }
@@ -454,10 +454,7 @@ function update_focused_kyous_list(column_index: number): void {
     if (!match_kyous_list.value || match_kyous_list.value.length === 0) {
         return
     }
-    focused_kyous_list.value.splice(0)
-    for (let i = 0; i < match_kyous_list.value[column_index].length; i++) {
-        focused_kyous_list.value.push(match_kyous_list.value[column_index][i])
-    }
+    focused_kyous_list.value = match_kyous_list.value[column_index]
 }
 
 async function reload_kyou(kyou: Kyou): Promise<void> {
@@ -554,7 +551,6 @@ async function close_list_view(column_index: number): Promise<void> {
         skip_search_this_tick.value = true
         focused_column_index.value = -1
         focused_query.value = querys.value[focused_column_index.value]
-        focused_kyous_list.value.splice(0)
 
         querys.value.splice(column_index, 1)
         querys_backup.value.splice(column_index, 1)
@@ -744,7 +740,6 @@ function open_or_focus_board(board_name: string): void {
         if (query.mi_board_name === board_name) {
             focused_query.value = querys.value[i].clone()
 
-            focused_kyous_list.value.splice(0)
             for (let j = 0; j < match_kyous_list.value[i].length; j++) {
                 focused_kyous_list.value.push(match_kyous_list.value[i][j])
             }
