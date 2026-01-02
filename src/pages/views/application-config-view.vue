@@ -15,10 +15,12 @@
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="reload_repositories()">{{ i18n.global.t("RELOAD_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark @click="logout()" color="primary">{{ i18n.global.t("LOGOUT_TITLE") }}</v-btn>
+                    <v-btn dark color="primary" @click="() => logout(false)"
+                        v-long-press="() => logout(true)">{{
+                            i18n.global.t("LOGOUT_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -140,13 +142,13 @@
                     <td>
                         <v-btn dark color="primary" @click="show_edit_tag_dialog">{{
                             i18n.global.t("EDIT_TAG_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_dialog">{{
                             i18n.global.t("EDIT_REP_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_device_dialog">{{
                             i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                             i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
                     </td>
@@ -165,7 +167,7 @@
             <a href="https://github.com/mt3hr/gkill" style="color:inherit;text-decoration:none;" target="_blank">
                 <p class="gkill_version_info">gkill v-{{ gkill_info.version }} ({{
                     gkill_info.build_time.toLocaleString()
-                }})</p>
+                    }})</p>
                 <p class="gkill_version_info">{{ gkill_info.commit_hash }}</p>
             </a>
         </v-card>
@@ -173,13 +175,13 @@
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="update_application_config" color="primary">{{ i18n.global.t("APPLY_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CANCEL_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -415,8 +417,9 @@ async function update_application_config(): Promise<void> {
     emits('requested_close_dialog')
 }
 
-async function logout(): Promise<void> {
+async function logout(close_database: boolean): Promise<void> {
     const req = new LogoutRequest()
+    req.close_database = close_database
     const res = await props.gkill_api.logout(req)
     if (res.errors && res.errors.length !== 0) {
         emits('received_errors', res.errors)
