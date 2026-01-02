@@ -17,7 +17,9 @@ import type AddDnoteItemDialogEmits from './add-dnote-item-dialog-emits';
 import type AddDnoteItemDialogProps from './add-dnote-item-dialog-props';
 import AddDnoteItemView from '@/pages/views/add-dnote-item-view.vue';
 import type DnoteItem from '@/classes/dnote/dnote-item';
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 defineExpose({ show, hide })
 defineProps<AddDnoteItemDialogProps>()

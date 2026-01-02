@@ -76,9 +76,7 @@ import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 import { useTheme } from 'vuetify'
-
-
-
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 
 const theme = useTheme()
 
@@ -86,6 +84,7 @@ const application_config_dialog = ref<InstanceType<typeof ApplicationConfigDialo
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
+useBackToCloseDialog(enable_dialog)
 
 const actual_height: Ref<Number> = ref(0)
 const element_height: Ref<Number> = ref(0)

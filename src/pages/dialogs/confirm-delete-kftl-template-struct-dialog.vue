@@ -23,7 +23,9 @@ defineExpose({ show, hide })
 
 const kftl_template_struct: Ref<KFTLTemplateStruct> = ref(new KFTLTemplateStruct())
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 async function show(kftl_template_struct_obj: KFTLTemplateStruct): Promise<void> {
     kftl_template_struct.value = kftl_template_struct_obj

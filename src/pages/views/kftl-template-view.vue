@@ -40,7 +40,9 @@ defineProps<KFTLTemplateViewProps>()
 const emits = defineEmits<KFTLTemplateViewEmits>()
 defineExpose({ show, hide })
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 function clicked_template_button(template: KFTLTemplateElementData, index: number): void {
     if (!template.children) {

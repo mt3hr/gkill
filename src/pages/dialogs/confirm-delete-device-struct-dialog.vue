@@ -23,7 +23,9 @@ defineExpose({ show, hide })
 
 const device_struct: Ref<DeviceStruct> = ref(new DeviceStruct())
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 
 async function show(device_struct_obj: DeviceStruct): Promise<void> {
     device_struct.value = device_struct_obj

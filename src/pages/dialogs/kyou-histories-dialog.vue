@@ -83,7 +83,9 @@ defineProps<KyouHistoriesDialogProps>()
 const emits = defineEmits<KyouDialogEmits>()
 defineExpose({ show, hide })
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 const show_kyou: Ref<boolean> = ref(false)
 
 async function show(): Promise<void> {

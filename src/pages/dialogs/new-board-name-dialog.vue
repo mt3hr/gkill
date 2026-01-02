@@ -27,7 +27,9 @@ defineProps<NewBoardNameDialogProps>()
 const emits = defineEmits<NewBoardNameDialogEmits>()
 defineExpose({ show, hide })
 
+import { useBackToCloseDialog } from '@/classes/use-back-to-close-dialog'
 const is_show_dialog: Ref<boolean> = ref(false)
+useBackToCloseDialog(is_show_dialog)
 const board_name: Ref<string> = ref("")
 
 async function show(): Promise<void> {
