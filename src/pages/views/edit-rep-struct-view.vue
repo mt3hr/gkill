@@ -102,7 +102,7 @@ function show_edit_rep_struct_dialog(id: string): void {
             target_struct_object = rep
         } else if (rep_children) {
             rep_children.forEach(child_rep => {
-                if (child_rep.children) {
+                if (child_rep) {
                     rep_name_walk(child_rep)
                 }
             })
@@ -158,7 +158,7 @@ function show_confirm_delete_rep_struct_dialog(id: string): void {
             target_struct_object = rep
         } else if (rep_children) {
             rep_children.forEach(child_rep => {
-                if (child_rep.children) {
+                if (child_rep) {
                     rep_name_walk(child_rep)
                 }
             })

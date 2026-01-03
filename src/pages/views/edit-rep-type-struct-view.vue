@@ -116,7 +116,7 @@ function show_edit_rep_type_struct_dialog(id: string): void {
             target_struct_object = rep_type
         } else if (rep_type_children) {
             rep_type_children.forEach(child_rep_type => {
-                if (child_rep_type.children) {
+                if (child_rep_type) {
                     rep_type_name_walk(child_rep_type)
                 }
             })
@@ -186,7 +186,7 @@ function show_confirm_delete_rep_type_struct_dialog(id: string): void {
             target_struct_object = rep_type
         } else if (rep_type_children) {
             rep_type_children.forEach(child_rep_type => {
-                if (child_rep_type.children) {
+                if (child_rep_type) {
                     rep_type_name_walk(child_rep_type)
                 }
             })

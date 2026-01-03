@@ -114,7 +114,7 @@ function show_edit_device_struct_dialog(id: string): void {
             target_struct_object = device
         } else if (device_children) {
             device_children.forEach(child_device => {
-                if (child_device.children) {
+                if (child_device) {
                     device_name_walk(child_device)
                 }
             })
@@ -182,7 +182,7 @@ function show_confirm_delete_device_struct_dialog(id: string): void {
             target_struct_object = device
         } else if (device_children) {
             device_children.forEach(child_device => {
-                if (child_device.children) {
+                if (child_device) {
                     device_name_walk(child_device)
                 }
             })

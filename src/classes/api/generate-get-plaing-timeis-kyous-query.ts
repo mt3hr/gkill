@@ -23,7 +23,7 @@ export default function generate_get_plaing_timeis_kyous_query(fixed_time: Date 
             if (rep_children) {
                 rep_children.forEach(child_rep => {
                     rep_names.push(child_rep.rep_name)
-                    if (child_rep.children) {
+                    if (child_rep) {
                         rep_names.push(...rep_name_walk(child_rep))
                     }
                 })
@@ -40,7 +40,7 @@ export default function generate_get_plaing_timeis_kyous_query(fixed_time: Date 
                     if (child_tag.check_when_inited) {
                         tag_names.push(child_tag.tag_name)
                     }
-                    if (child_tag.children) {
+                    if (child_tag) {
                         tag_names.push(...tag_name_walk(child_tag))
                     }
                 })
