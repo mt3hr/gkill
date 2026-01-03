@@ -115,7 +115,7 @@ function show_edit_tag_struct_dialog(id: string): void {
             target_struct_object = tag
         } else if (tag_children) {
             tag_children.forEach(child_tag => {
-                if (child_tag.children) {
+                if (child_tag) {
                     tag_name_walk(child_tag)
                 }
             })
@@ -183,7 +183,7 @@ function show_confirm_delete_tag_struct_dialog(id: string): void {
             target_struct_object = tag
         } else if (tag_children) {
             tag_children.forEach(child_tag => {
-                if (child_tag.children) {
+                if (child_tag) {
                     tag_name_walk(child_tag)
                 }
             })
