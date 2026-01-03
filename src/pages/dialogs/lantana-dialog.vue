@@ -7,7 +7,6 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { LantanaDialogEmits } from './lantana-dialog-emits'
 import type { LantanaDialogProps } from './lantana-dialog-props'

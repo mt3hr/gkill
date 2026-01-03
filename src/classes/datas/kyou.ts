@@ -170,7 +170,7 @@ export class Kyou extends InfoBase {
         return super.clear_attached_datas()
     }
 
-    async load_typed_kmemo(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_typed_kmemo(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetKmemoRequest()
         // req.rep_name = this.rep_name
         req.abort_controller = this.abort_controller
@@ -213,7 +213,7 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_typed_kc(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_typed_kc(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetKCRequest()
         req.abort_controller = this.abort_controller
         // req.rep_name = this.rep_name
@@ -256,7 +256,7 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_typed_urlog(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_typed_urlog(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetURLogRequest()
         req.abort_controller = this.abort_controller
         // req.rep_name = this.rep_name
@@ -299,7 +299,7 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_typed_nlog(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_typed_nlog(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetNlogRequest()
         req.abort_controller = this.abort_controller
         // req.rep_name = this.rep_name
@@ -342,7 +342,7 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_typed_timeis(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_typed_timeis(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetTimeisRequest()
         req.abort_controller = this.abort_controller
         // req.rep_name = this.rep_name
@@ -385,7 +385,7 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_typed_mi(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_typed_mi(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetMiRequest()
         req.abort_controller = this.abort_controller
         // req.rep_name = this.rep_name
@@ -427,7 +427,7 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_typed_lantana(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_typed_lantana(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetLantanaRequest()
         req.abort_controller = this.abort_controller
         // req.rep_name = this.rep_name
@@ -470,7 +470,7 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_typed_idf_kyou(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_typed_idf_kyou(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetIDFKyouRequest()
         req.abort_controller = this.abort_controller
         // req.rep_name = this.rep_name
@@ -513,7 +513,7 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_typed_git_commit_log(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_typed_git_commit_log(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetGitCommitLogRequest()
         req.abort_controller = this.abort_controller
 
@@ -549,7 +549,7 @@ export class Kyou extends InfoBase {
         return new Array<GkillError>()
     }
 
-    async load_typed_rekyou(query?: FindKyouQuery): Promise<Array<GkillError>> {
+    async load_typed_rekyou(_query?: FindKyouQuery): Promise<Array<GkillError>> {
         const req = new GetReKyouRequest()
         req.abort_controller = this.abort_controller
         // req.rep_name = this.rep_name

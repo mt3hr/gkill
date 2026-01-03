@@ -23,7 +23,6 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { EditRekyouDialogProps } from './edit-rekyou-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'

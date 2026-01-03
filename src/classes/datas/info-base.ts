@@ -2,12 +2,13 @@
 
 import { GkillAPI } from "../api/gkill-api"
 import { GkillError } from "../api/gkill-error"
-import { GkillErrorCodes } from "../api/message/gkill_error"
 import { GetApplicationConfigRequest } from "../api/req_res/get-application-config-request"
 import { GetKyousRequest } from "../api/req_res/get-kyous-request"
 import { GetNotificationsByTargetIDRequest } from "../api/req_res/get-notifications-by-target-id-request"
 import { GetTagsByTargetIDRequest } from "../api/req_res/get-tags-by-target-id-request"
 import { GetTextsByTargetIDRequest } from "../api/req_res/get-texts-by-target-id-request"
+import type { RepStructElementData } from "./config/rep-struct-element-data"
+import type { TagStructElementData } from "./config/tag-struct-element-data"
 import type { Kyou } from "./kyou"
 import type { Notification } from "./notification"
 import type { Tag } from "./tag"
@@ -91,16 +92,38 @@ export abstract class InfoBase {
 
         const application_config = (await GkillAPI.get_gkill_api().get_application_config(new GetApplicationConfigRequest())).application_config
         if (!application_config.for_share_kyou) {
-            const reps = new Array<string>()
-            const tags = new Array<string>()
-            for (let i = 0; i < application_config.rep_struct.length; i++) {
-                reps.push(application_config.rep_struct[i].rep_name)
+            let rep_name_walk = (_rep: RepStructElementData): Array<string> => []
+            rep_name_walk = (rep: RepStructElementData): Array<string> => {
+                const rep_names = new Array<string>()
+                const rep_children = rep.children
+                if (rep_children) {
+                    rep_children.forEach(child_rep => {
+                        rep_names.push(child_rep.rep_name)
+                        if (child_rep.children) {
+                            rep_names.push(...rep_name_walk(child_rep))
+                        }
+                    })
+                }
+                return rep_names
             }
-            for (let i = 0; i < application_config.tag_struct.length; i++) {
-                tags.push(application_config.tag_struct[i].tag_name)
+            req.query.reps = rep_name_walk(application_config.rep_struct)
+            let tag_name_walk = (_tag: TagStructElementData): Array<string> => []
+            tag_name_walk = (tag: TagStructElementData): Array<string> => {
+                const tag_names = new Array<string>()
+                const tag_children = tag.children
+                if (tag_children) {
+                    tag_children.forEach(child_tag => {
+                        if (child_tag.check_when_inited) {
+                            tag_names.push(child_tag.tag_name)
+                        }
+                        if (child_tag.children) {
+                            tag_names.push(...tag_name_walk(child_tag))
+                        }
+                    })
+                }
+                return tag_names
             }
-            req.query.reps = reps
-            req.query.tags = tags
+            req.query.tags = tag_name_walk(application_config.tag_struct)
         }
 
         const res = await GkillAPI.get_gkill_api().get_kyous(req)

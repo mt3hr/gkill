@@ -91,7 +91,6 @@ import { UpdateAccountStatusRequest } from '@/classes/api/req_res/update-account
 import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-configs-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const allocate_rep_dialog = ref<InstanceType<typeof AllocateRepDialog> | null>(null);
@@ -113,17 +112,6 @@ function show_create_account_dialog(): void {
 }
 
 async function update_is_enable_account(account: Account, is_enable: boolean): Promise<void> {
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info = await props.gkill_api.get_gkill_info(gkill_info_req)
-    if (gkill_info.user_id === account.user_id) {
-        account.is_enable = true
-        const error = new GkillError()
-        error.error_code = GkillErrorCodes.can_not_disable_self_account
-        error.error_message = i18n.global.t("CAN_NOT_DISABLE_SELF_ACCOUNT_MESSAGE")
-        emits('received_errors', [error])
-        return
-    }
-
     const req = new UpdateAccountStatusRequest()
     req.enable = is_enable
     req.target_user_id = account.user_id

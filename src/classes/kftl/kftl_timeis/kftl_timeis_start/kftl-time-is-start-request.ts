@@ -5,10 +5,11 @@ import type { KFTLStatementLineContext } from '../../kftl-statement-line-context
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
+import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 
 export class KFTLTimeIsStartRequest extends KFTLRequest {
 
@@ -37,8 +38,8 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
             return errors
         }
 
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
+        const application_config_req = new GetApplicationConfigRequest()
+        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
 
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
@@ -50,13 +51,13 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         req.timeis.start_time = time
         req.timeis.title = this.title
         req.timeis.create_app = "gkill_kftl"
-        req.timeis.create_device = gkill_info_res.device
+        req.timeis.create_device = application_config_res.application_config.device
         req.timeis.create_time = now
-        req.timeis.create_user = gkill_info_res.user_id
+        req.timeis.create_user = application_config_res.application_config.user_id
         req.timeis.update_app = "gkill_kftl"
-        req.timeis.update_device = gkill_info_res.device
+        req.timeis.update_device = application_config_res.application_config.device
         req.timeis.update_time = now
-        req.timeis.update_user = gkill_info_res.user_id
+        req.timeis.update_user = application_config_res.application_config.user_id
 
         await delete_gkill_kyou_cache(req.timeis.id)
         await GkillAPI.get_gkill_api().add_timeis(req).then(res => {

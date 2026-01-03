@@ -3,7 +3,7 @@
         <v-checkbox readonly v-model="use_board" :label="i18n.global.t('BOARD_TITLE')" hide-details />
         <table v-show="use_board" class="boardlist">
             <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-                :is_open="true" :struct_obj="cloned_application_config.parsed_mi_boad_struct" :is_editable="false"
+                :is_open="true" :struct_obj="cloned_application_config.mi_board_struct" :is_editable="false"
                 :is_root="true" :is_show_checkbox="false"
                 @clicked_items="(event: MouseEvent, items: string[], check_state: CheckState, is_by_user: boolean) => { if (is_by_user && check_state === CheckState.checked) { items.forEach((board) => { board_name = board; emits('request_open_focus_board', board) }) } }"
                 @requested_update_check_state="[]"

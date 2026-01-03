@@ -24,17 +24,5 @@ type ConfigDAOs struct {
 
 	RepositoryDAO user_config.RepositoryDAO
 
-	KFTLTemplateDAO user_config.KFTLTemplateDAO
-
-	DnoteDataDAO user_config.DnoteDataDAO
-
-	TagStructDAO user_config.TagStructDAO
-
-	RepStructDAO user_config.RepStructDAO
-
-	DeviceStructDAO user_config.DeviceStructDAO
-
-	RepTypeStructDAO user_config.RepTypeStructDAO
-
 	GkillNotificationTargetDAO gkill_notification.GkillNotificateTargetDAO
 }

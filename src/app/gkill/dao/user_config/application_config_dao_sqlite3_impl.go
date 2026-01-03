@@ -87,7 +87,24 @@ var applicationConfigDefaultValue = map[string]interface{}{
 	"IS_SHOW_SHARE_FOOTER":          false,
 	"DEFAULT_PAGE":                  "rykv",
 	"SHOW_TAGS_IN_LIST":             true,
-	"RYUU_JSON_DATA":                json.RawMessage(nil),
+	"RYUU_JSON_DATA":                "null",
+	"TAG_STRUCT":                    "null",
+	"REP_STRUCT":                    "null",
+	"REP_TYPE_STRUCT":               "null",
+	"DEVICE_STRUCT":                 "null",
+	"MI_BOARD_STRUCT":               "null",
+	"KFTL_TEMPLATE_STRUCT":          "null",
+	"DNOTE_JSON_DATA":               "null",
+}
+var ignoreDeviceNameConfigKey = []string{
+	"RYUU_JSON_DATA",
+	"TAG_STRUCT",
+	"REP_STRUCT",
+	"REP_TYPE_STRUCT",
+	"DEVICE_STRUCT",
+	"MI_BOARD_STRUCT",
+	"KFTL_TEMPLATE_STRUCT",
+	"DNOTE_JSON_DATA",
 }
 
 func (a *applicationConfigDAOSQLite3Impl) GetAllApplicationConfigs(ctx context.Context) ([]*ApplicationConfig, error) {
@@ -226,9 +243,93 @@ SELECT
 	  END
 	FROM APPLICATION_CONFIG
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
-	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND DEVICE = 'ALL'
 	AND KEY = 'RYUU_JSON_DATA'
-  ) AS RYUU_JSON_DATA
+  ) AS RYUU_JSON_DATA,
+  /* TAG_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'TAG_STRUCT'
+  ) AS TAG_STRUCT,
+  /* REP_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'REP_STRUCT'
+  ) AS REP_STRUCT,
+  /* REP_TYPE_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'REP_TYPE_STRUCT'
+  ) AS REP_TYPE_STRUCT,
+  /* DEVICE_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'DEVICE_STRUCT'
+  ) AS DEVICE_STRUCT,
+  /* MI_BOARD_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'MI_BOARD_STRUCT'
+  ) AS MI_BOARD_STRUCT,
+  /* KFTL_TEMPLATE_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'KFTL_TEMPLATE_STRUCT'
+  ) AS KFTL_TEMPLATE_STRUCT,
+  /* DNOTE_JSON_DATA */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'DNOTE_JSON_DATA'
+  ) AS DNOTE_JSON_DATA
 FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
 GROUP BY USER_ID, DEVICE
 `,
@@ -243,6 +344,13 @@ GROUP BY USER_ID, DEVICE
 		applicationConfigDefaultValue["DEFAULT_PAGE"],
 		applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"],
 		applicationConfigDefaultValue["RYUU_JSON_DATA"],
+		applicationConfigDefaultValue["TAG_STRUCT"],
+		applicationConfigDefaultValue["REP_STRUCT"],
+		applicationConfigDefaultValue["REP_TYPE_STRUCT"],
+		applicationConfigDefaultValue["DEVICE_STRUCT"],
+		applicationConfigDefaultValue["MI_BOARD_STRUCT"],
+		applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"],
+		applicationConfigDefaultValue["DNOTE_JSON_DATA"],
 	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
@@ -270,6 +378,13 @@ GROUP BY USER_ID, DEVICE
 			rykvDefaultPeriod := -1
 			miDefaultPeriod := -1
 			ryuuJSONData := ""
+			tagStrcut := ""
+			repStruct := ""
+			repTypeStruct := ""
+			deviceStruct := ""
+			miBoardStruct := ""
+			kftlTemplateStruct := ""
+			dnoteJsonData := ""
 
 			err = rows.Scan(
 				&applicationConfig.UserID,
@@ -285,6 +400,13 @@ GROUP BY USER_ID, DEVICE
 				&applicationConfig.DefaultPage,
 				&applicationConfig.ShowTagsInList,
 				&ryuuJSONData,
+				&tagStrcut,
+				&repStruct,
+				&repTypeStruct,
+				&deviceStruct,
+				&miBoardStruct,
+				&kftlTemplateStruct,
+				&dnoteJsonData,
 			)
 			if err != nil {
 				return nil, err
@@ -292,7 +414,38 @@ GROUP BY USER_ID, DEVICE
 
 			applicationConfig.RykvDefaultPeriod = json.Number(strconv.Itoa(rykvDefaultPeriod))
 			applicationConfig.MiDefaultPeriod = json.Number(strconv.Itoa(miDefaultPeriod))
-			applicationConfig.RyuuJSONData = json.RawMessage(ryuuJSONData)
+			if ryuuJSONData != "" {
+				r := json.RawMessage(ryuuJSONData)
+				applicationConfig.RyuuJSONData = &r
+			}
+			if tagStrcut != "" {
+				t := json.RawMessage(tagStrcut)
+				applicationConfig.TagStruct = &t
+			}
+			if repStruct != "" {
+				r := json.RawMessage(repStruct)
+				applicationConfig.RepStruct = &r
+			}
+			if repTypeStruct != "" {
+				r := json.RawMessage(repTypeStruct)
+				applicationConfig.RepTypeStruct = &r
+			}
+			if deviceStruct != "" {
+				d := json.RawMessage(deviceStruct)
+				applicationConfig.DeviceStruct = &d
+			}
+			if miBoardStruct != "" {
+				m := json.RawMessage(miBoardStruct)
+				applicationConfig.MiBoardStruct = &m
+			}
+			if kftlTemplateStruct != "" {
+				k := json.RawMessage(kftlTemplateStruct)
+				applicationConfig.KFTLTemplate = &k
+			}
+			if dnoteJsonData != "" {
+				d := json.RawMessage(dnoteJsonData)
+				applicationConfig.DnoteJSONData = &d
+			}
 
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
@@ -436,9 +589,93 @@ SELECT
 	  END
 	FROM APPLICATION_CONFIG
 	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
-	AND DEVICE = GROUPED_APPLICATION_CONFIG.DEVICE
+	AND DEVICE = 'ALL'
 	AND KEY = 'RYUU_JSON_DATA'
-  ) AS RYUU_JSON_DATA
+  ) AS RYUU_JSON_DATA,
+  /* TAG_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'TAG_STRUCT'
+  ) AS TAG_STRUCT,
+  /* REP_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'REP_STRUCT'
+  ) AS REP_STRUCT,
+  /* REP_TYPE_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'REP_TYPE_STRUCT'
+  ) AS REP_TYPE_STRUCT,
+  /* DEVICE_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'DEVICE_STRUCT'
+  ) AS DEVICE_STRUCT,
+  /* MI_BOARD_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'MI_BOARD_STRUCT'
+  ) AS MI_BOARD_STRUCT,
+  /* KFTL_TEMPLATE_STRUCT */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'KFTL_TEMPLATE_STRUCT'
+  ) AS KFTL_TEMPLATE_STRUCT,
+  /* DNOTE_JSON_DATA */ (
+    SELECT 
+	  CASE 
+	    WHEN VALUE IS NOT NULL AND COUNT(VALUE) = 1 
+		THEN VALUE
+		ELSE '%v'
+	  END
+	FROM APPLICATION_CONFIG
+	WHERE USER_ID = GROUPED_APPLICATION_CONFIG.USER_ID
+	AND DEVICE = 'ALL'
+	AND KEY = 'DNOTE_JSON_DATA'
+  ) AS DNOTE_JSON_DATA
 FROM APPLICATION_CONFIG AS GROUPED_APPLICATION_CONFIG
 GROUP BY USER_ID, DEVICE
 HAVING USER_ID = ? AND DEVICE = ?
@@ -454,6 +691,13 @@ HAVING USER_ID = ? AND DEVICE = ?
 		applicationConfigDefaultValue["DEFAULT_PAGE"],
 		applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"],
 		applicationConfigDefaultValue["RYUU_JSON_DATA"],
+		applicationConfigDefaultValue["TAG_STRUCT"],
+		applicationConfigDefaultValue["REP_STRUCT"],
+		applicationConfigDefaultValue["REP_TYPE_STRUCT"],
+		applicationConfigDefaultValue["DEVICE_STRUCT"],
+		applicationConfigDefaultValue["MI_BOARD_STRUCT"],
+		applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"],
+		applicationConfigDefaultValue["DNOTE_JSON_DATA"],
 	)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := a.db.PrepareContext(ctx, sql)
@@ -483,10 +727,16 @@ HAVING USER_ID = ? AND DEVICE = ?
 			return nil, ctx.Err()
 		default:
 			applicationConfig := &ApplicationConfig{}
-
 			rykvDefaultPeriod := -1
 			miDefaultPeriod := -1
 			ryuuJSONData := ""
+			tagStrcut := ""
+			repStruct := ""
+			repTypeStruct := ""
+			deviceStruct := ""
+			miBoardStruct := ""
+			kftlTemplateStruct := ""
+			dnoteJsonData := ""
 
 			err = rows.Scan(
 				&applicationConfig.UserID,
@@ -502,11 +752,49 @@ HAVING USER_ID = ? AND DEVICE = ?
 				&applicationConfig.DefaultPage,
 				&applicationConfig.ShowTagsInList,
 				&ryuuJSONData,
+				&tagStrcut,
+				&repStruct,
+				&repTypeStruct,
+				&deviceStruct,
+				&miBoardStruct,
+				&kftlTemplateStruct,
+				&dnoteJsonData,
 			)
 
 			applicationConfig.RykvDefaultPeriod = json.Number(strconv.Itoa(rykvDefaultPeriod))
 			applicationConfig.MiDefaultPeriod = json.Number(strconv.Itoa(miDefaultPeriod))
-			applicationConfig.RyuuJSONData = json.RawMessage(ryuuJSONData)
+			if ryuuJSONData != "" {
+				r := json.RawMessage(ryuuJSONData)
+				applicationConfig.RyuuJSONData = &r
+			}
+			if tagStrcut != "" {
+				t := json.RawMessage(tagStrcut)
+				applicationConfig.TagStruct = &t
+			}
+			if repStruct != "" {
+				r := json.RawMessage(repStruct)
+				applicationConfig.RepStruct = &r
+			}
+			if repTypeStruct != "" {
+				r := json.RawMessage(repTypeStruct)
+				applicationConfig.RepTypeStruct = &r
+			}
+			if deviceStruct != "" {
+				d := json.RawMessage(deviceStruct)
+				applicationConfig.DeviceStruct = &d
+			}
+			if miBoardStruct != "" {
+				m := json.RawMessage(miBoardStruct)
+				applicationConfig.MiBoardStruct = &m
+			}
+			if kftlTemplateStruct != "" {
+				k := json.RawMessage(kftlTemplateStruct)
+				applicationConfig.KFTLTemplate = &k
+			}
+			if dnoteJsonData != "" {
+				d := json.RawMessage(dnoteJsonData)
+				applicationConfig.DnoteJSONData = &d
+			}
 
 			applicationConfigs = append(applicationConfigs, applicationConfig)
 		}
@@ -526,7 +814,14 @@ HAVING USER_ID = ? AND DEVICE = ?
 			IsShowShareFooter:         (applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"]).(bool),
 			DefaultPage:               (applicationConfigDefaultValue["DEFAULT_PAGE"]).(string),
 			ShowTagsInList:            (applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"]).(bool),
-			RyuuJSONData:              (applicationConfigDefaultValue["RYUU_JSON_DATA"]).(json.RawMessage),
+			RyuuJSONData:              (applicationConfigDefaultValue["RYUU_JSON_DATA"]).(*json.RawMessage),
+			TagStruct:                 (applicationConfigDefaultValue["TAG_STRUCT"]).(*json.RawMessage),
+			RepStruct:                 (applicationConfigDefaultValue["REP_STRUCT"]).(*json.RawMessage),
+			RepTypeStruct:             (applicationConfigDefaultValue["REP_TYPE_STRUCT"]).(*json.RawMessage),
+			DeviceStruct:              (applicationConfigDefaultValue["DEVICE_STRUCT"]).(*json.RawMessage),
+			MiBoardStruct:             (applicationConfigDefaultValue["MI_BOARD_STRUCT"]).(*json.RawMessage),
+			KFTLTemplate:              (applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"]).(*json.RawMessage),
+			DnoteJSONData:             (applicationConfigDefaultValue["DNOTE_JSON_DATA"]).(*json.RawMessage),
 		}
 		return application_config, nil
 	} else if len(applicationConfigs) == 1 {
@@ -580,6 +875,13 @@ INSERT INTO APPLICATION_CONFIG (
 		"DEFAULT_PAGE":                  applicationConfig.DefaultPage,
 		"SHOW_TAGS_IN_LIST":             applicationConfig.ShowTagsInList,
 		"RYUU_JSON_DATA":                applicationConfig.RyuuJSONData,
+		"TAG_STRUCT":                    applicationConfig.TagStruct,
+		"REP_STRUCT":                    applicationConfig.RepStruct,
+		"REP_TYPE_STRUCT":               applicationConfig.RepTypeStruct,
+		"DEVICE_STRUCT":                 applicationConfig.DeviceStruct,
+		"MI_BOARD_STRUCT":               applicationConfig.MiBoardStruct,
+		"KFTL_TEMPLATE_STRUCT":          applicationConfig.KFTLTemplate,
+		"DNOTE_JSON_DATA":               applicationConfig.DnoteJSONData,
 	}
 	for key, value := range insertValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -661,6 +963,13 @@ INSERT INTO APPLICATION_CONFIG (
 		"DEFAULT_PAGE":                  applicationConfig.DefaultPage,
 		"SHOW_TAGS_IN_LIST":             applicationConfig.ShowTagsInList,
 		"RYUU_JSON_DATA":                applicationConfig.RyuuJSONData,
+		"TAG_STRUCT":                    applicationConfig.TagStruct,
+		"REP_STRUCT":                    applicationConfig.RepStruct,
+		"REP_TYPE_STRUCT":               applicationConfig.RepTypeStruct,
+		"DEVICE_STRUCT":                 applicationConfig.DeviceStruct,
+		"MI_BOARD_STRUCT":               applicationConfig.MiBoardStruct,
+		"KFTL_TEMPLATE_STRUCT":          applicationConfig.KFTLTemplate,
+		"DNOTE_JSON_DATA":               applicationConfig.DnoteJSONData,
 	}
 
 	checkExistStmt, err := tx.PrepareContext(ctx, checkExistSQL)
@@ -700,9 +1009,21 @@ INSERT INTO APPLICATION_CONFIG (
 	// レコード自体が存在しなかったらいれる
 	for key, value := range updateValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
+
+		device := applicationConfig.Device
+		isIgnoreDeviceNameKey := false
+		for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
+			if key == ignoreDeviceNameKey {
+				isIgnoreDeviceNameKey = true
+				break
+			}
+		}
+		if isIgnoreDeviceNameKey {
+			device = "ALL"
+		}
 		queryArgs := []interface{}{
 			applicationConfig.UserID,
-			applicationConfig.Device,
+			device,
 			key,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", checkExistSQL, queryArgs)
@@ -720,20 +1041,18 @@ INSERT INTO APPLICATION_CONFIG (
 		recordCount := 0
 		err = row.Scan(&recordCount)
 		if err != nil {
-			if err != nil {
-				err = fmt.Errorf("error at scan:%w", err)
-				rollbackErr := tx.Rollback()
-				if rollbackErr != nil {
-					err = fmt.Errorf("%w: %w", err, rollbackErr)
-				}
-				return false, err
+			err = fmt.Errorf("error at scan:%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
 			}
+			return false, err
 		}
 		if recordCount == 0 {
 			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
 			queryArgs := []interface{}{
 				applicationConfig.UserID,
-				applicationConfig.Device,
+				device,
 				key,
 				value,
 			}
@@ -755,10 +1074,21 @@ INSERT INTO APPLICATION_CONFIG (
 	// 更新する
 	for key, value := range updateValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		device := applicationConfig.Device
+		isIgnoreDeviceNameKey := false
+		for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
+			if key == ignoreDeviceNameKey {
+				isIgnoreDeviceNameKey = true
+				break
+			}
+		}
+		if isIgnoreDeviceNameKey {
+			device = "ALL"
+		}
 		queryArgs := []interface{}{
 			value,
 			applicationConfig.UserID,
-			applicationConfig.Device,
+			device,
 			key,
 		}
 		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)

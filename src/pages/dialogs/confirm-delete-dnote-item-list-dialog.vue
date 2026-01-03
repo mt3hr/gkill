@@ -9,7 +9,6 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import ConfirmDeleteDnoteItemListView from '../views/confirm-delete-dnote-item-list-view.vue';
 import type { ConfirmDeleteDnoteItemListDialogEmits } from './confirm-delete-dnote-item-list-dialog-emits';

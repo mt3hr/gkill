@@ -501,15 +501,10 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext, l
 }
 
 func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *FindKyouContext, userID string, device string, latestDatas *map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
-	tagStructs, err := findCtx.GkillDAOManager.ConfigDAOs.TagStructDAO.GetTagStructs(ctx, userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get tag tag structs: %w", err)
-		return nil, err
-	}
 	hideTagNames := []string{}
-	for _, tagStruct := range tagStructs {
-		if tagStruct.IsForceHide {
-			hideTagNames = append(hideTagNames, tagStruct.TagName)
+	if findCtx.ParsedFindQuery.HideTags != nil {
+		for _, hideTagName := range *findCtx.ParsedFindQuery.HideTags {
+			hideTagNames = append(hideTagNames, hideTagName)
 		}
 	}
 

@@ -230,7 +230,7 @@ import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 import moment from 'moment'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
 import { Kyou } from '@/classes/datas/kyou'
 import { Notification } from '@/classes/datas/notification'
@@ -459,14 +459,6 @@ async function save(): Promise<void> {
 
         // Mi 追加
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 作成するMi情報を用意する
         let estimate_start_time: Date | null = null
         let estimate_end_time: Date | null = null
@@ -488,13 +480,13 @@ async function save(): Promise<void> {
         new_mi.estimate_end_time = estimate_end_time
         new_mi.limit_time = limit_time
         new_mi.create_app = "gkill"
-        new_mi.create_device = gkill_info_res.device
+        new_mi.create_device = props.application_config.device
         new_mi.create_time = new Date(Date.now())
-        new_mi.create_user = gkill_info_res.user_id
+        new_mi.create_user = props.application_config.user_id
         new_mi.update_app = "gkill"
-        new_mi.update_device = gkill_info_res.device
+        new_mi.update_device = props.application_config.device
         new_mi.update_time = new Date(Date.now())
-        new_mi.update_user = gkill_info_res.user_id
+        new_mi.update_user = props.application_config.user_id
 
         // 追加リクエストを飛ばす
         await delete_gkill_kyou_cache(new_mi.id)

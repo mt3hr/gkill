@@ -82,36 +82,13 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 		}
 	}
 
-	applicationConfigs, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetAllApplicationConfigs(context.TODO())
+	serverConfigs, err := gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.Background())
 	if err != nil {
-		err = fmt.Errorf("error at get all application configs: %w", err)
+		err = fmt.Errorf("error at get all server configs: %w", err)
+		gkill_log.Debug.Println(err.Error())
 		return nil, err
-	}
-	if len(applicationConfigs) == 0 {
-		applicationConfig := &user_config.ApplicationConfig{
-			UserID:                    "admin",
-			Device:                    "gkill",
-			UseDarkTheme:              false,
-			GoogleMapAPIKey:           "",
-			RykvImageListColumnNumber: 3,
-			RykvHotReload:             false,
-			MiDefaultBoard:            "Inbox",
-			RykvDefaultPeriod:         json.Number("-1"),
-			MiDefaultPeriod:           json.Number("-1"),
-			IsShowShareFooter:         false,
-		}
-		_, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
-		if err != nil {
-			err = fmt.Errorf("error at add application config admin: %w", err)
-			return nil, err
-		}
 	}
 
-	serverConfigs, err := gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.TODO())
-	if err != nil {
-		err = fmt.Errorf("error at get server configs: %w", err)
-		return nil, err
-	}
 	if len(serverConfigs) == 0 {
 		serverConfig := &server_config.ServerConfig{
 			EnableThisDevice:     true,
@@ -137,6 +114,38 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 		_, err = gkillDAOManager.ConfigDAOs.ServerConfigDAO.AddServerConfig(context.TODO(), serverConfig)
 		if err != nil {
 			err = fmt.Errorf("error at add init data to server config db: %w", err)
+			return nil, err
+		}
+	}
+
+	var device *string
+	for _, serverConfig := range serverConfigs {
+		if serverConfig.EnableThisDevice {
+			if device != nil {
+				err = fmt.Errorf("invalid status. enable device count is not 1")
+				return nil, err
+			}
+			device = &serverConfig.Device
+		}
+	}
+	if device == nil {
+		err = fmt.Errorf("invalid status. enable device count is not 1")
+		return nil, err
+	}
+
+	applicationConfigs, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetAllApplicationConfigs(context.TODO())
+	if err != nil {
+		err = fmt.Errorf("error at get all application configs: %w", err)
+		return nil, err
+	}
+	if len(applicationConfigs) == 0 {
+		applicationConfig := &user_config.ApplicationConfig{
+			UserID: "admin",
+			Device: *device,
+		}
+		_, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
+		if err != nil {
+			err = fmt.Errorf("error at add application config admin: %w", err)
 			return nil, err
 		}
 	}
@@ -490,43 +499,6 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		g.HandleUpdateApplicationConfig(w, r)
 	}).Methods(g.APIAddress.UpdateApplicationConfigMethod)
-	router.HandleFunc(g.APIAddress.UpdateTagStructAddress, func(w http.ResponseWriter, r *http.Request) {
-		if ok := g.filterLocalOnly(w, r); !ok {
-			return
-		}
-		g.HandleUpdateTagStruct(w, r)
-	}).Methods(g.APIAddress.UpdateTagStructMethod)
-	router.HandleFunc(g.APIAddress.UpdateDnoteJSONDataAddress, func(w http.ResponseWriter, r *http.Request) {
-		if ok := g.filterLocalOnly(w, r); !ok {
-			return
-		}
-		g.HandleUpdateDnoteJSONData(w, r)
-	}).Methods(g.APIAddress.UpdateDnoteJSONDataMethod)
-
-	router.HandleFunc(g.APIAddress.UpdateRepStructAddress, func(w http.ResponseWriter, r *http.Request) {
-		if ok := g.filterLocalOnly(w, r); !ok {
-			return
-		}
-		g.HandleUpdateRepStruct(w, r)
-	}).Methods(g.APIAddress.UpdateRepStructMethod)
-	router.HandleFunc(g.APIAddress.UpdateDeviceStructAddress, func(w http.ResponseWriter, r *http.Request) {
-		if ok := g.filterLocalOnly(w, r); !ok {
-			return
-		}
-		g.HandleUpdateDeviceStruct(w, r)
-	}).Methods(g.APIAddress.UpdateDeviceStructMethod)
-	router.HandleFunc(g.APIAddress.UpdateRepTypeStructAddress, func(w http.ResponseWriter, r *http.Request) {
-		if ok := g.filterLocalOnly(w, r); !ok {
-			return
-		}
-		g.HandleUpdateRepTypeStruct(w, r)
-	}).Methods(g.APIAddress.UpdateRepTypeStructMethod)
-	router.HandleFunc(g.APIAddress.UpdateKFTLTemplateAddress, func(w http.ResponseWriter, r *http.Request) {
-		if ok := g.filterLocalOnly(w, r); !ok {
-			return
-		}
-		g.HandleUpdateKFTLTemplate(w, r)
-	}).Methods(g.APIAddress.UpdateKFTLTemplateStructMethod)
 	router.HandleFunc(g.APIAddress.UpdateAccountStatusAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
@@ -563,18 +535,6 @@ func (g *GkillServerAPI) Serve() error {
 		}
 		g.HandleGetGPSLog(w, r)
 	}).Methods(g.APIAddress.GetGPSLogMethod)
-	router.HandleFunc(g.APIAddress.GetKFTLTemplateAddress, func(w http.ResponseWriter, r *http.Request) {
-		if ok := g.filterLocalOnly(w, r); !ok {
-			return
-		}
-		g.HandleGetKFTLTemplate(w, r)
-	}).Methods(g.APIAddress.GetKFTLTemplateMethod)
-	router.HandleFunc(g.APIAddress.GetGkillInfoAddress, func(w http.ResponseWriter, r *http.Request) {
-		if ok := g.filterLocalOnly(w, r); !ok {
-			return
-		}
-		g.HandleGetGkillInfo(w, r)
-	}).Methods(g.APIAddress.GetGkillInfoMethod)
 	router.HandleFunc(g.APIAddress.GetShareKyouListInfosAddress, func(w http.ResponseWriter, r *http.Request) {
 		if ok := g.filterLocalOnly(w, r); !ok {
 			return
@@ -4480,16 +4440,8 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			gkill_log.Debug.Println(err.Error())
 
 			newApplicationConfig := &user_config.ApplicationConfig{
-				UserID:                    userID,
-				Device:                    device,
-				UseDarkTheme:              false,
-				GoogleMapAPIKey:           "",
-				RykvImageListColumnNumber: 3,
-				RykvHotReload:             false,
-				MiDefaultBoard:            "Inbox",
-				RykvDefaultPeriod:         json.Number("-1"),
-				MiDefaultPeriod:           json.Number("-1"),
-				IsShowShareFooter:         false,
+				UserID: userID,
+				Device: device,
 			}
 			_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), newApplicationConfig)
 			if err != nil {
@@ -7591,16 +7543,8 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		gkill_log.Debug.Println(err.Error())
 
 		newApplicationConfig := &user_config.ApplicationConfig{
-			UserID:                    userID,
-			Device:                    device,
-			UseDarkTheme:              false,
-			GoogleMapAPIKey:           "",
-			RykvImageListColumnNumber: 3,
-			RykvHotReload:             false,
-			MiDefaultBoard:            "Inbox",
-			RykvDefaultPeriod:         json.Number("-1"),
-			MiDefaultPeriod:           json.Number("-1"),
-			IsShowShareFooter:         false,
+			UserID: userID,
+			Device: device,
 		}
 		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), newApplicationConfig)
 		if err != nil {
@@ -7620,78 +7564,6 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-	}
-
-	kftlTemplates, err := g.GkillDAOManager.ConfigDAOs.KFTLTemplateDAO.GetKFTLTemplates(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get kftlTemplates user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKFTLTemplateError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KFTL_TEMPLATE_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	tagStructs, err := g.GkillDAOManager.ConfigDAOs.TagStructDAO.GetTagStructs(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get tagStructs user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetTagStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_TAG_STRUCT_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	repStructs, err := g.GkillDAOManager.ConfigDAOs.RepStructDAO.GetRepStructs(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get repStructs user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetRepStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REP_STRUCT_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	deviceStructs, err := g.GkillDAOManager.ConfigDAOs.DeviceStructDAO.GetDeviceStructs(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get deviceStructs user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_DEVICE_STRUCT_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	repTypeStructs, err := g.GkillDAOManager.ConfigDAOs.RepTypeStructDAO.GetRepTypeStructs(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get repTypeStructs user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetRepTypeStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_REP_TYPE_STRUCT_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	dnoteJSONData, err := g.GkillDAOManager.ConfigDAOs.DnoteDataDAO.GetDnoteData(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get dnote json data user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDnoteJSONDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_DNOTE_QUERY_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
 	}
 
 	session, err := g.GkillDAOManager.ConfigDAOs.LoginSessionDAO.GetLoginSession(r.Context(), request.SessionID)
@@ -7724,20 +7596,45 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		}
 	}
 
-	var dnoteJSONDataValue json.RawMessage
-	if len(dnoteJSONData) != 0 {
-		dnoteJSONDataValue = dnoteJSONData[0].DnoteJSONData
+	privateIP, err := privateIPv4s()
+	if err != nil {
+		gkill_log.Debug.Printf("%w", err)
+	}
+	globalIP, err := globalIP(context.Background())
+	if err != nil {
+		gkill_log.Debug.Printf("%w", err)
+	}
+	privateIPStr := ""
+	if len(privateIP) != 0 {
+		privateIPStr = privateIP[0].String()
 	}
 
-	applicationConfig.KFTLTemplate = kftlTemplates
-	applicationConfig.TagStruct = tagStructs
-	applicationConfig.RepStruct = repStructs
-	applicationConfig.DeviceStruct = deviceStructs
-	applicationConfig.RepTypeStruct = repTypeStructs
-	applicationConfig.DnoteJSONData = dnoteJSONDataValue
+	version, err := GetVersion()
+	if err != nil {
+		err = fmt.Errorf("error at get device name: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.GetDeviceError,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	applicationConfig.AccountIsAdmin = account.IsAdmin
 	applicationConfig.SessionIsLocal = session.IsLocalAppUser
 	response.ApplicationConfig = applicationConfig
+
+	response.ApplicationConfig.UserID = userID
+	response.ApplicationConfig.Device = device
+	response.ApplicationConfig.UserIsAdmin = account.IsAdmin
+	response.ApplicationConfig.CacheClearCountLimit = gkill_options.CacheClearCountLimit
+	response.ApplicationConfig.GlobalIP = globalIP.String()
+	response.ApplicationConfig.PrivateIP = privateIPStr
+	response.ApplicationConfig.Version = version.Version
+	response.ApplicationConfig.BuildTime = version.BuildTime
+	response.ApplicationConfig.CommitHash = version.CommitHash
+
 	response.Messages = append(response.Messages, &message.GkillMessage{
 		MessageCode: message.GetApplicationConfigSuccessMessage,
 		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_APPLICATION_CONFIG_MESSAGE"}),
@@ -8447,223 +8344,6 @@ errloop2:
 	})
 }
 
-func (g *GkillServerAPI) HandleUpdateTagStruct(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
-	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.UpdateTagStructRequest{}
-	response := &req_res.UpdateTagStructResponse{}
-
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update tagStruct response to json: %w", err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateTagStructResponseDataError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		err = fmt.Errorf("error at parse update tagStruct request to json: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidUpdateTagStructRequestDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// 他ユーザのものが紛れていたら弾く
-	for _, tagStruct := range request.TagStruct {
-		if tagStruct.UserID != userID {
-			err := fmt.Errorf("error at invalid user id user id = %s tag struct user id = %s device = %s: %w", userID, tagStruct.UserID, device, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.TagStructInvalidUserID,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}
-
-	// 一回全部消して全部いれる
-	ok, err := g.GkillDAOManager.ConfigDAOs.TagStructDAO.DeleteUsersTagStructs(r.Context(), userID)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at delete users tag structs user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Print(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.DeleteUsersTagStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	ok, err = g.GkillDAOManager.ConfigDAOs.TagStructDAO.AddTagStructs(r.Context(), request.TagStruct)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at add tag structs user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddUsersTagStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.ApplicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.UpdateTagStructSuccessMessage,
-		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_TAG_STRUCT_UPDATED_GET_MESSAGE"}),
-	})
-}
-
-func (g *GkillServerAPI) HandleUpdateDnoteJSONData(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
-	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.UpdateDnoteJSONDataRequest{}
-	response := &req_res.UpdateDnoteJSONDataResponse{}
-
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update dnote json data response to json: %w", err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateDnoteJSONDataResponseDataError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		err = fmt.Errorf("error at parse update dnote json data request to json: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidUpdateDnoteJSONDataRequestDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// 一回全部消して全部いれる
-	ok, err := g.GkillDAOManager.ConfigDAOs.DnoteDataDAO.DeleteUsersDnoteData(r.Context(), userID)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at delete users dnote json data user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Print(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.DeleteUsersDnoteDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	ok, err = g.GkillDAOManager.ConfigDAOs.DnoteDataDAO.AddDnoteData(r.Context(), &user_config.DnoteData{
-		ID:            uuid.NewString(),
-		UserID:        userID,
-		Device:        device,
-		DnoteJSONData: request.DnoteJSONData,
-	})
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at add dnote json data user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddUsersDnoteDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.ApplicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.UpdateTagStructSuccessMessage,
-		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_DNOTE_VIEW_CONDITION_MESSAGE"}),
-	})
-}
-
 func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
 	w.Header().Set("Content-Type", "application/json")
@@ -8740,459 +8420,6 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_SETTINGS_MESSAGE"}),
 	})
 }
-
-func (g *GkillServerAPI) HandleUpdateRepStruct(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
-	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.UpdateRepStructRequest{}
-	response := &req_res.UpdateRepStructResponse{}
-
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update repStruct response to json: %w", err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateRepStructResponseDataError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		err = fmt.Errorf("error at parse update repStruct request to json: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidUpdateRepStructRequestDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// 他ユーザのものが紛れていたら弾く
-	for _, repStruct := range request.RepStruct {
-		if repStruct.UserID != userID {
-			err := fmt.Errorf("error at invalid user id user id = %s rep struct user id = %s device = %s: %w", userID, repStruct.UserID, device, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.RepStructInvalidUserID,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}
-
-	// 一回全部消して全部いれる
-	ok, err := g.GkillDAOManager.ConfigDAOs.RepStructDAO.DeleteUsersRepStructs(r.Context(), userID)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at delete users rep structs user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.DeleteUsersRepStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	ok, err = g.GkillDAOManager.ConfigDAOs.RepStructDAO.AddRepStructs(r.Context(), request.RepStruct)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at add rep structs user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddUsersRepStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.ApplicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.UpdateRepStructSuccessMessage,
-		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_REP_STRUCT_UPDATED_GET_MESSAGE"}),
-	})
-}
-
-func (g *GkillServerAPI) HandleUpdateDeviceStruct(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
-	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.UpdateDeviceStructRequest{}
-	response := &req_res.UpdateDeviceStructResponse{}
-
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update deviceStruct response to json: %w", err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateDeviceStructResponseDataError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		err = fmt.Errorf("error at parse update deviceStruct request to json: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidUpdateDeviceStructRequestDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// 他ユーザのものが紛れていたら弾く
-	for _, deviceStruct := range request.DeviceStruct {
-		if deviceStruct.UserID != userID {
-			err := fmt.Errorf("error at invalid user id user id = %s device struct user id = %s device = %s: %w", userID, deviceStruct.UserID, device, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.DeviceStructInvalidUserID,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}
-
-	// 一回全部消して全部いれる
-	ok, err := g.GkillDAOManager.ConfigDAOs.DeviceStructDAO.DeleteUsersDeviceStructs(r.Context(), userID)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at delete users device structs user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.DeleteUsersDeviceStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	ok, err = g.GkillDAOManager.ConfigDAOs.DeviceStructDAO.AddDeviceStructs(r.Context(), request.DeviceStruct)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at add device structs user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddUsersDeviceStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.ApplicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_DEVICE_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.UpdateDeviceStructSuccessMessage,
-		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_DEVICE_STRUCT_UPDATED_GET_MESSAGE"}),
-	})
-}
-
-func (g *GkillServerAPI) HandleUpdateRepTypeStruct(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
-	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.UpdateRepTypeStructRequest{}
-	response := &req_res.UpdateRepTypeStructResponse{}
-
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update repTypeStruct response to json: %w", err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateRepTypeStructResponseDataError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		err = fmt.Errorf("error at parse update repTypeStruct request to json: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidUpdateRepTypeStructRequestDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// 他ユーザのものが紛れていたら弾く
-	for _, repTypeStruct := range request.RepTypeStruct {
-		if repTypeStruct.UserID != userID {
-			err := fmt.Errorf("error at invalid user id user id = %s repType struct user id = %s device = %s: %w", userID, repTypeStruct.UserID, device, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.RepTypeStructInvalidUserID,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}
-
-	// 一回全部消して全部いれる
-	ok, err := g.GkillDAOManager.ConfigDAOs.RepTypeStructDAO.DeleteUsersRepTypeStructs(r.Context(), userID)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at delete users repType structs user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.DeleteUsersRepTypeStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	ok, err = g.GkillDAOManager.ConfigDAOs.RepTypeStructDAO.AddRepTypeStructs(r.Context(), request.RepTypeStruct)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at add repType structs user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddUsersRepTypeStructError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.ApplicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REP_TYPE_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.UpdateRepTypeStructSuccessMessage,
-		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_REP_TYPE_STRUCT_UPDATED_GET_MESSAGE"}),
-	})
-}
-
-func (g *GkillServerAPI) HandleUpdateKFTLTemplate(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
-	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.UpdateKFTLTemplateRequest{}
-	response := &req_res.UpdateKFTLTemplateResponse{}
-
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse update kftl template response to json: %w", err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidUpdateKFTLTemplateResponseDataError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		err = fmt.Errorf("error at parse update kftl template request to json: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidUpdateKFTLTemplateRequestDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// 他ユーザのものが紛れていたら弾く
-	for _, kftlTemplate := range request.KFTLTemplates {
-		if kftlTemplate.UserID != userID {
-			err := fmt.Errorf("error at invalid user id user id = %s kftl template user id = %s device = %s: %w", userID, kftlTemplate.UserID, device, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.KFTLTemplateStructInvalidUserID,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}
-
-	// 一回全部消して全部いれる
-	ok, err := g.GkillDAOManager.ConfigDAOs.KFTLTemplateDAO.DeleteUsersKFTLTemplates(r.Context(), userID)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at delete users kftl tempates user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.DeleteUsersKFTLTemplateError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-	ok, err = g.GkillDAOManager.ConfigDAOs.KFTLTemplateDAO.AddKFTLTemplates(r.Context(), request.KFTLTemplates)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at add kftl templates user user id = %s device = %s: %w", userID, device, err)
-			gkill_log.Debug.Println(err.Error())
-		}
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddUsersKFTLTemplateError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.ApplicationConfig, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.GetApplicationConfig(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get application config user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetApplicationConfigError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KFTL_TEMPLATE_STRUCT_UPDATED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.UpdateKFTLTemplateSuccessMessage,
-		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_UPDATE_KFTL_TEMPLATE_STRUCT_UPDATED_GET_MESSAGE"}),
-	})
-}
-
 func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *http.Request) {
 	defer func() { runtime.GC() }()
 	w.Header().Set("Content-Type", "application/json")
@@ -9699,16 +8926,8 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	}
 
 	applicationConfig := &user_config.ApplicationConfig{
-		UserID:                    request.AccountInfo.UserID,
-		Device:                    device,
-		UseDarkTheme:              false,
-		GoogleMapAPIKey:           "",
-		RykvImageListColumnNumber: 3,
-		RykvHotReload:             false,
-		MiDefaultBoard:            "Inbox",
-		RykvDefaultPeriod:         json.Number("-1"),
-		MiDefaultPeriod:           json.Number("-1"),
-		IsShowShareFooter:         false,
+		UserID: request.AccountInfo.UserID,
+		Device: device,
 	}
 	_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
 	if err != nil {
@@ -10224,170 +9443,6 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 	})
 }
 
-func (g *GkillServerAPI) HandleGetKFTLTemplate(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
-	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.GetKFTLTemplatesRequest{}
-	response := &req_res.GetKFTLTemplateResponse{}
-
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get kftl template response to json: %w", err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetKFTLTemplateResponseDataError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KFTL_TEMPLATE_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		err = fmt.Errorf("error at parse get kftl template request to json: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidGetKFTLTemplateRequestDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KFTL_TEMPLATE_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	kftlTemplates, err := g.GkillDAOManager.ConfigDAOs.KFTLTemplateDAO.GetKFTLTemplates(r.Context(), userID, device)
-	if err != nil {
-		err = fmt.Errorf("error at get kftlTemplates user id = %s device = %s: %w", userID, device, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKFTLTemplateError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_KFTL_TEMPLATE_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.KFTLTemplates = kftlTemplates
-	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.GetApplicationConfigSuccessMessage,
-		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_KFTL_TEMPLATE_MESSAGE"}),
-	})
-}
-
-func (g *GkillServerAPI) HandleGetGkillInfo(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
-	w.Header().Set("Content-Type", "application/json")
-	request := &req_res.GetGkillInfoRequest{}
-	response := &req_res.GetGkillInfoResponse{}
-
-	defer r.Body.Close()
-	defer func() {
-		err := json.NewEncoder(w).Encode(response)
-		if err != nil {
-			err = fmt.Errorf("error at parse get gkillInfo response to json: %w", err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.InvalidGetGkillInfoResponseDataError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GKILL_INFO_MESSAGE"}),
-			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
-	}()
-
-	err := json.NewDecoder(r.Body).Decode(request)
-	if err != nil {
-		err = fmt.Errorf("error at parse get gkillInfo request to json: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.InvalidGetGkillInfoRequestDataError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_GET_GKILL_INFO_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	// アカウントを取得
-	account, gkillError, err := g.getAccountFromSessionID(r.Context(), request.SessionID, request.LocaleName)
-	if err != nil {
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	userID := account.UserID
-	device, err := g.GetDevice()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	privateIP, err := privateIPv4s()
-	if err != nil {
-		gkill_log.Debug.Printf("%w", err)
-	}
-	globalIP, err := globalIP(context.Background())
-	if err != nil {
-		gkill_log.Debug.Printf("%w", err)
-	}
-	privateIPStr := ""
-	if len(privateIP) != 0 {
-		privateIPStr = privateIP[0].String()
-	}
-
-	version, err := GetVersion()
-	if err != nil {
-		err = fmt.Errorf("error at get device name: %w", err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetDeviceError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "INTERNAL_SERVER_ERROR_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	response.UserID = userID
-	response.Device = device
-	response.UserIsAdmin = account.IsAdmin
-	response.CacheClearCountLimit = gkill_options.CacheClearCountLimit
-	response.GlobalIP = globalIP.String()
-	response.PrivateIP = privateIPStr
-	response.Version = version.Version
-	response.BuildTime = version.BuildTime
-	response.CommitHash = version.CommitHash
-	response.Messages = append(response.Messages, &message.GkillMessage{
-		MessageCode: message.GetGkillInfoSuccessMessage,
-		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_GET_GKILL_INFO_MESSAGE"}),
-	})
-}
 func privateIPv4s() ([]net.IP, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
