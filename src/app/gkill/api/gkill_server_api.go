@@ -86,7 +86,6 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 	if err != nil {
 		err = fmt.Errorf("error at get all server configs: %w", err)
 		gkill_log.Debug.Println(err.Error())
-		return nil, err
 	}
 
 	if len(serverConfigs) == 0 {
