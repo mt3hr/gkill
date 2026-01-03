@@ -1,7 +1,6 @@
 import type { FindKyouQuery } from "@/classes/api/find_query/find-kyou-query";
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteAgregateTarget from "../dnote-agregate-target";
-import { i18n } from "@/i18n";
 import AverageInfo from "./average-info";
 import { format_duration } from "@/classes/format-date-time";
 

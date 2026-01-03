@@ -18,9 +18,8 @@
                     }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="() => logout(false)"
-                        v-long-press="() => logout(true)">{{
-                            i18n.global.t("LOGOUT_TITLE") }}</v-btn>
+                    <v-btn dark color="primary" @click="() => logout(false)" v-long-press="() => logout(true)">{{
+                        i18n.global.t("LOGOUT_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -165,10 +164,10 @@
                 </tr>
             </table>
             <a href="https://github.com/mt3hr/gkill" style="color:inherit;text-decoration:none;" target="_blank">
-                <p class="gkill_version_info">gkill v-{{ gkill_info.version }} ({{
-                    gkill_info.build_time.toLocaleString()
+                <p class="gkill_version_info">gkill v-{{ application_config.version }} ({{
+                    application_config.build_time.toLocaleString()
                     }})</p>
-                <p class="gkill_version_info">{{ gkill_info.commit_hash }}</p>
+                <p class="gkill_version_info">{{ application_config.commit_hash }}</p>
             </a>
         </v-card>
         <v-card-action>
@@ -185,39 +184,44 @@
                 </v-col>
             </v-row>
         </v-card-action>
-        <EditDeviceStructDialog :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
+        <EditDeviceStructDialog :application_config="cloned_application_config" :folder_name="''" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_update_device_struct_element="async () => emits('requested_reload_application_config')"
+            @requested_apply_device_struct="(...device_struct_element_data: any[]) => { cloned_application_config.device_struct = (device_struct_element_data[0] as DeviceStructElementData) }"
             ref="edit_device_struct_dialog" />
         <EditKFTLTemplateDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api"
+            :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_apply_kftl_template_struct="(...kftl_template_struct_element_data: any[]) => { cloned_application_config.kftl_template_struct = (kftl_template_struct_element_data[0] as KFTLTemplateElementData) }"
             @requested_reload_application_config="() => emits('requested_reload_application_config')"
             ref="edit_kftl_template_dialog" />
         <EditRepStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api"
+            :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_apply_rep_struct="(...rep_struct_element_data: any[]) => { cloned_application_config.rep_struct = (rep_struct_element_data[0] as RepStructElementData) }"
             @requested_reload_application_config="(...application_config: any) => emits('requested_reload_application_config')"
             ref="edit_rep_struct_dialog" />
         <EditRepTypeStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api"
+            :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_apply_rep_type_struct="(...rep_type_struct_element_data: any[]) => { cloned_application_config.rep_type_struct = (rep_type_struct_element_data[0] as RepTypeStructElementData) }"
             @requested_reload_application_config="(...application_config: any) => emits('requested_reload_application_config')"
             ref="edit_rep_type_struct_dialog" />
         <EditTagStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api"
+            :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_apply_tag_struct="(...tag_struct_element_data: any[]) => { cloned_application_config.tag_struct = (tag_struct_element_data[0] as TagStructElementData) }"
             @requested_reload_application_config="emits('requested_reload_application_config')"
             ref="edit_tag_struct_dialog" />
         <EditDnoteDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :application_config="application_config" :gkill_api="gkill_api"
+            :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_apply_dnote="(...dnote_data: any[]) => { cloned_application_config.dnote_json_data= (dnote_data[0]); }"
             @requested_reload_application_config="emits('requested_reload_application_config')"
             ref="edit_dnote_dialog" />
         <EditRyuuDialog v-model="cloned_application_config" :app_content_height="app_content_height"
@@ -225,14 +229,15 @@
             :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_apply_ryuu_struct="(...ryuu_data: any[]) => { cloned_application_config.ryuu_json_data = (ryuu_data[0]) }"
             @requested_reload_application_config="emits('requested_reload_application_config')"
             ref="edit_ryuu_dialog" />
-        <NewBoardNameDialog :application_config="application_config" :gkill_api="gkill_api"
+        <NewBoardNameDialog :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
             ref="new_board_name_dialog" />
-        <ServerConfigDialog :application_config="application_config" :gkill_api="gkill_api"
+        <ServerConfigDialog :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             ref="server_config_dialog" />
@@ -240,7 +245,7 @@
 </template>
 <script setup lang="ts">
 import { i18n } from '@/i18n'
-import { computed, nextTick, type Ref, ref, watch } from 'vue'
+import { computed, type Ref, ref, watch } from 'vue'
 
 import EditDeviceStructDialog from '../dialogs/edit-device-struct-dialog.vue'
 import EditKFTLTemplateDialog from '../dialogs/edit-kftl-template-struct-dialog.vue'
@@ -265,8 +270,11 @@ import delete_gkill_kyou_cache, { delete_gkill_config_cache } from '@/classes/de
 import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
-import { GetGkillInfoResponse } from '@/classes/api/req_res/get-gkill-info-response'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
+import type { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data'
+import type { RepStructElementData } from '@/classes/datas/config/rep-struct-element-data'
+import type { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data'
+import type { KFTLTemplateElementData } from '@/classes/datas/kftl-template-element-data'
 
 const theme = useTheme()
 
@@ -286,7 +294,6 @@ const pages = ref([
     { app_name: i18n.global.t('PLAING_TIMEIS_APP_NAME'), page_name: 'plaing' },
     { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
 ])
-const gkill_info = ref(new GetGkillInfoResponse())
 
 const props = defineProps<ApplicationConfigViewProps>()
 const emits = defineEmits<ApplicationConfigViewEmits>()
@@ -399,7 +406,14 @@ async function update_application_config(): Promise<void> {
     application_config.use_dark_theme = use_dark_theme.value
     application_config.is_show_share_footer = is_show_share_footer.value
     application_config.default_page = default_page.value
+    application_config.tag_struct = cloned_application_config.value.tag_struct
+    application_config.rep_struct = cloned_application_config.value.rep_struct
+    application_config.rep_type_struct = cloned_application_config.value.rep_type_struct
+    application_config.device_struct = cloned_application_config.value.device_struct
+    application_config.kftl_template_struct = cloned_application_config.value.kftl_template_struct
     application_config.ryuu_json_data = cloned_application_config.value.ryuu_json_data
+    application_config.dnote_json_data = cloned_application_config.value.dnote_json_data
+    application_config.mi_board_struct = cloned_application_config.value.mi_board_struct
 
     const req = new UpdateApplicationConfigRequest()
     req.application_config = application_config
@@ -559,7 +573,6 @@ javascript: (function () {
 })
 
 load_mi_board_names()
-nextTick(async () => gkill_info.value = await props.gkill_api.get_gkill_info(new GetGkillInfoRequest()))
 
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 </script>

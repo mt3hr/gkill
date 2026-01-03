@@ -61,7 +61,7 @@ import { Text } from '@/classes/datas/text'
 import KyouView from './kyou-view.vue'
 import { AddTextRequest } from '@/classes/api/req_res/add-text-request'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { GkillMessage } from '@/classes/api/gkill-message'
@@ -92,14 +92,6 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // テキスト情報を用意する
         const new_text = new Text()
         new_text.text = text_value.value
@@ -108,14 +100,14 @@ async function save(): Promise<void> {
         new_text.target_id = props.kyou.id
         new_text.related_time = new Date(Date.now())
         new_text.create_app = "gkill"
-        new_text.create_device = gkill_info_res.device
+        new_text.create_device = props.application_config.device
         new_text.create_time = new Date(Date.now())
-        new_text.create_user = gkill_info_res.user_id
+        new_text.create_user = props.application_config.user_id
         new_text.update_app = "gkill"
         new_text.update_app = "gkill"
-        new_text.update_device = gkill_info_res.device
+        new_text.update_device = props.application_config.device
         new_text.update_time = new Date(Date.now())
-        new_text.update_user = gkill_info_res.user_id
+        new_text.update_user = props.application_config.user_id
 
         // 追加リクエストを飛ばす
         await delete_gkill_kyou_cache(new_text.id)

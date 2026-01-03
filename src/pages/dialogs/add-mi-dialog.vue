@@ -22,7 +22,6 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import AddMiView from '../views/add-mi-view.vue'
 import type { AddMiDialogProps } from './add-mi-dialog-props'

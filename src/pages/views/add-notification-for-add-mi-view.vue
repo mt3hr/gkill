@@ -46,7 +46,7 @@ import { i18n } from '@/i18n'
 import { computed, type Ref, ref } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { Notification } from '@/classes/datas/notification'
 import moment from 'moment'
 import type { AddNotificationForAddMiViewProps } from './add-notification-for-add-mi-view-props'
@@ -89,14 +89,6 @@ async function get_notification(): Promise<Notification | null> {
         return null
     }
 
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return null
-    }
-
     // 通知情報を用意する
     const new_notification = new Notification()
     new_notification.notification_time = moment(notification_date_string.value + " " + notification_time_string.value).toDate()
@@ -106,14 +98,14 @@ async function get_notification(): Promise<Notification | null> {
     new_notification.target_id = props.kyou.id
     new_notification.related_time = new Date(Date.now())
     new_notification.create_app = "gkill"
-    new_notification.create_device = gkill_info_res.device
+    new_notification.create_device = props.application_config.device
     new_notification.create_time = new Date(Date.now())
-    new_notification.create_user = gkill_info_res.user_id
+    new_notification.create_user = props.application_config.user_id
     new_notification.update_app = "gkill"
     new_notification.update_app = "gkill"
-    new_notification.update_device = gkill_info_res.device
+    new_notification.update_device = props.application_config.device
     new_notification.update_time = new Date(Date.now())
-    new_notification.update_user = gkill_info_res.user_id
+    new_notification.update_user = props.application_config.user_id
     new_notification.related_time = new Date(Date.now())
     return new_notification
 }

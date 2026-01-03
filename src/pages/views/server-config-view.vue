@@ -162,7 +162,6 @@ import CreateAccountDialog from '../dialogs/create-account-dialog.vue'
 import ManageAccountDialog from '../dialogs/manage-account-dialog.vue'
 import type { ServerConfigViewEmits } from './server-config-view-emits'
 import type { ServerConfigViewProps } from './server-config-view-props'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GkillError } from '@/classes/api/gkill-error'
 import { UpdateServerConfigsRequest } from '@/classes/api/req_res/update-server-configs-request'
 import NewDeviceNameDialog from '../dialogs/new-device-name-dialog.vue'
@@ -276,18 +275,6 @@ function show_new_device_name_dialog(): void {
 async function update_server_config(): Promise<void> {
     is_loading.value = true
     update_enable_device()
-
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        is_loading.value = false
-        return
-    }
-    if (gkill_info_res.messages && gkill_info_res.messages.length !== 0) {
-        emits('received_messages', gkill_info_res.messages)
-    }
-
     const req = new UpdateServerConfigsRequest()
     req.server_configs = cloned_server_configs.value.concat()
 

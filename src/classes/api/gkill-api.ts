@@ -31,16 +31,12 @@ import type { GenerateTLSFileRequest } from "./req_res/generate-tls-file-request
 import type { GenerateTLSFileResponse } from "./req_res/generate-tls-file-response"
 import type { GetAllTagNamesRequest } from "./req_res/get-all-tag-names-request"
 import { GetAllTagNamesResponse } from "./req_res/get-all-tag-names-response"
-import type { GetApplicationConfigRequest } from "./req_res/get-application-config-request"
+import { GetApplicationConfigRequest } from "./req_res/get-application-config-request"
 import { GetApplicationConfigResponse } from "./req_res/get-application-config-response"
 import type { GetGitCommitLogRequest } from "./req_res/get-git-commit-log-request"
 import { GetGitCommitLogResponse } from "./req_res/get-git-commit-log-response"
-import { GetGkillInfoRequest } from "./req_res/get-gkill-info-request"
-import { GetGkillInfoResponse } from "./req_res/get-gkill-info-response"
 import type { GetGPSLogRequest } from "./req_res/get-gps-log-request"
 import { GetGPSLogResponse } from "./req_res/get-gps-log-response"
-import type { GetKFTLTemplatesRequest } from "./req_res/get-kftl-templates-request"
-import type { GetKFTLTemplatesResponse } from "./req_res/get-kftl-templates-response"
 import type { GetKmemoRequest } from "./req_res/get-kmemo-request"
 import { GetKmemoResponse } from "./req_res/get-kmemo-response"
 import type { GetKCRequest } from "./req_res/get-kc-request"
@@ -86,8 +82,6 @@ import type { UpdateAccountStatusRequest } from "./req_res/update-account-status
 import type { UpdateAccountStatusResponse } from "./req_res/update-account-status-response"
 import type { UpdateApplicationConfigRequest } from "./req_res/update-application-config-request"
 import type { UpdateApplicationConfigResponse } from "./req_res/update-application-config-response"
-import type { UpdateDeviceStructRequest } from "./req_res/update-device-struct-request"
-import type { UpdateDeviceStructResponse } from "./req_res/update-device-struct-response"
 import type { UpdateKmemoRequest } from "./req_res/update-kmemo-request"
 import type { UpdateKmemoResponse } from "./req_res/update-kmemo-response"
 import type { UpdateKCRequest } from "./req_res/update-kc-request"
@@ -100,18 +94,10 @@ import type { UpdateNlogRequest } from "./req_res/update-nlog-request"
 import type { UpdateNlogResponse } from "./req_res/update-nlog-response"
 import type { UpdateReKyouRequest } from "./req_res/update-re-kyou-request"
 import type { UpdateReKyouResponse } from "./req_res/update-re-kyou-response"
-import type { UpdateRepStructRequest } from "./req_res/update-rep-struct-request"
-import type { UpdateRepStructResponse } from "./req_res/update-rep-struct-response"
-import type { UpdateRepTypeStructRequest } from "./req_res/update-rep-type-struct-request"
-import type { UpdateRepTypeStructResponse } from "./req_res/update-rep-type-struct-response"
-import type { UpdateKFTLTemplateRequest } from "./req_res/update-kftl-template-request.ts"
-import type { UpdateKFTLTemplateResponse } from "./req_res/update-kftl-template-response.ts"
 import type { UpdateShareKyouListInfoRequest } from "./req_res/update-share-kyou-list-info-request"
 import { UpdateShareKyouListInfoResponse } from "./req_res/update-share-kyou-list-info-response"
 import type { UpdateTagRequest } from "./req_res/update-tag-request"
 import type { UpdateTagResponse } from "./req_res/update-tag-response"
-import type { UpdateTagStructRequest } from "./req_res/update-tag-struct-request"
-import type { UpdateTagStructResponse } from "./req_res/update-tag-struct-response"
 import type { UpdateTextRequest } from "./req_res/update-text-request"
 import type { UpdateTextResponse } from "./req_res/update-text-response"
 import type { UpdateTimeisRequest } from "./req_res/update-timeis-request"
@@ -172,8 +158,6 @@ import type { OpenDirectoryRequest } from "./req_res/open-directory-request"
 import type { OpenDirectoryResponse } from "./req_res/open-directory-response"
 import type { ReloadRepositoriesRequest } from "./req_res/reload-repositories-request"
 import type { ReloadRepositoriesResponse } from "./req_res/reload-repositories-response"
-import type { UpdateDnoteJSONDataRequest } from "./req_res/update-dnote-json-data-request"
-import type { UpdateDnoteJSONDataResponse } from "./req_res/update-dnote-json-data-response"
 import { GetShareKyouListInfosResponse } from "./req_res/get-share-kyou-list-infos-response"
 import { GetUpdatedDatasByTimeRequest } from "./req_res/get-updated-datas-by-time-request"
 import { GetUpdatedDatasByTimeResponse } from "./req_res/get-updated-datas-by-time-response"
@@ -183,6 +167,11 @@ import type { CommitTXResponse } from "./req_res/commit-tx-response"
 import type { DiscardTXRequest } from "./req_res/discard-tx-request"
 import type { DiscardTXResponse } from "./req_res/discard-tx-response"
 import { i18n } from "@/i18n"
+import { TagStructElementData } from "../datas/config/tag-struct-element-data"
+import { DeviceStructElementData } from "../datas/config/device-struct-element-data"
+import { RepStructElementData } from "../datas/config/rep-struct-element-data"
+import { RepTypeStructElementData } from "../datas/config/rep-type-struct-element-data"
+import { KFTLTemplateElementData } from "../datas/kftl-template-element-data"
 
 export class GkillAPI {
         // 画面以外から参照されるやつ
@@ -257,7 +246,6 @@ export class GkillAPI {
         upload_files_address: string
         upload_gpslog_files_address: string
         update_tag_struct_address: string
-        update_dnote_json_data_address: string
         update_rep_struct_address: string
         update_device_struct_address: string
         update_rep_type_struct_address: string
@@ -343,7 +331,6 @@ export class GkillAPI {
         upload_files_method: string
         upload_gpslog_files_method: string
         update_tag_struct_method: string
-        update_dnote_json_data_method: string
         update_rep_struct_method: string
         update_device_struct_method: string
         update_rep_type_struct_method: string
@@ -428,7 +415,6 @@ export class GkillAPI {
                 this.upload_gpslog_files_address = "/api/upload_gpslog_files"
                 this.update_application_config_address = "/api/update_application_config"
                 this.update_tag_struct_address = "/api/update_tag_struct"
-                this.update_dnote_json_data_address = "/api/update_dnote_json_data"
                 this.update_rep_struct_address = "/api/update_rep_struct"
                 this.update_device_struct_address = "/api/update_device_struct"
                 this.update_rep_type_struct_address = "/api/update_rep_type_struct"
@@ -513,7 +499,6 @@ export class GkillAPI {
                 this.upload_gpslog_files_method = "POST"
                 this.update_application_config_method = "POST"
                 this.update_tag_struct_method = "POST"
-                this.update_dnote_json_data_method = "POST"
                 this.update_rep_struct_method = "POST"
                 this.update_device_struct_method = "POST"
                 this.update_rep_type_struct_method = "POST"
@@ -1700,26 +1685,8 @@ export class GkillAPI {
                 const response = json as unknown as GetApplicationConfigResponse
                 this.check_auth(response)
 
-                const gkill_info_req = new GetGkillInfoRequest()
-                const gkill_info_res = await this.get_gkill_info(gkill_info_req)
-                if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-                        response.errors = response.errors.concat(gkill_info_res.errors)
-                        this.check_auth(response)
-                        return response
-                }
-                if (gkill_info_res.messages && gkill_info_res.messages.length !== 0) {
-                        // response.messages = response.messages.concat(gkill_info_res.messages)
-                }
-
                 const application_config = new ApplicationConfig()
-                application_config.tag_struct = response.application_config.tag_struct ? response.application_config.tag_struct : []
-                application_config.device_struct = response.application_config.device_struct ? response.application_config.device_struct : []
-                application_config.rep_struct = response.application_config.rep_struct ? response.application_config.rep_struct : []
-                application_config.rep_type_struct = response.application_config.rep_type_struct ? response.application_config.rep_type_struct : []
-                application_config.kftl_template_struct = response.application_config.kftl_template_struct ? response.application_config.kftl_template_struct : []
                 application_config.account_is_admin = response.application_config.account_is_admin
-                application_config.dnote_json_data = response.application_config.dnote_json_data
-                application_config.ryuu_json_data = response.application_config.ryuu_json_data
                 application_config.device = response.application_config.device
                 application_config.use_dark_theme = response.application_config.use_dark_theme
                 application_config.google_map_api_key = response.application_config.google_map_api_key
@@ -1735,6 +1702,51 @@ export class GkillAPI {
                 application_config.mi_default_period = response.application_config.mi_default_period
                 application_config.is_show_share_footer = response.application_config.is_show_share_footer
                 application_config.urlog_bookmarklet_session = response.application_config.urlog_bookmarklet_session
+
+                application_config.user_id = response.application_config.user_id
+                application_config.device = response.application_config.device
+                application_config.user_is_admin = response.application_config.user_is_admin
+                application_config.cache_clear_count_limit = response.application_config.cache_clear_count_limit
+                application_config.global_ip = response.application_config.global_ip
+                application_config.private_ip = response.application_config.private_ip
+                application_config.version = response.application_config.version
+                application_config.build_time = response.application_config.build_time
+                application_config.commit_hash = response.application_config.commit_hash
+
+                application_config.tag_struct = response.application_config.tag_struct ? response.application_config.tag_struct : new TagStructElementData()
+                application_config.device_struct = response.application_config.device_struct ? response.application_config.device_struct : new DeviceStructElementData()
+                application_config.rep_struct = response.application_config.rep_struct ? response.application_config.rep_struct : new RepStructElementData()
+                application_config.rep_type_struct = response.application_config.rep_type_struct ? response.application_config.rep_type_struct : new RepTypeStructElementData()
+                application_config.kftl_template_struct = response.application_config.kftl_template_struct ? response.application_config.kftl_template_struct : new KFTLTemplateElementData()
+                application_config.dnote_json_data = response.application_config.dnote_json_data
+                application_config.ryuu_json_data = response.application_config.ryuu_json_data
+
+                if (!application_config.tag_struct.children) {
+                        application_config.tag_struct.id = this.generate_uuid()
+                        application_config.tag_struct.children = []
+                        application_config.tag_struct.is_dir = true
+                }
+                if (!application_config.rep_struct.children) {
+                        application_config.rep_struct.id = this.generate_uuid()
+                        application_config.rep_struct.children = []
+                        application_config.rep_struct.is_dir = true
+                }
+                if (!application_config.rep_type_struct.children) {
+                        application_config.rep_type_struct.id = this.generate_uuid()
+                        application_config.rep_type_struct.children = []
+                        application_config.rep_type_struct.is_dir = true
+                }
+                if (!application_config.device_struct.children) {
+                        application_config.device_struct.id = this.generate_uuid()
+                        application_config.device_struct.children = []
+                        application_config.device_struct.is_dir = true
+                }
+                if (!application_config.kftl_template_struct.children) {
+                        application_config.kftl_template_struct.id = this.generate_uuid()
+                        application_config.kftl_template_struct.children = []
+                        application_config.kftl_template_struct.is_dir = true
+                }
+
                 response.application_config = application_config
                 await response.application_config.load_all()
                 this.check_auth(response)
@@ -1824,96 +1836,6 @@ export class GkillAPI {
                 })
                 const json = await res.json()
                 const response: UpdateApplicationConfigResponse = json
-                this.check_auth(response)
-                return response
-        }
-
-        async update_tag_struct(req: UpdateTagStructRequest): Promise<UpdateTagStructResponse> {
-                const res = await fetch(this.update_tag_struct_address, {
-                        'method': this.update_tag_struct_method,
-                        headers: {
-                                'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(req),
-                        signal: req.abort_controller?.signal,
-                })
-                const json = await res.json()
-                const response: UpdateTagStructResponse = json
-                this.check_auth(response)
-                return response
-        }
-
-        async update_rep_struct(req: UpdateRepStructRequest): Promise<UpdateRepStructResponse> {
-                const res = await fetch(this.update_rep_struct_address, {
-                        'method': this.update_rep_struct_method,
-                        headers: {
-                                'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(req),
-                        signal: req.abort_controller?.signal,
-                })
-                const json = await res.json()
-                const response: UpdateRepStructResponse = json
-                this.check_auth(response)
-                return response
-        }
-
-        async update_device_struct(req: UpdateDeviceStructRequest): Promise<UpdateDeviceStructResponse> {
-                const res = await fetch(this.update_device_struct_address, {
-                        'method': this.update_device_struct_method,
-                        headers: {
-                                'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(req),
-                        signal: req.abort_controller?.signal,
-                })
-                const json = await res.json()
-                const response: UpdateDeviceStructResponse = json
-                this.check_auth(response)
-                return response
-        }
-
-        async update_rep_type_struct(req: UpdateRepTypeStructRequest): Promise<UpdateRepTypeStructResponse> {
-                const res = await fetch(this.update_rep_type_struct_address, {
-                        'method': this.update_rep_type_struct_method,
-                        headers: {
-                                'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(req),
-                        signal: req.abort_controller?.signal,
-                })
-                const json = await res.json()
-                const response: UpdateRepTypeStructResponse = json
-                this.check_auth(response)
-                return response
-        }
-
-        async update_kftl_template(req: UpdateKFTLTemplateRequest): Promise<UpdateKFTLTemplateResponse> {
-                const res = await fetch(this.update_kftl_template_address, {
-                        'method': this.update_kftl_template_method,
-                        headers: {
-                                'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(req),
-                        signal: req.abort_controller?.signal,
-                })
-                const json = await res.json()
-                const response: UpdateKFTLTemplateResponse = json
-                this.check_auth(response)
-                return response
-        }
-
-        async update_dnote_json_data(req: UpdateDnoteJSONDataRequest): Promise<UpdateDnoteJSONDataResponse> {
-                const res = await fetch(this.update_dnote_json_data_address, {
-                        'method': this.update_dnote_json_data_method,
-                        headers: {
-                                'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(req),
-                        signal: req.abort_controller?.signal,
-                })
-                const json = await res.json()
-                const response: UpdateDnoteJSONDataResponse = json
                 this.check_auth(response)
                 return response
         }
@@ -2027,44 +1949,6 @@ export class GkillAPI {
                                 }
                         }
                         response.gps_logs[i] = gpslog
-                }
-                this.check_auth(response)
-                return response
-        }
-
-        async get_kftl_templates(req: GetKFTLTemplatesRequest): Promise<GetKFTLTemplatesResponse> {
-                const res = await fetch(this.get_kftl_template_address, {
-                        'method': this.get_kftl_template_method,
-                        headers: {
-                                'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(req),
-                        signal: req.abort_controller?.signal,
-                })
-                const json = await res.json()
-                const response: GetKFTLTemplatesResponse = json
-                this.check_auth(response)
-                return response
-        }
-
-        async get_gkill_info(req: GetGkillInfoRequest): Promise<GetGkillInfoResponse> {
-                const res = await fetch(this.get_gkill_info_address, {
-                        'method': this.get_gkill_info_method,
-                        headers: {
-                                'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(req),
-                        signal: req.abort_controller?.signal,
-                })
-                const json = await res.json()
-
-                const response: GetGkillInfoResponse = json
-                for (const key in json) {
-                        (response as any)[key] = (json as any)[key]
-                        // 時刻はDate型に変換
-                        if (key.endsWith("time") && (response as any)[key]) {
-                                (response as any)[key] = new Date((response as any)[key])
-                        }
                 }
                 this.check_auth(response)
                 return response
@@ -2912,8 +2796,7 @@ export class GkillAPI {
                         // 例外は無視する
                 }
 
-                const gkill_info_req = new GetGkillInfoRequest()
-                const gkill_info_res = await this.get_gkill_info(gkill_info_req)
+                const application_config_res = await this.get_application_config(new GetApplicationConfigRequest())
 
                 const last_cache_update_time = this.get_last_cache_update_time()
                 if (last_cache_update_time) {
@@ -2921,7 +2804,7 @@ export class GkillAPI {
                         req.last_updated_time = last_cache_update_time
                         const res = await this.get_updated_datas_by_time(req)
                         if (res.updated_ids) {
-                                if (res.updated_ids.length > gkill_info_res.cache_clear_count_limit) {
+                                if (res.updated_ids.length > application_config_res.application_config.cache_clear_count_limit) {
                                         await delete_gkill_kyou_cache(null)
                                 } else {
                                         for (let i = 0; i < res.updated_ids.length; i++) {
@@ -3341,26 +3224,6 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                 throw new Error("not implements")
         }
 
-        async update_tag_struct(_req: UpdateTagStructRequest): Promise<UpdateTagStructResponse> {
-                throw new Error("not implements")
-        }
-
-        async update_rep_struct(_req: UpdateRepStructRequest): Promise<UpdateRepStructResponse> {
-                throw new Error("not implements")
-        }
-
-        async update_device_struct(_req: UpdateDeviceStructRequest): Promise<UpdateDeviceStructResponse> {
-                throw new Error("not implements")
-        }
-
-        async update_rep_type_struct(_req: UpdateRepTypeStructRequest): Promise<UpdateRepTypeStructResponse> {
-                throw new Error("not implements")
-        }
-
-        async update_kftl_template(_req: UpdateKFTLTemplateRequest): Promise<UpdateKFTLTemplateResponse> {
-                throw new Error("not implements")
-        }
-
         async update_account_status(_req: UpdateAccountStatusRequest): Promise<UpdateAccountStatusResponse> {
                 throw new Error("not implements")
         }
@@ -3389,18 +3252,6 @@ export class GkillAPIForSharedKyou extends GkillAPI {
                                 res.gps_logs.push(gps_log)
                         }
                 }
-                return res
-        }
-
-        async get_kftl_templates(_req: GetKFTLTemplatesRequest): Promise<GetKFTLTemplatesResponse> {
-                throw new Error("not implements")
-        }
-
-        async get_gkill_info(_req: GetGkillInfoRequest): Promise<GetGkillInfoResponse> {
-                const res = new GetGkillInfoResponse()
-                res.device = "readonly"
-                res.user_id = "guest"
-                res.user_is_admin = false
                 return res
         }
 

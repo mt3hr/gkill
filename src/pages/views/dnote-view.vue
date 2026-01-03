@@ -123,7 +123,6 @@ import AddDnoteListDialog from '../../pages/dialogs/add-dnote-list-dialog.vue';
 import AddDnoteItemDialog from '../../pages/dialogs/add-dnote-item-dialog.vue';
 import { type DnoteEmits } from '@/pages/views/dnote-emits';
 import regist_dictionary, { build_dnote_aggregate_target_from_json, build_dnote_key_getter_from_json, build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary';
-import { UpdateDnoteJSONDataRequest } from '@/classes/api/req_res/update-dnote-json-data-request';
 import moment from 'moment';
 import { saveAs } from '@/classes/save-as';
 import type { Kyou } from '../../classes/datas/kyou';
@@ -317,17 +316,9 @@ function floatingActionButtonStyle() {
 }
 
 async function apply(): Promise<void> {
-    const req = new UpdateDnoteJSONDataRequest()
-    req.dnote_json_data = to_json()
-    const res = await props.gkill_api.update_dnote_json_data(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits('requested_close_dialog')
+    const dnote_json_data = to_json()
+    emits('requested_apply_dnote', dnote_json_data)
+    nextTick(() => emits('requested_close_dialog'))
 }
 
 // 進捗表示のためかか共通からコピー

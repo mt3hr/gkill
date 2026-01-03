@@ -73,13 +73,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -91,13 +91,14 @@ import type { EditURLogViewProps } from './edit-ur-log-view-props'
 import { URLog } from '@/classes/datas/ur-log'
 import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import type { KyouViewEmits } from './kyou-view-emits'
 import { AddURLogRequest } from '@/classes/api/req_res/add-ur-log-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 
 const is_requested_submit = ref(false)
 
@@ -161,14 +162,6 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 更新後URLog情報を用意する
         const new_urlog = await urlog.value.clone()
         new_urlog.id = props.gkill_api.generate_uuid()
@@ -176,13 +169,13 @@ async function save(): Promise<void> {
         new_urlog.url = url.value
         new_urlog.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         new_urlog.create_app = "gkill"
-        new_urlog.create_device = gkill_info_res.device
+        new_urlog.create_device = props.application_config.device
         new_urlog.create_time = new Date(Date.now())
-        new_urlog.create_user = gkill_info_res.user_id
+        new_urlog.create_user = props.application_config.user_id
         new_urlog.update_app = "gkill"
-        new_urlog.update_device = gkill_info_res.device
+        new_urlog.update_device = props.application_config.device
         new_urlog.update_time = new Date(Date.now())
-        new_urlog.update_user = gkill_info_res.user_id
+        new_urlog.update_user = props.application_config.user_id
 
         // 追加リクエストを飛ばす
         await delete_gkill_kyou_cache(new_urlog.id)

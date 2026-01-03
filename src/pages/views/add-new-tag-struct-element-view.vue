@@ -13,7 +13,8 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t('CANCEL_TITLE') }}</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
+                        i18n.global.t('CANCEL_TITLE') }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -54,6 +55,7 @@ function emits_tag_name(): void {
     tag_struct_element.indeterminate = false
     tag_struct_element.key = tag_name.value
     tag_struct_element.tag_name = tag_name.value
+    tag_struct_element.name = tag_name.value
     emits('requested_add_tag_struct_element', tag_struct_element)
     emits('requested_close_dialog')
 }

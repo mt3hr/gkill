@@ -10,19 +10,17 @@
 </template>
 
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import { defineProps } from 'vue'
 import type { ApplicationConfigDialogProps } from './application-config-dialog-props'
 import type { ApplicationConfigDialogEmits } from './application-config-dialog-emits'
 import ApplicationConfigView from '../views/application-config-view.vue'
-import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const application_config_view = ref<InstanceType<typeof ApplicationConfigView> | null>(null);
 
-defineProps<ApplicationConfigDialogProps>()
+const _props = defineProps<ApplicationConfigDialogProps>()
 const emits = defineEmits<ApplicationConfigDialogEmits>()
 defineExpose({ show, hide })
 

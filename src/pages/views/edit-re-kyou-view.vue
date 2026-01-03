@@ -105,7 +105,7 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { Kyou } from '@/classes/datas/kyou'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import moment from 'moment'
 import { UpdateReKyouRequest } from '@/classes/api/req_res/update-re-kyou-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
@@ -184,21 +184,13 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 更新後ReKyou情報を用意する
         const updated_rekyou = rekyou.clone()
         updated_rekyou.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         updated_rekyou.update_app = "gkill"
-        updated_rekyou.update_device = gkill_info_res.device
+        updated_rekyou.update_device = props.application_config.device
         updated_rekyou.update_time = new Date(Date.now())
-        updated_rekyou.update_user = gkill_info_res.user_id
+        updated_rekyou.update_user = props.application_config.user_id
 
         // 更新リクエストを飛ばす
         await delete_gkill_kyou_cache(updated_rekyou.id)

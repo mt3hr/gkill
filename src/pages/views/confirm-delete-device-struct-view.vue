@@ -7,7 +7,9 @@
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary" @click="emits('requested_delete_device', device_struct.id)">{{ i18n.global.t("DELETE_TITLE") }}</v-btn>
+                <v-btn dark color="primary" v-if="device_struct && device_struct.id"
+                    @click="emits('requested_delete_device', device_struct.id)">{{
+                        i18n.global.t("DELETE_TITLE") }}</v-btn>
             </v-col>
         </v-row>
     </v-card>

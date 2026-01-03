@@ -12,8 +12,9 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                    }}</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
+                        i18n.global.t("CANCEL_TITLE")
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -52,6 +53,7 @@ function emits_rep_type_name(): void {
     rep_type_struct_element.indeterminate = false
     rep_type_struct_element.key = rep_type_name.value
     rep_type_struct_element.rep_type_name = rep_type_name.value
+    rep_type_struct_element.name = rep_type_name.value
     emits('requested_add_rep_type_struct_element', rep_type_struct_element)
     emits('requested_close_dialog')
 }
