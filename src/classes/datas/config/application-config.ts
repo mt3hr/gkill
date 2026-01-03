@@ -1,24 +1,16 @@
 'use strict'
 
 import { GkillError } from '@/classes/api/gkill-error'
-import { DeviceStruct } from './device-struct'
-import { RepStruct } from './rep-struct'
-import { RepTypeStruct } from './rep-type-struct'
-import { TagStruct } from './tag-struct'
 import { TagStructElementData } from './tag-struct-element-data'
 import { RepStructElementData } from './rep-struct-element-data'
 import { DeviceStructElementData } from './device-struct-element-data'
 import { RepTypeStructElementData } from './rep-type-struct-element-data'
 import { KFTLTemplateElementData } from '../kftl-template-element-data'
-import type { KFTLTemplateStruct } from './kftl-template-struct'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetAllRepNamesRequest } from '@/classes/api/req_res/get-all-rep-names-request'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
 import { MiBoardStructElementData } from './mi-board-struct-element-data'
-import { MiBoardStruct } from './mi-board-struct'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
-import { generate_rep_type_map } from './rep-type-map'
 
 export class ApplicationConfig {
     is_loaded: boolean
@@ -34,42 +26,29 @@ export class ApplicationConfig {
     account_is_admin: boolean
     dnote_json_data: any
     ryuu_json_data: any
+
+    user_is_admin: boolean
+    cache_clear_count_limit: number
+    global_ip: string
+    private_ip: string
+    version: string
+    build_time: Date
+    commit_hash: string
+
     is_show_share_footer: boolean
     default_page: string
-    parsed_kftl_template: KFTLTemplateElementData
-    parsed_tag_struct: TagStructElementData
-    parsed_rep_struct: RepStructElementData
-    parsed_device_struct: DeviceStructElementData
-    parsed_rep_type_struct: RepTypeStructElementData
-    parsed_mi_boad_struct: MiBoardStructElementData
-    tag_struct: Array<TagStruct>
-    rep_struct: Array<RepStruct>
-    device_struct: Array<DeviceStruct>
-    rep_type_struct: Array<RepTypeStruct>
-    kftl_template_struct: Array<KFTLTemplateStruct>
-    mi_board_struct: Array<MiBoardStruct>
+    kftl_template_struct: KFTLTemplateElementData
+    tag_struct: TagStructElementData
+    rep_struct: RepStructElementData
+    device_struct: DeviceStructElementData
+    rep_type_struct: RepTypeStructElementData
+    mi_board_struct: MiBoardStructElementData
     show_tags_in_list: boolean
     session_is_local: boolean
     urlog_bookmarklet_session: string
 
     for_share_kyou: boolean
 
-    async parse_template_and_struct(): Promise<Array<GkillError>> {
-        const awaitPromises = new Array<Promise<any>>()
-        awaitPromises.push(this.parse_tag_struct())
-        awaitPromises.push(this.parse_rep_struct())
-        awaitPromises.push(this.parse_device_struct())
-        awaitPromises.push(this.parse_rep_type_struct())
-        awaitPromises.push(this.parse_kftl_template_struct())
-        awaitPromises.push(this.parse_mi_board_struct())
-        return Promise.all(awaitPromises).then((errors_list) => {
-            const errors = new Array<GkillError>()
-            errors_list.forEach(e => {
-                errors.push(...e)
-            })
-            return errors
-        })
-    }
     clone(): ApplicationConfig {
         const application_config = new ApplicationConfig()
         application_config.is_loaded = this.is_loaded
@@ -80,15 +59,15 @@ export class ApplicationConfig {
         application_config.rykv_image_list_column_number = this.rykv_image_list_column_number
         application_config.rykv_hot_reload = this.rykv_hot_reload
         application_config.mi_default_board = this.mi_default_board
-        application_config.tag_struct = (JSON.parse(JSON.stringify(this.tag_struct)) as Array<TagStruct>)
-        application_config.rep_struct = (JSON.parse(JSON.stringify(this.rep_struct)) as Array<RepStruct>)
-        application_config.device_struct = (JSON.parse(JSON.stringify(this.device_struct)) as Array<DeviceStruct>)
-        application_config.rep_type_struct = (JSON.parse(JSON.stringify(this.rep_type_struct)) as Array<RepTypeStruct>)
+        application_config.tag_struct = (JSON.parse(JSON.stringify(this.tag_struct)) as TagStructElementData)
+        application_config.rep_struct = (JSON.parse(JSON.stringify(this.rep_struct)) as RepStructElementData)
+        application_config.device_struct = (JSON.parse(JSON.stringify(this.device_struct)) as DeviceStructElementData)
+        application_config.rep_type_struct = (JSON.parse(JSON.stringify(this.rep_type_struct)) as RepTypeStructElementData)
         application_config.kftl_template_struct = this.kftl_template_struct
-        application_config.account_is_admin = this.account_is_admin
+        application_config.mi_board_struct = this.mi_board_struct
         application_config.dnote_json_data = this.dnote_json_data
         application_config.ryuu_json_data = this.ryuu_json_data
-        application_config.mi_board_struct = this.mi_board_struct
+        application_config.account_is_admin = this.account_is_admin
         application_config.session_is_local = this.session_is_local
         application_config.urlog_bookmarklet_session = this.urlog_bookmarklet_session
         application_config.for_share_kyou = this.for_share_kyou
@@ -97,12 +76,16 @@ export class ApplicationConfig {
         application_config.is_show_share_footer = this.is_show_share_footer
         application_config.show_tags_in_list = this.show_tags_in_list
         application_config.default_page = this.default_page
-        application_config.parsed_tag_struct = JSON.parse(JSON.stringify(this.parsed_tag_struct))
-        application_config.parsed_rep_struct = JSON.parse(JSON.stringify(this.parsed_rep_struct))
-        application_config.parsed_rep_type_struct = JSON.parse(JSON.stringify(this.parsed_rep_type_struct))
-        application_config.parsed_device_struct = JSON.parse(JSON.stringify(this.parsed_device_struct))
-        application_config.parsed_kftl_template = JSON.parse(JSON.stringify(this.parsed_kftl_template))
-        application_config.parsed_mi_boad_struct = this.parsed_mi_boad_struct
+
+        application_config.user_id = this.user_id
+        application_config.device = this.device
+        application_config.user_is_admin = this.user_is_admin
+        application_config.cache_clear_count_limit = this.cache_clear_count_limit
+        application_config.global_ip = this.global_ip
+        application_config.private_ip = this.private_ip
+        application_config.version = this.version
+        application_config.build_time = this.build_time
+        application_config.commit_hash = this.commit_hash
         return application_config
     }
     async append_not_found_infos(): Promise<Array<GkillError>> {
@@ -119,8 +102,7 @@ export class ApplicationConfig {
     }
     async load_all(): Promise<Array<GkillError>> {
         const errors = Array<GkillError>()
-        errors.concat(await this.append_not_found_infos())
-        errors.concat(await this.parse_template_and_struct())
+        errors.push(...await this.append_not_found_infos())
         return errors
     }
     async append_not_found_reps(): Promise<Array<GkillError>> {
@@ -130,21 +112,25 @@ export class ApplicationConfig {
         if (res.errors && res.errors.length !== 0) {
             return res.errors
         }
-
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            return gkill_info_res.errors
-        }
-
         const not_found = new Set<string>()
+
         res.rep_names.forEach(rep_name => {
             let exist = false
-            this.rep_struct.forEach(rep => {
-                if (rep.rep_name === rep_name) {
+            let rep_name_walk = (_rep: RepStructElementData): void => { }
+            rep_name_walk = (rep: RepStructElementData): void => {
+                const rep_children = rep.children
+                if (rep_name === rep.rep_name) {
                     exist = true
                 }
-            })
+                if (rep_children) {
+                    rep_children.forEach(child_rep => {
+                        if (child_rep) {
+                            rep_name_walk(child_rep)
+                        }
+                    })
+                }
+            }
+            rep_name_walk(this.rep_struct)
             if (!exist) {
                 not_found.add(rep_name)
             }
@@ -152,18 +138,22 @@ export class ApplicationConfig {
 
         let i = 0
         not_found.forEach(rep_name => {
-            const rep_struct = new RepStruct()
+            const rep_struct = new RepStructElementData()
+            rep_struct.key = rep_name
+            rep_struct.name = rep_name
             rep_struct.check_when_inited = true
-            rep_struct.device = gkill_info_res.device
+            rep_struct.is_checked = rep_struct.check_when_inited
             rep_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             rep_struct.ignore_check_rep_rykv = false
             rep_struct.parent_folder_id = null
             rep_struct.rep_name = rep_name
             rep_struct.seq = 1000 + i++
-            rep_struct.user_id = gkill_info_res.user_id
             rep_struct.is_dir = false
             rep_struct.is_open_default = false
-            this.rep_struct.push(rep_struct)
+            if (!this.rep_struct.children) {
+                this.rep_struct.children = []
+            }
+            this.rep_struct.children.push(rep_struct)
         })
         return new Array<GkillError>()
     }
@@ -175,39 +165,44 @@ export class ApplicationConfig {
             return res.errors
         }
 
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            return gkill_info_res.errors
-        }
-
         const not_found = new Set<string>()
         res.tag_names.forEach(tag_name => {
             let exist = false
-            this.tag_struct.forEach(tag => {
-                if (tag.tag_name === tag_name) {
+            let tag_name_walk = (_tag: TagStructElementData): void => { }
+            tag_name_walk = (tag: TagStructElementData): void => {
+                const tag_children = tag.children
+                if (tag_name === tag.tag_name) {
                     exist = true
                 }
-            })
+                if (tag_children) {
+                    tag_children.forEach(child_tag => {
+                        if (child_tag) {
+                            tag_name_walk(child_tag)
+                        }
+                    })
+                }
+            }
+            tag_name_walk(this.tag_struct)
             if (!exist) {
                 not_found.add(tag_name)
             }
         })
 
-        let i = 0
         not_found.forEach(tag_name => {
-            const tag_struct = new TagStruct()
+            const tag_struct = new TagStructElementData()
+            tag_struct.key = tag_name
+            tag_struct.name = tag_name
             tag_struct.check_when_inited = true
-            tag_struct.device = gkill_info_res.device
+            tag_struct.is_checked = tag_struct.check_when_inited
             tag_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             tag_struct.is_force_hide = false
-            tag_struct.parent_folder_id = null
             tag_struct.tag_name = tag_name
-            tag_struct.seq = 1000 + i++
-            tag_struct.user_id = gkill_info_res.user_id
             tag_struct.is_dir = false
             tag_struct.is_open_default = false
-            this.tag_struct.push(tag_struct)
+            if (!this.tag_struct.children) {
+                this.tag_struct.children = []
+            }
+            this.tag_struct.children.push(tag_struct)
         })
         return new Array<GkillError>()
     }
@@ -220,66 +215,70 @@ export class ApplicationConfig {
             return res.errors
         }
 
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            return gkill_info_res.errors
-        }
-
         const not_found = new Set<string>()
-        res.boards.forEach(board => {
+        res.boards.forEach(board_name => {
             let exist = false
-            this.mi_board_struct.forEach(mi_board => {
-                if (mi_board.board_name === board) {
+            let board_name_walk = (_board_name: MiBoardStructElementData): void => { }
+            board_name_walk = (board: MiBoardStructElementData): void => {
+                const board_children = board.children
+                if (board_name === board.board_name) {
                     exist = true
                 }
-            })
+                if (board_children) {
+                    board_children.forEach(child_board => {
+                        if (child_board) {
+                            board_name_walk(child_board)
+                        }
+                    })
+                }
+            }
+            board_name_walk(this.mi_board_struct)
             if (!exist) {
-                not_found.add(board)
+                not_found.add(board_name)
             }
         })
 
         let i = 0
         not_found.forEach(board_name => {
-            const board_struct = new MiBoardStruct()
+            const board_struct = new MiBoardStructElementData()
+            board_struct.key = board_name
+            board_struct.name = board_name
             board_struct.check_when_inited = true
-            board_struct.device = gkill_info_res.device
+            board_struct.is_checked = board_struct.check_when_inited
             board_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             board_struct.parent_folder_id = null
             board_struct.board_name = board_name
             board_struct.seq = 1000 + i++
-            board_struct.user_id = gkill_info_res.user_id
-            this.mi_board_struct.push(board_struct)
+            if (!this.mi_board_struct.children) {
+                this.mi_board_struct.children = []
+            }
+            this.mi_board_struct.children.push(board_struct)
         })
         return new Array<GkillError>()
     }
 
     async append_no_devices(): Promise<Array<GkillError>> {
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            return gkill_info_res.errors
-        }
-
         let exist = false
-        this.device_struct.forEach(device => {
+        this.device_struct.children?.forEach(device => {
             if (device.device_name === "なし") {
                 exist = true
             }
         })
 
         if (!exist) {
-            const device_struct = new DeviceStruct()
+            const device_struct = new DeviceStructElementData()
+            device_struct.key = "なし"
+            device_struct.name = "なし"
             device_struct.check_when_inited = true
-            device_struct.device = gkill_info_res.device
+            device_struct.is_checked = device_struct.check_when_inited
             device_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             device_struct.device_name = "なし"
-            device_struct.parent_folder_id = null
-            device_struct.seq = -1000
-            device_struct.user_id = gkill_info_res.user_id
             device_struct.is_dir = false
             device_struct.is_open_default = false
-            this.device_struct.push(device_struct)
+            if (!this.device_struct.children) {
+                this.device_struct.children = []
+            }
+            this.device_struct.children.push(device_struct)
         }
         return new Array<GkillError>()
     }
@@ -292,39 +291,47 @@ export class ApplicationConfig {
             return res.errors
         }
 
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            return gkill_info_res.errors
-        }
-
         const not_found = new Set<string>()
         res.rep_names.forEach(rep_name => {
-            let exist = false
             const device_name = this.get_device_from_rep_name(rep_name)
-            this.device_struct.forEach(device => {
-                if (device.device_name === device_name) {
+            let exist = false
+            let rep_name_walk = (_rep: RepStructElementData): void => { }
+            rep_name_walk = (rep: RepStructElementData): void => {
+                const rep_children = rep.children
+                if (device_name === this.get_device_from_rep_name(rep.rep_name)) {
                     exist = true
                 }
-            })
-            if (!exist && device_name) {
-                not_found.add(device_name)
+                if (rep_children) {
+                    rep_children.forEach(child_rep => {
+                        if (child_rep) {
+                            rep_name_walk(child_rep)
+                        }
+                    })
+                }
+            }
+            rep_name_walk(this.rep_struct)
+            if (!exist) {
+                const device_name = this.get_device_from_rep_name(rep_name)
+                if (device_name) {
+                    not_found.add(device_name)
+                }
             }
         })
 
-        let i = 0
         not_found.forEach(device_name => {
-            const device_struct = new DeviceStruct()
+            const device_struct = new DeviceStructElementData()
+            device_struct.key = device_name
+            device_struct.name = device_name
             device_struct.check_when_inited = true
-            device_struct.device = gkill_info_res.device
+            device_struct.is_checked = device_struct.check_when_inited
             device_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             device_struct.device_name = device_name
-            device_struct.parent_folder_id = null
-            device_struct.seq = 1000 + i++
-            device_struct.user_id = gkill_info_res.user_id
             device_struct.is_dir = false
             device_struct.is_open_default = false
-            this.device_struct.push(device_struct)
+            if (!this.device_struct.children) {
+                this.device_struct.children = []
+            }
+            this.device_struct.children.push(device_struct)
         })
         return new Array<GkillError>()
     }
@@ -336,639 +343,93 @@ export class ApplicationConfig {
             return res.errors
         }
 
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
-        if (res.errors && res.errors.length !== 0) {
-            return gkill_info_res.errors
-        }
-
         const not_found = new Set<string>()
         res.rep_names.forEach(rep_name => {
-            let exist = false
             const rep_type_name = this.get_rep_type_from_rep_name(rep_name)
-            this.rep_type_struct.forEach(rep_type => {
-                if (rep_type.rep_type_name === rep_type_name) {
+            let exist = false
+            let rep_type_name_walk = (_rep_type: RepTypeStructElementData): void => { }
+            rep_type_name_walk = (rep_type: RepTypeStructElementData): void => {
+                const rep_children = rep_type.children
+                if (rep_type_name === rep_type.rep_type_name) {
                     exist = true
                 }
-            })
-            if (!exist && rep_type_name) {
-                not_found.add(rep_type_name)
+                if (rep_children) {
+                    rep_children.forEach(child_rep => {
+                        if (child_rep) {
+                            rep_type_name_walk(child_rep)
+                        }
+                    })
+                }
+            }
+            rep_type_name_walk(this.rep_type_struct)
+            if (!exist) {
+                if (rep_type_name) {
+                    not_found.add(rep_type_name)
+                }
             }
         })
 
-        let i = 0
         not_found.forEach(rep_type => {
-            const rep_type_struct = new RepTypeStruct()
+            const rep_type_struct = new RepTypeStructElementData()
+            rep_type_struct.key = rep_type
+            rep_type_struct.name = rep_type
             rep_type_struct.check_when_inited = true
-            rep_type_struct.device = gkill_info_res.device
+            rep_type_struct.is_checked = rep_type_struct.check_when_inited
             rep_type_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             rep_type_struct.rep_type_name = rep_type
-            rep_type_struct.parent_folder_id = null
-            rep_type_struct.seq = 1000 + i++
-            rep_type_struct.user_id = gkill_info_res.user_id
             rep_type_struct.is_dir = false
             rep_type_struct.is_open_default = false
-            this.rep_type_struct.push(rep_type_struct)
+            if (!this.rep_type_struct.children) {
+                this.rep_type_struct.children = []
+            }
+            this.rep_type_struct.children.push(rep_type_struct)
         })
-        return new Array<GkillError>()
-    }
-    async parse_kftl_template_struct(): Promise<Array<GkillError>> {
-        const added_list = new Array<KFTLTemplateStruct>()
-        const not_added_list: Array<KFTLTemplateStruct> = this.kftl_template_struct.concat()
-        const struct = new KFTLTemplateElementData()
-        struct.children = new Array<KFTLTemplateElementData>()
-
-        // 親を持たないものをルートに追加する
-        for (let i = 0; i < not_added_list.length; i++) {
-            const item = not_added_list[i]
-            if (!item.parent_folder_id || item.parent_folder_id === "") {
-                const struct_element = new KFTLTemplateElementData()
-                struct_element.id = item.id
-                struct_element.title = item.title
-                struct_element.name = item.title
-                struct_element.key = item.title
-                struct_element.is_dir = item.is_dir
-                struct_element.is_open_default = item.is_open_default
-                if (item.template) {
-                    struct_element.template = item.template
-                }
-
-                struct.children.push(struct_element)
-                added_list.push(item)
-                not_added_list.splice(i, 1)
-                i--;
-            }
-        }
-        // 再帰呼び出し用
-        let walk = (_struct: KFTLTemplateElementData, _target_id: string | null): KFTLTemplateElementData | null => {
-            throw new Error('Not implemented')
-        }
-        // structを潜ってIDが一致するものを取得する
-        walk = (struct: KFTLTemplateElementData, target_id: string | null): KFTLTemplateElementData | null => {
-            if (struct.id === target_id) {
-                return struct
-            }
-            if (!struct.children) {
-                return null
-            }
-            let target: KFTLTemplateElementData | null = null
-            for (let i = 0; i < struct.children.length; i++) {
-                const child = struct.children[i]
-                target = walk(child, target_id)
-                if (target) {
-                    break
-                }
-            }
-            return target
-        }
-        while (not_added_list.length !== 0) {
-            for (let i = 0; i < not_added_list.length; i++) {
-                const item = not_added_list[i]
-                const parent_struct = walk(struct, item.parent_folder_id)
-                if (parent_struct) {
-                    const struct_element = new KFTLTemplateElementData()
-                    struct_element.id = item.id
-                    struct_element.name = item.title
-                    struct_element.title = item.title
-                    struct_element.key = item.title
-                    struct_element.is_dir = item.is_dir
-                    struct_element.is_open_default = item.is_open_default
-                    if (item.template) {
-                        struct_element.template = item.template
-                    }
-
-                    if (!parent_struct.children) {
-                        parent_struct.children = new Array<KFTLTemplateElementData>()
-                    }
-                    parent_struct.children.push(struct_element)
-                    added_list.push(item)
-                    not_added_list.splice(i, 1)
-                    i--;
-                }
-            }
-        }
-        this.parsed_kftl_template = struct
-        return new Array<GkillError>()
-    }
-    async parse_tag_struct(): Promise<Array<GkillError>> {
-        const added_list = new Array<TagStruct>()
-        const not_added_list: Array<TagStruct> = this.tag_struct.concat()
-        const struct = new TagStructElementData()
-        struct.children = new Array<TagStructElementData>()
-
-        // 親を持たないものをルートに追加する
-        for (let i = 0; i < not_added_list.length; i++) {
-            const item = not_added_list[i]
-            if (!item.parent_folder_id || item.parent_folder_id === "") {
-                const struct_element = new TagStructElementData()
-                struct_element.seq_in_parent = item.seq.valueOf()
-                struct_element.check_when_inited = item.check_when_inited
-                struct_element.id = item.id
-                struct_element.indeterminate = false
-                struct_element.is_checked = item.check_when_inited
-                struct_element.is_force_hide = item.is_force_hide
-                struct_element.name = item.tag_name
-                struct_element.key = item.tag_name
-                struct_element.tag_name = item.tag_name
-                struct_element.is_dir = item.is_dir
-                struct_element.is_open_default = item.is_open_default
-
-                struct.children.push(struct_element)
-                added_list.push(item)
-                not_added_list.splice(i, 1)
-                i--;
-            }
-        }
-        // 再帰呼び出し用
-        let walk = (_struct: TagStructElementData, _target_id: string | null): TagStructElementData | null => {
-            throw new Error('Not implemented')
-        }
-        // structを潜ってIDが一致するものを取得する
-        walk = (struct: TagStructElementData, target_id: string | null): TagStructElementData | null => {
-            if (struct.id === target_id) {
-                return struct
-            }
-            if (!struct.children) {
-                return null
-            }
-            let target: TagStructElementData | null = null
-            for (let i = 0; i < struct.children.length; i++) {
-                const child = struct.children[i]
-                target = walk(child, target_id)
-                if (target) {
-                    break
-                }
-            }
-            return target
-        }
-        while (not_added_list.length !== 0) {
-            for (let i = 0; i < not_added_list.length; i++) {
-                const item = not_added_list[i]
-                const parent_struct = walk(struct, item.parent_folder_id)
-                if (parent_struct) {
-                    const struct_element = new TagStructElementData()
-                    struct_element.seq_in_parent = item.seq.valueOf()
-                    struct_element.check_when_inited = item.check_when_inited
-                    struct_element.id = item.id
-                    struct_element.indeterminate = false
-                    struct_element.is_checked = item.check_when_inited
-                    struct_element.is_force_hide = item.is_force_hide
-                    struct_element.name = item.tag_name
-                    struct_element.key = item.tag_name
-                    struct_element.tag_name = item.tag_name
-                    struct_element.is_dir = item.is_dir
-                    struct_element.is_open_default = item.is_open_default
-
-                    if (!parent_struct.children) {
-                        parent_struct.children = new Array<TagStructElementData>()
-                    }
-                    parent_struct.children.push(struct_element)
-                    added_list.push(item)
-                    not_added_list.splice(i, 1)
-                    i--;
-                }
-            }
-        }
-        let sort = (_struct: TagStructElementData): void => { }
-        sort = (struct: TagStructElementData): void => {
-            if (struct.children) {
-                struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
-                for (let i = 0; i < struct.children.length; i++) {
-                    sort(struct.children[i])
-                }
-            }
-        }
-        sort(struct)
-        this.parsed_tag_struct = struct
-        return new Array<GkillError>()
-    }
-    async parse_rep_struct(): Promise<Array<GkillError>> {
-        const added_list = new Array<RepStruct>()
-        const not_added_list: Array<RepStruct> = this.rep_struct.concat()
-        const struct = new RepStructElementData()
-        struct.children = new Array<RepStructElementData>()
-
-        // 親を持たないものをルートに追加する
-        for (let i = 0; i < not_added_list.length; i++) {
-            const item = not_added_list[i]
-            if (!item.parent_folder_id || item.parent_folder_id === "") {
-                const struct_element = new RepStructElementData()
-                struct_element.seq_in_parent = item.seq.valueOf()
-                struct_element.check_when_inited = item.check_when_inited
-                struct_element.id = item.id
-                struct_element.indeterminate = false
-                struct_element.is_checked = item.check_when_inited
-                struct_element.ignore_check_rep_rykv = item.ignore_check_rep_rykv
-                struct_element.name = item.rep_name
-                struct_element.key = item.rep_name
-                struct_element.rep_name = item.rep_name
-                struct_element.is_dir = item.is_dir
-                struct_element.is_open_default = item.is_open_default
-
-                struct.children.push(struct_element)
-                added_list.push(item)
-                not_added_list.splice(i, 1)
-                i--;
-            }
-        }
-        // 再帰呼び出し用
-        let walk = (_struct: RepStructElementData, _target_id: string | null): RepStructElementData | null => {
-            throw new Error('Not implemented')
-        }
-        // structを潜ってIDが一致するものを取得する
-        walk = (struct: RepStructElementData, target_id: string | null): RepStructElementData | null => {
-            if (struct.id === target_id) {
-                return struct
-            }
-            if (!struct.children) {
-                return null
-            }
-            let target: RepStructElementData | null = null
-            for (let i = 0; i < struct.children.length; i++) {
-                const child = struct.children[i]
-                target = walk(child, target_id)
-                if (target) {
-                    break
-                }
-            }
-            return target
-        }
-        while (not_added_list.length !== 0) {
-            for (let i = 0; i < not_added_list.length; i++) {
-                const item = not_added_list[i]
-                const parent_struct = walk(struct, item.parent_folder_id)
-                if (parent_struct) {
-                    const struct_element = new RepStructElementData()
-                    struct_element.seq_in_parent = item.seq.valueOf()
-                    struct_element.check_when_inited = item.check_when_inited
-                    struct_element.id = item.id
-                    struct_element.indeterminate = false
-                    struct_element.is_checked = item.check_when_inited
-                    struct_element.ignore_check_rep_rykv = item.ignore_check_rep_rykv
-                    struct_element.name = item.rep_name
-                    struct_element.key = item.rep_name
-                    struct_element.rep_name = item.rep_name
-                    struct_element.is_dir = item.is_dir
-                    struct_element.is_open_default = item.is_open_default
-
-                    if (!parent_struct.children) {
-                        parent_struct.children = new Array<RepStructElementData>()
-                    }
-                    parent_struct.children.push(struct_element)
-                    added_list.push(item)
-                    not_added_list.splice(i, 1)
-                    i--;
-                }
-            }
-        }
-        let sort = (_struct: RepStructElementData): void => { }
-        sort = (struct: RepStructElementData): void => {
-            if (struct.children) {
-                struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
-                for (let i = 0; i < struct.children.length; i++) {
-                    sort(struct.children[i])
-                }
-            }
-        }
-        sort(struct)
-        this.parsed_rep_struct = struct
-        return new Array<GkillError>()
-    }
-    async parse_device_struct(): Promise<Array<GkillError>> {
-        const added_list = new Array<DeviceStruct>()
-        const not_added_list: Array<DeviceStruct> = this.device_struct.concat()
-        const struct = new DeviceStructElementData()
-        struct.children = new Array<DeviceStructElementData>()
-
-        // 親を持たないものをルートに追加する
-        for (let i = 0; i < not_added_list.length; i++) {
-            const item = not_added_list[i]
-            if (!item.parent_folder_id || item.parent_folder_id === "") {
-                const struct_element = new DeviceStructElementData()
-                struct_element.seq_in_parent = item.seq.valueOf()
-                struct_element.check_when_inited = item.check_when_inited
-                struct_element.id = item.id
-                struct_element.indeterminate = false
-                struct_element.is_checked = item.check_when_inited
-                struct_element.name = item.device_name
-                struct_element.key = item.device_name
-                struct_element.device_name = item.device_name
-                struct_element.is_dir = item.is_dir
-                struct_element.is_open_default = item.is_open_default
-
-                struct.children.push(struct_element)
-                added_list.push(item)
-                not_added_list.splice(i, 1)
-                i--;
-            }
-        }
-        // 再帰呼び出し用
-        let walk = (_struct: DeviceStructElementData, _target_id: string | null): DeviceStructElementData | null => {
-            throw new Error('Not implemented')
-        }
-        // structを潜ってIDが一致するものを取得する
-        walk = (struct: DeviceStructElementData, target_id: string | null): DeviceStructElementData | null => {
-            if (struct.id === target_id) {
-                return struct
-            }
-            if (!struct.children) {
-                return null
-            }
-            let target: DeviceStructElementData | null = null
-            for (let i = 0; i < struct.children.length; i++) {
-                const child = struct.children[i]
-                target = walk(child, target_id)
-                if (target) {
-                    break
-                }
-            }
-            return target
-        }
-        while (not_added_list.length !== 0) {
-            for (let i = 0; i < not_added_list.length; i++) {
-                const item = not_added_list[i]
-                const parent_struct = walk(struct, item.parent_folder_id)
-                if (parent_struct) {
-                    const struct_element = new DeviceStructElementData()
-                    struct_element.seq_in_parent = item.seq.valueOf()
-                    struct_element.check_when_inited = item.check_when_inited
-                    struct_element.id = item.id
-                    struct_element.indeterminate = false
-                    struct_element.is_checked = item.check_when_inited
-                    struct_element.name = item.device_name
-                    struct_element.key = item.device_name
-                    struct_element.device_name = item.device_name
-                    struct_element.is_dir = item.is_dir
-                    struct_element.is_open_default = item.is_open_default
-
-                    if (!parent_struct.children) {
-                        parent_struct.children = new Array<DeviceStructElementData>()
-                    }
-                    parent_struct.children.push(struct_element)
-                    added_list.push(item)
-                    not_added_list.splice(i, 1)
-                    i--;
-                }
-            }
-        }
-        let sort = (_struct: DeviceStructElementData): void => { }
-        sort = (struct: DeviceStructElementData): void => {
-            if (struct.children) {
-                struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
-                for (let i = 0; i < struct.children.length; i++) {
-                    sort(struct.children[i])
-                }
-            }
-        }
-        sort(struct)
-        this.parsed_device_struct = struct
-        return new Array<GkillError>()
-    }
-    async parse_rep_type_struct(): Promise<Array<GkillError>> {
-        const added_list = new Array<RepTypeStruct>()
-        const not_added_list: Array<RepTypeStruct> = this.rep_type_struct.concat()
-        const struct = new RepTypeStructElementData()
-        struct.children = new Array<RepTypeStructElementData>()
-
-        // 親を持たないものをルートに追加する
-        for (let i = 0; i < not_added_list.length; i++) {
-            const item = not_added_list[i]
-            if (!item.parent_folder_id || item.parent_folder_id === "") {
-                const struct_element = new RepTypeStructElementData()
-                struct_element.seq_in_parent = item.seq.valueOf()
-                struct_element.check_when_inited = item.check_when_inited
-                struct_element.id = item.id
-                struct_element.indeterminate = false
-                struct_element.is_checked = item.check_when_inited
-                struct_element.name = item.rep_type_name
-                struct_element.key = item.rep_type_name
-                struct_element.rep_type_name = item.rep_type_name
-                struct_element.is_dir = item.is_dir
-                struct_element.is_open_default = item.is_open_default
-
-                // 訳
-                const rep_type_name_in_locale = (await generate_rep_type_map()).get(item.rep_type_name)
-                if (rep_type_name_in_locale && "" !== rep_type_name_in_locale) {
-                    struct_element.name = rep_type_name_in_locale
-                }
-
-                struct.children.push(struct_element)
-                added_list.push(item)
-                not_added_list.splice(i, 1)
-                i--;
-            }
-        }
-        // 再帰呼び出し用
-        let walk = (_struct: RepTypeStructElementData, _target_id: string | null): RepTypeStructElementData | null => {
-            throw new Error('Not implemented')
-        }
-        // structを潜ってIDが一致するものを取得する
-        walk = (struct: RepTypeStructElementData, target_id: string | null): RepTypeStructElementData | null => {
-            if (struct.id === target_id) {
-                return struct
-            }
-            if (!struct.children) {
-                return null
-            }
-            let target: RepTypeStructElementData | null = null
-            for (let i = 0; i < struct.children.length; i++) {
-                const child = struct.children[i]
-                target = walk(child, target_id)
-                if (target) {
-                    break
-                }
-            }
-            return target
-        }
-        while (not_added_list.length !== 0) {
-            for (let i = 0; i < not_added_list.length; i++) {
-                const item = not_added_list[i]
-                const parent_struct = walk(struct, item.parent_folder_id)
-                if (parent_struct) {
-                    const struct_element = new RepTypeStructElementData()
-                    struct_element.seq_in_parent = item.seq.valueOf()
-                    struct_element.check_when_inited = item.check_when_inited
-                    struct_element.id = item.id
-                    struct_element.indeterminate = false
-                    struct_element.is_checked = item.check_when_inited
-                    struct_element.name = item.rep_type_name
-                    struct_element.key = item.rep_type_name
-                    struct_element.rep_type_name = item.rep_type_name
-                    struct_element.is_dir = item.is_dir
-                    struct_element.is_open_default = item.is_open_default
-
-                    // 訳
-                    const rep_type_name_in_locale = (await generate_rep_type_map()).get(item.rep_type_name)
-                    if (rep_type_name_in_locale && "" !== rep_type_name_in_locale) {
-                        struct_element.name = rep_type_name_in_locale
-                    }
-
-                    if (!parent_struct.children) {
-                        parent_struct.children = new Array<RepTypeStructElementData>()
-                    }
-                    parent_struct.children.push(struct_element)
-                    added_list.push(item)
-                    not_added_list.splice(i, 1)
-                    i--;
-                }
-            }
-        }
-        let sort = (_struct: RepTypeStructElementData): void => { }
-        sort = (struct: RepTypeStructElementData): void => {
-            if (struct.children) {
-                struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
-                for (let i = 0; i < struct.children.length; i++) {
-                    sort(struct.children[i])
-                }
-            }
-        }
-        sort(struct)
-        this.parsed_rep_type_struct = struct
-        return new Array<GkillError>()
-
-    }
-
-    async parse_mi_board_struct(): Promise<Array<GkillError>> {
-        const added_list = new Array<MiBoardStruct>()
-        const not_added_list: Array<MiBoardStruct> = this.mi_board_struct.concat()
-        const struct = new MiBoardStructElementData()
-        struct.children = new Array<MiBoardStructElementData>()
-
-        // 親を持たないものをルートに追加する
-        for (let i = 0; i < not_added_list.length; i++) {
-            const item = not_added_list[i]
-            if (!item.parent_folder_id || item.parent_folder_id === "") {
-                const struct_element = new MiBoardStructElementData()
-                struct_element.seq_in_parent = item.seq.valueOf()
-                struct_element.check_when_inited = item.check_when_inited
-                struct_element.id = item.id
-                struct_element.indeterminate = false
-                struct_element.is_checked = item.check_when_inited
-                struct_element.name = item.board_name
-                struct_element.key = item.board_name
-
-                struct.children.push(struct_element)
-                added_list.push(item)
-                not_added_list.splice(i, 1)
-                i--;
-            }
-        }
-        // 再帰呼び出し用
-        let walk = (_struct: MiBoardStructElementData, _target_id: string | null): MiBoardStructElementData | null => {
-            throw new Error('Not implemented')
-        }
-        // structを潜ってIDが一致するものを取得する
-        walk = (struct: MiBoardStructElementData, target_id: string | null): MiBoardStructElementData | null => {
-            if (struct.id === target_id) {
-                return struct
-            }
-            if (!struct.children) {
-                return null
-            }
-            let target: MiBoardStructElementData | null = null
-            for (let i = 0; i < struct.children.length; i++) {
-                const child = struct.children[i]
-                target = walk(child, target_id)
-                if (target) {
-                    break
-                }
-            }
-            return target
-        }
-        while (not_added_list.length !== 0) {
-            for (let i = 0; i < not_added_list.length; i++) {
-                const item = not_added_list[i]
-                const parent_struct = walk(struct, item.parent_folder_id)
-                if (parent_struct) {
-                    const struct_element = new MiBoardStructElementData()
-                    struct_element.seq_in_parent = item.seq.valueOf()
-                    struct_element.check_when_inited = item.check_when_inited
-                    struct_element.id = item.id
-                    struct_element.indeterminate = false
-                    struct_element.is_checked = item.check_when_inited
-                    struct_element.name = item.board_name
-                    struct_element.key = item.board_name
-                    struct_element.board_name = item.board_name
-
-                    if (!parent_struct.children) {
-                        parent_struct.children = new Array<MiBoardStructElementData>()
-                    }
-                    parent_struct.children.push(struct_element)
-                    added_list.push(item)
-                    not_added_list.splice(i, 1)
-                    i--;
-                }
-            }
-        }
-        let sort = (_struct: MiBoardStructElementData): void => { }
-        sort = (struct: MiBoardStructElementData): void => {
-            if (struct.children) {
-                struct.children.sort((a, b): number => a.seq_in_parent - b.seq_in_parent)
-                for (let i = 0; i < struct.children.length; i++) {
-                    sort(struct.children[i])
-                }
-            }
-        }
-        sort(struct)
-        this.parsed_mi_boad_struct = struct
         return new Array<GkillError>()
     }
 
     async append_no_tags(): Promise<Array<GkillError>> {
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            return gkill_info_res.errors
-        }
-
         let exist = false
-        this.tag_struct.forEach(tag => {
+        this.tag_struct.children?.forEach(tag => {
             if (tag.tag_name === "no tags") {
                 exist = true
             }
         })
 
         if (!exist) {
-            const tag_struct = new TagStruct()
+            const tag_struct = new TagStructElementData()
+            tag_struct.key = "no tags"
+            tag_struct.name = "no tags"
             tag_struct.check_when_inited = true
-            tag_struct.device = gkill_info_res.device
+            tag_struct.is_checked = tag_struct.check_when_inited
             tag_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             tag_struct.is_force_hide = false
-            tag_struct.parent_folder_id = null
             tag_struct.tag_name = "no tags"
-            tag_struct.seq = -1000
-            tag_struct.user_id = gkill_info_res.user_id
             tag_struct.is_dir = false
             tag_struct.is_open_default = false
-            this.tag_struct.unshift(tag_struct)
+            this.tag_struct.children?.unshift(tag_struct)
         }
         return new Array<GkillError>()
     }
 
     async append_all_mi_board(): Promise<Array<GkillError>> {
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            return gkill_info_res.errors
-        }
-
         let exist = false
-        this.mi_board_struct.forEach(board => {
+        this.mi_board_struct.children?.forEach(board => {
             if (board.board_name === "すべて") {
                 exist = true
             }
         })
 
         if (!exist) {
-            const board_struct = new MiBoardStruct()
+            const board_struct = new MiBoardStructElementData()
+            board_struct.key = "すべて"
+            board_struct.name = "すべて"
             board_struct.check_when_inited = true
-            board_struct.device = gkill_info_res.device
+            board_struct.is_checked = board_struct.check_when_inited
             board_struct.id = GkillAPI.get_gkill_api().generate_uuid()
             board_struct.parent_folder_id = null
             board_struct.board_name = "すべて"
             board_struct.seq = -1000
-            board_struct.user_id = gkill_info_res.user_id
-            this.mi_board_struct.unshift(board_struct)
+            this.mi_board_struct.children?.unshift(board_struct)
         }
         return new Array<GkillError>()
     }
@@ -986,24 +447,27 @@ export class ApplicationConfig {
         this.account_is_admin = false
         this.rykv_default_period = -1
         this.mi_default_period = -1
-        this.parsed_kftl_template = new KFTLTemplateElementData()
-        this.parsed_tag_struct = new TagStructElementData()
-        this.parsed_rep_struct = new RepStructElementData()
-        this.parsed_device_struct = new DeviceStructElementData()
-        this.parsed_rep_type_struct = new RepTypeStructElementData()
-        this.tag_struct = new Array<TagStruct>()
-        this.rep_struct = new Array<RepStruct>()
-        this.device_struct = new Array<DeviceStruct>()
-        this.rep_type_struct = new Array<RepTypeStruct>()
-        this.kftl_template_struct = new Array<KFTLTemplateStruct>()
-        this.parsed_mi_boad_struct = new MiBoardStructElementData()
-        this.mi_board_struct = new Array<MiBoardStruct>()
+        this.kftl_template_struct = new KFTLTemplateElementData()
+        this.tag_struct = new TagStructElementData()
+        this.rep_struct = new RepStructElementData()
+        this.device_struct = new DeviceStructElementData()
+        this.rep_type_struct = new RepTypeStructElementData()
+        this.mi_board_struct = new MiBoardStructElementData()
         this.session_is_local = false
         this.urlog_bookmarklet_session = ""
         this.for_share_kyou = false
         this.is_show_share_footer = false
         this.show_tags_in_list = true
         this.default_page = "rykv"
+        this.user_id = ""
+        this.device = ""
+        this.user_is_admin = false
+        this.cache_clear_count_limit = 1001
+        this.global_ip = ""
+        this.private_ip = ""
+        this.version = ""
+        this.build_time = new Date(0)
+        this.commit_hash = ""
     }
 
 

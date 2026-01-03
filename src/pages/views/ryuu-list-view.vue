@@ -169,8 +169,10 @@ function add_related_kyou_query(related_kyou_query: RelatedKyouQuery): void {
 
 async function apply(): Promise<void> {
     if (model_value.value) {
-        model_value.value.ryuu_json_data = to_json(related_kyou_queries.value)
-        emits('requested_close_dialog')
+        const ryuu_json_data = to_json(related_kyou_queries.value)
+        model_value.value.ryuu_json_data = ryuu_json_data
+        emits('requested_apply_ryuu_struct', ryuu_json_data)
+        nextTick(() => emits('requested_close_dialog'))
     }
 }
 

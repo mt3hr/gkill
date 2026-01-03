@@ -6,6 +6,9 @@ import { MiSortType } from "./mi-sort-type"
 import type { RepStructElementData } from "@/classes/datas/config/rep-struct-element-data"
 import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
 import moment from "moment"
+import type { DeviceStructElementData } from "@/classes/datas/config/device-struct-element-data"
+import type { RepTypeStructElementData } from "@/classes/datas/config/rep-type-struct-element-data"
+import type { TagStructElementData } from "@/classes/datas/config/tag-struct-element-data"
 
 export class FindKyouQuery {
     query_id: string
@@ -27,6 +30,7 @@ export class FindKyouQuery {
     timeis_tags: Array<string>
     timeis_tags_and: boolean
     tags: Array<string>
+    hide_tags: Array<string>
     tags_and: boolean
     use_map: boolean
     map_latitude: Number
@@ -85,6 +89,7 @@ export class FindKyouQuery {
         cloned.timeis_tags = json.timeis_tags.concat()
         cloned.timeis_tags_and = json.timeis_tags_and
         cloned.tags = json.tags.concat()
+        cloned.hide_tags = json.hide_tags.concat()
         cloned.tags_and = json.tags_and
         cloned.use_map = json.use_map
         cloned.map_latitude = json.map_latitude
@@ -140,6 +145,7 @@ export class FindKyouQuery {
         cloned.timeis_tags = this.timeis_tags.concat()
         cloned.timeis_tags_and = this.timeis_tags_and
         cloned.tags = this.tags.concat()
+        cloned.hide_tags = this.hide_tags.concat()
         cloned.tags_and = this.tags_and
         cloned.use_map = this.use_map
         cloned.map_latitude = this.map_latitude
@@ -194,6 +200,7 @@ export class FindKyouQuery {
         this.timeis_tags = new Array<string>()
         this.timeis_tags_and = false
         this.tags = new Array<string>()
+        this.hide_tags = new Array<string>()
         this.tags_and = false
         this.use_map = false
         this.map_latitude = 0
@@ -302,12 +309,62 @@ export class FindKyouQuery {
         // Calendar
 
         // RepのSummary, Detail
-        query.devices_in_sidebar = application_config.device_struct.filter(device => device.check_when_inited).map(device => device.device_name)
-        query.rep_types_in_sidebar = application_config.rep_type_struct.filter(rep_type => rep_type.check_when_inited).map(rep_type => rep_type.rep_type_name)
+        let device_name_walk = (_device: DeviceStructElementData): Array<string> => []
+        device_name_walk = (device: DeviceStructElementData): Array<string> => {
+            const device_names = new Array<string>()
+            const device_children = device.children
+            if (device_children) {
+                device_children.forEach(child_device => {
+                    if (child_device.check_when_inited) {
+                        device_names.push(child_device.device_name)
+                    }
+                    if (child_device.children) {
+                        device_names.push(...device_name_walk(child_device))
+                    }
+                })
+            }
+            return device_names
+        }
+        query.devices_in_sidebar = device_name_walk(application_config.device_struct)
+
+        let rep_type_name_walk = (_rep_type: RepTypeStructElementData): Array<string> => []
+        rep_type_name_walk = (rep_type: RepTypeStructElementData): Array<string> => {
+            const rep_type_names = new Array<string>()
+            const rep_type_children = rep_type.children
+            if (rep_type_children) {
+                rep_type_children.forEach(child_rep_type => {
+                    if (child_rep_type.check_when_inited) {
+                        rep_type_names.push(child_rep_type.rep_type_name)
+                    }
+                    if (child_rep_type.children) {
+                        rep_type_names.push(...rep_type_name_walk(child_rep_type))
+                    }
+                })
+            }
+            return rep_type_names
+        }
+        query.rep_types_in_sidebar = rep_type_name_walk(application_config.rep_type_struct)
         query.apply_rep_summary_to_detaul(application_config)
 
         // Tag
-        query.tags = application_config.tag_struct.filter(tag => tag.check_when_inited).map(tag => tag.tag_name)
+        let tag_name_walk = (_tag: TagStructElementData): Array<string> => []
+        tag_name_walk = (tag: TagStructElementData): Array<string> => {
+            const tag_names = new Array<string>()
+            const tag_children = tag.children
+            if (tag_children) {
+                tag_children.forEach(child_tag => {
+                    if (child_tag.check_when_inited) {
+                        tag_names.push(child_tag.tag_name)
+                    }
+                    if (child_tag.children) {
+                        tag_names.push(...tag_name_walk(child_tag))
+                    }
+                })
+            }
+            return tag_names
+        }
+        query.tags = tag_name_walk(application_config.tag_struct)
+        query.timeis_tags = tag_name_walk(application_config.tag_struct)
 
         // Calendar
         if (application_config.rykv_default_period !== -1) {
@@ -315,6 +372,8 @@ export class FindKyouQuery {
             query.calendar_start_date = moment(moment().add(-application_config.rykv_default_period, "days").format("YYYY-MM-DD 00:00:00 ZZ")).toDate()
             query.calendar_end_date = moment(moment().format("YYYY-MM-DD 00:00:00 ZZ")).add(1, "days").add(-1, "milliseconds").toDate()
         }
+
+        query.apply_hide_tags(application_config)
 
         return query
     }
@@ -329,15 +388,47 @@ export class FindKyouQuery {
         // Calendar
 
         // RepはQuery時点では全部入れる。（サーバサイドでMiのRepのみに絞る考慮が入っている）
-        query.reps = application_config.rep_struct.map(rep => rep.rep_name)
+        let rep_name_walk = (_rep: RepStructElementData): Array<string> => []
+        rep_name_walk = (rep: RepStructElementData): Array<string> => {
+            const rep_names = new Array<string>()
+            const rep_children = rep.children
+            if (rep_children) {
+                rep_children.forEach(child_rep => {
+                    rep_names.push(child_rep.rep_name)
+                    if (child_rep.children) {
+                        rep_names.push(...rep_name_walk(child_rep))
+                    }
+                })
+            }
+            return rep_names
+        }
+        query.reps = rep_name_walk(application_config.rep_struct)
 
         // Tag
-        query.tags = application_config.tag_struct.filter(tag => tag.check_when_inited).map(tag => tag.tag_name)
+        let tag_name_walk = (_tag: TagStructElementData): Array<string> => []
+        tag_name_walk = (tag: TagStructElementData): Array<string> => {
+            const tag_names = new Array<string>()
+            const tag_children = tag.children
+            if (tag_children) {
+                tag_children.forEach(child_tag => {
+                    if (child_tag.check_when_inited) {
+                        tag_names.push(child_tag.tag_name)
+                    }
+                    if (child_tag.children) {
+                        tag_names.push(...tag_name_walk(child_tag))
+                    }
+                })
+            }
+            return tag_names
+        }
+        query.tags = tag_name_walk(application_config.tag_struct)
 
         // Calendarはない。
 
         // Mi
         query.for_mi = true
+
+        query.apply_hide_tags(application_config)
 
         return query
     }
@@ -345,9 +436,9 @@ export class FindKyouQuery {
     // この検索条件に対して、RepのSummaryをDetailに適用する
     // rep_types, devicesから、repsを算出する
     apply_rep_summary_to_detaul(application_config: ApplicationConfig): void {
-        const reps = application_config.parsed_rep_struct.children
-        const rep_types = application_config.parsed_rep_type_struct.children
-        const devices = application_config.parsed_device_struct.children
+        const reps = application_config.rep_struct.children
+        const rep_types = application_config.rep_type_struct.children
+        const devices = application_config.device_struct.children
 
         if (!reps || !devices || !rep_types) {
             return
@@ -419,5 +510,23 @@ export class FindKyouQuery {
             time: spl[2]
         }
     }
+    apply_hide_tags(application_config: ApplicationConfig): void {
+        this.hide_tags.splice(0)
 
+        let tag_name_walk = (_tag: TagStructElementData): void => { }
+        tag_name_walk = (tag: TagStructElementData): void => {
+            const tag_children = tag.children
+            if (tag.is_force_hide) {
+                this.hide_tags.push(tag.tag_name)
+            }
+            if (tag_children) {
+                tag_children.forEach(child_tag => {
+                    if (child_tag.children) {
+                        tag_name_walk(child_tag)
+                    }
+                })
+            }
+        }
+        tag_name_walk(application_config.tag_struct)
+    }
 }

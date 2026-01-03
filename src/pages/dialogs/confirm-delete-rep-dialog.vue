@@ -10,7 +10,6 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { ConfirmDeleteRepDialogEmits } from './confirm-delete-rep-dialog-emits'
 import type { ConfirmDeleteRepDialogProps } from './confirm-delete-rep-dialog-props'

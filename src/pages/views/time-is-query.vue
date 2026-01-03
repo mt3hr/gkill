@@ -41,7 +41,7 @@
     </div>
     <table v-show="cloned_query.use_timeis && cloned_query.use_timeis_tags" class="taglist">
         <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
-            :is_open="true" :struct_obj="cloned_application_config.parsed_tag_struct" :is_editable="false"
+            :is_open="true" :struct_obj="cloned_application_config.tag_struct" :is_editable="false"
             :is_root="true" :is_show_checkbox="true" @clicked_items="clicked_items"
             @requested_update_check_state="update_check_state"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
@@ -93,12 +93,6 @@ watch(() => props.application_config, async () => {
         update_check(cloned_query.value.timeis_tags, CheckState.checked, true)
         return
     }
-    const tags = Array<string>()
-    cloned_application_config.value.tag_struct.forEach(tag => {
-        if (tag.check_when_inited) {
-            tags.push(tag.tag_name)
-        }
-    })
     if (!props.inited) {
         emits('inited')
     }
@@ -163,7 +157,7 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
             }
         }
         f = func
-        f(cloned_application_config.value.parsed_tag_struct)
+        f(cloned_application_config.value.tag_struct)
     }
 
     for (let i = 0; i < items.length; i++) {
@@ -193,7 +187,7 @@ async function update_check(items: Array<string>, is_checked: CheckState, pre_un
             }
         }
         f = func
-        f(cloned_application_config.value.parsed_tag_struct)
+        f(cloned_application_config.value.tag_struct)
     }
 
     const checked_items = foldable_struct.value?.get_selected_items()

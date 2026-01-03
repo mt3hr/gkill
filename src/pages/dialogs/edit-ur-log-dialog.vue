@@ -23,7 +23,6 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { EditURLogDialogProps } from './edit-ur-log-dialog-props'
 import type { KyouDialogEmits } from '../views/kyou-dialog-emits'

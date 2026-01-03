@@ -84,13 +84,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -102,10 +102,11 @@
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true" :show_attached_timeis="true"
                 :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
-                @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)" :show_update_time="false" :show_related_time="true"
-                @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                :show_update_time="false" :show_related_time="true"
+                @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-                @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"
+                @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
                 @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
                 @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
@@ -115,7 +116,7 @@
                 @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
                 @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
                 @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-                @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
@@ -128,7 +129,7 @@ import { computed, type Ref, ref, watch } from 'vue'
 import type { EditURLogViewProps } from './edit-ur-log-view-props'
 import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { UpdateURLogRequest } from '@/classes/api/req_res/update-ur-log-request'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
@@ -235,23 +236,15 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 更新後URLog情報を用意する
         const updated_urlog = await urlog.clone()
         updated_urlog.title = title.value
         updated_urlog.url = url.value
         updated_urlog.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         updated_urlog.update_app = "gkill"
-        updated_urlog.update_device = gkill_info_res.device
+        updated_urlog.update_device = props.application_config.device
         updated_urlog.update_time = new Date(Date.now())
-        updated_urlog.update_user = gkill_info_res.user_id
+        updated_urlog.update_user = props.application_config.user_id
 
         // 再取得の場合、URLとタイトル以外をブランクにする
         if (re_get_urlog_content.value) {

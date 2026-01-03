@@ -107,18 +107,6 @@ type GkillServerAPIAddress struct {
 
 	UpdateApplicationConfigAddress string
 
-	UpdateTagStructAddress string
-
-	UpdateDnoteJSONDataAddress string
-
-	UpdateRepStructAddress string
-
-	UpdateDeviceStructAddress string
-
-	UpdateRepTypeStructAddress string
-
-	UpdateKFTLTemplateAddress string
-
 	UpdateAccountStatusAddress string
 
 	UpdateUserRepsAddress string
@@ -273,18 +261,6 @@ type GkillServerAPIAddress struct {
 
 	UpdateApplicationConfigMethod string
 
-	UpdateTagStructMethod string
-
-	UpdateDnoteJSONDataMethod string
-
-	UpdateRepStructMethod string
-
-	UpdateDeviceStructMethod string
-
-	UpdateRepTypeStructMethod string
-
-	UpdateKFTLTemplateStructMethod string
-
 	UpdateAccountStatusMethod string
 
 	UpdateUserRepsMethod string
@@ -388,12 +364,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UploadFilesAddress = "/api/upload_files"
 	gkillAPIAddress.UploadGPSLogFilesAddress = "/api/upload_gpslog_files"
 	gkillAPIAddress.UpdateApplicationConfigAddress = "/api/update_application_config"
-	gkillAPIAddress.UpdateTagStructAddress = "/api/update_tag_struct"
-	gkillAPIAddress.UpdateDnoteJSONDataAddress = "/api/update_dnote_json_data"
-	gkillAPIAddress.UpdateRepStructAddress = "/api/update_rep_struct"
-	gkillAPIAddress.UpdateDeviceStructAddress = "/api/update_device_struct"
-	gkillAPIAddress.UpdateRepTypeStructAddress = "/api/update_rep_type_struct"
-	gkillAPIAddress.UpdateKFTLTemplateAddress = "/api/update_kftl_template"
 	gkillAPIAddress.UpdateAccountStatusAddress = "/api/update_account_status"
 	gkillAPIAddress.UpdateUserRepsAddress = "/api/update_user_reps"
 	gkillAPIAddress.UpdateServerConfigsAddress = "/api/update_server_configs"
@@ -471,12 +441,6 @@ func NewGKillAPIAddress() *GkillServerAPIAddress {
 	gkillAPIAddress.UploadFilesMethod = "POST"
 	gkillAPIAddress.UploadGPSLogFilesMethod = "POST"
 	gkillAPIAddress.UpdateApplicationConfigMethod = "POST"
-	gkillAPIAddress.UpdateTagStructMethod = "POST"
-	gkillAPIAddress.UpdateDnoteJSONDataMethod = "POST"
-	gkillAPIAddress.UpdateRepStructMethod = "POST"
-	gkillAPIAddress.UpdateDeviceStructMethod = "POST"
-	gkillAPIAddress.UpdateRepTypeStructMethod = "POST"
-	gkillAPIAddress.UpdateKFTLTemplateStructMethod = "POST"
 	gkillAPIAddress.UpdateAccountStatusMethod = "POST"
 	gkillAPIAddress.UpdateUserRepsMethod = "POST"
 	gkillAPIAddress.UpdateServerConfigsMethod = "POST"

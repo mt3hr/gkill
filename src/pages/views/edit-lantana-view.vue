@@ -112,7 +112,7 @@ import type { EditLantanaViewProps } from './edit-lantana-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { UpdateLantanaRequest } from '@/classes/api/req_res/update-lantana-request'
 import moment from 'moment'
 import LantanaFlowersView from './lantana-flowers-view.vue'
@@ -197,22 +197,14 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 更新後Lantana情報を用意する
         const updated_lantana = await lantana.clone()
         updated_lantana.mood = await edit_lantana_flowers.value!.get_mood()
         updated_lantana.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         updated_lantana.update_app = "gkill"
-        updated_lantana.update_device = gkill_info_res.device
+        updated_lantana.update_device = props.application_config.device
         updated_lantana.update_time = new Date(Date.now())
-        updated_lantana.update_user = gkill_info_res.user_id
+        updated_lantana.update_user = props.application_config.user_id
 
         // 更新リクエストを飛ばす
         await delete_gkill_kyou_cache(updated_lantana.id)

@@ -81,7 +81,7 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import { KC } from '@/classes/datas/kc'
 import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { AddKCRequest } from '@/classes/api/req_res/add-kc-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
@@ -171,14 +171,6 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 更新後KC情報を用意する
         const new_kc = new KC()
         new_kc.id = props.gkill_api.generate_uuid()
@@ -186,13 +178,13 @@ async function save(): Promise<void> {
         new_kc.num_value = num_value.value
         new_kc.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         new_kc.create_app = "gkill"
-        new_kc.create_device = gkill_info_res.device
+        new_kc.create_device = props.application_config.device
         new_kc.create_time = new Date(Date.now())
-        new_kc.create_user = gkill_info_res.user_id
+        new_kc.create_user = props.application_config.user_id
         new_kc.update_app = "gkill"
-        new_kc.update_device = gkill_info_res.device
+        new_kc.update_device = props.application_config.device
         new_kc.update_time = new Date(Date.now())
-        new_kc.update_user = gkill_info_res.user_id
+        new_kc.update_user = props.application_config.user_id
 
         // 追加リクエストを飛ばす
         await delete_gkill_kyou_cache(new_kc.id)

@@ -8,7 +8,6 @@
 </template>
 
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { ref, type Ref } from 'vue'
 import AddRyuuItemView from '../views/add-ryuu-item-view.vue';
 import type AddRyuuItemDialogProps from './add-ryuu-item-dialog-props';

@@ -23,7 +23,6 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import EndTimeIsPlaingView from '../views/end-time-is-plaing-view.vue'
 import type { EndTimeIsPlaingDialogProps } from './end-time-is-plaing-dialog-props'

@@ -57,6 +57,7 @@ function emits_kftl_template_name(): void {
     kftl_template_struct_element.id = props.gkill_api.generate_uuid()
     kftl_template_struct_element.key = title.value
     kftl_template_struct_element.title = title.value
+    kftl_template_struct_element.name= title.value
     kftl_template_struct_element.template = template.value
     emits('requested_add_kftl_template_struct_element', kftl_template_struct_element)
     emits('requested_close_dialog')

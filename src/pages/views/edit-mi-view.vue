@@ -189,13 +189,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
@@ -207,9 +207,10 @@
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_readonly_mi_check="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true" :show_attached_timeis="true"
                 :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
-                @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)" :show_update_time="false"
-                :show_related_time="true" @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-                @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"
+                @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+                :show_update_time="false" :show_related_time="true"
+                @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
+                @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
                 @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
                 @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
                 @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
@@ -219,15 +220,15 @@
                 @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
                 @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
                 @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-                @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)" />
         </v-card>
         <NewBoardNameDialog v-if="kyou.typed_mi" :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
             ref="new_board_name_dialog" />
     </v-card>
@@ -242,7 +243,7 @@ import NewBoardNameDialog from '../dialogs/new-board-name-dialog.vue'
 import moment from 'moment'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import type { Kyou } from '@/classes/datas/kyou'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
@@ -478,14 +479,6 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 更新後Mi情報を用意する
         let estimate_start_time: Date | null = null
         let estimate_end_time: Date | null = null
@@ -506,9 +499,9 @@ async function save(): Promise<void> {
         updated_mi.estimate_end_time = estimate_end_time
         updated_mi.limit_time = limit_time
         updated_mi.update_app = "gkill"
-        updated_mi.update_device = gkill_info_res.device
+        updated_mi.update_device = props.application_config.device
         updated_mi.update_time = new Date(Date.now())
-        updated_mi.update_user = gkill_info_res.user_id
+        updated_mi.update_user = props.application_config.user_id
 
         // 更新リクエストを飛ばす
         await delete_gkill_kyou_cache(updated_mi.id)

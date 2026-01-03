@@ -57,7 +57,7 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { ReKyou } from '@/classes/datas/re-kyou'
 import { AddReKyouRequest } from '@/classes/api/req_res/add-re-kyou-request'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
@@ -72,14 +72,6 @@ const emits = defineEmits<KyouViewEmits>()
 const show_kyou: Ref<boolean> = ref(true)
 
 async function rekyou(): Promise<void> {
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
     // rekyou情報を用意する
     const new_rekyou = new ReKyou()
     new_rekyou.id = props.gkill_api.generate_uuid()
@@ -87,13 +79,13 @@ async function rekyou(): Promise<void> {
     new_rekyou.target_id = props.kyou.id
     new_rekyou.related_time = new Date(Date.now())
     new_rekyou.create_app = "gkill"
-    new_rekyou.create_device = gkill_info_res.device
+    new_rekyou.create_device = props.application_config.device
     new_rekyou.create_time = new Date(Date.now())
-    new_rekyou.create_user = gkill_info_res.user_id
+    new_rekyou.create_user = props.application_config.user_id
     new_rekyou.update_app = "gkill"
-    new_rekyou.update_device = gkill_info_res.device
+    new_rekyou.update_device = props.application_config.device
     new_rekyou.update_time = new Date(Date.now())
-    new_rekyou.update_user = gkill_info_res.user_id
+    new_rekyou.update_user = props.application_config.user_id
 
     // 追加リクエストを飛ばす
     await delete_gkill_kyou_cache(new_rekyou.id)

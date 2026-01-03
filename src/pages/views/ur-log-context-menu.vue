@@ -190,7 +190,6 @@ import { OpenDirectoryRequest } from '@/classes/api/req_res/open-directory-reque
 import { OpenFileRequest } from '@/classes/api/req_res/open-file-request'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { AddTagRequest } from '@/classes/api/req_res/add-tag-request'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { Tag } from '@/classes/datas/tag';
 import type { Text } from '@/classes/datas/text';
@@ -285,13 +284,6 @@ async function open_file(): Promise<void> {
 
 async function add_last_added_tag(): Promise<void> {
     // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
     const tag_names = props.gkill_api.get_saved_last_added_tag().split("、")
     for (let i = 0; i < tag_names.length; i++) {
         const tag = tag_names[i]
@@ -303,13 +295,13 @@ async function add_last_added_tag(): Promise<void> {
         new_tag.target_id = props.kyou.id
         new_tag.related_time = new Date(Date.now())
         new_tag.create_app = "gkill"
-        new_tag.create_device = gkill_info_res.device
+        new_tag.create_device = props.application_config.device
         new_tag.create_time = new Date(Date.now())
-        new_tag.create_user = gkill_info_res.user_id
+        new_tag.create_user = props.application_config.user_id
         new_tag.update_app = "gkill"
-        new_tag.update_device = gkill_info_res.device
+        new_tag.update_device = props.application_config.device
         new_tag.update_time = new Date(Date.now())
-        new_tag.update_user = gkill_info_res.user_id
+        new_tag.update_user = props.application_config.user_id
 
         // 追加リクエストを飛ばす
         await delete_gkill_kyou_cache(new_tag.id)

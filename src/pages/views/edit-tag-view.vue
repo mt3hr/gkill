@@ -60,7 +60,7 @@ import type { EditTagViewProps } from './edit-tag-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request';
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
+;
 import { GkillError } from '@/classes/api/gkill-error';
 import type { Tag } from '@/classes/datas/tag';
 import type { Text } from '@/classes/datas/text';
@@ -113,21 +113,13 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 更新後タグ情報を用意する
         const updated_tag = await cloned_tag.value.clone()
         updated_tag.tag = tag_name.value
         updated_tag.update_app = "gkill"
-        updated_tag.update_device = gkill_info_res.device
+        updated_tag.update_device = props.application_config.device
         updated_tag.update_time = new Date(Date.now())
-        updated_tag.update_user = gkill_info_res.user_id
+        updated_tag.update_user = props.application_config.user_id
 
         // 更新リクエストを飛ばす
         await delete_gkill_kyou_cache(updated_tag.id)

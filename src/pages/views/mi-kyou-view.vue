@@ -65,7 +65,6 @@ import type { Kyou } from '@/classes/datas/kyou'
 import type { miKyouViewProps } from './mi-kyou-view-props'
 import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
 import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { KyouViewEmits } from './kyou-view-emits'
@@ -147,21 +146,13 @@ async function clicked_mi_check(): Promise<void> {
         return
     }
 
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
     // 更新後mi情報を用意する
     const updated_mi = mi.clone()
     updated_mi.is_checked = is_checked_mi.value
     updated_mi.update_app = "gkill"
-    updated_mi.update_device = gkill_info_res.device
+    updated_mi.update_device = props.application_config.device
     updated_mi.update_time = new Date(Date.now())
-    updated_mi.update_user = gkill_info_res.user_id
+    updated_mi.update_user = props.application_config.user_id
 
     // 更新リクエストを飛ばす
     await delete_gkill_kyou_cache(updated_mi.id)

@@ -103,35 +103,10 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	gkillDAOManager.ConfigDAOs.KFTLTemplateDAO, err = user_config.NewKFTLTemplateDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
-	if err != nil {
-		return nil, err
-	}
-	gkillDAOManager.ConfigDAOs.TagStructDAO, err = user_config.NewTagStructDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
-	if err != nil {
-		return nil, err
-	}
-	gkillDAOManager.ConfigDAOs.RepStructDAO, err = user_config.NewRepStructDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
-	if err != nil {
-		return nil, err
-	}
-	gkillDAOManager.ConfigDAOs.DeviceStructDAO, err = user_config.NewDeviceStructDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
-	if err != nil {
-		return nil, err
-	}
-	gkillDAOManager.ConfigDAOs.RepTypeStructDAO, err = user_config.NewRepTypeStructDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
-	if err != nil {
-		return nil, err
-	}
-	gkillDAOManager.ConfigDAOs.DnoteDataDAO, err = user_config.NewDnoteDataDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "user_config.db"))
-	if err != nil {
-		return nil, err
-	}
 	gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO, err = gkill_notification.NewGkillNotificateTargetDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "gkill_notification_target.db"))
 	if err != nil {
 		return nil, err
 	}
-
 	gkillDAOManager.TempReps, err = NewTempReps(memory_db.MemoryDB)
 	if err != nil {
 		return nil, err
@@ -1036,27 +1011,6 @@ func (g *GkillDAOManager) Close() error {
 		if err != nil {
 			return err
 		}
-		err = g.ConfigDAOs.KFTLTemplateDAO.Close(ctx)
-		if err != nil {
-			return err
-		}
-		err = g.ConfigDAOs.TagStructDAO.Close(ctx)
-		if err != nil {
-			return err
-		}
-		err = g.ConfigDAOs.RepStructDAO.Close(ctx)
-		if err != nil {
-			return err
-		}
-		err = g.ConfigDAOs.DeviceStructDAO.Close(ctx)
-		if err != nil {
-			return err
-		}
-		err = g.ConfigDAOs.RepTypeStructDAO.Close(ctx)
-		if err != nil {
-			return err
-		}
-
 		g.ConfigDAOs.AccountDAO = nil
 		g.ConfigDAOs.LoginSessionDAO = nil
 		g.ConfigDAOs.FileUploadHistoryDAO = nil
@@ -1064,11 +1018,6 @@ func (g *GkillDAOManager) Close() error {
 		g.ConfigDAOs.ServerConfigDAO = nil
 		g.ConfigDAOs.AppllicationConfigDAO = nil
 		g.ConfigDAOs.RepositoryDAO = nil
-		g.ConfigDAOs.KFTLTemplateDAO = nil
-		g.ConfigDAOs.TagStructDAO = nil
-		g.ConfigDAOs.RepStructDAO = nil
-		g.ConfigDAOs.DeviceStructDAO = nil
-		g.ConfigDAOs.RepTypeStructDAO = nil
 	}
 
 	g.ConfigDAOs = nil

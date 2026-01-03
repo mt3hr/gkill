@@ -1,8 +1,8 @@
 'use strict'
 
+import type { KFTLTemplateStructElementData } from "@/classes/datas/config/kftl-template-struct-element-data"
 import type { GkillPropsBase } from "./gkill-props-base"
-import { KFTLTemplateStruct } from "@/classes/datas/config/kftl-template-struct"
 
 export interface EditKFTLTemplateStructViewProps extends GkillPropsBase {
-    kftl_template_struct: Array<KFTLTemplateStruct>
+    kftl_template_struct: KFTLTemplateStructElementData
 }

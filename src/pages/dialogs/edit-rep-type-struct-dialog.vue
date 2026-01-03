@@ -2,15 +2,14 @@
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <EditRepTypeStructView :application_config="application_config" :gkill_api="gkill_api"
             :rep_type_struct="application_config.rep_type_struct"
-            @requested_reload_application_config="(...application_config :any[]) => emits('requested_reload_application_config', application_config[0] as ApplicationConfig)"
-            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" 
-            @requested_close_dialog="hide"
-            />
+            @requested_reload_application_config="(...application_config: any[]) => emits('requested_reload_application_config', application_config[0] as ApplicationConfig)"
+            @requested_apply_rep_type_struct="(...rep_type_struct_element_data: any[]) => emits('requested_apply_rep_type_struct', rep_type_struct_element_data[0] as RepTypeStructElementData)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @requested_close_dialog="hide" />
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { EditRepTypeDialogEmits } from './edit-rep-type-dialog-emits'
 import type { EditRepTypeDialogProps } from './edit-rep-type-dialog-props'
@@ -24,6 +23,7 @@ const emits = defineEmits<EditRepTypeDialogEmits>()
 defineExpose({ show, hide })
 
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import type { RepTypeStructElementData } from '@/classes/datas/config/rep-type-struct-element-data'
 const is_show_dialog: Ref<boolean> = ref(false)
 useDialogHistoryStack(is_show_dialog)
 
