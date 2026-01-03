@@ -3,14 +3,14 @@
         <v-card class="edit_ryuu_dialog_view">
             <RyuuListView v-model="model_value" :application_config="application_config" :gkill_api="gkill_api"
                 :editable="true" :find_kyou_query_default="new FindKyouQuery()" :related_time="new Date(Date.now())"
-                @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                @requested_apply_ryuu_struct="(...ryuu_data: any[]) => { emits('requested_apply_ryuu_struct', ryuu_data[0]) }"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                 @requested_close_dialog="hide()" />
         </v-card>
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { nextTick, type Ref, ref } from 'vue'
 import Dnote from '../views/dnote-view.vue'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'

@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { nextTick, ref, watch, type Ref } from 'vue'
 import FindQueryEditorView from '../views/find-query-editor-view.vue';
 import type FindQueryEditorDialogProps from './find-query-editor-dialog-props';

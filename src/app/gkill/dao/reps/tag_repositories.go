@@ -630,6 +630,7 @@ func (t TagRepositories) AddTagInfo(ctx context.Context, tag *Tag) error {
 
 func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
 	tagNames := []string{}
+	tagNamesMap := map[string]struct{}{}
 	tags, err := t.GetAllTags(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags: %w", err)
@@ -654,7 +655,10 @@ func (t TagRepositories) GetAllTagNames(ctx context.Context) ([]string, error) {
 		if tag.IsDeleted {
 			continue
 		}
-		tagNames = append(tagNames, tag.Tag)
+		tagNamesMap[tag.Tag] = struct{}{}
+	}
+	for tag := range tagNamesMap {
+		tagNames = append(tagNames, tag)
 	}
 	return tagNames, nil
 }

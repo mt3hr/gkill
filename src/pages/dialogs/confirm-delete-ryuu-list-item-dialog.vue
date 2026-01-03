@@ -8,7 +8,6 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import RelatedKyouQuery from '@/classes/dnote/related-kyou-query';
 import ConfirmDeleteRelatedKyouQueryView from '../views/confirm-delete-related-kyou-query-view.vue';

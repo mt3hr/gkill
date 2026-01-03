@@ -53,6 +53,7 @@ function emits_device_name(): void {
     device_struct_element.indeterminate = false
     device_struct_element.key = device_name.value
     device_struct_element.device_name = device_name.value
+    device_struct_element.name = device_name.value
     emits('requested_add_device_struct_element', device_struct_element)
     emits('requested_close_dialog')
 }

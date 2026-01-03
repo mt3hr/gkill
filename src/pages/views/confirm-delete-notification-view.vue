@@ -52,7 +52,7 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
+;
 import type { KyouViewEmits } from './kyou-view-emits'
 import { computed, type Ref, ref } from 'vue'
 import KyouView from './kyou-view.vue'
@@ -78,21 +78,13 @@ const notification_highlight_targets = computed<Array<InfoIdentifier>>(() => {
 const show_kyou: Ref<boolean> = ref(true)
 
 async function delete_notification(): Promise<void> {
-    // UserIDやDevice情報を取得する
-    const get_gkill_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-    if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-        emits('received_errors', gkill_info_res.errors)
-        return
-    }
-
     // 更新後テキスト情報を用意する
     const updated_notification = await props.notification.clone()
     updated_notification.is_deleted = true
     updated_notification.update_app = "gkill"
-    updated_notification.update_device = gkill_info_res.device
+    updated_notification.update_device = props.application_config.device
     updated_notification.update_time = new Date(Date.now())
-    updated_notification.update_user = gkill_info_res.user_id
+    updated_notification.update_user = props.application_config.user_id
 
     // 更新リクエストを飛ばす
     await delete_gkill_kyou_cache(updated_notification.id)

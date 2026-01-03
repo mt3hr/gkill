@@ -129,7 +129,7 @@ import type { KyouViewEmits } from './kyou-view-emits'
 import { TimeIs } from '@/classes/datas/time-is'
 import moment from 'moment'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
@@ -243,14 +243,6 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 更新後TimeIs情報を用意する
         let end_time: Date | null = null
         if (timeis_end_date_string.value !== "" && timeis_end_time_string.value !== "") {
@@ -262,13 +254,13 @@ async function save(): Promise<void> {
         new_timeis.start_time = moment(timeis_start_date_string.value + " " + timeis_start_time_string.value).toDate()
         new_timeis.end_time = end_time
         new_timeis.create_app = "gkill"
-        new_timeis.create_device = gkill_info_res.device
+        new_timeis.create_device = props.application_config.device
         new_timeis.create_time = new Date(Date.now())
-        new_timeis.create_user = gkill_info_res.user_id
+        new_timeis.create_user = props.application_config.user_id
         new_timeis.update_app = "gkill"
-        new_timeis.update_device = gkill_info_res.device
+        new_timeis.update_device = props.application_config.device
         new_timeis.update_time = new Date(Date.now())
-        new_timeis.update_user = gkill_info_res.user_id
+        new_timeis.update_user = props.application_config.user_id
 
         // 追加リクエストを飛ばす
         await delete_gkill_kyou_cache(new_timeis.id)

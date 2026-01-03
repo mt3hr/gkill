@@ -8,14 +8,12 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { AddNewDeviceStructElementDialogEmits } from './add-new-device-struct-element-dialog-emits'
 import type { AddNewDeviceStructElementDialogProps } from './add-new-device-struct-element-dialog-props'
 import AddNewDeviceStructElementView from '../views/add-new-device-struct-element-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
-import type { FoldableStructModel } from '../views/foldable-struct-model'
 import type { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data'
 
 const add_new_device_struct_element_view = ref<InstanceType<typeof AddNewDeviceStructElementView> | null>(null);

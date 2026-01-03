@@ -8,7 +8,6 @@
 </template>
 
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import type { UploadFileDialogProps } from './upload-file-dialog-props'
 
 import UploadFileView from '../views/upload-file-view.vue'

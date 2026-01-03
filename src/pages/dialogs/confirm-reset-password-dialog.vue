@@ -10,7 +10,6 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { ConfirmResetPasswordDialogEmits } from './confirm-reset-password-dialog-emits'
 import type { ConfirmResetPasswordDialogProps } from './confirm-reset-password-dialog-props'

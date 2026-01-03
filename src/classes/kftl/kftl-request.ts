@@ -4,7 +4,7 @@ import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
 import { AddTagRequest } from '../api/req_res/add-tag-request'
 import { AddTextRequest } from '../api/req_res/add-text-request'
-import { GetGkillInfoRequest } from '../api/req_res/get-gkill-info-request'
+import { GetApplicationConfigRequest } from '../api/req_res/get-application-config-request'
 import delete_gkill_kyou_cache from '../delete-gkill-cache'
 import { KFTLRequestBase } from './kftl-request-base'
 import type { KFTLStatementLineContext } from './kftl-statement-line-context'
@@ -41,9 +41,9 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         let errors = Array<GkillError>()
         const time = this.get_related_time() != null ? this.get_related_time()!! : new Date(Date.now())
         const now = new Date(Date.now())
-        const req = new GetGkillInfoRequest()
 
-        const res = await GkillAPI.get_gkill_api().get_gkill_info(req)
+        const application_config_req = new GetApplicationConfigRequest()
+        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
 
         for (let i = 0; i < this.tags.length; i++) {
             const tag = this.tags[i]
@@ -55,13 +55,13 @@ export abstract class KFTLRequest extends KFTLRequestBase {
             req.tag.target_id = this.get_request_id()
             req.tag.related_time = time
             req.tag.create_app = "gkill_kftl"
-            req.tag.create_device = res.device
+            req.tag.create_device = application_config_res.application_config.device
             req.tag.create_time = now
-            req.tag.create_user = res.user_id
+            req.tag.create_user = application_config_res.application_config.user_id
             req.tag.update_app = "gkill_kftl"
-            req.tag.update_device = res.device
+            req.tag.update_device = application_config_res.application_config.device
             req.tag.update_time = now
-            req.tag.update_user = res.user_id
+            req.tag.update_user = application_config_res.application_config.user_id
             await delete_gkill_kyou_cache(req.tag.id)
             await delete_gkill_kyou_cache(req.tag.target_id)
             await GkillAPI.get_gkill_api().add_tag(req).then((res) => {
@@ -82,13 +82,13 @@ export abstract class KFTLRequest extends KFTLRequestBase {
             req.text.text = text
             req.text.related_time = time
             req.text.create_app = "gkill_kftl"
-            req.text.create_device = res.device
+            req.text.create_device = application_config_res.application_config.device
             req.text.create_time = now
-            req.text.create_user = res.user_id
+            req.text.create_user = application_config_res.application_config.user_id
             req.text.update_app = "gkill_kftl"
-            req.text.update_device = res.device
+            req.text.update_device = application_config_res.application_config.device
             req.text.update_time = now
-            req.text.update_user = res.user_id
+            req.text.update_user = application_config_res.application_config.user_id
             await delete_gkill_kyou_cache(req.text.id)
             await delete_gkill_kyou_cache(req.text.target_id)
             await GkillAPI.get_gkill_api().add_text(req).then((res) => {

@@ -51,7 +51,7 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
+;
 import type { KyouViewEmits } from './kyou-view-emits'
 import { type Ref, ref, watch } from 'vue'
 import KyouView from './kyou-view.vue'
@@ -132,124 +132,103 @@ async function delete_kyou(): Promise<void> {
 }
 
 async function delete_kmemo(): Promise<Array<GkillError>> {
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
-
     await delete_gkill_kyou_cache(cloned_kyou.value.id)
     const req = new UpdateKmemoRequest()
     req.kmemo = cloned_kyou.value.typed_kmemo!!.clone()
     req.kmemo.is_deleted = true
 
     req.kmemo.update_app = "gkill"
-    req.kmemo.update_device = gkill_info_res.device
+    req.kmemo.update_device = props.application_config.device
     req.kmemo.update_time = new Date(Date.now())
-    req.kmemo.update_user = gkill_info_res.user_id
+    req.kmemo.update_user = props.application_config.user_id
 
     const res = await props.gkill_api.update_kmemo(req)
     return res.errors
 }
 async function delete_kc(): Promise<Array<GkillError>> {
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
-
     await delete_gkill_kyou_cache(cloned_kyou.value.id)
     const req = new UpdateKCRequest()
     req.kc = cloned_kyou.value.typed_kc!!.clone()
     req.kc.is_deleted = true
 
     req.kc.update_app = "gkill"
-    req.kc.update_device = gkill_info_res.device
+    req.kc.update_device = props.application_config.device
     req.kc.update_time = new Date(Date.now())
-    req.kc.update_user = gkill_info_res.user_id
+    req.kc.update_user = props.application_config.user_id
 
     const res = await props.gkill_api.update_kc(req)
     return res.errors
 }
 async function delete_urlog(): Promise<Array<GkillError>> {
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
-
     await delete_gkill_kyou_cache(cloned_kyou.value.id)
     const req = new UpdateURLogRequest()
     req.urlog = cloned_kyou.value.typed_urlog!!.clone()
     req.urlog.is_deleted = true
 
     req.urlog.update_app = "gkill"
-    req.urlog.update_device = gkill_info_res.device
+    req.urlog.update_device = props.application_config.device
     req.urlog.update_time = new Date(Date.now())
-    req.urlog.update_user = gkill_info_res.user_id
+    req.urlog.update_user = props.application_config.user_id
 
     const res = await props.gkill_api.update_urlog(req)
     return res.errors
 }
 
 async function delete_nlog(): Promise<Array<GkillError>> {
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
-
     await delete_gkill_kyou_cache(cloned_kyou.value.id)
     const req = new UpdateNlogRequest()
     req.nlog = cloned_kyou.value.typed_nlog!!.clone()
     req.nlog.is_deleted = true
 
     req.nlog.update_app = "gkill"
-    req.nlog.update_device = gkill_info_res.device
+    req.nlog.update_device = props.application_config.device
     req.nlog.update_time = new Date(Date.now())
-    req.nlog.update_user = gkill_info_res.user_id
+    req.nlog.update_user = props.application_config.user_id
 
     const res = await props.gkill_api.update_nlog(req)
     return res.errors
 }
 
 async function delete_timeis(): Promise<Array<GkillError>> {
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
-
     await delete_gkill_kyou_cache(cloned_kyou.value.id)
     const req = new UpdateTimeisRequest()
     req.timeis = cloned_kyou.value.typed_timeis!!.clone()
     req.timeis.is_deleted = true
 
     req.timeis.update_app = "gkill"
-    req.timeis.update_device = gkill_info_res.device
+    req.timeis.update_device = props.application_config.device
     req.timeis.update_time = new Date(Date.now())
-    req.timeis.update_user = gkill_info_res.user_id
+    req.timeis.update_user = props.application_config.user_id
 
     const res = await props.gkill_api.update_timeis(req)
     return res.errors
 }
 
 async function delete_mi(): Promise<Array<GkillError>> {
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
-
     await delete_gkill_kyou_cache(cloned_kyou.value.id)
     const req = new UpdateMiRequest()
     req.mi = cloned_kyou.value.typed_mi!!.clone()
     req.mi.is_deleted = true
 
     req.mi.update_app = "gkill"
-    req.mi.update_device = gkill_info_res.device
+    req.mi.update_device = props.application_config.device
     req.mi.update_time = new Date(Date.now())
-    req.mi.update_user = gkill_info_res.user_id
+    req.mi.update_user = props.application_config.user_id
 
     const res = await props.gkill_api.update_mi(req)
     return res.errors
 }
 
 async function delete_lantana(): Promise<Array<GkillError>> {
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
-
     await delete_gkill_kyou_cache(cloned_kyou.value.id)
     const req = new UpdateLantanaRequest()
     req.lantana = cloned_kyou.value.typed_lantana!!.clone()
     req.lantana.is_deleted = true
 
     req.lantana.update_app = "gkill"
-    req.lantana.update_device = gkill_info_res.device
+    req.lantana.update_device = props.application_config.device
     req.lantana.update_time = new Date(Date.now())
-    req.lantana.update_user = gkill_info_res.user_id
+    req.lantana.update_user = props.application_config.user_id
 
 
     const res = await props.gkill_api.update_lantana(req)
@@ -257,18 +236,15 @@ async function delete_lantana(): Promise<Array<GkillError>> {
 }
 
 async function delete_idf_kyou(): Promise<Array<GkillError>> {
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
-
     await delete_gkill_kyou_cache(cloned_kyou.value.id)
     const req = new UpdateIDFKyouRequest()
     req.idf_kyou = cloned_kyou.value.typed_idf_kyou!!.clone()
     req.idf_kyou.is_deleted = true
 
     req.idf_kyou.update_app = "gkill"
-    req.idf_kyou.update_device = gkill_info_res.device
+    req.idf_kyou.update_device = props.application_config.device
     req.idf_kyou.update_time = new Date(Date.now())
-    req.idf_kyou.update_user = gkill_info_res.user_id
+    req.idf_kyou.update_user = props.application_config.user_id
 
     const res = await props.gkill_api.update_idf_kyou(req)
     return res.errors
@@ -279,18 +255,15 @@ async function delete_git_commit_log(): Promise<Array<GkillError>> {
 }
 
 async function delete_rekyou(): Promise<Array<GkillError>> {
-    const gkill_info_req = new GetGkillInfoRequest()
-    const gkill_info_res = await props.gkill_api.get_gkill_info(gkill_info_req)
-
     await delete_gkill_kyou_cache(cloned_kyou.value.id)
     const req = new UpdateReKyouRequest()
     req.rekyou = cloned_kyou.value.typed_rekyou!!.clone()
     req.rekyou.is_deleted = true
 
     req.rekyou.update_app = "gkill"
-    req.rekyou.update_device = gkill_info_res.device
+    req.rekyou.update_device = props.application_config.device
     req.rekyou.update_time = new Date(Date.now())
-    req.rekyou.update_user = gkill_info_res.user_id
+    req.rekyou.update_user = props.application_config.user_id
 
     const res = await props.gkill_api.update_rekyou(req)
     return res.errors

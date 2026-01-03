@@ -6,10 +6,11 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { AddKmemoRequest } from '@/classes/api/req_res/add-kmemo-request'
 import { Kmemo } from '@/classes/datas/kmemo'
 import { GkillAPI } from '@/classes/api/gkill-api'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
+import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 
 export class KFTLKmemoRequest extends KFTLRequest {
 
@@ -30,8 +31,8 @@ export class KFTLKmemoRequest extends KFTLRequest {
             return errors
         }
 
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
+        const application_config_req = new GetApplicationConfigRequest()
+        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
 
         await super.do_request().then(super_errors => (errors = errors.concat(super_errors)))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
@@ -45,13 +46,13 @@ export class KFTLKmemoRequest extends KFTLRequest {
         req.kmemo.related_time = time
 
         req.kmemo.create_app = "gkill_kftl"
-        req.kmemo.create_device = gkill_info_res.device
+        req.kmemo.create_device = application_config_res.application_config.device
         req.kmemo.create_time = now
-        req.kmemo.create_user = gkill_info_res.user_id
+        req.kmemo.create_user = application_config_res.application_config.user_id
         req.kmemo.update_app = "gkill_kftl"
-        req.kmemo.update_device = gkill_info_res.device
+        req.kmemo.update_device = application_config_res.application_config.device
         req.kmemo.update_time = now
-        req.kmemo.update_user = gkill_info_res.user_id
+        req.kmemo.update_user = application_config_res.application_config.user_id
         await delete_gkill_kyou_cache(req.kmemo.id)
         await GkillAPI.get_gkill_api().add_kmemo(req).then((res) => {
             if (res.errors && res.errors.length !== 0) {

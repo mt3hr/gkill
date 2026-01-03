@@ -7,7 +7,7 @@
         <v-row class="pa-0 ma-0">
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="primary"
+                <v-btn dark color="primary" v-if="tag_struct && tag_struct.id"
                     @click="emits('requested_delete_tag', tag_struct.id)">{{ i18n.global.t("DELETE_TITLE") }}</v-btn>
             </v-col>
         </v-row>

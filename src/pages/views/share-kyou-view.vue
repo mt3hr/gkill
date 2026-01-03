@@ -27,7 +27,6 @@ import type { ShareKyousListViewEmits } from './share-kyou-view-emits'
 import type { ShareKyousListViewProps } from './share-kyou-view-props'
 import { AddShareKyouListInfoRequest } from '@/classes/api/req_res/add-share-kyou-list-infos-request';
 import { ShareKyousInfo } from '@/classes/datas/share-kyous-info';
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
 
 const props = defineProps<ShareKyousListViewProps>()
 const emits = defineEmits<ShareKyousListViewEmits>()
@@ -52,13 +51,6 @@ const is_share_with_timeiss: Ref<boolean> = ref(false)
 const is_share_with_locations: Ref<boolean> = ref(false)
 
 async function share(): Promise<void> {
-    const gkill_req = new GetGkillInfoRequest()
-    const gkill_res = await props.gkill_api.get_gkill_info(gkill_req)
-    if (gkill_res.errors && gkill_res.errors.length !== 0) {
-        emits('received_errors', gkill_res.errors)
-        return
-    }
-
     const query = props.find_kyou_query.clone()
     if (view_type.value === "mi") {
         query.use_rep_types = true
@@ -67,8 +59,8 @@ async function share(): Promise<void> {
 
     const share_kyou_list_info = new ShareKyousInfo()
     share_kyou_list_info.share_id = props.gkill_api.generate_uuid()
-    share_kyou_list_info.user_id = gkill_res.user_id
-    share_kyou_list_info.device = gkill_res.device
+    share_kyou_list_info.user_id = props.application_config.user_id
+    share_kyou_list_info.device = props.application_config.device
     share_kyou_list_info.find_query_json = query
     share_kyou_list_info.share_title = share_title.value
     share_kyou_list_info.view_type = view_type.value

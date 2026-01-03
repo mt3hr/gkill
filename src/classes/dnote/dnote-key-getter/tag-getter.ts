@@ -1,6 +1,5 @@
 import type { Kyou } from "@/classes/datas/kyou";
 import type DnoteKeyGetter from "../dnote-key-getter";
-import DnoteKeyGetterDictionary from "../serialize/dnote-key-getter-dictionary";
 
 export default class TagGetter implements DnoteKeyGetter {
 

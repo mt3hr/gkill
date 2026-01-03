@@ -6,7 +6,7 @@ import { GkillError } from '@/classes/api/gkill-error'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
@@ -41,8 +41,8 @@ export class KFTLMiRequest extends KFTLRequest {
             errors = errors.concat([error])
         }
 
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
+        const application_config_req = new GetApplicationConfigRequest()
+        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
 
         if (this.board_name == "") {
             const req = new GetApplicationConfigRequest()
@@ -80,13 +80,13 @@ export class KFTLMiRequest extends KFTLRequest {
         mi_req.mi.is_checked = false
 
         mi_req.mi.create_app = "gkill_kftl"
-        mi_req.mi.create_device = gkill_info_res.device
+        mi_req.mi.create_device = application_config_res.application_config.device
         mi_req.mi.create_time = now
-        mi_req.mi.create_user = gkill_info_res.user_id
+        mi_req.mi.create_user = application_config_res.application_config.user_id
         mi_req.mi.update_app = "gkill_kftl"
-        mi_req.mi.update_device = gkill_info_res.device
+        mi_req.mi.update_device = application_config_res.application_config.device
         mi_req.mi.update_time = now
-        mi_req.mi.update_user = gkill_info_res.user_id
+        mi_req.mi.update_user = application_config_res.application_config.user_id
 
         await delete_gkill_kyou_cache(mi_req.mi.id)
         await GkillAPI.get_gkill_api().add_mi(mi_req).then(res => {

@@ -1,7 +1,7 @@
 'use strict'
 
 import { GkillAPI } from "../api/gkill-api"
-import { GetGkillInfoRequest } from "../api/req_res/get-gkill-info-request"
+import { GetApplicationConfigRequest } from "../api/req_res/get-application-config-request"
 
 export class KFTLRequestBase {
 
@@ -37,15 +37,15 @@ export class KFTLRequestBase {
 
     async apply_default_value_kftl_request_base(): Promise<void> {
         const now = new Date(Date.now())
-        const req = new GetGkillInfoRequest()
 
-        const res = await GkillAPI.get_gkill_api().get_gkill_info(req)
+        const application_config_req = new GetApplicationConfigRequest()
+        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
 
         this.is_deleted = false
         this.create_app = "gkill_kftl"
         this.update_app = "gkill_kftl"
-        this.create_device = res.device
-        this.create_user = res.user_id
+        this.create_device = application_config_res.application_config.device
+        this.create_user = application_config_res.application_config.user_id
         this.update_device = ""
         this.update_user = ""
         this.create_time = now
