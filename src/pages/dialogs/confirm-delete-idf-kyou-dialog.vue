@@ -22,7 +22,6 @@
     </v-dialog>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import ConfirmDeleteKyouView from '../views/confirm-delete-kyou-view.vue';
 import type { ConfirmDeleteIDFKyouDialogEmits } from './confirm-delete-idf-kyou-dialog-emits';

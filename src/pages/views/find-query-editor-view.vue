@@ -148,6 +148,7 @@ function generate_query(query_id?: string): FindKyouQuery {
         find_query.query_id = query_id
     }
 
+
     find_query.is_focus_kyou_in_list_view = props.find_kyou_query! ? props.find_kyou_query.is_focus_kyou_in_list_view : false
     find_query.is_image_only = props.find_kyou_query ? props.find_kyou_query.is_image_only : false
 
@@ -196,6 +197,8 @@ function generate_query(query_id?: string): FindKyouQuery {
         find_query.map_radius = map_query.value.get_radius()
         find_query.is_enable_map_circle_in_sidebar = map_query.value.get_is_enable_circle()
     }
+
+    find_query.apply_hide_tags(props.application_config)
 
     return find_query
 }

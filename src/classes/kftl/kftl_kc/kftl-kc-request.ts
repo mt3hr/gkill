@@ -5,8 +5,9 @@ import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { AddKCRequest } from '@/classes/api/req_res/add-kc-request'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
+import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 
 export class KFTLKCRequest extends KFTLRequest {
 
@@ -23,8 +24,8 @@ export class KFTLKCRequest extends KFTLRequest {
         let errors = new Array<GkillError>()
         await super.do_request().then(super_errors => errors = errors.concat(super_errors))
 
-        const gkill_info_req = new GetGkillInfoRequest()
-        const gkill_info_res = await GkillAPI.get_gkill_api().get_gkill_info(gkill_info_req)
+        const application_config_req = new GetApplicationConfigRequest()
+        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
 
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddKCRequest()
@@ -37,13 +38,13 @@ export class KFTLKCRequest extends KFTLRequest {
         req.kc.related_time = time
 
         req.kc.create_app = "gkill_kftl"
-        req.kc.create_device = gkill_info_res.device
+        req.kc.create_device = application_config_res.application_config.device
         req.kc.create_time = now
-        req.kc.create_user = gkill_info_res.user_id
+        req.kc.create_user = application_config_res.application_config.user_id
         req.kc.update_app = "gkill_kftl"
-        req.kc.update_device = gkill_info_res.device
+        req.kc.update_device = application_config_res.application_config.device
         req.kc.update_time = now
-        req.kc.update_user = gkill_info_res.user_id
+        req.kc.update_user = application_config_res.application_config.user_id
 
         await delete_gkill_kyou_cache(req.kc.id)
         await GkillAPI.get_gkill_api().add_kc(req).then(res => {

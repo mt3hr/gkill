@@ -20,7 +20,7 @@
                 <table class="devicelist">
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="false"
-                        :struct_obj="cloned_application_config.parsed_device_struct"
+                        :struct_obj="cloned_application_config.device_struct"
                         @requested_update_check_state="update_devices"
                         @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                         @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
@@ -30,7 +30,7 @@
                 <table class="typelist">
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true"
-                        :struct_obj="cloned_application_config.parsed_rep_type_struct"
+                        :struct_obj="cloned_application_config.rep_type_struct"
                         @requested_update_check_state="update_rep_types"
                         @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                         @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
@@ -42,7 +42,7 @@
                 <table>
                     <FoldableStruct :application_config="application_config" :folder_name="''" :gkill_api="gkill_api"
                         :is_editable="false" :is_root="true" :is_show_checkbox="true" :is_open="true"
-                        :struct_obj="cloned_application_config.parsed_rep_struct"
+                        :struct_obj="cloned_application_config.rep_struct"
                         @requested_update_check_state="update_reps"
                         @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                         @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
@@ -64,9 +64,6 @@ import { RepStructElementData } from '@/classes/datas/config/rep-struct-element-
 import { CheckState } from './check-state'
 import type { FoldableStructModel } from './foldable-struct-model'
 import { deepEquals } from '@/classes/deep-equals'
-import type { Tag } from '@/classes/datas/tag';
-import type { Text } from '@/classes/datas/text';
-import type { Notification } from '@/classes/datas/notification';
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
@@ -115,24 +112,6 @@ watch(() => props.application_config, async (_new_application_config: Applicatio
         update_check_reps(cloned_query.value.reps, CheckState.checked, true)
         return
     }
-    const reps = new Array<string>()
-    const devices = new Array<string>()
-    const rep_types = new Array<string>()
-    cloned_application_config.value.rep_struct.forEach(rep => {
-        if (rep.check_when_inited) {
-            reps.push(rep.rep_name)
-        }
-    })
-    cloned_application_config.value.device_struct.forEach(device => {
-        if (device.check_when_inited) {
-            devices.push(device.device_name)
-        }
-    })
-    cloned_application_config.value.rep_type_struct.forEach(rep_type => {
-        if (rep_type.check_when_inited) {
-            rep_types.push(rep_type.rep_type_name)
-        }
-    })
     if (!props.inited) {
         emits('inited')
     }
@@ -202,7 +181,7 @@ function update_check_reps(items: Array<string>, is_checked: CheckState, pre_unc
             }
         }
         f = func
-        f(cloned_application_config.value.parsed_rep_struct)
+        f(cloned_application_config.value.rep_struct)
     }
 
     for (let i = 0; i < items.length; i++) {
@@ -230,7 +209,7 @@ function update_check_reps(items: Array<string>, is_checked: CheckState, pre_unc
             }
         }
         f = func
-        f(cloned_application_config.value.parsed_rep_struct)
+        f(cloned_application_config.value.rep_struct)
     }
     const reps = foldable_struct_reps.value?.get_selected_items()
     if (reps && !deepEquals(reps, old_cloned_query.value?.reps)) {
@@ -250,7 +229,7 @@ function update_check_devices(items: Array<string>, is_checked: CheckState, pre_
             }
         }
         f = func
-        f(cloned_application_config.value.parsed_device_struct)
+        f(cloned_application_config.value.device_struct)
     }
 
     for (let i = 0; i < items.length; i++) {
@@ -278,7 +257,7 @@ function update_check_devices(items: Array<string>, is_checked: CheckState, pre_
             }
         }
         f = func
-        f(cloned_application_config.value.parsed_device_struct)
+        f(cloned_application_config.value.device_struct)
     }
 
     const devices = foldable_struct_devices.value?.get_selected_items()
@@ -305,7 +284,7 @@ function update_check_rep_types(items: Array<string>, is_checked: CheckState, pr
             }
         }
         f = func
-        f(cloned_application_config.value.parsed_rep_type_struct)
+        f(cloned_application_config.value.rep_type_struct)
     }
 
     for (let i = 0; i < items.length; i++) {
@@ -333,7 +312,7 @@ function update_check_rep_types(items: Array<string>, is_checked: CheckState, pr
             }
         }
         f = func
-        f(cloned_application_config.value.parsed_rep_type_struct)
+        f(cloned_application_config.value.rep_type_struct)
     }
 
     const rep_types = foldable_struct_rep_types.value?.get_selected_items()

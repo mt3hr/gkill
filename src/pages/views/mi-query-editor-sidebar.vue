@@ -213,11 +213,7 @@ function generate_query(query_id?: string): FindKyouQuery {
         }
     }
 
-    const reps = new Array<string>()
-    for (let i = 0; i < props.application_config.rep_struct.length; i++) {
-        reps.push(props.application_config.rep_struct[i].rep_name)
-    }
-    find_query.reps = reps
+    find_query.reps = get_default_query().reps
     find_query.use_rep_types = true
     find_query.rep_types = ["mi"]
 
@@ -264,6 +260,8 @@ function generate_query(query_id?: string): FindKyouQuery {
         find_query.map_radius = map_query.value.get_radius()
         find_query.is_enable_map_circle_in_sidebar = map_query.value.get_is_enable_circle()
     }
+
+    find_query.apply_hide_tags(props.application_config)
 
     return find_query
 }

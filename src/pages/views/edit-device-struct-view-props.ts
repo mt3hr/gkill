@@ -1,8 +1,8 @@
 'use strict'
 
+import type { DeviceStructElementData } from "@/classes/datas/config/device-struct-element-data"
 import type { GkillPropsBase } from "./gkill-props-base"
-import { DeviceStruct } from "@/classes/datas/config/device-struct"
 
 export interface EditDeviceStructViewProps extends GkillPropsBase {
-    device_struct: Array<DeviceStruct>
+    device_struct: DeviceStructElementData
 }

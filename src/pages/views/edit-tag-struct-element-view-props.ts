@@ -1,8 +1,8 @@
 'use strict'
 
+import type { TagStructElementData } from "@/classes/datas/config/tag-struct-element-data"
 import type { GkillPropsBase } from "./gkill-props-base"
-import type { TagStruct } from "@/classes/datas/config/tag-struct"
 
 export interface EditTagStructElementViewProps extends GkillPropsBase {
-    struct_obj: TagStruct
+    struct_obj: TagStructElementData
 }

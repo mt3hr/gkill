@@ -7,7 +7,6 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { AddRepDialogEmits } from './add-rep-dialog-emits'
 import type { AddRepDialogProps } from './add-rep-dialog-props'

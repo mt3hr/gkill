@@ -100,7 +100,7 @@ import { i18n } from '@/i18n'
 import { computed, type Ref, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request';
+;
 import { GkillError } from '@/classes/api/gkill-error';
 import type { EditNotificationViewProps } from './edit-notification-view-props';
 import { UpdateNotificationRequest } from '@/classes/api/req_res/update-notification-request';
@@ -176,22 +176,14 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 更新後通知情報を用意する
         const updated_notification = await cloned_notification.value.clone()
         updated_notification.content = content_value.value
         updated_notification.notification_time = moment(notification_date_string.value + " " + notification_time_string.value).toDate()
         updated_notification.update_app = "gkill"
-        updated_notification.update_device = gkill_info_res.device
+        updated_notification.update_device = props.application_config.device
         updated_notification.update_time = moment(new Date(Date.now())).toDate()
-        updated_notification.update_user = gkill_info_res.user_id
+        updated_notification.update_user = props.application_config.user_id
 
         // 更新リクエストを飛ばす
         await delete_gkill_kyou_cache(updated_notification.id)

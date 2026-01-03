@@ -117,7 +117,7 @@ import { computed, type Ref, ref, watch } from 'vue'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import moment from 'moment'
 import { UpdateNlogRequest } from '@/classes/api/req_res/update-nlog-request'
 import type { EditNlogViewProps } from './edit-nlog-view-props'
@@ -240,14 +240,6 @@ async function save(): Promise<void> {
             return
         }
 
-        // UserIDやDevice情報を取得する
-        const get_gkill_req = new GetGkillInfoRequest()
-        const gkill_info_res = await props.gkill_api.get_gkill_info(get_gkill_req)
-        if (gkill_info_res.errors && gkill_info_res.errors.length !== 0) {
-            emits('received_errors', gkill_info_res.errors)
-            return
-        }
-
         // 更新後Kmemo情報を用意する
         const updated_nlog = await nlog.clone()
         updated_nlog.amount = nlog_amount_value.value
@@ -255,9 +247,9 @@ async function save(): Promise<void> {
         updated_nlog.title = nlog_title_value.value
         updated_nlog.related_time = moment(related_date_string.value + " " + related_time_string.value).toDate()
         updated_nlog.update_app = "gkill"
-        updated_nlog.update_device = gkill_info_res.device
+        updated_nlog.update_device = props.application_config.device
         updated_nlog.update_time = new Date(Date.now())
-        updated_nlog.update_user = gkill_info_res.user_id
+        updated_nlog.update_user = props.application_config.user_id
 
         // 更新リクエストを飛ばす
         await delete_gkill_kyou_cache(updated_nlog.id)

@@ -8,7 +8,6 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { ServerConfigDialogEmits } from './server-config-dialog-emits'
 import type { ServerConfigDialogProps } from './server-config-dialog-props'

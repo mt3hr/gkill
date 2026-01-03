@@ -7,7 +7,6 @@
 </template>
 
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { ref, type Ref } from 'vue'
 import EditRyuuItemView from '../views/edit-ryuu-item-view.vue';
 import type EditRyuuItemDialogEmits from './edit-ryuu-item-dialog-emits';

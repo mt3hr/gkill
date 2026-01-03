@@ -6,7 +6,7 @@
         <div class="device_struct_root">
             <FoldableStruct :application_config="application_config" :gkill_api="gkill_api"
                 :folder_name="i18n.global.t('DEVICE_TITLE')" :is_open="true"
-                :struct_obj="cloned_application_config.parsed_device_struct" :is_editable="true" :is_root="true"
+                :struct_obj="cloned_application_config.device_struct" :is_editable="true" :is_root="true"
                 :is_show_checkbox="false"
                 @dblclicked_item="(e: MouseEvent, id: string | null) => { if (id) show_edit_device_struct_dialog(id) }"
                 @contextmenu_item="show_device_contextmenu" ref="foldable_struct" />
@@ -63,19 +63,16 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { type Ref, ref, watch } from 'vue'
+import { nextTick, type Ref, ref, watch } from 'vue'
 import type { EditDeviceStructViewEmits } from './edit-device-struct-view-emits'
 import type { EditDeviceStructViewProps } from './edit-device-struct-view-props'
 import AddNewDeviceStructElementDialog from '../dialogs/add-new-device-struct-element-dialog.vue'
 import EditDeviceStructElementDialog from '../dialogs/edit-device-struct-element-dialog.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import FoldableStruct from './foldable-struct.vue'
-import { DeviceStruct } from '@/classes/datas/config/device-struct'
-import type { FoldableStructModel } from './foldable-struct-model'
-import { UpdateDeviceStructRequest } from '@/classes/api/req_res/update-device-struct-request'
 import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
 import { DeviceStructElementData } from '@/classes/datas/config/device-struct-element-data'
-import { GetGkillInfoRequest } from '@/classes/api/req_res/get-gkill-info-request'
+
 import type { FolderStructElementData } from '@/classes/datas/config/folder-struct-element-data'
 import DeviceStructContextMenu from './device-struct-context-menu.vue'
 import ConfirmDeleteDeviceStructDialog from '../dialogs/confirm-delete-device-struct-dialog.vue'
@@ -94,14 +91,9 @@ const emits = defineEmits<EditDeviceStructViewEmits>()
 defineExpose({ reload_cloned_application_config })
 
 watch(() => props.application_config, () => reload_cloned_application_config())
-
 const cloned_application_config: Ref<ApplicationConfig> = ref(props.application_config.clone())
-
-cloned_application_config.value.parse_device_struct()
-
 async function reload_cloned_application_config(): Promise<void> {
     cloned_application_config.value = props.application_config.clone()
-    cloned_application_config.value.parse_device_struct()
 }
 
 function show_device_contextmenu(e: MouseEvent, id: string | null): void {
@@ -114,14 +106,21 @@ function show_edit_device_struct_dialog(id: string): void {
     if (!foldable_struct.value) {
         return
     }
-    let target_struct_object: DeviceStruct | null = null
-
-    for (let i = 0; i < cloned_application_config.value.device_struct.length; i++) {
-        const device_struct = cloned_application_config.value.device_struct[i]
-        if (device_struct.id === id) {
-            target_struct_object = device_struct
+    let target_struct_object: DeviceStructElementData | null = null
+    let device_name_walk = (_device: DeviceStructElementData): void => { }
+    device_name_walk = (device: DeviceStructElementData): void => {
+        const device_children = device.children
+        if (device.id === id) {
+            target_struct_object = device
+        } else if (device_children) {
+            device_children.forEach(child_device => {
+                if (child_device.children) {
+                    device_name_walk(child_device)
+                }
+            })
         }
     }
+    device_name_walk(cloned_application_config.value.device_struct)
 
     if (!target_struct_object) {
         return
@@ -130,83 +129,31 @@ function show_edit_device_struct_dialog(id: string): void {
     edit_device_struct_element_dialog.value?.show(target_struct_object)
 }
 
-function update_device_struct(device_struct_obj: DeviceStruct): void {
-    for (let i = 0; i < cloned_application_config.value.device_struct.length; i++) {
-        if (cloned_application_config.value.device_struct[i].id === device_struct_obj.id) {
-            cloned_application_config.value.device_struct.splice(i, 1, device_struct_obj)
-            break
-        }
-    }
-    if (cloned_application_config.value.parsed_device_struct.children) {
-        update_seq(cloned_application_config.value.parsed_device_struct.children)
-    }
-}
-
-function update_seq(_device_struct: Array<FoldableStructModel>): void {
-    const exist_ids = new Array<string>()
-
-    // 並び順再決定
-    let f = (_struct: FoldableStructModel, _parent: FoldableStructModel, _seq: number) => { }
-    let func = (struct: FoldableStructModel, parent: FoldableStructModel, seq: number) => {
-        if (struct.id) {
-            exist_ids.push(struct.id)
-        }
-
-        for (let i = 0; i < cloned_application_config.value.device_struct.length; i++) {
-            if (struct.id === cloned_application_config.value.device_struct[i].id) {
-                cloned_application_config.value.device_struct[i].seq = seq
-                cloned_application_config.value.device_struct[i].parent_folder_id = parent.id
+function update_device_struct(device_struct_obj: DeviceStructElementData): void {
+    let device_name_walk = (_device: DeviceStructElementData): boolean => false
+    device_name_walk = (device: DeviceStructElementData): boolean => {
+        const device_children = device.children
+        if (device.id === device_struct_obj.id) {
+            return true
+        } else if (device_children) {
+            for (let i = 0; i < device_children.length; i++) {
+                const child_device = device_children[i]
+                if (child_device.children) {
+                    if (device_name_walk(child_device)) {
+                        device_children[i] = device_struct_obj
+                        return false
+                    }
+                }
             }
         }
-        if (struct.children) {
-            for (let i = 0; i < struct.children.length; i++) {
-                f(struct.children[i], struct, i)
-            }
-        }
+        return false
     }
-    f = func
-    if (cloned_application_config.value.parsed_device_struct.children) {
-        for (let i = 0; i < cloned_application_config.value.parsed_device_struct.children?.length; i++) {
-            f(cloned_application_config.value.parsed_device_struct.children[i], cloned_application_config.value.parsed_device_struct, i)
-        }
-    }
-
-    // 存在しないものを消す
-    for (let i = 0; i < cloned_application_config.value.device_struct.length; i++) {
-        let exist = false
-        for (let j = 0; j < exist_ids.length; j++) {
-            if (cloned_application_config.value.device_struct[i].id === exist_ids[j]) {
-                exist = true
-            }
-        }
-        if (!exist) {
-            cloned_application_config.value.device_struct.splice(i, 1)
-            i--
-        }
-    }
-
+    device_name_walk(cloned_application_config.value.device_struct)
 }
 
 async function apply(): Promise<void> {
-    const device_struct = foldable_struct.value?.get_foldable_struct()
-    if (!device_struct) {
-        return
-    }
-
-    update_seq(device_struct)
-
-    // 更新する
-    const req = new UpdateDeviceStructRequest()
-    req.device_struct = cloned_application_config.value.device_struct
-    const res = await props.gkill_api.update_device_struct(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-    emits('requested_close_dialog')
+    emits('requested_apply_device_struct', cloned_application_config.value.device_struct)
+    nextTick(() => emits('requested_close_dialog'))
 }
 function show_add_new_device_struct_element_dialog(): void {
     add_new_device_struct_element_dialog.value?.show()
@@ -215,71 +162,33 @@ function show_add_new_folder_dialog(): void {
     add_new_folder_dialog.value?.show()
 }
 async function add_folder_struct_element(folder_struct_element: FolderStructElementData): Promise<void> {
-    const req = new GetGkillInfoRequest()
-    const res = await props.gkill_api.get_gkill_info(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-
-    const device_struct = new DeviceStruct()
-    device_struct.id = folder_struct_element.id
-    device_struct.user_id = res.user_id
-    device_struct.device = res.device
-    device_struct.check_when_inited = false
-    device_struct.parent_folder_id = null
-    device_struct.seq = cloned_application_config.value.parsed_device_struct.children ? cloned_application_config.value.parsed_device_struct.children.length : 0
-    device_struct.device_name = folder_struct_element.folder_name
-
     const device_struct_element = new DeviceStructElementData()
     device_struct_element.id = folder_struct_element.id
     device_struct_element.check_when_inited = false
     device_struct_element.device_name = folder_struct_element.folder_name
     device_struct_element.children = new Array<DeviceStructElementData>()
     device_struct_element.key = folder_struct_element.folder_name
-
-    cloned_application_config.value.device_struct.push(device_struct)
-    cloned_application_config.value.parsed_device_struct.children?.push(device_struct_element)
+    cloned_application_config.value.device_struct.children?.push(device_struct_element)
 }
 async function add_device_struct_element(device_struct_element: DeviceStructElementData): Promise<void> {
-    const req = new GetGkillInfoRequest()
-    const res = await props.gkill_api.get_gkill_info(req)
-    if (res.errors && res.errors.length !== 0) {
-        emits('received_errors', res.errors)
-        return
-    }
-    if (res.messages && res.messages.length !== 0) {
-        emits('received_messages', res.messages)
-    }
-
-    const device_struct = new DeviceStruct()
-    device_struct.id = device_struct_element.id ? device_struct_element.id : ""
-    device_struct.user_id = res.user_id
-    device_struct.device = res.device
-    device_struct.check_when_inited = device_struct_element.check_when_inited
-    device_struct.parent_folder_id = null
-    device_struct.seq = cloned_application_config.value.parsed_device_struct.children ? cloned_application_config.value.parsed_device_struct.children.length : 0
-    device_struct.device_name = device_struct_element.device_name
-
-    cloned_application_config.value.device_struct.push(device_struct)
-    cloned_application_config.value.parsed_device_struct.children?.push(device_struct_element)
-    await cloned_application_config.value.parse_device_struct()
+    cloned_application_config.value.device_struct.children?.push(device_struct_element)
 }
 function show_confirm_delete_device_struct_dialog(id: string): void {
-    if (!foldable_struct.value) {
-        return
-    }
-    let target_struct_object: DeviceStruct | null = null
-
-    for (let i = 0; i < cloned_application_config.value.device_struct.length; i++) {
-        const device_struct = cloned_application_config.value.device_struct[i]
-        if (device_struct.id === id) {
-            target_struct_object = device_struct
+    let target_struct_object: DeviceStructElementData | null = null
+    let device_name_walk = (_device: DeviceStructElementData): void => { }
+    device_name_walk = (device: DeviceStructElementData): void => {
+        const device_children = device.children
+        if (device.id === id) {
+            target_struct_object = device
+        } else if (device_children) {
+            device_children.forEach(child_device => {
+                if (child_device.children) {
+                    device_name_walk(child_device)
+                }
+            })
         }
     }
+    device_name_walk(cloned_application_config.value.device_struct)
 
     if (!target_struct_object) {
         return
@@ -287,13 +196,25 @@ function show_confirm_delete_device_struct_dialog(id: string): void {
     confirm_delete_device_struct_dialog.value?.show(target_struct_object)
 }
 function delete_device_struct(id: string): void {
-    for (let i = 0; i < cloned_application_config.value.device_struct.length; i++) {
-        if (cloned_application_config.value.device_struct[i].id === id) {
-            cloned_application_config.value.device_struct.splice(i, 1)
-            break
+    let device_name_walk = (_device: DeviceStructElementData): boolean => false
+    device_name_walk = (device: DeviceStructElementData): boolean => {
+        const device_children = device.children
+        if (device.id === id) {
+            return true
+        } else if (device_children) {
+            for (let i = 0; i < device_children.length; i++) {
+                const child_device = device_children[i]
+                if (child_device.children) {
+                    if (device_name_walk(child_device)) {
+                        device_children.splice(i, 1)
+                        return false
+                    }
+                }
+            }
         }
+        return false
     }
-    foldable_struct.value?.delete_struct(id)
+    device_name_walk(cloned_application_config.value.device_struct)
 }
 </script>
 <style lang="css" scoped>

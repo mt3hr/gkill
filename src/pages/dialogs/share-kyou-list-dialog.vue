@@ -9,7 +9,6 @@
     </v-dialog>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import type { ShareKyousListDialogEmits } from './share-kyou-list-dialog-emits'
 import type { ShareKyousListDialogProps } from './share-kyou-list-dialog-props'
 import ShareKyousListView from '../views/share-kyou-view.vue'
