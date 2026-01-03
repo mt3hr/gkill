@@ -115,6 +115,13 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 			err = fmt.Errorf("error at add init data to server config db: %w", err)
 			return nil, err
 		}
+
+		serverConfigs, err = gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(context.Background())
+		if err != nil {
+			err = fmt.Errorf("error at get all server configs: %w", err)
+			gkill_log.Debug.Println(err.Error())
+			return nil, err
+		}
 	}
 
 	var device *string
@@ -11347,6 +11354,31 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 }
 
 func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWriter, r *http.Request) bool {
+	// GET 以外は対象外
+	if r.Method != http.MethodGet {
+		return false
+	}
+
+	// ブラウザの通常ナビゲーション(HTMLドキュメント)の時だけ
+	if d := r.Header.Get("Sec-Fetch-Dest"); d != "" && d != "document" {
+		return false
+	}
+	if m := r.Header.Get("Sec-Fetch-Mode"); m != "" && m != "navigate" && m != "nested-navigate" {
+		return false
+	}
+
+	p := r.URL.Path
+	if strings.HasPrefix(p, "/assets/") ||
+		strings.HasSuffix(p, ".js") ||
+		strings.HasSuffix(p, ".css") ||
+		strings.HasSuffix(p, ".map") ||
+		strings.HasSuffix(p, ".png") ||
+		strings.HasSuffix(p, ".svg") ||
+		strings.HasSuffix(p, ".ico") ||
+		strings.HasSuffix(p, ".webmanifest") {
+		return false
+	}
+
 	accounts, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.GetAllAccounts(context.TODO())
 	if err != nil {
 		err = fmt.Errorf("error at get all account config")
