@@ -318,7 +318,7 @@ export class FindKyouQuery {
                     if (child_device.check_when_inited) {
                         device_names.push(child_device.device_name)
                     }
-                    if (child_device.children) {
+                    if (child_device) {
                         device_names.push(...device_name_walk(child_device))
                     }
                 })
@@ -336,7 +336,7 @@ export class FindKyouQuery {
                     if (child_rep_type.check_when_inited) {
                         rep_type_names.push(child_rep_type.rep_type_name)
                     }
-                    if (child_rep_type.children) {
+                    if (child_rep_type) {
                         rep_type_names.push(...rep_type_name_walk(child_rep_type))
                     }
                 })
@@ -356,7 +356,7 @@ export class FindKyouQuery {
                     if (child_tag.check_when_inited) {
                         tag_names.push(child_tag.tag_name)
                     }
-                    if (child_tag.children) {
+                    if (child_tag) {
                         tag_names.push(...tag_name_walk(child_tag))
                     }
                 })
@@ -395,7 +395,7 @@ export class FindKyouQuery {
             if (rep_children) {
                 rep_children.forEach(child_rep => {
                     rep_names.push(child_rep.rep_name)
-                    if (child_rep.children) {
+                    if (child_rep) {
                         rep_names.push(...rep_name_walk(child_rep))
                     }
                 })
@@ -414,7 +414,7 @@ export class FindKyouQuery {
                     if (child_tag.check_when_inited) {
                         tag_names.push(child_tag.tag_name)
                     }
-                    if (child_tag.children) {
+                    if (child_tag) {
                         tag_names.push(...tag_name_walk(child_tag))
                     }
                 })
@@ -521,7 +521,7 @@ export class FindKyouQuery {
             }
             if (tag_children) {
                 tag_children.forEach(child_tag => {
-                    if (child_tag.children) {
+                    if (child_tag) {
                         tag_name_walk(child_tag)
                     }
                 })
