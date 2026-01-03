@@ -22,15 +22,6 @@ precacheAndRoute(self.__WB_MANIFEST, {
   directoryIndex: (null as any),
 })
 
-// / は常にネットワーク（HTTP キャッシュも使わない）
-registerRoute(
-  ({ request, url }) => request.mode === 'navigate' && url.pathname === '/',
-  async ({ event }) => {
-    // no-store でブラウザHTTPキャッシュも回避
-    return fetch(new Request((event as any).request, { cache: 'no-store' }))
-  },
-)
-
 // SPA の app-shell (index.html) フォールバック。ただし / と /api/ は除外
 registerRoute(
   new NavigationRoute(createHandlerBoundToURL('index.html'), {
@@ -133,7 +124,6 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     )
   } else if (request.method === 'POST' && (
     // ApplicationConfig系
-    url.pathname === '/api/get_gkill_info' ||
     url.pathname === '/api/get_all_rep_names' ||
     url.pathname === '/api/get_all_tag_names' ||
     url.pathname === '/api/get_mi_board_list')) {
