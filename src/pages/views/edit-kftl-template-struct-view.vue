@@ -120,7 +120,7 @@ function show_edit_kftl_template_struct_dialog(id: string): void {
             target_struct_object = kftl_template
         } else if (kftl_template_children) {
             kftl_template_children.forEach(child_kftl_template => {
-                if (child_kftl_template.children) {
+                if (child_kftl_template) {
                     kftl_template_walk(child_kftl_template)
                 }
             })
@@ -188,7 +188,7 @@ function show_confirm_delete_kftl_template_struct_dialog(id: string): void {
             target_struct_object = kftl_template_struct
         } else if (kftl_template_children) {
             kftl_template_children.forEach(child_kftl_template => {
-                if (child_kftl_template.children) {
+                if (child_kftl_template) {
                     kftl_template_walk(child_kftl_template)
                 }
             })
