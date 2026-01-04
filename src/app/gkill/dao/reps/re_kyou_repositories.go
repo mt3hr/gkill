@@ -298,7 +298,7 @@ errloop:
 }
 
 func (r *ReKyouRepositories) GetRepName(ctx context.Context) (string, error) {
-	return "ReKyouReps", nil
+	return "ReKyou", nil
 }
 
 func (r *ReKyouRepositories) Close(ctx context.Context) error {
