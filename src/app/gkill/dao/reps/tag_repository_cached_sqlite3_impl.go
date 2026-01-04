@@ -43,7 +43,10 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
-  REP_NAME NOT NULL
+  REP_NAME NOT NULL,
+  RELATED_TIME_UNIX NOT NULL,
+  CREATE_TIME_UNIX NOT NULL,
+  UPDATE_TIME_UNIX NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -60,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + `(ID, RELATED_TIME, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `" (ID, RELATED_TIME, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -83,7 +86,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + `_TARGET_ID ON ` + dbName + `(TARGET_ID, UPDATE_TIME DESC);`
+	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_TARGET_ID" ON "` + dbName + `"(TARGET_ID, UPDATE_TIME DESC);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
 	indexTargetIDStmt, err := cacheDB.PrepareContext(ctx, indexTargetIDSQL)
 	if err != nil {
@@ -99,14 +102,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + `_ID_UPDATE_TIME ON ` + dbName + `(ID, UPDATE_TIME);`
+	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_ID_UPDATE_TIME" ON "` + dbName + `"(ID, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
 	indexIDUpdateTimeStmt, err := cacheDB.PrepareContext(ctx, indexIDUpdateTimeSQL)
 	if err != nil {
@@ -122,10 +118,35 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
+	indexTargetIDUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_TARGET_ID_UNIX" ON "` + dbName + `"(TARGET_ID, UPDATE_TIME_UNIX DESC);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDUnixSQL)
+	indexTargetIDUnixStmt, err := cacheDB.PrepareContext(ctx, indexTargetIDUnixSQL)
 	if err != nil {
-		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME table to %s: %w", dbName, err)
+		err = fmt.Errorf("error at create TAG_TARGET_ID_UNIX index statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexTargetIDUnixStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDUnixSQL)
+	_, err = indexTargetIDUnixStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG_TARGET_ID_UNIX index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexIDUpdateTimeUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_ID_UPDATE_TIME_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeUnixSQL)
+	indexIDUpdateTimeUnixStmt, err := cacheDB.PrepareContext(ctx, indexIDUpdateTimeUnixSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME_UNIX index statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexIDUpdateTimeUnixStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeUnixSQL)
+	_, err = indexIDUpdateTimeUnixStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME_UNIX index to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -135,12 +156,12 @@ SELECT
   ID,
   TARGET_ID,
   TAG,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -152,9 +173,9 @@ WHERE TAG1.TARGET_ID = ?
     SELECT 1
     FROM ` + dbName + ` AS TAG2
     WHERE TAG2.ID = TAG1.ID
-      AND TAG2.UPDATE_TIME > TAG1.UPDATE_TIME
+      AND TAG2.UPDATE_TIME_UNIX > TAG1.UPDATE_TIME_UNIX
   )
-ORDER BY TAG1.UPDATE_TIME DESC
+ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 `
 	gkill_log.TraceSQL.Printf("sql: %s", getTagsByTargetIDSQL)
 	getTagsByTargetIDStmt, err := cacheDB.PrepareContext(ctx, getTagsByTargetIDSQL)
@@ -192,12 +213,12 @@ SELECT
   ID,
   TARGET_ID,
   TAG,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -215,7 +236,7 @@ WHERE
 	tableNameAlias := t.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "UPDATE_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TAG"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -256,19 +277,19 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			tag := &Tag{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			dataType := ""
 
 			err = rows.Scan(&tag.IsDeleted,
 				&tag.ID,
 				&tag.TargetID,
 				&tag.Tag,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&tag.CreateApp,
 				&tag.CreateDevice,
 				&tag.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&tag.UpdateApp,
 				&tag.UpdateDevice,
 				&tag.UpdateUser,
@@ -280,21 +301,9 @@ WHERE
 				return nil, err
 			}
 
-			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in TAG: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			tag.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in TAG: %w", createTimeStr, err)
-				return nil, err
-			}
-			tag.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in TAG: %w", updateTimeStr, err)
-				return nil, err
-			}
+			tag.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			tag.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			tag.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			tags = append(tags, tag)
 		}
 	}
@@ -355,12 +364,12 @@ SELECT
   ID,
   TARGET_ID,
   TAG,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -387,7 +396,7 @@ WHERE
 	tableNameAlias := t.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "UPDATE_TIME"
+	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TAG"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -423,19 +432,19 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			tag := &Tag{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			dataType := ""
 
 			err = rows.Scan(&tag.IsDeleted,
 				&tag.ID,
 				&tag.TargetID,
 				&tag.Tag,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&tag.CreateApp,
 				&tag.CreateDevice,
 				&tag.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&tag.UpdateApp,
 				&tag.UpdateDevice,
 				&tag.UpdateUser,
@@ -447,21 +456,9 @@ WHERE
 				return nil, err
 			}
 
-			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in TAG: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			tag.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in TAG: %w", createTimeStr, err)
-				return nil, err
-			}
-			tag.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in TAG: %w", updateTimeStr, err)
-				return nil, err
-			}
+			tag.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			tag.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			tag.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			tags = append(tags, tag)
 		}
 	}
@@ -492,19 +489,20 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 			return nil, ctx.Err()
 		default:
 			tag := &Tag{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+
 			dataType := ""
 
 			err = rows.Scan(&tag.IsDeleted,
 				&tag.ID,
 				&tag.TargetID,
 				&tag.Tag,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&tag.CreateApp,
 				&tag.CreateDevice,
 				&tag.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&tag.UpdateApp,
 				&tag.UpdateDevice,
 				&tag.UpdateUser,
@@ -516,21 +514,9 @@ func (t *tagRepositoryCachedSQLite3Impl) GetTagsByTargetID(ctx context.Context, 
 				return nil, err
 			}
 
-			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in TAG: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			tag.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in TAG: %w", createTimeStr, err)
-				return nil, err
-			}
-			tag.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in TAG: %w", updateTimeStr, err)
-				return nil, err
-			}
+			tag.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			tag.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			tag.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			tags = append(tags, tag)
 		}
 	}
@@ -581,8 +567,14 @@ INSERT INTO "` + t.dbName + `" (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -630,6 +622,9 @@ INSERT INTO "` + t.dbName + `" (
 				tag.UpdateDevice,
 				tag.UpdateUser,
 				tag.RepName,
+				tag.RelatedTime.Unix(),
+				tag.CreateTime.Unix(),
+				tag.UpdateTime.Unix(),
 			}
 			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
@@ -670,12 +665,12 @@ SELECT
   ID,
   TARGET_ID,
   TAG,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -701,7 +696,7 @@ WHERE
 	tableNameAlias := t.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "UPDATE_TIME"
+	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TAG"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -711,7 +706,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
+
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -737,46 +732,33 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			tag := &Tag{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			dataType := ""
 
 			err = rows.Scan(&tag.IsDeleted,
 				&tag.ID,
 				&tag.TargetID,
 				&tag.Tag,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&tag.CreateApp,
 				&tag.CreateDevice,
 				&tag.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&tag.UpdateApp,
 				&tag.UpdateDevice,
 				&tag.UpdateUser,
 				&tag.RepName,
 				&dataType,
 			)
-
 			if err != nil {
 				err = fmt.Errorf("error at read rows at get tag histories: %w", err)
 				return nil, err
 			}
 
-			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in TAG: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			tag.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in TAG: %w", createTimeStr, err)
-				return nil, err
-			}
-			tag.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in TAG: %w", updateTimeStr, err)
-				return nil, err
-			}
+			tag.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			tag.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			tag.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			tags = append(tags, tag)
 		}
 	}
@@ -799,8 +781,14 @@ INSERT INTO ` + t.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX 
 ) VALUES (
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -839,6 +827,9 @@ INSERT INTO ` + t.dbName + ` (
 		tag.UpdateDevice,
 		tag.UpdateUser,
 		tag.RepName,
+		tag.RelatedTime.Unix(),
+		tag.CreateTime.Unix(),
+		tag.UpdateTime.Unix(),
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -859,7 +850,7 @@ FROM ` + t.dbName + `
 `
 	tableName := t.dbName
 	tableNameAlias := t.dbName
-	sql += fmt.Sprintf(" WHERE UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
+	sql += fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
 	sql += fmt.Sprintf(" GROUP BY TAG ")
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -912,12 +903,12 @@ SELECT
   ID,
   TARGET_ID,
   TAG,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -938,7 +929,7 @@ WHERE
 	tableNameAlias := t.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "UPDATE_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := true
@@ -974,19 +965,19 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			tag := &Tag{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			dataType := ""
 
 			err = rows.Scan(&tag.IsDeleted,
 				&tag.ID,
 				&tag.TargetID,
 				&tag.Tag,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&tag.CreateApp,
 				&tag.CreateDevice,
 				&tag.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&tag.UpdateApp,
 				&tag.UpdateDevice,
 				&tag.UpdateUser,
@@ -998,21 +989,9 @@ WHERE
 				return nil, err
 			}
 
-			tag.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in TAG: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			tag.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in TAG: %w", createTimeStr, err)
-				return nil, err
-			}
-			tag.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in TAG: %w", updateTimeStr, err)
-				return nil, err
-			}
+			tag.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			tag.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			tag.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			tags = append(tags, tag)
 		}
 	}

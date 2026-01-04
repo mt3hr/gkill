@@ -44,7 +44,10 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
-  REP_NAME NOT NULL
+  REP_NAME NOT NULL,
+  NOTIFICATION_TIME_UNIX NOT NULL,
+  CREATE_TIME_UNIX NOT NULL,
+  UPDATE_TIME_UNIX NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -61,14 +64,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create NOTIFICATION table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -81,6 +77,22 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create NOTIFICATION index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create notification index unix statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexUnixStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	_, err = indexUnixStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create notification index unix to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -110,14 +122,14 @@ SELECT
   IS_DELETED,
   ID,
   TARGET_ID,
-  NOTIFICATION_TIME,
+  NOTIFICATION_TIME_UNIX,
   CONTENT,
   IS_NOTIFICATED,
-  CREATE_TIME,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_USER,
   CREATE_DEVICE,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -136,7 +148,7 @@ WHERE
 	tableNameAlias := t.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "UPDATE_TIME"
+	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -177,21 +189,21 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			notification := &Notification{}
-			createTimeStr, updateTimeStr, notificationTimeStr := "", "", ""
+			notificationTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			dataType := ""
 
 			err = rows.Scan(
 				&notification.IsDeleted,
 				&notification.ID,
 				&notification.TargetID,
-				&notificationTimeStr,
+				&notificationTimeUnix,
 				&notification.Content,
 				&notification.IsNotificated,
-				&createTimeStr,
+				&createTimeUnix,
 				&notification.CreateApp,
 				&notification.CreateDevice,
 				&notification.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&notification.UpdateApp,
 				&notification.UpdateDevice,
 				&notification.UpdateUser,
@@ -203,21 +215,9 @@ WHERE
 				return nil, err
 			}
 
-			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse notification time %s in NOTIFICATION: %w", notificationTimeStr, err)
-				return nil, err
-			}
-			notification.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in NOTIFICATION: %w", createTimeStr, err)
-				return nil, err
-			}
-			notification.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in NOTIFICATION: %w", updateTimeStr, err)
-				return nil, err
-			}
+			notification.NotificationTime = time.Unix(notificationTimeUnix, 0).Local()
+			notification.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			notification.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			notifications = append(notifications, notification)
 		}
 	}
@@ -277,14 +277,14 @@ SELECT
   IS_DELETED,
   ID,
   TARGET_ID,
-  NOTIFICATION_TIME,
+  NOTIFICATION_TIME_UNIX,
   CONTENT,
   IS_NOTIFICATED,
-  CREATE_TIME,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_USER,
   CREATE_DEVICE,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -310,7 +310,7 @@ WHERE
 	tableNameAlias := t.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "UPDATE_TIME"
+	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TARGET_ID"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -320,7 +320,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
+
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -347,21 +347,22 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			notification := &Notification{}
-			createTimeStr, updateTimeStr, notificationTimeStr := "", "", ""
+			notificationTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+
 			dataType := ""
 
 			err = rows.Scan(
 				&notification.IsDeleted,
 				&notification.ID,
 				&notification.TargetID,
-				&notificationTimeStr,
+				&notificationTimeUnix,
 				&notification.Content,
 				&notification.IsNotificated,
-				&createTimeStr,
+				&createTimeUnix,
 				&notification.CreateApp,
 				&notification.CreateDevice,
 				&notification.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&notification.UpdateApp,
 				&notification.UpdateDevice,
 				&notification.UpdateUser,
@@ -373,21 +374,9 @@ WHERE
 				return nil, err
 			}
 
-			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse notification time %s in NOTIFICATION: %w", notificationTimeStr, err)
-				return nil, err
-			}
-			notification.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in NOTIFICATION: %w", createTimeStr, err)
-				return nil, err
-			}
-			notification.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in NOTIFICATION: %w", updateTimeStr, err)
-				return nil, err
-			}
+			notification.NotificationTime = time.Unix(notificationTimeUnix, 0).Local()
+			notification.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			notification.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			notifications = append(notifications, notification)
 		}
 	}
@@ -402,14 +391,14 @@ SELECT
   IS_DELETED,
   ID,
   TARGET_ID,
-  NOTIFICATION_TIME,
+  NOTIFICATION_TIME_UNIX,
   CONTENT,
   IS_NOTIFICATED,
-  CREATE_TIME,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_USER,
   CREATE_DEVICE,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -433,7 +422,7 @@ WHERE
 	tableNameAlias := t.dbName
 	whereCounter := 1
 	onlyLatestData := true
-	relatedTimeColumnName := "NOTIFICATION_TIME"
+	relatedTimeColumnName := "NOTIFICATION_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -470,21 +459,22 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			notification := &Notification{}
-			createTimeStr, updateTimeStr, notificationTimeStr := "", "", ""
+			notificationTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+
 			dataType := ""
 
 			err = rows.Scan(
 				&notification.IsDeleted,
 				&notification.ID,
 				&notification.TargetID,
-				&notificationTimeStr,
+				&notificationTimeUnix,
 				&notification.Content,
 				&notification.IsNotificated,
-				&createTimeStr,
+				&createTimeUnix,
 				&notification.CreateApp,
 				&notification.CreateDevice,
 				&notification.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&notification.UpdateApp,
 				&notification.UpdateDevice,
 				&notification.UpdateUser,
@@ -496,21 +486,9 @@ WHERE
 				return nil, err
 			}
 
-			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse notification time %s in NOTIFICATION: %w", notificationTimeStr, err)
-				return nil, err
-			}
-			notification.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in NOTIFICATION: %w", createTimeStr, err)
-				return nil, err
-			}
-			notification.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in NOTIFICATION: %w", updateTimeStr, err)
-				return nil, err
-			}
+			notification.NotificationTime = time.Unix(notificationTimeUnix, 0).Local()
+			notification.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			notification.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			notifications = append(notifications, notification)
 		}
 	}
@@ -562,8 +540,14 @@ INSERT INTO ` + t.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  NOTIFICATION_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -612,6 +596,9 @@ INSERT INTO ` + t.dbName + ` (
 				notification.UpdateApp,
 				notification.UpdateDevice,
 				notification.UpdateUser,
+				notification.NotificationTime.Unix(),
+				notification.CreateTime.Unix(),
+				notification.UpdateTime.Unix(),
 			}
 			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
@@ -650,14 +637,14 @@ SELECT
   IS_DELETED,
   ID,
   TARGET_ID,
-  NOTIFICATION_TIME,
+  NOTIFICATION_TIME_UNIX,
   CONTENT,
   IS_NOTIFICATED,
-  CREATE_TIME,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_USER,
   CREATE_DEVICE,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -689,7 +676,7 @@ WHERE
 	tableNameAlias := t.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "UPDATE_TIME"
+	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := false
@@ -699,7 +686,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
+
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -726,21 +713,21 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			notification := &Notification{}
-			createTimeStr, updateTimeStr, notificationTimeStr := "", "", ""
+			notificationTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			dataType := ""
 
 			err = rows.Scan(
 				&notification.IsDeleted,
 				&notification.ID,
 				&notification.TargetID,
-				&notificationTimeStr,
+				&notificationTimeUnix,
 				&notification.Content,
 				&notification.IsNotificated,
-				&createTimeStr,
+				&createTimeUnix,
 				&notification.CreateApp,
 				&notification.CreateDevice,
 				&notification.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&notification.UpdateApp,
 				&notification.UpdateDevice,
 				&notification.UpdateUser,
@@ -752,21 +739,9 @@ WHERE
 				return nil, err
 			}
 
-			notification.NotificationTime, err = time.Parse(sqlite3impl.TimeLayout, notificationTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse notification time %s in NOTIFICATION: %w", notificationTimeStr, err)
-				return nil, err
-			}
-			notification.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in NOTIFICATION: %w", createTimeStr, err)
-				return nil, err
-			}
-			notification.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in NOTIFICATION: %w", updateTimeStr, err)
-				return nil, err
-			}
+			notification.NotificationTime = time.Unix(notificationTimeUnix, 0).Local()
+			notification.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			notification.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			notifications = append(notifications, notification)
 		}
 	}
@@ -789,8 +764,14 @@ INSERT INTO ` + t.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  NOTIFICATION_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -831,6 +812,9 @@ INSERT INTO ` + t.dbName + ` (
 		notification.UpdateDevice,
 		notification.UpdateUser,
 		notification.RepName,
+		notification.NotificationTime.Unix(),
+		notification.CreateTime.Unix(),
+		notification.UpdateTime.Unix(),
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)

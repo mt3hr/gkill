@@ -205,22 +205,40 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	} else if useCalendar {
 		// 開始日時を指定するSQLを追記
 		if calendarStartDate != nil {
-			if *whereCounter != 0 {
-				sql += " AND "
+			if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
+				if *whereCounter != 0 {
+					sql += " AND "
+				}
+				sql += fmt.Sprintf("%s >= ?", relatedTimeColumnName)
+				*queryArgs = append(*queryArgs, calendarStartDate.Unix())
+				*whereCounter++
+			} else {
+				if *whereCounter != 0 {
+					sql += " AND "
+				}
+				sql += fmt.Sprintf("datetime(%s, 'localtime') >= datetime(?, 'localtime')", relatedTimeColumnName)
+				*queryArgs = append(*queryArgs, calendarStartDate.Format(TimeLayout))
+				*whereCounter++
 			}
-			sql += fmt.Sprintf("datetime(%s, 'localtime') >= datetime(?, 'localtime')", relatedTimeColumnName)
-			*queryArgs = append(*queryArgs, calendarStartDate.Format(TimeLayout))
-			*whereCounter++
 		}
 
 		// 終了日時を指定するSQLを追記
 		if calendarEndDate != nil {
-			if *whereCounter != 0 {
-				sql += " AND "
+			if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
+				if *whereCounter != 0 {
+					sql += " AND "
+				}
+				sql += fmt.Sprintf("%s <= ?", relatedTimeColumnName)
+				*queryArgs = append(*queryArgs, calendarEndDate.Unix())
+				*whereCounter++
+			} else {
+				if *whereCounter != 0 {
+					sql += " AND "
+				}
+				sql += fmt.Sprintf("datetime(%s, 'localtime') <= datetime(?, 'localtime')", relatedTimeColumnName)
+				*queryArgs = append(*queryArgs, calendarEndDate.Format(TimeLayout))
+				*whereCounter++
 			}
-			sql += fmt.Sprintf("datetime(%s, 'localtime') <= datetime(?, 'localtime')", relatedTimeColumnName)
-			*queryArgs = append(*queryArgs, calendarEndDate.Format(TimeLayout))
-			*whereCounter++
 		}
 	}
 

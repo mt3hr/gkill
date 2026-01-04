@@ -44,7 +44,11 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
-  REP_NAME NOT NULL
+  REP_NAME NOT NULL,
+  START_TIME_UNIX NOT NULL,
+  END_TIME_UNIX,
+  CREATE_TIME_UNIX NOT NULL,
+  UPDATE_TIME_UNIX NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -61,14 +65,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TIMEIS table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -81,6 +78,22 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create timeis index unix statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexUnixStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	_, err = indexUnixStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create timeis index unix to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -109,12 +122,12 @@ func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query
 SELECT 
   IS_DELETED,
   ID,
-  START_TIME AS RELATED_TIME,
-  CREATE_TIME,
+  START_TIME_UNIX AS RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -126,12 +139,12 @@ FROM ` + t.dbName + `
 SELECT 
   IS_DELETED,
   ID,
-  END_TIME AS RELATED_TIME,
-  CREATE_TIME,
+  END_TIME_UNIX AS RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -142,7 +155,7 @@ FROM ` + t.dbName + `
 
 	sqlWhereFilterEndTimeIs := ""
 	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
-		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME IS NOT NULL"
+		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME_UNIX IS NOT NULL"
 	} else {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
@@ -153,7 +166,7 @@ FROM ` + t.dbName + `
 	tableNameAlias := t.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -171,9 +184,9 @@ FROM ` + t.dbName + `
 		return nil, err
 	}
 	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
@@ -183,7 +196,7 @@ FROM ` + t.dbName + `
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "RELATED_TIME"
+	relatedTimeColumnName = "RELATED_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -195,15 +208,14 @@ FROM ` + t.dbName + `
 		return nil, err
 	}
 	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
 
 	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
-	sql += " ORDER BY RELATED_TIME DESC"
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
@@ -228,17 +240,17 @@ FROM ` + t.dbName + `
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(
 				&kyou.IsDeleted,
 				&kyou.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kyou.CreateApp,
 				&kyou.CreateDevice,
 				&kyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kyou.UpdateApp,
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
@@ -250,21 +262,9 @@ FROM ` + t.dbName + `
 				return nil, err
 			}
 
-			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in TIMEIS: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in TIMEIS: %w", createTimeStr, err)
-				return nil, err
-			}
-			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in TIMEIS: %w", updateTimeStr, err)
-				return nil, err
-			}
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
 			if _, exist := kyous[kyou.ID]; !exist {
 				kyous[kyou.ID] = []*Kyou{}
@@ -313,12 +313,12 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context
 SELECT 
   IS_DELETED,
   ID,
-  START_TIME AS RELATED_TIME,
-  CREATE_TIME,
+  START_TIME_UNIX AS RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -339,7 +339,7 @@ WHERE
 	queryArgs := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -349,7 +349,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
+
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -360,7 +360,6 @@ WHERE
 	}
 	defer stmt.Close()
 
-	sql += " ORDER BY RELATED_TIME DESC"
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -378,44 +377,31 @@ WHERE
 		default:
 			kyou := &Kyou{}
 			kyou.RepName = repName
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(
 				&kyou.IsDeleted,
 				&kyou.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kyou.CreateApp,
 				&kyou.CreateDevice,
 				&kyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kyou.UpdateApp,
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
 				&kyou.RepName,
 				&kyou.DataType,
 			)
-
 			if err != nil {
 				err = fmt.Errorf("error at scan kyou: %w", err)
 				return nil, err
 			}
 
-			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in TIMEIS: %w", relatedTimeStr, id, err)
-				return nil, err
-			}
-			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in TIMEIS: %w", createTimeStr, id, err)
-				return nil, err
-			}
-			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in TIMEIS: %w", updateTimeStr, id, err)
-				return nil, err
-			}
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kyous = append(kyous, kyou)
 		}
 	}
@@ -477,8 +463,16 @@ INSERT INTO ` + t.dbName + `(
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  START_TIME_UNIX,
+  END_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -513,10 +507,13 @@ INSERT INTO ` + t.dbName + `(
 		}
 		err = func() error {
 			var endTimeStr interface{}
+			var endTimeUnix interface{}
 			if timeis.EndTime == nil {
 				endTimeStr = nil
+				endTimeUnix = nil
 			} else {
 				endTimeStr = timeis.EndTime.Format(sqlite3impl.TimeLayout)
+				endTimeUnix = timeis.EndTime.Unix()
 			}
 
 			queryArgs := []interface{}{
@@ -534,6 +531,10 @@ INSERT INTO ` + t.dbName + `(
 				timeis.UpdateDevice,
 				timeis.UpdateUser,
 				timeis.RepName,
+				timeis.StartTime.Unix(),
+				endTimeUnix,
+				timeis.CreateTime.Unix(),
+				timeis.UpdateTime.Unix(),
 			}
 			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
@@ -598,14 +599,14 @@ SELECT
   IS_DELETED,
   ID,
   TITLE,
-  START_TIME,
-  END_TIME,
-  START_TIME AS RELATED_TIME,
-  CREATE_TIME,
+  START_TIME_UNIX,
+  END_TIME_UNIX,
+  START_TIME_UNIX AS RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -618,14 +619,14 @@ SELECT
   IS_DELETED,
   ID,
   TITLE,
-  START_TIME,
-  END_TIME,
-  END_TIME AS RELATED_TIME,
-  CREATE_TIME,
+  START_TIME_UNIX,
+  END_TIME_UNIX,
+  END_TIME_UNIX AS RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -636,7 +637,7 @@ FROM ` + t.dbName + `
 
 	sqlWhereFilterEndTimeIs := ""
 	if query.IncludeEndTimeIs != nil && *query.IncludeEndTimeIs {
-		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME IS NOT NULL"
+		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start', 'timeis_end') AND END_TIME_UNIX IS NOT NULL"
 	} else {
 		sqlWhereFilterEndTimeIs = "DATA_TYPE IN ('timeis_start')"
 	}
@@ -646,7 +647,7 @@ FROM ` + t.dbName + `
 	tableNameAlias := t.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -664,9 +665,9 @@ FROM ` + t.dbName + `
 		return nil, err
 	}
 	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
@@ -676,7 +677,7 @@ FROM ` + t.dbName + `
 	tableNameAlias = t.dbName
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "RELATED_TIME"
+	relatedTimeColumnName = "RELATED_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -688,15 +689,14 @@ FROM ` + t.dbName + `
 		return nil, err
 	}
 	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisEnd += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
 
 	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
-	sql += " ORDER BY RELATED_TIME DESC"
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
@@ -721,21 +721,21 @@ FROM ` + t.dbName + `
 			return nil, ctx.Err()
 		default:
 			timeis := &TimeIs{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			startTimeStr, endTime := "", sqllib.NullString{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+			startTimeUnix, endTimeUnix := int64(0), sqllib.NullInt64{}
 
 			err = rows.Scan(
 				&timeis.IsDeleted,
 				&timeis.ID,
 				&timeis.Title,
-				&startTimeStr,
-				&endTime,
-				&relatedTimeStr,
-				&createTimeStr,
+				&startTimeUnix,
+				&endTimeUnix,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&timeis.CreateApp,
 				&timeis.CreateDevice,
 				&timeis.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&timeis.UpdateApp,
 				&timeis.UpdateDevice,
 				&timeis.UpdateUser,
@@ -747,23 +747,11 @@ FROM ` + t.dbName + `
 				return nil, err
 			}
 
-			timeis.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in TIMEIS: %w", createTimeStr, err)
-				return nil, err
-			}
-			timeis.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in TIMEIS: %w", updateTimeStr, err)
-				return nil, err
-			}
-			timeis.StartTime, err = time.Parse(sqlite3impl.TimeLayout, startTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", updateTimeStr, err)
-				return nil, err
-			}
-			if endTime.Valid {
-				parsedEndTime, _ := time.Parse(sqlite3impl.TimeLayout, endTime.String)
+			timeis.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			timeis.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			timeis.StartTime = time.Unix(startTimeUnix, 0).Local()
+			if endTimeUnix.Valid {
+				parsedEndTime := time.Unix(endTimeUnix.Int64, 0).Local()
 				timeis.EndTime = &parsedEndTime
 			}
 			timeiss = append(timeiss, timeis)
@@ -806,14 +794,14 @@ SELECT
   IS_DELETED,
   ID,
   TITLE,
-  START_TIME,
-  END_TIME,
-  CREATE_TIME AS RELATED_TIME,
-  CREATE_TIME,
+  START_TIME_UNIX,
+  END_TIME_UNIX,
+  CREATE_TIME_UNIX AS RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -839,7 +827,7 @@ WHERE
 	tableNameAlias := t.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -852,15 +840,14 @@ WHERE
 		return nil, err
 	}
 	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisStart += " AND ((datetime(?, 'localtime') >= datetime(START_TIME, 'localtime')) AND (datetime(?, 'localtime') <= datetime(END_TIME, 'localtime') OR END_TIME IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Format(sqlite3impl.TimeLayout))
+		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
 
 	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
-	sql += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
@@ -885,21 +872,21 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			timeis := &TimeIs{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			startTimeStr, endTime := "", sqllib.NullString{}
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
+			startTimeUnix, endTimeUnix := int64(0), sqllib.NullInt64{}
 
 			err = rows.Scan(
 				&timeis.IsDeleted,
 				&timeis.ID,
 				&timeis.Title,
-				&startTimeStr,
-				&endTime,
-				&relatedTimeStr,
-				&createTimeStr,
+				&startTimeUnix,
+				&endTimeUnix,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&timeis.CreateApp,
 				&timeis.CreateDevice,
 				&timeis.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&timeis.UpdateApp,
 				&timeis.UpdateDevice,
 				&timeis.UpdateUser,
@@ -911,23 +898,11 @@ WHERE
 				return nil, err
 			}
 
-			timeis.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in TIMEIS: %w", createTimeStr, err)
-				return nil, err
-			}
-			timeis.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in TIMEIS: %w", updateTimeStr, err)
-				return nil, err
-			}
-			timeis.StartTime, err = time.Parse(sqlite3impl.TimeLayout, startTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse start time %s in TIMEIS: %w", updateTimeStr, err)
-				return nil, err
-			}
-			if endTime.Valid {
-				parsedEndTime, _ := time.Parse(sqlite3impl.TimeLayout, endTime.String)
+			timeis.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			timeis.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+			timeis.StartTime = time.Unix(startTimeUnix, 0).Local()
+			if endTimeUnix.Valid {
+				parsedEndTime := time.Unix(endTimeUnix.Int64, 0).Local()
 				timeis.EndTime = &parsedEndTime
 			}
 			timeiss = append(timeiss, timeis)
@@ -952,8 +927,16 @@ INSERT INTO ` + t.dbName + `(
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  START_TIME_UNIX,
+  END_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -978,10 +961,13 @@ INSERT INTO ` + t.dbName + `(
 	defer stmt.Close()
 
 	var endTimeStr interface{}
+	var endTimeUnix interface{}
 	if timeis.EndTime == nil {
 		endTimeStr = nil
+		endTimeUnix = nil
 	} else {
 		endTimeStr = timeis.EndTime.Format(sqlite3impl.TimeLayout)
+		endTimeUnix = timeis.EndTime.Unix()
 	}
 
 	queryArgs := []interface{}{
@@ -999,6 +985,10 @@ INSERT INTO ` + t.dbName + `(
 		timeis.UpdateDevice,
 		timeis.UpdateUser,
 		timeis.RepName,
+		timeis.StartTime.Unix(),
+		endTimeUnix,
+		timeis.CreateTime.Unix(),
+		timeis.UpdateTime.Unix(),
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"sort"
 	"sync"
 	"time"
 
@@ -322,9 +321,6 @@ AND DEVICE = ?
 			kyous = append(kyous, kyou)
 		}
 	}
-	sort.Slice(kyous, func(i, j int) bool {
-		return kyous[i].UpdateTime.After(kyous[j].UpdateTime)
-	})
 	return kyous, nil
 }
 

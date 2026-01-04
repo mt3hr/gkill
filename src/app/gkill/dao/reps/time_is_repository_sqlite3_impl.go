@@ -217,7 +217,6 @@ FROM TIMEIS
 	}
 
 	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
-	sql += " ORDER BY RELATED_TIME DESC"
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
@@ -366,7 +365,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
+
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -377,7 +376,6 @@ WHERE
 	}
 	defer stmt.Close()
 
-	sql += " ORDER BY RELATED_TIME DESC"
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
@@ -594,7 +592,6 @@ FROM TIMEIS
 	}
 
 	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
-	sql += " ORDER BY RELATED_TIME DESC"
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
@@ -765,7 +762,6 @@ WHERE
 	}
 
 	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
-	sql += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
