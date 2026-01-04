@@ -32,12 +32,9 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   CONTENT NOT NULL,
-  RELATED_TIME NOT NULL,
-  CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
   CREATE_USER NOT NULL,
   CREATE_DEVICE NOT NULL,
-  UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
@@ -58,22 +55,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create KMEMO table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create KMEMO index statement %s: %w", dbName, err)
-		return nil, err
-	}
-	defer indexStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	_, err = indexStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create KMEMO index to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -386,12 +367,9 @@ INSERT INTO ` + k.dbName + ` (
   IS_DELETED,
   ID,
   CONTENT,
-  RELATED_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -400,9 +378,6 @@ INSERT INTO ` + k.dbName + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -438,12 +413,9 @@ INSERT INTO ` + k.dbName + ` (
 				kmemo.IsDeleted,
 				kmemo.ID,
 				kmemo.Content,
-				kmemo.RelatedTime.Format(sqlite3impl.TimeLayout),
-				kmemo.CreateTime.Format(sqlite3impl.TimeLayout),
 				kmemo.CreateApp,
 				kmemo.CreateDevice,
 				kmemo.CreateUser,
-				kmemo.UpdateTime.Format(sqlite3impl.TimeLayout),
 				kmemo.UpdateApp,
 				kmemo.UpdateDevice,
 				kmemo.UpdateUser,
@@ -747,12 +719,9 @@ INSERT INTO ` + k.dbName + ` (
   IS_DELETED,
   ID,
   CONTENT,
-  RELATED_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -761,9 +730,6 @@ INSERT INTO ` + k.dbName + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX 
 ) VALUES (
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -790,12 +756,9 @@ INSERT INTO ` + k.dbName + ` (
 		kmemo.IsDeleted,
 		kmemo.ID,
 		kmemo.Content,
-		kmemo.RelatedTime.Format(sqlite3impl.TimeLayout),
-		kmemo.CreateTime.Format(sqlite3impl.TimeLayout),
 		kmemo.CreateApp,
 		kmemo.CreateDevice,
 		kmemo.CreateUser,
-		kmemo.UpdateTime.Format(sqlite3impl.TimeLayout),
 		kmemo.UpdateApp,
 		kmemo.UpdateDevice,
 		kmemo.UpdateUser,
