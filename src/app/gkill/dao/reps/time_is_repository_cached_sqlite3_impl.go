@@ -34,13 +34,9 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TITLE NOT NULL,
-  START_TIME NOT NULL,
-  END_TIME,
-  CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
   CREATE_USER NOT NULL,
   CREATE_DEVICE NOT NULL,
-  UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
@@ -62,22 +58,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create TIMEIS index statement %s: %w", dbName, err)
-		return nil, err
-	}
-	defer indexStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	_, err = indexStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TIMEIS index to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -453,13 +433,9 @@ INSERT INTO ` + t.dbName + `(
   IS_DELETED,
   ID,
   TITLE,
-  START_TIME,
-  END_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -469,10 +445,6 @@ INSERT INTO ` + t.dbName + `(
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -506,13 +478,10 @@ INSERT INTO ` + t.dbName + `(
 		default:
 		}
 		err = func() error {
-			var endTimeStr interface{}
 			var endTimeUnix interface{}
 			if timeis.EndTime == nil {
-				endTimeStr = nil
 				endTimeUnix = nil
 			} else {
-				endTimeStr = timeis.EndTime.Format(sqlite3impl.TimeLayout)
 				endTimeUnix = timeis.EndTime.Unix()
 			}
 
@@ -520,13 +489,9 @@ INSERT INTO ` + t.dbName + `(
 				timeis.IsDeleted,
 				timeis.ID,
 				timeis.Title,
-				timeis.StartTime.Format(sqlite3impl.TimeLayout),
-				endTimeStr,
-				timeis.CreateTime.Format(sqlite3impl.TimeLayout),
 				timeis.CreateApp,
 				timeis.CreateDevice,
 				timeis.CreateUser,
-				timeis.UpdateTime.Format(sqlite3impl.TimeLayout),
 				timeis.UpdateApp,
 				timeis.UpdateDevice,
 				timeis.UpdateUser,
@@ -917,13 +882,9 @@ INSERT INTO ` + t.dbName + `(
   IS_DELETED,
   ID,
   TITLE,
-  START_TIME,
-  END_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -933,10 +894,6 @@ INSERT INTO ` + t.dbName + `(
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -960,13 +917,10 @@ INSERT INTO ` + t.dbName + `(
 	}
 	defer stmt.Close()
 
-	var endTimeStr interface{}
 	var endTimeUnix interface{}
 	if timeis.EndTime == nil {
-		endTimeStr = nil
 		endTimeUnix = nil
 	} else {
-		endTimeStr = timeis.EndTime.Format(sqlite3impl.TimeLayout)
 		endTimeUnix = timeis.EndTime.Unix()
 	}
 
@@ -974,13 +928,9 @@ INSERT INTO ` + t.dbName + `(
 		timeis.IsDeleted,
 		timeis.ID,
 		timeis.Title,
-		timeis.StartTime.Format(sqlite3impl.TimeLayout),
-		endTimeStr,
-		timeis.CreateTime.Format(sqlite3impl.TimeLayout),
 		timeis.CreateApp,
 		timeis.CreateDevice,
 		timeis.CreateUser,
-		timeis.UpdateTime.Format(sqlite3impl.TimeLayout),
 		timeis.UpdateApp,
 		timeis.UpdateDevice,
 		timeis.UpdateUser,

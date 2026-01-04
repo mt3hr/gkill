@@ -36,12 +36,9 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   SHOP NOT NULL,
   TITLE NOT NULL,
   AMOUNT NOT NULL,
-  RELATED_TIME NOT NULL,
-  CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
   CREATE_USER NOT NULL,
   CREATE_DEVICE NOT NULL,
-  UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
@@ -69,22 +66,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create NLOG table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create NLOG index statement %s: %w", dbName, err)
-		return nil, err
-	}
-	defer indexStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	_, err = indexStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create NLOG index to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -218,7 +199,6 @@ WHERE
 			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
-
 			if _, exist := kyous[kyou.ID]; !exist {
 				kyous[kyou.ID] = []*Kyou{}
 			}
@@ -403,12 +383,9 @@ INSERT INTO ` + n.dbName + ` (
   SHOP,
   TITLE,
   AMOUNT,
-  RELATED_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -417,9 +394,6 @@ INSERT INTO ` + n.dbName + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -460,12 +434,9 @@ INSERT INTO ` + n.dbName + ` (
 				nlog.Shop,
 				nlog.Title,
 				nlog.Amount.String(),
-				nlog.RelatedTime.Format(sqlite3impl.TimeLayout),
-				nlog.CreateTime.Format(sqlite3impl.TimeLayout),
 				nlog.CreateApp,
 				nlog.CreateDevice,
 				nlog.CreateUser,
-				nlog.UpdateTime.Format(sqlite3impl.TimeLayout),
 				nlog.UpdateApp,
 				nlog.UpdateDevice,
 				nlog.UpdateUser,
@@ -778,12 +749,9 @@ INSERT INTO ` + n.dbName + ` (
   SHOP,
   TITLE,
   AMOUNT,
-  RELATED_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -792,9 +760,6 @@ INSERT INTO ` + n.dbName + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX 
 ) VALUES (
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -825,12 +790,9 @@ INSERT INTO ` + n.dbName + ` (
 		nlog.Shop,
 		nlog.Title,
 		nlog.Amount.String(),
-		nlog.RelatedTime.Format(sqlite3impl.TimeLayout),
-		nlog.CreateTime.Format(sqlite3impl.TimeLayout),
 		nlog.CreateApp,
 		nlog.CreateDevice,
 		nlog.CreateUser,
-		nlog.UpdateTime.Format(sqlite3impl.TimeLayout),
 		nlog.UpdateApp,
 		nlog.UpdateDevice,
 		nlog.UpdateUser,

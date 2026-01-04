@@ -57,8 +57,8 @@ var (
 	CacheMiReps           = &IsCacheInMemory
 	CacheLantanaReps      = &IsCacheInMemory
 	CacheIDFKyouReps      = &IsCacheInMemory
-	CacheTagReps          = &trueValue
-	CacheTextReps         = &trueValue
-	CacheNotificationReps = &falseValue // 未検証
-	CacheReKyouReps       = &falseValue // 未検証
+	CacheTagReps          = &IsCacheInMemory
+	CacheTextReps         = &IsCacheInMemory
+	CacheNotificationReps = &IsCacheInMemory
+	CacheReKyouReps       = &IsCacheInMemory
 )
