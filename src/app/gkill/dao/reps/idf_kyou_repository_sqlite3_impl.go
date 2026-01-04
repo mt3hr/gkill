@@ -308,23 +308,26 @@ WHERE
 				// 接続されていないRepのIDがあったときは無視する
 				continue
 			}
-			fileContentText += strings.ToLower(filename)
-			switch filepath.Ext(idf.TargetFile) {
-			case ".md":
-				fallthrough
-			case ".txt":
-				file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-				if err != nil {
-					err = fmt.Errorf("error at open file %s: %w", filename, err)
-					return nil, err
+
+			if query.UseWords != nil && *query.UseWords {
+				fileContentText += strings.ToLower(filename)
+				switch filepath.Ext(idf.TargetFile) {
+				case ".md":
+					fallthrough
+				case ".txt":
+					file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
+					if err != nil {
+						err = fmt.Errorf("error at open file %s: %w", filename, err)
+						return nil, err
+					}
+					b, err := io.ReadAll(file)
+					file.Close()
+					if err != nil {
+						err = fmt.Errorf("error at read all file content %s: %w", filename, err)
+						return nil, err
+					}
+					fileContentText += strings.ToLower(string(b))
 				}
-				defer file.Close()
-				b, err := io.ReadAll(file)
-				if err != nil {
-					err = fmt.Errorf("error at read all file content %s: %w", filename, err)
-					return nil, err
-				}
-				fileContentText += strings.ToLower(string(b))
 			}
 
 			words := []string{}
@@ -486,7 +489,6 @@ WHERE
 		err = fmt.Errorf("error at generate find sql common: %w", err)
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	sql += commonWhereSQL
 
@@ -587,9 +589,6 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
-	sort.Slice(kyous, func(i, j int) bool {
-		return kyous[i].UpdateTime.After(kyous[j].UpdateTime)
-	})
 	return kyous, nil
 }
 
@@ -729,15 +728,15 @@ WHERE
 			idfKyous = append(idfKyous, idf)
 		}
 	}
-	sort.Slice(idfKyous, func(i, j int) bool {
-		return idfKyous[i].UpdateTime.After(idfKyous[j].UpdateTime)
-	})
+
 	if len(idfKyous) == 0 {
 		repName, _ := i.GetRepName(ctx)
 		err := fmt.Errorf("not found %s in %s", id, repName)
 		return "", err
 	}
-
+	sort.Slice(idfKyous, func(i, j int) bool {
+		return idfKyous[i].UpdateTime.After(idfKyous[j].UpdateTime)
+	})
 	filename := filepath.Join(i.contentDir, idfKyous[0].TargetFile)
 	return filename, nil
 }
@@ -922,23 +921,25 @@ WHERE
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
 			}
-			fileContentText += filename
-			switch filepath.Ext(idf.TargetFile) {
-			case ".md":
-				fallthrough
-			case ".txt":
-				file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-				if err != nil {
-					err = fmt.Errorf("error at open file %s: %w", filename, err)
-					return nil, err
+			if query.UseWords != nil && *query.UseWords {
+				fileContentText += filename
+				switch filepath.Ext(idf.TargetFile) {
+				case ".md":
+					fallthrough
+				case ".txt":
+					file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
+					if err != nil {
+						err = fmt.Errorf("error at open file %s: %w", filename, err)
+						return nil, err
+					}
+					b, err := io.ReadAll(file)
+					file.Close()
+					if err != nil {
+						err = fmt.Errorf("error at read all file content %s: %w", filename, err)
+						return nil, err
+					}
+					fileContentText += strings.ToLower(string(b))
 				}
-				defer file.Close()
-				b, err := io.ReadAll(file)
-				if err != nil {
-					err = fmt.Errorf("error at read all file content %s: %w", filename, err)
-					return nil, err
-				}
-				fileContentText += strings.ToLower(string(b))
 			}
 
 			words := []string{}
@@ -989,9 +990,6 @@ WHERE
 			}
 		}
 	}
-	sort.Slice(idfKyous, func(i, j int) bool {
-		return idfKyous[i].RelatedTime.After(idfKyous[j].RelatedTime)
-	})
 	return idfKyous, nil
 }
 
@@ -1077,7 +1075,6 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	sql += commonWhereSQL
 
@@ -1162,9 +1159,6 @@ WHERE
 			idfKyous = append(idfKyous, idf)
 		}
 	}
-	sort.Slice(idfKyous, func(i, j int) bool {
-		return idfKyous[i].UpdateTime.After(idfKyous[j].UpdateTime)
-	})
 	return idfKyous, nil
 }
 
@@ -1317,8 +1311,8 @@ INSERT INTO IDF (
   RELATED_TIME,
   CREATE_TIME,
   CREATE_APP,
-  CREATE_USER,
   CREATE_DEVICE,
+  CREATE_USER,
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,

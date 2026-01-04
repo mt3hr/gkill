@@ -411,10 +411,6 @@ loop:
 		}
 		matchGitCommitLogsList = append(matchGitCommitLogsList, kyou)
 	}
-
-	sort.Slice(matchGitCommitLogsList, func(i, j int) bool {
-		return matchGitCommitLogsList[i].RelatedTime.After(matchGitCommitLogsList[j].RelatedTime)
-	})
 	return matchGitCommitLogsList, nil
 }
 

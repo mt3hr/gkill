@@ -425,10 +425,6 @@ loop:
 		}
 		matchLantanasList = append(matchLantanasList, kyou)
 	}
-
-	sort.Slice(matchLantanasList, func(i, j int) bool {
-		return matchLantanasList[i].RelatedTime.After(matchLantanasList[j].RelatedTime)
-	})
 	return matchLantanasList, nil
 }
 

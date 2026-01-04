@@ -94,10 +94,6 @@ loop:
 		}
 		matchTextsList = append(matchTextsList, text)
 	}
-
-	sort.Slice(matchTextsList, func(i, j int) bool {
-		return matchTextsList[i].RelatedTime.After(matchTextsList[j].RelatedTime)
-	})
 	return matchTextsList, nil
 }
 

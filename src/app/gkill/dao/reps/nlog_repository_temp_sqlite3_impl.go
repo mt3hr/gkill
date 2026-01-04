@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -316,9 +315,6 @@ AND DEVICE = ?
 			kyous = append(kyous, kyou)
 		}
 	}
-	sort.Slice(kyous, func(i, j int) bool {
-		return kyous[i].UpdateTime.After(kyous[j].UpdateTime)
-	})
 	return kyous, nil
 }
 

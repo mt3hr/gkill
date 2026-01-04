@@ -470,9 +470,6 @@ loop:
 		}
 	}
 
-	sort.Slice(matchTimeIssList, func(i, j int) bool {
-		return matchTimeIssList[i].StartTime.After(matchTimeIssList[j].StartTime)
-	})
 	return matchTimeIssList, nil
 }
 
