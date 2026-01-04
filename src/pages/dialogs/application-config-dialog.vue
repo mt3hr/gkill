@@ -2,9 +2,8 @@
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <ApplicationConfigView :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
-            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            @requested_reload_application_config="reload_page()" @requested_close_dialog="hide"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             ref="application_config_view" />
     </v-dialog>
 </template>
@@ -16,7 +15,7 @@ import type { ApplicationConfigDialogProps } from './application-config-dialog-p
 import type { ApplicationConfigDialogEmits } from './application-config-dialog-emits'
 import ApplicationConfigView from '../views/application-config-view.vue'
 import type { GkillError } from '@/classes/api/gkill-error'
-import type { GkillMessage } from '@/classes/api/gkill-message'
+import { GkillMessage } from '@/classes/api/gkill-message'
 
 const application_config_view = ref<InstanceType<typeof ApplicationConfigView> | null>(null);
 
@@ -34,9 +33,5 @@ async function show(): Promise<void> {
 }
 async function hide(): Promise<void> {
     is_show_dialog.value = false
-}
-async function reload_page(): Promise<void> {
-    is_show_dialog.value = false
-    window.location.reload()
 }
 </script>

@@ -6,6 +6,5 @@ import type { GkillMessage } from "@/classes/api/gkill-message"
 export interface ApplicationConfigViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'requested_reload_application_config'): void
     (e: 'requested_close_dialog'): void
 }
