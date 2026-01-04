@@ -59,6 +59,6 @@ var (
 	CacheIDFKyouReps      = &IsCacheInMemory
 	CacheTagReps          = &IsCacheInMemory
 	CacheTextReps         = &IsCacheInMemory
-	CacheNotificationReps = &IsCacheInMemory
-	CacheReKyouReps       = &IsCacheInMemory
+	CacheNotificationReps = &falseValue // 未検証
+	CacheReKyouReps       = &falseValue // 未検証
 )
