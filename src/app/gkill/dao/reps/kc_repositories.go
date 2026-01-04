@@ -424,10 +424,6 @@ loop:
 		}
 		matchKCsList = append(matchKCsList, kyou)
 	}
-
-	sort.Slice(matchKCsList, func(i, j int) bool {
-		return matchKCsList[i].RelatedTime.After(matchKCsList[j].RelatedTime)
-	})
 	return matchKCsList, nil
 }
 

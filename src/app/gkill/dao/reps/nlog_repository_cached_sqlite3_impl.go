@@ -45,7 +45,10 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
-  REP_NAME NOT NULL
+  REP_NAME NOT NULL,
+  RELATED_TIME_UNIX NOT NULL,
+  CREATE_TIME_UNIX NOT NULL,
+  UPDATE_TIME_UNIX NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -69,7 +72,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, RELATED_TIME, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, RELATED_TIME, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -82,6 +85,22 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create NLOG index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create nlog index unix statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexUnixStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	_, err = indexUnixStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create nlog index unix to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -109,12 +128,12 @@ func (n *nlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *
 SELECT 
   IS_DELETED,
   ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -134,7 +153,7 @@ WHERE
 	tableNameAlias := n.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -175,16 +194,16 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kyou.IsDeleted,
 				&kyou.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kyou.CreateApp,
 				&kyou.CreateDevice,
 				&kyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kyou.UpdateApp,
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
@@ -196,21 +215,10 @@ WHERE
 				return nil, err
 			}
 
-			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in NLOG: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in NLOG: %w", createTimeStr, err)
-				return nil, err
-			}
-			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in NLOG: %w", updateTimeStr, err)
-				return nil, err
-			}
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+
 			if _, exist := kyous[kyou.ID]; !exist {
 				kyous[kyou.ID] = []*Kyou{}
 			}
@@ -251,12 +259,12 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, 
 SELECT 
   IS_DELETED,
   ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -282,17 +290,17 @@ WHERE
 	tableNameAlias := n.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
-	appendOrderBy := true
+	appendOrderBy := false
 	findWordUseLike := true
 	ignoreCase := true
 	commonWhereSQL, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
-
 	if err != nil {
 		return nil, err
 	}
+
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -318,16 +326,16 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kyou.IsDeleted,
 				&kyou.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kyou.CreateApp,
 				&kyou.CreateDevice,
 				&kyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kyou.UpdateApp,
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
@@ -339,21 +347,9 @@ WHERE
 				return nil, err
 			}
 
-			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in NLOG: %w", relatedTimeStr, id, err)
-				return nil, err
-			}
-			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in NLOG: %w", createTimeStr, id, err)
-				return nil, err
-			}
-			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in NLOG: %w", updateTimeStr, id, err)
-				return nil, err
-			}
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kyous = append(kyous, kyou)
 		}
 	}
@@ -416,8 +412,14 @@ INSERT INTO ` + n.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -468,6 +470,9 @@ INSERT INTO ` + n.dbName + ` (
 				nlog.UpdateDevice,
 				nlog.UpdateUser,
 				nlog.RepName,
+				nlog.RelatedTime.Unix(),
+				nlog.CreateTime.Unix(),
+				nlog.UpdateTime.Unix(),
 			}
 			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
@@ -532,12 +537,12 @@ func (n *nlogRepositoryCachedSQLite3Impl) FindNlog(ctx context.Context, query *f
 SELECT 
   IS_DELETED,
   ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -557,7 +562,7 @@ WHERE
 	tableNameAlias := n.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -592,17 +597,17 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			nlog := &Nlog{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			amount := 0
 
 			err = rows.Scan(&nlog.IsDeleted,
 				&nlog.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&nlog.CreateApp,
 				&nlog.CreateDevice,
 				&nlog.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&nlog.UpdateApp,
 				&nlog.UpdateDevice,
 				&nlog.UpdateUser,
@@ -620,21 +625,9 @@ WHERE
 
 			nlog.Amount = json.Number(strconv.Itoa(amount))
 
-			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in NLOG: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			nlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in NLOG: %w", createTimeStr, err)
-				return nil, err
-			}
-			nlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in NLOG: %w", updateTimeStr, err)
-				return nil, err
-			}
+			nlog.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			nlog.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			nlog.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			nlogs = append(nlogs, nlog)
 		}
 	}
@@ -672,12 +665,12 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetNlogHistories(ctx context.Context, 
 SELECT 
   IS_DELETED,
   ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -704,7 +697,7 @@ WHERE
 	tableNameAlias := n.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -715,6 +708,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
+
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -740,17 +734,17 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			nlog := &Nlog{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			amount := 0
 
 			err = rows.Scan(&nlog.IsDeleted,
 				&nlog.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&nlog.CreateApp,
 				&nlog.CreateDevice,
 				&nlog.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&nlog.UpdateApp,
 				&nlog.UpdateDevice,
 				&nlog.UpdateUser,
@@ -767,21 +761,9 @@ WHERE
 
 			nlog.Amount = json.Number(strconv.Itoa(amount))
 
-			nlog.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in NLOG: %w", relatedTimeStr, id, err)
-				return nil, err
-			}
-			nlog.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in NLOG: %w", createTimeStr, id, err)
-				return nil, err
-			}
-			nlog.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in NLOG: %w", updateTimeStr, id, err)
-				return nil, err
-			}
+			nlog.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			nlog.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			nlog.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			nlogs = append(nlogs, nlog)
 		}
 	}
@@ -805,8 +787,14 @@ INSERT INTO ` + n.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX 
 ) VALUES (
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -847,6 +835,9 @@ INSERT INTO ` + n.dbName + ` (
 		nlog.UpdateDevice,
 		nlog.UpdateUser,
 		nlog.RepName,
+		nlog.RelatedTime.Unix(),
+		nlog.CreateTime.Unix(),
+		nlog.UpdateTime.Unix(),
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)

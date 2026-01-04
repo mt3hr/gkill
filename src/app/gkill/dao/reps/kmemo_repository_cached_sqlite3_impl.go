@@ -41,7 +41,10 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
-  REP_NAME NOT NULL
+  REP_NAME NOT NULL,
+  RELATED_TIME_UNIX NOT NULL,
+  CREATE_TIME_UNIX NOT NULL,
+  UPDATE_TIME_UNIX NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -58,14 +61,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create KMEMO table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + `(ID, RELATED_TIME, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, RELATED_TIME, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -78,6 +74,22 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create KMEMO index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create kmemo index unix statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexUnixStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	_, err = indexUnixStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create kmemo index unix to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -105,12 +117,12 @@ func (k *kmemoRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query 
 SELECT 
   IS_DELETED,
   ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -129,7 +141,7 @@ WHERE
 	tableNameAlias := k.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -169,16 +181,16 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kyou.IsDeleted,
 				&kyou.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kyou.CreateApp,
 				&kyou.CreateDevice,
 				&kyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kyou.UpdateApp,
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
@@ -190,22 +202,9 @@ WHERE
 				return nil, err
 			}
 
-			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in KMEMO: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in KMEMO: %w", createTimeStr, err)
-				return nil, err
-			}
-			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in KMEMO: %w", updateTimeStr, err)
-				return nil, err
-			}
-
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			if _, exist := kyous[kyou.ID]; !exist {
 				kyous[kyou.ID] = []*Kyou{}
 			}
@@ -246,12 +245,12 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context,
 SELECT 
   IS_DELETED,
   ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -276,7 +275,7 @@ WHERE
 	tableNameAlias := k.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -286,7 +285,6 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	sql += commonWhereSQL
 
@@ -313,16 +311,16 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kyou.IsDeleted,
 				&kyou.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kyou.CreateApp,
 				&kyou.CreateDevice,
 				&kyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kyou.UpdateApp,
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
@@ -334,21 +332,9 @@ WHERE
 				return nil, err
 			}
 
-			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in KMEMO: %w", relatedTimeStr, id, err)
-				return nil, err
-			}
-			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in KMEMO: %w", createTimeStr, id, err)
-				return nil, err
-			}
-			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in KMEMO: %w", updateTimeStr, id, err)
-				return nil, err
-			}
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kyous = append(kyous, kyou)
 		}
 	}
@@ -409,8 +395,14 @@ INSERT INTO ` + k.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -456,6 +448,9 @@ INSERT INTO ` + k.dbName + ` (
 				kmemo.UpdateDevice,
 				kmemo.UpdateUser,
 				kmemo.RepName,
+				kmemo.RelatedTime.Unix(),
+				kmemo.CreateTime.Unix(),
+				kmemo.UpdateTime.Unix(),
 			}
 			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
@@ -519,12 +514,12 @@ func (k *kmemoRepositoryCachedSQLite3Impl) FindKmemo(ctx context.Context, query 
 SELECT 
   IS_DELETED,
   ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -545,7 +540,7 @@ WHERE
 	tableNameAlias := k.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := true
@@ -586,16 +581,16 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kmemo := &Kmemo{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kmemo.IsDeleted,
 				&kmemo.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kmemo.CreateApp,
 				&kmemo.CreateDevice,
 				&kmemo.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kmemo.UpdateApp,
 				&kmemo.UpdateDevice,
 				&kmemo.UpdateUser,
@@ -608,21 +603,9 @@ WHERE
 				return nil, err
 			}
 
-			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in KMEMO: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			kmemo.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in KMEMO: %w", createTimeStr, err)
-				return nil, err
-			}
-			kmemo.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in KMEMO: %w", updateTimeStr, err)
-				return nil, err
-			}
+			kmemo.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kmemo.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kmemo.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kmemos = append(kmemos, kmemo)
 		}
 	}
@@ -660,12 +643,12 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemoHistories(ctx context.Context
 SELECT 
   IS_DELETED,
   ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -691,7 +674,7 @@ WHERE
 	tableNameAlias := k.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -701,7 +684,6 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	sql += commonWhereSQL
 
@@ -728,16 +710,16 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kmemo := &Kmemo{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kmemo.IsDeleted,
 				&kmemo.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kmemo.CreateApp,
 				&kmemo.CreateDevice,
 				&kmemo.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kmemo.UpdateApp,
 				&kmemo.UpdateDevice,
 				&kmemo.UpdateUser,
@@ -750,21 +732,9 @@ WHERE
 				return nil, err
 			}
 
-			kmemo.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in KMEMO: %w", relatedTimeStr, id, err)
-				return nil, err
-			}
-			kmemo.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in KMEMO: %w", createTimeStr, id, err)
-				return nil, err
-			}
-			kmemo.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in KMEMO: %w", updateTimeStr, id, err)
-				return nil, err
-			}
+			kmemo.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kmemo.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kmemo.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kmemos = append(kmemos, kmemo)
 		}
 	}
@@ -786,8 +756,14 @@ INSERT INTO ` + k.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX 
 ) VALUES (
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -824,6 +800,9 @@ INSERT INTO ` + k.dbName + ` (
 		kmemo.UpdateDevice,
 		kmemo.UpdateUser,
 		kmemo.RepName,
+		kmemo.RelatedTime.Unix(),
+		kmemo.CreateTime.Unix(),
+		kmemo.UpdateTime.Unix(),
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)

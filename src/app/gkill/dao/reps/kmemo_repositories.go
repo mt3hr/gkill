@@ -427,9 +427,6 @@ loop:
 		matchKmemosList = append(matchKmemosList, kyou)
 	}
 
-	sort.Slice(matchKmemosList, func(i, j int) bool {
-		return matchKmemosList[i].RelatedTime.After(matchKmemosList[j].RelatedTime)
-	})
 	return matchKmemosList, nil
 }
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -46,9 +45,6 @@ func (g *gpsLogRepositoryDirectoryImpl) GetAllGPSLogs(ctx context.Context) ([]*G
 			gpsLogs = append(gpsLogs, gpsLogsFromFile...)
 		}
 	}
-	sort.Slice(gpsLogs, func(i, j int) bool {
-		return gpsLogs[i].RelatedTime.After(gpsLogs[j].RelatedTime)
-	})
 	return gpsLogs, nil
 }
 

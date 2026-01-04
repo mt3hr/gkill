@@ -42,7 +42,10 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
-  REP_NAME NOT NULL
+  REP_NAME NOT NULL,
+  RELATED_TIME_UNIX NOT NULL,
+  CREATE_TIME_UNIX NOT NULL,
+  UPDATE_TIME_UNIX NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -66,7 +69,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, RELATED_TIME, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, RELATED_TIME, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -79,6 +82,22 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create REKYOU index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create rekyou index unix statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexUnixStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	_, err = indexUnixStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create rekyou index unix to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -200,12 +219,12 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context
 SELECT 
   IS_DELETED,
   ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -230,7 +249,7 @@ WHERE
 	tableNameAlias := r.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := false
@@ -245,7 +264,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
+
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -271,16 +290,16 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&kyou.IsDeleted,
 				&kyou.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kyou.CreateApp,
 				&kyou.CreateDevice,
 				&kyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kyou.UpdateApp,
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
@@ -292,21 +311,9 @@ WHERE
 				return nil, err
 			}
 
-			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in REKYOU: %w", relatedTimeStr, id, err)
-				return nil, err
-			}
-			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in REKYOU: %w", createTimeStr, id, err)
-				return nil, err
-			}
-			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in REKYOU: %w", updateTimeStr, id, err)
-				return nil, err
-			}
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kyous = append(kyous, kyou)
 		}
 	}
@@ -366,8 +373,16 @@ INSERT INTO ` + r.dbName + ` (
   UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
-  UPDATE_USER
+  UPDATE_USER,
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -412,6 +427,10 @@ INSERT INTO ` + r.dbName + ` (
 				rekyou.UpdateApp,
 				rekyou.UpdateDevice,
 				rekyou.UpdateUser,
+				rekyou.RepName,
+				rekyou.RelatedTime.Unix(),
+				rekyou.CreateTime.Unix(),
+				rekyou.UpdateTime.Unix(),
 			}
 			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
@@ -534,12 +553,12 @@ SELECT
   IS_DELETED,
   ID,
   TARGET_ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_USER,
   CREATE_DEVICE,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -564,7 +583,7 @@ WHERE
 	tableNameAlias := r.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := false
@@ -574,7 +593,7 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
+
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -601,17 +620,17 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			reKyou := &ReKyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&reKyou.IsDeleted,
 				&reKyou.ID,
 				&reKyou.TargetID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&reKyou.CreateApp,
 				&reKyou.CreateDevice,
 				&reKyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&reKyou.UpdateApp,
 				&reKyou.UpdateDevice,
 				&reKyou.UpdateUser,
@@ -623,21 +642,9 @@ WHERE
 				return nil, err
 			}
 
-			reKyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in REKYOU: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			reKyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in REKYOU: %w", createTimeStr, err)
-				return nil, err
-			}
-			reKyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in REKYOU: %w", updateTimeStr, err)
-				return nil, err
-			}
+			reKyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			reKyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			reKyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			reKyous = append(reKyous, reKyou)
 		}
 	}
@@ -659,8 +666,14 @@ INSERT INTO ` + r.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX 
 ) VALUES (
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -697,6 +710,9 @@ INSERT INTO ` + r.dbName + ` (
 		rekyou.UpdateDevice,
 		rekyou.UpdateUser,
 		rekyou.RepName,
+		rekyou.RelatedTime.Unix(),
+		rekyou.CreateTime.Unix(),
+		rekyou.UpdateTime.Unix(),
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -715,12 +731,12 @@ SELECT
   IS_DELETED,
   ID,
   TARGET_ID,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_USER,
   CREATE_DEVICE,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -741,7 +757,7 @@ WHERE
 	tableNameAlias := r.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
 	appendOrderBy := true
@@ -777,17 +793,17 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			reKyou := &ReKyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(&reKyou.IsDeleted,
 				&reKyou.ID,
 				&reKyou.TargetID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&reKyou.CreateApp,
 				&reKyou.CreateDevice,
 				&reKyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&reKyou.UpdateApp,
 				&reKyou.UpdateDevice,
 				&reKyou.UpdateUser,
@@ -799,21 +815,9 @@ WHERE
 				return nil, err
 			}
 
-			reKyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in REKYOU: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			reKyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in REKYOU: %w", createTimeStr, err)
-				return nil, err
-			}
-			reKyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in REKYOU: %w", updateTimeStr, err)
-				return nil, err
-			}
+			reKyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			reKyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			reKyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			reKyous = append(reKyous, reKyou)
 		}
 	}
