@@ -426,10 +426,6 @@ loop:
 		}
 		matchMisList = append(matchMisList, kyou)
 	}
-
-	sort.Slice(matchMisList, func(i, j int) bool {
-		return matchMisList[i].CreateTime.After(matchMisList[j].CreateTime)
-	})
 	return matchMisList, nil
 }
 

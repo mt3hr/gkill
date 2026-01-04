@@ -223,11 +223,6 @@ loop:
 		}
 		kyouHistoriesList = append(kyouHistoriesList, kyou)
 	}
-
-	sort.Slice(kyouHistoriesList, func(i, j int) bool {
-		return kyouHistoriesList[i].UpdateTime.After(kyouHistoriesList[j].UpdateTime)
-	})
-
 	return kyouHistoriesList, nil
 }
 
@@ -425,10 +420,6 @@ loop:
 		}
 		matchIDFKyousList = append(matchIDFKyousList, kyou)
 	}
-
-	sort.Slice(matchIDFKyousList, func(i, j int) bool {
-		return matchIDFKyousList[i].RelatedTime.After(matchIDFKyousList[j].RelatedTime)
-	})
 	return matchIDFKyousList, nil
 }
 

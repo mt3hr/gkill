@@ -302,7 +302,6 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	sql += commonWhereSQL
 
@@ -617,7 +616,6 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	sql += commonWhereSQL
 

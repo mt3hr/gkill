@@ -47,7 +47,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
-  REP_NAME NOT NULL
+  REP_NAME NOT NULL,
+  LIMIT_TIME_UNIX,
+  ESTIMATE_START_TIME_UNIX,
+  ESTIMATE_END_TIME_UNIX,
+  CREATE_TIME_UNIX NOT NULL,
+  UPDATE_TIME_UNIX NOT NULL
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
@@ -64,14 +69,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create MI table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -84,6 +82,22 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MI index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create mi index unix statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexUnixStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	_, err = indexUnixStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create mi index unix to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -110,12 +124,12 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  CREATE_TIME AS RELATED_TIME,
-		  CREATE_TIME,
+		  CREATE_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -128,12 +142,12 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  UPDATE_TIME AS RELATED_TIME,
-		  CREATE_TIME,
+		  UPDATE_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -146,12 +160,12 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  LIMIT_TIME AS RELATED_TIME,
-		  CREATE_TIME,
+		  LIMIT_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -163,12 +177,12 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  ESTIMATE_START_TIME AS RELATED_TIME,
-		  CREATE_TIME,
+		  ESTIMATE_START_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -181,12 +195,12 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  ESTIMATE_END_TIME AS RELATED_TIME,
-		  CREATE_TIME,
+		  ESTIMATE_END_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -245,7 +259,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "CREATE_TIME"
+	relatedTimeColumnName := "CREATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -260,7 +274,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
+	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForCreate += " AND "
 		sqlWhereForCreate += " BOARD_NAME = ? "
@@ -272,7 +286,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "RELATED_TIME"
+	relatedTimeColumnName = "RELATED_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -299,7 +313,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "LIMIT_TIME"
+	relatedTimeColumnName = "LIMIT_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -314,7 +328,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForLimit = "LIMIT_TIME IS NOT NULL AND " + sqlWhereForLimit
+	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForLimit += " AND "
 		sqlWhereForLimit += " BOARD_NAME = ? "
@@ -326,7 +340,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "ESTIMATE_START_TIME"
+	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -341,7 +355,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForStart = "ESTIMATE_START_TIME IS NOT NULL AND " + sqlWhereForStart
+	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForStart += " AND "
 		sqlWhereForStart += " BOARD_NAME = ? "
@@ -353,7 +367,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "ESTIMATE_END_TIME"
+	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -368,7 +382,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForEnd = "ESTIMATE_END_TIME IS NOT NULL AND " + sqlWhereForEnd
+	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForEnd += " AND "
 		sqlWhereForEnd += " BOARD_NAME = ? "
@@ -407,17 +421,17 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(
 				&kyou.IsDeleted,
 				&kyou.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kyou.CreateApp,
 				&kyou.CreateDevice,
 				&kyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kyou.UpdateApp,
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
@@ -429,21 +443,10 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 				return nil, err
 			}
 
-			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in MI: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in MI: %w", createTimeStr, err)
-				return nil, err
-			}
-			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in MI: %w", updateTimeStr, err)
-				return nil, err
-			}
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
+
 			if _, exist := kyous[kyou.ID]; !exist {
 				kyous[kyou.ID] = []*Kyou{}
 			}
@@ -505,12 +508,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  CREATE_TIME AS RELATED_TIME,
-		  CREATE_TIME,
+		  CREATE_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -523,12 +526,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  UPDATE_TIME AS RELATED_TIME,
-		  CREATE_TIME,
+		  UPDATE_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -541,12 +544,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  LIMIT_TIME AS RELATED_TIME,
-		  CREATE_TIME,
+		  LIMIT_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -558,12 +561,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  ESTIMATE_START_TIME AS RELATED_TIME,
-		  CREATE_TIME,
+		  ESTIMATE_START_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -576,12 +579,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		SELECT
 		  IS_DELETED,
 		  ID,
-		  ESTIMATE_END_TIME AS RELATED_TIME,
-		  CREATE_TIME,
+		  ESTIMATE_END_TIME_UNIX AS RELATED_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -640,7 +643,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "CREATE_TIME"
+	relatedTimeColumnName := "CREATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -655,7 +658,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
+	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForCreate += " AND "
 		sqlWhereForCreate += " BOARD_NAME = ? "
@@ -667,7 +670,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "RELATED_TIME"
+	relatedTimeColumnName = "RELATED_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -694,7 +697,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "LIMIT_TIME"
+	relatedTimeColumnName = "LIMIT_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -709,7 +712,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForLimit = "LIMIT_TIME IS NOT NULL AND " + sqlWhereForLimit
+	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForLimit += " AND "
 		sqlWhereForLimit += " BOARD_NAME = ? "
@@ -721,7 +724,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "ESTIMATE_START_TIME"
+	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -736,7 +739,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForStart = "ESTIMATE_START_TIME IS NOT NULL AND " + sqlWhereForStart
+	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForStart += " AND "
 		sqlWhereForStart += " BOARD_NAME = ? "
@@ -748,7 +751,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "ESTIMATE_END_TIME"
+	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -763,7 +766,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForEnd = "ESTIMATE_END_TIME IS NOT NULL AND " + sqlWhereForEnd
+	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForEnd += " AND "
 		sqlWhereForEnd += " BOARD_NAME = ? "
@@ -802,17 +805,17 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 			return nil, ctx.Err()
 		default:
 			kyou := &Kyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 
 			err = rows.Scan(
 				&kyou.IsDeleted,
 				&kyou.ID,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&kyou.CreateApp,
 				&kyou.CreateDevice,
 				&kyou.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&kyou.UpdateApp,
 				&kyou.UpdateDevice,
 				&kyou.UpdateUser,
@@ -824,21 +827,9 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 				return nil, err
 			}
 
-			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s at %s in MI: %w", relatedTimeStr, id, err)
-				return nil, err
-			}
-			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s at %s in MI: %w", createTimeStr, id, err)
-				return nil, err
-			}
-			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s at %s in MI: %w", updateTimeStr, id, err)
-				return nil, err
-			}
+			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			kyous = append(kyous, kyou)
 		}
 	}
@@ -903,8 +894,18 @@ INSERT INTO ` + m.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  LIMIT_TIME_UNIX,
+  ESTIMATE_START_TIME_UNIX,
+  ESTIMATE_END_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -942,22 +943,31 @@ INSERT INTO ` + m.dbName + ` (
 		}
 		err = func() error {
 			var limitTimeStr interface{}
+			var limitTimeUnix interface{}
 			if mi.LimitTime == nil {
 				limitTimeStr = nil
+				limitTimeUnix = nil
 			} else {
 				limitTimeStr = mi.LimitTime.Format(sqlite3impl.TimeLayout)
+				limitTimeUnix = mi.LimitTime.Unix()
 			}
 			var startTimeStr interface{}
+			var startTimeUnix interface{}
 			if mi.EstimateStartTime == nil {
 				startTimeStr = nil
+				startTimeUnix = nil
 			} else {
 				startTimeStr = mi.EstimateStartTime.Format(sqlite3impl.TimeLayout)
+				startTimeUnix = mi.EstimateStartTime.Unix()
 			}
 			var endTimeStr interface{}
+			var endTimeUnix interface{}
 			if mi.EstimateEndTime == nil {
 				endTimeStr = nil
+				endTimeUnix = nil
 			} else {
 				endTimeStr = mi.EstimateEndTime.Format(sqlite3impl.TimeLayout)
+				endTimeUnix = mi.EstimateEndTime.Unix()
 			}
 
 			queryArgs := []interface{}{
@@ -978,6 +988,11 @@ INSERT INTO ` + m.dbName + ` (
 				mi.UpdateDevice,
 				mi.UpdateUser,
 				mi.RepName,
+				limitTimeUnix,
+				startTimeUnix,
+				endTimeUnix,
+				mi.CreateTime.Unix(),
+				mi.UpdateTime.Unix(),
 			}
 			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
@@ -1041,14 +1056,14 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		  TITLE,
   	      IS_CHECKED,
           BOARD_NAME,
-          LIMIT_TIME,
-          ESTIMATE_START_TIME,
-          ESTIMATE_END_TIME,
-		  CREATE_TIME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -1064,14 +1079,14 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		  TITLE,
   	      IS_CHECKED,
           BOARD_NAME,
-          LIMIT_TIME,
-          ESTIMATE_START_TIME,
-          ESTIMATE_END_TIME,
-		  CREATE_TIME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -1087,14 +1102,14 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		  TITLE,
   	      IS_CHECKED,
           BOARD_NAME,
-          LIMIT_TIME,
-          ESTIMATE_START_TIME,
-          ESTIMATE_END_TIME,
-		  CREATE_TIME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -1109,14 +1124,14 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		  TITLE,
   	      IS_CHECKED,
           BOARD_NAME,
-          LIMIT_TIME,
-          ESTIMATE_START_TIME,
-          ESTIMATE_END_TIME,
-		  CREATE_TIME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -1132,14 +1147,14 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		  TITLE,
   	      IS_CHECKED,
           BOARD_NAME,
-          LIMIT_TIME,
-          ESTIMATE_START_TIME,
-          ESTIMATE_END_TIME,
-		  CREATE_TIME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -1198,7 +1213,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "CREATE_TIME"
+	relatedTimeColumnName := "CREATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -1213,7 +1228,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
+	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForCreate += " AND "
 		sqlWhereForCreate += " BOARD_NAME = ? "
@@ -1225,7 +1240,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "CREATE_TIME"
+	relatedTimeColumnName = "CREATE_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -1252,7 +1267,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "LIMIT_TIME"
+	relatedTimeColumnName = "LIMIT_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -1267,7 +1282,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForLimit = "LIMIT_TIME IS NOT NULL AND " + sqlWhereForLimit
+	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForLimit += " AND "
 		sqlWhereForLimit += " BOARD_NAME = ? "
@@ -1279,7 +1294,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "ESTIMATE_START_TIME"
+	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -1294,7 +1309,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForStart = "ESTIMATE_START_TIME IS NOT NULL AND " + sqlWhereForStart
+	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForStart += " AND "
 		sqlWhereForStart += " BOARD_NAME = ? "
@@ -1306,7 +1321,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = true
-	relatedTimeColumnName = "ESTIMATE_END_TIME"
+	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -1321,7 +1336,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForEnd = "ESTIMATE_END_TIME IS NOT NULL AND " + sqlWhereForEnd
+	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForEnd += " AND "
 		sqlWhereForEnd += " BOARD_NAME = ? "
@@ -1360,8 +1375,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 			return nil, ctx.Err()
 		default:
 			mi := &Mi{}
-			createTimeStr, updateTimeStr := "", ""
-			limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
+			createTimeUnix, updateTimeUnix := int64(0), int64(0)
+			limitTime, estimateStartTime, estimateEndTime := sqllib.NullInt64{}, sqllib.NullInt64{}, sqllib.NullInt64{}
 
 			err = rows.Scan(
 				&mi.IsDeleted,
@@ -1372,11 +1387,11 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 				&limitTime,
 				&estimateStartTime,
 				&estimateEndTime,
-				&createTimeStr,
+				&createTimeUnix,
 				&mi.CreateApp,
 				&mi.CreateDevice,
 				&mi.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&mi.UpdateApp,
 				&mi.UpdateDevice,
 				&mi.UpdateUser,
@@ -1388,26 +1403,18 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 				return nil, err
 			}
 
-			mi.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in MI: %w", createTimeStr, err)
-				return nil, err
-			}
-			mi.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in MI: %w", updateTimeStr, err)
-				return nil, err
-			}
+			mi.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			mi.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			if limitTime.Valid {
-				parsedLimitTime, _ := time.Parse(sqlite3impl.TimeLayout, limitTime.String)
+				parsedLimitTime := time.Unix(limitTime.Int64, 0)
 				mi.LimitTime = &parsedLimitTime
 			}
 			if estimateStartTime.Valid {
-				parsedEstimateStartTime, _ := time.Parse(sqlite3impl.TimeLayout, estimateStartTime.String)
+				parsedEstimateStartTime := time.Unix(estimateStartTime.Int64, 0).Local()
 				mi.EstimateStartTime = &parsedEstimateStartTime
 			}
 			if estimateEndTime.Valid {
-				parsedEstimateEndTime, _ := time.Parse(sqlite3impl.TimeLayout, estimateEndTime.String)
+				parsedEstimateEndTime := time.Unix(estimateEndTime.Int64, 0).Local()
 				mi.EstimateEndTime = &parsedEstimateEndTime
 			}
 			mis = append(mis, mi)
@@ -1463,14 +1470,14 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		  TITLE,
   	      IS_CHECKED,
           BOARD_NAME,
-          LIMIT_TIME,
-          ESTIMATE_START_TIME,
-          ESTIMATE_END_TIME,
-		  CREATE_TIME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -1486,14 +1493,14 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		  TITLE,
   	      IS_CHECKED,
           BOARD_NAME,
-          LIMIT_TIME,
-          ESTIMATE_START_TIME,
-          ESTIMATE_END_TIME,
-		  CREATE_TIME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -1509,14 +1516,14 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		  TITLE,
   	      IS_CHECKED,
           BOARD_NAME,
-          LIMIT_TIME,
-          ESTIMATE_START_TIME,
-          ESTIMATE_END_TIME,
-		  CREATE_TIME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -1531,14 +1538,14 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		  TITLE,
   	      IS_CHECKED,
           BOARD_NAME,
-          LIMIT_TIME,
-          ESTIMATE_START_TIME,
-          ESTIMATE_END_TIME,
-		  CREATE_TIME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -1554,14 +1561,14 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		  TITLE,
   	      IS_CHECKED,
           BOARD_NAME,
-          LIMIT_TIME,
-          ESTIMATE_START_TIME,
-          ESTIMATE_END_TIME,
-		  CREATE_TIME,
+          LIMIT_TIME_UNIX,
+          ESTIMATE_START_TIME_UNIX,
+          ESTIMATE_END_TIME_UNIX,
+		  CREATE_TIME_UNIX,
 		  CREATE_APP,
 		  CREATE_DEVICE,
 		  CREATE_USER,
-		  UPDATE_TIME,
+		  UPDATE_TIME_UNIX,
 		  UPDATE_APP,
 		  UPDATE_DEVICE,
 		  UPDATE_USER,
@@ -1620,7 +1627,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "CREATE_TIME"
+	relatedTimeColumnName := "CREATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -1630,7 +1637,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForCreate = "CREATE_TIME IS NOT NULL AND " + sqlWhereForCreate
+	sqlWhereForCreate = "CREATE_TIME_UNIX IS NOT NULL AND " + sqlWhereForCreate
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForCreate += " AND "
 		sqlWhereForCreate += " BOARD_NAME = ? "
@@ -1642,7 +1649,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = false
-	relatedTimeColumnName = "CREATE_TIME"
+	relatedTimeColumnName = "CREATE_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -1664,7 +1671,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = false
-	relatedTimeColumnName = "LIMIT_TIME"
+	relatedTimeColumnName = "LIMIT_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -1674,7 +1681,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForLimit = "LIMIT_TIME IS NOT NULL AND " + sqlWhereForLimit
+	sqlWhereForLimit = "LIMIT_TIME_UNIX IS NOT NULL AND " + sqlWhereForLimit
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForLimit += " AND "
 		sqlWhereForLimit += " BOARD_NAME = ? "
@@ -1686,7 +1693,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = false
-	relatedTimeColumnName = "ESTIMATE_START_TIME"
+	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -1696,7 +1703,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForStart = "ESTIMATE_START_TIME IS NOT NULL AND " + sqlWhereForStart
+	sqlWhereForStart = "ESTIMATE_START_TIME_UNIX IS NOT NULL AND " + sqlWhereForStart
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForStart += " AND "
 		sqlWhereForStart += " BOARD_NAME = ? "
@@ -1708,7 +1715,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
 	onlyLatestData = false
-	relatedTimeColumnName = "ESTIMATE_END_TIME"
+	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
 	appendOrderBy = false
@@ -1718,7 +1725,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 	if err != nil {
 		return nil, err
 	}
-	sqlWhereForEnd = "ESTIMATE_END_TIME IS NOT NULL AND " + sqlWhereForEnd
+	sqlWhereForEnd = "ESTIMATE_END_TIME_UNIX IS NOT NULL AND " + sqlWhereForEnd
 	if query.UseMiBoardName != nil && query.MiBoardName != nil && *query.UseMiBoardName {
 		sqlWhereForEnd += " AND "
 		sqlWhereForEnd += " BOARD_NAME = ? "
@@ -1757,8 +1764,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 			return nil, ctx.Err()
 		default:
 			mi := &Mi{}
-			createTimeStr, updateTimeStr := "", ""
-			limitTime, estimateStartTime, estimateEndTime := sqllib.NullString{}, sqllib.NullString{}, sqllib.NullString{}
+			createTimeUnix, updateTimeUnix := int64(0), int64(0)
+			limitTime, estimateStartTime, estimateEndTime := sqllib.NullInt64{}, sqllib.NullInt64{}, sqllib.NullInt64{}
 
 			err = rows.Scan(
 				&mi.IsDeleted,
@@ -1769,11 +1776,11 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 				&limitTime,
 				&estimateStartTime,
 				&estimateEndTime,
-				&createTimeStr,
+				&createTimeUnix,
 				&mi.CreateApp,
 				&mi.CreateDevice,
 				&mi.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&mi.UpdateApp,
 				&mi.UpdateDevice,
 				&mi.UpdateUser,
@@ -1785,26 +1792,18 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 				return nil, err
 			}
 
-			mi.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in MI: %w", createTimeStr, err)
-				return nil, err
-			}
-			mi.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in MI: %w", updateTimeStr, err)
-				return nil, err
-			}
+			mi.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			mi.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 			if limitTime.Valid {
-				parsedLimitTime, _ := time.Parse(sqlite3impl.TimeLayout, limitTime.String)
+				parsedLimitTime := time.Unix(limitTime.Int64, 0)
 				mi.LimitTime = &parsedLimitTime
 			}
 			if estimateStartTime.Valid {
-				parsedEstimateStartTime, _ := time.Parse(sqlite3impl.TimeLayout, estimateStartTime.String)
+				parsedEstimateStartTime := time.Unix(estimateStartTime.Int64, 0).Local()
 				mi.EstimateStartTime = &parsedEstimateStartTime
 			}
 			if estimateEndTime.Valid {
-				parsedEstimateEndTime, _ := time.Parse(sqlite3impl.TimeLayout, estimateEndTime.String)
+				parsedEstimateEndTime := time.Unix(estimateEndTime.Int64, 0).Local()
 				mi.EstimateEndTime = &parsedEstimateEndTime
 			}
 			mis = append(mis, mi)
@@ -1833,8 +1832,18 @@ INSERT INTO ` + m.dbName + ` (
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
-  REP_NAME
+  REP_NAME,
+  LIMIT_TIME_UNIX,
+  ESTIMATE_START_TIME_UNIX,
+  ESTIMATE_END_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -1862,22 +1871,31 @@ INSERT INTO ` + m.dbName + ` (
 	defer stmt.Close()
 
 	var limitTimeStr interface{}
+	var limitTimeUnix interface{}
 	if mi.LimitTime == nil {
 		limitTimeStr = nil
+		limitTimeUnix = nil
 	} else {
 		limitTimeStr = mi.LimitTime.Format(sqlite3impl.TimeLayout)
+		limitTimeUnix = mi.LimitTime.Unix()
 	}
 	var startTimeStr interface{}
+	var startTimeUnix interface{}
 	if mi.EstimateStartTime == nil {
 		startTimeStr = nil
+		startTimeUnix = nil
 	} else {
 		startTimeStr = mi.EstimateStartTime.Format(sqlite3impl.TimeLayout)
+		startTimeUnix = mi.EstimateStartTime.Unix()
 	}
 	var endTimeStr interface{}
+	var endTimeUnix interface{}
 	if mi.EstimateEndTime == nil {
 		endTimeStr = nil
+		endTimeUnix = nil
 	} else {
 		endTimeStr = mi.EstimateEndTime.Format(sqlite3impl.TimeLayout)
+		endTimeUnix = mi.EstimateEndTime.Unix()
 	}
 
 	queryArgs := []interface{}{
@@ -1898,6 +1916,11 @@ INSERT INTO ` + m.dbName + ` (
 		mi.UpdateDevice,
 		mi.UpdateUser,
 		mi.RepName,
+		limitTimeUnix,
+		startTimeUnix,
+		endTimeUnix,
+		mi.CreateTime.Unix(),
+		mi.UpdateTime.Unix(),
 	}
 	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
@@ -1915,29 +1938,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetBoardNames(ctx context.Context) ([]st
 SELECT 
   DISTINCT BOARD_NAME
 FROM ` + m.dbName + `
-WHERE
 `
-	trueValue := true
-	query := &find.FindQuery{}
-	query.OnlyLatestData = &trueValue
-
 	tableName := m.dbName
 	tableNameAlias := m.dbName
-	queryArgs := []interface{}{}
-	whereCounter := 0
-	onlyLatestData := true
-	relatedTimeColumnName := "UPDATE_TIME"
-	findWordTargetColumns := []string{}
-	ignoreFindWord := true
-	appendOrderBy := false
-	findWordUseLike := true
-	ignoreCase := false
-	sqlWhereForCreate, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgs)
-	if err != nil {
-		return nil, err
-	}
+	sql += fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
+	sql += fmt.Sprintf(" GROUP BY BOARD_NAME")
 
-	sql = fmt.Sprintf("%s %s", sql, sqlWhereForCreate)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
