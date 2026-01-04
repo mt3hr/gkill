@@ -32,12 +32,9 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   MOOD NOT NULL,
-  RELATED_TIME NOT NULL,
-  CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
   CREATE_USER NOT NULL,
   CREATE_DEVICE NOT NULL,
-  UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
@@ -58,22 +55,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create LANTANA table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create LANTANA index statement %s: %w", dbName, err)
-		return nil, err
-	}
-	defer indexStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	_, err = indexStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create LANTANA index to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -338,7 +319,6 @@ WHERE
 			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
-
 			kyous = append(kyous, kyou)
 		}
 	}
@@ -390,12 +370,9 @@ INSERT INTO ` + l.dbName + ` (
   IS_DELETED,
   ID,
   MOOD,
-  RELATED_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -404,9 +381,6 @@ INSERT INTO ` + l.dbName + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -443,12 +417,9 @@ INSERT INTO ` + l.dbName + ` (
 				lantana.IsDeleted,
 				lantana.ID,
 				lantana.Mood,
-				lantana.RelatedTime.Format(sqlite3impl.TimeLayout),
-				lantana.CreateTime.Format(sqlite3impl.TimeLayout),
 				lantana.CreateApp,
 				lantana.CreateDevice,
 				lantana.CreateUser,
-				lantana.UpdateTime.Format(sqlite3impl.TimeLayout),
 				lantana.UpdateApp,
 				lantana.UpdateDevice,
 				lantana.UpdateUser,
@@ -756,12 +727,9 @@ INSERT INTO ` + l.dbName + ` (
   IS_DELETED,
   ID,
   MOOD,
-  RELATED_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -770,9 +738,6 @@ INSERT INTO ` + l.dbName + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX 
 ) VALUES (
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -799,12 +764,9 @@ INSERT INTO ` + l.dbName + ` (
 		lantana.IsDeleted,
 		lantana.ID,
 		lantana.Mood,
-		lantana.RelatedTime.Format(sqlite3impl.TimeLayout),
-		lantana.CreateTime.Format(sqlite3impl.TimeLayout),
 		lantana.CreateApp,
 		lantana.CreateDevice,
 		lantana.CreateUser,
-		lantana.UpdateTime.Format(sqlite3impl.TimeLayout),
 		lantana.UpdateApp,
 		lantana.UpdateDevice,
 		lantana.UpdateUser,

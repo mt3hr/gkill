@@ -33,14 +33,11 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TARGET_ID NOT NULL,
-  NOTIFICATION_TIME NOT NULL,
   CONTENT NOT NULL,
   IS_NOTIFICATED NOT NULL,
-  CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
   CREATE_USER NOT NULL,
   CREATE_DEVICE NOT NULL,
-  UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
@@ -61,22 +58,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create NOTIFICATION table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create NOTIFICATION index statement %s: %w", dbName, err)
-		return nil, err
-	}
-	defer indexStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	_, err = indexStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create NOTIFICATION index to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -407,15 +388,15 @@ SELECT
 FROM ` + t.dbName + `
 WHERE 
 `
-	sql += " (datetime(NOTIFICATION_TIME, 'localtime') BETWEEN datetime(?, 'localtime') AND datetime(?, 'localtime')) "
+	sql += " (NOTIFICATION_TIME_UNIX BETWEEN ? AND ?) "
 
 	dataType := "notification"
 
 	query := &find.FindQuery{}
 	queryArgs := []interface{}{
 		dataType,
-		startTime.Format(sqlite3impl.TimeLayout),
-		endTime.Format(sqlite3impl.TimeLayout),
+		startTime.Unix(),
+		endTime.Unix(),
 	}
 
 	tableName := t.dbName
@@ -528,15 +509,12 @@ func (t *notificationRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Contex
 INSERT INTO ` + t.dbName + ` (
   IS_DELETED,
   ID,
-  NOTIFICATION_TIME,
   CONTENT,
   TARGET_ID,
   IS_NOTIFICATED,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -545,9 +523,6 @@ INSERT INTO ` + t.dbName + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -584,15 +559,12 @@ INSERT INTO ` + t.dbName + ` (
 			queryArgs := []interface{}{
 				notification.IsDeleted,
 				notification.ID,
-				notification.NotificationTime.Format(sqlite3impl.TimeLayout),
 				notification.Content,
 				notification.TargetID,
 				notification.IsNotificated,
-				notification.CreateTime.Format(sqlite3impl.TimeLayout),
 				notification.CreateApp,
 				notification.CreateDevice,
 				notification.CreateUser,
-				notification.UpdateTime.Format(sqlite3impl.TimeLayout),
 				notification.UpdateApp,
 				notification.UpdateDevice,
 				notification.UpdateUser,
@@ -752,15 +724,12 @@ func (t *notificationRepositoryCachedSQLite3Impl) AddNotificationInfo(ctx contex
 INSERT INTO ` + t.dbName + ` (
   IS_DELETED,
   ID,
-  NOTIFICATION_TIME,
   CONTENT,
   TARGET_ID,
   IS_NOTIFICATED,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -769,9 +738,6 @@ INSERT INTO ` + t.dbName + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -799,15 +765,12 @@ INSERT INTO ` + t.dbName + ` (
 	queryArgs := []interface{}{
 		notification.IsDeleted,
 		notification.ID,
-		notification.NotificationTime.Format(sqlite3impl.TimeLayout),
 		notification.Content,
 		notification.TargetID,
 		notification.IsNotificated,
-		notification.CreateTime.Format(sqlite3impl.TimeLayout),
 		notification.CreateApp,
 		notification.CreateDevice,
 		notification.CreateUser,
-		notification.UpdateTime.Format(sqlite3impl.TimeLayout),
 		notification.UpdateApp,
 		notification.UpdateDevice,
 		notification.UpdateUser,

@@ -34,12 +34,9 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   ID NOT NULL,
   TARGET_ID NOT NULL,
   TAG NOT NULL,
-  RELATED_TIME NOT NULL,
-  CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
   CREATE_USER NOT NULL,
   CREATE_DEVICE NOT NULL,
-  UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
@@ -60,61 +57,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `" (ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create TAG index statement %s: %w", dbName, err)
-		return nil, err
-	}
-	defer indexStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	_, err = indexStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TAG index to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TAG index statement %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_TARGET_ID" ON "` + dbName + `"(TARGET_ID, UPDATE_TIME DESC);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
-	indexTargetIDStmt, err := cacheDB.PrepareContext(ctx, indexTargetIDSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create TAG_TARGET_ID index statement %s: %w", dbName, err)
-		return nil, err
-	}
-	defer indexTargetIDStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
-	_, err = indexTargetIDStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TAG_TARGET_ID index to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_ID_UPDATE_TIME" ON "` + dbName + `"(ID, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
-	indexIDUpdateTimeStmt, err := cacheDB.PrepareContext(ctx, indexIDUpdateTimeSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", dbName, err)
-		return nil, err
-	}
-	defer indexIDUpdateTimeStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
-	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -558,12 +500,9 @@ INSERT INTO "` + t.dbName + `" (
   ID,
   TAG,
   TARGET_ID,
-  RELATED_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -572,9 +511,6 @@ INSERT INTO "` + t.dbName + `" (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -612,12 +548,9 @@ INSERT INTO "` + t.dbName + `" (
 				tag.ID,
 				tag.Tag,
 				tag.TargetID,
-				tag.RelatedTime.Format(sqlite3impl.TimeLayout),
-				tag.CreateTime.Format(sqlite3impl.TimeLayout),
 				tag.CreateApp,
 				tag.CreateDevice,
 				tag.CreateUser,
-				tag.UpdateTime.Format(sqlite3impl.TimeLayout),
 				tag.UpdateApp,
 				tag.UpdateDevice,
 				tag.UpdateUser,
@@ -772,12 +705,9 @@ INSERT INTO ` + t.dbName + ` (
   ID,
   TAG,
   TARGET_ID,
-  RELATED_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -786,9 +716,6 @@ INSERT INTO ` + t.dbName + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX 
 ) VALUES (
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -817,12 +744,9 @@ INSERT INTO ` + t.dbName + ` (
 		tag.ID,
 		tag.Tag,
 		tag.TargetID,
-		tag.RelatedTime.Format(sqlite3impl.TimeLayout),
-		tag.CreateTime.Format(sqlite3impl.TimeLayout),
 		tag.CreateApp,
 		tag.CreateDevice,
 		tag.CreateUser,
-		tag.UpdateTime.Format(sqlite3impl.TimeLayout),
 		tag.UpdateApp,
 		tag.UpdateDevice,
 		tag.UpdateUser,

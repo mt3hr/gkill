@@ -36,14 +36,9 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   TITLE NOT NULL,
   IS_CHECKED NOT NULL,
   BOARD_NAME NOT NULL,
-  LIMIT_TIME,
-  ESTIMATE_START_TIME,
-  ESTIMATE_END_TIME,
-  CREATE_TIME NOT NULL,
   CREATE_APP NOT NULL,
   CREATE_USER NOT NULL,
   CREATE_DEVICE NOT NULL,
-  UPDATE_TIME NOT NULL,
   UPDATE_APP NOT NULL,
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
@@ -66,22 +61,6 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create MI table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `"(ID, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create MI index statement %s: %w", dbName, err)
-		return nil, err
-	}
-	defer indexStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	_, err = indexStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create MI index to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -446,7 +425,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 			kyou.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
 			kyou.CreateTime = time.Unix(createTimeUnix, 0).Local()
 			kyou.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
-
 			if _, exist := kyous[kyou.ID]; !exist {
 				kyous[kyou.ID] = []*Kyou{}
 			}
@@ -883,14 +861,9 @@ INSERT INTO ` + m.dbName + ` (
   TITLE,
   IS_CHECKED,
   BOARD_NAME,
-  LIMIT_TIME,
-  ESTIMATE_START_TIME,
-  ESTIMATE_END_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_USER,
   CREATE_DEVICE,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -901,11 +874,6 @@ INSERT INTO ` + m.dbName + ` (
   CREATE_TIME_UNIX,
   UPDATE_TIME_UNIX
 ) VALUES (
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
   ?,
   ?,
   ?,
@@ -942,31 +910,22 @@ INSERT INTO ` + m.dbName + ` (
 		default:
 		}
 		err = func() error {
-			var limitTimeStr interface{}
 			var limitTimeUnix interface{}
 			if mi.LimitTime == nil {
-				limitTimeStr = nil
 				limitTimeUnix = nil
 			} else {
-				limitTimeStr = mi.LimitTime.Format(sqlite3impl.TimeLayout)
 				limitTimeUnix = mi.LimitTime.Unix()
 			}
-			var startTimeStr interface{}
 			var startTimeUnix interface{}
 			if mi.EstimateStartTime == nil {
-				startTimeStr = nil
 				startTimeUnix = nil
 			} else {
-				startTimeStr = mi.EstimateStartTime.Format(sqlite3impl.TimeLayout)
 				startTimeUnix = mi.EstimateStartTime.Unix()
 			}
-			var endTimeStr interface{}
 			var endTimeUnix interface{}
 			if mi.EstimateEndTime == nil {
-				endTimeStr = nil
 				endTimeUnix = nil
 			} else {
-				endTimeStr = mi.EstimateEndTime.Format(sqlite3impl.TimeLayout)
 				endTimeUnix = mi.EstimateEndTime.Unix()
 			}
 
@@ -976,14 +935,9 @@ INSERT INTO ` + m.dbName + ` (
 				mi.Title,
 				mi.IsChecked,
 				mi.BoardName,
-				limitTimeStr,
-				startTimeStr,
-				endTimeStr,
-				mi.CreateTime.Format(sqlite3impl.TimeLayout),
 				mi.CreateApp,
 				mi.CreateDevice,
 				mi.CreateUser,
-				mi.UpdateTime.Format(sqlite3impl.TimeLayout),
 				mi.UpdateApp,
 				mi.UpdateDevice,
 				mi.UpdateUser,
@@ -1821,14 +1775,9 @@ INSERT INTO ` + m.dbName + ` (
   TITLE,
   IS_CHECKED,
   BOARD_NAME,
-  LIMIT_TIME,
-  ESTIMATE_START_TIME,
-  ESTIMATE_END_TIME,
-  CREATE_TIME,
   CREATE_APP,
   CREATE_USER,
   CREATE_DEVICE,
-  UPDATE_TIME,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -1855,11 +1804,6 @@ INSERT INTO ` + m.dbName + ` (
   ?,
   ?,
   ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -1870,31 +1814,22 @@ INSERT INTO ` + m.dbName + ` (
 	}
 	defer stmt.Close()
 
-	var limitTimeStr interface{}
 	var limitTimeUnix interface{}
 	if mi.LimitTime == nil {
-		limitTimeStr = nil
 		limitTimeUnix = nil
 	} else {
-		limitTimeStr = mi.LimitTime.Format(sqlite3impl.TimeLayout)
 		limitTimeUnix = mi.LimitTime.Unix()
 	}
-	var startTimeStr interface{}
 	var startTimeUnix interface{}
 	if mi.EstimateStartTime == nil {
-		startTimeStr = nil
 		startTimeUnix = nil
 	} else {
-		startTimeStr = mi.EstimateStartTime.Format(sqlite3impl.TimeLayout)
 		startTimeUnix = mi.EstimateStartTime.Unix()
 	}
-	var endTimeStr interface{}
 	var endTimeUnix interface{}
 	if mi.EstimateEndTime == nil {
-		endTimeStr = nil
 		endTimeUnix = nil
 	} else {
-		endTimeStr = mi.EstimateEndTime.Format(sqlite3impl.TimeLayout)
 		endTimeUnix = mi.EstimateEndTime.Unix()
 	}
 
@@ -1904,14 +1839,9 @@ INSERT INTO ` + m.dbName + ` (
 		mi.Title,
 		mi.IsChecked,
 		mi.BoardName,
-		limitTimeStr,
-		startTimeStr,
-		endTimeStr,
-		mi.CreateTime.Format(sqlite3impl.TimeLayout),
 		mi.CreateApp,
 		mi.CreateDevice,
 		mi.CreateUser,
-		mi.UpdateTime.Format(sqlite3impl.TimeLayout),
 		mi.UpdateApp,
 		mi.UpdateDevice,
 		mi.UpdateUser,
