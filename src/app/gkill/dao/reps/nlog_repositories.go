@@ -425,10 +425,6 @@ loop:
 		}
 		matchNlogsList = append(matchNlogsList, kyou)
 	}
-
-	sort.Slice(matchNlogsList, func(i, j int) bool {
-		return matchNlogsList[i].RelatedTime.After(matchNlogsList[j].RelatedTime)
-	})
 	return matchNlogsList, nil
 }
 

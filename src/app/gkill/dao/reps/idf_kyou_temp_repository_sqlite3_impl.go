@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
-	"sort"
 	"sync"
 	"time"
 
@@ -358,9 +357,6 @@ AND DEVICE = ?
 			kyous = append(kyous, kyou)
 		}
 	}
-	sort.Slice(kyous, func(i, j int) bool {
-		return kyous[i].UpdateTime.After(kyous[j].UpdateTime)
-	})
 	return kyous, nil
 }
 
@@ -479,9 +475,6 @@ AND DEVICE = ?
 			idfKyous = append(idfKyous, idf)
 		}
 	}
-	sort.Slice(idfKyous, func(i, j int) bool {
-		return idfKyous[i].UpdateTime.After(idfKyous[j].UpdateTime)
-	})
 	return idfKyous, nil
 }
 

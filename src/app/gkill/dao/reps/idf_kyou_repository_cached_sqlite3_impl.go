@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -48,7 +47,10 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL,
   CONTENT_PATH NOT NULL,
-  REP_NAME NOT NULL
+  REP_NAME NOT NULL,
+  RELATED_TIME_UNIX NOT NULL,
+  CREATE_TIME_UNIX NOT NULL,
+  UPDATE_TIME_UNIX NOT NULL
 )
 `
 
@@ -67,14 +69,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create IDF table to %s: %w", dbName, err)
-		return nil, err
-	}
-
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_` + dbName + ` ON ` + dbName + ` (ID, RELATED_TIME, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `" ON "` + dbName + `" (ID, RELATED_TIME, UPDATE_TIME);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
 	indexStmt, err := cacheDB.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -87,6 +82,22 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF index to %s: %w", dbName, err)
+		return nil, err
+	}
+
+	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `" (ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create IDF index unix statement %s: %w", dbName, err)
+		return nil, err
+	}
+	defer indexUnixStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	_, err = indexUnixStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create IDF index unix to %s: %w", dbName, err)
 		return nil, err
 	}
 
@@ -117,12 +128,12 @@ SELECT
   ID,
   TARGET_REP_NAME,
   TARGET_FILE,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -141,7 +152,7 @@ WHERE
 	tableNameAlias := i.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
 	appendOrderBy := true
@@ -181,7 +192,7 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			idf := &IDFKyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			targetRepName := ""
 
 			err = rows.Scan(
@@ -189,12 +200,12 @@ WHERE
 				&idf.ID,
 				&targetRepName,
 				&idf.TargetFile,
-				&relatedTimeStr,
-				&createTimeStr,
-				&idf.CreateApp,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&idf.CreateDevice,
+				&idf.CreateApp,
 				&idf.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&idf.UpdateApp,
 				&idf.UpdateDevice,
 				&idf.UpdateUser,
@@ -215,21 +226,9 @@ WHERE
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
 
-			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in idf: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			idf.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in idf: %w", createTimeStr, err)
-				return nil, err
-			}
-			idf.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in idf: %w", updateTimeStr, err)
-				return nil, err
-			}
+			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			idf.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
 			// 判定OKであれば追加する
 			// ファイルの内容を取得する
@@ -242,23 +241,25 @@ WHERE
 				// 接続されていないRepのIDがあったときは無視する
 				continue
 			}
-			fileContentText += strings.ToLower(filename)
-			switch filepath.Ext(idf.TargetFile) {
-			case ".md":
-				fallthrough
-			case ".txt":
-				file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-				if err != nil {
-					err = fmt.Errorf("error at open file %s: %w", filename, err)
-					return nil, err
+			if query.UseWords != nil && *query.UseWords {
+				fileContentText += strings.ToLower(filename)
+				switch filepath.Ext(idf.TargetFile) {
+				case ".md":
+					fallthrough
+				case ".txt":
+					file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
+					if err != nil {
+						err = fmt.Errorf("error at open file %s: %w", filename, err)
+						return nil, err
+					}
+					b, err := io.ReadAll(file)
+					file.Close()
+					if err != nil {
+						err = fmt.Errorf("error at read all file content %s: %w", filename, err)
+						return nil, err
+					}
+					fileContentText += strings.ToLower(string(b))
 				}
-				defer file.Close()
-				b, err := io.ReadAll(file)
-				if err != nil {
-					err = fmt.Errorf("error at read all file content %s: %w", filename, err)
-					return nil, err
-				}
-				fileContentText += strings.ToLower(string(b))
 			}
 
 			words := []string{}
@@ -371,12 +372,12 @@ SELECT
   ID,
   TARGET_REP_NAME,
   TARGET_FILE,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -403,7 +404,7 @@ WHERE
 	tableNameAlias := i.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
 	appendOrderBy := false
@@ -414,7 +415,6 @@ WHERE
 		err = fmt.Errorf("error at generate find sql common: %w", err)
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	sql += commonWhereSQL
 
@@ -441,7 +441,7 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			idf := &IDFKyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			targetRepName := ""
 
 			err = rows.Scan(
@@ -449,12 +449,12 @@ WHERE
 				&idf.ID,
 				&targetRepName,
 				&idf.TargetFile,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&idf.CreateApp,
 				&idf.CreateDevice,
 				&idf.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&idf.UpdateApp,
 				&idf.UpdateDevice,
 				&idf.UpdateUser,
@@ -474,21 +474,9 @@ WHERE
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
 
-			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in idf: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			idf.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in idf: %w", createTimeStr, err)
-				return nil, err
-			}
-			idf.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in idf: %w", updateTimeStr, err)
-				return nil, err
-			}
+			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			idf.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
 			kyou := &Kyou{}
 			kyou.IsDeleted = idf.IsDeleted
@@ -509,9 +497,6 @@ WHERE
 			kyous = append(kyous, kyou)
 		}
 	}
-	sort.Slice(kyous, func(i, j int) bool {
-		return kyous[i].UpdateTime.After(kyous[j].UpdateTime)
-	})
 	return kyous, nil
 }
 
@@ -571,8 +556,14 @@ INSERT INTO ` + i.dbName + ` (
   UPDATE_DEVICE,
   UPDATE_USER,
   CONTENT_PATH,
-  REP_NAME
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX
 ) VALUES (
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -614,14 +605,17 @@ INSERT INTO ` + i.dbName + ` (
 				idfKyou.RelatedTime.Format(sqlite3impl.TimeLayout),
 				idfKyou.CreateTime.Format(sqlite3impl.TimeLayout),
 				idfKyou.CreateApp,
-				idfKyou.CreateDevice,
 				idfKyou.CreateUser,
+				idfKyou.CreateDevice,
 				idfKyou.UpdateTime.Format(sqlite3impl.TimeLayout),
 				idfKyou.UpdateApp,
 				idfKyou.UpdateDevice,
 				idfKyou.UpdateUser,
 				idfKyou.ContentPath,
 				idfKyou.RepName,
+				idfKyou.RelatedTime.Unix(),
+				idfKyou.CreateTime.Unix(),
+				idfKyou.UpdateTime.Unix(),
 			}
 
 			gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
@@ -688,12 +682,12 @@ SELECT
   ID,
   TARGET_REP_NAME,
   TARGET_FILE,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -712,7 +706,7 @@ WHERE
 	tableNameAlias := i.dbName
 	whereCounter := 0
 	onlyLatestData := true
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
 	appendOrderBy := true
@@ -754,7 +748,7 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			idf := &IDFKyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			targetRepName := ""
 
 			err = rows.Scan(
@@ -762,12 +756,12 @@ WHERE
 				&idf.ID,
 				&targetRepName,
 				&idf.TargetFile,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&idf.CreateApp,
 				&idf.CreateDevice,
 				&idf.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&idf.UpdateApp,
 				&idf.UpdateDevice,
 				&idf.UpdateUser,
@@ -788,21 +782,9 @@ WHERE
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
 
-			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in idf: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			idf.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in idf: %w", createTimeStr, err)
-				return nil, err
-			}
-			idf.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in idf: %w", updateTimeStr, err)
-				return nil, err
-			}
+			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			idf.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
 			// ファイルの内容を取得する
 			fileContentText := ""
@@ -811,23 +793,25 @@ WHERE
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
 			}
-			fileContentText += filename
-			switch filepath.Ext(idf.TargetFile) {
-			case ".md":
-				fallthrough
-			case ".txt":
-				file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
-				if err != nil {
-					err = fmt.Errorf("error at open file %s: %w", filename, err)
-					return nil, err
+			if query.UseWords != nil && *query.UseWords {
+				fileContentText += filename
+				switch filepath.Ext(idf.TargetFile) {
+				case ".md":
+					fallthrough
+				case ".txt":
+					file, err := os.OpenFile(filename, os.O_RDONLY, os.ModePerm)
+					if err != nil {
+						err = fmt.Errorf("error at open file %s: %w", filename, err)
+						return nil, err
+					}
+					b, err := io.ReadAll(file)
+					file.Close()
+					if err != nil {
+						err = fmt.Errorf("error at read all file content %s: %w", filename, err)
+						return nil, err
+					}
+					fileContentText += strings.ToLower(string(b))
 				}
-				defer file.Close()
-				b, err := io.ReadAll(file)
-				if err != nil {
-					err = fmt.Errorf("error at read all file content %s: %w", filename, err)
-					return nil, err
-				}
-				fileContentText += strings.ToLower(string(b))
 			}
 
 			words := []string{}
@@ -878,9 +862,6 @@ WHERE
 			}
 		}
 	}
-	sort.Slice(idfKyous, func(i, j int) bool {
-		return idfKyous[i].RelatedTime.After(idfKyous[j].RelatedTime)
-	})
 	return idfKyous, nil
 }
 
@@ -918,12 +899,12 @@ SELECT
   ID,
   TARGET_REP_NAME,
   TARGET_FILE,
-  RELATED_TIME,
-  CREATE_TIME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
   CREATE_APP,
   CREATE_DEVICE,
   CREATE_USER,
-  UPDATE_TIME,
+  UPDATE_TIME_UNIX,
   UPDATE_APP,
   UPDATE_DEVICE,
   UPDATE_USER,
@@ -950,7 +931,7 @@ WHERE
 	tableNameAlias := i.dbName
 	whereCounter := 0
 	onlyLatestData := false
-	relatedTimeColumnName := "RELATED_TIME"
+	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"ID"}
 	ignoreFindWord := false
 	appendOrderBy := false
@@ -960,7 +941,6 @@ WHERE
 	if err != nil {
 		return nil, err
 	}
-	commonWhereSQL += " ORDER BY datetime(UPDATE_TIME, 'localtime') DESC "
 
 	sql += commonWhereSQL
 
@@ -987,7 +967,7 @@ WHERE
 			return nil, ctx.Err()
 		default:
 			idf := &IDFKyou{}
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
+			relatedTimeUnix, createTimeUnix, updateTimeUnix := int64(0), int64(0), int64(0)
 			targetRepName := ""
 
 			err = rows.Scan(
@@ -995,12 +975,12 @@ WHERE
 				&idf.ID,
 				&targetRepName,
 				&idf.TargetFile,
-				&relatedTimeStr,
-				&createTimeStr,
+				&relatedTimeUnix,
+				&createTimeUnix,
 				&idf.CreateApp,
 				&idf.CreateDevice,
 				&idf.CreateUser,
-				&updateTimeStr,
+				&updateTimeUnix,
 				&idf.UpdateApp,
 				&idf.UpdateDevice,
 				&idf.UpdateUser,
@@ -1020,28 +1000,13 @@ WHERE
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
 
-			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in idf: %w", relatedTimeStr, err)
-				return nil, err
-			}
-			idf.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in idf: %w", createTimeStr, err)
-				return nil, err
-			}
-			idf.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in idf: %w", updateTimeStr, err)
-				return nil, err
-			}
+			idf.RelatedTime = time.Unix(relatedTimeUnix, 0).Local()
+			idf.CreateTime = time.Unix(createTimeUnix, 0).Local()
+			idf.UpdateTime = time.Unix(updateTimeUnix, 0).Local()
 
 			idfKyous = append(idfKyous, idf)
 		}
 	}
-	sort.Slice(idfKyous, func(i, j int) bool {
-		return idfKyous[i].UpdateTime.After(idfKyous[j].UpdateTime)
-	})
 	return idfKyous, nil
 }
 
@@ -1051,7 +1016,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) IDF(ctx context.Context) error {
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
 	sql := `
-INSERT INTO IDF (
+INSERT INTO ` + i.dbName + ` (
   IS_DELETED,
   ID,
   TARGET_REP_NAME,
@@ -1066,8 +1031,15 @@ INSERT INTO IDF (
   UPDATE_DEVICE,
   UPDATE_USER,
   CONTENT_PATH,
-  REP_NAME
+  REP_NAME,
+  RELATED_TIME_UNIX,
+  CREATE_TIME_UNIX,
+  UPDATE_TIME_UNIX 
 ) VALUES (
+  ?,
+  ?,
+  ?,
+  ?,
   ?,
   ?,
   ?,
@@ -1099,13 +1071,17 @@ INSERT INTO IDF (
 		idfKyou.RelatedTime.Format(sqlite3impl.TimeLayout),
 		idfKyou.CreateTime.Format(sqlite3impl.TimeLayout),
 		idfKyou.CreateApp,
-		idfKyou.CreateDevice,
 		idfKyou.CreateUser,
+		idfKyou.CreateDevice,
 		idfKyou.UpdateTime.Format(sqlite3impl.TimeLayout),
 		idfKyou.UpdateApp,
 		idfKyou.UpdateDevice,
 		idfKyou.UpdateUser,
+		idfKyou.ContentPath,
 		idfKyou.RepName,
+		idfKyou.RelatedTime.Unix(),
+		idfKyou.CreateTime.Unix(),
+		idfKyou.UpdateTime.Unix(),
 	}
 
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)

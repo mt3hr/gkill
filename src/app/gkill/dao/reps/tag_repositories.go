@@ -94,10 +94,6 @@ loop:
 		}
 		matchTagsList = append(matchTagsList, tag)
 	}
-
-	sort.Slice(matchTagsList, func(i, j int) bool {
-		return matchTagsList[i].RelatedTime.After(matchTagsList[j].RelatedTime)
-	})
 	return matchTagsList, nil
 }
 
@@ -288,11 +284,6 @@ loop:
 		}
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
-
-	sort.Slice(tagHistoriesList, func(i, j int) bool {
-		return tagHistoriesList[i].UpdateTime.After(tagHistoriesList[j].UpdateTime)
-	})
-
 	return tagHistoriesList, nil
 }
 
@@ -371,11 +362,6 @@ loop:
 		}
 		tagHistoriesList = append(tagHistoriesList, tag)
 	}
-
-	sort.Slice(tagHistoriesList, func(i, j int) bool {
-		return tagHistoriesList[i].UpdateTime.After(tagHistoriesList[j].UpdateTime)
-	})
-
 	return tagHistoriesList, nil
 }
 
@@ -738,10 +724,6 @@ loop:
 		}
 		allTagsList = append(allTagsList, tag)
 	}
-
-	sort.Slice(allTagsList, func(i, j int) bool {
-		return allTagsList[i].UpdateTime.After(allTagsList[j].UpdateTime)
-	})
 
 	return allTagsList, nil
 }

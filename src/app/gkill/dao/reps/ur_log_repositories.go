@@ -425,10 +425,6 @@ loop:
 		}
 		matchURLogsList = append(matchURLogsList, kyou)
 	}
-
-	sort.Slice(matchURLogsList, func(i, j int) bool {
-		return matchURLogsList[i].RelatedTime.After(matchURLogsList[j].RelatedTime)
-	})
 	return matchURLogsList, nil
 }
 

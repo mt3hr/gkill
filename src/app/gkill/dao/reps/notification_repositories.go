@@ -95,9 +95,6 @@ loop:
 		matchNotificationsList = append(matchNotificationsList, notification)
 	}
 
-	sort.Slice(matchNotificationsList, func(i, j int) bool {
-		return matchNotificationsList[i].UpdateTime.After(matchNotificationsList[j].UpdateTime)
-	})
 	return matchNotificationsList, nil
 }
 
