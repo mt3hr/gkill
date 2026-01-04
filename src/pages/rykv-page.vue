@@ -59,7 +59,7 @@ const last_added_tag: Ref<string> = ref("")
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
-
+    req.force_reget = true
     return gkill_api.value.get_application_config(req)
         .then(async res => {
             if (res.errors && res.errors.length !== 0) {
