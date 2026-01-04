@@ -294,7 +294,12 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 
 	typeMatchReps := []reps.Repository{}
 
-	if findCtx.ParsedFindQuery.IsImageOnly != nil && *findCtx.ParsedFindQuery.IsImageOnly {
+	if findCtx.ParsedFindQuery.ForMi != nil && *findCtx.ParsedFindQuery.ForMi {
+		// ForMiだったらMi以外は無視する
+		for _, rep := range repositories.MiReps {
+			typeMatchReps = append(typeMatchReps, rep)
+		}
+	} else if findCtx.ParsedFindQuery.IsImageOnly != nil && *findCtx.ParsedFindQuery.IsImageOnly {
 		// ImageOnlyだったらIDFRep以外は無視する
 		for _, rep := range repositories.IDFKyouReps {
 			typeMatchReps = append(typeMatchReps, rep)
