@@ -126,7 +126,8 @@ self.addEventListener('fetch', (event: FetchEvent) => {
     // ApplicationConfig系
     url.pathname === '/api/get_all_rep_names' ||
     url.pathname === '/api/get_all_tag_names' ||
-    url.pathname === '/api/get_mi_board_list')) {
+    url.pathname === '/api/get_mi_board_list' ||
+    url.pathname === '/api/get_application_config')) {
     event.respondWith(
       (async () => {
         try {
