@@ -195,12 +195,21 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	// UPDATE_TIMEか、Calendarの条件をSQLに追記
 	if query.UseUpdateTime != nil && *query.UseUpdateTime && query.UpdateTime != nil {
 		if query.UpdateTime != nil {
-			if *whereCounter != 0 {
-				sql += " AND "
+			if strings.HasSuffix(relatedTimeColumnName, "_UNIX") { // UNIXついてればキャッシュでしょ（適当）
+				if *whereCounter != 0 {
+					sql += " AND "
+				}
+				sql += fmt.Sprintf("%s = ?", "UPDATE_TIME_UNIX")
+				*queryArgs = append(*queryArgs, ((*query.UpdateTime).Unix()))
+				*whereCounter++
+			} else {
+				if *whereCounter != 0 {
+					sql += " AND "
+				}
+				sql += fmt.Sprintf("datetime(%s, 'localtime') = datetime(?, 'localtime')", "UPDATE_TIME")
+				*queryArgs = append(*queryArgs, ((*query.UpdateTime).Format(TimeLayout)))
+				*whereCounter++
 			}
-			sql += fmt.Sprintf("datetime(%s, 'localtime') = datetime(?, 'localtime')", "UPDATE_TIME")
-			*queryArgs = append(*queryArgs, ((*query.UpdateTime).Format(TimeLayout)))
-			*whereCounter++
 		}
 	} else if useCalendar {
 		// 開始日時を指定するSQLを追記
@@ -244,11 +253,19 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 
 	// 最新のレコード判定
 	if onlyLatestData {
-		if *whereCounter != 0 {
-			sql += " AND "
+		if strings.HasSuffix(relatedTimeColumnName, "_UNIX") { // UNIXついてればキャッシュでしょ（適当）
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += fmt.Sprintf(" UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
+			*whereCounter++
+		} else {
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += fmt.Sprintf(" UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
+			*whereCounter++
 		}
-		sql += fmt.Sprintf(" UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
-		*whereCounter++
 	}
 
 	// 削除済みであるかどうかのSQL追記
