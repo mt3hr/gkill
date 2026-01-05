@@ -9,7 +9,7 @@ import { AddTimeisRequest } from '@/classes/api/req_res/add-timeis-request'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
-import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
+import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 
 export class KFTLTimeIsStartRequest extends KFTLRequest {
 
@@ -28,7 +28,7 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         this.title = title
     }
 
-    async do_request(): Promise<Array<GkillError>> {
+    async do_request(gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<Array<GkillError>> {
         let errors = Array<GkillError>()
         if (this.title == "") {
             const error = new GkillError()
@@ -38,10 +38,7 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
             return errors
         }
 
-        const application_config_req = new GetApplicationConfigRequest()
-        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
-
-        await super.do_request().then(super_errors => errors = errors.concat(super_errors))
+        await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddTimeisRequest()
         const now = new Date(Date.now())
@@ -51,16 +48,16 @@ export class KFTLTimeIsStartRequest extends KFTLRequest {
         req.timeis.start_time = time
         req.timeis.title = this.title
         req.timeis.create_app = "gkill_kftl"
-        req.timeis.create_device = application_config_res.application_config.device
+        req.timeis.create_device = application_config.device
         req.timeis.create_time = now
-        req.timeis.create_user = application_config_res.application_config.user_id
+        req.timeis.create_user = application_config.user_id
         req.timeis.update_app = "gkill_kftl"
-        req.timeis.update_device = application_config_res.application_config.device
+        req.timeis.update_device = application_config.device
         req.timeis.update_time = now
-        req.timeis.update_user = application_config_res.application_config.user_id
+        req.timeis.update_user = application_config.user_id
 
         await delete_gkill_kyou_cache(req.timeis.id)
-        await GkillAPI.get_gkill_api().add_timeis(req).then(res => {
+        await gkill_api.add_timeis(req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
             }

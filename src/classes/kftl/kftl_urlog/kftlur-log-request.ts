@@ -9,7 +9,7 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
-import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
+import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 
 export class KFTLURLogRequest extends KFTLRequest {
 
@@ -31,7 +31,7 @@ export class KFTLURLogRequest extends KFTLRequest {
         this.title = title
     }
 
-    async do_request(): Promise<Array<GkillError>> {
+    async do_request(gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<Array<GkillError>> {
         let errors = Array<GkillError>()
         if (this.url == "" && this.title == "") {
             const error = new GkillError()
@@ -41,10 +41,7 @@ export class KFTLURLogRequest extends KFTLRequest {
             return errors
         }
 
-        const application_config_req = new GetApplicationConfigRequest()
-        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
-
-        await super.do_request().then(super_errors => errors = errors.concat(super_errors))
+        await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddURLogRequest()
         const now = new Date(Date.now())
@@ -55,16 +52,16 @@ export class KFTLURLogRequest extends KFTLRequest {
         req.urlog.url = this.url
         req.urlog.title = this.title
         req.urlog.create_app = "gkill_kftl"
-        req.urlog.create_device = application_config_res.application_config.device
+        req.urlog.create_device = application_config.device
         req.urlog.create_time = now
-        req.urlog.create_user = application_config_res.application_config.user_id
+        req.urlog.create_user = application_config.user_id
         req.urlog.update_app = "gkill_kftl"
-        req.urlog.update_device = application_config_res.application_config.device
+        req.urlog.update_device = application_config.device
         req.urlog.update_time = now
-        req.urlog.update_user = application_config_res.application_config.user_id
+        req.urlog.update_user = application_config.user_id
 
         await delete_gkill_kyou_cache(req.urlog.id)
-        await GkillAPI.get_gkill_api().add_urlog(req).then(res => {
+        await gkill_api.add_urlog(req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
             }
