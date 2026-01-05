@@ -13,7 +13,7 @@
                 <v-col cols="auto">
                     <v-btn dark color="primary" @click="submit" :disabled="is_requested_submit">{{
                         i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-title>
@@ -212,7 +212,7 @@ async function submit(): Promise<void> {
             if (request_related_time && request_related_time.getTime() > last_added_request_time.getTime()) {
                 last_added_request_time = request_related_time
             }
-            await request.do_request().then(request_errors => errors = errors.concat(request_errors))
+            await request.do_request(props.gkill_api, props.application_config).then(request_errors => errors = errors.concat(request_errors))
         }
         if (errors.length != 0) {
             emits('received_errors', errors)
