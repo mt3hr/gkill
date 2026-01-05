@@ -24,7 +24,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -827,7 +826,7 @@ func (g *GkillServerAPI) Close() error {
 }
 
 func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.LoginRequest{}
 	response := &req_res.LoginResponse{}
@@ -1027,7 +1026,7 @@ func (g *GkillServerAPI) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.LogoutRequest{}
 	response := &req_res.LogoutResponse{}
@@ -1115,7 +1114,7 @@ func (g *GkillServerAPI) HandleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.ResetPasswordRequest{}
 	response := &req_res.ResetPasswordResponse{}
@@ -1244,7 +1243,7 @@ func (g *GkillServerAPI) HandleResetPassword(w http.ResponseWriter, r *http.Requ
 }
 
 func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.SetNewPasswordRequest{}
 	response := &req_res.SetNewPasswordResponse{}
@@ -1337,7 +1336,7 @@ func (g *GkillServerAPI) HandleSetNewPassword(w http.ResponseWriter, r *http.Req
 }
 
 func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddTagRequest{}
 	response := &req_res.AddTagResponse{}
@@ -1514,7 +1513,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddTextRequest{}
 	response := &req_res.AddTextResponse{}
@@ -1690,7 +1689,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddNotificationRequest{}
 	response := &req_res.AddNotificationResponse{}
@@ -1926,7 +1925,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 }
 
 func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddKmemoRequest{}
 	response := &req_res.AddKmemoResponse{}
@@ -2101,7 +2100,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 }
 
 func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddKCRequest{}
 	response := &req_res.AddKCResponse{}
@@ -2277,7 +2276,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddURLogRequest{}
 	response := &req_res.AddURLogResponse{}
@@ -2484,7 +2483,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 }
 
 func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddNlogRequest{}
 	response := &req_res.AddNlogResponse{}
@@ -2659,7 +2658,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddTimeIsRequest{}
 	response := &req_res.AddTimeIsResponse{}
@@ -2834,7 +2833,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 }
 
 func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddLantanaRequest{}
 	response := &req_res.AddLantanaResponse{}
@@ -3011,7 +3010,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 }
 
 func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddMiRequest{}
 	response := &req_res.AddMiResponse{}
@@ -3186,7 +3185,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddReKyouRequest{}
 	response := &req_res.AddReKyouResponse{}
@@ -3363,7 +3362,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 }
 
 func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateTagRequest{}
 	response := &req_res.UpdateTagResponse{}
@@ -3554,7 +3553,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 }
 
 func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateTextRequest{}
 	response := &req_res.UpdateTextResponse{}
@@ -3744,7 +3743,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 }
 
 func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateNotificationRequest{}
 	response := &req_res.UpdateNotificationResponse{}
@@ -3957,7 +3956,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 }
 
 func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateKmemoRequest{}
 	response := &req_res.UpdateKmemoResponse{}
@@ -4145,7 +4144,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 }
 
 func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateKCRequest{}
 	response := &req_res.UpdateKCResponse{}
@@ -4333,7 +4332,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 }
 
 func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateURLogRequest{}
 	response := &req_res.UpdateURLogResponse{}
@@ -4586,7 +4585,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 }
 
 func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateNlogRequest{}
 	response := &req_res.UpdateNlogResponse{}
@@ -4774,7 +4773,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 }
 
 func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateTimeisRequest{}
 	response := &req_res.UpdateTimeisResponse{}
@@ -4962,7 +4961,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 }
 
 func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateLantanaRequest{}
 	response := &req_res.UpdateLantanaResponse{}
@@ -5150,7 +5149,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 }
 
 func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateIDFKyouRequest{}
 	response := &req_res.UpdateIDFKyouResponse{}
@@ -5338,7 +5337,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 }
 
 func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateMiRequest{}
 	response := &req_res.UpdateMiResponse{}
@@ -5513,7 +5512,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 }
 
 func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateReKyouRequest{}
 	response := &req_res.UpdateReKyouResponse{}
@@ -5702,7 +5701,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 }
 
 func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetKyousRequest{}
 	response := &req_res.GetKyousResponse{}
@@ -5774,7 +5773,7 @@ func (g *GkillServerAPI) HandleGetKyous(w http.ResponseWriter, r *http.Request) 
 }
 
 func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetKyouRequest{}
 	response := &req_res.GetKyouResponse{}
@@ -5867,7 +5866,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetKmemoRequest{}
 	response := &req_res.GetKmemoResponse{}
@@ -5951,7 +5950,7 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 }
 
 func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetKCRequest{}
 	response := &req_res.GetKCResponse{}
@@ -6035,7 +6034,7 @@ func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetURLogRequest{}
 	response := &req_res.GetURLogResponse{}
@@ -6119,7 +6118,7 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 }
 
 func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetNlogRequest{}
 	response := &req_res.GetNlogResponse{}
@@ -6203,7 +6202,7 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTimeisRequest{}
 	response := &req_res.GetTimeisResponse{}
@@ -6287,7 +6286,7 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 }
 
 func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetMiRequest{}
 	response := &req_res.GetMiResponse{}
@@ -6371,7 +6370,7 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 }
 
 func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetLantanaRequest{}
 	response := &req_res.GetLantanaResponse{}
@@ -6455,7 +6454,7 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 }
 
 func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetReKyouRequest{}
 	response := &req_res.GetReKyouResponse{}
@@ -6539,7 +6538,7 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 }
 
 func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetGitCommitLogRequest{}
 	response := &req_res.GetGitCommitLogResponse{}
@@ -6623,7 +6622,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 }
 
 func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetIDFKyouRequest{}
 	response := &req_res.GetIDFKyouResponse{}
@@ -6707,7 +6706,7 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 }
 
 func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetMiBoardRequest{}
 	response := &req_res.GetMiBoardResponse{}
@@ -6791,7 +6790,7 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 }
 
 func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetAllTagNamesRequest{}
 	response := &req_res.GetAllTagNamesResponse{}
@@ -6875,7 +6874,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 }
 
 func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetAllRepNamesRequest{}
 	response := &req_res.GetAllRepNamesResponse{}
@@ -6959,7 +6958,7 @@ func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Req
 }
 
 func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTagsByTargetIDRequest{}
 	response := &req_res.GetTagsByTargetIDResponse{}
@@ -7043,7 +7042,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 }
 
 func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTagHistoryByTagIDRequest{}
 	response := &req_res.GetTagHistoryByTagIDResponse{}
@@ -7136,7 +7135,7 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 }
 
 func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTextsByTargetIDRequest{}
 	response := &req_res.GetTextsByTargetIDResponse{}
@@ -7220,7 +7219,7 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 }
 
 func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetNotificationsByTargetIDRequest{}
 	response := &req_res.GetNotificationsByTargetIDResponse{}
@@ -7304,7 +7303,7 @@ func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter,
 }
 
 func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetTextHistoryByTextIDRequest{}
 	response := &req_res.GetTextHistoryByTextIDResponse{}
@@ -7397,7 +7396,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 }
 
 func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetNotificationHistoryByNotificationIDRequest{}
 	response := &req_res.GetNotificationHistoryByNotificationIDResponse{}
@@ -7490,7 +7489,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 }
 
 func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetApplicationConfigRequest{}
 	response := &req_res.GetApplicationConfigResponse{}
@@ -7648,7 +7647,7 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 }
 
 func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetServerConfigsRequest{}
 	response := &req_res.GetServerConfigsResponse{}
@@ -7760,7 +7759,7 @@ func (g *GkillServerAPI) HandleGetServerConfigs(w http.ResponseWriter, r *http.R
 }
 
 func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UploadFilesRequest{}
 	response := &req_res.UploadFilesResponse{}
@@ -8045,7 +8044,7 @@ loop:
 }
 
 func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UploadGPSLogFilesRequest{}
 	response := &req_res.UploadGPSLogFilesResponse{}
@@ -8351,7 +8350,7 @@ errloop2:
 }
 
 func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateApplicationConfigRequest{}
 	response := &req_res.UpdateApplicationConfigResponse{}
@@ -8427,7 +8426,7 @@ func (g *GkillServerAPI) HandleUpdateApplicationConfig(w http.ResponseWriter, r 
 	})
 }
 func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateAccountStatusRequest{}
 	response := &req_res.UpdateAccountStatusResponse{}
@@ -8533,7 +8532,7 @@ func (g *GkillServerAPI) HandleUpdateAccountStatus(w http.ResponseWriter, r *htt
 }
 
 func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateUserRepsRequest{}
 	response := &req_res.UpdateUserRepsResponse{}
@@ -8642,7 +8641,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 }
 
 func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	defer func() {
 		done := threads.AllocateThread()
 		defer done()
@@ -8801,7 +8800,7 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 }
 
 func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddAccountRequest{}
 	response := &req_res.AddAccountResponse{}
@@ -8969,7 +8968,7 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 }
 
 func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GenerateTLSFileRequest{}
 	response := &req_res.GenerateTLSFileResponse{}
@@ -9366,7 +9365,7 @@ func (g *GkillServerAPI) HandleGenerateTLSFile(w http.ResponseWriter, r *http.Re
 }
 
 func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetGPSLogRequest{}
 	response := &req_res.GetGPSLogResponse{}
@@ -9541,7 +9540,7 @@ func globalIP(ctx context.Context) (net.IP, error) {
 }
 
 func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddShareKyouListInfoRequest{}
 	response := &req_res.AddShareKyouListInfoResponse{}
@@ -9665,7 +9664,7 @@ func (g *GkillServerAPI) HandleAddShareKyouListInfo(w http.ResponseWriter, r *ht
 }
 
 func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.UpdateShareKyouListInfoRequest{}
 	response := &req_res.UpdateShareKyouListInfoResponse{}
@@ -9789,7 +9788,7 @@ func (g *GkillServerAPI) HandleUpdateShareKyouListInfo(w http.ResponseWriter, r 
 }
 
 func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetShareKyouListInfosRequest{}
 	response := &req_res.GetShareKyouListInfosResponse{}
@@ -9861,7 +9860,7 @@ func (g *GkillServerAPI) HandleGetShareKyouListInfos(w http.ResponseWriter, r *h
 }
 
 func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.DeleteShareKyouListInfoRequest{}
 	response := &req_res.DeleteShareKyouListInfosResponse{}
@@ -9934,7 +9933,7 @@ func (g *GkillServerAPI) HandleDeleteShareKyouListInfos(w http.ResponseWriter, r
 }
 
 func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetSharedKyousRequest{}
 	response := &req_res.GetSharedKyousResponse{}
@@ -10359,7 +10358,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 }
 
 func (g *GkillServerAPI) HandleGetRepositories(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetRepositoriesRequest{}
 	response := &req_res.GetRepositoriesResponse{}
@@ -10725,7 +10724,6 @@ func (g *GkillServerAPI) getTLSFileNames(device string) (certFileName string, pe
 }
 
 func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
 
 	sessionID := ""
 	sharedID := ""
@@ -10828,7 +10826,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 }
 
 func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.GetGkillNotificationPublicKeyRequest{}
 	response := &req_res.GetGkillNotificationPublicKeyResponse{}
@@ -10913,7 +10911,7 @@ func (g *GkillServerAPI) HandleGetGkillNotificationPublicKey(w http.ResponseWrit
 	response.GkillNotificationPublicKey = currentServerConfig.GkillNotificationPublicKey
 }
 func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.RegisterGkillNotificationRequest{}
 	response := &req_res.RegisterGkillNotificationResponse{}
@@ -10979,7 +10977,7 @@ func (g *GkillServerAPI) HandleRegisterGkillNotification(w http.ResponseWriter, 
 }
 
 func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.OpenDirectoryRequest{}
 	response := &req_res.OpenDirectoryResponse{}
@@ -11113,7 +11111,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 }
 
 func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.OpenFileRequest{}
 	response := &req_res.OpenFileResponse{}
@@ -11247,7 +11245,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 }
 
 func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.ReloadRepositoriesRequest{}
 	response := &req_res.ReloadRepositoriesResponse{}
@@ -11405,7 +11403,7 @@ func (g *GkillServerAPI) ifRedirectResetAdminAccountIsNotFound(w http.ResponseWr
 }
 
 func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -11689,7 +11687,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 }
 
 func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -11971,7 +11969,7 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 }
 
 func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.CommitTxRequest{}
 	response := &req_res.CommitTxResponse{}
@@ -12875,7 +12873,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 	})
 }
 func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request) {
-	defer func() { runtime.GC() }()
+
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.DiscardTxRequest{}
 	response := &req_res.DiscardTxResponse{}

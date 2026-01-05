@@ -722,7 +722,7 @@ func (f *FindFilter) sortAndTrimKyousMap(ctx context.Context, findCtx *FindKyouC
 			trimedKyousMap[kyou.RelatedTime.Unix()] = kyou
 		}
 
-		sortedKyous := []*reps.Kyou{}
+		sortedKyous := make([]*reps.Kyou, 0, len(trimedKyousMap))
 		for _, kyou := range trimedKyousMap {
 			sortedKyous = append(sortedKyous, kyou)
 		}

@@ -1,9 +1,7 @@
 package reps
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -260,7 +258,7 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
 			if query.IDs != nil {
-				ids := *query.IDs
+				ids := append([]string{}, *query.IDs...)
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -275,23 +273,12 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 					return
 				}
 
-				idsStrBuf := bytes.NewBufferString("")
 				for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 					ids = append(ids, latestDataRepositoryAddress.TargetID)
 				}
-
-				err = json.NewEncoder(idsStrBuf).Encode(ids)
-				if err != nil {
-					err = fmt.Errorf("error at latest ids in rep marshal json %#v: %w", ids, err)
-					errch <- err
-					return
-				}
 				trueValue := true
-
-				query.IDs = &ids
-				query.UseIDs = &trueValue
-
-				queryLatest = query
+				queryLatest.IDs = &ids
+				queryLatest.UseIDs = &trueValue
 			}
 
 			matchKyousInRep, err := rep.FindKyous(ctx, queryLatest)
@@ -914,23 +901,14 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 					return
 				}
 
-				idsStrBuf := bytes.NewBufferString("")
 				ids := []string{}
 				for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 					ids = append(ids, latestDataRepositoryAddress.TargetID)
 				}
 
-				err = json.NewEncoder(idsStrBuf).Encode(ids)
-				if err != nil {
-					err = fmt.Errorf("error at latest ids in rep marshal json %#v: %w", ids, err)
-					errch <- err
-					return
-				}
 				trueValue := true
-				query.IDs = &ids
-				query.UseIDs = &trueValue
-
-				queryLatest = query
+				queryLatest.IDs = &ids
+				queryLatest.UseIDs = &trueValue
 			}
 
 			matchTagsInRep, err := rep.FindTags(ctx, queryLatest)
@@ -1361,7 +1339,7 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 			queryLatest := query
 			ids := []string{}
 			if query.IDs != nil {
-				ids = *query.IDs
+				ids = append([]string{}, *query.IDs...)
 			}
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
 			if len(ids) == 0 {
@@ -1379,22 +1357,13 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 					return
 				}
 
-				idsStrBuf := bytes.NewBufferString("")
 				for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 					ids = append(ids, latestDataRepositoryAddress.TargetID)
 				}
 
-				err = json.NewEncoder(idsStrBuf).Encode(ids)
-				if err != nil {
-					err = fmt.Errorf("error at latest ids in rep marshal json %#v: %w", ids, err)
-					errch <- err
-					return
-				}
 				trueValue := true
-				query.IDs = &ids
-				query.UseIDs = &trueValue
-
-				queryLatest = query
+				queryLatest.IDs = &ids
+				queryLatest.UseIDs = &trueValue
 			}
 
 			matchTextsInRep, err := rep.FindTexts(ctx, queryLatest)
