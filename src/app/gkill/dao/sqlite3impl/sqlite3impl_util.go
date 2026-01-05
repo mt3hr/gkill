@@ -35,20 +35,27 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 		ids = *query.IDs
 	}
 
-	if useIDs && len(ids) != 0 {
-		if *whereCounter != 0 {
-			sql += " AND "
-		}
-		sql += " ID IN ("
-		for i, id := range ids {
-			sql += " ? "
-			*queryArgs = append(*queryArgs, id)
-			if i != len(ids)-1 {
-				sql += ", "
+	if useIDs {
+		if len(ids) != 0 {
+			if *whereCounter != 0 {
+				sql += " AND "
 			}
-			*whereCounter++
+			sql += " ID IN ("
+			for i, id := range ids {
+				sql += " ? "
+				*queryArgs = append(*queryArgs, id)
+				if i != len(ids)-1 {
+					sql += ", "
+				}
+				*whereCounter++
+			}
+			sql += ")"
+		} else {
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += " 0 = 1 "
 		}
-		sql += ")"
 	}
 	if *whereCounter == 0 {
 		sql += " 0 = 0 "

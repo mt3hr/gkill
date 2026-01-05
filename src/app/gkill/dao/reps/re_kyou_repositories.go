@@ -320,7 +320,7 @@ func (r *ReKyouRepositories) Close(ctx context.Context) error {
 		go func(rep ReKyouRepository) {
 			defer done()
 			defer wg.Done()
-			err = rep.Close(ctx)
+			err := rep.Close(ctx)
 			if err != nil {
 				errch <- err
 				return

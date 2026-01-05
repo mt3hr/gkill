@@ -790,5 +790,9 @@ INSERT INTO ` + t.dbName + ` (
 }
 
 func (t *notificationRepositoryCachedSQLite3Impl) UnWrapTyped() ([]NotificationRepository, error) {
-	return []NotificationRepository{t.notificationRep}, nil
+	unWraped, err := t.notificationRep.UnWrapTyped()
+	if err != nil {
+		return nil, err
+	}
+	return unWraped, nil
 }
