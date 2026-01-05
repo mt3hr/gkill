@@ -12,7 +12,7 @@ import generate_get_plaing_timeis_kyous_query from '@/classes/api/generate-get-p
 import { GetKyousRequest } from '@/classes/api/req_res/get-kyous-request'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
-import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
+import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 
 export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
 
@@ -29,7 +29,7 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
         this.title = title
     }
 
-    async do_request(): Promise<Array<GkillError>> {
+    async do_request(gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<Array<GkillError>> {
         let errors = Array<GkillError>()
         if (this.title == "") {
             const error = new GkillError()
@@ -38,11 +38,8 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
             errors.push(error)
             return errors
         }
-        await super.do_request().then(super_errors => errors = errors.concat(super_errors))
+        await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
-
-        const application_config_req = new GetApplicationConfigRequest()
-        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
 
         // 対象のtimeisを取得する
         let target_timeis: TimeIs | null = null
@@ -50,8 +47,8 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
         const get_plaing_timeis_req = new GetKyousRequest()
         get_plaing_timeis_req.query = get_plaing_timeis_query
 
-        await GkillAPI.get_instance().delete_updated_gkill_caches()
-        const get_plaing_timeis_res = await GkillAPI.get_gkill_api().get_kyous(get_plaing_timeis_req)
+        await gkill_api.delete_updated_gkill_caches()
+        const get_plaing_timeis_res = await gkill_api.get_kyous(get_plaing_timeis_req)
         if (get_plaing_timeis_res.errors && get_plaing_timeis_res.errors.length !== 0) {
             errors = errors.concat(get_plaing_timeis_res.errors)
             return errors
@@ -91,11 +88,11 @@ export class KFTLTimeIsEndByTitleRequest extends KFTLRequest {
         update_timeis_req.timeis = target_timeis.clone()
         update_timeis_req.timeis.end_time = time
         update_timeis_req.timeis.update_app = "gkill_kftl"
-        update_timeis_req.timeis.update_device = application_config_res.application_config.device
+        update_timeis_req.timeis.update_device = application_config.device
         update_timeis_req.timeis.update_time = time
-        update_timeis_req.timeis.update_user = application_config_res.application_config.user_id
+        update_timeis_req.timeis.update_user = application_config.user_id
 
-        await GkillAPI.get_gkill_api().update_timeis(update_timeis_req).then(res => {
+        await gkill_api.update_timeis(update_timeis_req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
             }
