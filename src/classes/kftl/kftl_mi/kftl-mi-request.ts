@@ -4,12 +4,12 @@ import { KFTLRequest } from '../kftl-request'
 import type { KFTLStatementLineContext } from '../kftl-statement-line-context'
 import { GkillError } from '@/classes/api/gkill-error'
 import { GkillAPI } from '@/classes/api/gkill-api'
-import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import { AddMiRequest } from '@/classes/api/req_res/add-mi-request'
 
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 import { i18n } from '@/i18n'
+import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 
 export class KFTLMiRequest extends KFTLRequest {
 
@@ -32,7 +32,7 @@ export class KFTLMiRequest extends KFTLRequest {
         this.esitimate_end_time = null
     }
 
-    async do_request(): Promise<Array<GkillError>> {
+    async do_request(gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<Array<GkillError>> {
         let errors = new Array<GkillError>()
         if (this.title == "") {
             const error = new GkillError()
@@ -41,30 +41,15 @@ export class KFTLMiRequest extends KFTLRequest {
             errors = errors.concat([error])
         }
 
-        const application_config_req = new GetApplicationConfigRequest()
-        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
-
         if (this.board_name == "") {
-            const req = new GetApplicationConfigRequest()
-
-            const res = await GkillAPI.get_gkill_api().get_application_config(req)
-            this.board_name = res.application_config.mi_default_board
+            this.board_name = application_config.mi_default_board
         }
         if (errors.length !== 0) {
             return errors
         }
 
-        const req = new GetApplicationConfigRequest()
-
-        const res = await GkillAPI.get_gkill_api().get_application_config(req)
-        if (res.errors && res.errors.length !== 0) {
-            errors = errors.concat(res.errors)
-            return errors
-        }
-
-        const board_name = this.board_name != "" ? this.board_name : res.application_config.mi_default_board
-
-        await super.do_request().then(super_errors => errors = errors.concat(super_errors))
+        const board_name = this.board_name != "" ? this.board_name : application_config.mi_default_board
+        await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
         const id = this.get_request_id()
         const now = new Date(Date.now())
 
@@ -80,16 +65,16 @@ export class KFTLMiRequest extends KFTLRequest {
         mi_req.mi.is_checked = false
 
         mi_req.mi.create_app = "gkill_kftl"
-        mi_req.mi.create_device = application_config_res.application_config.device
+        mi_req.mi.create_device = application_config.device
         mi_req.mi.create_time = now
-        mi_req.mi.create_user = application_config_res.application_config.user_id
+        mi_req.mi.create_user = application_config.user_id
         mi_req.mi.update_app = "gkill_kftl"
-        mi_req.mi.update_device = application_config_res.application_config.device
+        mi_req.mi.update_device = application_config.device
         mi_req.mi.update_time = now
-        mi_req.mi.update_user = application_config_res.application_config.user_id
+        mi_req.mi.update_user = application_config.user_id
 
         await delete_gkill_kyou_cache(mi_req.mi.id)
-        await GkillAPI.get_gkill_api().add_mi(mi_req).then(res => {
+        await gkill_api.add_mi(mi_req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
             }
