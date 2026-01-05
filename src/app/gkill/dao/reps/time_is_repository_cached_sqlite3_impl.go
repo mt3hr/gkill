@@ -195,7 +195,8 @@ FROM ` + t.dbName + `
 		whereCounter++
 	}
 
-	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
+	orderby := " ORDER BY END_TIME_UNIX DESC "
+	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs, orderby)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
