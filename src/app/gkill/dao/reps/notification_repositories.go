@@ -621,5 +621,13 @@ func (t NotificationRepositories) AddNotificationInfo(ctx context.Context, text 
 }
 
 func (t NotificationRepositories) UnWrapTyped() ([]NotificationRepository, error) {
-	return t, nil
+	unWraped := []NotificationRepository{}
+	for _, rep := range t {
+		unwraped, err := rep.UnWrapTyped()
+		if err != nil {
+			return nil, err
+		}
+		unWraped = append(unWraped, unwraped...)
+	}
+	return unWraped, nil
 }
