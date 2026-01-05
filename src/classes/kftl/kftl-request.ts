@@ -4,7 +4,7 @@ import { GkillAPI } from '../api/gkill-api'
 import type { GkillError } from '../api/gkill-error'
 import { AddTagRequest } from '../api/req_res/add-tag-request'
 import { AddTextRequest } from '../api/req_res/add-text-request'
-import { GetApplicationConfigRequest } from '../api/req_res/get-application-config-request'
+import type { ApplicationConfig } from '../datas/config/application-config'
 import delete_gkill_kyou_cache from '../delete-gkill-cache'
 import { KFTLRequestBase } from './kftl-request-base'
 import type { KFTLStatementLineContext } from './kftl-statement-line-context'
@@ -23,12 +23,8 @@ export abstract class KFTLRequest extends KFTLRequestBase {
 
     private context: KFTLStatementLineContext
 
-    private api: GkillAPI
-
     constructor(request_id: string, context: KFTLStatementLineContext) {
         super()
-        this.api = GkillAPI.get_gkill_api()
-
         this.request_id = request_id
         this.tags = new Array<string>()
         this.current_text_id = ""
@@ -37,34 +33,31 @@ export abstract class KFTLRequest extends KFTLRequestBase {
         this.context = context
     }
 
-    async do_request(): Promise<Array<GkillError>> {
+    async do_request(gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<Array<GkillError>> {
         let errors = Array<GkillError>()
         const time = this.get_related_time() != null ? this.get_related_time()!! : new Date(Date.now())
         const now = new Date(Date.now())
-
-        const application_config_req = new GetApplicationConfigRequest()
-        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
 
         for (let i = 0; i < this.tags.length; i++) {
             const tag = this.tags[i]
             const req = new AddTagRequest()
             req.tx_id = this.get_tx_id()
 
-            req.tag.id = GkillAPI.get_gkill_api().generate_uuid()
+            req.tag.id = gkill_api.generate_uuid()
             req.tag.tag = tag
             req.tag.target_id = this.get_request_id()
             req.tag.related_time = time
             req.tag.create_app = "gkill_kftl"
-            req.tag.create_device = application_config_res.application_config.device
+            req.tag.create_device = application_config.device
             req.tag.create_time = now
-            req.tag.create_user = application_config_res.application_config.user_id
+            req.tag.create_user = application_config.user_id
             req.tag.update_app = "gkill_kftl"
-            req.tag.update_device = application_config_res.application_config.device
+            req.tag.update_device = application_config.device
             req.tag.update_time = now
-            req.tag.update_user = application_config_res.application_config.user_id
+            req.tag.update_user = application_config.user_id
             await delete_gkill_kyou_cache(req.tag.id)
             await delete_gkill_kyou_cache(req.tag.target_id)
-            await GkillAPI.get_gkill_api().add_tag(req).then((res) => {
+            await gkill_api.add_tag(req).then((res) => {
                 if (res.errors && res.errors.length !== 0) {
                     errors = errors.concat(res.errors)
                 }
@@ -82,16 +75,16 @@ export abstract class KFTLRequest extends KFTLRequestBase {
             req.text.text = text
             req.text.related_time = time
             req.text.create_app = "gkill_kftl"
-            req.text.create_device = application_config_res.application_config.device
+            req.text.create_device = application_config.device
             req.text.create_time = now
-            req.text.create_user = application_config_res.application_config.user_id
+            req.text.create_user = application_config.user_id
             req.text.update_app = "gkill_kftl"
-            req.text.update_device = application_config_res.application_config.device
+            req.text.update_device = application_config.device
             req.text.update_time = now
-            req.text.update_user = application_config_res.application_config.user_id
+            req.text.update_user = application_config.user_id
             await delete_gkill_kyou_cache(req.text.id)
             await delete_gkill_kyou_cache(req.text.target_id)
-            await GkillAPI.get_gkill_api().add_text(req).then((res) => {
+            await gkill_api.add_text(req).then((res) => {
                 if (res.errors && res.errors.length !== 0) {
                     errors = errors.concat(res.errors)
                 }

@@ -7,7 +7,7 @@ import { GkillAPI } from '@/classes/api/gkill-api'
 import { AddLantanaRequest } from '@/classes/api/req_res/add-lantana-request'
 
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
-import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
+import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 
 export class KFTLLantanaRequest extends KFTLRequest {
 
@@ -18,12 +18,9 @@ export class KFTLLantanaRequest extends KFTLRequest {
         this.mood = 0
     }
 
-    async do_request(): Promise<Array<GkillError>> {
+    async do_request(gkill_api: GkillAPI, application_config: ApplicationConfig): Promise<Array<GkillError>> {
         let errors = new Array<GkillError>()
-        await super.do_request().then(super_errors => errors = errors.concat(super_errors))
-
-        const application_config_req = new GetApplicationConfigRequest()
-        const application_config_res = await GkillAPI.get_gkill_api().get_application_config(application_config_req)
+        await super.do_request(gkill_api, application_config).then(super_errors => errors = errors.concat(super_errors))
 
         const time = this.get_related_time() ? this.get_related_time()!! : new Date(Date.now())
         const req = new AddLantanaRequest()
@@ -35,16 +32,16 @@ export class KFTLLantanaRequest extends KFTLRequest {
         req.lantana.related_time = time
 
         req.lantana.create_app = "gkill_kftl"
-        req.lantana.create_device = application_config_res.application_config.device
+        req.lantana.create_device = application_config.device
         req.lantana.create_time = now
-        req.lantana.create_user = application_config_res.application_config.user_id
+        req.lantana.create_user = application_config.user_id
         req.lantana.update_app = "gkill_kftl"
-        req.lantana.update_device = application_config_res.application_config.device
+        req.lantana.update_device = application_config.device
         req.lantana.update_time = now
-        req.lantana.update_user = application_config_res.application_config.user_id
+        req.lantana.update_user = application_config.user_id
 
         await delete_gkill_kyou_cache(req.lantana.id)
-        await GkillAPI.get_gkill_api().add_lantana(req).then(res => {
+        await gkill_api.add_lantana(req).then(res => {
             if (res.errors && res.errors.length !== 0) {
                 errors = errors.concat(res.errors)
             }
