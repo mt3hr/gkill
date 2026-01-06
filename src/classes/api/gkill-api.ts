@@ -1751,9 +1751,12 @@ export class GkillAPI {
                 await response.application_config.load_all()
                 this.check_auth(response)
 
-                this.set_google_map_api_key(response.application_config.google_map_api_key)
-                this.set_saved_application_config(response.application_config)
-                this.set_default_page_to_cookie(response.application_config.default_page)
+                const has_document = typeof document !== 'undefined';
+                if (has_document) {
+                        this.set_google_map_api_key(response.application_config.google_map_api_key)
+                        this.set_saved_application_config(response.application_config)
+                        this.set_default_page_to_cookie(response.application_config.default_page)
+                }
                 response.application_config.is_loaded = true
                 return response
         }
@@ -2518,7 +2521,7 @@ export class GkillAPI {
                                         if (has_window) {
                                                 window.location.replace("/")
                                         }
-                                        break
+                                        return
                         }
                 })
         }
