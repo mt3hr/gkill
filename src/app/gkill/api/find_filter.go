@@ -15,6 +15,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
@@ -53,6 +54,9 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	findKyouContext.MatchKyousAtFilterTimeIs = map[string][]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFilterLocation = map[string][]*reps.Kyou{}
 	findKyouContext.MatchKyousAtFilterImage = map[string][]*reps.Kyou{}
+	// メモリキャッシュ有効の場合、型につき1つのDBに全部のデータがある。
+	// だから、LatestDataRepositoryAddressを知る必要がない
+	findKyouContext.DisableLatestDataRepositoryCache = gkill_options.IsCacheInMemory
 
 	// ユーザのRep取得
 	gkillErr, err := f.getRepositories(ctx, userID, device, gkillDAOManager, findKyouContext)
@@ -489,12 +493,14 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext, l
 
 	// タグの対象をリスト
 	for _, tag := range findCtx.AllTags {
-		latestData, exist := (*latestDatas)[tag.ID]
-		if !exist {
-			continue
-		}
-		if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
-			continue
+		if !findCtx.DisableLatestDataRepositoryCache {
+			latestData, exist := (*latestDatas)[tag.ID]
+			if !exist {
+				continue
+			}
+			if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
+				continue
+			}
 		}
 		if tag.IsDeleted {
 			continue
@@ -520,12 +526,14 @@ func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *F
 			return nil, err
 		}
 		for _, hideTag := range hideTagsInReps {
-			latestData, exist := (*latestDatas)[hideTag.ID]
-			if !exist {
-				continue
-			}
-			if !latestData.DataUpdateTime.Equal(hideTag.UpdateTime) {
-				continue
+			if !findCtx.DisableLatestDataRepositoryCache {
+				latestData, exist := (*latestDatas)[hideTag.ID]
+				if !exist {
+					continue
+				}
+				if !latestData.DataUpdateTime.Equal(hideTag.UpdateTime) {
+					continue
+				}
 			}
 			if hideTag.IsDeleted {
 				continue
@@ -590,12 +598,14 @@ func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContex
 			return nil, err
 		}
 		for _, tag := range matchTags {
-			latestData, exist := (*latestDatas)[tag.ID]
-			if !exist {
-				continue
-			}
-			if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
-				continue
+			if !findCtx.DisableLatestDataRepositoryCache {
+				latestData, exist := (*latestDatas)[tag.ID]
+				if !exist {
+					continue
+				}
+				if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
+					continue
+				}
 			}
 			if tag.IsDeleted {
 				continue
@@ -622,12 +632,14 @@ func (f *FindFilter) findTags(ctx context.Context, findCtx *FindKyouContext, lat
 		return nil, err
 	}
 	for _, tag := range matchTags {
-		latestData, exist := (*latestDatas)[tag.ID]
-		if !exist {
-			continue
-		}
-		if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
-			continue
+		if !findCtx.DisableLatestDataRepositoryCache {
+			latestData, exist := (*latestDatas)[tag.ID]
+			if !exist {
+				continue
+			}
+			if !latestData.DataUpdateTime.Equal(tag.UpdateTime) {
+				continue
+			}
 		}
 		if tag.IsDeleted {
 			continue
@@ -1219,12 +1231,14 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext, l
 		matchtimeissInRep := <-timeIssCh
 		for _, timeis := range matchtimeissInRep {
 			if existtimeis, exist := findCtx.MatchTimeIssAtFindTimeIs[timeis.ID]; exist {
-				latestData, exist := (*latestDatas)[timeis.ID]
-				if !exist {
-					continue
-				}
-				if !latestData.DataUpdateTime.Equal(timeis.UpdateTime) {
-					continue
+				if !findCtx.DisableLatestDataRepositoryCache {
+					latestData, exist := (*latestDatas)[timeis.ID]
+					if !exist {
+						continue
+					}
+					if !latestData.DataUpdateTime.Equal(timeis.UpdateTime) {
+						continue
+					}
 				}
 				if timeis.UpdateTime.After(existtimeis.UpdateTime) {
 					findCtx.MatchTimeIssAtFindTimeIs[timeis.ID] = timeis
@@ -1571,12 +1585,14 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext, la
 	for range lenOfTextReps {
 		matchTexts := <-textsCh
 		for _, text := range matchTexts {
-			latestData, exist := (*latestDatas)[text.ID]
-			if !exist {
-				continue
-			}
-			if !latestData.DataUpdateTime.Equal(text.UpdateTime) {
-				continue
+			if !findCtx.DisableLatestDataRepositoryCache {
+				latestData, exist := (*latestDatas)[text.ID]
+				if !exist {
+					continue
+				}
+				if !latestData.DataUpdateTime.Equal(text.UpdateTime) {
+					continue
+				}
 			}
 			if existText, exist := findCtx.MatchTexts[text.ID]; exist {
 				if text.UpdateTime.After(existText.UpdateTime) {
@@ -1680,12 +1696,14 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 	for range lenOfTextReps {
 		matchTexts := <-textsCh
 		for _, text := range matchTexts {
-			latestData, exist := (*latestDatas)[text.ID]
-			if !exist {
-				continue
-			}
-			if !latestData.DataUpdateTime.Equal(text.UpdateTime) {
-				continue
+			if !findCtx.DisableLatestDataRepositoryCache {
+				latestData, exist := (*latestDatas)[text.ID]
+				if !exist {
+					continue
+				}
+				if !latestData.DataUpdateTime.Equal(text.UpdateTime) {
+					continue
+				}
 			}
 			if existText, exist := findCtx.MatchTimeIsTexts[text.ID]; exist {
 				if text.UpdateTime.After(existText.UpdateTime) {
@@ -1702,10 +1720,13 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKyouContext, latestDatas *map[string]*account_state.LatestDataRepositoryAddress) ([]*message.GkillError, error) {
 	latestKyousMap := map[string][]*reps.Kyou{}
 
-	// startTime := findCtx.ParsedFindQuery.CalendarStartDate
-	// endTime := findCtx.ParsedFindQuery.CalendarEndDate
-
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
+		if !findCtx.DisableLatestDataRepositoryCache {
+			sort.Slice(currentKyou, func(i, j int) bool { return currentKyou[i].UpdateTime.After(currentKyou[j].UpdateTime) })
+			latestKyousMap[id] = []*reps.Kyou{currentKyou[0]}
+			continue
+		}
+
 		latestData, exist := (*latestDatas)[id]
 		if !exist {
 			continue
