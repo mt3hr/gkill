@@ -1161,10 +1161,13 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext, l
 
 	// 対象TimeIs取得用検索クエリ
 	timeisFindKyouQuery := &find.FindQuery{
-		UseWords: &trueValue,
-		Words:    findCtx.ParsedFindQuery.TimeIsWords,
-		NotWords: findCtx.ParsedFindQuery.TimeIsNotWords,
-		WordsAnd: findCtx.ParsedFindQuery.TimeIsWordsAnd,
+		UseWords:          &trueValue,
+		Words:             findCtx.ParsedFindQuery.TimeIsWords,
+		NotWords:          findCtx.ParsedFindQuery.TimeIsNotWords,
+		WordsAnd:          findCtx.ParsedFindQuery.TimeIsWordsAnd,
+		UseCalendar:       &trueValue,
+		CalendarStartDate: findCtx.ParsedFindQuery.CalendarStartDate,
+		CalendarEndDate:   findCtx.ParsedFindQuery.CalendarEndDate,
 	}
 
 	// text検索用クエリ
@@ -1247,6 +1250,16 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext, l
 				findCtx.MatchTimeIssAtFindTimeIs[timeis.ID] = timeis
 			}
 		}
+	}
+
+	deletedIDs := []string{}
+	for _, timeis := range findCtx.MatchTimeIssAtFindTimeIs {
+		if timeis.IsDeleted {
+			deletedIDs = append(deletedIDs, timeis.ID)
+		}
+	}
+	for _, deletedID := range deletedIDs {
+		delete(findCtx.MatchTimeIssAtFindTimeIs, deletedID)
 	}
 
 	return nil, nil
