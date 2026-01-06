@@ -20,4 +20,6 @@ export enum GkillMessageCodes {
     saved_shared_data = "MSG900019",
     do_reload = "MSG900020",
     requested_reload = "MSG9000021",
+    start_export_kyous = "MSG9000022",
+    finish_export_kyous = "MSG9000022"
 }
