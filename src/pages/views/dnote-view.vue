@@ -19,7 +19,7 @@
                     {{ finished_aggregate_task }}/{{ estimate_aggregate_task }}
                 </div>
                 <div class="align-center justify-center overlay_message">{{ i18n.global.t('DNOTE_PLEASE_WAIT_MESSAGE')
-                    }}</div>
+                }}</div>
             </div>
         </v-overlay>
         <h1>
@@ -89,7 +89,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -372,7 +372,7 @@ async function streamSaveJsonArray(items: any[], filename: string): Promise<void
     const start_message = new GkillMessage()
     start_message.message_code = GkillMessageCodes.start_export_kyous
     start_message.message = i18n.global.t('START_EXPORT_KYOUS_MESSAGE')
-    emits('received_messages', start_message)
+    emits('received_messages', [start_message])
 
     const handle = await (window as any).showSaveFilePicker({
         suggestedName: filename,
@@ -409,7 +409,7 @@ async function streamSaveJsonArray(items: any[], filename: string): Promise<void
         const finish_message = new GkillMessage()
         finish_message.message_code = GkillMessageCodes.start_export_kyous
         finish_message.message = i18n.global.t('FINISH_EXPORT_KYOUS_MESSAGE')
-        emits('received_messages', finish_message)
+        emits('received_messages', [finish_message])
     }
 }
 
