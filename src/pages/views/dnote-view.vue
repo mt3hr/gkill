@@ -131,6 +131,7 @@ import type { Tag } from '@/classes/datas/tag';
 import type { Notification } from '@/classes/datas/notification';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
+import type { GkillMessageCodes } from '@/classes/api/message/gkill_message';
 
 const dnote_item_table_view = ref<InstanceType<typeof DnoteItemTableView> | null>(null);
 const dnote_list_table_view = ref<InstanceType<typeof DnoteListTableView> | null>(null);
