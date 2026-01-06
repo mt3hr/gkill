@@ -19,7 +19,7 @@
                     {{ finished_aggregate_task }}/{{ estimate_aggregate_task }}
                 </div>
                 <div class="align-center justify-center overlay_message">{{ i18n.global.t('DNOTE_PLEASE_WAIT_MESSAGE')
-                    }}</div>
+                }}</div>
             </div>
         </v-overlay>
         <h1>
@@ -89,7 +89,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -132,6 +132,8 @@ import type { Notification } from '@/classes/datas/notification';
 import type { GkillError } from '@/classes/api/gkill-error';
 import { GkillMessage } from '@/classes/api/gkill-message';
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message';
+import { toExportKyouDto } from '@/classes/dto/export_dto';
+import { pruneEmpty } from '@/classes/dto/export_prune';
 
 const dnote_item_table_view = ref<InstanceType<typeof DnoteItemTableView> | null>(null);
 const dnote_list_table_view = ref<InstanceType<typeof DnoteListTableView> | null>(null);
@@ -370,11 +372,6 @@ async function download_kyous_json(): Promise<void> {
 }
 
 async function streamSaveJsonArray(items: any[], filename: string): Promise<void> {
-    const start_message = new GkillMessage()
-    start_message.message_code = GkillMessageCodes.start_export_kyous
-    start_message.message = i18n.global.t('START_EXPORT_KYOUS_MESSAGE')
-    emits('received_messages', [start_message])
-
     const handle = await (window as any).showSaveFilePicker({
         suggestedName: filename,
         types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
@@ -382,9 +379,18 @@ async function streamSaveJsonArray(items: any[], filename: string): Promise<void
 
     const writable = await handle.createWritable()
 
+    const start_message = new GkillMessage()
+    start_message.message_code = GkillMessageCodes.start_export_kyous
+    start_message.message = i18n.global.t('START_EXPORT_KYOUS_MESSAGE')
+    emits('received_messages', [start_message])
+
     try {
         await writable.write("[\n")
         for (let i = 0; i < items.length; i++) {
+            const dto = toExportKyouDto(items[i]);
+            const pruned = pruneEmpty(dto);
+            if (pruned === undefined) continue;
+
             const seen = new WeakSet<object>()
             const replacer = (_k: string, v: any) => {
                 if (typeof v === "bigint") return v.toString()
@@ -398,11 +404,8 @@ async function streamSaveJsonArray(items: any[], filename: string): Promise<void
             if (i > 0) await writable.write(",\n")
 
             // 1要素ずつstringifyする
-            const s = JSON.stringify(items[i], replacer, 0)
+            const s = JSON.stringify(pruned, replacer, 0)
             await writable.write(s)
-
-            // UI固まり回避
-            if ((i & 1023) === 0) await new Promise(requestAnimationFrame)
         }
         await writable.write("\n]\n")
     } finally {
