@@ -8,6 +8,7 @@ import (
 
 type FindKyouContext struct {
 	GkillDAOManager                  *dao.GkillDAOManager
+	DisableLatestDataRepositoryCache bool
 	UserID                           string
 	Device                           string
 	ParsedFindQuery                  *find.FindQuery            `json:"parsed_find_query"`
