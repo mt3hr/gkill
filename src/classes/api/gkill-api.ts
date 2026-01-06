@@ -2500,24 +2500,27 @@ export class GkillAPI {
 
         // 認証が通っていなかったらログイン画面に遷移する
         check_auth(res: GkillAPIResponse): void {
-                if (res.errors && res.errors.length !== 0) {
-                        res.errors.forEach(error => {
-                                switch (error.error_code) {
-                                        case "ERR000013": // AccountSessionNotFoundError
-                                                this.set_session_id("")
-                                                window.location.replace("/")
-                                                break
-                                        case "ERR000002": // AccountNotFoundError
-                                                this.set_session_id("")
-                                                window.location.replace("/")
-                                                break
-                                        case "ERR000238": // AccountDisabledError
-                                                this.set_session_id("")
-                                                window.location.replace("/")
-                                                break
-                                }
-                        })
+                if (!res.errors || res.errors.length == 0) {
+                        return
                 }
+
+                const has_window = typeof window !== 'undefined';
+                const has_document = typeof document !== 'undefined';
+
+                res.errors.forEach(error => {
+                        switch (error.error_code) {
+                                case "ERR000013": // AccountSessionNotFoundError
+                                case "ERR000002": // AccountNotFoundError
+                                case "ERR000238": // AccountDisabledError
+                                        if (has_document) {
+                                                this.set_session_id("")
+                                        }
+                                        if (has_window) {
+                                                window.location.replace("/")
+                                        }
+                                        break
+                        }
+                })
         }
 
         private saved_application_config: ApplicationConfig | null
