@@ -347,16 +347,63 @@ async function load_kyous(abort_controller: AbortController, kyous: Array<Kyou>,
 }
 
 async function download_kyous_json(): Promise<void> {
-    if (!loaded_kyous.value) {
+    const kyous = loaded_kyous.value
+    if (!kyous || kyous.length === 0) return
+
+    const start_date = new Date(kyous[0].related_time)
+    const end_date = new Date(kyous[kyous.length - 1].related_time)
+    const now = new Date(Date.now())
+    const pad2 = (n: number) => String(n).padStart(2, "0")
+    const format_date_string = (d: Date) => `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}`
+    const format_date_time_string = (d: Date) => `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`
+    const filename = `gkill_export_data_${format_date_string(start_date)}_${format_date_string(end_date)}_exported_${format_date_time_string(now)}.json`
+
+    if ("showSaveFilePicker" in window) {
+        await streamSaveJsonArray(kyous, filename)
         return
     }
-    JSON.stringify(loaded_kyous.value)
-    const json_str = JSON.stringify(loaded_kyous.value, null, 2)
 
-    const blob = new Blob([json_str], { type: 'application/json;charset=utf-8' })
-    const filename = `gkill_kyou_${new Date().toISOString().slice(0, 10)}.json`
+    const jsonStr = JSON.stringify(kyous)
+    const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" })
     saveAs(blob, filename)
 }
+
+async function streamSaveJsonArray(items: any[], filename: string): Promise<void> {
+    const handle = await (window as any).showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
+    })
+
+    const writable = await handle.createWritable()
+
+    try {
+        await writable.write("[\n")
+        for (let i = 0; i < items.length; i++) {
+            const seen = new WeakSet<object>()
+            const replacer = (_k: string, v: any) => {
+                if (typeof v === "bigint") return v.toString()
+                if (v && typeof v === "object") {
+                    if (seen.has(v)) return "[Circular]"
+                    seen.add(v)
+                }
+                return v
+            }
+
+            if (i > 0) await writable.write(",\n")
+
+            // 1要素ずつstringifyする
+            const s = JSON.stringify(items[i], replacer, 0)
+            await writable.write(s)
+
+            // UI固まり回避
+            if ((i & 1023) === 0) await new Promise(requestAnimationFrame)
+        }
+        await writable.write("\n]\n")
+    } finally {
+        await writable.close()
+    }
+}
+
 </script>
 <style lang="css" scoped>
 .position-fixed {
