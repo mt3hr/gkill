@@ -350,8 +350,8 @@ async function download_kyous_json(): Promise<void> {
     const kyous = loaded_kyous.value
     if (!kyous || kyous.length === 0) return
 
-    const start_date = new Date(kyous[0].related_time)
-    const end_date = new Date(kyous[kyous.length - 1].related_time)
+    const start_date = new Date(kyous[kyous.length - 1].related_time)
+    const end_date = new Date(kyous[0].related_time)
     const now = new Date(Date.now())
     const pad2 = (n: number) => String(n).padStart(2, "0")
     const format_date_string = (d: Date) => `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}`
@@ -369,6 +369,11 @@ async function download_kyous_json(): Promise<void> {
 }
 
 async function streamSaveJsonArray(items: any[], filename: string): Promise<void> {
+    const start_message = new GkillMessage()
+    start_message.message_code = GkillMessageCodes.start_export_kyous
+    start_message.message = i18n.global.t('START_EXPORT_KYOUS_MESSAGE')
+    emits('received_messages', start_message)
+
     const handle = await (window as any).showSaveFilePicker({
         suggestedName: filename,
         types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
@@ -401,6 +406,10 @@ async function streamSaveJsonArray(items: any[], filename: string): Promise<void
         await writable.write("\n]\n")
     } finally {
         await writable.close()
+        const finish_message = new GkillMessage()
+        finish_message.message_code = GkillMessageCodes.start_export_kyous
+        finish_message.message = i18n.global.t('FINISH_EXPORT_KYOUS_MESSAGE')
+        emits('received_messages', finish_message)
     }
 }
 
