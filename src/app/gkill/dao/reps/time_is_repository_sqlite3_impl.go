@@ -172,6 +172,9 @@ FROM TIMEIS
 	} else {
 		onlyLatestData = false
 	}
+	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+		onlyLatestData = true
+	}
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
 	if err != nil {
 		return nil, err

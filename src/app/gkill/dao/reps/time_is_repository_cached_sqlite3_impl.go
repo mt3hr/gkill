@@ -157,6 +157,9 @@ FROM ` + t.dbName + `
 	} else {
 		onlyLatestData = false
 	}
+	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
+		onlyLatestData = true
+	}
 	queryArgsForPlaingStart := []interface{}{}
 	sqlWhereFilterPlaingTimeisStart := ""
 	sqlWhereForStart, err := sqlite3impl.GenerateFindSQLCommon(query, tableName, tableNameAlias, &whereCounter, onlyLatestData, relatedTimeColumnName, findWordTargetColumns, findWordUseLike, ignoreFindWord, appendOrderBy, ignoreCase, &queryArgsForStart)
@@ -188,9 +191,9 @@ FROM ` + t.dbName + `
 		return nil, err
 	}
 	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		sqlWhereFilterPlaingTimeisEnd += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Unix())
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
@@ -655,9 +658,9 @@ FROM ` + t.dbName + `
 		return nil, err
 	}
 	if query.UsePlaing != nil && *query.UsePlaing && query.PlaingTime != nil {
-		sqlWhereFilterPlaingTimeisStart += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
-		queryArgsForPlaingStart = append(queryArgsForPlaingStart, (*query.PlaingTime).Unix())
+		sqlWhereFilterPlaingTimeisEnd += " AND ((? >= START_TIME_UNIX) AND (? <= END_TIME_UNIX OR END_TIME_UNIX IS NULL)) "
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Unix())
+		queryArgsForPlaingEnd = append(queryArgsForPlaingEnd, (*query.PlaingTime).Unix())
 		whereCounter++
 		whereCounter++
 	}
