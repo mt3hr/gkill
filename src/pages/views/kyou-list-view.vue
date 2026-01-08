@@ -205,7 +205,9 @@ async function update_match_kyous_for_image(): Promise<void> {
         }
         match_kyous_for_image_result.push(kyou_row_list)
     }
-    match_kyous_for_image.value.push(...match_kyous_for_image_result)
+    for (let i = 0; i < match_kyous_for_image_result.length; i++) {
+        match_kyous_for_image.value.push(match_kyous_for_image_result[i])
+    }
 }
 
 async function scroll_to_kyou(kyou: Kyou): Promise<boolean> {
