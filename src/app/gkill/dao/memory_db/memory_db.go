@@ -3,6 +3,7 @@ package memory_db
 import (
 	"database/sql"
 	"fmt"
+	"runtime"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -26,8 +27,8 @@ func InitMemoryDB() {
 		gkill_log.Debug.Fatal(err)
 	}
 
-	MemoryDB.SetMaxOpenConns(8)    // 読み取り並列を許可
-	MemoryDB.SetMaxIdleConns(1)    // 0にすると最後が閉じて消える
-	MemoryDB.SetConnMaxLifetime(0) // 無限
-	MemoryDB.SetConnMaxIdleTime(0) // 無限
+	MemoryDB.SetMaxOpenConns(runtime.NumCPU()) // 読み取り並列を許可
+	MemoryDB.SetMaxIdleConns(1)                // 0にすると最後が閉じて消える
+	MemoryDB.SetConnMaxLifetime(0)             // 無限
+	MemoryDB.SetConnMaxIdleTime(0)             // 無限
 }
