@@ -1628,14 +1628,12 @@ func (f *FindFilter) findTexts(ctx context.Context, findCtx *FindKyouContext, la
 
 	// 対象タグ取得用検索クエリ
 	trueValue := true
-	falseValue := false
-
 	findTextsQuery := &find.FindQuery{
 		// IsDeleted: &falseValue, // TextReps.FindTexts内に考慮があるため削除
 		UseWords: &trueValue,
 		Words:    &words,
 		NotWords: &notWords,
-		WordsAnd: &falseValue,
+		WordsAnd: findCtx.ParsedFindQuery.WordsAnd,
 	}
 
 	existErr := false
@@ -1736,14 +1734,12 @@ func (f *FindFilter) findTimeIsTexts(ctx context.Context, findCtx *FindKyouConte
 
 	// 対象タグ取得用検索クエリ
 	trueValue := true
-	falseValue := false
-
 	findTextsQuery := &find.FindQuery{
 		// IsDeleted: &falseValue, // TextReps.FindTexts内に考慮があるため削除
 		UseWords: &trueValue,
 		Words:    &words,
 		NotWords: &notWords,
-		WordsAnd: &falseValue,
+		WordsAnd: findCtx.ParsedFindQuery.TimeIsWordsAnd,
 	}
 
 	existErr := false
