@@ -10,7 +10,7 @@ export default class TimeIsTitleEqualPredicate implements DnotePredicate {
         const timeis_title_equal_target = json.value as string
         return new TimeIsTitleEqualPredicate(timeis_title_equal_target)
     }
-    async is_match(loaded_kyou: Kyou): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
         const timeis_title = loaded_kyou.typed_timeis?.title
         if (timeis_title) {
             if (timeis_title === this.timeis_title_equal_target) {
