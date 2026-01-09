@@ -8,7 +8,8 @@
         <v-card-action>
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="emits_kftl_template_name">{{ i18n.global.t("ADD_TITLE") }}</v-btn>
+                    <v-btn dark color="primary" @click="emits_kftl_template_name">{{ i18n.global.t("ADD_TITLE")
+                        }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -55,9 +56,10 @@ function emits_kftl_template_name(): void {
 
     const kftl_template_struct_element = new KFTLTemplateStructElementData()
     kftl_template_struct_element.id = props.gkill_api.generate_uuid()
+    kftl_template_struct_element.is_dir = false
     kftl_template_struct_element.key = title.value
     kftl_template_struct_element.title = title.value
-    kftl_template_struct_element.name= title.value
+    kftl_template_struct_element.name = title.value
     kftl_template_struct_element.template = template.value
     emits('requested_add_kftl_template_struct_element', kftl_template_struct_element)
     emits('requested_close_dialog')

@@ -11,6 +11,7 @@ import { GetAllRepNamesRequest } from '@/classes/api/req_res/get-all-rep-names-r
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
 import { MiBoardStructElementData } from './mi-board-struct-element-data'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
+import type { FoldableStructModel } from '@/pages/views/foldable-struct-model'
 
 export class ApplicationConfig {
     is_loaded: boolean
