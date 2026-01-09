@@ -2,30 +2,28 @@ package reps
 
 import (
 	"context"
+	"database/sql"
+	sqllib "database/sql"
 	"fmt"
 	"path/filepath"
 	"sync"
 	"time"
 
-	sqllib "database/sql"
-
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
 
 type miRepositorySQLite3Impl struct {
-	filename string
-	db       *sqllib.DB
-	m        *sync.Mutex
+	filename    string
+	db          *sqllib.DB
+	m           *sync.Mutex
+	fullConnect bool
 }
 
-func NewMiRepositorySQLite3Impl(ctx context.Context, filename string) (MiRepository, error) {
-	var err error
-	db, err := sqllib.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+func NewMiRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (MiRepository, error) {
+	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
 
@@ -79,22 +77,35 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create MI table to %s: %w", filename, err)
-		return nil, err
+	if !fullConnect {
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
+		db = nil
 	}
 
 	return &miRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
-		m:        &sync.Mutex{},
+		filename:    filename,
+		db:          db,
+		m:           &sync.Mutex{},
+		fullConnect: fullConnect,
 	}, nil
 }
+
 func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
+	var db *sql.DB
+	if m.fullConnect {
+		db = m.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, m.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
 		err = m.UpdateCache(ctx)
@@ -369,7 +380,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
@@ -473,6 +484,16 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 
 func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	var err error
+	var db *sql.DB
+	if m.fullConnect {
+		db = m.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, m.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	trueValue := true
 	query := &find.FindQuery{
@@ -752,7 +773,7 @@ func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id strin
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
@@ -849,11 +870,25 @@ func (m *miRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, error
 }
 
 func (m *miRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return m.db.Close()
+	if m.fullConnect {
+		return m.db.Close()
+	}
+	return nil
 }
 
 func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
 	var err error
+	var db *sql.DB
+	if m.fullConnect {
+		db = m.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, m.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	if query.UpdateCache != nil && *query.UpdateCache {
 		err = m.UpdateCache(ctx)
 		if err != nil {
@@ -1152,7 +1187,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
@@ -1266,6 +1301,16 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 
 func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
 	var err error
+	var db *sql.DB
+	if m.fullConnect {
+		db = m.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, m.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	trueValue := true
 	falseValue := false
@@ -1562,7 +1607,7 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 	sql := fmt.Sprintf("%s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s UNION %s WHERE %s AND %s", sqlCreateMi, sqlWhereForCreate, sqlCheckMi, sqlWhereForCheck, sqlLimitMi, sqlWhereForLimit, sqlStartMi, sqlWhereForStart, sqlEndMi, sqlWhereForEnd, sqlWhereFilterEndMi)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
@@ -1650,6 +1695,18 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 }
 
 func (m *miRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi) error {
+	var err error
+	var db *sql.DB
+	if m.fullConnect {
+		db = m.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, m.filename)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	}
+
 	sql := `
 INSERT INTO MI (
   IS_DELETED,
@@ -1687,7 +1744,7 @@ INSERT INTO MI (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mi sql %s: %w", mi.ID, err)
 		return err
@@ -1742,6 +1799,16 @@ INSERT INTO MI (
 
 func (m *miRepositorySQLite3Impl) GetBoardNames(ctx context.Context) ([]string, error) {
 	var err error
+	var db *sql.DB
+	if m.fullConnect {
+		db = m.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, m.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -1769,7 +1836,7 @@ WHERE
 
 	sql = fmt.Sprintf("%s %s", sql, sqlWhereForCreate)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := m.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get board names sql: %w", err)
 		return nil, err

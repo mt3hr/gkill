@@ -273,7 +273,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 				switch rep.Type {
 				case "kmemo":
-					kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(ctx, filename)
+					kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -311,7 +311,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "kc":
-					kcRep, err := reps.NewKCRepositorySQLite3Impl(ctx, filename)
+					kcRep, err := reps.NewKCRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -349,7 +349,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "urlog":
-					urlogRep, err := reps.NewURLogRepositorySQLite3Impl(ctx, filename)
+					urlogRep, err := reps.NewURLogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -387,7 +387,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "timeis":
-					timeisRep, err := reps.NewTimeIsRepositorySQLite3Impl(ctx, filename)
+					timeisRep, err := reps.NewTimeIsRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -425,7 +425,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "mi":
-					miRep, err := reps.NewMiRepositorySQLite3Impl(ctx, filename)
+					miRep, err := reps.NewMiRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -463,7 +463,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "nlog":
-					nlogRep, err := reps.NewNlogRepositorySQLite3Impl(ctx, filename)
+					nlogRep, err := reps.NewNlogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -501,7 +501,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "lantana":
-					lantanaRep, err := reps.NewLantanaRepositorySQLite3Impl(ctx, filename)
+					lantanaRep, err := reps.NewLantanaRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -539,7 +539,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "tag":
-					tagRep, err := reps.NewTagRepositorySQLite3Impl(ctx, filename)
+					tagRep, err := reps.NewTagRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -578,7 +578,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "text":
-					textRep, err := reps.NewTextRepositorySQLite3Impl(ctx, filename)
+					textRep, err := reps.NewTextRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -617,7 +617,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "notification":
-					notificationRep, err := reps.NewNotificationRepositorySQLite3Impl(ctx, filename)
+					notificationRep, err := reps.NewNotificationRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -655,7 +655,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "rekyou":
-					reKyouRep, err := reps.NewReKyouRepositorySQLite3Impl(ctx, filename, repositories)
+					reKyouRep, err := reps.NewReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
 					if err != nil {
 						return nil, err
 					}

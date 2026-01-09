@@ -15,14 +15,14 @@ import (
 )
 
 type tagRepositorySQLite3Impl struct {
-	filename string
-	db       *sql.DB
-	m        *sync.Mutex
+	filename    string
+	db          *sql.DB
+	m           *sync.Mutex
+	fullConnect bool
 }
 
-func NewTagRepositorySQLite3Impl(ctx context.Context, filename string) (TagRepository, error) {
-	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+func NewTagRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (TagRepository, error) {
+	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -75,13 +75,6 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TAG index statement %s: %w", filename, err)
-		return nil, err
-	}
-
 	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG_TARGET_ID ON TAG (TARGET_ID, UPDATE_TIME DESC);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
 	indexTargetIDStmt, err := db.PrepareContext(ctx, indexTargetIDSQL)
@@ -95,13 +88,6 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	_, err = indexTargetIDStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID index to %s: %w", filename, err)
-		return nil, err
-	}
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", filename, err)
 		return nil, err
 	}
 
@@ -128,14 +114,33 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 		return nil, err
 	}
 
+	if !fullConnect {
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
+		db = nil
+	}
+
 	return &tagRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
-		m:        &sync.Mutex{},
+		filename:    filename,
+		db:          db,
+		m:           &sync.Mutex{},
+		fullConnect: fullConnect,
 	}, nil
 }
 func (t *tagRepositorySQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -201,7 +206,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get find tags sql: %w", err)
 		return nil, err
@@ -270,7 +275,10 @@ WHERE
 }
 
 func (t *tagRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return t.db.Close()
+	if t.fullConnect {
+		return t.db.Close()
+	}
+	return nil
 }
 
 func (t *tagRepositorySQLite3Impl) GetTag(ctx context.Context, id string, updateTime *time.Time) (*Tag, error) {
@@ -301,6 +309,16 @@ func (t *tagRepositorySQLite3Impl) GetTag(ctx context.Context, id string, update
 
 func (t *tagRepositorySQLite3Impl) GetTagsByTagName(ctx context.Context, tagname string) ([]*Tag, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -360,7 +378,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get tag by name sql %s: %w", tagname, err)
 		return nil, err
@@ -429,6 +447,16 @@ WHERE
 
 func (t *tagRepositorySQLite3Impl) GetTagsByTargetID(ctx context.Context, target_id string) ([]*Tag, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -488,7 +516,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get target id sql %s: %w", target_id, err)
 		return nil, err
@@ -580,6 +608,16 @@ func (t *tagRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, erro
 
 func (t *tagRepositorySQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -638,7 +676,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get tag histories sql: %w", err)
 		return nil, err
@@ -707,6 +745,17 @@ WHERE
 }
 
 func (t *tagRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag *Tag) error {
+	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	}
 	sql := `
 INSERT INTO TAG (
   IS_DELETED,
@@ -738,7 +787,7 @@ INSERT INTO TAG (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add tag sql %s: %w", tag.ID, err)
 		return err
@@ -771,6 +820,16 @@ INSERT INTO TAG (
 
 func (t *tagRepositorySQLite3Impl) GetAllTagNames(ctx context.Context) ([]string, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -780,7 +839,7 @@ WHERE IS_DELETED = FALSE
 
 `
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all tag names sql: %w", err)
 		return nil, err
@@ -818,6 +877,16 @@ WHERE IS_DELETED = FALSE
 
 func (t *tagRepositorySQLite3Impl) GetAllTags(ctx context.Context) ([]*Tag, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -871,7 +940,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all tags sql: %w", err)
 		return nil, err

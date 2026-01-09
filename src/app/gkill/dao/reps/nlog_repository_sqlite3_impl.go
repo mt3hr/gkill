@@ -17,16 +17,15 @@ import (
 )
 
 type nlogRepositorySQLite3Impl struct {
-	filename string
-	db       *sql.DB
-	m        *sync.Mutex
+	filename    string
+	db          *sql.DB
+	m           *sync.Mutex
+	fullConnect bool
 }
 
-func NewNlogRepositorySQLite3Impl(ctx context.Context, filename string) (NlogRepository, error) {
-	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+func NewNlogRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (NlogRepository, error) {
+	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
 
@@ -78,22 +77,34 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create NLOG table to %s: %w", filename, err)
-		return nil, err
+	if !fullConnect {
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
+		db = nil
 	}
 
 	return &nlogRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
-		m:        &sync.Mutex{},
+		filename:    filename,
+		db:          db,
+		m:           &sync.Mutex{},
+		fullConnect: fullConnect,
 	}, nil
 }
 func (n *nlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
+	var db *sql.DB
+	if n.fullConnect {
+		db = n.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
 		err = n.UpdateCache(ctx)
@@ -158,7 +169,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := n.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -254,6 +265,18 @@ func (n *nlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, upda
 }
 
 func (n *nlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	var err error
+	var db *sql.DB
+	if n.fullConnect {
+		db = n.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	repName, err := n.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at NLOG: %w", err)
@@ -310,7 +333,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := n.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -399,11 +422,24 @@ func (n *nlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, err
 }
 
 func (n *nlogRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return n.db.Close()
+	if n.fullConnect {
+		return n.db.Close()
+	}
+	return nil
 }
 
 func (n *nlogRepositorySQLite3Impl) FindNlog(ctx context.Context, query *find.FindQuery) ([]*Nlog, error) {
 	var err error
+	var db *sql.DB
+	if n.fullConnect {
+		db = n.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -471,7 +507,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := n.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -570,6 +606,18 @@ func (n *nlogRepositorySQLite3Impl) GetNlog(ctx context.Context, id string, upda
 }
 
 func (n *nlogRepositorySQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
+	var err error
+	var db *sql.DB
+	if n.fullConnect {
+		db = n.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	repName, err := n.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at nlog: %w", err)
@@ -628,7 +676,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := n.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get nlog histories sql %s: %w", id, err)
 		return nil, err
@@ -700,6 +748,18 @@ WHERE
 }
 
 func (n *nlogRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
+	var err error
+	var db *sql.DB
+	if n.fullConnect {
+		db = n.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, n.filename)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	}
+
 	sql := `
 INSERT INTO NLOG (
   IS_DELETED,
@@ -733,7 +793,7 @@ INSERT INTO NLOG (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := n.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add nlog sql %s: %w", nlog.ID, err)
 		return err
