@@ -8,15 +8,18 @@ import type { Tag } from "@/classes/datas/tag"
 export interface rykvViewEmits {
     (e: 'received_messages', message: Array<GkillMessage>): void
     (e: 'received_errors', errors: Array<GkillError>): void
-    (e: 'registered_kyou', kyou: Kyou): void
-    (e: 'updated_kyou', kyou: Kyou): void
-    (e: 'deleted_kyou', kyou: Kyou): void
-    (e: 'registered_tag', tag: Tag): void
-    (e: 'updated_tag', tag: Tag): void
-    (e: 'deleted_tag', tag: Tag): void
-    (e: 'registered_text', text: Text): void
-    (e: 'updated_text', text: Text): void
-    (e: 'deleted_text', text: Text): void
+    (e: 'registered_kyou', registered_kyou: Kyou): void
+    (e: 'updated_kyou', updated_kyou: Kyou): void
+    (e: 'deleted_kyou', deleted_kyou: Kyou): void
+    (e: 'registered_tag', registred_tag: Tag): void
+    (e: 'updated_tag', updated_tag: Tag): void
+    (e: 'deleted_tag', deleted_tag: Tag): void
+    (e: 'registered_text', registered_text: Text): void
+    (e: 'updated_text', updated_text: Text): void
+    (e: 'deleted_text', deleted_text: Text): void
+    (e: 'registered_notification', registered_notification: Notification): void
+    (e: 'updated_notification', updated_notification: Notification): void
+    (e: 'deleted_notification', deleted_notification: Notification): void
     (e: 'requested_show_application_config_dialog'): void
     (e: 'requested_reload_application_config'): void
 }
