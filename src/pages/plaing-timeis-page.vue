@@ -38,7 +38,17 @@
                 :app_content_height="app_content_height.valueOf()" :app_content_width="app_content_width"
                 @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
-                ref="plaing_timeis_view" />
+                @deleted_kyou="(...deleted_kyou: any[]) => { }" @deleted_tag="(...deleted_tag: any[]) => { }"
+                @deleted_text="(...deleted_text: any[]) => { }"
+                @deleted_notification="(...deleted_notification: any[]) => { }"
+                @registered_kyou="(...registered_kyou: any[]) => { }"
+                @registered_tag="(...registered_tag: any[]) => { check_tag_update(registered_tag[0] as Tag) }"
+                @registered_text="(...registered_text: any[]) => { }"
+                @registered_notification="(...registered_notification: any[]) => { }"
+                @updated_kyou="(...updated_kyou: any[]) => { }"
+                @updated_tag="(...updated_tag: any[]) => { check_tag_update(updated_tag[0] as Tag) }"
+                @updated_text="(...updated_text: any[]) => { }"
+                @updated_notification="(...updated_notification: any[]) => { }" ref="plaing_timeis_view" />
             <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
                 :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :is_show="is_show_application_config_dialog"
@@ -70,9 +80,8 @@ import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
-
-
-
+import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
+import { Tag } from '@/classes/datas/tag'
 
 const theme = useTheme()
 
@@ -247,6 +256,47 @@ async function register_gkill_task_notification(): Promise<void> {
 
 function show_application_config_dialog(): void {
     application_config_dialog.value?.show()
+}
+
+async function check_tag_update(tag: Tag) {
+    // タグ追加時、ApplicationConfigになさそうであればキャッシュを消す
+    let aggregate_tag_name_walk = (_tag: TagStructElementData): Array<string> => []
+    aggregate_tag_name_walk = (tag: TagStructElementData): Array<string> => {
+        const tag_names = new Array<string>()
+        const tag_children = tag.children
+        if (tag_children) {
+            tag_children.forEach(child_tag => {
+                if (child_tag.check_when_inited) {
+                    tag_names.push(child_tag.tag_name)
+                }
+                if (child_tag) {
+                    tag_names.push(...aggregate_tag_name_walk(child_tag))
+                }
+            })
+        }
+        return tag_names
+    }
+    const tags = aggregate_tag_name_walk((await gkill_api.value.get_application_config(new GetApplicationConfigRequest())).application_config.tag_struct)
+    let exist_tag_in_application_config = false
+    for (let i = 0; i < tags.length; i++) {
+        if (tag.tag === tags[i]) {
+            exist_tag_in_application_config = true
+            break
+        }
+    }
+    if (!exist_tag_in_application_config) {
+        const req = new GetApplicationConfigRequest()
+        req.force_reget = true
+        const res = await gkill_api.value.get_application_config(req)
+        if (res.errors && res.errors.length !== 0) {
+            write_errors(res.errors)
+            return
+        }
+        // if (res.messages && res.messages.length !== 0) {
+        // emits('received_messages', res.messages)
+        // }
+        application_config.value.tag_struct = res.application_config.tag_struct
+    }
 }
 </script>
 <style lang="css">
