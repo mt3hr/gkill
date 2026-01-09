@@ -15,16 +15,15 @@ import (
 )
 
 type kmemoRepositorySQLite3Impl struct {
-	filename string
-	db       *sql.DB
-	m        *sync.Mutex
+	filename    string
+	db          *sql.DB
+	m           *sync.Mutex
+	fullConnect bool
 }
 
-func NewKmemoRepositorySQLite3Impl(ctx context.Context, filename string) (KmemoRepository, error) {
-	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+func NewKmemoRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (KmemoRepository, error) {
+	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
 
@@ -74,23 +73,35 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create KMEMO table to %s: %w", filename, err)
-		return nil, err
+	if !fullConnect {
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
+		db = nil
 	}
 
 	return &kmemoRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
-		m:        &sync.Mutex{},
+		filename:    filename,
+		db:          db,
+		m:           &sync.Mutex{},
+		fullConnect: fullConnect,
 	}, nil
 }
 
 func (k *kmemoRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
+	var db *sql.DB
+	if k.fullConnect {
+		db = k.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, k.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
 		err = k.UpdateCache(ctx)
@@ -154,7 +165,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -250,6 +261,18 @@ func (k *kmemoRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, upd
 }
 
 func (k *kmemoRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	var err error
+	var db *sql.DB
+	if k.fullConnect {
+		db = k.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, k.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	repName, err := k.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
@@ -305,7 +328,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -394,11 +417,24 @@ func (k *kmemoRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, er
 }
 
 func (k *kmemoRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return k.db.Close()
+	if k.fullConnect {
+		return k.db.Close()
+	}
+	return nil
 }
 
 func (k *kmemoRepositorySQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
 	var err error
+	var db *sql.DB
+	if k.fullConnect {
+		db = k.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, k.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -461,7 +497,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -554,6 +590,18 @@ func (k *kmemoRepositorySQLite3Impl) GetKmemo(ctx context.Context, id string, up
 }
 
 func (k *kmemoRepositorySQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
+	var err error
+	var db *sql.DB
+	if k.fullConnect {
+		db = k.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, k.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	repName, err := k.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at kmemo: %w", err)
@@ -610,7 +658,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
 		return nil, err
@@ -677,6 +725,17 @@ WHERE
 }
 
 func (k *kmemoRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
+	var err error
+	var db *sql.DB
+	if k.fullConnect {
+		db = k.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, k.filename)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	}
 	sql := `
 INSERT INTO KMEMO (
   IS_DELETED,
@@ -706,7 +765,7 @@ INSERT INTO KMEMO (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := k.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add kmemo sql %s: %w", kmemo.ID, err)
 		return err

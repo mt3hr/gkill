@@ -396,7 +396,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		panic(err)
 	}
 	for _, kmemo := range kmemos {
-		kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, kmemo.RepName+".db"))
+		kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, kmemo.RepName+".db"), true)
 		if err != nil {
 			panic(err)
 		}
@@ -412,7 +412,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		panic(err)
 	}
 	for _, urlog := range urlogs {
-		urlogRep, err := reps.NewURLogRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, urlog.RepName+".db"))
+		urlogRep, err := reps.NewURLogRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, urlog.RepName+".db"), true)
 		if err != nil {
 			panic(err)
 		}
@@ -428,7 +428,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		panic(err)
 	}
 	for _, lantana := range lantanas {
-		lantanaRep, err := reps.NewLantanaRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, lantana.RepName+".db"))
+		lantanaRep, err := reps.NewLantanaRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, lantana.RepName+".db"), true)
 		if err != nil {
 			panic(err)
 		}
@@ -473,7 +473,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		panic(err)
 	}
 	for _, tag := range tags {
-		tagRep, err := reps.NewTagRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, tag.RepName+".db"))
+		tagRep, err := reps.NewTagRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, tag.RepName+".db"), true)
 		if err != nil {
 			panic(err)
 		}
@@ -489,7 +489,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		panic(err)
 	}
 	for _, text := range texts {
-		textRep, err := reps.NewTextRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, text.RepName+".db"))
+		textRep, err := reps.NewTextRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, text.RepName+".db"), true)
 		if err != nil {
 			panic(err)
 		}
@@ -505,7 +505,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		panic(err)
 	}
 	for _, nlog := range nlogs {
-		nlogRep, err := reps.NewNlogRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, nlog.RepName+".db"))
+		nlogRep, err := reps.NewNlogRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, nlog.RepName+".db"), true)
 		if err != nil {
 			panic(err)
 		}
@@ -521,7 +521,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		panic(err)
 	}
 	for _, mi := range mis {
-		miRep, err := reps.NewMiRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, mi.RepName+".db"))
+		miRep, err := reps.NewMiRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, mi.RepName+".db"), true)
 		if err != nil {
 			panic(err)
 		}
@@ -537,7 +537,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		panic(err)
 	}
 	for _, timeIs := range timeiss {
-		timeIsRep, err := reps.NewTimeIsRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, timeIs.RepName+".db"))
+		timeIsRep, err := reps.NewTimeIsRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, timeIs.RepName+".db"), true)
 		if err != nil {
 			panic(err)
 		}
@@ -553,7 +553,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		panic(err)
 	}
 	for _, kc := range kcs {
-		kcRep, err := reps.NewKCRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, kc.RepName+".db"))
+		kcRep, err := reps.NewKCRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, kc.RepName+".db"), true)
 		if err != nil {
 			panic(err)
 		}
@@ -563,7 +563,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 		}
 		kcRep.Close(context.Background())
 
-		tagRep, err := reps.NewTagRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, strings.ReplaceAll(kc.RepName, "STVS", "Tag")+".db"))
+		tagRep, err := reps.NewTagRepositorySQLite3Impl(context.Background(), filepath.Join(transferDestinationDir, strings.ReplaceAll(kc.RepName, "STVS", "Tag")+".db"), true)
 		if err != nil {
 			panic(err)
 		}
