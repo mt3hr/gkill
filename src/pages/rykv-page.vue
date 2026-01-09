@@ -3,13 +3,16 @@
         <rykvView :app_content_height="app_content_height" :app_content_width="app_content_width"
             :app_title_bar_height="app_title_bar_height" :application_config="application_config" :gkill_api="gkill_api"
             :is_shared_rykv_view="false" :share_title="''"
-            @requested_show_application_config_dialog="show_application_config_dialog()" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)" @requested_reload_application_config="load_application_config()" />
+            @requested_show_application_config_dialog="show_application_config_dialog()"
+            @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+            @requested_reload_application_config="load_application_config()" />
         <ApplicationConfigDialog :application_config="application_config" :gkill_api="gkill_api"
             :app_content_height="app_content_height" :app_content_width="app_content_width"
-            :is_show="is_show_application_config_dialog" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)" @requested_reload_application_config="load_application_config"
-            ref="application_config_dialog" />
+            :is_show="is_show_application_config_dialog"
+            @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+            @requested_reload_application_config="load_application_config" ref="application_config_dialog" />
         <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="last_added_tag" />
         <div class="alert_container">
@@ -38,6 +41,7 @@ import rykvView from './views/rykv-view.vue'
 import { GetGkillNotificationPublicKeyRequest } from '@/classes/api/req_res/get-gkill-notification-public-key-request'
 import { RegisterGkillNotificationRequest } from '@/classes/api/req_res/register-gkill-notification-request'
 import { useTheme } from 'vuetify'
+import { useRoute } from 'vue-router'
 
 const theme = useTheme()
 
@@ -59,7 +63,9 @@ const last_added_tag: Ref<string> = ref("")
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
-    req.force_reget = true
+    const loaded_raw_value = useRoute().query.loaded
+    const loaded = loaded_raw_value && (loaded_raw_value == 'true')
+    req.force_reget = !loaded // メニューから遷移したときにはApplicationConfig再取得はしない（キャッシュから取得する）
     return gkill_api.value.get_application_config(req)
         .then(async res => {
             if (res.errors && res.errors.length !== 0) {
