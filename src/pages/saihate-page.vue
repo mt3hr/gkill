@@ -49,41 +49,59 @@
             </v-avatar>
             <AddKCDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)" @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
                 ref="add_kc_dialog" />
             <AddTimeisDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)" @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
                 ref="add_timeis_dialog" />
             <AddLantanaDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)" @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
                 ref="add_lantana_dialog" />
             <AddUrlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)" @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
                 ref="add_urlog_dialog" />
             <AddMiDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)" @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
                 ref="add_mi_dialog" />
             <AddNlogDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :enable_context_menu="enable_context_menu"
-                :enable_dialog="enable_dialog" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)" @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                :enable_dialog="enable_dialog"
+                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
                 ref="add_nlog_dialog" />
             <kftlDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                :app_content_width="app_content_width" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)" ref="kftl_dialog" />
+                :app_content_width="app_content_width"
+                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                ref="kftl_dialog" />
             <mkflDialog :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
                 :last_added_tag="''" :kyou="new Kyou()" :app_content_height="app_content_height"
                 :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-                :app_content_width="app_content_width" @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)"
-                @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)" ref="mkfl_dialog" />
+                :app_content_width="app_content_width"
+                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                ref="mkfl_dialog" />
             <UploadFileDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
                 :application_config="application_config" :gkill_api="gkill_api" :last_added_tag="''"
-                @received_errors="(...errors :any[]) => write_errors(errors[0] as Array<GkillError>)" @received_messages="(...messages :any[]) => write_messages(messages[0] as Array<GkillMessage>)" ref="upload_file_dialog" />
+                @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => write_messages(messages[0] as Array<GkillMessage>)"
+                ref="upload_file_dialog" />
         </v-main>
         <div class="alert_container">
             <v-slide-y-transition group>
@@ -99,12 +117,12 @@
 import { i18n } from '@/i18n'
 'use strict'
 import { computed, ref, watch, type Ref } from 'vue'
+import router from '@/router'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import type { GkillError } from '@/classes/api/gkill-error'
 import { GkillMessage } from '@/classes/api/gkill-message'
-
 import { Kyou } from '@/classes/datas/kyou'
 import AddKCDialog from './dialogs/add-kc-dialog.vue'
 import AddTimeisDialog from './dialogs/add-timeis-dialog.vue'
@@ -118,7 +136,7 @@ import UploadFileDialog from './dialogs/upload-file-dialog.vue'
 import { useTheme } from 'vuetify'
 import { GkillMessageCodes } from '@/classes/api/message/gkill_message'
 import { useScopedEnterForKFTL } from '@/classes/use-scoped-enter-for-kftl'
-import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
+import { useRoute } from 'vue-router'
 
 
 const theme = useTheme()
@@ -156,6 +174,7 @@ async function show_dialog(): Promise<void> {
         write_messages([message])
 
         await sleep(2500)
+        router.replace('/saihate')
         window.close()
     }
     switch (dialog) {
@@ -193,7 +212,9 @@ async function show_dialog(): Promise<void> {
 
 async function load_application_config(): Promise<void> {
     const req = new GetApplicationConfigRequest()
-    req.force_reget = true
+    const loaded_raw_value = useRoute().query.loaded
+    const loaded = loaded_raw_value && (loaded_raw_value == 'true')
+    req.force_reget = !loaded // メニューから遷移したときにはApplicationConfig再取得はしない（キャッシュから取得する）
     return gkill_api.value.get_application_config(req)
         .then(res => {
             if (res.errors && res.errors.length != 0) {

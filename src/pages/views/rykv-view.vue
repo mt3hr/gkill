@@ -20,7 +20,7 @@
                                 { app_name: i18n.global.t('MKFL_APP_NAME'), page_name: 'mkfl' },
                                 { app_name: i18n.global.t('SAIHATE_APP_NAME'), page_name: 'saihate' },
                             ]">
-                                <v-list-item-title @click="router.replace('/' + page.page_name)">
+                                <v-list-item-title @click="router.replace('/' + page.page_name + '?loaded=true')">
                                     {{ page.app_name }}</v-list-item-title>
                             </v-list-item>
                         </v-list>
