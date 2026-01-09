@@ -2,8 +2,20 @@
     <v-dialog :width="'fit-content'" v-model="is_show_dialog" class="mkfl_dialog">
         <MKFLView :app_content_height="app_content_height" :app_content_width="app_content_width.valueOf() - 50"
             :application_config="application_config" :gkill_api="gkill_api"
-            @received_messages="(messages: Array<GkillMessage>) => emits('received_messages', messages)"
-            @received_errors="(errors: Array<GkillError>) => emits('received_errors', errors)" />
+            @deleted_kyou="(...deleted_kyou: any[]) => { emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
+            @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
+            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
+            @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
+            @registered_kyou="(...registered_kyou: any[]) => { emits('registered_kyou', registered_kyou[0] as Kyou) }"
+            @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
+            @registered_text="(...registered_text: any[]) => emits('registered_text', registered_text[0] as Text)"
+            @registered_notification="(...registered_notification: any[]) => emits('registered_notification', registered_notification[0] as Notification)"
+            @updated_kyou="(...updated_kyou: any[]) => { emits('updated_kyou', updated_kyou[0] as Kyou) }"
+            @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
+            @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
+            @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)" />
     </v-dialog>
 </template>
 <script lang="ts" setup>
@@ -13,6 +25,10 @@ import type { GkillMessage } from '@/classes/api/gkill-message'
 import type { MKFLDialogEmits } from './mkfl-dialog-emits'
 import type { MKFLDialogProps } from './mkfl-dialog-props'
 import MKFLView from '../views/mkfl-view.vue'
+import type { Kyou } from "@/classes/datas/kyou"
+import type { Tag } from "@/classes/datas/tag"
+import type { Text } from "@/classes/datas/text"
+import type { Notification } from "@/classes/datas/notification"
 
 defineProps<MKFLDialogProps>()
 const emits = defineEmits<MKFLDialogEmits>()
