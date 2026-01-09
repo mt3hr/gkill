@@ -5,8 +5,6 @@ import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
 export class TagStructElementData implements FoldableStructModel {
     name: string
 
-    seq_in_parent: number
-
     id: string | null
 
     tag_name: string
@@ -29,7 +27,6 @@ export class TagStructElementData implements FoldableStructModel {
 
     constructor() {
         this.name = ""
-        this.seq_in_parent = 0
         this.id = ""
         this.tag_name = ""
         this.check_when_inited = false

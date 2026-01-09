@@ -13,7 +13,8 @@
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE") }}</v-btn>
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
+                        i18n.global.t("CANCEL_TITLE") }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -35,11 +36,13 @@ const ignore_check_rep_rykv: Ref<boolean> = ref(props.struct_obj.ignore_check_re
 async function apply(): Promise<void> {
     const rep_struct = new RepStructElementData()
     rep_struct.id = props.struct_obj.id
+    rep_struct.key = props.struct_obj.rep_name
     rep_struct.rep_name = props.struct_obj.rep_name
-    rep_struct.parent_folder_id = props.struct_obj.parent_folder_id
+    rep_struct.name = props.struct_obj.rep_name
     rep_struct.check_when_inited = check_when_inited.value
     rep_struct.ignore_check_rep_rykv = ignore_check_rep_rykv.value
-    rep_struct.seq = props.struct_obj.seq
+    rep_struct.children = null
+    rep_struct.indeterminate = false
     emits('requested_update_rep_struct', rep_struct)
     emits('requested_close_dialog')
 }

@@ -49,6 +49,7 @@ function emits_tag_name(): void {
 
     const tag_struct_element = new TagStructElementData()
     tag_struct_element.id = props.gkill_api.generate_uuid()
+    tag_struct_element.is_dir = false
     tag_struct_element.check_when_inited = check_when_inited.value
     tag_struct_element.is_force_hide = is_force_hide.value
     tag_struct_element.children = null
