@@ -10,7 +10,7 @@ export default class NlogTitleEqualPredicate implements DnotePredicate {
         const nlog_title_equal_target = json.value as string
         return new NlogTitleEqualPredicate(nlog_title_equal_target)
     }
-    async is_match(loaded_kyou: Kyou): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
         const nlog_title = loaded_kyou.typed_nlog?.title
         if (nlog_title) {
             if (nlog_title === this.nlog_title_equal_target) {

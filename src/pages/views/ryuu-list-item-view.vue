@@ -140,7 +140,10 @@ async function load_related_kyou(): Promise<void> {
     match_kyou.value = null
     is_no_data.value = false
 
-    const related_time = props.related_time
+    let related_time = new Date(Date.now())
+    if (props.target_kyou) {
+        related_time = props.target_kyou.related_time
+    }
     const related_time_match_type = model_value.value!.related_time_match_type
     const predicate_for_before = new AndPredicate([
         build_dnote_predicate_from_json(model_value.value!.predicate.predicate_struct_to_json()),
@@ -174,11 +177,11 @@ async function load_related_kyou(): Promise<void> {
     const kyou_is_loaded = true
     const limit_count = 1
     const match_kyous_before = await (new FilterTopKyous(limit_count).filter_kyous(
-        (await matcher_for_before.match(props.abort_controller, kyous, find_kyou_query, kyou_is_loaded)),
+        (await matcher_for_before.match(props.abort_controller, kyous, find_kyou_query, props.target_kyou, kyou_is_loaded)),
         find_kyou_query
     ))
     const match_kyous_after = await (new FilterBottomKyous(limit_count).filter_kyous(
-        (await matcher_for_after.match(props.abort_controller, kyous, find_kyou_query, kyou_is_loaded)),
+        (await matcher_for_after.match(props.abort_controller, kyous, find_kyou_query, props.target_kyou, kyou_is_loaded)),
         find_kyou_query
     ))
 
@@ -197,7 +200,7 @@ async function load_related_kyou(): Promise<void> {
             } else if (!match_kyou_before && match_kyou_after) {
                 match_kyou.value = match_kyou_after
             } else if (match_kyou_before && match_kyou_after) {
-                if (Math.abs(moment(match_kyou_before.related_time).diff(props.related_time)) < Math.abs(moment(match_kyou_after.related_time).diff(props.related_time))) {
+                if (Math.abs(moment(match_kyou_before.related_time).diff(related_time)) < Math.abs(moment(match_kyou_after.related_time).diff(related_time))) {
                     await match_kyou_before.load_all()
                     match_kyou.value = match_kyou_before
                 } else {

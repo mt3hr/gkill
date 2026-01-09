@@ -10,7 +10,7 @@ export default class DataTypePrefixPredicate implements DnotePredicate {
         const data_type_prefix = json.data_type_prefix as string
         return new DataTypePrefixPredicate(data_type_prefix)
     }
-    async is_match(loaded_kyou: Kyou): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
         const data_type = loaded_kyou.data_type
         if (data_type.startsWith(this.data_type_prefix)) {
             return true

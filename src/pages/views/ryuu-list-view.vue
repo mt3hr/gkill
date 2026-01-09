@@ -1,10 +1,10 @@
 <template>
     <v-card>
-        <div v-if="related_time" class="ryuu_views">
+        <div v-if="target_kyou" class="ryuu_views">
             <RyuuListItemView v-for="related_kyou_query, index in related_kyou_queries"
                 v-model="related_kyou_queries[index]" :key="related_kyou_query.id" :gkill_api="gkill_api"
                 :application_config="application_config" :enable_dialog="true" :enable_context_menu="true"
-                :related_time="related_time" :abort_controller="abort_controler"
+                :target_kyou="target_kyou" :abort_controller="abort_controler"
                 :find_kyou_query_default="find_kyou_query_default" :editable="editable"
                 @requested_delete_related_kyou_list_query="(...id: any[]) => delete_related_kyou_query(id[0] as string)"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
@@ -92,8 +92,8 @@ nextTick(async () => {
     nextTick(() => load_related_kyou())
 })
 
-watch(() => props.related_time, () => {
-    if (props.editable) {
+watch(() => props.target_kyou, () => {
+    if (props.editable && !props.target_kyou) {
         return
     }
     abort_controler.value.abort()

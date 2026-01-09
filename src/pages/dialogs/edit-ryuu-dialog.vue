@@ -2,7 +2,7 @@
     <v-dialog :width="'fit-content'" v-model="is_show_dialog">
         <v-card class="edit_ryuu_dialog_view">
             <RyuuListView v-model="model_value" :application_config="application_config" :gkill_api="gkill_api"
-                :editable="true" :find_kyou_query_default="new FindKyouQuery()" :related_time="new Date(Date.now())"
+                :editable="true" :find_kyou_query_default="new FindKyouQuery()" :target_kyou="new Kyou()"
                 @requested_apply_ryuu_struct="(...ryuu_data: any[]) => { emits('requested_apply_ryuu_struct', ryuu_data[0]) }"
                 @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                 @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
@@ -20,6 +20,7 @@ import type { EditRyuuDialogEmits } from './edit-ryuu-dialog-emits'
 import type { EditRyuuDialogProps } from './edit-ryuu-dialog-props'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
+import { Kyou } from "@/classes/datas/kyou";
 const dnote_view = ref<InstanceType<typeof Dnote> | null>(null);
 
 const model_value = defineModel<ApplicationConfig>()
