@@ -19,11 +19,11 @@ type reKyouRepositorySQLite3Impl struct {
 	db                *sql.DB
 	m                 *sync.Mutex
 	gkillRepositories *GkillRepositories
+	fullConnect       bool
 }
 
-func NewReKyouRepositorySQLite3Impl(ctx context.Context, filename string, reps *GkillRepositories) (ReKyouRepository, error) {
-	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+func NewReKyouRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool, reps *GkillRepositories) (ReKyouRepository, error) {
+	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -75,12 +75,12 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create REKYOU table to %s: %w", filename, err)
-		return nil, err
+	if !fullConnect {
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
+		db = nil
 	}
 
 	return &reKyouRepositorySQLite3Impl{
@@ -88,9 +88,22 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 		db:                db,
 		m:                 &sync.Mutex{},
 		gkillRepositories: reps,
+		fullConnect:       fullConnect,
 	}, nil
 }
 func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	var err error
+	var db *sql.DB
+	if r.fullConnect {
+		db = r.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	matchKyous := map[string][]*Kyou{}
 
 	// 未削除ReKyouを抽出
@@ -170,6 +183,18 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 }
 
 func (r *reKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	var err error
+	var db *sql.DB
+	if r.fullConnect {
+		db = r.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	// 最新のデータを返す
 	kyouHistories, err := r.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -196,6 +221,18 @@ func (r *reKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 }
 
 func (r *reKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	var err error
+	var db *sql.DB
+	if r.fullConnect {
+		db = r.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	repName, err := r.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at rekyou: %w", err)
@@ -251,7 +288,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := r.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -340,10 +377,25 @@ func (r *reKyouRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, e
 }
 
 func (r *reKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return r.db.Close()
+	if r.fullConnect {
+		return r.db.Close()
+	}
+	return nil
 }
 
 func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
+	var err error
+	var db *sql.DB
+	if r.fullConnect {
+		db = r.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	matchReKyous := []*ReKyou{}
 
 	// 未削除ReKyouを抽出
@@ -414,6 +466,16 @@ func (r *reKyouRepositorySQLite3Impl) GetReKyou(ctx context.Context, id string, 
 
 func (r *reKyouRepositorySQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
 	var err error
+	var db *sql.DB
+	if r.fullConnect {
+		db = r.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -471,7 +533,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := r.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get rekyou histories sql: %w", err)
 		return nil, err
@@ -538,6 +600,18 @@ WHERE
 }
 
 func (r *reKyouRepositorySQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
+	var err error
+	var db *sql.DB
+	if r.fullConnect {
+		db = r.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	}
+
 	sql := `
 INSERT INTO REKYOU (
   IS_DELETED,
@@ -567,7 +641,7 @@ INSERT INTO REKYOU (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := r.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add rekyou sql %s: %w", rekyou.ID, err)
 		return err
@@ -599,6 +673,16 @@ INSERT INTO REKYOU (
 
 func (r *reKyouRepositorySQLite3Impl) GetReKyousAllLatest(ctx context.Context) ([]*ReKyou, error) {
 	var err error
+	var db *sql.DB
+	if r.fullConnect {
+		db = r.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -651,7 +735,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := r.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all rekyous sql: %w", err)
 		return nil, err

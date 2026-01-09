@@ -1,18 +1,33 @@
 package sqlite3impl
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+
+	sqllib "database/sql"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const TimeLayout = "2006-01-02T15:04:05-07:00"
 
 func EscapeSQLite(str string) string {
 	return strings.ReplaceAll(str, "'", "''")
+}
+
+func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error) {
+	db, err := sqllib.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+	if err != nil {
+		err = fmt.Errorf("error at open database %s: %w", filename, err)
+		return nil, err
+	}
+	return db, err
 }
 
 func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAlias string, whereCounter *int, onlyLatestData bool, relatedTimeColumnName string, findWordTargetColumns []string, findWordUseLike bool, ignoreFindWord bool, appendOrderBy bool, ignoreCase bool, queryArgs *[]interface{}) (string, error) {
