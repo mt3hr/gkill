@@ -15,16 +15,15 @@ import (
 )
 
 type lantanaRepositorySQLite3Impl struct {
-	filename string
-	db       *sql.DB
-	m        *sync.Mutex
+	filename    string
+	db          *sql.DB
+	m           *sync.Mutex
+	fullConnect bool
 }
 
-func NewLantanaRepositorySQLite3Impl(ctx context.Context, filename string) (LantanaRepository, error) {
-	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+func NewLantanaRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (LantanaRepository, error) {
+	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
 
@@ -74,22 +73,35 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create LANTANA table to %s: %w", filename, err)
-		return nil, err
+	if !fullConnect {
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
+		db = nil
 	}
 
 	return &lantanaRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
-		m:        &sync.Mutex{},
+		filename:    filename,
+		db:          db,
+		m:           &sync.Mutex{},
+		fullConnect: fullConnect,
 	}, nil
 }
+
 func (l *lantanaRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
+	var db *sql.DB
+	if l.fullConnect {
+		db = l.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, l.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
 		err = l.UpdateCache(ctx)
@@ -154,7 +166,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := l.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -249,6 +261,18 @@ func (l *lantanaRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, u
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	var err error
+	var db *sql.DB
+	if l.fullConnect {
+		db = l.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, l.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	repName, err := l.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at lantana: %w", err)
@@ -306,7 +330,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := l.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -395,11 +419,24 @@ func (l *lantanaRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, 
 }
 
 func (l *lantanaRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return l.db.Close()
+	if l.fullConnect {
+		return l.db.Close()
+	}
+	return nil
 }
 
 func (l *lantanaRepositorySQLite3Impl) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
 	var err error
+	var db *sql.DB
+	if l.fullConnect {
+		db = l.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, l.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -468,7 +505,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := l.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -562,6 +599,18 @@ func (l *lantanaRepositorySQLite3Impl) GetLantana(ctx context.Context, id string
 }
 
 func (l *lantanaRepositorySQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
+	var err error
+	var db *sql.DB
+	if l.fullConnect {
+		db = l.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, l.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	sql := `
 SELECT 
   IS_DELETED,
@@ -620,7 +669,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := l.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get lantana histories sql %s: %w", id, err)
 		return nil, err
@@ -688,6 +737,18 @@ WHERE
 }
 
 func (l *lantanaRepositorySQLite3Impl) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
+	var err error
+	var db *sql.DB
+	if l.fullConnect {
+		db = l.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, l.filename)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	}
+
 	sql := `
 INSERT INTO LANTANA (
   IS_DELETED,
@@ -717,7 +778,7 @@ INSERT INTO LANTANA (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := l.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add lantana sql %s: %w", lantana.ID, err)
 		return err

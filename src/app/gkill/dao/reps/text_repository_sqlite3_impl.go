@@ -15,14 +15,14 @@ import (
 )
 
 type textRepositorySQLite3Impl struct {
-	filename string
-	db       *sql.DB
-	m        *sync.Mutex
+	filename    string
+	db          *sql.DB
+	m           *sync.Mutex
+	fullConnect bool
 }
 
-func NewTextRepositorySQLite3Impl(ctx context.Context, filename string) (TextRepository, error) {
-	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+func NewTextRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (TextRepository, error) {
+	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -75,13 +75,6 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TEXT index statement %s: %w", "TEXT", err)
-		return nil, err
-	}
-
 	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT_TARGET_ID ON TEXT(TARGET_ID, UPDATE_TIME DESC);`
 	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
 	indexTargetIDStmt, err := db.PrepareContext(ctx, indexTargetIDSQL)
@@ -95,13 +88,6 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	_, err = indexTargetIDStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_TARGET_ID index to %s: %w", "TEXT", err)
-		return nil, err
-	}
-
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
-	_, err = stmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index statement %s: %w", "TEXT", err)
 		return nil, err
 	}
 
@@ -128,14 +114,33 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 		return nil, err
 	}
 
+	if !fullConnect {
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
+		db = nil
+	}
+
 	return &textRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
-		m:        &sync.Mutex{},
+		filename:    filename,
+		db:          db,
+		m:           &sync.Mutex{},
+		fullConnect: fullConnect,
 	}, nil
 }
 func (t *textRepositorySQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	if query.UseWords != nil && *query.UseWords {
 		if query.Words != nil && len(*query.Words) == 0 {
@@ -207,7 +212,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get TEXT histories sql: %w", err)
 		return nil, err
@@ -276,7 +281,10 @@ WHERE
 }
 
 func (t *textRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return t.db.Close()
+	if t.fullConnect {
+		return t.db.Close()
+	}
+	return nil
 }
 
 func (t *textRepositorySQLite3Impl) GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error) {
@@ -307,6 +315,16 @@ func (t *textRepositorySQLite3Impl) GetText(ctx context.Context, id string, upda
 
 func (t *textRepositorySQLite3Impl) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -366,7 +384,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get text histories sql: %w", err)
 		return nil, err
@@ -459,6 +477,16 @@ func (t *textRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, err
 
 func (t *textRepositorySQLite3Impl) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -517,7 +545,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get text histories sql: %w", err)
 		return nil, err
@@ -585,6 +613,17 @@ WHERE
 	return texts, nil
 }
 func (t *textRepositorySQLite3Impl) AddTextInfo(ctx context.Context, text *Text) error {
+	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	}
 	sql := `
 INSERT INTO TEXT (
   IS_DELETED,
@@ -616,7 +655,7 @@ INSERT INTO TEXT (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add text sql %s: %w", text.ID, err)
 		return err
