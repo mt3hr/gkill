@@ -7,8 +7,6 @@ export class MiBoardStructElementData implements FoldableStructModel {
 
     name: string
 
-    seq_in_parent: number
-
     id: string | null
 
     board_name: string
@@ -29,9 +27,10 @@ export class MiBoardStructElementData implements FoldableStructModel {
 
     seq: number
 
+    is_dir: boolean
+
     constructor() {
         this.name = ""
-        this.seq_in_parent = 0
         this.id = ""
         this.board_name = ""
         this.check_when_inited = false
@@ -42,5 +41,6 @@ export class MiBoardStructElementData implements FoldableStructModel {
         this.indeterminate = false
         this.parent_folder_id = ""
         this.seq = 0
+        this.is_dir = false
     }
 }

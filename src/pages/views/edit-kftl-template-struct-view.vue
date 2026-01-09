@@ -170,6 +170,7 @@ function show_add_new_folder_dialog(): void {
 async function add_folder_struct_element(folder_struct_element: FolderStructElementData): Promise<void> {
     const kftl_template_struct_element = new KFTLTemplateStructElementData()
     kftl_template_struct_element.id = folder_struct_element.id
+    kftl_template_struct_element.is_dir = true
     kftl_template_struct_element.title = folder_struct_element.folder_name
     kftl_template_struct_element.children = new Array<KFTLTemplateStructElementData>()
     kftl_template_struct_element.key = folder_struct_element.folder_name

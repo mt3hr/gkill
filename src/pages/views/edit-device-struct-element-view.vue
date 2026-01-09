@@ -34,8 +34,12 @@ const check_when_inited: Ref<boolean> = ref(props.struct_obj.check_when_inited)
 async function apply(): Promise<void> {
     const device_struct = new DeviceStructElementData()
     device_struct.id = props.struct_obj.id
-    device_struct.device_name = props.struct_obj.device_name
     device_struct.check_when_inited = check_when_inited.value
+    device_struct.children = null
+    device_struct.indeterminate = false
+    device_struct.key = props.struct_obj.device_name
+    device_struct.device_name = props.struct_obj.device_name
+    device_struct.name = props.struct_obj.device_name
     emits('requested_update_device_struct', device_struct)
 }
 </script>

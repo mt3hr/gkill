@@ -48,6 +48,7 @@ function emits_device_name(): void {
 
     const device_struct_element = new DeviceStructElementData()
     device_struct_element.id = props.gkill_api.generate_uuid()
+    device_struct_element.is_dir = false
     device_struct_element.check_when_inited = check_when_inited.value
     device_struct_element.children = null
     device_struct_element.indeterminate = false
