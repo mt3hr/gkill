@@ -15,14 +15,14 @@ import (
 )
 
 type urlogRepositorySQLite3Impl struct {
-	filename string
-	db       *sql.DB
-	m        *sync.Mutex
+	filename    string
+	db          *sql.DB
+	m           *sync.Mutex
+	fullConnect bool
 }
 
-func NewURLogRepositorySQLite3Impl(ctx context.Context, filename string) (URLogRepository, error) {
-	var err error
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+func NewURLogRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (URLogRepository, error) {
+	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -78,23 +78,34 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create URLOG table to %s: %w", filename, err)
-		return nil, err
+	if !fullConnect {
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
+		db = nil
 	}
 
 	return &urlogRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
-		m:        &sync.Mutex{},
+		filename:    filename,
+		db:          db,
+		m:           &sync.Mutex{},
+		fullConnect: fullConnect,
 	}, nil
 }
 
 func (u *urlogRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
+	var db *sql.DB
+	if u.fullConnect {
+		db = u.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, u.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -159,7 +170,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -256,6 +267,18 @@ func (u *urlogRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, upd
 }
 
 func (u *urlogRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	var err error
+	var db *sql.DB
+	if u.fullConnect {
+		db = u.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, u.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	repName, err := u.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
@@ -311,7 +334,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -403,11 +426,24 @@ func (u *urlogRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, er
 }
 
 func (u *urlogRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return u.db.Close()
+	if u.fullConnect {
+		return u.db.Close()
+	}
+	return nil
 }
 
 func (u *urlogRepositorySQLite3Impl) FindURLog(ctx context.Context, query *find.FindQuery) ([]*URLog, error) {
 	var err error
+	var db *sql.DB
+	if u.fullConnect {
+		db = u.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, u.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -477,7 +513,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -576,6 +612,18 @@ func (u *urlogRepositorySQLite3Impl) GetURLog(ctx context.Context, id string, up
 }
 
 func (u *urlogRepositorySQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
+	var err error
+	var db *sql.DB
+	if u.fullConnect {
+		db = u.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, u.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	repName, err := u.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
@@ -636,7 +684,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get urlog histories sql %s: %w", id, err)
 		return nil, err
@@ -710,6 +758,18 @@ WHERE
 }
 
 func (u *urlogRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog) error {
+	var err error
+	var db *sql.DB
+	if u.fullConnect {
+		db = u.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, u.filename)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	}
+
 	sql := `
 INSERT INTO URLOG (
   IS_DELETED,
@@ -747,7 +807,7 @@ INSERT INTO URLOG (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := u.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add urlog sql %s: %w", urlog.ID, err)
 		return err

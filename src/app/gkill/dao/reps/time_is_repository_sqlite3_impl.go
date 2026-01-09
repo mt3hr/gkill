@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"database/sql"
 	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -16,14 +17,14 @@ import (
 )
 
 type timeIsRepositorySQLite3Impl struct {
-	filename string
-	db       *sqllib.DB
-	m        *sync.Mutex
+	filename    string
+	db          *sqllib.DB
+	m           *sync.Mutex
+	fullConnect bool
 }
 
-func NewTimeIsRepositorySQLite3Impl(ctx context.Context, filename string) (TimeIsRepository, error) {
-	var err error
-	db, err := sqllib.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+func NewTimeIsRepositorySQLite3Impl(ctx context.Context, filename string, fullConnect bool) (TimeIsRepository, error) {
+	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
@@ -76,22 +77,33 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
-
-	if err != nil {
-		err = fmt.Errorf("error at create TIMEIS table to %s: %w", filename, err)
-		return nil, err
+	if !fullConnect {
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
+		db = nil
 	}
 
 	return &timeIsRepositorySQLite3Impl{
-		filename: filename,
-		db:       db,
-		m:        &sync.Mutex{},
+		filename:    filename,
+		db:          db,
+		m:           &sync.Mutex{},
+		fullConnect: fullConnect,
 	}, nil
 }
 func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -222,7 +234,7 @@ FROM TIMEIS
 	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous sql: %w", err)
 		return nil, err
@@ -319,6 +331,18 @@ func (t *timeIsRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 }
 
 func (t *timeIsRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
@@ -372,7 +396,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
@@ -464,11 +488,24 @@ func (t *timeIsRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, e
 }
 
 func (t *timeIsRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return t.db.Close()
+	if t.fullConnect {
+		return t.db.Close()
+	}
+	return nil
 }
 
 func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -597,7 +634,7 @@ FROM TIMEIS
 	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous sql: %w", err)
 		return nil, err
@@ -699,6 +736,16 @@ func (t *timeIsRepositorySQLite3Impl) GetTimeIs(ctx context.Context, id string, 
 
 func (t *timeIsRepositorySQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
 	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	sql := `
 SELECT 
@@ -766,7 +813,7 @@ WHERE
 
 	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get time is histories sql: %w", err)
 		return nil, err
@@ -842,6 +889,18 @@ WHERE
 }
 
 func (t *timeIsRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
+	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	}
+
 	sql := `
 INSERT INTO TIMEIS (
   IS_DELETED,
@@ -873,7 +932,7 @@ INSERT INTO TIMEIS (
   ?
 )`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := t.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add timeis sql %s: %w", timeis.ID, err)
 		return err
