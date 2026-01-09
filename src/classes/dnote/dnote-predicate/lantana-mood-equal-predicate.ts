@@ -10,7 +10,7 @@ export default class LantanaMoodEqualPredicate implements DnotePredicate {
         const lantana_mood_equal_target = json.value as number
         return new LantanaMoodEqualPredicate(lantana_mood_equal_target)
     }
-    async is_match(loaded_kyou: Kyou): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
         const lantana_mood = loaded_kyou.typed_lantana?.mood
         if (lantana_mood) {
             if (lantana_mood.valueOf() === this.lantana_mood_equal_target) {

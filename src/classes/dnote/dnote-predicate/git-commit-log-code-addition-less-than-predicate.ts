@@ -10,7 +10,7 @@ export default class GitCommitLogCodeAdditionLessThanPredicate implements DnoteP
         const git_commit_log_code_count = json.git_commit_log_code_count as number
         return new GitCommitLogCodeAdditionLessThanPredicate(git_commit_log_code_count)
     }
-    async is_match(loaded_kyou: Kyou): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
 
         if (loaded_kyou.typed_git_commit_log) {
             const git_commit_log_code_count = loaded_kyou.typed_git_commit_log.addition

@@ -14,12 +14,12 @@ export default class NotPredicate implements DnotePredicate {
         }
         return new NotPredicate(children);
     }
-    async is_match(loaded_kyou: Kyou): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
         if (!this.predicates || this.predicates.length === 0) {
             return true
         }
         for (const predicate of this.predicates) {
-            if ((await predicate.is_match(loaded_kyou))) {
+            if ((await predicate.is_match(loaded_kyou, target_kyou))) {
                 return true
             }
         }

@@ -10,7 +10,7 @@ export default class MiTitleContainsPredicate implements DnotePredicate {
         const mi_title_contains_target = json.value as string
         return new MiTitleContainsPredicate(mi_title_contains_target)
     }
-    async is_match(loaded_kyou: Kyou): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
         const mi_title = loaded_kyou.typed_mi?.title
         if (mi_title) {
             if (mi_title?.includes(this.mi_title_contains_target)) {
