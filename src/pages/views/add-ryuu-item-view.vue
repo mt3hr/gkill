@@ -121,7 +121,7 @@ function is_group(p: Predicate | PredicateGroupType): p is PredicateGroupType {
 
 function show_find_query_editor_dialog(): void {
     if (!find_kyou_query.value) {
-        find_kyou_query.value = new FindKyouQuery()
+        find_kyou_query.value = FindKyouQuery.generate_default_query_for_rykv(props.application_config)
     }
     const cloned_find_kyou_query = find_kyou_query.value.clone()
     nextTick(() => {
