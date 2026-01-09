@@ -40,8 +40,9 @@
                     :folder_name="get_group_name(index)" :gkill_api="gkill_api" :is_open="get_group_open(index)"
                     :struct_obj="child_struct" :is_editable="is_editable" @clicked_items="emit_click_items_by_user"
                     :is_show_checkbox="is_show_checkbox" @click_items_by_user="emit_click_items_by_user"
-                    :is_root="false" @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                    @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                    :is_root="false"
+                    @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                    @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
                     @dblclicked_item="(e: MouseEvent, id: string | null) => emits('dblclicked_item', e, id)"
                     @contextmenu_item.prevent.stop="(e: MouseEvent, id: string | null) => emits('contextmenu_item', e, id)"
                     @requested_update_check_state="(items: Array<string>, check_state: CheckState) => emits('requested_update_check_state', items, check_state)"
@@ -147,7 +148,7 @@ function updated_struct() {
 }
 // this.structがアイテムであればtrueを、そうではなくグループである場合はfalseを返します。
 function is_item() {
-    return props.struct_obj.children === null
+    return !props.struct_obj.is_dir
 }
 function get_group_open(_index: number) {
     return false

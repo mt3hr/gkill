@@ -14,7 +14,7 @@
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CANCEL_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -48,6 +48,7 @@ function emits_rep_type_name(): void {
 
     const rep_type_struct_element = new RepTypeStructElementData()
     rep_type_struct_element.id = props.gkill_api.generate_uuid()
+    rep_type_struct_element.is_dir = false
     rep_type_struct_element.check_when_inited = check_when_inited.value
     rep_type_struct_element.children = null
     rep_type_struct_element.indeterminate = false

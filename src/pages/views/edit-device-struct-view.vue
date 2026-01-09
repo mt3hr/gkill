@@ -164,6 +164,7 @@ function show_add_new_folder_dialog(): void {
 async function add_folder_struct_element(folder_struct_element: FolderStructElementData): Promise<void> {
     const device_struct_element = new DeviceStructElementData()
     device_struct_element.id = folder_struct_element.id
+    device_struct_element.is_dir = true
     device_struct_element.check_when_inited = false
     device_struct_element.device_name = folder_struct_element.folder_name
     device_struct_element.children = new Array<DeviceStructElementData>()
