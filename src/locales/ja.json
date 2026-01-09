@@ -791,5 +791,8 @@
     "LOCAL_TITLE": "ローカル",
     "COPIED_LOCAL_SHARE_KYOU_LINK_MESSAGE": "コピーしました",
     "START_EXPORT_KYOUS_MESSAGE": "ダウンロードを開始します。しばらくお待ち下さい。",
-    "FINISH_EXPORT_KYOUS_MESSAGE": "ダウンロード完了"
+    "FINISH_EXPORT_KYOUS_MESSAGE": "ダウンロード完了",
+    "DNOTE_EQUAL_TITLE_TARGET_KYOU_PREDICATE": "タイトルが対象と等しい",
+    "DNOTE_EQUAL_TAGS_TARGET_KYOU_PREDICATE": "タグが対象と等しい",
+    "DNOTE_EQUAL_DATA_TYPE_TARGET_KYOU_PREDICATE": "データタイプが対象と等しい"
 }

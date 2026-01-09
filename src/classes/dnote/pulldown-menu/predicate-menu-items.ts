@@ -29,5 +29,7 @@ export default [
     { label: i18n.global.t("DNOTE_GIT_COMMIT_LOG_ADDITION_CODE_LESS_THAN_PREDICATE"), value: "GitCommitLogCodeDeletionLessThanPredicate" },
     { label: i18n.global.t("DNOTE_GIT_COMMIT_LOG_DELETION_CODE_GREATER_THAN_PREDICATE"), value: "GitCommitLogCodeAdditionGreaterThanPredicate" },
     { label: i18n.global.t("DNOTE_GIT_COMMIT_LOG_DELETION_CODE_LESS_THAN_PREDICATE"), value: "GitCommitLogCodeDeletionLessThanPredicate" },
-
+    { label: i18n.global.t("DNOTE_EQUAL_TITLE_TARGET_KYOU_PREDICATE"), value: "EqualTitleTargetKyouPredicate" },
+    { label: i18n.global.t("DNOTE_EQUAL_TAGS_TARGET_KYOU_PREDICATE"), value: "EqualTagsTargetKyouPredicate" },
+    { label: i18n.global.t("DNOTE_EQUAL_DATA_TYPE_TARGET_KYOU_PREDICATE"), value: "EqualDataTypeTargetKyouPredicate" },
 ]
