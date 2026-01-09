@@ -19,7 +19,7 @@
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="primary" @click="show_add_new_folder_dialog">{{ i18n.global.t("ADD_FOLDER_TITLE")
-                    }}</v-btn>
+                        }}</v-btn>
                 </v-col>
             </v-row>
             <v-row class="pa-0 ma-0">
@@ -165,6 +165,7 @@ function show_add_new_folder_dialog(): void {
 async function add_folder_struct_element(folder_struct_element: FolderStructElementData): Promise<void> {
     const tag_struct_element = new TagStructElementData()
     tag_struct_element.id = folder_struct_element.id
+    tag_struct_element.is_dir = true
     tag_struct_element.check_when_inited = false
     tag_struct_element.tag_name = folder_struct_element.folder_name
     tag_struct_element.children = new Array<TagStructElementData>()

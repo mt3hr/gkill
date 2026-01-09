@@ -6,8 +6,6 @@ export class KFTLTemplateElementData implements FoldableStructModel {
 
     name: string
 
-    seq_in_parent: number
-
     id: string | null
 
     title: string
@@ -26,7 +24,6 @@ export class KFTLTemplateElementData implements FoldableStructModel {
 
     constructor() {
         this.name = ""
-        this.seq_in_parent = 0
         this.id = ""
         this.title = ""
         this.template = ""

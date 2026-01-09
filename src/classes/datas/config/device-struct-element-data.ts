@@ -5,8 +5,6 @@ import type { FoldableStructModel } from "@/pages/views/foldable-struct-model"
 export class DeviceStructElementData implements FoldableStructModel {
     name: string
 
-    seq_in_parent: number
-
     id: string | null
 
     device_name: string
@@ -27,7 +25,6 @@ export class DeviceStructElementData implements FoldableStructModel {
 
     constructor() {
         this.name = ""
-        this.seq_in_parent = 0
         this.id = ""
         this.device_name = ""
         this.check_when_inited = false

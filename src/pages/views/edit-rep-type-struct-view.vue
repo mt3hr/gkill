@@ -168,6 +168,7 @@ function show_add_new_folder_dialog(): void {
 async function add_folder_struct_element(folder_struct_element: FolderStructElementData): Promise<void> {
     const rep_type_struct_element = new RepTypeStructElementData()
     rep_type_struct_element.id = folder_struct_element.id
+    rep_type_struct_element.is_dir = true
     rep_type_struct_element.check_when_inited = false
     rep_type_struct_element.rep_type_name = folder_struct_element.folder_name
     rep_type_struct_element.children = new Array<RepTypeStructElementData>()
