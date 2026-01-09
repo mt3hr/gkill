@@ -25,7 +25,7 @@ export class DnoteListAggregator {
         // predicateにマッチしたKyouを抽出
         const match_kyous = new Array<Kyou>()
         for (let i = 0; i < cloned_kyous.length; i++) {
-            if (await this.dnote_predicate.is_match(cloned_kyous[i])) {
+            if (await this.dnote_predicate.is_match(cloned_kyous[i], null)) {
                 match_kyous.push(cloned_kyous[i])
             }
         }

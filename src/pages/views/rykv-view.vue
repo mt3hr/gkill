@@ -205,9 +205,9 @@
                                 @requested_reload_list="() => { }" />
                         </div>
                         <div class="ryuu_view dummy">
-                            <RyuuListView v-if="focused_kyou_related_time && default_query"
+                            <RyuuListView v-if="focused_kyou && default_query"
                                 :application_config="application_config" :gkill_api="gkill_api"
-                                :related_time="focused_kyou_related_time" :editable="false"
+                                :target_kyou="focused_kyou" :editable="false"
                                 :find_kyou_query_default="default_query"
                                 @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0]); focused_kyou?.reload(true, false) }"
                                 @deleted_text="(...deleted_text: any[]) => { }"
@@ -500,8 +500,6 @@ const drawer: Ref<boolean | null> = ref(false)
 const drawer_mode_is_mobile: Ref<boolean | null> = ref(false)
 const kyou_list_view_height = computed(() => props.app_content_height)
 const default_query: Ref<FindKyouQuery> = ref(new FindKyouQuery())
-
-const focused_kyou_related_time = computed(() => focused_kyou.value?.related_time)
 
 const position_x: Ref<Number> = ref(0)
 const position_y: Ref<Number> = ref(0)

@@ -14,12 +14,12 @@ export default class AndPredicate implements DnotePredicate {
         }
         return new AndPredicate(children);
     }
-    async is_match(loaded_kyou: Kyou): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, target_kyou: Kyou): Promise<boolean> {
         if (!this.predicates || this.predicates.length === 0) {
             return true
         }
         for (const predicate of this.predicates) {
-            if (!(await predicate.is_match(loaded_kyou))) {
+            if (!(await predicate.is_match(loaded_kyou, target_kyou))) {
                 return false
             }
         }
