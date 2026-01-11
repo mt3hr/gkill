@@ -17,7 +17,7 @@ import (
 
 type timeIsTempRepositorySQLite3Impl timeIsRepositorySQLite3Impl
 
-func NewTimeIsTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (TimeIsTempRepository, error) {
+func NewTimeIsTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (TimeIsTempRepository, error) {
 	filename := "time_is_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "TIMEIS" (
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 	return &timeIsTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 func (t *timeIsTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {

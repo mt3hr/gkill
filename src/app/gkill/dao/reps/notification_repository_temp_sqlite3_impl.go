@@ -15,7 +15,7 @@ import (
 
 type notificationTempRepositorySQLite3Impl notificationRepositorySQLite3Impl
 
-func NewNotificationTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (NotificationTempRepository, error) {
+func NewNotificationTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (NotificationTempRepository, error) {
 	filename := "notification_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 	return &notificationTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 func (t *notificationTempRepositorySQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
