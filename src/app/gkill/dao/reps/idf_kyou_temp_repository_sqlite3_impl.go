@@ -17,7 +17,7 @@ import (
 
 type idfKyouRepositoryTempSQLite3Impl idfKyouRepositorySQLite3Impl
 
-func NewIDFKyouTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (IDFKyouTempRepository, error) {
+func NewIDFKyouTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (IDFKyouTempRepository, error) {
 	filename := "temp_db"
 
 	sql := `
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		// autoIDF:   autoIDF,
 		// idfIgnore: idfIgnore,
 		db: db,
-		m:  &sync.Mutex{},
+		m:  m,
 	}
 
 	//r.PathPrefix(rep.rootAddress).Handler(http.StripPrefix(rep.rootAddress, http.FileServer(http.Dir(dir))))

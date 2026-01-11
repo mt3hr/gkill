@@ -17,7 +17,7 @@ import (
 
 type miTempRepositorySQLite3Impl miRepositorySQLite3Impl
 
-func NewMiTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (MiTempRepository, error) {
+func NewMiTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (MiTempRepository, error) {
 	filename := "mi_temp"
 
 	sql := `
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 	return &miTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 func (m *miTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {

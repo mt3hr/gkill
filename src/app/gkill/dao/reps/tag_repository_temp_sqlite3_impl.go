@@ -15,7 +15,7 @@ import (
 
 type tagTempRepositorySQLite3Impl tagRepositorySQLite3Impl
 
-func NewTagTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (TagTempRepository, error) {
+func NewTagTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (TagTempRepository, error) {
 	filename := "tag_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "TAG" (
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	return &tagTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 func (t *tagTempRepositorySQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
