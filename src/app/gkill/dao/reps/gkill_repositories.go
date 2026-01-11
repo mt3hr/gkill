@@ -2,16 +2,20 @@ package reps
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
+	"runtime"
 	"sort"
 	"sync"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/memory_db"
+
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -89,6 +93,7 @@ type GkillRepositories struct {
 	WriteGPSLogRep GPSLogRepository
 
 	LatestDataRepositoryAddressDAO account_state.LatestDataRepositoryAddressDAO
+	TempReps                       *TempReps
 
 	LatestDataRepositoryAddresses map[string]*account_state.LatestDataRepositoryAddress
 	LastFindTime                  time.Time
@@ -99,6 +104,11 @@ type GkillRepositories struct {
 
 	cancelPreFunc context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
 	m             sync.Mutex
+
+	CacheMemoryDBMutex *sync.Mutex
+	CacheMemoryDB      *sql.DB
+	TempMemoryDBMutex  *sync.Mutex
+	TempMemoryDB       *sql.DB
 }
 
 // repsとLatestDataRepositoryAddressDAOのみ初期化済みのGkillRepositoriesを返す
@@ -115,14 +125,55 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		return nil, err
 	}
 
-	// メモリ上でやる
-	mutex := memory_db.CacheMemoryDBMutex
-	if !gkill_options.IsCacheInMemory {
-		mutex = &sync.Mutex{}
+	// memory_dbの初期化
+	var CacheMemoryDBMutex *sync.Mutex
+	var CacheMemoryDB *sql.DB
+	var TempMemoryDBMutex *sync.Mutex
+	var TempMemoryDB *sql.DB
+	if gkill_options.IsCacheInMemory {
+		CacheMemoryDB, err = sql.Open("sqlite3", "file:gkill_memory_db"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
+		if err != nil {
+			err = fmt.Errorf("error at open memory database: %w", err)
+			gkill_log.Debug.Fatal(err)
+		}
+		CacheMemoryDB.SetMaxOpenConns(runtime.NumCPU()) // 読み取り並列を許可
+		CacheMemoryDB.SetMaxIdleConns(1)                // 0にすると最後が閉じて消える
+		CacheMemoryDB.SetConnMaxLifetime(0)             // 無限
+		CacheMemoryDB.SetConnMaxIdleTime(0)             // 無限
+
+		TempMemoryDB, err = sql.Open("sqlite3", "file:gkill_temp_db"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
+		if err != nil {
+			err = fmt.Errorf("error at open memory database: %w", err)
+			gkill_log.Debug.Fatal(err)
+		}
+		TempMemoryDB.SetMaxOpenConns(runtime.NumCPU()) // 読み取り並列を許可
+		TempMemoryDB.SetMaxIdleConns(1)                // 0にすると最後が閉じて消える
+		TempMemoryDB.SetConnMaxLifetime(0)             // 無限
+		TempMemoryDB.SetConnMaxIdleTime(0)             // 無限
+
+		CacheMemoryDBMutex = &sync.Mutex{}
+		TempMemoryDBMutex = &sync.Mutex{}
+	} else {
+		TempMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
+		if err != nil {
+			err = fmt.Errorf("error at open database: %w", err)
+			return nil, err
+		}
+		CacheMemoryDB = TempMemoryDB
+
+		CacheMemoryDBMutex = &sync.Mutex{}
+		TempMemoryDBMutex = CacheMemoryDBMutex
 	}
-	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(userID, mutex)
+
+	// メモリ上でやる
+	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(userID, CacheMemoryDB, CacheMemoryDBMutex)
 	if err != nil {
 		err = fmt.Errorf("error at get latest data repository address dao. user id = %s: %w", userID, err)
+		return nil, err
+	}
+
+	TempReps, err := NewTempReps(TempMemoryDB, TempMemoryDBMutex)
+	if err != nil {
 		return nil, err
 	}
 
@@ -136,7 +187,14 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 
 		cancelPreFunc: context.CancelFunc(func() {}),
 
+		TempReps: TempReps,
+
 		m: sync.Mutex{},
+
+		TempMemoryDB:       TempMemoryDB,
+		CacheMemoryDB:      CacheMemoryDB,
+		TempMemoryDBMutex:  TempMemoryDBMutex,
+		CacheMemoryDBMutex: CacheMemoryDBMutex,
 
 		updateCacheTicker:             ticker,
 		LatestDataRepositoryAddresses: nil,
