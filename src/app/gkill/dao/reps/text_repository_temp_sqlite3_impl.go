@@ -15,7 +15,7 @@ import (
 
 type textTempRepositorySQLite3Impl textRepositorySQLite3Impl
 
-func NewTextTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (TextTempRepository, error) {
+func NewTextTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (TextTempRepository, error) {
 	filename := "text_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "TEXT" (
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	return &textTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 

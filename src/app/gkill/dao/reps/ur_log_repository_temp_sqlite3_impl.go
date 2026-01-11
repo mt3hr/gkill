@@ -15,7 +15,7 @@ import (
 
 type urlogTempRepositorySQLite3Impl urlogRepositorySQLite3Impl
 
-func NewURLogTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (URLogTempRepository, error) {
+func NewURLogTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (URLogTempRepository, error) {
 	filename := "urlog_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "URLOG" (
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 	return &urlogTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 
