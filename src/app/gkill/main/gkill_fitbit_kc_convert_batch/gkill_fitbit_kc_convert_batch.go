@@ -528,13 +528,13 @@ func run(args Args) error {
 	}
 
 	// KC / Tag の本番リポジトリ
-	kcRepo, err := reps.NewKCRepositorySQLite3Impl(ctx, args.KCDBPath)
+	kcRepo, err := reps.NewKCRepositorySQLite3Impl(ctx, args.KCDBPath, true)
 	if err != nil {
 		return err
 	}
 	defer kcRepo.Close(ctx)
 
-	tagRepo, err := reps.NewTagRepositorySQLite3Impl(ctx, args.TagDBPath)
+	tagRepo, err := reps.NewTagRepositorySQLite3Impl(ctx, args.TagDBPath, true)
 	if err != nil {
 		return err
 	}
