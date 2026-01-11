@@ -15,7 +15,7 @@ import (
 
 type kmemoTempRepositorySQLite3Impl kmemoRepositorySQLite3Impl
 
-func NewKmemoTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (KmemoTempRepository, error) {
+func NewKmemoTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (KmemoTempRepository, error) {
 	filename := "kmemo_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "KMEMO" (
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 	return &kmemoTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 

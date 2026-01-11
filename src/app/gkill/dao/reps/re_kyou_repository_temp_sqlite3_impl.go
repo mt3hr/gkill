@@ -15,7 +15,7 @@ import (
 
 type reKyouTempRepositorySQLite3Impl reKyouRepositorySQLite3Impl
 
-func NewReKyouTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (ReKyouTempRepository, error) {
+func NewReKyouTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (ReKyouTempRepository, error) {
 	filename := "rekyou_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "REKYOU" (

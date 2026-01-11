@@ -15,7 +15,7 @@ import (
 
 type lantanaTempRepositorySQLite3Impl lantanaRepositorySQLite3Impl
 
-func NewLantanaTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (LantanaTempRepository, error) {
+func NewLantanaTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (LantanaTempRepository, error) {
 	filename := "lantana_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "LANTANA" (
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 	return &lantanaTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 func (l *lantanaTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
