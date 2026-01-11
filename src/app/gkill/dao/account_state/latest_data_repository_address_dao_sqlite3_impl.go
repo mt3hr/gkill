@@ -4,13 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/memory_db"
+
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -23,26 +21,17 @@ type latestDataRepositoryAddressSQLite3Impl struct {
 	tableName string
 }
 
-func NewLatestDataRepositoryAddressSQLite3Impl(userID string, mutex *sync.Mutex) (LatestDataRepositoryAddressDAO, error) {
+func NewLatestDataRepositoryAddressSQLite3Impl(userID string, db *sql.DB, mutex *sync.Mutex) (LatestDataRepositoryAddressDAO, error) {
 	var err error
 
 	latestDataRepositoryAddress := &latestDataRepositoryAddressSQLite3Impl{
 		m:         mutex,
 		userID:    userID,
 		tableName: fmt.Sprintf("LATEST_DATA_REPOSITORY_ADDRESS_%s", userID),
+		db:        db,
 	}
 
 	ctx := context.Background()
-
-	if gkill_options.IsCacheInMemory {
-		latestDataRepositoryAddress.db = memory_db.CacheMemoryDB
-	} else {
-		latestDataRepositoryAddress.db, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, latestDataRepositoryAddress.tableName+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
-		if err != nil {
-			err = fmt.Errorf("error at open database: %w", err)
-			return nil, err
-		}
-	}
 
 	sql := fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %s (
