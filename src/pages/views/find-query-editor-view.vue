@@ -14,20 +14,20 @@
                 ref="keyword_query" />
             <div> <v-divider /> </div>
             <RepQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-                @request_update_checked_reps="emits_current_query()" @request_clear_rep_query="emits_cleard_rep_query()"
+                @request_update_checked_reps="(_reps, is_by_user) => { if (is_by_user) emits_current_query() }" @request_clear_rep_query="emits_cleard_rep_query()"
                 ref="rep_query" :inited="inited_rep_query_for_query_sidebar"
                 @inited="inited_rep_query_for_query_sidebar = true" />
             <div> <v-divider /> </div>
             <TagQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_tags="emits_current_query()"
-                @request_update_checked_tags="emits_current_query()" @request_clear_tag_query="emits_cleard_tag_query()"
+                @request_update_checked_tags="(_tags, is_by_user) => { if (is_by_user) emits_current_query() }" @request_clear_tag_query="emits_cleard_tag_query()"
                 ref="tag_query" :inited="inited_tag_query_for_query_sidebar"
                 @inited="inited_tag_query_for_query_sidebar = true" />
             <div> <v-divider /> </div>
             <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_timeis_tags="emits_current_query()"
                 @request_update_and_search_timeis_word="emits_current_query()"
-                @request_update_checked_timeis_tags="emits_current_query()"
+                @request_update_checked_timeis_tags="(...params: any[]) => { const is_by_user = params[1]; if (is_by_user) emits_current_query() }"
                 :inited="inited_timeis_query_for_query_sidebar" @inited="inited_timeis_query_for_query_sidebar = true"
                 @request_update_timeis_keywords="emits_current_query()"
                 @request_update_use_timeis_query="emits_current_query()"
