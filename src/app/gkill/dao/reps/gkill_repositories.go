@@ -131,7 +131,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	var TempMemoryDBMutex *sync.Mutex
 	var TempMemoryDB *sql.DB
 	if gkill_options.IsCacheInMemory {
-		CacheMemoryDB, err = sql.Open("sqlite3", "file:gkill_memory_db"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
+		CacheMemoryDB, err = sql.Open("sqlite3", "file:gkill_memory_db_"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
 		if err != nil {
 			err = fmt.Errorf("error at open memory database: %w", err)
 			gkill_log.Debug.Fatal(err)
@@ -141,7 +141,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		CacheMemoryDB.SetConnMaxLifetime(0)             // 無限
 		CacheMemoryDB.SetConnMaxIdleTime(0)             // 無限
 
-		TempMemoryDB, err = sql.Open("sqlite3", "file:gkill_temp_db"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
+		TempMemoryDB, err = sql.Open("sqlite3", "file:gkill_temp_db_"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
 		if err != nil {
 			err = fmt.Errorf("error at open memory database: %w", err)
 			gkill_log.Debug.Fatal(err)
@@ -273,6 +273,9 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 	if err != nil {
 		gkill_log.Error.Println(err.Error())
 	}
+
+	g.CacheMemoryDB.Close()
+	g.TempMemoryDB.Close()
 	/*
 		for _, rep := range g.GPSLogReps {
 			err := rep.Close(ctx)
