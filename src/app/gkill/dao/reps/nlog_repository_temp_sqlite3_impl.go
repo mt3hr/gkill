@@ -17,7 +17,7 @@ import (
 
 type nlogTempRepositorySQLite3Impl nlogRepositorySQLite3Impl
 
-func NewNlogTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (NlogTempRepository, error) {
+func NewNlogTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (NlogTempRepository, error) {
 	filename := "nlog_temp"
 
 	sql := `
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 	return &nlogTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 func (n *nlogTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {

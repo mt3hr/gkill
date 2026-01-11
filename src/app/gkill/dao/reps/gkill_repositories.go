@@ -116,7 +116,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	}
 
 	// メモリ上でやる
-	mutex := memory_db.Mutex
+	mutex := memory_db.CacheMemoryDBMutex
 	if !gkill_options.IsCacheInMemory {
 		mutex = &sync.Mutex{}
 	}

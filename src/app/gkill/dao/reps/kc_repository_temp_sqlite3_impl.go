@@ -17,7 +17,7 @@ import (
 
 type kcTempRepositorySQLite3Impl kcRepositorySQLite3Impl
 
-func NewKCTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB) (KCTempRepository, error) {
+func NewKCTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (KCTempRepository, error) {
 	filename := "temp_db"
 
 	sql := `
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS "kc" (
 	return &kcTempRepositorySQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        m,
 	}, nil
 }
 
