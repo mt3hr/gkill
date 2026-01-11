@@ -82,6 +82,7 @@ import { useTheme } from 'vuetify'
 import { useRoute } from 'vue-router'
 import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import { Tag } from '@/classes/datas/tag'
+import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
 
 const theme = useTheme()
 
@@ -258,44 +259,49 @@ function show_application_config_dialog(): void {
     application_config_dialog.value?.show()
 }
 
+function tagStructHas(tag_struct: TagStructElementData, tagName: string): boolean {
+    if (tag_struct.tag_name === tagName) return true
+    for (const c of (tag_struct.children ?? [])) {
+        if (tagStructHas(c, tagName)) return true
+    }
+    return false
+}
+
+// 連打/連続登録で二重に通信しないため
+let tagStructRefreshPromise: Promise<void> | null = null
+
 async function check_tag_update(tag: Tag) {
-    // タグ追加時、ApplicationConfigになさそうであればキャッシュを消す
-    let aggregate_tag_name_walk = (_tag: TagStructElementData): Array<string> => []
-    aggregate_tag_name_walk = (tag: TagStructElementData): Array<string> => {
-        const tag_names = new Array<string>()
-        const tag_children = tag.children
-        if (tag_children) {
-            tag_children.forEach(child_tag => {
-                if (child_tag.check_when_inited) {
-                    tag_names.push(child_tag.tag_name)
-                }
-                if (child_tag) {
-                    tag_names.push(...aggregate_tag_name_walk(child_tag))
-                }
-            })
-        }
-        return tag_names
+    const name = tag.tag
+    if (!name) return
+
+    const req = new GetAllTagNamesRequest()
+    req.force_reget = true
+    await gkill_api.value.get_all_tag_names(req)
+
+    if (tagStructHas(application_config.value.tag_struct, name)) return
+
+    // すでに更新中ならそれに乗る
+    if (tagStructRefreshPromise) {
+        await tagStructRefreshPromise
+        return
     }
-    const tags = aggregate_tag_name_walk((await gkill_api.value.get_application_config(new GetApplicationConfigRequest())).application_config.tag_struct)
-    let exist_tag_in_application_config = false
-    for (let i = 0; i < tags.length; i++) {
-        if (tag.tag === tags[i]) {
-            exist_tag_in_application_config = true
-            break
-        }
-    }
-    if (!exist_tag_in_application_config) {
-        const req = new GetApplicationConfigRequest()
-        req.force_reget = true
-        const res = await gkill_api.value.get_application_config(req)
-        if (res.errors && res.errors.length !== 0) {
-            write_errors(res.errors)
+
+    tagStructRefreshPromise = (async () => {
+        const errors = await application_config.value.append_not_found_tags()
+        if (errors && errors.length) {
+            write_errors(errors)
             return
         }
-        // if (res.messages && res.messages.length !== 0) {
-        // emits('received_messages', res.messages)
-        // }
-        application_config.value.tag_struct = res.application_config.tag_struct
+
+        application_config.value = application_config.value.clone()
+
+        gkill_api.value.set_saved_application_config(application_config.value)
+    })()
+
+    try {
+        await tagStructRefreshPromise
+    } finally {
+        tagStructRefreshPromise = null
     }
 }
 </script>

@@ -1672,7 +1672,7 @@ export class GkillAPI {
 
 
 
-        async get_application_config(req: GetApplicationConfigRequest): Promise<GetApplicationConfigResponse> {
+        async get_application_config(req: GetApplicationConfigRequest, not_load_all?: boolean): Promise<GetApplicationConfigResponse> {
                 const res = await fetch(this.get_application_config_address, {
                         'method': this.get_application_config_method,
                         headers: {
@@ -1748,8 +1748,12 @@ export class GkillAPI {
                 }
 
                 response.application_config = application_config
-                await response.application_config.load_all()
                 this.check_auth(response)
+                if (not_load_all) {
+                        return response
+                }
+
+                await response.application_config.load_all()
 
                 const has_document = typeof document !== 'undefined';
                 if (has_document) {
