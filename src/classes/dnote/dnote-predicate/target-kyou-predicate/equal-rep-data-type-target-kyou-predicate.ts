@@ -10,8 +10,9 @@ export default class EqualDataTypeTargetKyouPredicate implements DnotePredicate 
         if (!target_kyou) {
             return false
         }
-        const data_type = target_kyou.data_type.split("_")[0]
-        if (data_type.startsWith(loaded_kyou.data_type)) {
+        const target_kyou_data_type = target_kyou.data_type.split("_")[0]
+        const loaded_kyou_data_type = loaded_kyou.data_type.split("_")[0]
+        if (target_kyou_data_type.startsWith(loaded_kyou_data_type)) {
             return true
         }
         return false
