@@ -85,6 +85,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 func (t *notificationRepositoryCachedSQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
+	t.m.Lock()
+	t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -602,6 +604,8 @@ func (t *notificationRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context
 }
 
 func (t *notificationRepositoryCachedSQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
+	t.m.Lock()
+	t.m.Unlock()
 	var err error
 
 	sql := `
