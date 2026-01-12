@@ -213,6 +213,7 @@ function generate_query(query_id?: string): FindKyouQuery {
         find_query.use_period_of_time = period_of_time_query.value.get_use_period_of_time()
         find_query.period_of_time_start_time_second = period_of_time_query.value.get_period_of_time_start_time_second()
         find_query.period_of_time_end_time_second = period_of_time_query.value.get_period_of_time_end_time_second()
+        find_query.period_of_time_week_of_days = period_of_time_query.value.get_period_of_time_week_of_days()
     }
 
     find_query.apply_hide_tags(props.application_config)
@@ -279,6 +280,7 @@ function emits_cleard_period_of_time_query(): void {
     find_query.use_period_of_time = default_query.value.use_period_of_time
     find_query.period_of_time_start_time_second = default_query.value.period_of_time_start_time_second
     find_query.period_of_time_end_time_second = default_query.value.period_of_time_end_time_second
+    find_query.period_of_time_week_of_days = default_query.value.period_of_time_week_of_days.concat()
     query.value = find_query
     emits('updated_query', find_query)
 }

@@ -52,6 +52,7 @@ type FindQuery struct {
 	UsePeriodOfTime             *bool         `json:"use_period_of_time"`
 	PeriodOfTimeStartTimeSecond *int64        `json:"period_of_time_start_time_second"`
 	PeriodOfTimeEndTimeSecond   *int64        `json:"period_of_time_end_time_second"`
+	PeriodOfTimeWeekOfDays      []WeekOfDays  `json:"period_of_time_week_of_days"`
 	MiBoardName                 *string       `json:"mi_board_name"`
 	MiCheckState                *MiCheckState `json:"mi_check_state"`
 	MiSortType                  *MiSortType   `json:"mi_sort_type"`
