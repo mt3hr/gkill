@@ -44,6 +44,10 @@ export class FindKyouQuery {
     use_update_time: boolean
     update_time: Date | null
 
+    use_period_of_time: boolean
+    period_of_time_start_time_second: number | null
+    period_of_time_end_time_second: number | null
+
     use_rep_types: boolean
     rep_types: Array<string>
     reps: Array<string>
@@ -116,6 +120,9 @@ export class FindKyouQuery {
         cloned.use_mi_check_state = json.use_mi_check_state
         cloned.mi_check_state = json.mi_check_state
         cloned.for_mi = json.for_mi
+        cloned.use_period_of_time = json.use_period_of_time
+        cloned.period_of_time_start_time_second = json.period_of_time_start_time_second
+        cloned.period_of_time_end_time_second = json.period_of_time_end_time_second
         cloned.include_create_mi = json.include_create_mi
         cloned.include_check_mi = json.include_check_mi
         cloned.include_limit_mi = json.include_limit_mi
@@ -156,6 +163,9 @@ export class FindKyouQuery {
         cloned.calendar_end_date = this.calendar_end_date
         cloned.use_plaing = this.use_plaing
         cloned.plaing_time = this.plaing_time
+        cloned.use_period_of_time = this.use_period_of_time
+        cloned.period_of_time_start_time_second = this.period_of_time_start_time_second
+        cloned.period_of_time_end_time_second = this.period_of_time_end_time_second
         cloned.reps = this.reps.concat()
         cloned.is_image_only = this.is_image_only
         cloned.devices_in_sidebar = this.devices_in_sidebar.concat()
@@ -213,6 +223,9 @@ export class FindKyouQuery {
         this.plaing_time = null
         this.use_update_time = false
         this.update_time = null
+        this.use_period_of_time = false
+        this.period_of_time_start_time_second = null
+        this.period_of_time_end_time_second = null
         this.reps = new Array<string>()
         this.is_image_only = false
         this.devices_in_sidebar = new Array<string>()
