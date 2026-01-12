@@ -66,6 +66,14 @@ func (g *gitCommitLogRepositoryLocalImpl) FindKyous(ctx context.Context, query *
 		// return err
 	}
 	defer logs.Close()
+
+	useCalendar := false
+	calendarStartDate := query.CalendarStartDate
+	calendarEndDate := query.CalendarEndDate
+	if query.UseCalendar != nil {
+		useCalendar = *query.UseCalendar
+	}
+
 loop:
 	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
 		if err != nil {
@@ -150,19 +158,18 @@ loop:
 				continue
 			}
 
-			// 日付範囲指定ありの場合
-			useCalendar := false
-			calendarStartDate := query.CalendarStartDate
-			calendarEndDate := query.CalendarEndDate
-			if query.UseCalendar != nil {
-				useCalendar = *query.UseCalendar
+			// 時間範囲指定ありの場合
+			useP, stOK, stSec, etOK, etSec := buildPeriodOfTimeSeconds(query)
+			if useP && !matchPeriodOfTime(commit.Committer.When, stOK, stSec, etOK, etSec) {
+				continue
 			}
+
+			// 日付範囲指定ありの場合
 			if useCalendar {
 				if calendarStartDate != nil {
 					if !commit.Committer.When.After(*calendarStartDate) {
 						continue
 					}
-
 				}
 				if calendarEndDate != nil {
 					if !commit.Committer.When.Before(*calendarEndDate) {
@@ -516,4 +523,44 @@ func (g *gitCommitLogRepositoryLocalImpl) UnWrapTyped() ([]GitCommitLogRepositor
 
 func (g *gitCommitLogRepositoryLocalImpl) UnWrap() ([]Repository, error) {
 	return []Repository{g}, nil
+}
+
+func buildPeriodOfTimeSeconds(query *find.FindQuery) (use bool, stOK bool, stSec int, etOK bool, etSec int) {
+	if query.UsePeriodOfTime == nil || !*query.UsePeriodOfTime {
+		return false, false, 0, false, 0
+	}
+	use = true
+
+	if query.PeriodOfTimeStartTimeSecond != nil {
+		st := time.Unix(*query.PeriodOfTimeStartTimeSecond, 0).In(time.Local)
+		stSec = st.Hour()*3600 + st.Minute()*60 + st.Second()
+		stOK = true
+	}
+	if query.PeriodOfTimeEndTimeSecond != nil {
+		et := time.Unix(*query.PeriodOfTimeEndTimeSecond, 0).In(time.Local)
+		etSec = et.Hour()*3600 + et.Minute()*60 + et.Second()
+		etOK = true
+	}
+	return
+}
+
+func matchPeriodOfTime(t time.Time, stOK bool, stSec int, etOK bool, etSec int) bool {
+	if !stOK && !etOK {
+		return true
+	}
+	lt := t.In(time.Local)
+	sec := lt.Hour()*3600 + lt.Minute()*60 + lt.Second()
+
+	if stOK && etOK {
+		if stSec <= etSec {
+			// 通常: start <= time <= end
+			return sec >= stSec && sec <= etSec
+		}
+		// 夜またぎ: time >= start OR time <= end
+		return sec >= stSec || sec <= etSec
+	}
+	if stOK {
+		return sec >= stSec
+	}
+	return sec <= etSec
 }

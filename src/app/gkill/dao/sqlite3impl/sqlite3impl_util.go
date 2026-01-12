@@ -273,6 +273,76 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 		}
 	}
 
+	// 時間範囲指定ありの場合
+	usePeriodOfTime := false
+	var periodOfStartTimeSecond *int64
+	var periodOfEndTimeSecond *int64
+	if query.UsePeriodOfTime != nil {
+		usePeriodOfTime = *query.UsePeriodOfTime
+	}
+	if query.PeriodOfTimeStartTimeSecond != nil {
+		periodOfStartTimeSecond = query.PeriodOfTimeStartTimeSecond
+	}
+	if query.PeriodOfTimeEndTimeSecond != nil {
+		periodOfEndTimeSecond = query.PeriodOfTimeEndTimeSecond
+	}
+
+	// 時間帯比較用
+	// 時間帯比較用
+	timeExpr := ""
+	if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
+		timeExpr = "strftime('%H:%M:%S', datetime(" + relatedTimeColumnName + ", 'unixepoch', 'localtime'))"
+	} else {
+		timeExpr = "strftime('%H:%M:%S', datetime(" + relatedTimeColumnName + ", 'localtime'))"
+	}
+	argExpr := "strftime('%H:%M:%S', datetime(?, 'localtime'))"
+
+	if usePeriodOfTime {
+		// start/end を両方指定している場合は「ひとかたまり」で付ける
+		if periodOfStartTimeSecond != nil && periodOfEndTimeSecond != nil {
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+
+			st := time.Unix(*periodOfStartTimeSecond, 0).In(time.Local)
+			et := time.Unix(*periodOfEndTimeSecond, 0).In(time.Local)
+			stSec := st.Hour()*3600 + st.Minute()*60 + st.Second()
+			etSec := et.Hour()*3600 + et.Minute()*60 + et.Second()
+
+			sql += " ( "
+			sql += timeExpr + " >= " + argExpr
+			*queryArgs = append(*queryArgs, st.Format(TimeLayout))
+
+			if stSec > etSec {
+				// 夜跨ぎ
+				sql += " OR "
+			} else {
+				// 通常
+				sql += " AND "
+			}
+
+			sql += timeExpr + " <= " + argExpr
+			*queryArgs = append(*queryArgs, et.Format(TimeLayout))
+			sql += " ) "
+
+			*whereCounter++
+		} else if periodOfStartTimeSecond != nil {
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += timeExpr + " >= " + argExpr
+			*queryArgs = append(*queryArgs, time.Unix(*periodOfStartTimeSecond, 0).In(time.Local).Format(TimeLayout))
+			*whereCounter++
+		} else if periodOfEndTimeSecond != nil {
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += timeExpr + " <= " + argExpr
+			*queryArgs = append(*queryArgs, time.Unix(*periodOfEndTimeSecond, 0).In(time.Local).Format(TimeLayout))
+			*whereCounter++
+		}
+	}
+
 	// 最新のレコード判定
 	if onlyLatestData {
 		if strings.HasSuffix(relatedTimeColumnName, "_UNIX") { // UNIXついてればキャッシュでしょ（適当）

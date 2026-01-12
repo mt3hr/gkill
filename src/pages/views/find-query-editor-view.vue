@@ -14,15 +14,15 @@
                 ref="keyword_query" />
             <div> <v-divider /> </div>
             <RepQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
-                @request_update_checked_reps="(_reps, is_by_user) => { if (is_by_user) emits_current_query() }" @request_clear_rep_query="emits_cleard_rep_query()"
-                ref="rep_query" :inited="inited_rep_query_for_query_sidebar"
-                @inited="inited_rep_query_for_query_sidebar = true" />
+                @request_update_checked_reps="(_reps, is_by_user) => { if (is_by_user) emits_current_query() }"
+                @request_clear_rep_query="emits_cleard_rep_query()" ref="rep_query"
+                :inited="inited_rep_query_for_query_sidebar" @inited="inited_rep_query_for_query_sidebar = true" />
             <div> <v-divider /> </div>
             <TagQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_tags="emits_current_query()"
-                @request_update_checked_tags="(_tags, is_by_user) => { if (is_by_user) emits_current_query() }" @request_clear_tag_query="emits_cleard_tag_query()"
-                ref="tag_query" :inited="inited_tag_query_for_query_sidebar"
-                @inited="inited_tag_query_for_query_sidebar = true" />
+                @request_update_checked_tags="(_tags, is_by_user) => { if (is_by_user) emits_current_query() }"
+                @request_clear_tag_query="emits_cleard_tag_query()" ref="tag_query"
+                :inited="inited_tag_query_for_query_sidebar" @inited="inited_tag_query_for_query_sidebar = true" />
             <div> <v-divider /> </div>
             <TimeIsQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_and_search_timeis_tags="emits_current_query()"
@@ -32,6 +32,13 @@
                 @request_update_timeis_keywords="emits_current_query()"
                 @request_update_use_timeis_query="emits_current_query()"
                 @request_clear_timeis_query="emits_cleard_timeis_query()" ref="timeis_query" />
+            <div> <v-divider /> </div>
+            <PeriodOfTimeQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
+                :inited="inited_period_of_time_query_for_query_sidebar"
+                @request_update_use_period_of_time="emits_current_query()"
+                @request_update_period_of_time="emits_current_query()"
+                @request_clear_use_period_of_time_query="emits_cleard_period_of_time_query()"
+                ref="period_of_time_query" />
             <div> <v-divider /> </div>
             <MapQuery :application_config="application_config" :gkill_api="gkill_api" :find_kyou_query="query"
                 @request_update_area="emits_current_query()" @request_update_use_map_query="emits_current_query()"
@@ -62,6 +69,7 @@ import MapQuery from './map-query.vue'
 import RepQuery from './rep-query.vue'
 import TagQuery from './tag-query.vue'
 import TimeIsQuery from './time-is-query.vue'
+import PeriodOfTimeQuery from './period-of-time-query.vue'
 import { computed, nextTick, onMounted, type Ref, ref, watch } from 'vue'
 import { deepEquals } from '@/classes/deep-equals'
 import moment from 'moment'
@@ -74,6 +82,7 @@ const timeis_query = ref<InstanceType<typeof TimeIsQuery> | null>(null);
 const rep_query = ref<InstanceType<typeof RepQuery> | null>(null);
 const tag_query = ref<InstanceType<typeof TagQuery> | null>(null);
 const map_query = ref<InstanceType<typeof MapQuery> | null>(null);
+const period_of_time_query = ref<InstanceType<typeof PeriodOfTimeQuery> | null>(null);
 
 const props = defineProps<FindQueryEditorViewProps>()
 const emits = defineEmits<FindQueryEditorViewEmits>()
@@ -96,7 +105,8 @@ const inited = computed(() => {
         inited_rep_query_for_query_sidebar.value &&
         inited_tag_query_for_query_sidebar.value &&
         inited_timeis_query_for_query_sidebar.value &&
-        inited_map_query_for_query_sidebar.value
+        inited_map_query_for_query_sidebar.value &&
+        inited_period_of_time_query_for_query_sidebar.value
 })
 
 watch(() => inited.value, (new_value: boolean, old_value: boolean) => {
@@ -118,6 +128,7 @@ const inited_timeis_query_for_query_sidebar = ref(false)
 const inited_rep_query_for_query_sidebar = ref(false)
 const inited_tag_query_for_query_sidebar = ref(false)
 const inited_map_query_for_query_sidebar = ref(false)
+const inited_period_of_time_query_for_query_sidebar = ref(true)
 
 watch(() => props.find_kyou_query, (new_value: FindKyouQuery, old_value: FindKyouQuery) => {
     if (deepEquals(new_value, old_value)) {
@@ -198,6 +209,12 @@ function generate_query(query_id?: string): FindKyouQuery {
         find_query.is_enable_map_circle_in_sidebar = map_query.value.get_is_enable_circle()
     }
 
+    if (period_of_time_query.value) {
+        find_query.use_period_of_time = period_of_time_query.value.get_use_period_of_time()
+        find_query.period_of_time_start_time_second = period_of_time_query.value.get_period_of_time_start_time_second()
+        find_query.period_of_time_end_time_second = period_of_time_query.value.get_period_of_time_end_time_second()
+    }
+
     find_query.apply_hide_tags(props.application_config)
 
     return find_query
@@ -253,6 +270,17 @@ function emits_cleard_map_query(): void {
     find_query.is_enable_map_circle_in_sidebar = get_default_query().is_enable_map_circle_in_sidebar
     find_query.map_radius = get_default_query().map_radius
     query.value = find_query
+}
+
+function emits_cleard_period_of_time_query(): void {
+    const find_query = generate_query()
+    find_query.query_id = props.gkill_api.generate_uuid()
+    find_query.use_calendar = get_default_query().use_calendar
+    find_query.use_period_of_time = default_query.value.use_period_of_time
+    find_query.period_of_time_start_time_second = default_query.value.period_of_time_start_time_second
+    find_query.period_of_time_end_time_second = default_query.value.period_of_time_end_time_second
+    query.value = find_query
+    emits('updated_query', find_query)
 }
 
 async function emits_default_query(): Promise<void> {
