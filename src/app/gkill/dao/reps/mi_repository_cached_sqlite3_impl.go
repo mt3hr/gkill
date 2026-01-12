@@ -88,6 +88,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	m.m.Lock()
+	m.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -461,6 +463,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	m.m.Lock()
+	m.m.Unlock()
 	var err error
 
 	trueValue := true
@@ -1404,6 +1408,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
+	m.m.Lock()
+	m.m.Unlock()
 	var err error
 
 	trueValue := true
@@ -1862,6 +1868,8 @@ INSERT INTO ` + m.dbName + ` (
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetBoardNames(ctx context.Context) ([]string, error) {
+	m.m.Lock()
+	m.m.Unlock()
 	var err error
 
 	sql := `

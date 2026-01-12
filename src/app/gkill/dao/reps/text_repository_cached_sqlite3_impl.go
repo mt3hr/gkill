@@ -153,6 +153,8 @@ ORDER BY TEXT1.UPDATE_TIME_UNIX DESC
 	}, nil
 }
 func (t *textRepositoryCachedSQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
+	t.m.Lock()
+	t.m.Unlock()
 	var err error
 
 	if query.UseWords != nil && *query.UseWords {
@@ -512,6 +514,8 @@ func (t *textRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (strin
 }
 
 func (t *textRepositoryCachedSQLite3Impl) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
+	t.m.Lock()
+	t.m.Unlock()
 	var err error
 
 	sql := `
