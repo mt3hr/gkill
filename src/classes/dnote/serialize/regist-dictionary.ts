@@ -55,7 +55,7 @@ import TimeIsTitleContainsPredicate from "../dnote-predicate/timeis-title-contai
 import TimeIsTitleEqualPredicate from "../dnote-predicate/timeis-title-equal-predicate"
 import AgregateTargetDictionary from "./dnote-aggregate-target-dictionary"
 import DnoteKeyGetterDictionary from "./dnote-key-getter-dictionary"
-import PredicateDictonary from "./dnote-predicate-dictionary"
+import PredicateDictionary from "./dnote-predicate-dictionary"
 import RelatedTimeAfterPredicate from "../dnote-predicate/related-time-after-predicate"
 import RelatedTimeBeforePredicate from "../dnote-predicate/related-time-before-predicate"
 import type DnoteKyouFilter from "../dnote-kyou-filter"
@@ -69,39 +69,42 @@ import EqualTagsTargetKyouPredicate from "../dnote-predicate/target-kyou-predica
 import EqualDataTypeTargetKyouPredicate from "../dnote-predicate/target-kyou-predicate/equal-rep-data-type-target-kyou-predicate"
 
 export default function regist_dictionary(): void {
-    PredicateDictonary.set("AndPredicate", AndPredicate)
-    PredicateDictonary.set("DataTypePrefixPredicate", DataTypePrefixPredicate)
-    PredicateDictonary.set("GitCommitLogCodeAdditionGreaterThanPredicate", GitCommitLogCodeAdditionGreaterThanPredicate)
-    PredicateDictonary.set("GitCommitLogCodeAdditionLessThanPredicate", GitCommitLogCodeAdditionLessThanPredicate)
-    PredicateDictonary.set("GitCommitLogCodeDeletionGreaterThanPredicate", GitCommitLogCodeDeletionGreaterThanPredicate)
-    PredicateDictonary.set("GitCommitLogCodeDeletionLessThanPredicate", GitCommitLogCodeDeletionLessThanPredicate)
-    PredicateDictonary.set("GitCommitLogCodeGreaterThanPredicate", GitCommitLogCodeGreaterThanPredicate)
-    PredicateDictonary.set("GitCommitLogCodeLessThanPredicate", GitCommitLogCodeLessThanPredicate)
-    PredicateDictonary.set("KmemoContentContainsPredicate", KmemoContentContainsPredicate)
-    PredicateDictonary.set("KmemoContentEqualPredicate", KmemoContentEqualPredicate)
-    PredicateDictonary.set("TextContentContainsPredicate", KmemoContentContainsPredicate)
-    PredicateDictonary.set("TextContentEqualPredicate", KmemoContentEqualPredicate)
-    PredicateDictonary.set("LantanaMoodEqualPredicate", LantanaMoodEqualPredicate)
-    PredicateDictonary.set("LantanaMoodGreaterThanPredicate", LantanaMoodGreaterThanPredicate)
-    PredicateDictonary.set("LantanaMoodLessThanPredicate", LantanaMoodLessThanPredicate)
-    PredicateDictonary.set("MiTitleContainsPredicate", MiTitleContainsPredicate)
-    PredicateDictonary.set("MiTitleEqualPredicate", MiTitleEqualPredicate)
-    PredicateDictonary.set("NlogAmountGreaterThanPredicate", NlogAmountGreaterThanPredicate)
-    PredicateDictonary.set("NlogAmountLessThanPredicate", NlogAmountLessThanPredicate)
-    PredicateDictonary.set("NlogShopContainsPredicate", NlogShopContainsPredicate)
-    PredicateDictonary.set("NlogShopEqualPredicate", NlogShopEqualPredicate)
-    PredicateDictonary.set("NlogTitleContainsPredicate", NlogTitleContainsPredicate)
-    PredicateDictonary.set("NlogTitleEqualPredicate", NlogTitleEqualPredicate)
-    PredicateDictonary.set("NotPredicate", NotPredicate)
-    PredicateDictonary.set("OrPredicate", OrPredicate)
-    PredicateDictonary.set("RelatedTimeWeekPredicate", RelatedTimeWeekPredicate)
-    PredicateDictonary.set("TagEqualPredicate", TagEqualPredicate)
-    PredicateDictonary.set("TimeIsTitleContainsPredicate", TimeIsTitleContainsPredicate)
-    PredicateDictonary.set("TimeIsTitleEqualPredicate", TimeIsTitleEqualPredicate)
-    PredicateDictonary.set("KCTitleContainsPredicate", KCTitleContainsPredicate)
-    PredicateDictonary.set("KCTitleEqualPredicate", KCTitleEqualPredicate)
-    PredicateDictonary.set("RelatedTimeAfterPredicate", RelatedTimeAfterPredicate)
-    PredicateDictonary.set("RelatedTimeBeforePredicate", RelatedTimeBeforePredicate)
+    PredicateDictionary.set("AndPredicate", AndPredicate)
+    PredicateDictionary.set("DataTypePrefixPredicate", DataTypePrefixPredicate)
+    PredicateDictionary.set("GitCommitLogCodeAdditionGreaterThanPredicate", GitCommitLogCodeAdditionGreaterThanPredicate)
+    PredicateDictionary.set("GitCommitLogCodeAdditionLessThanPredicate", GitCommitLogCodeAdditionLessThanPredicate)
+    PredicateDictionary.set("GitCommitLogCodeDeletionGreaterThanPredicate", GitCommitLogCodeDeletionGreaterThanPredicate)
+    PredicateDictionary.set("GitCommitLogCodeDeletionLessThanPredicate", GitCommitLogCodeDeletionLessThanPredicate)
+    PredicateDictionary.set("GitCommitLogCodeGreaterThanPredicate", GitCommitLogCodeGreaterThanPredicate)
+    PredicateDictionary.set("GitCommitLogCodeLessThanPredicate", GitCommitLogCodeLessThanPredicate)
+    PredicateDictionary.set("KmemoContentContainsPredicate", KmemoContentContainsPredicate)
+    PredicateDictionary.set("KmemoContentEqualPredicate", KmemoContentEqualPredicate)
+    PredicateDictionary.set("TextContentContainsPredicate", KmemoContentContainsPredicate)
+    PredicateDictionary.set("TextContentEqualPredicate", KmemoContentEqualPredicate)
+    PredicateDictionary.set("LantanaMoodEqualPredicate", LantanaMoodEqualPredicate)
+    PredicateDictionary.set("LantanaMoodGreaterThanPredicate", LantanaMoodGreaterThanPredicate)
+    PredicateDictionary.set("LantanaMoodLessThanPredicate", LantanaMoodLessThanPredicate)
+    PredicateDictionary.set("MiTitleContainsPredicate", MiTitleContainsPredicate)
+    PredicateDictionary.set("MiTitleEqualPredicate", MiTitleEqualPredicate)
+    PredicateDictionary.set("NlogAmountGreaterThanPredicate", NlogAmountGreaterThanPredicate)
+    PredicateDictionary.set("NlogAmountLessThanPredicate", NlogAmountLessThanPredicate)
+    PredicateDictionary.set("NlogShopContainsPredicate", NlogShopContainsPredicate)
+    PredicateDictionary.set("NlogShopEqualPredicate", NlogShopEqualPredicate)
+    PredicateDictionary.set("NlogTitleContainsPredicate", NlogTitleContainsPredicate)
+    PredicateDictionary.set("NlogTitleEqualPredicate", NlogTitleEqualPredicate)
+    PredicateDictionary.set("NotPredicate", NotPredicate)
+    PredicateDictionary.set("OrPredicate", OrPredicate)
+    PredicateDictionary.set("RelatedTimeWeekPredicate", RelatedTimeWeekPredicate)
+    PredicateDictionary.set("TagEqualPredicate", TagEqualPredicate)
+    PredicateDictionary.set("TimeIsTitleContainsPredicate", TimeIsTitleContainsPredicate)
+    PredicateDictionary.set("TimeIsTitleEqualPredicate", TimeIsTitleEqualPredicate)
+    PredicateDictionary.set("KCTitleContainsPredicate", KCTitleContainsPredicate)
+    PredicateDictionary.set("KCTitleEqualPredicate", KCTitleEqualPredicate)
+    PredicateDictionary.set("RelatedTimeAfterPredicate", RelatedTimeAfterPredicate)
+    PredicateDictionary.set("RelatedTimeBeforePredicate", RelatedTimeBeforePredicate)
+    PredicateDictionary.set("EqualTitleTargetKyouPredicate", EqualTitleTargetKyouPredicate)
+    PredicateDictionary.set("EqualTagsTargetKyouPredicate", EqualTagsTargetKyouPredicate)
+    PredicateDictionary.set("EqualDataTypeTargetKyouPredicate", EqualDataTypeTargetKyouPredicate)
     DnoteKeyGetterDictionary.set("DataTypeGetter", DataTypeGetter)
     DnoteKeyGetterDictionary.set("LantanaMoodGetter", LantanaMoodGetter)
     DnoteKeyGetterDictionary.set("NlogShopNameGetter", NlogShopNameGetter)
@@ -132,9 +135,6 @@ export default function regist_dictionary(): void {
     AgregateTargetDictionary.set("AgregateSumKCNumValue", AgregateSumKCNumValue)
     DnoteKyouFilterDictionary.set("FilterTopKyous", FilterTopKyous)
     DnoteKyouFilterDictionary.set("FilterBottomKyous", FilterBottomKyous)
-    DnoteKyouFilterDictionary.set("EqualTitleTargetKyouPredicate", EqualTitleTargetKyouPredicate)
-    DnoteKyouFilterDictionary.set("EqualTagsTargetKyouPredicate", EqualTagsTargetKyouPredicate)
-    DnoteKyouFilterDictionary.set("EqualDataTypeTargetKyouPredicate", EqualDataTypeTargetKyouPredicate)
 }
 
 export function build_dnote_aggregate_target_from_json(json: any): DnoteAgregateTarget {
@@ -161,7 +161,7 @@ export function build_dnote_predicate_from_json(json: any): DnotePredicate {
         throw new Error(`Unknown logic type: ${json.logic}`)
     }
 
-    const ctor = PredicateDictonary.get(json.type)
+    const ctor = PredicateDictionary.get(json.type)
     if (!ctor) throw new Error(`Unknown predicate type: ${json.type}`)
     return new ctor(json.value)
 }
