@@ -87,6 +87,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	u.m.Lock()
+	u.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -230,6 +232,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id strin
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	u.m.Lock()
+	u.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -643,6 +647,8 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetURLog(ctx context.Context, id stri
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
+	u.m.Lock()
+	u.m.Unlock()
 	repName, err := u.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at URLOG: %w", err)
