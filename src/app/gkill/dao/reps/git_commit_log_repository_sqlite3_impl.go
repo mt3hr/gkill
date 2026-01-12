@@ -158,12 +158,6 @@ loop:
 				continue
 			}
 
-			// 時間範囲指定ありの場合
-			useP, stOK, stSec, etOK, etSec := buildPeriodOfTimeSeconds(query)
-			if useP && !matchPeriodOfTime(commit.Committer.When, stOK, stSec, etOK, etSec) {
-				continue
-			}
-
 			// 日付範囲指定ありの場合
 			if useCalendar {
 				if calendarStartDate != nil {
@@ -175,6 +169,29 @@ loop:
 					if !commit.Committer.When.Before(*calendarEndDate) {
 						continue
 					}
+				}
+			}
+
+			// 時間範囲指定ありの場合
+			useP, stOK, stSec, etOK, etSec := buildPeriodOfTimeSeconds(query)
+			if useP {
+				if !matchPeriodOfTime(commit.Committer.When, stOK, stSec, etOK, etSec) {
+					continue
+				}
+				// 曜日判定
+				matchWeekOfDays := len(query.PeriodOfTimeWeekOfDays) == 7
+				localTimeWeekDay := commit.Committer.When.Local().Weekday()
+				if !matchWeekOfDays {
+				weekloop:
+					for _, weekOfDay := range query.PeriodOfTimeWeekOfDays {
+						if localTimeWeekDay == time.Weekday(weekOfDay) {
+							matchWeekOfDays = true
+							break weekloop
+						}
+					}
+				}
+				if !matchWeekOfDays {
+					continue
 				}
 			}
 
