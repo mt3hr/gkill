@@ -288,7 +288,6 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 	}
 
 	// 時間帯比較用
-	// 時間帯比較用
 	timeExpr := ""
 	if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
 		timeExpr = "strftime('%H:%M:%S', datetime(" + relatedTimeColumnName + ", 'unixepoch', 'localtime'))"
@@ -339,6 +338,35 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 			}
 			sql += timeExpr + " <= " + argExpr
 			*queryArgs = append(*queryArgs, time.Unix(*periodOfEndTimeSecond, 0).In(time.Local).Format(TimeLayout))
+			*whereCounter++
+		}
+
+		// 曜日判定
+		if len(query.PeriodOfTimeWeekOfDays) == 0 {
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += " 0 = 1 "
+			*whereCounter++
+		} else if len(query.PeriodOfTimeWeekOfDays) != 7 {
+			weekExpr := ""
+			if strings.HasSuffix(relatedTimeColumnName, "_UNIX") {
+				weekExpr = "strftime('%w', datetime(" + relatedTimeColumnName + ", 'unixepoch', 'localtime'))"
+			} else {
+				weekExpr = "strftime('%w', datetime(" + relatedTimeColumnName + ", 'localtime'))"
+			}
+
+			if *whereCounter != 0 {
+				sql += " AND "
+			}
+			sql += " " + weekExpr + " IN ( "
+			for i, w := range query.PeriodOfTimeWeekOfDays {
+				sql += fmt.Sprintf("'%d'", w)
+				if i != len(query.PeriodOfTimeWeekOfDays)-1 {
+					sql += ", "
+				}
+			}
+			sql += " ) "
 			*whereCounter++
 		}
 	}
