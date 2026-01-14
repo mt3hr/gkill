@@ -9,7 +9,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
@@ -39,8 +38,8 @@ CREATE TABLE IF NOT EXISTS %s (
   TARGET_ID_IN_DATA,
   TARGET_ID NOT NULL,
   LATEST_DATA_REPOSITORY_NAME NOT NULL,
-  DATA_UPDATE_TIME NOT NULL,
-  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME NOT NULL,
+  DATA_UPDATE_TIME_UNIX NOT NULL,
+  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX NOT NULL,
   PRIMARY KEY(TARGET_ID)
 );`, latestDataRepositoryAddress.tableName)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -93,8 +92,8 @@ SELECT
   TARGET_ID,
   TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
-  DATA_UPDATE_TIME,
-  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
+  DATA_UPDATE_TIME_UNIX,
+  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
 FROM %s
 `, l.tableName)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -120,32 +119,23 @@ FROM %s
 			return nil, ctx.Err()
 		default:
 			latestDataRepositoryAddress := &LatestDataRepositoryAddress{}
-			dataUpdateTimeStr := ""
-			latestDataRepositoryAddressUpdatedTimeStr := ""
+			dataUpdateTimeUnix := int64(0)
+			latestDataRepositoryAddressUpdatedTimeUnix := int64(0)
 			err = rows.Scan(
 				&latestDataRepositoryAddress.IsDeleted,
 				&latestDataRepositoryAddress.TargetID,
 				&latestDataRepositoryAddress.TargetIDInData,
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
-				&dataUpdateTimeStr,
-				&latestDataRepositoryAddressUpdatedTimeStr,
+				&dataUpdateTimeUnix,
+				&latestDataRepositoryAddressUpdatedTimeUnix,
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan latest data repository address: %w", err)
 				return nil, err
 			}
 
-			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse file data update time %s at %s in LATEST_DATA_REPOSITORY_ADDREDD: %w", dataUpdateTimeStr, latestDataRepositoryAddress.TargetID, err)
-				return nil, err
-			}
-
-			latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime, err = time.Parse(sqlite3impl.TimeLayout, latestDataRepositoryAddressUpdatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse latest data repository address updated time %s at %s in LATEST_DATA_REPOSITORY_ADDREDD: %w", latestDataRepositoryAddressUpdatedTimeStr, latestDataRepositoryAddress.TargetID, err)
-				return nil, err
-			}
+			latestDataRepositoryAddress.DataUpdateTime = time.Unix(dataUpdateTimeUnix, int64(0))
+			latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime = time.Unix(latestDataRepositoryAddressUpdatedTimeUnix, int64(0))
 
 			latestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
 		}
@@ -162,8 +152,8 @@ SELECT
   TARGET_ID,
   TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
-  DATA_UPDATE_TIME,
-  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
+  DATA_UPDATE_TIME_UNIX,
+  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
 FROM %s
 WHERE LATEST_DATA_REPOSITORY_NAME = ?
 `, l.tableName)
@@ -193,32 +183,23 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 			return nil, ctx.Err()
 		default:
 			latestDataRepositoryAddress := &LatestDataRepositoryAddress{}
-			dataUpdateTimeStr := ""
-			latestDataRepositoryAddressUpdatedTimeStr := ""
+			dataUpdateTimeUnix := int64(0)
+			latestDataRepositoryAddressUpdatedTimeUnix := int64(0)
 			err = rows.Scan(
 				&latestDataRepositoryAddress.IsDeleted,
 				&latestDataRepositoryAddress.TargetID,
 				&latestDataRepositoryAddress.TargetIDInData,
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
-				&dataUpdateTimeStr,
-				&latestDataRepositoryAddressUpdatedTimeStr,
+				&dataUpdateTimeUnix,
+				&latestDataRepositoryAddressUpdatedTimeUnix,
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan latest data repository address: %w", err)
 				return nil, err
 			}
 
-			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse file data update time %s at %s in LATEST_DATA_REPOSITORY_ADDREDD: %w", dataUpdateTimeStr, latestDataRepositoryAddress.TargetID, err)
-				return nil, err
-			}
-
-			latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime, err = time.Parse(sqlite3impl.TimeLayout, latestDataRepositoryAddressUpdatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse latest data repository address updated time %s at %s in LATEST_DATA_REPOSITORY_ADDREDD: %w", latestDataRepositoryAddressUpdatedTimeStr, latestDataRepositoryAddress.TargetID, err)
-				return nil, err
-			}
+			latestDataRepositoryAddress.DataUpdateTime = time.Unix(dataUpdateTimeUnix, int64(0))
+			latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime = time.Unix(latestDataRepositoryAddressUpdatedTimeUnix, int64(0))
 
 			latestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
 		}
@@ -235,8 +216,8 @@ SELECT
   TARGET_ID,
   TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
-  DATA_UPDATE_TIME,
-  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
+  DATA_UPDATE_TIME_UNIX,
+  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
 FROM %s
 WHERE TARGET_ID = ?
 `, l.tableName)
@@ -266,32 +247,23 @@ WHERE TARGET_ID = ?
 			return nil, ctx.Err()
 		default:
 			latestDataRepositoryAddress := &LatestDataRepositoryAddress{}
-			dataUpdateTimeStr := ""
-			latestDataRepositoryAddressUpdatedTimeStr := ""
+			dataUpdateTimeUnix := int64(0)
+			latestDataRepositoryAddressUpdatedTimeUnix := int64(0)
 			err = rows.Scan(
 				&latestDataRepositoryAddress.IsDeleted,
 				&latestDataRepositoryAddress.TargetID,
 				&latestDataRepositoryAddress.TargetIDInData,
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
-				&dataUpdateTimeStr,
-				&latestDataRepositoryAddressUpdatedTimeStr,
+				&dataUpdateTimeUnix,
+				&latestDataRepositoryAddressUpdatedTimeUnix,
 			)
 			if err != nil {
 				err = fmt.Errorf("error at scan latest data repository address: %w", err)
 				return nil, err
 			}
 
-			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse file data update time %s at %s in LATEST_DATA_REPOSITORY_ADDREDD: %w", dataUpdateTimeStr, latestDataRepositoryAddress.TargetID, err)
-				return nil, err
-			}
-
-			latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime, err = time.Parse(sqlite3impl.TimeLayout, latestDataRepositoryAddressUpdatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse latest data repository address updated time %s at %s in LATEST_DATA_REPOSITORY_ADDREDD: %w", latestDataRepositoryAddressUpdatedTimeStr, latestDataRepositoryAddress.TargetID, err)
-				return nil, err
-			}
+			latestDataRepositoryAddress.DataUpdateTime = time.Unix(dataUpdateTimeUnix, int64(0))
+			latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime = time.Unix(latestDataRepositoryAddressUpdatedTimeUnix, int64(0))
 
 			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 		}
@@ -311,10 +283,10 @@ SELECT
   TARGET_ID,
   TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
-  DATA_UPDATE_TIME,
-  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
+  DATA_UPDATE_TIME_UNIX,
+  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
 FROM %s
-WHERE datetime(LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME, 'localtime') >= datetime(?, 'localtime')
+WHERE LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX >= ?
 LIMIT ?
 `, l.tableName)
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
@@ -326,7 +298,7 @@ LIMIT ?
 	defer stmt.Close()
 
 	queryArgs := []interface{}{
-		updateTime.Format(sqlite3impl.TimeLayout),
+		updateTime.Unix(),
 		limit,
 	}
 	gkill_log.TraceSQL.Printf("sql: %s queryArgs: %v", sql, queryArgs)
@@ -344,32 +316,19 @@ LIMIT ?
 			return nil, ctx.Err()
 		default:
 			latestDataRepositoryAddress := &LatestDataRepositoryAddress{}
-			dataUpdateTimeStr := ""
-			latestDataRepositoryAddressUpdatedTimeStr := ""
+			dataUpdateTimeUnix := int64(0)
+			latestDataRepositoryAddressUpdatedTimeUnix := int64(0)
 			err = rows.Scan(
 				&latestDataRepositoryAddress.IsDeleted,
 				&latestDataRepositoryAddress.TargetID,
 				&latestDataRepositoryAddress.TargetIDInData,
 				&latestDataRepositoryAddress.LatestDataRepositoryName,
-				&dataUpdateTimeStr,
-				&latestDataRepositoryAddressUpdatedTimeStr,
+				&dataUpdateTimeUnix,
+				&latestDataRepositoryAddressUpdatedTimeUnix,
 			)
-			if err != nil {
-				err = fmt.Errorf("error at scan latest data repository address: %w", err)
-				return nil, err
-			}
 
-			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse file data update time %s at %s in LATEST_DATA_REPOSITORY_ADDREDD: %w", dataUpdateTimeStr, latestDataRepositoryAddress.TargetID, err)
-				return nil, err
-			}
-
-			latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime, err = time.Parse(sqlite3impl.TimeLayout, latestDataRepositoryAddressUpdatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse latest data repository address updated time %s at %s in LATEST_DATA_REPOSITORY_ADDREDD: %w", latestDataRepositoryAddressUpdatedTimeStr, latestDataRepositoryAddress.TargetID, err)
-				return nil, err
-			}
+			latestDataRepositoryAddress.DataUpdateTime = time.Unix(dataUpdateTimeUnix, int64(0))
+			latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime = time.Unix(latestDataRepositoryAddressUpdatedTimeUnix, int64(0))
 
 			latestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
 		}
@@ -390,8 +349,8 @@ INSERT INTO %s (
   TARGET_ID,
   TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
-  DATA_UPDATE_TIME,
-  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
+  DATA_UPDATE_TIME_UNIX,
+  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
 ) VALUES (
   ?,
   ?,
@@ -433,8 +392,8 @@ INSERT INTO %s (
 		latestDataRepositoryAddress.TargetID,
 		latestDataRepositoryAddress.TargetIDInData,
 		latestDataRepositoryAddress.LatestDataRepositoryName,
-		latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
-		latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime.Format(sqlite3impl.TimeLayout),
+		latestDataRepositoryAddress.DataUpdateTime.Unix(),
+		latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime.Unix(),
 	}
 	gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, insertQueryArgs)
 	_, err = insertStmt.ExecContext(ctx, insertQueryArgs...)
@@ -476,8 +435,8 @@ INSERT INTO %s (
   TARGET_ID,
   TARGET_ID_IN_DATA,
   LATEST_DATA_REPOSITORY_NAME,
-  DATA_UPDATE_TIME,
-  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME
+  DATA_UPDATE_TIME_UNIX,
+  LATEST_DATA_REPOSITORY_ADDRESS_UPDATED_TIME_UNIX
 ) VALUES (
   ?,
   ?,
@@ -521,8 +480,8 @@ INSERT INTO %s (
 				latestDataRepositoryAddress.TargetID,
 				latestDataRepositoryAddress.TargetIDInData,
 				latestDataRepositoryAddress.LatestDataRepositoryName,
-				latestDataRepositoryAddress.DataUpdateTime.Format(sqlite3impl.TimeLayout),
-				latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime.Format(sqlite3impl.TimeLayout),
+				latestDataRepositoryAddress.DataUpdateTime.Unix(),
+				latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime.Unix(),
 			}
 
 			gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, insertQueryArgs)
