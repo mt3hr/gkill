@@ -154,15 +154,19 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		CacheMemoryDBMutex = &sync.Mutex{}
 		TempMemoryDBMutex = &sync.Mutex{}
 	} else {
-		TempMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
+		TempMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_temp_"+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
 		if err != nil {
 			err = fmt.Errorf("error at open database: %w", err)
 			return nil, err
 		}
-		CacheMemoryDB = TempMemoryDB
+		CacheMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_cache_"+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
+		if err != nil {
+			err = fmt.Errorf("error at open database: %w", err)
+			return nil, err
+		}
 
 		CacheMemoryDBMutex = &sync.Mutex{}
-		TempMemoryDBMutex = CacheMemoryDBMutex
+		TempMemoryDBMutex = &sync.Mutex{}
 	}
 
 	// メモリ上でやる
