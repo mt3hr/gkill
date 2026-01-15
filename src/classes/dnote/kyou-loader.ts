@@ -1,6 +1,8 @@
+import type DnotePredicate from "./dnote-predicate";
 import type { Kyou } from "../datas/kyou";
 
-export default async function load_kyous(abort_controller: AbortController, kyous: Array<Kyou>, get_latest_data: boolean, clone: boolean): Promise<Array<Kyou>> {
+export default async function load_kyous(abort_controller: AbortController, kyous: Array<Kyou>, get_latest_data: boolean, clone: boolean, predicate?: DnotePredicate, target_kyou?: Kyou | null, limit?: number): Promise<Array<Kyou>> {
+    let match_count = 0
     const cloned_kyous = new Array<Kyou>()
     for (let i = 0; i < kyous.length; i++) {
         let kyou: Kyou = kyous[i]
@@ -19,6 +21,12 @@ export default async function load_kyous(abort_controller: AbortController, kyou
         }
         await Promise.all(waitPromises)
         cloned_kyous.push(kyou)
+        if (predicate && target_kyou && limit && (await predicate.is_match(kyou, target_kyou))) {
+            match_count++
+            if (match_count >= limit) {
+                break
+            }
+        }
     }
     return cloned_kyous
 }
