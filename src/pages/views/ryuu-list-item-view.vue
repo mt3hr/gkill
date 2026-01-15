@@ -44,7 +44,7 @@
                                             :last_added_tag="''" :show_checkbox="false" :show_content_only="true"
                                             :show_mi_create_time="false" :show_mi_estimate_end_time="false"
                                             :show_mi_estimate_start_time="false" :show_mi_limit_time="false"
-                                            :show_timeis_elapsed_time="false" :show_timeis_plaing_end_button="false"
+                                            :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="false"
                                             :height="'fit-content'" :enable_context_menu="enable_context_menu"
                                             :enable_dialog="enable_dialog" :show_attached_timeis="false"
                                             :show_update_time="false" :show_related_time="false" :width="'fit-content'"
