@@ -124,6 +124,9 @@ import type { GkillMessage } from '@/classes/api/gkill-message';
 import type { Tag } from '@/classes/datas/tag';
 import type { Text } from '@/classes/datas/text';
 import type { Notification } from '@/classes/datas/notification';
+import EqualTagsTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-tags-target-kyou-predicate';
+import EqualTitleTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-title-target-kyou-predicate';
+import type DnotePredicate from '@/classes/dnote/dnote-predicate';
 
 const kyou_dialog = ref<InstanceType<typeof KyouDialog> | null>(null);
 const contextmenu = ref<InstanceType<typeof RyuuListItemContextMenu> | null>(null);
@@ -144,22 +147,96 @@ async function load_related_kyou(): Promise<void> {
     if (props.target_kyou) {
         related_time = props.target_kyou.related_time
     }
+    const ryuu_predicate = build_dnote_predicate_from_json(model_value.value!.predicate.predicate_struct_to_json())
     const related_time_match_type = model_value.value!.related_time_match_type
     const predicate_for_before = new AndPredicate([
-        build_dnote_predicate_from_json(model_value.value!.predicate.predicate_struct_to_json()),
+        ryuu_predicate,
         new RelatedTimeBeforePredicate(related_time),
     ])
     const matcher_for_before = new DnoteMatcher(predicate_for_before)
     const predicate_for_after = new AndPredicate([
-        build_dnote_predicate_from_json(model_value.value!.predicate.predicate_struct_to_json()),
+        ryuu_predicate,
         new RelatedTimeAfterPredicate(related_time),
     ])
     const matcher_for_after = new DnoteMatcher(predicate_for_after)
-    const find_kyou_query = model_value.value?.find_kyou_query ? model_value.value.find_kyou_query : props.find_kyou_query_default
+    const find_kyou_query = model_value.value?.find_kyou_query ? model_value.value.find_kyou_query.clone() : props.find_kyou_query_default.clone()
     find_kyou_query.use_calendar = true
     find_kyou_query.apply_rep_summary_to_detaul(props.application_config)
-    find_kyou_query.calendar_start_date = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
-    find_kyou_query.calendar_end_date = new Date(related_time.getTime() + (model_value.value!.find_duration_hour * 60 * 60 * 1000))
+    switch (related_time_match_type) {
+        case RelatedTimeMatchType.NEAR_RELATED_TIME: {
+            find_kyou_query.calendar_start_date = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
+            find_kyou_query.calendar_end_date = new Date(related_time.getTime() + (model_value.value!.find_duration_hour * 60 * 60 * 1000))
+            break
+        }
+        case RelatedTimeMatchType.NEAR_RELATED_TIME_BEFORE: {
+            find_kyou_query.calendar_start_date = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
+            find_kyou_query.calendar_end_date = props.target_kyou && props.target_kyou?.related_time ? props.target_kyou.related_time : null
+            break
+        }
+        case RelatedTimeMatchType.NEAR_RELATED_TIME_AFTER: {
+            find_kyou_query.calendar_start_date = props.target_kyou && props.target_kyou?.related_time ? props.target_kyou.related_time : null
+            find_kyou_query.calendar_end_date = new Date(related_time.getTime() + (model_value.value!.find_duration_hour * 60 * 60 * 1000))
+            break
+        }
+    }
+
+    // Titleが同じ であれば検索条件に入れる
+    if (ryuu_predicate && ryuu_predicate instanceof AndPredicate) {
+        (ryuu_predicate as any).predicates.forEach((predicate: DnotePredicate) => {
+            if (predicate && predicate instanceof EqualTitleTargetKyouPredicate) {
+                const get_title_func = (kyou: Kyou | null): string | null => {
+                    if (kyou === null) {
+                        return null
+                    }
+                    if (kyou.data_type.startsWith("kmemo")) {
+                        return kyou.typed_kmemo ? kyou.typed_kmemo.content : null
+                    }
+                    if (kyou.data_type.startsWith("kc")) {
+                        return kyou.typed_kc ? kyou.typed_kc.title : null
+                    }
+                    if (kyou.data_type.startsWith("urlog")) {
+                        return kyou.typed_urlog ? kyou.typed_urlog.url : null
+                    }
+                    if (kyou.data_type.startsWith("nlog")) {
+                        return kyou.typed_nlog ? kyou.typed_nlog.title : null
+                    }
+                    if (kyou.data_type.startsWith("timeis")) {
+                        return kyou.typed_timeis ? kyou.typed_timeis.title : null
+                    }
+                    if (kyou.data_type.startsWith("mi")) {
+                        return kyou.typed_mi ? kyou.typed_mi.title : null
+                    }
+                    if (kyou.data_type.startsWith("lantana")) {
+                        return null
+                    }
+                    if (kyou.data_type.startsWith("idf")) {
+                        return kyou.typed_idf_kyou ? kyou.typed_idf_kyou.file_name : null
+                    }
+                    if (kyou.data_type.startsWith("git")) {
+                        return kyou.typed_git_commit_log ? kyou.typed_git_commit_log.commit_message : null
+                    }
+                    if (kyou.data_type.startsWith("rekyou")) {
+                        return null
+                    }
+                    return null
+                }
+                const title = get_title_func(props.target_kyou)
+                if (title && title !== "") {
+                    find_kyou_query.use_words = true
+                    find_kyou_query.words = [title]
+                }
+            }
+        })
+        if (ryuu_predicate && ryuu_predicate instanceof AndPredicate) {
+            (ryuu_predicate as any).predicates.forEach((predicate: DnotePredicate) => {
+                if (predicate && predicate instanceof EqualTagsTargetKyouPredicate) {
+                    find_kyou_query.use_tags = true
+                    find_kyou_query.tags_and = predicate["and"] ? Boolean(predicate["and"]) : false
+                    find_kyou_query.tags = props.target_kyou ? props.target_kyou.attached_tags.map(tag => tag.tag) : []
+                }
+            })
+        }
+    }
 
     const get_kyous_req = new GetKyousRequest()
     get_kyous_req.abort_controller = props.abort_controller
@@ -170,9 +247,16 @@ async function load_related_kyou(): Promise<void> {
         emits('received_errors', res.errors)
         return
     }
+    const trimed_kyous_map = new Map<string, Kyou>()
+    for (let i = 0; i < res.kyous.length; i++) {
+        trimed_kyous_map.set(res.kyous[i].id, res.kyous[i])
+    }
+    const trimed_kyous = new Array<Kyou>()
+    trimed_kyous_map.forEach((kyou) => trimed_kyous.push(kyou))
+
     const clone = true
     const get_latest_data = true
-    const kyous = await load_kyous(props.abort_controller, res.kyous, get_latest_data, clone)
+    const kyous = await load_kyous(props.abort_controller, trimed_kyous, get_latest_data, clone)
 
     const kyou_is_loaded = true
     const limit_count = 1
