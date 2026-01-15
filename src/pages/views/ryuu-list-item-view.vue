@@ -127,6 +127,7 @@ import type { Notification } from '@/classes/datas/notification';
 import EqualTagsTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-tags-target-kyou-predicate';
 import EqualTitleTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-title-target-kyou-predicate';
 import type DnotePredicate from '@/classes/dnote/dnote-predicate';
+import OrPredicate from '@/classes/dnote/dnote-predicate/or-predicate';
 
 const kyou_dialog = ref<InstanceType<typeof KyouDialog> | null>(null);
 const contextmenu = ref<InstanceType<typeof RyuuListItemContextMenu> | null>(null);
@@ -256,7 +257,21 @@ async function load_related_kyou(): Promise<void> {
 
     const clone = true
     const get_latest_data = true
-    const kyous = await load_kyous(props.abort_controller, trimed_kyous, get_latest_data, clone)
+    let kyous = new Array<Kyou>()
+    switch (related_time_match_type) {
+        case RelatedTimeMatchType.NEAR_RELATED_TIME: {
+            kyous = await load_kyous(props.abort_controller, trimed_kyous, get_latest_data, clone)
+            break
+        }
+        case RelatedTimeMatchType.NEAR_RELATED_TIME_BEFORE: {
+            kyous = await load_kyous(props.abort_controller, trimed_kyous, get_latest_data, clone, predicate_for_before, props.target_kyou, 1)
+            break
+        }
+        case RelatedTimeMatchType.NEAR_RELATED_TIME_AFTER: {
+            kyous = await load_kyous(props.abort_controller, trimed_kyous, get_latest_data, clone, predicate_for_after, props.target_kyou, 1)
+            break
+        }
+    }
 
     const kyou_is_loaded = true
     const limit_count = 1
