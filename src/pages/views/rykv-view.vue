@@ -226,12 +226,12 @@
                                 @requested_reload_list="() => { }" />
                         </div>
                     </td>
-                    <td class="rykv_dnote_wrap" valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
+                    <td valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
                         :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
-                            :application_config="application_config" :gkill_api="gkill_api" :query="focused_query"
-                            :checked_kyous="focused_column_checked_kyous" :last_added_tag="last_added_tag"
-                            :editable="false"
+                        <Dnote class="rykv_dnote_wrap" :app_content_height="app_content_height"
+                            :app_content_width="app_content_width" :application_config="application_config"
+                            :gkill_api="gkill_api" :query="focused_query" :checked_kyous="focused_column_checked_kyous"
+                            :last_added_tag="last_added_tag" :editable="false"
                             @deleted_kyou="(...deleted_kyou: any[]) => { reload_kyou(deleted_kyou[0] as Kyou); focused_kyou?.reload(true, false); emits('deleted_kyou', deleted_kyou[0] as Kyou) }"
                             @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                             @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
@@ -1031,6 +1031,8 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
     min-width: calc(100vw);
 }
 
+</style>
+<style lang="css">
 .rykv_dnote_wrap {
     width: fit-content;
 }
