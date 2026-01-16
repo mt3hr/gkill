@@ -193,8 +193,8 @@
                         <AddNotificationForAddMiView :application_config="application_config" :gkill_api="gkill_api"
                             :enable_context_menu="false" :enable_dialog="true" :highlight_targets="[]" :kyou="kyou"
                             :last_added_tag="''" :default_notification="notification" ref="add_notification_views"
-                            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-                            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
+                            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
                     </v-col>
                 </v-row>
             </v-col>
@@ -203,18 +203,18 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
         <NewBoardNameDialog v-if="mi" :application_config="application_config" :gkill_api="gkill_api"
-            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @setted_new_board_name="(board_name: string) => update_board_name(board_name)"
             ref="new_board_name_dialog" />
     </v-card>
@@ -492,6 +492,7 @@ async function save(): Promise<void> {
         await delete_gkill_kyou_cache(new_mi.id)
         const req = new AddMiRequest()
         req.mi = new_mi
+        req.want_response_kyou = true
         const res = await props.gkill_api.add_mi(req)
         if (res.errors && res.errors.length !== 0) {
             emits('received_errors', res.errors)
@@ -516,10 +517,7 @@ async function save(): Promise<void> {
                 emits('received_messages', res.messages)
             }
         }
-
-
-
-        emits("registered_kyou", res.added_mi_kyou)
+        emits("registered_kyou", res.added_kyou!)
         emits('requested_reload_list')
         emits('requested_close_dialog')
         return

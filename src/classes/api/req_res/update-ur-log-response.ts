@@ -8,12 +8,12 @@ export class UpdateURLogResponse extends GkillAPIResponse {
 
     updated_urlog: URLog
 
-    updated_urlog_kyou: Kyou
+    updated_kyou: Kyou | null
 
     constructor() {
         super()
         this.updated_urlog = new URLog()
-        this.updated_urlog_kyou = new Kyou()
+        this.updated_kyou = null
     }
 
 }

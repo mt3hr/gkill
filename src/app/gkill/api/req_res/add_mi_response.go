@@ -12,5 +12,5 @@ type AddMiResponse struct {
 
 	AddedMi *reps.Mi `json:"added_mi"`
 
-	AddedMiKyou *reps.Kyou `json:"added_mi_kyou"`
+	AddedKyou *reps.Kyou `json:"added_kyou"`
 }

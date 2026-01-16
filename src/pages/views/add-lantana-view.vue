@@ -63,13 +63,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -164,6 +164,7 @@ async function save(): Promise<void> {
         await delete_gkill_kyou_cache(new_lantana.id)
         const req = new AddLantanaRequest()
         req.lantana = new_lantana
+        req.want_response_kyou = true
         const res = await props.gkill_api.add_lantana(req)
         if (res.errors && res.errors.length !== 0) {
             emits('received_errors', res.errors)
@@ -172,7 +173,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits('registered_kyou', res.added_lantana_kyou)
+        emits('registered_kyou', res.added_kyou!)
         emits('requested_reload_list')
         emits('requested_close_dialog')
         return

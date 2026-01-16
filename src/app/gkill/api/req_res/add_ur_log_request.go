@@ -10,4 +10,8 @@ type AddURLogRequest struct {
 	TXID *string `json:"tx_id"`
 
 	LocaleName string `json:"locale_name"`
+
+	AddedKyou *reps.Kyou `json:"added_kyou"`
+
+	WantResponseKyou bool `json:"want_response_kyou"`
 }

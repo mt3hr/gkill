@@ -12,5 +12,5 @@ type AddReKyouResponse struct {
 
 	AddedReKyou *reps.ReKyou `json:"added_re_kyou"`
 
-	AddedReKyouKyou *reps.Kyou `json:"added_rekyou_kyou"`
+	AddedKyou *reps.Kyou `json:"added_kyou"`
 }

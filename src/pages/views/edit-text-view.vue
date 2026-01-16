@@ -59,7 +59,6 @@ import type { EditTextViewProps } from './edit-text-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { UpdateTextRequest } from '@/classes/api/req_res/update-text-request';
-;
 import { GkillError } from '@/classes/api/gkill-error';
 import { GkillErrorCodes } from '@/classes/api/message/gkill_error';
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'

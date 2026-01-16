@@ -8,12 +8,12 @@ export class UpdateIDFKyouResponse extends GkillAPIResponse {
 
     updated_idf_kyou: IDFKyou
 
-    updated_idf_kyou_kyou: Kyou
+    updated_kyou: Kyou | null
 
     constructor() {
         super()
         this.updated_idf_kyou = new IDFKyou()
-        this.updated_idf_kyou_kyou = new Kyou()
+        this.updated_kyou = null
     }
 
 }

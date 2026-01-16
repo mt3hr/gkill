@@ -158,6 +158,7 @@ async function clicked_mi_check(): Promise<void> {
     await delete_gkill_kyou_cache(updated_mi.id)
     const req = new UpdateMiRequest()
     req.mi = updated_mi
+    req.want_response_kyou  = true
 
     const res = await props.gkill_api.update_mi(req)
     if (res.errors && res.errors.length !== 0) {
