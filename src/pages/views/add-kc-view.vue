@@ -190,6 +190,7 @@ async function save(): Promise<void> {
         await delete_gkill_kyou_cache(new_kc.id)
         const req = new AddKCRequest()
         req.kc = new_kc
+        req.want_response_kyou = true
         const res = await props.gkill_api.add_kc(req)
         if (res.errors && res.errors.length !== 0) {
             emits('received_errors', res.errors)
@@ -198,7 +199,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits("updated_kyou", res.added_kc_kyou)
+        emits("updated_kyou", res.added_kyou!)
         emits('requested_reload_list')
         emits('requested_close_dialog')
         return

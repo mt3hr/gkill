@@ -12,5 +12,5 @@ type AddKCResponse struct {
 
 	AddedKC *reps.KC `json:"added_kc"`
 
-	AddedKCKyou *reps.Kyou `json:"added_kc_kyou"`
+	AddedKyou *reps.Kyou `json:"added_kyou"`
 }
