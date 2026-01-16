@@ -19,7 +19,7 @@
                     {{ finished_aggregate_task }}/{{ estimate_aggregate_task }}
                 </div>
                 <div class="align-center justify-center overlay_message">{{ i18n.global.t('DNOTE_PLEASE_WAIT_MESSAGE')
-                }}</div>
+                    }}</div>
             </div>
         </v-overlay>
         <h1>
@@ -53,7 +53,7 @@
             @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
             @finish_a_aggregate_task="finished_aggregate_task++" ref="dnote_item_table_view" />
         <DnoteListTableView :application_config="application_config" :gkill_api="gkill_api" :editable="editable"
-            v-model="dnote_list_item_table_view_data"
+            v-if="dnote_list_item_table_view_data" v-model="dnote_list_item_table_view_data"
             @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
             @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
             @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
@@ -89,7 +89,7 @@
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
         <AddDnoteListDialog :application_config="application_config" :gkill_api="gkill_api"
@@ -228,7 +228,7 @@ async function load_aggregated_value(abort_controller: AbortController, kyous: A
 }
 
 async function load_aggregate_grouping_list(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<void> {
-    return dnote_list_table_view.value?.load_aggregate_grouping_list(abort_controller, kyous, find_kyou_query, kyou_is_loaded)
+    return await dnote_list_table_view.value?.load_aggregate_grouping_list(abort_controller, kyous, find_kyou_query, kyou_is_loaded)
 }
 
 function to_json(): any {
