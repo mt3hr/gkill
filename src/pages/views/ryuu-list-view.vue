@@ -1,11 +1,12 @@
 <template>
     <v-card>
         <div v-if="target_kyou" class="ryuu_views">
-            <RyuuListItemView v-for="related_kyou_query, index in related_kyou_queries"
-                v-model="related_kyou_queries[index]" :key="related_kyou_query.id" :gkill_api="gkill_api"
-                :application_config="application_config" :enable_dialog="true" :enable_context_menu="true"
-                :target_kyou="target_kyou" :abort_controller="abort_controler"
-                :find_kyou_query_default="find_kyou_query_default" :editable="editable"
+            <RyuuListItemView v-for="(related_kyou_query, index) in related_kyou_queries" :key="related_kyou_query.id"
+                v-model="related_kyou_queries[index]" :gkill_api="gkill_api" :application_config="application_config"
+                :enable_dialog="true" :enable_context_menu="true" :target_kyou="target_kyou"
+                :abort_controller="abort_controler" :find_kyou_query_default="find_kyou_query_default"
+                :editable="editable"
+                @requested_move_related_kyou_query="(...id: any[]) => handle_move_related_kyou_query(id[0] as string, id[1] as string, id[2] as 'up' | 'down')"
                 @requested_delete_related_kyou_list_query="(...id: any[]) => delete_related_kyou_query(id[0] as string)"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
@@ -25,35 +26,40 @@
                 @requested_reload_list="emits('requested_reload_list')"
                 @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
                 ref="related_kyou_list_item_views" />
+
+            <AddRyuuItemDialog :gkill_api="gkill_api" :application_config="application_config"
+                @requested_add_related_kyou_query="(...related_kyou_query: any[]) => add_related_kyou_query(related_kyou_query[0] as RelatedKyouQuery)"
+                @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+                @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+                ref="add_ryuu_item_dialog" />
+
+            <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
+                <v-menu transition="slide-x-transition">
+                    <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props"
+                            @click="add_ryuu_item_dialog?.show()" />
+                    </template>
+                </v-menu>
+            </v-avatar>
+
+            <v-row v-if="editable" class="pa-0 ma-0">
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <v-btn dark @click="apply" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
+                </v-col>
+                <v-spacer />
+                <v-col cols="auto" class="pa-0 ma-0">
+                    <v-btn dark color="secondary" @click="emits('requested_close_dialog')">
+                        {{ i18n.global.t("CANCEL_TITLE") }}
+                    </v-btn>
+                </v-col>
+            </v-row>
         </div>
-        <AddRyuuItemDialog :gkill_api="gkill_api" :application_config="application_config"
-            @requested_add_related_kyou_query="(...related_kyou_query: any[]) => add_related_kyou_query(related_kyou_query[0] as RelatedKyouQuery)"
-            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
-            ref="add_ryuu_item_dialog" />
-        <v-avatar v-if="editable" :style="floatingActionButtonStyle()" color="primary" class="position-fixed">
-            <v-menu transition="slide-x-transition">
-                <template v-slot:activator="{ props }">
-                    <v-btn color="white" icon="mdi-plus" variant="text" v-bind="props"
-                        @click="add_ryuu_item_dialog?.show()" />
-                </template>
-            </v-menu>
-        </v-avatar>
-        <v-row v-if="editable" class="pa-0 ma-0">
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark @click="apply" color="primary">{{ i18n.global.t("APPLY_TITLE") }}</v-btn>
-            </v-col>
-            <v-spacer />
-            <v-col cols="auto" class="pa-0 ma-0">
-                <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{ i18n.global.t("CANCEL_TITLE")
-                }}</v-btn>
-            </v-col>
-        </v-row>
     </v-card>
 </template>
+
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { ref, defineEmits, defineProps, type Ref, watch, nextTick } from 'vue';
+import { ref, type Ref, watch, nextTick, onUnmounted } from 'vue';
 import AddRyuuItemDialog from '../dialogs/add-ryuu-item-dialog.vue';
 import RyuuListItemView from './ryuu-list-item-view.vue';
 import RelatedKyouQuery from '../../classes/dnote/related-kyou-query';
@@ -62,7 +68,6 @@ import type RyuuListViewEmits from './ryuu-list-view-emits';
 import { build_dnote_predicate_from_json } from '@/classes/dnote/serialize/regist-dictionary';
 import { ApplicationConfig } from '@/classes/datas/config/application-config';
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query';
-import { onUnmounted } from 'vue';
 import type { Kyou } from '@/classes/datas/kyou';
 import type { Tag } from '@/classes/datas/tag';
 import type { Text } from '@/classes/datas/text';
@@ -71,7 +76,6 @@ import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 
 const add_ryuu_item_dialog = ref<InstanceType<typeof AddRyuuItemDialog> | null>(null);
-
 const related_kyou_list_item_views = ref()
 
 const model_value = defineModel<ApplicationConfig>()
@@ -83,19 +87,15 @@ const abort_controler: Ref<AbortController> = ref(new AbortController())
 
 nextTick(async () => {
     await load_from_application_config()
-    if (props.editable) {
-        return
-    }
+    if (props.editable) return
+
     abort_controler.value.abort()
     abort_controler.value = new AbortController()
-
     nextTick(() => load_related_kyou())
 })
 
 watch(() => props.target_kyou, () => {
-    if (props.editable && !props.target_kyou) {
-        return
-    }
+    if (props.editable && !props.target_kyou) return
     abort_controler.value.abort()
     abort_controler.value = new AbortController()
     nextTick(() => { load_related_kyou() })
@@ -107,9 +107,7 @@ onUnmounted(() => {
 })
 
 async function load_related_kyou(): Promise<void> {
-    if (!related_kyou_list_item_views.value) {
-        return
-    }
+    if (!related_kyou_list_item_views.value) return
     const wait_promises = []
     for (let i = 0; i < related_kyou_list_item_views.value.length; i++) {
         wait_promises.push(related_kyou_list_item_views.value[i].load_related_kyou())
@@ -126,9 +124,8 @@ async function load_from_application_config(): Promise<void> {
 
 function load_from_json(json: any): Array<RelatedKyouQuery> {
     const related_kyou_queries = new Array<RelatedKyouQuery>()
-    if (!json) {
-        return related_kyou_queries
-    }
+    if (!json) return related_kyou_queries
+
     for (let i = 0; i < json.length; i++) {
         const related_kyou_query = new RelatedKyouQuery()
         related_kyou_query.id = json[i].id
@@ -148,7 +145,7 @@ function to_json(related_kyou_queries: Array<RelatedKyouQuery>): any {
     const json = []
     for (let i = 0; i < related_kyou_queries.length; i++) {
         const related_kyou_query = related_kyou_queries[i]
-        const json_record = {
+        json.push({
             id: related_kyou_query.id,
             title: related_kyou_query.title,
             prefix: related_kyou_query.prefix,
@@ -157,8 +154,7 @@ function to_json(related_kyou_queries: Array<RelatedKyouQuery>): any {
             related_time_match_type: related_kyou_query.related_time_match_type,
             find_kyou_query: related_kyou_query.find_kyou_query,
             find_duration_hour: related_kyou_query.find_duration_hour,
-        }
-        json.push(json_record)
+        })
     }
     return json
 }
@@ -168,22 +164,22 @@ function add_related_kyou_query(related_kyou_query: RelatedKyouQuery): void {
 }
 
 async function apply(): Promise<void> {
-    if (model_value.value) {
-        const ryuu_json_data = to_json(related_kyou_queries.value)
-        model_value.value.ryuu_json_data = ryuu_json_data
-        emits('requested_apply_ryuu_struct', ryuu_json_data)
-        nextTick(() => emits('requested_close_dialog'))
-    }
+    if (!model_value.value) return
+    const ryuu_json_data = to_json(related_kyou_queries.value)
+    model_value.value.ryuu_json_data = ryuu_json_data
+    emits('requested_apply_ryuu_struct', ryuu_json_data)
+    nextTick(() => emits('requested_close_dialog'))
 }
 
 function floatingActionButtonStyle() {
     return {
-        'bottom': '60px',
-        'right': '10px',
-        'height': '50px',
-        'width': '50px',
+        bottom: '60px',
+        right: '10px',
+        height: '50px',
+        width: '50px',
     }
 }
+
 function delete_related_kyou_query(id: string): void {
     let delete_target_index: number | null = null
     for (let i = 0; i < related_kyou_queries.value.length; i++) {
@@ -197,7 +193,30 @@ function delete_related_kyou_query(id: string): void {
     }
 }
 
+/**
+ * FoldableStruct式：上/下挿入で並び替え
+ */
+function handle_move_related_kyou_query(srcId: string, targetId: string, dropType: 'up' | 'down'): void {
+    if (!props.editable) return
+
+    const from = related_kyou_queries.value.findIndex(v => v.id === srcId)
+    const target = related_kyou_queries.value.findIndex(v => v.id === targetId)
+    if (from < 0 || target < 0) return
+    if (from === target) return
+
+    const [item] = related_kyou_queries.value.splice(from, 1)
+
+    // remove後のtarget補正
+    let t = target
+    if (from < target) t = target - 1
+
+    const insertIndex = (dropType === 'up') ? t : (t + 1)
+    related_kyou_queries.value.splice(insertIndex, 0, item)
+
+    nextTick(() => load_related_kyou())
+}
 </script>
+
 <style lang="css" scoped>
 .ryuu_views {
     position: relative;

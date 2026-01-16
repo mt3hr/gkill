@@ -1,6 +1,6 @@
 <template>
     <tr v-if="is_item()" :draggable="is_editable" @dragstart="drag_start" @drop="drop" :dropzone="is_editable"
-        :key="props.struct_obj.key" @dragover="dragover"
+        :key="props.struct_obj.key" @dragover="dragover" class="foldable_struct_draggable"
         @contextmenu.prevent.stop="(e: MouseEvent) => emits('contextmenu_item', e, props.struct_obj.id)">
         <td>
             <table>
@@ -16,7 +16,7 @@
         </td>
     </tr>
     <tr v-if="!is_item()" :draggable="is_editable" @dragstart="drag_start" @drop="drop" :dropzone="is_editable"
-        :key="props.struct_obj.key" @dragover="dragover"
+        :key="props.struct_obj.key" @dragover="dragover" class="foldable_struct_draggable"
         @contextmenu.prevent.stop="(e: MouseEvent) => emits('contextmenu_item', e, props.struct_obj.id)">
         <td>
             <table>
@@ -485,5 +485,10 @@ function delete_struct(id: string): boolean {
 
 .checkbox_in_foldable_struct {
     accent-color: rgb(var(--v-theme-primary));
+}
+
+.foldable_struct_draggable {
+    user-select: none;
+    touch-action: none;
 }
 </style>
