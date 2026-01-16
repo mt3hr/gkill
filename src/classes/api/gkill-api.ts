@@ -172,6 +172,7 @@ import { DeviceStructElementData } from "../datas/config/device-struct-element-d
 import { RepStructElementData } from "../datas/config/rep-struct-element-data"
 import { RepTypeStructElementData } from "../datas/config/rep-type-struct-element-data"
 import { KFTLTemplateElementData } from "../datas/kftl-template-element-data"
+import { MiBoardStructElementData } from "../datas/config/mi-board-struct-element-data"
 
 export class GkillAPI {
         // 画面以外から参照されるやつ
@@ -1717,6 +1718,7 @@ export class GkillAPI {
                 application_config.device_struct = response.application_config.device_struct ? response.application_config.device_struct : new DeviceStructElementData()
                 application_config.rep_struct = response.application_config.rep_struct ? response.application_config.rep_struct : new RepStructElementData()
                 application_config.rep_type_struct = response.application_config.rep_type_struct ? response.application_config.rep_type_struct : new RepTypeStructElementData()
+                application_config.mi_board_struct = response.application_config.mi_board_struct ? response.application_config.mi_board_struct : new MiBoardStructElementData()
                 application_config.kftl_template_struct = response.application_config.kftl_template_struct ? response.application_config.kftl_template_struct : new KFTLTemplateElementData()
                 application_config.dnote_json_data = response.application_config.dnote_json_data
                 application_config.ryuu_json_data = response.application_config.ryuu_json_data
@@ -1740,6 +1742,11 @@ export class GkillAPI {
                         application_config.device_struct.id = this.generate_uuid()
                         application_config.device_struct.children = []
                         application_config.device_struct.is_dir = true
+                }
+                if (!application_config.mi_board_struct.children) {
+                        application_config.mi_board_struct.id = this.generate_uuid()
+                        application_config.mi_board_struct.children = []
+                        application_config.mi_board_struct.is_dir = true
                 }
                 if (!application_config.kftl_template_struct.children) {
                         application_config.kftl_template_struct.id = this.generate_uuid()
