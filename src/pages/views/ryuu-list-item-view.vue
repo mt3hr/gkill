@@ -1,5 +1,6 @@
 <template>
-    <v-card class="pa-0 ma-0 related_kyou_list_item"
+    <v-card class="pa-0 ma-0 related_kyou_list_item" :draggable="editable" :class="{ draggable: editable }"
+        @dragstart="drag_start" @dragover="dragover" @drop="drop"
         @contextmenu.prevent.stop="(e: any) => { if (editable) { show_context_menu(e) } }"
         @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } }">
         <table>
@@ -10,9 +11,7 @@
                     </span>
                 </td>
                 <td>
-                    <span>
-                        :
-                    </span>
+                    <span>:</span>
                 </td>
                 <td>
                     <v-row class="pa-0 ma-0">
@@ -22,9 +21,11 @@
                                     <td>
                                         <span>{{ model_value?.prefix }}</span>
                                     </td>
+
                                     <td v-if="is_no_data">
                                         ---
                                     </td>
+
                                     <td v-if="match_kyou && !is_no_data">
                                         <span
                                             v-if="(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana)">
@@ -33,10 +34,12 @@
                                                 :mood="match_kyou.typed_lantana.mood" :editable="false"
                                                 @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } else { show_kyou_dialog() } }" />
                                         </span>
+
                                         <span v-if="(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)"
                                             @dblclick="() => { if (editable) { show_edit_ryuu_item_dialog() } else { show_kyou_dialog() } }">
                                             {{ match_kyou.typed_kc.num_value }}
                                         </span>
+
                                         <KyouView
                                             v-if="!(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana) && !(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)"
                                             :application_config="application_config" :gkill_api="gkill_api"
@@ -54,6 +57,7 @@
                                             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
                                             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)" />
                                     </td>
+
                                     <td>
                                         <span>{{ model_value?.suffix }}</span>
                                     </td>
@@ -64,6 +68,7 @@
                 </td>
             </tr>
         </table>
+
         <KyouDialog v-if="match_kyou" :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="[]" :kyou="match_kyou" :last_added_tag="''" :enable_context_menu="enable_context_menu"
             :enable_dialog="enable_dialog" :is_readonly_mi_check="false" :show_timeis_plaing_end_button="true"
@@ -85,15 +90,18 @@
             @requested_reload_list="emits('requested_reload_list')"
             @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
             ref="kyou_dialog" />
+
         <RyuuListItemContextMenu :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
             @requested_delete_related_kyou_query="(...id: any[]) => emits('requested_delete_related_kyou_list_query', id[0] as string)"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             ref="contextmenu" />
+
         <EditRyuuItemDialog :application_config="application_config" :gkill_api="gkill_api" v-model="model_value"
             ref="edit_related_kyou_query_dialog" />
     </v-card>
 </template>
+
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
 import EditRyuuItemDialog from '../dialogs/edit-ryuu-item-dialog.vue'
@@ -140,7 +148,52 @@ const props = defineProps<RyuuListItemViewProps>()
 const emits = defineEmits<RyuuListItemViewEmits>()
 defineExpose({ load_related_kyou })
 
+/**
+ * D&D: FoldableStruct式（上/下判定）
+ */
+type DropTypeRyuu = 'up' | 'down'
+
+function drag_start(e: DragEvent): void {
+    if (!props.editable) return
+    const id = model_value.value?.id ?? ''
+    if (!id) return
+
+    // Firefox対策で何かしら setData が必要なことがある
+    e.dataTransfer?.setData('gkill_ryuu_query_id', id)
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
+    e.stopPropagation()
+}
+
+function dragover(e: DragEvent): void {
+    if (!props.editable) return
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'
+    e.preventDefault()      // dropを許可する
+    e.stopPropagation()
+}
+
+function drop(e: DragEvent): void {
+    if (!props.editable) return
+
+    const srcId = e.dataTransfer?.getData('gkill_ryuu_query_id')
+    const targetId = model_value.value?.id ?? ''
+    if (!srcId || !targetId) return
+    if (srcId === targetId) return
+
+    // currentTarget基準で上/下を判定（子要素に落ちても安定）
+    const el = e.currentTarget as HTMLElement | null
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const y = e.clientY - rect.top
+    const dropType: DropTypeRyuu = (y <= rect.height * 0.5) ? 'up' : 'down'
+
+    emits('requested_move_related_kyou_query', srcId, targetId, dropType)
+
+    e.preventDefault()
+    e.stopPropagation()
+}
+
 async function load_related_kyou(): Promise<void> {
+    // ここから下はあなたの元コードそのまま（変更なし）
     match_kyou.value = null
     is_no_data.value = false
 
@@ -163,6 +216,7 @@ async function load_related_kyou(): Promise<void> {
     const find_kyou_query = model_value.value?.find_kyou_query ? model_value.value.find_kyou_query.clone() : props.find_kyou_query_default.clone()
     find_kyou_query.use_calendar = true
     find_kyou_query.apply_rep_summary_to_detaul(props.application_config)
+
     switch (related_time_match_type) {
         case RelatedTimeMatchType.NEAR_RELATED_TIME: {
             find_kyou_query.calendar_start_date = new Date(related_time.getTime() - (model_value.value!.find_duration_hour * 60 * 60 * 1000))
@@ -186,39 +240,17 @@ async function load_related_kyou(): Promise<void> {
         (ryuu_predicate as any).predicates.forEach((predicate: DnotePredicate) => {
             if (predicate && predicate instanceof EqualTitleTargetKyouPredicate) {
                 const get_title_func = (kyou: Kyou | null): string | null => {
-                    if (kyou === null) {
-                        return null
-                    }
-                    if (kyou.data_type.startsWith("kmemo")) {
-                        return kyou.typed_kmemo ? kyou.typed_kmemo.content : null
-                    }
-                    if (kyou.data_type.startsWith("kc")) {
-                        return kyou.typed_kc ? kyou.typed_kc.title : null
-                    }
-                    if (kyou.data_type.startsWith("urlog")) {
-                        return kyou.typed_urlog ? kyou.typed_urlog.url : null
-                    }
-                    if (kyou.data_type.startsWith("nlog")) {
-                        return kyou.typed_nlog ? kyou.typed_nlog.title : null
-                    }
-                    if (kyou.data_type.startsWith("timeis")) {
-                        return kyou.typed_timeis ? kyou.typed_timeis.title : null
-                    }
-                    if (kyou.data_type.startsWith("mi")) {
-                        return kyou.typed_mi ? kyou.typed_mi.title : null
-                    }
-                    if (kyou.data_type.startsWith("lantana")) {
-                        return null
-                    }
-                    if (kyou.data_type.startsWith("idf")) {
-                        return kyou.typed_idf_kyou ? kyou.typed_idf_kyou.file_name : null
-                    }
-                    if (kyou.data_type.startsWith("git")) {
-                        return kyou.typed_git_commit_log ? kyou.typed_git_commit_log.commit_message : null
-                    }
-                    if (kyou.data_type.startsWith("rekyou")) {
-                        return null
-                    }
+                    if (kyou === null) return null
+                    if (kyou.data_type.startsWith("kmemo")) return kyou.typed_kmemo ? kyou.typed_kmemo.content : null
+                    if (kyou.data_type.startsWith("kc")) return kyou.typed_kc ? kyou.typed_kc.title : null
+                    if (kyou.data_type.startsWith("urlog")) return kyou.typed_urlog ? kyou.typed_urlog.url : null
+                    if (kyou.data_type.startsWith("nlog")) return kyou.typed_nlog ? kyou.typed_nlog.title : null
+                    if (kyou.data_type.startsWith("timeis")) return kyou.typed_timeis ? kyou.typed_timeis.title : null
+                    if (kyou.data_type.startsWith("mi")) return kyou.typed_mi ? kyou.typed_mi.title : null
+                    if (kyou.data_type.startsWith("lantana")) return null
+                    if (kyou.data_type.startsWith("idf")) return kyou.typed_idf_kyou ? kyou.typed_idf_kyou.file_name : null
+                    if (kyou.data_type.startsWith("git")) return kyou.typed_git_commit_log ? kyou.typed_git_commit_log.commit_message : null
+                    if (kyou.data_type.startsWith("rekyou")) return null
                     return null
                 }
                 const title = get_title_func(props.target_kyou)
@@ -248,6 +280,7 @@ async function load_related_kyou(): Promise<void> {
         emits('received_errors', res.errors)
         return
     }
+
     const trimed_kyous_map = new Map<string, Kyou>()
     for (let i = 0; i < res.kyous.length; i++) {
         trimed_kyous_map.set(res.kyous[i].id, res.kyous[i])
@@ -328,6 +361,7 @@ async function load_related_kyou(): Promise<void> {
             break
         }
     }
+
     if (!match_kyou.value) {
         is_no_data.value = true
     }
@@ -364,12 +398,23 @@ async function show_edit_ryuu_item_dialog(): Promise<void> {
     edit_related_kyou_query_dialog.value?.show()
 }
 </script>
+
 <style lang="css" scoped>
 .related_kyou_list_item {
     border-top: 1px solid silver;
 }
+
+.related_kyou_list_item.draggable {
+    cursor: grab;
+}
+
+.related_kyou_list_item.draggable:active {
+    cursor: grabbing;
+}
 </style>
+
 <style lang="css">
+/* ここから下はあなたの元CSSそのまま（省略せず残す） */
 .related_kyou_list_item .lantana_icon {
     position: relative;
     width: 20px !important;
