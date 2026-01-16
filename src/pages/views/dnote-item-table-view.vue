@@ -19,7 +19,8 @@
                         @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0])"
                         @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0])"
                         @updated_text="(...text: any[]) => emits('updated_text', text[0])"
-                        @updated_notification="(...n: any[]) => emits('updated_notification', n[0])" />
+                        @updated_notification="(...n: any[]) => emits('updated_notification', n[0])"
+                        ref="dnote_item_list_views" />
                 </td>
             </tr>
         </table>

@@ -91,7 +91,7 @@
                 </template>
             </v-virtual-scroll>
         </v-card>
-        <v-card v-if="show_footer" :class="footer_class" :ripple="false" :link="false">
+        <v-card v-if="show_footer" :class="footer_class" variant="text" :ripple="false" :link="false">
             <v-row no-gutters>
                 <v-col v-if="matched_kyous && matched_kyous.length" cols="auto" class="py-3">
                     {{ matched_kyous.length }}{{ i18n.global.t("N_COUNT_ITEMS_TITLE") }}

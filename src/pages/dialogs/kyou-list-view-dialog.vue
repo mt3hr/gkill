@@ -22,7 +22,7 @@
                 @updated_kyou="(...updated_kyou: any[]) => reload_kyou(updated_kyou[0])"
                 @updated_tag="(...updated_tag: any[]) => { }" @updated_text="(...updated_text: any[]) => { }"
                 @updated_notification="(...updated_notification: any[]) => { }" />
-            <v-card :ripple="false" :link="false">
+            <v-card variant="text" :ripple="false" :link="false">
                 <v-row no-gutters>
                     <v-col v-if="model_value && model_value.length" cols="auto" class="py-3">
                         {{ model_value.length }}{{ i18n.global.t("N_COUNT_ITEMS_TITLE") }}
