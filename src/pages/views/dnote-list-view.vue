@@ -48,7 +48,7 @@
       </template>
     </v-virtual-scroll>
 
-    <v-card :ripple="false" :link="false">
+    <v-card variant="text" :ripple="false" :link="false">
       <v-row no-gutters>
         <v-col v-if="aggregated_items && aggregated_items.length" cols="auto" class="py-3">
           {{ aggregated_items.length }}{{ i18n.global.t("N_COUNT_ITEMS_TITLE") }}
