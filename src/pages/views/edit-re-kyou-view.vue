@@ -196,6 +196,7 @@ async function save(): Promise<void> {
         await delete_gkill_kyou_cache(updated_rekyou.id)
         const req = new UpdateReKyouRequest()
         req.rekyou = updated_rekyou
+        req.want_response_kyou = true
 
         const res = await props.gkill_api.update_rekyou(req)
         if (res.errors && res.errors.length !== 0) {
@@ -205,7 +206,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits('updated_kyou', res.updated_rekyou_kyou)
+        emits('updated_kyou', res.updated_kyou!)
         emits('requested_reload_kyou', props.kyou)
         emits('requested_close_dialog')
         return

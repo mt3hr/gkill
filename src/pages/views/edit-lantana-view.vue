@@ -209,6 +209,7 @@ async function save(): Promise<void> {
         // 更新リクエストを飛ばす
         await delete_gkill_kyou_cache(updated_lantana.id)
         const req = new UpdateLantanaRequest()
+        req.want_response_kyou = true
         req.lantana = updated_lantana
 
         const res = await props.gkill_api.update_lantana(req)
@@ -219,7 +220,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits('updated_kyou', res.updated_lantana_kyou)
+        emits('updated_kyou', res.updated_kyou!)
         emits('requested_reload_kyou', props.kyou)
         emits('requested_close_dialog')
         return

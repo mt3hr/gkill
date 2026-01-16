@@ -8,12 +8,12 @@ export class UpdateReKyouResponse extends GkillAPIResponse {
 
     updated_rekyou: ReKyou
 
-    updated_rekyou_kyou: Kyou
+    updated_kyou: Kyou | null
 
     constructor() {
         super()
         this.updated_rekyou = new ReKyou()
-        this.updated_rekyou_kyou = new Kyou()
+        this.updated_kyou = null
     }
 
 }

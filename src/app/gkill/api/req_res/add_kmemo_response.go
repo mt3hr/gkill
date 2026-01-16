@@ -12,5 +12,5 @@ type AddKmemoResponse struct {
 
 	AddedKmemo *reps.Kmemo `json:"added_kmemo"`
 
-	AddedKmemoKyou *reps.Kyou `json:"added_kmemo_kyou"`
+	AddedKyou *reps.Kyou `json:"added_kyou"`
 }

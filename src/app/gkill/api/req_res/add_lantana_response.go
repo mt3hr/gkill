@@ -12,5 +12,5 @@ type AddLantanaResponse struct {
 
 	AddedLantana *reps.Lantana `json:"added_lantana"`
 
-	AddedLantanaKyou *reps.Kyou `json:"added_lantana_kyou"`
+	AddedKyou *reps.Kyou `json:"added_kyou"`
 }

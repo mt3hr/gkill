@@ -12,5 +12,5 @@ type AddURLogResponse struct {
 
 	AddedURLog *reps.URLog `json:"added_urlog"`
 
-	AddedURLogKyou *reps.Kyou `json:"added_urlog_kyou"`
+	AddedKyou *reps.Kyou `json:"added_kyou"`
 }

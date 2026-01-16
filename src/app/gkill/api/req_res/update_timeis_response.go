@@ -12,5 +12,5 @@ type UpdateTimeisResponse struct {
 
 	UpdatedTimeis *reps.TimeIs `json:"updated_timeis"`
 
-	UpdatedTimeisKyou *reps.Kyou `json:"updated_timeis_kyou"`
+	UpdatedKyou *reps.Kyou `json:"updated_kyou"`
 }
