@@ -1030,7 +1030,6 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
     min-height: calc(v-bind('app_content_height.toString().concat("px")'));
     min-width: calc(100vw);
 }
-
 </style>
 <style lang="css">
 .rykv_dnote_wrap {
