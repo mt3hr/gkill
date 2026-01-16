@@ -1746,6 +1746,9 @@ export class GkillAPI {
                         application_config.kftl_template_struct.children = []
                         application_config.kftl_template_struct.is_dir = true
                 }
+                if (!application_config.dnote_json_data) {
+                        application_config.dnote_json_data = [[], []]
+                }
 
                 response.application_config = application_config
                 this.check_auth(response)

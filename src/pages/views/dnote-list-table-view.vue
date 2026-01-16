@@ -1,104 +1,137 @@
 <template>
-    <div>
-        <table>
-            <tr>
-                <td v-for="dnote_list_item in model_value" :key="dnote_list_item.id">
-                    <DnoteListView :application_config="application_config" :gkill_api="gkill_api"
-                        v-model="dnote_list_item!" :editable="editable"
-                        @requested_delete_dnote_list_query="(...id: any[]) => delete_dnote_list_query(id[0] as string)"
-                        @requested_update_dnote_list_query="(...dnote_item: any[]) => update_dnote_list_query(dnote_item[0] as DnoteListQuery)"
-                        @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0] as Kyou)"
-                        @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0] as Tag)"
-                        @deleted_text="(...text: any[]) => emits('deleted_text', text[0] as Text)"
-                        @deleted_notification="(...notification: any[]) => emits('deleted_notification', notification[0] as Notification)"
-                        @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0] as Kyou)"
-                        @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0] as Tag)"
-                        @registered_text="(...text: any[]) => emits('registered_text', text[0] as Text)"
-                        @registered_notification="(...notification: any[]) => emits('registered_notification', notification[0] as Notification)"
-                        @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0] as Kyou)"
-                        @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0] as Tag)"
-                        @updated_text="(...text: any[]) => emits('updated_text', text[0] as Text)"
-                        @updated_notification="(...notification: any[]) => emits('updated_notification', notification[0] as Notification)"
-                        @finish_a_aggregate_task="emits('finish_a_aggregate_task')" ref="dnote_list_views" />
-                </td>
-            </tr>
-        </table>
+  <div class="dnote_list_table_root" @dragover="on_table_dragover" @drop="on_table_drop">
+    <div class="dnote_list_table_row">
+      <DnoteListView v-for="(q, index) in model_value" :key="q.id" v-model="model_value[index]" :editable="editable"
+        :application_config="application_config" :gkill_api="gkill_api"
+        @requested_move_dnote_list_query="(...args: any[]) => handle_move_dnote_list_query(args[0] as string, args[1] as string, args[2] as 'left' | 'right')"
+        @requested_delete_dnote_list_query="(...id: any[]) => delete_dnote_list_query(id[0] as string)"
+        @requested_update_dnote_list_query="(...qq: any[]) => update_dnote_list_query(qq[0])"
+        @finish_a_aggregate_task="emits('finish_a_aggregate_task')"
+        @deleted_kyou="(...kyou: any[]) => emits('deleted_kyou', kyou[0])"
+        @deleted_tag="(...tag: any[]) => emits('deleted_tag', tag[0])"
+        @deleted_text="(...text: any[]) => emits('deleted_text', text[0])"
+        @deleted_notification="(...n: any[]) => emits('deleted_notification', n[0])"
+        @registered_kyou="(...kyou: any[]) => emits('registered_kyou', kyou[0])"
+        @registered_tag="(...tag: any[]) => emits('registered_tag', tag[0])"
+        @registered_text="(...text: any[]) => emits('registered_text', text[0])"
+        @registered_notification="(...n: any[]) => emits('registered_notification', n[0])"
+        @updated_kyou="(...kyou: any[]) => emits('updated_kyou', kyou[0])"
+        @updated_tag="(...tag: any[]) => emits('updated_tag', tag[0])"
+        @updated_text="(...text: any[]) => emits('updated_text', text[0])"
+        @updated_notification="(...n: any[]) => emits('updated_notification', n[0])" ref="dnote_list_views" />
     </div>
+  </div>
 </template>
+
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
-import { nextTick, ref } from 'vue';
-import type DnoteListTableViewProps from './dnote-list-table-view-props';
-import DnoteListView from './dnote-list-view.vue';
-import type { Kyou } from '../../classes/datas/kyou';
-import type { Text } from '@/classes/datas/text';
-import type { Tag } from '@/classes/datas/tag';
-import type { Notification } from '@/classes/datas/notification';
-import type { FindKyouQuery } from '../../classes/api/find_query/find-kyou-query';
-import type DnoteListQuery from './dnote-list-query';
-import type DnoteListTableViewEmits from './dnote-list-table-view-emits';
-import type DnoteItem from '@/classes/dnote/dnote-item';
+import { nextTick, ref } from "vue"
+import DnoteListView from "./dnote-list-view.vue"
+import type DnoteListQuery from "./dnote-list-query"
+import type { FindKyouQuery } from "../../classes/api/find_query/find-kyou-query"
+import type { Kyou } from "../../classes/datas/kyou"
+import type { KyouViewEmits } from "./kyou-view-emits"
+import type { GkillAPI } from "../../classes/api/gkill-api"
+import type { ApplicationConfig } from "../../classes/datas/config/application-config"
 
-const dnote_list_views = ref()
+interface Props { gkill_api: GkillAPI; application_config: ApplicationConfig; editable: boolean }
+interface Emits extends KyouViewEmits { (e: "finish_a_aggregate_task"): void }
 
-defineProps<DnoteListTableViewProps>()
+const props = defineProps<Props>()
+const emits = defineEmits<Emits>()
 defineExpose({ load_aggregate_grouping_list, reset })
-const emits = defineEmits<DnoteListTableViewEmits>()
-const model_value = defineModel<Array<DnoteListQuery>>()
 
-async function load_aggregate_grouping_list(abort_controller: AbortController, kyous: Array<Kyou>, find_kyou_query: FindKyouQuery, kyou_is_loaded: boolean): Promise<any> {
-    if (!dnote_list_views.value || !model_value.value) {
-        return
-    }
-    const waitPromises = new Array<Promise<any>>()
-    for (let i = 0; i < dnote_list_views.value.length; i++) {
-        if (!dnote_list_views.value[i]) {
-            continue
-        }
-        waitPromises.push(dnote_list_views.value[i].load_aggregate_grouping_list(abort_controller, kyous, find_kyou_query, kyou_is_loaded))
-    }
-    return Promise.all(waitPromises)
-}
+const model_value = defineModel<Array<DnoteListQuery>>({ default: () => [] })
+const dnote_list_views = ref<any>(null)
 
-
-function delete_dnote_list_query(dnote_list_query_id: string): void {
-    let delete_target_index: number | null = null;
-    for (let i = 0; i < model_value.value!.length; i++) {
-        const dnote_list_query = model_value.value![i]
-        if (dnote_list_query.id === dnote_list_query_id) {
-            delete_target_index = i
-            break
-        }
-    }
-    if (delete_target_index === null) {
-        return
-    }
-    model_value.value?.splice(delete_target_index, 1)
-}
-
-function update_dnote_list_query(_dnote_list_query: DnoteListQuery): void {
-    let delete_target_index: number | null = null;
-    for (let i = 0; i < model_value.value!.length; i++) {
-        const dnote_list_query = model_value.value![i]
-        if (dnote_list_query.id === _dnote_list_query.id) {
-            delete_target_index = i
-            break
-        }
-    }
-    if (delete_target_index === null) {
-        return
-    }
-    model_value.value?.splice(delete_target_index, 1, _dnote_list_query)
+function load_aggregate_grouping_list(
+  abort_controller: AbortController,
+  kyous: Array<Kyou>,
+  query: FindKyouQuery,
+  kyou_is_loaded: boolean
+): void {
+  if (!dnote_list_views.value) return
+  const waits: Array<Promise<any>> = []
+  for (let i = 0; i < dnote_list_views.value.length; i++) {
+    const v = dnote_list_views.value[i]
+    if (!v) continue
+    waits.push(v.load_aggregate_grouping_list(abort_controller, kyous, query, kyou_is_loaded))
+  }
+  // fire-and-forget（呼び出し側は void を期待）
+  Promise.all(waits).then(() => { })
 }
 
 async function reset(): Promise<void> {
-    if (!dnote_list_views.value || dnote_list_views.value.length === 0) {
-        return
-    }
-    return nextTick(async () => {
-        for (let i = 0; i < dnote_list_views.value.length; i++) {
-            await dnote_list_views.value[i].reset()
-        }
-    })
+  if (!dnote_list_views.value || dnote_list_views.value.length === 0) return
+  return nextTick(async () => {
+    for (let i = 0; i < dnote_list_views.value.length; i++) await dnote_list_views.value[i].reset()
+  })
+}
+
+function delete_dnote_list_query(id: string): void {
+  const idx = model_value.value.findIndex((x) => x.id === id)
+  if (idx < 0) return
+  model_value.value.splice(idx, 1)
+}
+
+function update_dnote_list_query(q: DnoteListQuery): void {
+  const idx = model_value.value.findIndex((x) => x.id === q.id)
+  if (idx < 0) return
+  model_value.value.splice(idx, 1, q)
+}
+
+function handle_move_dnote_list_query(srcId: string, targetId: string, dropType: "left" | "right"): void {
+  if (!props.editable) return
+  const srcIndex = model_value.value.findIndex((x) => x.id === srcId)
+  if (srcIndex < 0) return
+  const [moved] = model_value.value.splice(srcIndex, 1)
+
+  const targetIndex = model_value.value.findIndex((x) => x.id === targetId)
+  if (targetIndex < 0) { model_value.value.push(moved); return }
+
+  let insertIndex = dropType === "left" ? targetIndex : targetIndex + 1
+  if (srcIndex < insertIndex) insertIndex -= 1
+  if (insertIndex < 0) insertIndex = 0
+  if (insertIndex > model_value.value.length) insertIndex = model_value.value.length
+  model_value.value.splice(insertIndex, 0, moved)
+}
+
+function on_table_dragover(e: DragEvent): void {
+  if (!props.editable) return
+  e.preventDefault()
+  if (e.dataTransfer) e.dataTransfer.dropEffect = "move"
+}
+
+function on_table_drop(e: DragEvent): void {
+  if (!props.editable) return
+  const srcId = e.dataTransfer?.getData("gkill_dnote_list_id")
+  if (!srcId) return
+
+  const srcIndex = model_value.value.findIndex((x) => x.id === srcId)
+  if (srcIndex < 0) return
+  const [moved] = model_value.value.splice(srcIndex, 1)
+
+  const el = e.currentTarget as HTMLElement | null
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const insertIndex = x <= rect.width * 0.5 ? 0 : model_value.value.length
+  model_value.value.splice(insertIndex, 0, moved)
+
+  e.preventDefault()
+  e.stopPropagation()
 }
 </script>
+
+<style scoped>
+.dnote_list_table_root {
+  overflow-x: auto;
+  padding: 4px;
+}
+
+.dnote_list_table_row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  min-height: 81px;
+}
+</style>

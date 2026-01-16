@@ -5,4 +5,5 @@ export default interface DnoteItemListViewProps {
     gkill_api: GkillAPI
     application_config: ApplicationConfig
     editable: boolean
+    dnd_list_index: number
 }

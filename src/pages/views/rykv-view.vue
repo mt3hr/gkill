@@ -226,7 +226,7 @@
                                 @requested_reload_list="() => { }" />
                         </div>
                     </td>
-                    <td valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
+                    <td class="rykv_dnote_wrap" valign="top" v-if="is_show_dnote && !is_shared_rykv_view"
                         :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <Dnote :app_content_height="app_content_height" :app_content_width="app_content_width"
                             :application_config="application_config" :gkill_api="gkill_api" :query="focused_query"
@@ -1029,5 +1029,9 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
     position: absolute;
     min-height: calc(v-bind('app_content_height.toString().concat("px")'));
     min-width: calc(100vw);
+}
+
+.rykv_dnote_wrap {
+    width: fit-content;
 }
 </style>
