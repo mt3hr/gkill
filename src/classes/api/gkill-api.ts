@@ -1,4 +1,4 @@
-'use strict'
+
 
 import { ApplicationConfig } from "../datas/config/application-config"
 import type { AddAccountRequest } from "./req_res/add-account-request"

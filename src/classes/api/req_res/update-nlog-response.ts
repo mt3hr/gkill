@@ -8,12 +8,12 @@ export class UpdateNlogResponse extends GkillAPIResponse {
 
     updated_nlog: Nlog
 
-    updated_nlog_kyou: Kyou
+    updated_kyou: Kyou | null
 
     constructor() {
         super()
         this.updated_nlog = new Nlog()
-        this.updated_nlog_kyou = new Kyou()
+        this.updated_kyou = null
     }
 
 }

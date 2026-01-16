@@ -8,12 +8,12 @@ export class AddMiResponse extends GkillAPIResponse {
 
     added_mi: Mi
 
-    added_mi_kyou: Kyou
+    added_kyou: Kyou | null
 
     constructor() {
         super()
         this.added_mi = new Mi()
-        this.added_mi_kyou = new Kyou()
+        this.added_kyou = null
     }
 
 }

@@ -65,13 +65,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="secondary" @click="reset()" :disabled="is_requested_submit">{{
                     i18n.global.t("RESET_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
             <v-spacer />
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t("SAVE_TITLE")
-                }}</v-btn>
+                    }}</v-btn>
             </v-col>
         </v-row>
     </v-card>
@@ -189,6 +189,7 @@ async function save(): Promise<void> {
         // 追加リクエストを飛ばす
         await delete_gkill_kyou_cache(new_nlog.id)
         const req = new AddNlogRequest()
+        req.want_response_kyou = true
         req.nlog = new_nlog
         const res = await props.gkill_api.add_nlog(req)
         if (res.errors && res.errors.length !== 0) {
@@ -198,7 +199,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits('registered_kyou', res.added_nlog_kyou)
+        emits('registered_kyou', res.added_kyou!)
         emits('requested_reload_list')
         emits('requested_close_dialog')
         return

@@ -216,6 +216,7 @@ async function save(): Promise<void> {
         // 更新リクエストを飛ばす
         await delete_gkill_kyou_cache(updated_kmemo.id)
         const req = new UpdateKmemoRequest()
+        req.want_response_kyou = true
         req.kmemo = updated_kmemo
 
         const res = await props.gkill_api.update_kmemo(req)
@@ -226,7 +227,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits('updated_kyou', res.updated_kmemo_kyou)
+        emits('updated_kyou', res.updated_kyou!)
         emits('requested_reload_kyou', props.kyou)
         emits('requested_close_dialog')
         return

@@ -12,5 +12,5 @@ type AddNlogResponse struct {
 
 	AddedNlog *reps.Nlog `json:"added_nlog"`
 
-	AddedNlogKyou *reps.Kyou `json:"added_nlog_kyou"`
+	AddedKyou *reps.Kyou `json:"added_kyou"`
 }
