@@ -60,7 +60,6 @@ import type { EditTagViewProps } from './edit-tag-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import KyouView from './kyou-view.vue'
 import { UpdateTagRequest } from '@/classes/api/req_res/update-tag-request';
-;
 import { GkillError } from '@/classes/api/gkill-error';
 import type { Tag } from '@/classes/datas/tag';
 import type { Text } from '@/classes/datas/text';

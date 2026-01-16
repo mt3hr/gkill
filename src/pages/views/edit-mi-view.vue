@@ -507,7 +507,7 @@ async function save(): Promise<void> {
         await delete_gkill_kyou_cache(updated_mi.id)
         const req = new UpdateMiRequest()
         req.mi = updated_mi
-
+        req.want_response_kyou = true
         const res = await props.gkill_api.update_mi(req)
         if (res.errors && res.errors.length !== 0) {
             emits('received_errors', res.errors)
@@ -516,7 +516,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits("updated_kyou", res.updated_mi_kyou)
+        emits("updated_kyou", res.updated_kyou!)
         emits('requested_reload_kyou', props.kyou)
         emits('requested_close_dialog')
         return

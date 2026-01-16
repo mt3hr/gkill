@@ -8,12 +8,12 @@ export class AddTimeisResponse extends GkillAPIResponse {
 
     added_timeis: TimeIs
 
-    added_timeis_kyou: Kyou
+    added_kyou: Kyou | null
 
     constructor() {
         super()
         this.added_timeis = new TimeIs()
-        this.added_timeis_kyou = new Kyou()
+        this.added_kyou = null
     }
 
 }

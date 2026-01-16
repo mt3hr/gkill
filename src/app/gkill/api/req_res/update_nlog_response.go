@@ -12,5 +12,5 @@ type UpdateNlogResponse struct {
 
 	UpdatedNlog *reps.Nlog `json:"updated_nlog"`
 
-	UpdatedNlogKyou *reps.Kyou `json:"updated_nlog_kyou"`
+	UpdatedKyou *reps.Kyou `json:"updated_kyou"`
 }

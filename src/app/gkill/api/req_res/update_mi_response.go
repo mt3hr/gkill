@@ -12,5 +12,5 @@ type UpdateMiResponse struct {
 
 	UpdatedMi *reps.Mi `json:"updated_mi"`
 
-	UpdatedMiKyou *reps.Kyou `json:"updated_mi_kyou"`
+	UpdatedKyou *reps.Kyou `json:"updated_kyou"`
 }

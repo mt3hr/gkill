@@ -55,6 +55,7 @@ import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-r
 import type { Kyou } from '@/classes/datas/kyou'
 import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
 import type { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data'
+import { GetKyouRequest } from '@/classes/api/req_res/get-kyou-request'
 
 const theme = useTheme()
 
@@ -286,6 +287,14 @@ function mi_board_struct_has(mi_board_struct: MiBoardStructElementData, mi_board
 let mi_board_StructRefreshPromise: Promise<void> | null = null
 
 async function check_mi_board_update(kyou: Kyou) {
+    const get_kyou_req = new GetKyouRequest()
+    get_kyou_req.id = kyou.id
+    const get_kyou_res = await gkill_api.value.get_kyou(get_kyou_req)
+    if (!get_kyou_res.kyou_histories || get_kyou_res.kyou_histories.length === 0) {
+        return
+    }
+    kyou = get_kyou_res.kyou_histories[0]
+
     await kyou.load_typed_mi()
     if (!kyou.typed_mi) {
         return

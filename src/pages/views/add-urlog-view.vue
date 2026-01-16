@@ -181,6 +181,7 @@ async function save(): Promise<void> {
         await delete_gkill_kyou_cache(new_urlog.id)
         const req = new AddURLogRequest()
         req.urlog = new_urlog
+        req.want_response_kyou = true
         const res = await props.gkill_api.add_urlog(req)
         if (res.errors && res.errors.length !== 0) {
             emits('received_errors', res.errors)
@@ -189,7 +190,7 @@ async function save(): Promise<void> {
         if (res.messages && res.messages.length !== 0) {
             emits('received_messages', res.messages)
         }
-        emits("updated_kyou", res.added_urlog_kyou)
+        emits("updated_kyou", res.added_kyou!)
         emits('requested_reload_list')
         emits('requested_close_dialog')
         return

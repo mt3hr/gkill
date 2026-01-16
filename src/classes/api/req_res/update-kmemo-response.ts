@@ -8,12 +8,12 @@ export class UpdateKmemoResponse extends GkillAPIResponse {
 
     updated_kmemo: Kmemo
 
-    updated_kmemo_kyou: Kyou
+    updated_kyou: Kyou | null
 
     constructor() {
         super()
         this.updated_kmemo = new Kmemo()
-        this.updated_kmemo_kyou = new Kyou()
+        this.updated_kyou = null
     }
 
 }

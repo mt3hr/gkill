@@ -8,12 +8,12 @@ export class UpdateKCResponse extends GkillAPIResponse {
 
     updated_kc: KC
 
-    updated_kc_kyou: Kyou
+    updated_kyou: Kyou | null
 
     constructor() {
         super()
         this.updated_kc = new KC()
-        this.updated_kc_kyou = new Kyou()
+        this.updated_kyou = null
     }
 
 }

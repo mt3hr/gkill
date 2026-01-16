@@ -8,12 +8,12 @@ export class AddLantanaResponse extends GkillAPIResponse {
 
     added_lantana: Lantana
 
-    added_lantana_kyou: Kyou
+    added_kyou: Kyou | null
 
     constructor() {
         super()
         this.added_lantana = new Lantana()
-        this.added_lantana_kyou = new Kyou()
+        this.added_kyou = null
     }
 
 }
