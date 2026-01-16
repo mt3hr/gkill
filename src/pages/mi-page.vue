@@ -5,11 +5,11 @@
             @deleted_kyou="(...deleted_kyou: any[]) => { }" @deleted_tag="(...deleted_tag: any[]) => { }"
             @deleted_text="(...deleted_text: any[]) => { }"
             @deleted_notification="(...deleted_notification: any[]) => { }"
-            @registered_kyou="(...registered_kyou: any[]) => { }"
+            @registered_kyou="(...registered_kyou: any[]) => { check_mi_board_update(registered_kyou[0] as Kyou) }"
             @registered_tag="(...registered_tag: any[]) => { check_tag_update(registered_tag[0] as Tag) }"
             @registered_text="(...registered_text: any[]) => { }"
             @registered_notification="(...registered_notification: any[]) => { }"
-            @updated_kyou="(...updated_kyou: any[]) => { }"
+            @updated_kyou="(...updated_kyou: any[]) => { check_mi_board_update(updated_kyou[0] as Kyou) }"
             @updated_tag="(...updated_tag: any[]) => { check_tag_update(updated_tag[0] as Tag) }"
             @updated_text="(...updated_text: any[]) => { }"
             @updated_notification="(...updated_notification: any[]) => { }"
@@ -52,6 +52,9 @@ import { useRoute } from 'vue-router'
 import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import { Tag } from '@/classes/datas/tag'
 import { GetAllTagNamesRequest } from '@/classes/api/req_res/get-all-tag-names-request'
+import type { Kyou } from '@/classes/datas/kyou'
+import { GetMiBoardRequest } from '@/classes/api/req_res/get-mi-board-request'
+import type { MiBoardStructElementData } from '@/classes/datas/config/mi-board-struct-element-data'
 
 const theme = useTheme()
 
@@ -267,6 +270,57 @@ async function check_tag_update(tag: Tag) {
         await tagStructRefreshPromise
     } finally {
         tagStructRefreshPromise = null
+    }
+}
+
+
+function mi_board_struct_has(mi_board_struct: MiBoardStructElementData, mi_board_name: string): boolean {
+    if (mi_board_struct.board_name === mi_board_name) return true
+    for (const c of (mi_board_struct.children ?? [])) {
+        if (mi_board_struct_has(c, mi_board_name)) return true
+    }
+    return false
+}
+
+// 連打/連続登録で二重に通信しないため
+let mi_board_StructRefreshPromise: Promise<void> | null = null
+
+async function check_mi_board_update(kyou: Kyou) {
+    await kyou.load_typed_mi()
+    if (!kyou.typed_mi) {
+        return
+    }
+    const name = kyou.typed_mi.board_name
+    if (!name) return
+
+    const req = new GetMiBoardRequest()
+    req.force_reget = true
+    await gkill_api.value.get_mi_board_list(req)
+
+    if (mi_board_struct_has(application_config.value.mi_board_struct, name)) return
+
+    // すでに更新中ならそれに乗る
+    if (mi_board_StructRefreshPromise) {
+        await mi_board_StructRefreshPromise
+        return
+    }
+
+    mi_board_StructRefreshPromise = (async () => {
+        const errors = await application_config.value.append_not_found_mi_boards()
+        if (errors && errors.length) {
+            write_errors(errors)
+            return
+        }
+
+        application_config.value = application_config.value.clone()
+
+        gkill_api.value.set_saved_application_config(application_config.value)
+    })()
+
+    try {
+        await mi_board_StructRefreshPromise
+    } finally {
+        mi_board_StructRefreshPromise = null
     }
 }
 </script>
