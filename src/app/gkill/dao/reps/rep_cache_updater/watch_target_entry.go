@@ -16,41 +16,25 @@ type watchTargetEntry struct {
 	filename           string
 	ignoreFilePrefixes []string
 
-	watcher        *fsnotify.Watcher
-	requestCloseCh chan interface{}
-	watchUsers     map[string]struct{}
+	watcher    *fsnotify.Watcher
+	watchUsers map[string]struct{}
 
 	skip *bool
 }
 
 func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes []string, skip *bool) (*watchTargetEntry, error) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		err = fmt.Errorf("error at new watcher: %w", err)
-		return nil, err
-	}
-
+	var err error
 	// ファイル監視を始める
 	err = watcher.Add(filename)
 	if err != nil {
 		err = fmt.Errorf("error at add watch file. filename = %s: %w", filename, err)
 		return nil, err
 	}
-	requestCloseCh := make(chan interface{}, 1) // goroutine終了用Ch
 	done := threads.AllocateThread()
 	go func() {
 		defer done()
 		for {
 			select {
-			case <-requestCloseCh:
-				// 誰も見なくなったときにファイルの監視を終了する
-				err := watcher.Close()
-				if err != nil {
-					err = fmt.Errorf("error at close watcher: %w", err)
-					gkill_log.Debug.Fatal(err)
-					return
-				}
-				return
 			case event, ok := <-watcher.Events:
 				if !ok {
 					err := fmt.Errorf("file watch event is not ok")
@@ -83,11 +67,13 @@ func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
-					err := fmt.Errorf("file watch event is not ok")
+					err = fmt.Errorf("file watch event is not ok %w", err)
 					gkill_log.Debug.Print(err)
 					return
 				}
+				err = fmt.Errorf("file watch event is not ok %w", err)
 				gkill_log.Debug.Print(err)
+				return
 			}
 		}
 	}()
@@ -97,8 +83,7 @@ func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes
 		rep:                rep,
 		ignoreFilePrefixes: ignoreFilePrefixes,
 
-		watcher:        watcher,
-		requestCloseCh: requestCloseCh,
+		watcher: watcher,
 
 		watchUsers: map[string]struct{}{},
 
@@ -152,7 +137,5 @@ func (w *watchTargetEntry) RemoveWatchUser(userID string) (isClosed bool, err er
 		return false, nil
 
 	}
-	// 消したあとにどのユーザも見ていなかったら消す。
-	w.requestCloseCh <- struct{}{}
 	return true, nil
 }

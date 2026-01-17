@@ -3,12 +3,27 @@ package rep_cache_updater
 import (
 	"fmt"
 	"sync"
+
+	"github.com/fsnotify/fsnotify"
 )
+
+var (
+	watcher *fsnotify.Watcher
+)
+
+func init() {
+	var err error
+	watcher, err = fsnotify.NewWatcher()
+	if err != nil {
+		panic(err)
+	}
+}
 
 func NewFileRepCacheUpdater(skip *bool) (FileRepCacheUpdater, error) {
 	return &fileRepCacheUpdaterImpl{
 		watchTargets: map[string]*watchTargetEntry{},
 		skip:         skip,
+		watcher:      watcher,
 	}, nil
 }
 
@@ -16,6 +31,7 @@ type fileRepCacheUpdaterImpl struct {
 	m            sync.Mutex
 	watchTargets map[string]*watchTargetEntry // map[対象ファイル名] = 監視対象の情報
 	skip         *bool
+	watcher      *fsnotify.Watcher
 }
 
 func (f *fileRepCacheUpdaterImpl) RegisterWatchFileRep(rep CacheUpdatable, filename string, ignoreFilePrefixes []string, userID string) error {
