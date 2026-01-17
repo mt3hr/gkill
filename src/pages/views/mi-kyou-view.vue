@@ -1,5 +1,6 @@
 <template>
-    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height">
+    <v-card @contextmenu.prevent="show_context_menu" :width="width" :height="height" :draggable="props.draggable"
+        @dragstart="(...args: any[]) => on_drag_start(args[0] as DragEvent)">
         <v-row v-if="kyou.typed_mi" class="pa-0 ma-0">
             <v-col cols="auto" class="pa-0 ma-0" :style="mi_title_style">
                 <table class="pa-0 ma-0">
@@ -37,9 +38,9 @@
         <MiContextMenu :application_config="application_config" :gkill_api="gkill_api"
             :highlight_targets="highlight_targets" :kyou="kyou" :last_added_tag="last_added_tag"
             :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
-            @deleted_kyou="(...deleted_kyou :any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
+            @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0] as Kyou)"
             @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
-            @deleted_text="(...deleted_text :any[]) => emits('deleted_text', deleted_text[0] as Text)"
+            @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"
             @deleted_notification="(...deleted_notification: any[]) => emits('deleted_notification', deleted_notification[0] as Notification)"
             @registered_kyou="(...registered_kyou: any[]) => emits('registered_kyou', registered_kyou[0] as Kyou)"
             @registered_tag="(...registered_tag: any[]) => emits('registered_tag', registered_tag[0] as Tag)"
@@ -49,8 +50,8 @@
             @updated_tag="(...updated_tag: any[]) => emits('updated_tag', updated_tag[0] as Tag)"
             @updated_text="(...updated_text: any[]) => emits('updated_text', updated_text[0] as Text)"
             @updated_notification="(...updated_notification: any[]) => emits('updated_notification', updated_notification[0] as Notification)"
-            @received_errors="(...errors :any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
-            @received_messages="(...messages :any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
+            @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
+            @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_reload_kyou="(...kyou: any[]) => emits('requested_reload_kyou', kyou[0] as Kyou)"
             @requested_reload_list="emits('requested_reload_list')"
             @requested_update_check_kyous="(...params: any[]) => emits('requested_update_check_kyous', params[0] as Array<Kyou>, params[1] as boolean)"
@@ -158,7 +159,7 @@ async function clicked_mi_check(): Promise<void> {
     await delete_gkill_kyou_cache(updated_mi.id)
     const req = new UpdateMiRequest()
     req.mi = updated_mi
-    req.want_response_kyou  = true
+    req.want_response_kyou = true
 
     const res = await props.gkill_api.update_mi(req)
     if (res.errors && res.errors.length !== 0) {
@@ -198,6 +199,10 @@ function get_canvas_font(element = document.body): string {
     const fontSize = get_css_style(element, 'font-size') || '16px'
     const fontFamily = get_css_style(element, 'font-family') || 'Times New Roman'
     return `${fontWeight} ${fontSize} ${fontFamily}`
+}
+
+function on_drag_start(e: DragEvent) {
+    e.dataTransfer!.setData("gkill_mi", JSON.stringify(props.kyou.typed_mi))
 }
 </script>
 <style lang="css" scoped>
