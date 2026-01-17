@@ -11,8 +11,8 @@
                 @scrollend.prevent="(e: any) => { e.preventDefault(); emits('scroll_list', e.target.scrollTop) }">
                 <template v-slot:default="{ item }">
                     <KyouView class="kyou_in_list" :application_config="application_config" :gkill_api="gkill_api"
-                        :key="item.id" :highlight_targets="[]" :is_image_view="false" :kyou="item"
-                        :last_added_tag="last_added_tag" :show_checkbox="show_checkbox"
+                        :draggable="draggable" :key="item.id" :highlight_targets="[]" :is_image_view="false"
+                        :kyou="item" :last_added_tag="last_added_tag" :show_checkbox="show_checkbox"
                         :show_content_only="show_content_only" :show_mi_create_time="true"
                         :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
                         :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="show_timeis_plaing_end_button"
@@ -55,9 +55,9 @@
                         <tr>
                             <td v-for="kyou in item" :key="kyou.id">
                                 <KyouView class="kyou_image_in_list" :application_config="application_config"
-                                    :key="kyou.id" :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="true"
-                                    :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
-                                    :show_content_only="true" :show_mi_create_time="true"
+                                    :draggable="draggable" :key="kyou.id" :gkill_api="gkill_api" :highlight_targets="[]"
+                                    :is_image_view="true" :kyou="kyou" :last_added_tag="last_added_tag"
+                                    :show_checkbox="false" :show_content_only="true" :show_mi_create_time="true"
                                     :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                                     :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
                                     :show_timeis_plaing_end_button="true" :height="'100%'" :width="'100%'"

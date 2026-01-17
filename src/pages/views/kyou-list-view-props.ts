@@ -24,4 +24,5 @@ export interface KyouListViewProps extends GkillPropsBase {
     is_show_arrow_button: boolean
     force_show_latest_kyou_info: boolean
     show_rep_name: boolean
+    draggable?: boolean
 }
