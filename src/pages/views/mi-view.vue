@@ -69,11 +69,13 @@
                 <tr>
                     <td valign="top" v-for="query, index in querys" :key="query.query_id"
                         :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
-                        <v-card>
+                        <v-card dropzone="true" @dragenter.prevent.stop="(...args: any[]) => { }"
+                            @drop.prevent.stop="(...args: any[]) => on_drop_board_task(args[0] as DragEvent, query)"
+                            @dragover.prevent.stop="(...args: any[]) => on_dragover_board_task(args[0] as DragEvent, query)">
                             <v-card-title v-if="query.use_mi_board_name">{{ query.mi_board_name }}</v-card-title>
                             <v-card-title v-if="!query.use_mi_board_name">{{ i18n.global.t("MI_ALL_TITLE")
-                            }}</v-card-title>
-                            <KyouListView :kyou_height="56 + 35" :width="400"
+                                }}</v-card-title>
+                            <KyouListView :kyou_height="56 + 35" :width="400" :draggable="true"
                                 :list_height="kyou_list_view_height.valueOf() - 48"
                                 :application_config="application_config" :gkill_api="gkill_api"
                                 :matched_kyous="match_kyous_list[index]" :query="query" :last_added_tag="last_added_tag"
@@ -446,6 +448,8 @@ import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import { Tag } from '@/classes/datas/tag'
+import { Mi } from '@/classes/datas/mi'
+import { UpdateMiRequest } from '@/classes/api/req_res/update-mi-request'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
@@ -702,6 +706,11 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Prom
 
 async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
     const query_id = query.query_id
+    const startIndex = querys.value.findIndex(q => q.query_id === query_id)
+    if (startIndex === -1) {
+        column_index = startIndex
+    }
+
     // 検索する。Tickでまとめる
     try {
         if (!force_search) {
@@ -870,6 +879,93 @@ function show_upload_file_dialog(): void {
 
 const enable_enter_shortcut = ref(true)
 useScopedEnterForKFTL(mi_root, show_kftl_dialog, enable_enter_shortcut);
+
+async function on_drop_board_task(e: DragEvent, find_kyou_query: FindKyouQuery) {
+    let mi: Mi
+    try {
+        const json_mi = JSON.parse(e.dataTransfer!.getData("gkill_mi"))
+        const parsed_mi = new Mi()
+        for (const key in json_mi) {
+            (parsed_mi as any)[key] = (json_mi as any)[key]
+
+            // 時刻はDate型に変換
+            if (key.endsWith("time") && (parsed_mi as any)[key]) {
+                (parsed_mi as any)[key] = new Date((parsed_mi as any)[key])
+            }
+        }
+        mi = parsed_mi
+    } catch (e: any) {
+        console.error(e)
+        return
+    }
+
+    if (!mi.id || mi.id == "") {
+        return
+    }
+
+    e!.preventDefault()
+    e!.stopPropagation()
+
+    const before_board_name = mi.board_name
+    const after_board_name = find_kyou_query.mi_board_name
+    if (before_board_name === after_board_name || !find_kyou_query.use_mi_board_name) {
+        return
+    }
+
+    mi.board_name = find_kyou_query.mi_board_name
+    mi.update_app = "gkill"
+    mi.update_device = props.application_config.device
+    mi.update_time = new Date(Date.now())
+    mi.update_user = props.application_config.user_id
+
+    const req = new UpdateMiRequest()
+    req.mi = mi
+    req.want_response_kyou = true
+    const res = await props.gkill_api.update_mi(req)
+    if (res.errors && res.errors.length !== 0) {
+        emits('received_errors', res.errors)
+        return
+    }
+    if (res.messages && res.messages.length !== 0) {
+        emits('received_messages', res.messages)
+    }
+    if (res.updated_kyou) {
+        emits('updated_kyou', res.updated_kyou)
+    }
+
+    // 更更新と更新あとの板をリロードする
+    let before_board_query_index = -1
+    let after_board_query_index = -1
+    let all_board_query_index = -1
+    for (let i = 0; i < querys.value.length; i++) {
+        const query = querys.value[i]
+        if (query.mi_board_name === before_board_name) {
+            before_board_query_index = i
+        }
+        if (query.mi_board_name === after_board_name) {
+            after_board_query_index = i
+        }
+        if (!query.use_mi_board_name) {
+            all_board_query_index = i
+        }
+    }
+    const reload_target_indexes = new Set<number>()
+    reload_target_indexes.add(before_board_query_index)
+    reload_target_indexes.add(after_board_query_index)
+    reload_target_indexes.add(all_board_query_index)
+    const targets = [...reload_target_indexes].filter(i => i !== -1)
+    for (const target_column_index of targets) {
+        skip_search_this_tick.value = true
+        // nextTick(() => skip_search_this_tick.value = false)
+        reload_list(target_column_index)
+        await nextTick(() => { })
+    }
+}
+function on_dragover_board_task(e: DragEvent, _find_kyou_query: FindKyouQuery) {
+    e!.dataTransfer!.dropEffect = "move"
+    e!.preventDefault()
+    e!.stopPropagation()
+}
 </script>
 <style lang="css" scoped>
 .kyou_detail_view.dummy {

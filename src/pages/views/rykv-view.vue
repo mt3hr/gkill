@@ -809,6 +809,11 @@ async function clicked_kyou_in_list_view(column_index: number, kyou: Kyou): Prom
 const abort_controllers: Ref<Array<AbortController>> = ref([])
 async function search(column_index: number, query: FindKyouQuery, force_search?: boolean, update_cache?: boolean): Promise<void> {
     const query_id = query.query_id
+    const startIndex = querys.value.findIndex(q => q.query_id === query_id)
+    if (startIndex === -1) {
+        column_index = startIndex
+    }
+
     await dnote_view.value?.abort()
     // 検索する。Tickでまとめる
     try {
