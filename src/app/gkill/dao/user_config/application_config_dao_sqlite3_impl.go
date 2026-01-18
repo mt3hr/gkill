@@ -98,11 +98,6 @@ func GetDefaultApplicationConfig(userID string, device string) *ApplicationConfi
 	}
 }
 
-func jsonRawPtr(s string) *json.RawMessage {
-	r := json.RawMessage(s)
-	return &r
-}
-
 var applicationConfigDefaultValue = map[string]interface{}{
 	"USER_ID":                       "",
 	"DEVICE":                        "",
@@ -116,14 +111,14 @@ var applicationConfigDefaultValue = map[string]interface{}{
 	"IS_SHOW_SHARE_FOOTER":          false,
 	"DEFAULT_PAGE":                  "rykv",
 	"SHOW_TAGS_IN_LIST":             true,
-	"RYUU_JSON_DATA":                jsonRawPtr("null"),
-	"TAG_STRUCT":                    jsonRawPtr("null"),
-	"REP_STRUCT":                    jsonRawPtr("null"),
-	"REP_TYPE_STRUCT":               jsonRawPtr("null"),
-	"DEVICE_STRUCT":                 jsonRawPtr("null"),
-	"MI_BOARD_STRUCT":               jsonRawPtr("null"),
-	"KFTL_TEMPLATE_STRUCT":          jsonRawPtr("null"),
-	"DNOTE_JSON_DATA":               jsonRawPtr("null"),
+	"RYUU_JSON_DATA":                "null",
+	"TAG_STRUCT":                    "null",
+	"REP_STRUCT":                    "null",
+	"REP_TYPE_STRUCT":               "null",
+	"DEVICE_STRUCT":                 "null",
+	"MI_BOARD_STRUCT":               "null",
+	"KFTL_TEMPLATE_STRUCT":          "null",
+	"DNOTE_JSON_DATA":               "null",
 }
 
 var ignoreDeviceNameConfigKey = []string{

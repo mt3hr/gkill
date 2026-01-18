@@ -322,7 +322,7 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 			queryLatest := &queryLatestValue
 
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if query.IDs != nil {
+			if query.IDs == nil || len(*query.IDs) == 0 {
 				ids := append([]string{}, *query.IDs...)
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
@@ -964,7 +964,7 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 			queryLatest := &queryLatestValue
 
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if query.IDs != nil {
+			if query.IDs == nil || len(*query.IDs) == 0 {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
@@ -1420,7 +1420,7 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 				ids = append([]string{}, *query.IDs...)
 			}
 			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if len(ids) == 0 {
+			if query.IDs == nil || len(ids) == 0 {
 				repName, err := rep.GetRepName(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at get rep name: %w", err)
