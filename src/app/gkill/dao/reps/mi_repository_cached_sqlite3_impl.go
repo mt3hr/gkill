@@ -1774,6 +1774,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 }
 
 func (m *miRepositoryCachedSQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	sql := `
 INSERT INTO ` + m.dbName + ` (
   IS_DELETED,

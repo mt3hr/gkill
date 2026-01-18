@@ -150,6 +150,8 @@ func (i *idfKyouRepositoryTempSQLite3Impl) IDF(ctx context.Context) error {
 }
 
 func (i *idfKyouRepositoryTempSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou, txID string, userID string, device string) error {
+	i.m.Lock()
+	defer i.m.Unlock()
 	sql := `
 INSERT INTO IDF (
   IS_DELETED,

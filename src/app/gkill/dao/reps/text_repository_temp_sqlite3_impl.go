@@ -166,6 +166,8 @@ func (t *textTempRepositorySQLite3Impl) GetTextHistories(ctx context.Context, id
 }
 
 func (t *textTempRepositorySQLite3Impl) AddTextInfo(ctx context.Context, text *Text, txID string, userID string, device string) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	sql := `
 INSERT INTO TEXT (
   IS_DELETED,

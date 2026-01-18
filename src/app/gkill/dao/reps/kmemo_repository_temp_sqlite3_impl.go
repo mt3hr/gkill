@@ -130,6 +130,8 @@ func (k *kmemoTempRepositorySQLite3Impl) GetKmemoHistories(ctx context.Context, 
 }
 
 func (k *kmemoTempRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo *Kmemo, txID string, userID string, device string) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	sql := `
 INSERT INTO KMEMO (
   IS_DELETED,

@@ -724,6 +724,8 @@ WHERE
 	return notifications, nil
 }
 func (t *notificationRepositoryCachedSQLite3Impl) AddNotificationInfo(ctx context.Context, notification *Notification) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	sql := `
 INSERT INTO ` + t.dbName + ` (
   IS_DELETED,

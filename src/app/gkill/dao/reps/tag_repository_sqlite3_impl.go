@@ -745,6 +745,8 @@ WHERE
 }
 
 func (t *tagRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag *Tag) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	var err error
 	var db *sql.DB
 	if t.fullConnect {

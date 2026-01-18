@@ -758,6 +758,8 @@ WHERE
 }
 
 func (u *urlogRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog) error {
+	u.m.Lock()
+	defer u.m.Unlock()
 	var err error
 	var db *sql.DB
 	if u.fullConnect {

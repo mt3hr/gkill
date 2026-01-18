@@ -613,6 +613,8 @@ WHERE
 	return texts, nil
 }
 func (t *textRepositorySQLite3Impl) AddTextInfo(ctx context.Context, text *Text) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	var err error
 	var db *sql.DB
 	if t.fullConnect {

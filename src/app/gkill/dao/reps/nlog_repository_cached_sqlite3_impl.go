@@ -748,6 +748,8 @@ WHERE
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
+	n.m.Lock()
+	defer n.m.Unlock()
 	sql := `
 INSERT INTO ` + n.dbName + ` (
   IS_DELETED,
