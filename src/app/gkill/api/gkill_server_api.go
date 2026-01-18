@@ -1450,8 +1450,6 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.TagTempRep.AddTagInfo(r.Context(), request.Tag, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
@@ -1628,8 +1626,6 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.TextTempRep.AddTextInfo(r.Context(), request.Text, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
@@ -1806,8 +1802,6 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(r.Context(), request.Notification, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
@@ -2044,8 +2038,6 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(r.Context(), request.Kmemo, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
@@ -2237,8 +2229,6 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.KCTempRep.AddKCInfo(r.Context(), request.KC, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
@@ -2459,8 +2449,6 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(r.Context(), request.URLog, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
@@ -2650,8 +2638,6 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(r.Context(), request.Nlog, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
@@ -2841,8 +2827,6 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(r.Context(), request.TimeIs, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
@@ -3034,8 +3018,6 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.LantanaTempRep.AddLantanaInfo(r.Context(), request.Lantana, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
@@ -3228,8 +3210,6 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.MiTempRep.AddMiInfo(r.Context(), request.Mi, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
@@ -3421,8 +3401,6 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(r.Context(), request.ReKyou, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
@@ -3605,8 +3583,6 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.TagTempRep.AddTagInfo(r.Context(), request.Tag, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
@@ -3797,8 +3773,6 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.TextTempRep.AddTextInfo(r.Context(), request.Text, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
@@ -3988,8 +3962,6 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(r.Context(), request.Notification, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
@@ -4203,8 +4175,6 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(r.Context(), request.Kmemo, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
@@ -4407,8 +4377,6 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.KCTempRep.AddKCInfo(r.Context(), request.KC, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
@@ -4677,8 +4645,6 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(r.Context(), request.URLog, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
@@ -4880,8 +4846,6 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(r.Context(), request.Nlog, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
@@ -5084,8 +5048,6 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(r.Context(), request.TimeIs, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
@@ -5288,8 +5250,6 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.LantanaTempRep.AddLantanaInfo(r.Context(), request.Lantana, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
@@ -5492,8 +5452,6 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.IDFKyouTempRep.AddIDFKyouInfo(r.Context(), request.IDFKyou, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
@@ -5706,8 +5664,6 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.MiTempRep.AddMiInfo(r.Context(), request.Mi, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
@@ -5887,8 +5843,6 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 			}
 		}
 	} else {
-		repositories.TempMemoryDBMutex.Lock()
-		defer repositories.TempMemoryDBMutex.Unlock()
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(r.Context(), request.ReKyou, *request.TXID, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
