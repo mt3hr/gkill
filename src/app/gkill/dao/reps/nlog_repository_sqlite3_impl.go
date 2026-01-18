@@ -748,6 +748,8 @@ WHERE
 }
 
 func (n *nlogRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog) error {
+	n.m.Lock()
+	defer n.m.Unlock()
 	var err error
 	var db *sql.DB
 	if n.fullConnect {

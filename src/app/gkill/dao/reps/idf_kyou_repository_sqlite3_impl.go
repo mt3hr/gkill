@@ -1302,6 +1302,8 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 }
 
 func (i *idfKyouRepositorySQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
+	i.m.Lock()
+	defer i.m.Unlock()
 	sql := `
 INSERT INTO IDF (
   IS_DELETED,

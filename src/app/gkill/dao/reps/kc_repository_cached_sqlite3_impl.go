@@ -737,6 +737,8 @@ WHERE
 }
 
 func (k *kcRepositoryCachedSQLite3Impl) AddKCInfo(ctx context.Context, kc *KC) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	sql := `
 INSERT INTO ` + k.dbName + ` (
   IS_DELETED,

@@ -625,6 +625,8 @@ WHERE
 	return texts, nil
 }
 func (t *textRepositoryCachedSQLite3Impl) AddTextInfo(ctx context.Context, text *Text) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	sql := `
 INSERT INTO ` + t.dbName + ` (
   IS_DELETED,

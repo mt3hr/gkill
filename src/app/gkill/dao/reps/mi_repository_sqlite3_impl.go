@@ -1695,6 +1695,8 @@ func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string)
 }
 
 func (m *miRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	var err error
 	var db *sql.DB
 	if m.fullConnect {

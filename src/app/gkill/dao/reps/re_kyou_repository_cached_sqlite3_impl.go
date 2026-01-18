@@ -622,6 +622,8 @@ WHERE
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
+	r.m.Lock()
+	defer r.m.Unlock()
 	sql := `
 INSERT INTO ` + r.dbName + ` (
   IS_DELETED,

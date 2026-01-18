@@ -170,6 +170,8 @@ func (t *tagTempRepositorySQLite3Impl) GetTagHistories(ctx context.Context, id s
 }
 
 func (t *tagTempRepositorySQLite3Impl) AddTagInfo(ctx context.Context, tag *Tag, txID string, userID string, device string) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	sql := `
 INSERT INTO TAG (
   IS_DELETED,

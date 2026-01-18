@@ -136,6 +136,8 @@ func (m *miTempRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id str
 }
 
 func (m *miTempRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi, txID string, userID string, device string) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	sql := `
 INSERT INTO MI (
   IS_DELETED,

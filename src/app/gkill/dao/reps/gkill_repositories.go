@@ -209,6 +209,8 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		for !repositories.isClosed {
 			<-ticker.C
 			if repositories.IsUpdateCacheNextTick {
+				repositories.CacheMemoryDBMutex.Lock()
+				defer repositories.CacheMemoryDBMutex.Unlock()
 				err := repositories.UpdateCache(context.Background())
 				if err != nil {
 					gkill_log.Error.Println(err.Error())
