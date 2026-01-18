@@ -725,6 +725,8 @@ WHERE
 }
 
 func (k *kmemoRepositorySQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	var err error
 	var db *sql.DB
 	if k.fullConnect {

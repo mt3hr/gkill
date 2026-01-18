@@ -993,6 +993,8 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) IDF(ctx context.Context) error {
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
+	i.m.Lock()
+	defer i.m.Unlock()
 	sql := `
 INSERT INTO ` + i.dbName + ` (
   IS_DELETED,

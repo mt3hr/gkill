@@ -134,6 +134,8 @@ func (n *nlogTempRepositorySQLite3Impl) GetNlogHistories(ctx context.Context, id
 }
 
 func (n *nlogTempRepositorySQLite3Impl) AddNlogInfo(ctx context.Context, nlog *Nlog, txID string, userID string, device string) error {
+	n.m.Lock()
+	defer n.m.Unlock()
 	sql := `
 INSERT INTO NLOG (
   IS_DELETED,

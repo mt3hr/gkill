@@ -134,6 +134,8 @@ func (u *urlogTempRepositorySQLite3Impl) GetURLogHistories(ctx context.Context, 
 }
 
 func (u *urlogTempRepositorySQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog, txID string, userID string, device string) error {
+	u.m.Lock()
+	defer u.m.Unlock()
 	sql := `
 INSERT INTO URLOG (
   IS_DELETED,

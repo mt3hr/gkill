@@ -134,6 +134,8 @@ func (k *kcTempRepositorySQLite3Impl) GetKCHistories(ctx context.Context, id str
 }
 
 func (k *kcTempRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc *KC, txID string, userID string, device string) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	sql := `
 INSERT INTO kc (
   IS_DELETED,

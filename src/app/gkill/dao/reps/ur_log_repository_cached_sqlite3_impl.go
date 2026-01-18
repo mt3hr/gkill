@@ -769,6 +769,8 @@ WHERE
 }
 
 func (u *urlogRepositoryCachedSQLite3Impl) AddURLogInfo(ctx context.Context, urlog *URLog) error {
+	u.m.Lock()
+	defer u.m.Unlock()
 	sql := `
 INSERT INTO ` + u.dbName + ` (
   IS_DELETED,
