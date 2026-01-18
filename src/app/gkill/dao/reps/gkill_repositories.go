@@ -95,8 +95,8 @@ type GkillRepositories struct {
 	LatestDataRepositoryAddressDAO account_state.LatestDataRepositoryAddressDAO
 	TempReps                       *TempReps
 
-	LatestDataRepositoryAddresses map[string]*account_state.LatestDataRepositoryAddress
-	LastFindTime                  time.Time
+	LatestDataRepositoryAddresses                       map[string]*account_state.LatestDataRepositoryAddress
+	LastUpdatedLatestDataRepositoryAddressCacheFindTime time.Time
 
 	IsUpdateCacheNextTick bool
 	updateCacheTicker     *time.Ticker
@@ -200,9 +200,9 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		TempMemoryDBMutex:  TempMemoryDBMutex,
 		CacheMemoryDBMutex: CacheMemoryDBMutex,
 
-		updateCacheTicker:             ticker,
-		LatestDataRepositoryAddresses: nil,
-		LastFindTime:                  time.Unix(0, 0),
+		updateCacheTicker:                                   ticker,
+		LatestDataRepositoryAddresses:                       nil,
+		LastUpdatedLatestDataRepositoryAddressCacheFindTime: time.Unix(0, 0),
 	}
 
 	go func() {
@@ -761,7 +761,7 @@ notificationsloop:
 	}
 
 	// 最新のKyou, Tag, Text, Notificationの状態をLatestDataRepositoryAddressにいれる
-	latestDataRepositoryAddresses := []*account_state.LatestDataRepositoryAddress{}
+	latestDataRepositoryAddresses := make([]*account_state.LatestDataRepositoryAddress, 0, len(latestKyousMap)+len(latestTagsMap)+len(latestTextsMap)+len(latestNotificationsMap))
 	for _, kyou := range latestKyousMap {
 		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
 			IsDeleted:                              kyou.IsDeleted,
@@ -806,11 +806,25 @@ notificationsloop:
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 
-	err = g.LatestDataRepositoryAddressDAO.UpdateLatestDataRepositoryAddressesData(ctx, latestDataRepositoryAddresses)
+	updatedLatestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.ExtructUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
 	if err != nil {
 		err = fmt.Errorf("error at update latest data repository address cache data: %w", err)
 		return err
 	}
+
+	if g.LatestDataRepositoryAddresses == nil {
+		g.LatestDataRepositoryAddresses = map[string]*account_state.LatestDataRepositoryAddress{}
+	}
+	for _, updatedLatestDataRepositoryAddress := range updatedLatestDataRepositoryAddresses {
+		g.LatestDataRepositoryAddresses[updatedLatestDataRepositoryAddress.TargetID] = updatedLatestDataRepositoryAddress
+	}
+
+	_, err = g.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, updatedLatestDataRepositoryAddresses)
+	if err != nil {
+		err = fmt.Errorf("error at update latest data repository address cache data: %w", err)
+		return err
+	}
+	g.LastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
 	return nil
 }
 
