@@ -703,6 +703,8 @@ WHERE
 }
 
 func (t *tagRepositoryCachedSQLite3Impl) AddTagInfo(ctx context.Context, tag *Tag) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	sql := `
 INSERT INTO ` + t.dbName + ` (
   IS_DELETED,

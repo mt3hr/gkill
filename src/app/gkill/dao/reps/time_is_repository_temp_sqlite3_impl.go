@@ -132,6 +132,8 @@ func (t *timeIsTempRepositorySQLite3Impl) GetTimeIsHistories(ctx context.Context
 }
 
 func (t *timeIsTempRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis *TimeIs, txID string, userID string, device string) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	sql := `
 INSERT INTO TIMEIS (
   IS_DELETED,

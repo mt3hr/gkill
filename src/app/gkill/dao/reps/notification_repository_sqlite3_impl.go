@@ -719,6 +719,8 @@ WHERE
 	return notifications, nil
 }
 func (t *notificationRepositorySQLite3Impl) AddNotificationInfo(ctx context.Context, notification *Notification) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	var err error
 	var db *sql.DB
 	if t.fullConnect {

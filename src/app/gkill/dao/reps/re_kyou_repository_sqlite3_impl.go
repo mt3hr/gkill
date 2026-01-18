@@ -600,6 +600,8 @@ WHERE
 }
 
 func (r *reKyouRepositorySQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou *ReKyou) error {
+	r.m.Lock()
+	defer r.m.Unlock()
 	var err error
 	var db *sql.DB
 	if r.fullConnect {
