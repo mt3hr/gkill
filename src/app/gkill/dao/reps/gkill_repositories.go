@@ -102,8 +102,8 @@ type GkillRepositories struct {
 	updateCacheTicker     *time.Ticker
 	isClosed              bool
 
-	cancelPreFunc context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
-	m             sync.Mutex
+	cancelPreFunc    context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
+	updateCacheMutex sync.Mutex
 
 	CacheMemoryDBMutex *sync.Mutex
 	CacheMemoryDB      *sql.DB
@@ -193,7 +193,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 
 		TempReps: TempReps,
 
-		m: sync.Mutex{},
+		updateCacheMutex: sync.Mutex{},
 
 		TempMemoryDB:       TempMemoryDB,
 		CacheMemoryDB:      CacheMemoryDB,
@@ -209,12 +209,10 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		for !repositories.isClosed {
 			<-ticker.C
 			if repositories.IsUpdateCacheNextTick {
-				repositories.CacheMemoryDBMutex.Lock()
-				defer repositories.CacheMemoryDBMutex.Unlock()
 				err := repositories.UpdateCache(context.Background())
 				if err != nil {
 					gkill_log.Error.Println(err.Error())
-					continue
+					return
 				}
 				repositories.IsUpdateCacheNextTick = false
 			}
@@ -445,12 +443,11 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 }
 
 func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
-
 	<-updateCacheThreadPool
 	func() {
 		defer func() { updateCacheThreadPool <- struct{}{} }()
-		g.m.Lock()
-		defer g.m.Unlock()
+		g.updateCacheMutex.Lock()
+		defer g.updateCacheMutex.Unlock()
 
 		var cancelFunc context.CancelFunc
 
