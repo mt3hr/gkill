@@ -144,11 +144,7 @@ func NewGkillServerAPI() (*GkillServerAPI, error) {
 		return nil, err
 	}
 	if len(applicationConfigs) == 0 {
-		applicationConfig := &user_config.ApplicationConfig{
-			UserID: "admin",
-			Device: *device,
-		}
-		_, err := gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
+		_, err = gkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddDefaultApplicationConfig(context.Background(), "admin", *device)
 		if err != nil {
 			err = fmt.Errorf("error at add application config admin: %w", err)
 			return nil, err
@@ -4606,11 +4602,9 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			err = fmt.Errorf("try create application config user id = %s device = %s: %w", userID, device, err)
 			gkill_log.Debug.Println(err.Error())
 
-			newApplicationConfig := &user_config.ApplicationConfig{
-				UserID: userID,
-				Device: device,
-			}
-			_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), newApplicationConfig)
+			defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
+			_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), defaultApplicationConfig)
+
 			if err != nil {
 				gkillError := &message.GkillError{
 					ErrorCode:    message.GetApplicationConfigError,
@@ -7813,11 +7807,9 @@ func (g *GkillServerAPI) HandleGetApplicationConfig(w http.ResponseWriter, r *ht
 		err = fmt.Errorf("try create application config user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
 
-		newApplicationConfig := &user_config.ApplicationConfig{
-			UserID: userID,
-			Device: device,
-		}
-		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(r.Context(), newApplicationConfig)
+		defaultApplicationConfig := user_config.GetDefaultApplicationConfig(userID, device)
+		_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), defaultApplicationConfig)
+
 		if err != nil {
 			gkillError := &message.GkillError{
 				ErrorCode:    message.GetApplicationConfigError,
@@ -9067,7 +9059,6 @@ func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *htt
 }
 
 func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.AddAccountRequest{}
 	response := &req_res.AddAccountResponse{}
@@ -9155,22 +9146,33 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	}
 
 	// アカウント情報を追加
+	defaultApplicationConfig := user_config.GetDefaultApplicationConfig(request.AccountInfo.UserID, device)
+	_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), defaultApplicationConfig)
+	if err != nil {
+		err = fmt.Errorf("error at add application config user id = %s id = %s: %w", userID, request.AccountInfo.UserID, err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.AddApplicationConfig,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_ADDED_GET_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	passwordResetToken := GenerateNewID()
-	newAccount := &account.Account{
+	account := &account.Account{
 		UserID:             request.AccountInfo.UserID,
-		IsAdmin:            false,
-		IsEnable:           true,
+		IsAdmin:            request.AccountInfo.IsAdmin,
+		IsEnable:           request.AccountInfo.IsEnable,
 		PasswordResetToken: &passwordResetToken,
 	}
-	ok, err := g.GkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(r.Context(), newAccount)
-	if !ok || err != nil {
-		if err != nil {
-			err = fmt.Errorf("error at add account user id = %s device = %s account = %#v: %w", userID, device, request.AccountInfo, err)
-			gkill_log.Debug.Println(err.Error())
-		}
+	_, err = g.GkillDAOManager.ConfigDAOs.AccountDAO.AddAccount(r.Context(), account)
+	if err != nil {
+		err = fmt.Errorf("error at add account user id = %s id = %s: %w", userID, request.AccountInfo.UserID, err)
+		gkill_log.Debug.Println(err.Error())
 		gkillError := &message.GkillError{
-			ErrorCode:    message.AddAccountError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_MESSAGE"}),
+			ErrorCode:    message.AddApplicationConfig,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)
 		return
@@ -9191,22 +9193,6 @@ func (g *GkillServerAPI) HandleAddAccount(w http.ResponseWriter, r *http.Request
 	if requesterAccount == nil {
 		gkillError := &message.GkillError{
 			ErrorCode:    message.GetAccountError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_ADDED_GET_MESSAGE"}),
-		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
-
-	applicationConfig := &user_config.ApplicationConfig{
-		UserID: request.AccountInfo.UserID,
-		Device: device,
-	}
-	_, err = g.GkillDAOManager.ConfigDAOs.AppllicationConfigDAO.AddApplicationConfig(context.TODO(), applicationConfig)
-	if err != nil {
-		err = fmt.Errorf("error at add application config user id = %s id = %s: %w", userID, request.AccountInfo.UserID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.AddApplicationConfig,
 			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_ACCOUNT_ADDED_GET_MESSAGE"}),
 		}
 		response.Errors = append(response.Errors, gkillError)

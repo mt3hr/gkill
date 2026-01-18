@@ -9,6 +9,8 @@ type ApplicationConfigDAO interface {
 
 	AddApplicationConfig(ctx context.Context, applicationConfig *ApplicationConfig) (bool, error)
 
+	AddDefaultApplicationConfig(ctx context.Context, userID string, device string) (bool, error)
+
 	UpdateApplicationConfig(ctx context.Context, applicationConfig *ApplicationConfig) (bool, error)
 
 	DeleteApplicationConfig(ctx context.Context, userID string, device string) (bool, error)
