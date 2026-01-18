@@ -14,7 +14,7 @@ type ApplicationConfig struct {
 
 	GoogleMapAPIKey string `json:"google_map_api_key"`
 
-	RykvImageListColumnNumber int `json:"rykv_image_list_column_number"`
+	RykvImageListColumnNumber json.Number `json:"rykv_image_list_column_number"`
 
 	RykvHotReload bool `json:"rykv_hot_reload"`
 
