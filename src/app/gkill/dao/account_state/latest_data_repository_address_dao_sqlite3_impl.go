@@ -586,11 +586,11 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 	return true, nil
 }
 
-func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddressesData(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) error {
+func (l *latestDataRepositoryAddressSQLite3Impl) ExtructUpdatedLatestDataRepositoryAddressDatas(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) ([]*LatestDataRepositoryAddress, error) {
 	existlatestDataRepositoryAddresses, err := l.GetAllLatestDataRepositoryAddresses(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
-		return err
+		return nil, err
 	}
 
 	latestDataRepositoryAddressMap := map[string]*LatestDataRepositoryAddress{}
@@ -609,7 +609,15 @@ func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddre
 			notExistsLatestDataRepositoryAddresses = append(notExistsLatestDataRepositoryAddresses, latestDataRepositoryAddress)
 		}
 	}
+	return notExistsLatestDataRepositoryAddresses, nil
+}
 
+func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddressesData(ctx context.Context, latestDataRepositoryAddresses []*LatestDataRepositoryAddress) error {
+	notExistsLatestDataRepositoryAddresses, err := l.ExtructUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
+	if err != nil {
+		err = fmt.Errorf("error at add or update latest data repository addresses: %w", err)
+		return err
+	}
 	// いれる
 	_, err = l.AddOrUpdateLatestDataRepositoryAddresses(ctx, notExistsLatestDataRepositoryAddresses)
 	if err != nil {

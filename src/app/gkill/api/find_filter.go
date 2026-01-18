@@ -72,12 +72,37 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		return nil, gkillErr, err
 	}
 	gkill_log.Trace.Printf("finish selectMatchRepsFromQuery")
-	gkillErr, err = f.updateCache(ctx, findKyouContext)
-	if err != nil {
-		err = fmt.Errorf("error at update cache: %w", err)
-		return nil, gkillErr, err
+	if findKyouContext.ParsedFindQuery.UpdateCache != nil && *findKyouContext.ParsedFindQuery.UpdateCache {
+		gkillErr, err = f.updateCache(ctx, findKyouContext)
+		if err != nil {
+			err = fmt.Errorf("error at update cache: %w", err)
+			return nil, gkillErr, err
+		}
+		gkill_log.Trace.Printf("finish updateCache")
+
 	}
-	gkill_log.Trace.Printf("finish updateCache")
+
+	if !gkill_options.IsCacheInMemory {
+		if findKyouContext.Repositories.LatestDataRepositoryAddresses == nil {
+			latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+			if err != nil {
+				err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
+				return nil, nil, err
+			}
+			findKyouContext.Repositories.LatestDataRepositoryAddresses = latestDatas
+		} else {
+			updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime, math.MaxInt)
+			if err != nil {
+				err = fmt.Errorf("error at get updated latest data repository addresses: %w", err)
+				return nil, nil, err
+			}
+			for _, latestData := range updatedLatestDatas {
+				findKyouContext.Repositories.LatestDataRepositoryAddresses[latestData.TargetID] = latestData
+			}
+		}
+		findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
+		gkill_log.Trace.Printf("finish update latest data repository address")
+	}
 
 	wg := &sync.WaitGroup{}
 	doneCh := make(chan struct{})
@@ -85,25 +110,6 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	gkillErrch := make(chan []*message.GkillError)
 	defer close(errch)
 	defer close(gkillErrch)
-
-	if findKyouContext.Repositories.LatestDataRepositoryAddresses == nil {
-		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
-		if err != nil {
-			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
-			return nil, nil, err
-		}
-		findKyouContext.Repositories.LatestDataRepositoryAddresses = latestDatas
-	} else {
-		updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, findKyouContext.Repositories.LastFindTime, math.MaxInt)
-		if err != nil {
-			err = fmt.Errorf("error at get updated latest data repository addresses: %w", err)
-			return nil, nil, err
-		}
-		for _, latestData := range updatedLatestDatas {
-			findKyouContext.Repositories.LatestDataRepositoryAddresses[latestData.TargetID] = latestData
-		}
-	}
-	findKyouContext.Repositories.LastFindTime = time.Now()
 
 	catchErrFunc := func() ([]*message.GkillError, error) {
 		gkillErrors := []*message.GkillError{}
@@ -369,13 +375,6 @@ func (f *FindFilter) getRepositories(ctx context.Context, userID string, device 
 	}
 	findCtx.Repositories = repositories
 
-	if findCtx.ParsedFindQuery.UpdateCache != nil && *findCtx.ParsedFindQuery.UpdateCache {
-		err := repositories.UpdateCache(ctx)
-		if err != nil {
-			err = fmt.Errorf("error at update repositories cache: %w", err)
-			return nil, err
-		}
-	}
 	return nil, nil
 }
 
@@ -480,38 +479,9 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 }
 
 func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	var err error
-	existErr := false
-	wg := &sync.WaitGroup{}
-	errch := make(chan error, len(findCtx.MatchReps))
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range findCtx.MatchReps {
-		wg.Add(1)
-		done := threads.AllocateThread()
-		go func(rep reps.Repository) {
-			defer done()
-			defer wg.Done()
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-			errch <- nil
-		}(rep)
-	}
-	wg.Wait()
-
-	// エラー集約
-	for range len(findCtx.MatchReps) {
-		e := <-errch
-		if e != nil {
-			err = fmt.Errorf("error at update cache: %w: %w", e, err)
-			existErr = true
-		}
-	}
-	if existErr {
+	err := findCtx.Repositories.UpdateCache(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at update repositories cache: %w", err)
 		return nil, err
 	}
 	falseValue := false
