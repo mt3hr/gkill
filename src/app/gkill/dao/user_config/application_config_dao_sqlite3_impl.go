@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -74,28 +73,59 @@ CREATE TABLE IF NOT EXISTS APPLICATION_CONFIG (
 	}, nil
 }
 
+func GetDefaultApplicationConfig(userID string, device string) *ApplicationConfig {
+	return &ApplicationConfig{
+		UserID:                    userID,
+		Device:                    device,
+		UseDarkTheme:              (applicationConfigDefaultValue["USE_DARK_THEME"]).(bool),
+		GoogleMapAPIKey:           (applicationConfigDefaultValue["GOOGLE_MAP_API_KEY"]).(string),
+		RykvImageListColumnNumber: (applicationConfigDefaultValue["RYKV_IMAGE_LIST_COLUMN_NUMBER"]).(json.Number),
+		RykvHotReload:             (applicationConfigDefaultValue["RYKV_HOT_RELOAD"]).(bool),
+		MiDefaultBoard:            (applicationConfigDefaultValue["MI_DEFAULT_BOARD"]).(string),
+		RykvDefaultPeriod:         (applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"]).(json.Number),
+		MiDefaultPeriod:           (applicationConfigDefaultValue["MI_DEFAULT_PERIOD"]).(json.Number),
+		IsShowShareFooter:         (applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"]).(bool),
+		DefaultPage:               (applicationConfigDefaultValue["DEFAULT_PAGE"]).(string),
+		ShowTagsInList:            (applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"]).(bool),
+		RyuuJSONData:              (applicationConfigDefaultValue["RYUU_JSON_DATA"]).(*json.RawMessage),
+		TagStruct:                 (applicationConfigDefaultValue["TAG_STRUCT"]).(*json.RawMessage),
+		RepStruct:                 (applicationConfigDefaultValue["REP_STRUCT"]).(*json.RawMessage),
+		RepTypeStruct:             (applicationConfigDefaultValue["REP_TYPE_STRUCT"]).(*json.RawMessage),
+		DeviceStruct:              (applicationConfigDefaultValue["DEVICE_STRUCT"]).(*json.RawMessage),
+		MiBoardStruct:             (applicationConfigDefaultValue["MI_BOARD_STRUCT"]).(*json.RawMessage),
+		KFTLTemplate:              (applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"]).(*json.RawMessage),
+		DnoteJSONData:             (applicationConfigDefaultValue["DNOTE_JSON_DATA"]).(*json.RawMessage),
+	}
+}
+
+func jsonRawPtr(s string) *json.RawMessage {
+	r := json.RawMessage(s)
+	return &r
+}
+
 var applicationConfigDefaultValue = map[string]interface{}{
 	"USER_ID":                       "",
 	"DEVICE":                        "",
 	"USE_DARK_THEME":                false,
 	"GOOGLE_MAP_API_KEY":            "",
-	"RYKV_IMAGE_LIST_COLUMN_NUMBER": 3,
+	"RYKV_IMAGE_LIST_COLUMN_NUMBER": json.Number("3"),
 	"RYKV_HOT_RELOAD":               true,
-	"RYKV_DEFAULT_PERIOD":           31,
+	"RYKV_DEFAULT_PERIOD":           json.Number("-1"),
 	"MI_DEFAULT_BOARD":              "Inbox",
-	"MI_DEFAULT_PERIOD":             -1,
+	"MI_DEFAULT_PERIOD":             json.Number("-1"),
 	"IS_SHOW_SHARE_FOOTER":          false,
 	"DEFAULT_PAGE":                  "rykv",
 	"SHOW_TAGS_IN_LIST":             true,
-	"RYUU_JSON_DATA":                "null",
-	"TAG_STRUCT":                    "null",
-	"REP_STRUCT":                    "null",
-	"REP_TYPE_STRUCT":               "null",
-	"DEVICE_STRUCT":                 "null",
-	"MI_BOARD_STRUCT":               "null",
-	"KFTL_TEMPLATE_STRUCT":          "null",
-	"DNOTE_JSON_DATA":               "null",
+	"RYUU_JSON_DATA":                jsonRawPtr("null"),
+	"TAG_STRUCT":                    jsonRawPtr("null"),
+	"REP_STRUCT":                    jsonRawPtr("null"),
+	"REP_TYPE_STRUCT":               jsonRawPtr("null"),
+	"DEVICE_STRUCT":                 jsonRawPtr("null"),
+	"MI_BOARD_STRUCT":               jsonRawPtr("null"),
+	"KFTL_TEMPLATE_STRUCT":          jsonRawPtr("null"),
+	"DNOTE_JSON_DATA":               jsonRawPtr("null"),
 }
+
 var ignoreDeviceNameConfigKey = []string{
 	"RYUU_JSON_DATA",
 	"TAG_STRUCT",
@@ -375,8 +405,6 @@ GROUP BY USER_ID, DEVICE
 			return nil, ctx.Err()
 		default:
 			applicationConfig := &ApplicationConfig{}
-			rykvDefaultPeriod := -1
-			miDefaultPeriod := -1
 			ryuuJSONData := ""
 			tagStrcut := ""
 			repStruct := ""
@@ -394,8 +422,8 @@ GROUP BY USER_ID, DEVICE
 				&applicationConfig.RykvImageListColumnNumber,
 				&applicationConfig.RykvHotReload,
 				&applicationConfig.MiDefaultBoard,
-				&rykvDefaultPeriod,
-				&miDefaultPeriod,
+				&applicationConfig.RykvDefaultPeriod,
+				&applicationConfig.MiDefaultPeriod,
 				&applicationConfig.IsShowShareFooter,
 				&applicationConfig.DefaultPage,
 				&applicationConfig.ShowTagsInList,
@@ -412,8 +440,6 @@ GROUP BY USER_ID, DEVICE
 				return nil, err
 			}
 
-			applicationConfig.RykvDefaultPeriod = json.Number(strconv.Itoa(rykvDefaultPeriod))
-			applicationConfig.MiDefaultPeriod = json.Number(strconv.Itoa(miDefaultPeriod))
 			if ryuuJSONData != "" {
 				r := json.RawMessage(ryuuJSONData)
 				applicationConfig.RyuuJSONData = &r
@@ -727,8 +753,6 @@ HAVING USER_ID = ? AND DEVICE = ?
 			return nil, ctx.Err()
 		default:
 			applicationConfig := &ApplicationConfig{}
-			rykvDefaultPeriod := -1
-			miDefaultPeriod := -1
 			ryuuJSONData := ""
 			tagStrcut := ""
 			repStruct := ""
@@ -746,8 +770,8 @@ HAVING USER_ID = ? AND DEVICE = ?
 				&applicationConfig.RykvImageListColumnNumber,
 				&applicationConfig.RykvHotReload,
 				&applicationConfig.MiDefaultBoard,
-				&rykvDefaultPeriod,
-				&miDefaultPeriod,
+				&applicationConfig.RykvDefaultPeriod,
+				&applicationConfig.MiDefaultPeriod,
 				&applicationConfig.IsShowShareFooter,
 				&applicationConfig.DefaultPage,
 				&applicationConfig.ShowTagsInList,
@@ -761,8 +785,6 @@ HAVING USER_ID = ? AND DEVICE = ?
 				&dnoteJsonData,
 			)
 
-			applicationConfig.RykvDefaultPeriod = json.Number(strconv.Itoa(rykvDefaultPeriod))
-			applicationConfig.MiDefaultPeriod = json.Number(strconv.Itoa(miDefaultPeriod))
 			if ryuuJSONData != "" {
 				r := json.RawMessage(ryuuJSONData)
 				applicationConfig.RyuuJSONData = &r
@@ -800,17 +822,17 @@ HAVING USER_ID = ? AND DEVICE = ?
 		}
 	}
 	if len(applicationConfigs) == 0 {
-		// なかっデフォ値を返す。
+		// なかったらデフォ値を返す。
 		application_config := &ApplicationConfig{
 			UserID:                    userID,
 			Device:                    device,
 			UseDarkTheme:              (applicationConfigDefaultValue["USE_DARK_THEME"]).(bool),
 			GoogleMapAPIKey:           (applicationConfigDefaultValue["GOOGLE_MAP_API_KEY"]).(string),
-			RykvImageListColumnNumber: (applicationConfigDefaultValue["RYKV_IMAGE_LIST_COLUMN_NUMBER"]).(int),
+			RykvImageListColumnNumber: (applicationConfigDefaultValue["RYKV_IMAGE_LIST_COLUMN_NUMBER"]).(json.Number),
 			RykvHotReload:             (applicationConfigDefaultValue["RYKV_HOT_RELOAD"]).(bool),
 			MiDefaultBoard:            (applicationConfigDefaultValue["MI_DEFAULT_BOARD"]).(string),
-			RykvDefaultPeriod:         json.Number(strconv.Itoa((applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"]).(int))),
-			MiDefaultPeriod:           json.Number(strconv.Itoa((applicationConfigDefaultValue["MI_DEFAULT_PERIOD"]).(int))),
+			RykvDefaultPeriod:         (applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"]).(json.Number),
+			MiDefaultPeriod:           (applicationConfigDefaultValue["MI_DEFAULT_PERIOD"]).(json.Number),
 			IsShowShareFooter:         (applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"]).(bool),
 			DefaultPage:               (applicationConfigDefaultValue["DEFAULT_PAGE"]).(string),
 			ShowTagsInList:            (applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"]).(bool),
@@ -885,9 +907,118 @@ INSERT INTO APPLICATION_CONFIG (
 	}
 	for key, value := range insertValuesMap {
 		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		device := applicationConfig.Device
+		isIgnoreDeviceNameKey := false
+		for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
+			if key == ignoreDeviceNameKey {
+				isIgnoreDeviceNameKey = true
+				break
+			}
+		}
+		if isIgnoreDeviceNameKey {
+			device = "ALL"
+		}
 		queryArgs := []interface{}{
 			applicationConfig.UserID,
-			applicationConfig.Device,
+			device,
+			key,
+			value,
+		}
+		gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+		_, err = insertStmt.ExecContext(ctx, queryArgs...)
+		if err != nil {
+			err = fmt.Errorf("error at add application config sql: %w", err)
+			err = fmt.Errorf("error at query :%w", err)
+			rollbackErr := tx.Rollback()
+			if rollbackErr != nil {
+				err = fmt.Errorf("%w: %w", err, rollbackErr)
+			}
+			return false, err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		err = fmt.Errorf("error at commit: %w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (a *applicationConfigDAOSQLite3Impl) AddDefaultApplicationConfig(ctx context.Context, userID string, device string) (bool, error) {
+	sql := `
+INSERT INTO APPLICATION_CONFIG (
+  USER_ID,
+  DEVICE,
+  KEY,
+  VALUE
+) VALUES (
+  ?,
+  ?,
+  ?,
+  ?
+)
+`
+
+	tx, err := a.db.BeginTx(ctx, nil)
+	if err != nil {
+		err = fmt.Errorf("error at begin: %w", err)
+		return false, err
+	}
+
+	insertStmt, err := tx.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at add application config sql: %w", err)
+		err = fmt.Errorf("error at query :%w", err)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			err = fmt.Errorf("%w: %w", err, rollbackErr)
+		}
+		return false, err
+	}
+	defer insertStmt.Close()
+
+	insertValuesMap := map[string]interface{}{
+		"USE_DARK_THEME":                applicationConfigDefaultValue["USE_DARK_THEME"],
+		"GOOGLE_MAP_API_KEY":            applicationConfigDefaultValue["GOOGLE_MAP_API_KEY"],
+		"RYKV_IMAGE_LIST_COLUMN_NUMBER": applicationConfigDefaultValue["RYKV_IMAGE_LIST_COLUMN_NUMBER"],
+		"RYKV_HOT_RELOAD":               applicationConfigDefaultValue["RYKV_HOT_RELOAD"],
+		"RYKV_DEFAULT_PERIOD":           applicationConfigDefaultValue["RYKV_DEFAULT_PERIOD"],
+		"MI_DEFAULT_BOARD":              applicationConfigDefaultValue["MI_DEFAULT_BOARD"],
+		"MI_DEFAULT_PERIOD":             applicationConfigDefaultValue["MI_DEFAULT_PERIOD"],
+		"IS_SHOW_SHARE_FOOTER":          applicationConfigDefaultValue["IS_SHOW_SHARE_FOOTER"],
+		"DEFAULT_PAGE":                  applicationConfigDefaultValue["DEFAULT_PAGE"],
+		"SHOW_TAGS_IN_LIST":             applicationConfigDefaultValue["SHOW_TAGS_IN_LIST"],
+		"RYUU_JSON_DATA":                applicationConfigDefaultValue["RYUU_JSON_DATA"],
+		"TAG_STRUCT":                    applicationConfigDefaultValue["TAG_STRUCT"],
+		"REP_STRUCT":                    applicationConfigDefaultValue["REP_STRUCT"],
+		"REP_TYPE_STRUCT":               applicationConfigDefaultValue["REP_TYPE_STRUCT"],
+		"DEVICE_STRUCT":                 applicationConfigDefaultValue["DEVICE_STRUCT"],
+		"MI_BOARD_STRUCT":               applicationConfigDefaultValue["MI_BOARD_STRUCT"],
+		"KFTL_TEMPLATE_STRUCT":          applicationConfigDefaultValue["KFTL_TEMPLATE_STRUCT"],
+		"DNOTE_JSON_DATA":               applicationConfigDefaultValue["DNOTE_JSON_DATA"],
+	}
+	for key, value := range insertValuesMap {
+		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		device := device
+		isIgnoreDeviceNameKey := false
+		for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
+			if key == ignoreDeviceNameKey {
+				isIgnoreDeviceNameKey = true
+				break
+			}
+		}
+		if isIgnoreDeviceNameKey {
+			device = "ALL"
+		}
+		queryArgs := []interface{}{
+			userID,
+			device,
 			key,
 			value,
 		}
@@ -1050,6 +1181,17 @@ INSERT INTO APPLICATION_CONFIG (
 		}
 		if recordCount == 0 {
 			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
+			device := applicationConfig.Device
+			isIgnoreDeviceNameKey := false
+			for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
+				if key == ignoreDeviceNameKey {
+					isIgnoreDeviceNameKey = true
+					break
+				}
+			}
+			if isIgnoreDeviceNameKey {
+				device = "ALL"
+			}
 			queryArgs := []interface{}{
 				applicationConfig.UserID,
 				device,
