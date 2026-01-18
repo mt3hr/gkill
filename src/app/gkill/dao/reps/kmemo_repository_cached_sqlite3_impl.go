@@ -720,6 +720,8 @@ WHERE
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) AddKmemoInfo(ctx context.Context, kmemo *Kmemo) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	sql := `
 INSERT INTO ` + k.dbName + ` (
   IS_DELETED,

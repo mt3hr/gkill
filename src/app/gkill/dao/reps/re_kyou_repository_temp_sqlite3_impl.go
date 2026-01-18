@@ -131,6 +131,8 @@ func (r *reKyouTempRepositorySQLite3Impl) GetReKyouHistories(ctx context.Context
 }
 
 func (r *reKyouTempRepositorySQLite3Impl) AddReKyouInfo(ctx context.Context, rekyou *ReKyou, txID string, userID string, device string) error {
+	r.m.Lock()
+	defer r.m.Unlock()
 	sql := `
 INSERT INTO REKYOU (
   IS_DELETED,

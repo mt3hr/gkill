@@ -126,6 +126,8 @@ func (t *notificationTempRepositorySQLite3Impl) GetNotificationHistories(ctx con
 }
 
 func (t *notificationTempRepositorySQLite3Impl) AddNotificationInfo(ctx context.Context, notification *Notification, txID string, userID string, device string) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	sql := `
 INSERT INTO NOTIFICATION (
   IS_DELETED,

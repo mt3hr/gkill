@@ -129,6 +129,8 @@ func (l *lantanaTempRepositorySQLite3Impl) GetLantanaHistories(ctx context.Conte
 }
 
 func (l *lantanaTempRepositorySQLite3Impl) AddLantanaInfo(ctx context.Context, lantana *Lantana, txID string, userID string, device string) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	sql := `
 INSERT INTO LANTANA (
   IS_DELETED,

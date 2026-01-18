@@ -728,6 +728,8 @@ WHERE
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	sql := `
 INSERT INTO ` + l.dbName + ` (
   IS_DELETED,

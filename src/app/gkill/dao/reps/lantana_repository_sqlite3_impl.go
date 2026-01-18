@@ -737,6 +737,8 @@ WHERE
 }
 
 func (l *lantanaRepositorySQLite3Impl) AddLantanaInfo(ctx context.Context, lantana *Lantana) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	var err error
 	var db *sql.DB
 	if l.fullConnect {

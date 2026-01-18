@@ -743,6 +743,8 @@ WHERE
 }
 
 func (k *kcRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc *KC) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	var err error
 	var db *sql.DB
 	if k.fullConnect {

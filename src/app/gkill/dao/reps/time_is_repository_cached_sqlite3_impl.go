@@ -891,6 +891,8 @@ WHERE
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	sql := `
 INSERT INTO ` + t.dbName + `(
   IS_DELETED,

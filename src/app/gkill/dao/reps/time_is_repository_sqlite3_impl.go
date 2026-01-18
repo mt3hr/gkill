@@ -889,6 +889,8 @@ WHERE
 }
 
 func (t *timeIsRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis *TimeIs) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	var err error
 	var db *sql.DB
 	if t.fullConnect {
