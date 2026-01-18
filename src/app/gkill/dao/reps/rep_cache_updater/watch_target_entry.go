@@ -11,6 +11,10 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
+var (
+	startedService = false
+)
+
 type watchTargetEntry struct {
 	rep                CacheUpdatable
 	filename           string
@@ -30,54 +34,56 @@ func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes
 		err = fmt.Errorf("error at add watch file. filename = %s: %w", filename, err)
 		return nil, err
 	}
-	done := threads.AllocateThread()
-	go func() {
-		defer done()
-		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					err := fmt.Errorf("file watch event is not ok")
-					gkill_log.Debug.Print(err)
-					return
-				}
-
-				// 無視対象だったら何もしない
-				ignore := false
-				for _, ignoreFilePrefix := range ignoreFilePrefixes {
-					if strings.HasPrefix(filepath.ToSlash(event.Name), ignoreFilePrefix) {
-						ignore = true
-						break
+	if !startedService {
+		startedService = true
+		done := threads.AllocateThread()
+		go func() {
+			defer done()
+			for {
+				select {
+				case event, ok := <-watcher.Events:
+					if !ok {
+						err := fmt.Errorf("file watch event is not ok")
+						gkill_log.Debug.Print(err)
+						return
 					}
-				}
-				if ignore {
-					continue
-				}
 
-				if *skip {
-					continue
-				}
+					// 無視対象だったら何もしない
+					ignore := false
+					for _, ignoreFilePrefix := range ignoreFilePrefixes {
+						if strings.HasPrefix(filepath.ToSlash(event.Name), ignoreFilePrefix) {
+							ignore = true
+							break
+						}
+					}
+					if ignore {
+						continue
+					}
 
-				// 無視対象でなければキャッシュを更新する
-				err := rep.UpdateCache(context.TODO())
-				if err != nil {
-					err = fmt.Errorf("error at update cache. filename = %s: %w", filename, err)
-					gkill_log.Debug.Print(err)
-					return
-				}
-			case err, ok := <-watcher.Errors:
-				if !ok {
+					if *skip {
+						continue
+					}
+
+					// 無視対象でなければキャッシュを更新する
+					err := rep.UpdateCache(context.TODO())
+					if err != nil {
+						err = fmt.Errorf("error at update cache. filename = %s: %w", filename, err)
+						gkill_log.Debug.Print(err)
+						return
+					}
+				case err, ok := <-watcher.Errors:
+					if !ok {
+						err = fmt.Errorf("file watch event is not ok %w", err)
+						gkill_log.Debug.Print(err)
+						return
+					}
 					err = fmt.Errorf("file watch event is not ok %w", err)
 					gkill_log.Debug.Print(err)
 					return
 				}
-				err = fmt.Errorf("file watch event is not ok %w", err)
-				gkill_log.Debug.Print(err)
-				return
 			}
-		}
-	}()
-
+		}()
+	}
 	return &watchTargetEntry{
 		filename:           filename,
 		rep:                rep,
