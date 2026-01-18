@@ -1433,17 +1433,13 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		}
 		// キャッシュに書き込み
 		if len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
+			// go func() {
 			err = repositories.TagReps[0].AddTagInfo(r.Context(), request.Tag)
 			if err != nil {
 				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddTagError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.TagTempRep.AddTagInfo(r.Context(), request.Tag, *request.TXID, userID, device)
@@ -1478,17 +1474,13 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Tag.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetTagError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Tag.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	tag, err := repositories.GetTag(r.Context(), request.Tag.ID, nil)
 	if err != nil {
@@ -1610,17 +1602,13 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
+			// go func() {
 			err = repositories.TextReps[0].AddTextInfo(r.Context(), request.Text)
 			if err != nil {
 				err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddTextError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(r.Context(), request.Text, *request.TXID, userID, device)
@@ -1655,17 +1643,13 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Text.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetTextError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Text.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	text, err := repositories.GetText(r.Context(), request.Text.ID, nil)
 	if err != nil {
@@ -1787,17 +1771,13 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 			return
 		}
 		if len(repositories.NotificationReps) == 1 && *gkill_options.CacheNotificationReps {
+			// go func() {
 			err = repositories.NotificationReps[0].AddNotificationInfo(r.Context(), request.Notification)
 			if err != nil {
 				err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddNotificationError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(r.Context(), request.Notification, *request.TXID, userID, device)
@@ -1832,17 +1812,13 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	notification, err := repositories.GetNotification(r.Context(), request.Notification.ID, nil)
 	if err != nil {
@@ -1905,17 +1881,13 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	response.AddedNotification = notification
 	response.Messages = append(response.Messages, &message.GkillMessage{
@@ -2025,17 +1997,13 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if len(repositories.KmemoReps) == 1 && *gkill_options.CacheKmemoReps {
+			// go func() {
 			err = repositories.KmemoReps[0].AddKmemoInfo(r.Context(), request.Kmemo)
 			if err != nil {
 				err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddKmemoError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(r.Context(), request.Kmemo, *request.TXID, userID, device)
@@ -2069,17 +2037,13 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Kmemo.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Kmemo.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	if request.WantResponseKyou {
 		kmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID, nil)
@@ -2217,17 +2181,13 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(repositories.KCReps) == 1 && *gkill_options.CacheKCReps {
+			// go func() {
 			err = repositories.KCReps[0].AddKCInfo(r.Context(), request.KC)
 			if err != nil {
 				err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddKCError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.KCTempRep.AddKCInfo(r.Context(), request.KC, *request.TXID, userID, device)
@@ -2261,17 +2221,13 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.KC.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKCError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.KC.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	if request.WantResponseKyou {
 		kc, err := repositories.KCReps.GetKC(r.Context(), request.KC.ID, nil)
@@ -2438,17 +2394,13 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
+			// go func() {
 			err = repositories.URLogReps[0].AddURLogInfo(r.Context(), request.URLog)
 			if err != nil {
 				err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddURLogError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(r.Context(), request.URLog, *request.TXID, userID, device)
@@ -2482,17 +2434,13 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.URLog.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetURLogError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.URLog.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	if request.WantResponseKyou {
 		urlog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID, nil)
@@ -2628,17 +2576,13 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
+			// go func() {
 			err = repositories.NlogReps[0].AddNlogInfo(r.Context(), request.Nlog)
 			if err != nil {
 				err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddNlogError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(r.Context(), request.Nlog, *request.TXID, userID, device)
@@ -2672,17 +2616,13 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Nlog.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetNlogError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Nlog.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	if request.WantResponseKyou {
 		nlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID, nil)
@@ -2818,17 +2758,13 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if len(repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
+			// go func() {
 			err = repositories.TimeIsReps[0].AddTimeIsInfo(r.Context(), request.TimeIs)
 			if err != nil {
 				err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddTimeIsError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(r.Context(), request.TimeIs, *request.TXID, userID, device)
@@ -2862,17 +2798,13 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.TimeIs.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.TimeIs.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	if request.WantResponseKyou {
 		timeis, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID, nil)
@@ -3010,17 +2942,13 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 			return
 		}
 		if len(repositories.LantanaReps) == 1 && *gkill_options.CacheLantanaReps {
+			// go func() {
 			err = repositories.LantanaReps[0].AddLantanaInfo(r.Context(), request.Lantana)
 			if err != nil {
 				err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddLantanaError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.LantanaTempRep.AddLantanaInfo(r.Context(), request.Lantana, *request.TXID, userID, device)
@@ -3055,17 +2983,13 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Lantana.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Lantana.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	if request.WantResponseKyou {
 		lantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
@@ -3203,17 +3127,13 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(repositories.MiReps) == 1 && *gkill_options.CacheMiReps {
+			// go func() {
 			err = repositories.MiReps[0].AddMiInfo(r.Context(), request.Mi)
 			if err != nil {
 				err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddMiError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.MiTempRep.AddMiInfo(r.Context(), request.Mi, *request.TXID, userID, device)
@@ -3247,17 +3167,13 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Mi.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetMiError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Mi.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	if request.WantResponseKyou {
 		mi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
@@ -3395,17 +3311,13 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		}
 
 		if len(repositories.ReKyouReps.ReKyouRepositories) == 1 && *gkill_options.CacheReKyouReps {
+			// go func() {
 			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(r.Context(), request.ReKyou)
 			if err != nil {
 				err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddReKyouError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(r.Context(), request.ReKyou, *request.TXID, userID, device)
@@ -3440,17 +3352,13 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.ReKyou.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.ReKyou.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	if request.WantResponseKyou {
 		rekyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID, nil)
@@ -3578,17 +3486,13 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 
 		// キャッシュに書き込み
 		if len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
+			// go func() {
 			err = repositories.TagReps[0].AddTagInfo(r.Context(), request.Tag)
 			if err != nil {
 				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddTagError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.TagTempRep.AddTagInfo(r.Context(), request.Tag, *request.TXID, userID, device)
@@ -3623,17 +3527,13 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Tag.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetTagError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TAG_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Tag.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	tag, err := repositories.GetTag(r.Context(), request.Tag.ID, nil)
 	if err != nil {
@@ -3769,17 +3669,13 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		}
 
 		if len(repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
+			// go func() {
 			err = repositories.TextReps[0].AddTextInfo(r.Context(), request.Text)
 			if err != nil {
 				err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddTextError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(r.Context(), request.Text, *request.TXID, userID, device)
@@ -3814,17 +3710,13 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Text.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetTextError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TEXT_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Text.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	text, err := repositories.GetText(r.Context(), request.Text.ID, nil)
 	if err != nil {
@@ -3959,17 +3851,13 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 			return
 		}
 		if len(repositories.NotificationReps) == 1 && *gkill_options.CacheNotificationReps {
+			// go func() {
 			err = repositories.NotificationReps[0].AddNotificationInfo(r.Context(), request.Notification)
 			if err != nil {
 				err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddNotificationError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(r.Context(), request.Notification, *request.TXID, userID, device)
@@ -4004,17 +3892,13 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetNotificationError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	notification, err := repositories.GetNotification(r.Context(), request.Notification.ID, nil)
 	if err != nil {
@@ -4173,17 +4057,13 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		if len(repositories.KmemoReps) == 1 && *gkill_options.CacheKmemoReps {
+			// go func() {
 			err = repositories.KmemoReps[0].AddKmemoInfo(r.Context(), request.Kmemo)
 			if err != nil {
 				err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddKmemoError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(r.Context(), request.Kmemo, *request.TXID, userID, device)
@@ -4217,17 +4097,13 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Kmemo.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKmemoError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KMEMO_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Kmemo.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	kmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID, nil)
 	if err != nil {
@@ -4376,17 +4252,13 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if len(repositories.KCReps) == 1 && *gkill_options.CacheKCReps {
+			// go func() {
 			err = repositories.WriteKCRep.AddKCInfo(r.Context(), request.KC)
 			if err != nil {
 				err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddKCError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.KCTempRep.AddKCInfo(r.Context(), request.KC, *request.TXID, userID, device)
@@ -4420,17 +4292,13 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.KC.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetKCError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_KC_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.KC.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	kc, err := repositories.KCReps.GetKC(r.Context(), request.KC.ID, nil)
 	if err != nil {
@@ -4643,17 +4511,13 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
+			// go func() {
 			err = repositories.URLogReps[0].AddURLogInfo(r.Context(), request.URLog)
 			if err != nil {
 				err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddURLogError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(r.Context(), request.URLog, *request.TXID, userID, device)
@@ -4687,17 +4551,13 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.URLog.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetURLogError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.URLog.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	urlog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID, nil)
 	if err != nil {
@@ -4845,17 +4705,13 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 			return
 		}
 		if len(repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
+			// go func() {
 			err = repositories.NlogReps[0].AddNlogInfo(r.Context(), request.Nlog)
 			if err != nil {
 				err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddNlogError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(r.Context(), request.Nlog, *request.TXID, userID, device)
@@ -4889,17 +4745,13 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Nlog.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetNlogError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NLOG_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Nlog.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	nlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID, nil)
 	if err != nil {
@@ -5048,17 +4900,13 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 			return
 		}
 		if len(repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
+			// go func() {
 			err = repositories.TimeIsReps[0].AddTimeIsInfo(r.Context(), request.TimeIs)
 			if err != nil {
 				err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddTimeIsError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(r.Context(), request.TimeIs, *request.TXID, userID, device)
@@ -5092,17 +4940,13 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.TimeIs.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetTimeIsError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_TIMEIS_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.TimeIs.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	timeis, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID, nil)
 	if err != nil {
@@ -5251,17 +5095,13 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 			return
 		}
 		if len(repositories.LantanaReps) == 1 && *gkill_options.CacheLantanaReps {
+			// go func() {
 			err = repositories.LantanaReps[0].AddLantanaInfo(r.Context(), request.Lantana)
 			if err != nil {
 				err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddLantanaError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.LantanaTempRep.AddLantanaInfo(r.Context(), request.Lantana, *request.TXID, userID, device)
@@ -5295,17 +5135,13 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Lantana.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetLantanaError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_LANTANA_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Lantana.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	lantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
 	if err != nil {
@@ -5454,17 +5290,13 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 			return
 		}
 		if len(repositories.IDFKyouReps) == 1 && *gkill_options.CacheIDFKyouReps {
+			// go func() {
 			err = repositories.IDFKyouReps[0].AddIDFKyouInfo(r.Context(), request.IDFKyou)
 			if err != nil {
 				err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddIDFKyouError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.IDFKyouTempRep.AddIDFKyouInfo(r.Context(), request.IDFKyou, *request.TXID, userID, device)
@@ -5498,17 +5330,13 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.IDFKyou.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetIDFKyouError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.IDFKyou.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	idfKyou, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.IDFKyou.ID, nil)
 	if err != nil {
@@ -5667,17 +5495,13 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if len(repositories.MiReps) == 1 && *gkill_options.CacheMiReps {
+			// go func() {
 			err = repositories.MiReps[0].AddMiInfo(r.Context(), request.Mi)
 			if err != nil {
 				err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddMiError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.MiTempRep.AddMiInfo(r.Context(), request.Mi, *request.TXID, userID, device)
@@ -5711,17 +5535,13 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Mi.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetMiError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_MI_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Mi.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	mi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
 	if err != nil {
@@ -5847,17 +5667,13 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 			return
 		}
 		if len(repositories.ReKyouReps.ReKyouRepositories) == 1 && *gkill_options.CacheReKyouReps {
+			// go func() {
 			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(r.Context(), request.ReKyou)
 			if err != nil {
 				err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddReKyouError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 	} else {
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(r.Context(), request.ReKyou, *request.TXID, userID, device)
@@ -5892,17 +5708,13 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.ReKyou.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetReKyouError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_UPDATED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.ReKyou.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	rekyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID, nil)
 	if err != nil {
@@ -8258,17 +8070,13 @@ loop:
 					LatestDataRepositoryName:               repName,
 					LatestDataRepositoryAddressUpdatedTime: time.Now(),
 				}
-				_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
-				if err != nil {
-					err = fmt.Errorf("error at update or add latest data repository address: %w", err)
-					gkill_log.Debug.Println(err.Error())
-					gkillError = &message.GkillError{
-						ErrorCode:    message.UpdateRepositoryAddressError,
-						ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPLOAD_FILE_MESSAGE"}),
+				go func() {
+					_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
+					if err != nil {
+						err = fmt.Errorf("error at update or add latest data repository address: %w", err)
+						gkill_log.Debug.Println(err.Error())
 					}
-					response.Errors = append(response.Errors, gkillError)
-					return
-				}
+				}()
 			}
 		default:
 			break loop
@@ -11821,18 +11629,13 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, urlog.ID)
 
 	if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
+		// go func() {
 		err = repositories.URLogReps[0].AddURLogInfo(r.Context(), urlog)
 		if err != nil {
 			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
 			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.AddURLogError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_MESSAGE"}),
-			}
-			_ = gkillError
-			// response.Errors = append(response.Errors, gkillError)
-			return
 		}
+		// }()
 	}
 
 	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
@@ -11854,18 +11657,13 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
-	if err != nil {
-		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-		gkill_log.Debug.Println(err.Error())
-		gkillError := &message.GkillError{
-			ErrorCode:    message.GetURLogError,
-			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
+	go func() {
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+			gkill_log.Debug.Println(err.Error())
 		}
-		_ = gkillError
-		// response.Errors = append(response.Errors, gkillError)
-		return
-	}
+	}()
 
 	// 通知する
 	// 現在のServerConfigを取得する
@@ -12223,7 +12021,6 @@ func (g *GkillServerAPI) WebPushUpdatedData(ctx context.Context, userID string, 
 }
 
 func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
 	request := &req_res.CommitTxRequest{}
 	response := &req_res.CommitTxResponse{}
@@ -12459,17 +12256,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if len(repositories.IDFKyouReps) == 1 && *gkill_options.CacheIDFKyouReps {
+			// go func() {
 			err = repositories.IDFKyouReps[0].AddIDFKyouInfo(r.Context(), idfKyou)
 			if err != nil {
 				err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddIDFKyouError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 		repositories.LatestDataRepositoryAddresses[idfKyou.ID] = &account_state.LatestDataRepositoryAddress{
 			IsDeleted:                              idfKyou.IsDeleted,
@@ -12478,19 +12271,14 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetIDFKyouError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_IDFKYOU_UPDATED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
-
 	for _, kc := range kcs {
 		err = repositories.WriteKCRep.AddKCInfo(r.Context(), kc)
 		if err != nil {
@@ -12505,17 +12293,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.KCReps) == 1 && *gkill_options.CacheKCReps {
+			// go func() {
 			err = repositories.KCReps[0].AddKCInfo(r.Context(), kc)
 			if err != nil {
 				err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddKCError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteKCRep.GetRepName(r.Context())
@@ -12536,17 +12320,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kc.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetKCError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KC_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kc.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	for _, kmemo := range kmemos {
@@ -12563,17 +12343,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.KmemoReps) == 1 && *gkill_options.CacheKmemoReps {
+			// go func() {
 			err = repositories.KmemoReps[0].AddKmemoInfo(r.Context(), kmemo)
 			if err != nil {
 				err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddKmemoError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteKmemoRep.GetRepName(r.Context())
@@ -12594,17 +12370,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kmemo.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetKmemoError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_KMEMO_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kmemo.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	for _, lantana := range lantanas {
@@ -12621,17 +12393,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.LantanaReps) == 1 && *gkill_options.CacheLantanaReps {
+			// go func() {
 			err = repositories.LantanaReps[0].AddLantanaInfo(r.Context(), lantana)
 			if err != nil {
 				err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, lantana, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddLantanaError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteLantanaRep.GetRepName(r.Context())
@@ -12652,17 +12420,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[lantana.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetLantanaError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_LANTANA_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[lantana.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	for _, mi := range mis {
@@ -12679,17 +12443,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.MiReps) == 1 && *gkill_options.CacheMiReps {
+			// go func() {
 			err = repositories.MiReps[0].AddMiInfo(r.Context(), mi)
 			if err != nil {
 				err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddMiError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteMiRep.GetRepName(r.Context())
@@ -12710,17 +12470,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[mi.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetMiError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_MI_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[mi.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	for _, nlog := range nlogs {
@@ -12737,17 +12493,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
+			// go func() {
 			err = repositories.NlogReps[0].AddNlogInfo(r.Context(), nlog)
 			if err != nil {
 				err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddNlogError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteNlogRep.GetRepName(r.Context())
@@ -12768,17 +12520,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[nlog.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetNlogError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NLOG_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[nlog.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	for _, notification := range notifications {
@@ -12795,17 +12543,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.NotificationReps) == 1 && *gkill_options.CacheNotificationReps {
+			// go func() {
 			err = repositories.NotificationReps[0].AddNotificationInfo(r.Context(), notification)
 			if err != nil {
 				err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddNotificationError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_NOTIFICATION_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
@@ -12827,17 +12571,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[notification.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetNotificationError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_NOTIFICATION_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[notification.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	for _, rekyou := range rekyous {
@@ -12854,17 +12594,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.ReKyouReps.ReKyouRepositories) == 1 && *gkill_options.CacheReKyouReps {
+			// go func() {
 			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(r.Context(), rekyou)
 			if err != nil {
 				err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddReKyouError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_REKYOU_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteReKyouRep.GetRepName(r.Context())
@@ -12886,17 +12622,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[rekyou.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetReKyouError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_REKYOU_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[rekyou.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	for _, tag := range tags {
@@ -12914,17 +12646,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		// キャッシュに書き込み
 		if len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
+			// go func() {
 			err = repositories.TagReps[0].AddTagInfo(r.Context(), tag)
 			if err != nil {
 				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddTagError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteTagRep.GetRepName(r.Context())
@@ -12946,17 +12674,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[tag.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetTagError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TAG_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[tag.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	for _, text := range texts {
@@ -12972,17 +12696,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if len(repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
+			// go func() {
 			err = repositories.TextReps[0].AddTextInfo(r.Context(), text)
 			if err != nil {
 				err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddTextError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteTextRep.GetRepName(r.Context())
@@ -13004,17 +12724,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[text.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetTextError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TEXT_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[text.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	for _, timeis := range timeiss {
@@ -13031,17 +12747,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
+			// go func() {
 			err = repositories.TimeIsReps[0].AddTimeIsInfo(r.Context(), timeis)
 			if err != nil {
 				err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddTimeIsError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteTimeIsRep.GetRepName(r.Context())
@@ -13062,17 +12774,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[timeis.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetTimeIsError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_TIMEIS_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[timeis.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	for _, urlog := range urlogs {
@@ -13089,17 +12797,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
+			// go func() {
 			err = repositories.URLogReps[0].AddURLogInfo(r.Context(), urlog)
 			if err != nil {
 				err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
 				gkill_log.Debug.Println(err.Error())
-				gkillError := &message.GkillError{
-					ErrorCode:    message.AddURLogError,
-					ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_UPDATE_URLOG_MESSAGE"}),
-				}
-				response.Errors = append(response.Errors, gkillError)
-				return
 			}
+			// }()
 		}
 
 		repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
@@ -13120,17 +12824,13 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-			gkill_log.Debug.Println(err.Error())
-			gkillError := &message.GkillError{
-				ErrorCode:    message.GetURLogError,
-				ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_ADD_URLOG_ADDED_GET_MESSAGE"}),
+		go func() {
+			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
+			if err != nil {
+				err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+				gkill_log.Debug.Println(err.Error())
 			}
-			response.Errors = append(response.Errors, gkillError)
-			return
-		}
+		}()
 	}
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
@@ -13138,6 +12838,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		Message:     GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "SUCCESS_ADD_URLOG_ADDED_GET_MESSAGE"}),
 	})
 }
+
 func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
