@@ -1,147 +1,105 @@
 package rep_cache_updater
 
 import (
-	"context"
-	"fmt"
 	"path/filepath"
+	"reflect"
 	"strings"
-
-	"github.com/fsnotify/fsnotify"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
-var (
-	startedService = false
-)
-
-type watchTargetEntry struct {
-	rep                CacheUpdatable
-	filename           string
-	ignoreFilePrefixes []string
-
-	watcher    *fsnotify.Watcher
-	watchUsers map[string]struct{}
-
+type ownerInfo struct {
+	rep  CacheUpdatable
 	skip *bool
 }
 
-func newWatchTargetEntry(rep CacheUpdatable, filename string, ignoreFilePrefixes []string, skip *bool) (*watchTargetEntry, error) {
-	var err error
-	// ファイル監視を始める
-	err = watcher.Add(filename)
-	if err != nil {
-		err = fmt.Errorf("error at add watch file. filename = %s: %w", filename, err)
-		return nil, err
-	}
-	if !startedService {
-		startedService = true
-		done := threads.AllocateThread()
-		go func() {
-			defer done()
-			for {
-				select {
-				case event, ok := <-watcher.Events:
-					if !ok {
-						err := fmt.Errorf("file watch event is not ok")
-						gkill_log.Debug.Print(err)
-						return
-					}
+type watchTargetEntry struct {
+	filename string // original
+	keySlash string // normalized key
 
-					// 無視対象だったら何もしない
-					ignore := false
-					for _, ignoreFilePrefix := range ignoreFilePrefixes {
-						if strings.HasPrefix(filepath.ToSlash(event.Name), ignoreFilePrefix) {
-							ignore = true
-							break
-						}
-					}
-					if ignore {
-						continue
-					}
+	// union of ignore prefixes
+	ignorePrefixes map[string]struct{}
 
-					if *skip {
-						continue
-					}
+	// ownerKey -> info
+	owners map[string]ownerInfo
+}
 
-					// 無視対象でなければキャッシュを更新する
-					err := rep.UpdateCache(context.TODO())
-					if err != nil {
-						err = fmt.Errorf("error at update cache. filename = %s: %w", filename, err)
-						gkill_log.Debug.Print(err)
-						return
-					}
-				case err, ok := <-watcher.Errors:
-					if !ok {
-						err = fmt.Errorf("file watch event is not ok %w", err)
-						gkill_log.Debug.Print(err)
-						return
-					}
-					err = fmt.Errorf("file watch event is not ok %w", err)
-					gkill_log.Debug.Print(err)
-					return
-				}
-			}
-		}()
+func newWatchTargetEntry(filename string, ignoreFilePrefixes []string) *watchTargetEntry {
+	ip := map[string]struct{}{}
+	for _, p := range ignoreFilePrefixes {
+		ip[p] = struct{}{}
 	}
 	return &watchTargetEntry{
-		filename:           filename,
-		rep:                rep,
-		ignoreFilePrefixes: ignoreFilePrefixes,
-
-		watcher: watcher,
-
-		watchUsers: map[string]struct{}{},
-
-		skip: skip,
-	}, nil
-}
-
-func (w *watchTargetEntry) GetTargetFileName() (string, error) {
-	return w.filename, nil
-}
-
-func (w *watchTargetEntry) GetWatchUsers() ([]string, error) {
-	watchUsers := []string{}
-	for watchUser := range w.watchUsers {
-		watchUsers = append(watchUsers, watchUser)
+		filename:       filename,
+		keySlash:       filepath.ToSlash(filepath.Clean(filename)),
+		ignorePrefixes: ip,
+		owners:         map[string]ownerInfo{},
 	}
-	return watchUsers, nil
 }
 
-func (w *watchTargetEntry) IsRegisteredUserID(userID string) (bool, error) {
-	registeredUsers, err := w.GetWatchUsers()
-	if err != nil {
-		err = fmt.Errorf("error at get watching users: %w", err)
-		return false, err
+func (w *watchTargetEntry) addOwner(ownerKey string, rep CacheUpdatable, skip *bool, ignoreFilePrefixes []string) {
+	w.owners[ownerKey] = ownerInfo{rep: rep, skip: skip}
+	for _, p := range ignoreFilePrefixes {
+		w.ignorePrefixes[p] = struct{}{}
 	}
+}
 
-	isRegisteredUserID := false
-	for _, registeredUser := range registeredUsers {
-		if registeredUser == userID {
-			isRegisteredUserID = true
-			break
+func (w *watchTargetEntry) removeOwner(ownerKey string) (empty bool) {
+	delete(w.owners, ownerKey)
+	return len(w.owners) == 0
+}
+
+func (w *watchTargetEntry) shouldIgnore(eventName string) bool {
+	ev := filepath.ToSlash(filepath.Clean(eventName))
+	for p := range w.ignorePrefixes {
+		if strings.HasPrefix(ev, p) {
+			return true
 		}
 	}
-	return isRegisteredUserID, nil
+	return false
 }
 
-func (w *watchTargetEntry) AddWatchUser(userID string) error {
-	w.watchUsers[userID] = struct{}{}
-	return nil
+func (w *watchTargetEntry) shouldSkipAll() bool {
+	if len(w.owners) == 0 {
+		return true
+	}
+	for _, info := range w.owners {
+		if info.skip == nil {
+			return false
+		}
+		if !*info.skip {
+			return false
+		}
+	}
+	return true
 }
 
-func (w *watchTargetEntry) RemoveWatchUser(userID string) (isClosed bool, err error) {
-	// あったら消す。
-	_, exist := w.watchUsers[userID]
-	if exist {
-		delete(w.watchUsers, userID)
-	}
+func (w *watchTargetEntry) repsToUpdate() []CacheUpdatable {
+	// Filter by skip=false and dedupe by pointer
+	seen := map[uintptr]struct{}{}
+	out := []CacheUpdatable{}
 
-	// まだ誰かが見ていたら何もせず返す
-	if len(w.watchUsers) != 0 {
-		return false, nil
-
+	for _, info := range w.owners {
+		if info.rep == nil {
+			continue
+		}
+		if info.skip != nil && *info.skip {
+			continue
+		}
+		// dedupe
+		v := reflect.ValueOf(info.rep)
+		if v.Kind() == reflect.Interface {
+			v = v.Elem()
+		}
+		var ptr uintptr
+		if v.IsValid() && v.Kind() == reflect.Pointer {
+			ptr = v.Pointer()
+		}
+		if ptr != 0 {
+			if _, ok := seen[ptr]; ok {
+				continue
+			}
+			seen[ptr] = struct{}{}
+		}
+		out = append(out, info.rep)
 	}
-	return true, nil
+	return out
 }
