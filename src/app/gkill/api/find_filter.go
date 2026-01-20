@@ -82,27 +82,25 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 	}
 
-	if !gkill_options.IsCacheInMemory {
-		if findKyouContext.Repositories.LatestDataRepositoryAddresses == nil {
-			latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
-				return nil, nil, err
-			}
-			findKyouContext.Repositories.LatestDataRepositoryAddresses = latestDatas
-		} else {
-			updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime, math.MaxInt)
-			if err != nil {
-				err = fmt.Errorf("error at get updated latest data repository addresses: %w", err)
-				return nil, nil, err
-			}
-			for _, latestData := range updatedLatestDatas {
-				findKyouContext.Repositories.LatestDataRepositoryAddresses[latestData.TargetID] = latestData
-			}
+	if findKyouContext.Repositories.LatestDataRepositoryAddresses == nil {
+		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+		if err != nil {
+			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
+			return nil, nil, err
 		}
-		findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
-		gkill_log.Trace.Printf("finish update latest data repository address")
+		findKyouContext.Repositories.LatestDataRepositoryAddresses = latestDatas
+	} else {
+		updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime, math.MaxInt)
+		if err != nil {
+			err = fmt.Errorf("error at get updated latest data repository addresses: %w", err)
+			return nil, nil, err
+		}
+		for _, latestData := range updatedLatestDatas {
+			findKyouContext.Repositories.LatestDataRepositoryAddresses[latestData.TargetID] = latestData
+		}
 	}
+	findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
+	gkill_log.Trace.Printf("finish update latest data repository address")
 
 	wg := &sync.WaitGroup{}
 	doneCh := make(chan struct{})
