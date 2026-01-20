@@ -99,6 +99,7 @@ func GetDefaultApplicationConfig(userID string, device string) *ApplicationConfi
 }
 
 var nullJSONStr = json.RawMessage("null")
+var emptyArrayJSONStr = json.RawMessage("[]")
 var applicationConfigDefaultValue = map[string]interface{}{
 	"USER_ID":                       "",
 	"DEVICE":                        "",
@@ -112,7 +113,7 @@ var applicationConfigDefaultValue = map[string]interface{}{
 	"IS_SHOW_SHARE_FOOTER":          false,
 	"DEFAULT_PAGE":                  "rykv",
 	"SHOW_TAGS_IN_LIST":             true,
-	"RYUU_JSON_DATA":                &nullJSONStr,
+	"RYUU_JSON_DATA":                &emptyArrayJSONStr,
 	"TAG_STRUCT":                    &nullJSONStr,
 	"REP_STRUCT":                    &nullJSONStr,
 	"REP_TYPE_STRUCT":               &nullJSONStr,
