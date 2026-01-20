@@ -76,7 +76,7 @@
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
-            <KyouView v-if="kyou.typed_kc" :application_config="application_config" :gkill_api="gkill_api"
+            <KyouView v-if="kyou.typed_kc" :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
                 :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
                 :last_added_tag="last_added_tag" :show_checkbox="false" :show_title_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"

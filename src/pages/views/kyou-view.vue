@@ -222,7 +222,7 @@
             <IDFKyouView v-if="cloned_kyou.typed_idf_kyou" :idf_kyou="cloned_kyou.typed_idf_kyou" :draggable=draggable
                 :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :kyou="cloned_kyou" :last_added_tag="last_added_tag" :height="height" :width="width"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog"
+                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :is_image_only="is_image_request_to_thumb_size"
                 @deleted_kyou="(...deleted_kyou: any[]) => emits('deleted_kyou', deleted_kyou[0])"
                 @deleted_tag="(...deleted_tag: any[]) => emits('deleted_tag', deleted_tag[0] as Tag)"
                 @deleted_text="(...deleted_text: any[]) => emits('deleted_text', deleted_text[0] as Text)"

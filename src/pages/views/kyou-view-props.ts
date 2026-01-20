@@ -29,4 +29,5 @@ export interface KyouViewProps extends KyouViewPropsBase {
     enable_context_menu: boolean
     enable_dialog: boolean
     force_show_latest_kyou_info: boolean
+    is_image_request_to_thumb_size: boolean
 }
