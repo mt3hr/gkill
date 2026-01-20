@@ -55,7 +55,7 @@
                             <tr>
                                 <td valign="top" v-if="is_show_kyou_detail_view">
                                     <div class="kyou_detail_view dummy">
-                                        <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
+                                        <KyouView v-if="focused_kyou && is_show_kyou_detail_view" :is_image_request_to_thumb_size="false"
                                             :application_config="application_config" :gkill_api="gkill_api"
                                             :highlight_targets="[]" :is_image_view="false" :kyou="focused_kyou"
                                             :last_added_tag="''" :show_checkbox="false" :show_content_only="false"
