@@ -20,6 +20,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type idfKyouRepositorySQLite3Impl struct {
@@ -34,6 +35,9 @@ type idfKyouRepositorySQLite3Impl struct {
 
 	db *sql.DB
 	m  *sync.Mutex
+
+	fileServer  http.Handler
+	thumbServer http.Handler
 }
 
 const DUIDLayout = "20060102T150405-0700"
@@ -129,8 +133,9 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		m:               &sync.Mutex{},
 	}
 
-	r.PathPrefix(rep.rootAddress).
-		Handler(http.StripPrefix(rep.rootAddress, http.FileServer(http.Dir(dir))))
+	fs := http.FileServer(http.Dir(dir))
+	rep.fileServer = fs
+	rep.thumbServer = NewThumbFileServer(dir, fs)
 
 	return rep, nil
 }
@@ -750,6 +755,11 @@ func (i *idfKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 			return err
 		}
 	}
+
+	dir := filepath.Clean(os.ExpandEnv(i.contentDir))
+	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "thumb_cache", filepath.Base(dir)))
+
+	os.RemoveAll(cacheDir)
 	return nil
 }
 
@@ -1397,6 +1407,10 @@ func (i *idfKyouRepositorySQLite3Impl) parseDUID(str string) (id uuid.UUID, t ti
 }
 
 func (i *idfKyouRepositorySQLite3Impl) HandleFileServe(w http.ResponseWriter, r *http.Request) {
+	if i.thumbServer != nil {
+		i.thumbServer.ServeHTTP(w, r)
+		return
+	}
 	http.FileServer(http.Dir(i.contentDir)).ServeHTTP(w, r)
 }
 
