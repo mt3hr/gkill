@@ -40,7 +40,7 @@
                                             {{ match_kyou.typed_kc.num_value }}
                                         </span>
 
-                                        <KyouView
+                                        <KyouView :is_image_request_to_thumb_size="false"
                                             v-if="!(match_kyou.data_type.startsWith('lantana') && match_kyou.typed_lantana) && !(match_kyou.data_type.startsWith('kc') && match_kyou.typed_kc)"
                                             :application_config="application_config" :gkill_api="gkill_api"
                                             :highlight_targets="[]" :is_image_view="false" :kyou="match_kyou"

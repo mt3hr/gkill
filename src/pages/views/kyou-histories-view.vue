@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <div>
-            <KyouView v-for="kyou in cloned_kyou.attached_histories" :application_config="application_config"
+            <KyouView v-for="kyou in cloned_kyou.attached_histories" :application_config="application_config" :is_image_request_to_thumb_size="false"
                 :key="kyou.update_time.getTime()" :gkill_api="gkill_api" :highlight_targets="highlight_targets"
                 :is_image_view="false" :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
                 :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
