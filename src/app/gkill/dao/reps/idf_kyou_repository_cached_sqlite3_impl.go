@@ -1068,6 +1068,14 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) HandleFileServe(w http.ResponseWrit
 	i.idfRep.HandleFileServe(w, r)
 }
 
+func (i *idfKyouRepositoryCachedSQLite3Impl) GenerateThumbCache(ctx context.Context) error {
+	return i.idfRep.GenerateThumbCache(ctx)
+}
+
+func (i *idfKyouRepositoryCachedSQLite3Impl) ClearThumbCache() error {
+	return i.idfRep.ClearThumbCache()
+}
+
 func (i *idfKyouRepositoryCachedSQLite3Impl) UnWrapTyped() ([]IDFKyouRepository, error) {
 	return i.idfRep.UnWrapTyped()
 }

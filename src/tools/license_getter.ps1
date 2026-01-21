@@ -1,24 +1,24 @@
-# ========== İ’è ==========
+# ========== è¨­å®š ==========
 $goProjectPath = "../app/"
 $nodeProjectPath = "../../"
-$outputFile = "../../DEPENDENCE_LICENSES.txt"
+$outputFile = "../../DEPENDENCE_LICENSES"
 
-# ========== o—Í‰Šú‰» ==========
-"=== ˆË‘¶ƒ‰ƒCƒZƒ“ƒXˆê—— ===`n" | Out-File -Encoding utf8 $outputFile
+# ========== å‡ºåŠ›åˆæœŸåŒ– ==========
+"=== ä¾å­˜ãƒ©ã‚¤ã‚»ãƒ³ã‚¹ä¸€è¦§ ===`n" | Out-File -Encoding utf8 $outputFile
 
 ########################################
-# Go ƒ‚ƒWƒ…[ƒ‹ƒ‰ƒCƒZƒ“ƒX’Šo
+# Go ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ãƒ©ã‚¤ã‚»ãƒ³ã‚¹æŠ½å‡º
 ########################################
 if (Test-Path "$goProjectPath\go.mod") {
     Push-Location $goProjectPath
-    Write-Host "? GoˆË‘¶ƒ‰ƒCƒZƒ“ƒX‚ğæ“¾’†..."
+    Write-Host "? Goä¾å­˜ãƒ©ã‚¤ã‚»ãƒ³ã‚¹ã‚’å–å¾—ä¸­..."
     go mod tidy | Out-Null
     $goDepsRaw = go list -m -json all
     Pop-Location
 
     Add-Content $outputFile "`n=== [Go Modules] ==="
 
-    # JSONƒuƒƒbƒN‚ğè“®‚Å•ªŠ„
+    # JSONãƒ–ãƒ­ãƒƒã‚¯ã‚’æ‰‹å‹•ã§åˆ†å‰²
     $lines = $goDepsRaw -split "`n"
     $jsonBlock = ""
     $braceCount = 0
@@ -62,17 +62,17 @@ if (Test-Path "$goProjectPath\go.mod") {
         }
     }
 } else {
-    Add-Content $outputFile "`n[!] GoƒvƒƒWƒFƒNƒg‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñF$goProjectPath"
+    Add-Content $outputFile "`n[!] Goãƒ—ãƒ­ã‚¸ã‚§ã‚¯ãƒˆãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ï¼š$goProjectPath"
 }
 
 ########################################
-# Node.js ƒ‰ƒCƒZƒ“ƒX’Šo
+# Node.js ãƒ©ã‚¤ã‚»ãƒ³ã‚¹æŠ½å‡º
 ########################################
 if (Test-Path "$nodeProjectPath\package.json") {
     Add-Content $outputFile "`n=== [Node.js Modules] ==="
 
     Push-Location $nodeProjectPath
-    Write-Host "? Node.jsˆË‘¶ƒ‰ƒCƒZƒ“ƒX‚ğæ“¾’†..."
+    Write-Host "? Node.jsä¾å­˜ãƒ©ã‚¤ã‚»ãƒ³ã‚¹ã‚’å–å¾—ä¸­..."
     $jsonRaw = license-checker --json --production 2>$null
     Pop-Location
 
@@ -96,23 +96,23 @@ if (Test-Path "$nodeProjectPath\package.json") {
             } elseif ($licenseFile -and (Test-Path $licenseFile)) {
                 Add-Content $outputFile "`n$(Get-Content $licenseFile)"
             } else {
-                Add-Content $outputFile "`n(ƒ‰ƒCƒZƒ“ƒX–{•¶‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ‚Å‚µ‚½)"
+                Add-Content $outputFile "`n(ãƒ©ã‚¤ã‚»ãƒ³ã‚¹æœ¬æ–‡ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã§ã—ãŸ)"
             }
 
-            # NOTICE‚à’T‚·
+            # NOTICEã‚‚æ¢ã™
             if ($info.path -and (Test-Path "$($info.path)\NOTICE")) {
                 Add-Content $outputFile "`n[NOTICE] (from $($info.path)\NOTICE):"
                 Add-Content $outputFile "$(Get-Content "$($info.path)\NOTICE" )"
             }
         }
     } else {
-        Add-Content $outputFile "`n[!] license-checker ‚©‚ç JSON o—Í‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½"
+        Add-Content $outputFile "`n[!] license-checker ã‹ã‚‰ JSON å‡ºåŠ›ã§ãã¾ã›ã‚“ã§ã—ãŸ"
     }
 } else {
-    Add-Content $outputFile "`n[!] Node.js ƒvƒƒWƒFƒNƒg‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñF$nodeProjectPath"
+    Add-Content $outputFile "`n[!] Node.js ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ãƒˆãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ï¼š$nodeProjectPath"
 }
 
 ########################################
-# ? Š®—¹
+# ? å®Œäº†
 ########################################
-Write-Host "`n? “‡ƒ‰ƒCƒZƒ“ƒXî•ñ‚ğ $outputFile ‚Éo—Í‚µ‚Ü‚µ‚½B" -ForegroundColor Green
+Write-Host "`n? çµ±åˆãƒ©ã‚¤ã‚»ãƒ³ã‚¹æƒ…å ±ã‚’ $outputFile ã«å‡ºåŠ›ã—ã¾ã—ãŸã€‚" -ForegroundColor Green

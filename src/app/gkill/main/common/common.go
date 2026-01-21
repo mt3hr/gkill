@@ -76,6 +76,7 @@ var (
 				}
 			}
 		},
+		Short: `idf 'target_dir'`,
 	}
 	DVNFCmd = dvnf_cmd.DVNFCmd
 
@@ -91,6 +92,32 @@ var (
 			fmt.Printf("%s:\t%s\n", "build_time", version.BuildTime)
 			fmt.Printf("%s:\t\t%s\n", "hash", version.CommitHash)
 		},
+	}
+
+	GenerateThumbCacheCmd = &cobra.Command{
+		Use: "generate_thumb_cache",
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				cmd.Usage()
+				return
+			}
+
+			targetUserIDs := args
+
+			err := InitGkillServerAPI()
+			if err != nil {
+				gkill_log.Debug.Fatal(err.Error())
+			}
+
+			for _, targetUserID := range targetUserIDs {
+				err := GenerateThumbCache(cmd.Context(), targetUserID)
+				if err != nil {
+					err = fmt.Errorf("error at generate thumb cache user id = %s: %w", targetUserID, err)
+					gkill_log.Debug.Fatal(err.Error())
+				}
+			}
+		},
+		Short: `generate_thumb_cache 'user_id'`,
 	}
 )
 
@@ -195,4 +222,24 @@ func Openbrowser(url string) error {
 		err = fmt.Errorf("unsupported platform")
 	}
 	return err
+}
+
+func GenerateThumbCache(ctx context.Context, userID string) error {
+	gkillkServerAPI := GetGkillServerAPI()
+	device, err := gkillkServerAPI.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device: %w", err)
+		return err
+	}
+	repositories, err := GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get gkill repositories: %w", err)
+		return err
+	}
+	err = repositories.IDFKyouReps.GenerateThumbCache(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at generate thumb cache: %w", err)
+		return err
+	}
+	return nil
 }
