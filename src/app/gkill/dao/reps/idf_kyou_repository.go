@@ -35,6 +35,10 @@ type IDFKyouRepository interface {
 
 	HandleFileServe(w http.ResponseWriter, r *http.Request)
 
+	GenerateThumbCache(ctx context.Context) error
+
+	ClearThumbCache() error
+
 	UnWrapTyped() ([]IDFKyouRepository, error)
 
 	UnWrap() ([]Repository, error)

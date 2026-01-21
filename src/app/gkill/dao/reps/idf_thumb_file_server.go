@@ -1,13 +1,16 @@
 package reps
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"image"
 	stdDraw "image/draw"
 	"image/jpeg"
+	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -19,6 +22,7 @@ import (
 	_ "image/png"
 
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/rwcarlsen/goexif/exif"
 	xdraw "golang.org/x/image/draw"
 	_ "golang.org/x/image/webp" // webp decode
 	"golang.org/x/sync/singleflight"
@@ -33,6 +37,10 @@ var (
 	// 生成の同時実行数を制限（CPU/IO暴走防止）
 	thumbSem = make(chan struct{}, 3)
 )
+
+type ThumbGenerator interface {
+	GenerateThumbCache(ctx context.Context, url string) error
+}
 
 // NewThumbFileServer は dir 配下をサーブしつつ、?thumb=200x200 のときだけサムネを返す。
 // - それ以外は base.ServeHTTP に委譲（既存挙動維持）
@@ -56,6 +64,74 @@ type thumbFileServer struct {
 
 	maxSize int
 	jpegQ   int
+}
+
+func (t *thumbFileServer) GenerateThumbCache(ctx context.Context, queryURL string) error {
+	queryURLObj, err := url.Parse(queryURL)
+	if err != nil {
+		err = fmt.Errorf("error at parse url %s: %w", queryURL, err)
+		return err
+	}
+
+	thumb := queryURLObj.Query().Get("thumb")
+	if thumb == "" {
+		err = fmt.Errorf("error at get parse thumb size %s: %w", queryURL, err)
+		return err
+	}
+
+	// サイズ解析
+	tw, th, ok := parseThumb(thumb)
+	if !ok || tw <= 0 || th <= 0 || tw > t.maxSize || th > t.maxSize {
+		err = fmt.Errorf("error at get parse thumb size %s: %w", queryURL, err)
+		return err
+	}
+
+	// URL Path（StripPrefix後）を安全に相対化
+	rel, ok := cleanRelURLPath(queryURLObj.Path)
+	if !ok || rel == "" {
+		err := fmt.Errorf("illegal url path %s")
+		return err
+	}
+
+	// デコード対応の拡張子だけサムネ処理（無駄なdecode回避）
+	if !looksLikeDecodableImage(rel) {
+		return nil
+	}
+
+	abs, ok := secureJoin(t.rootDir, rel)
+	if !ok {
+		err := fmt.Errorf("bad path %s", queryURL)
+		return err
+	}
+
+	st, err := os.Stat(abs)
+	if err != nil || st.IsDir() {
+		return nil
+	}
+
+	thumbPath, _, err := t.thumbPathFor(rel, st, tw, th)
+	if err != nil {
+		return nil
+	}
+
+	// キャッシュがあれば返す（ETagで304も返す）
+	if fileExists(thumbPath) {
+		return nil
+	}
+
+	// 生成
+	if fileExists(thumbPath) {
+		return nil
+	}
+	if err := os.MkdirAll(filepath.Dir(thumbPath), 0o755); err != nil {
+		return err
+	}
+	err = generateThumbJpeg(abs, thumbPath, tw, th, t.jpegQ)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (t *thumbFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -222,24 +298,44 @@ func generateThumbJpeg(srcPath, dstPath string, w, h int, quality int) error {
 	}
 	defer f.Close()
 
-	img, _, err := image.Decode(f)
+	// 1) EXIF Orientation を読む（失敗したら 1 扱い）
+	orient := 1
+	if _, err := f.Seek(0, io.SeekStart); err == nil {
+		if x, err := exif.Decode(f); err == nil {
+			if tag, err := x.Get(exif.Orientation); err == nil {
+				if v, err := tag.Int(0); err == nil && 1 <= v && v <= 8 {
+					orient = v
+				}
+			}
+		}
+	}
+
+	// 2) Decode に備えて先頭へ戻す
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return err
+	}
+
+	img, format, err := image.Decode(f)
 	if err != nil {
 		return err
 	}
 
+	// 3) JPEG のときだけ Orientation を適用
+	if format == "jpeg" && orient != 1 {
+		img = applyExifOrientation(img, orient)
+	}
+
+	// 4) いつもの crop → resize
 	cropped := cropCenterToAspect(img, float64(w)/float64(h))
 	dst := image.NewRGBA(image.Rect(0, 0, w, h))
-
-	// 高品質スケール（初回だけ重い）
 	xdraw.CatmullRom.Scale(dst, dst.Bounds(), cropped, cropped.Bounds(), stdDraw.Over, nil)
 
-	// atomic write
+	// 5) atomic write
 	tmp := dstPath + ".tmp"
 	tf, err := os.Create(tmp)
 	if err != nil {
 		return err
 	}
-
 	encErr := jpeg.Encode(tf, dst, &jpeg.Options{Quality: quality})
 	closeErr := tf.Close()
 
@@ -252,14 +348,67 @@ func generateThumbJpeg(srcPath, dstPath string, w, h int, quality int) error {
 		return closeErr
 	}
 
-	// Windows対策：既存があれば消してからrename
 	_ = os.Remove(dstPath)
 	if err := os.Rename(tmp, dstPath); err != nil {
 		_ = os.Remove(tmp)
 		return err
 	}
-
 	return nil
+}
+
+func applyExifOrientation(src image.Image, orient int) image.Image {
+	s := toNRGBA(src)
+	sw, sh := s.Bounds().Dx(), s.Bounds().Dy()
+
+	// dst のサイズ（90/270系は入れ替わる）
+	dw, dh := sw, sh
+	if orient >= 5 && orient <= 8 {
+		dw, dh = sh, sw
+	}
+	d := image.NewNRGBA(image.Rect(0, 0, dw, dh))
+
+	// src を走査して dst へ転送（1回だけなのでシンプル優先）
+	for y := 0; y < sh; y++ {
+		for x := 0; x < sw; x++ {
+			si := y*s.Stride + x*4
+
+			var dx, dy int
+			switch orient {
+			case 1: // normal
+				dx, dy = x, y
+			case 2: // mirror horizontal
+				dx, dy = sw-1-x, y
+			case 3: // rotate 180
+				dx, dy = sw-1-x, sh-1-y
+			case 4: // mirror vertical
+				dx, dy = x, sh-1-y
+			case 5: // transpose
+				dx, dy = y, x
+			case 6: // rotate 90 CW
+				dx, dy = sh-1-y, x
+			case 7: // transverse
+				dx, dy = sh-1-y, sw-1-x
+			case 8: // rotate 270 CW
+				dx, dy = y, sw-1-x
+			default:
+				dx, dy = x, y
+			}
+
+			di := dy*d.Stride + dx*4
+			copy(d.Pix[di:di+4], s.Pix[si:si+4])
+		}
+	}
+	return d
+}
+
+func toNRGBA(img image.Image) *image.NRGBA {
+	if n, ok := img.(*image.NRGBA); ok && n.Rect.Min.X == 0 && n.Rect.Min.Y == 0 {
+		return n
+	}
+	b := img.Bounds()
+	dst := image.NewNRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	stdDraw.Draw(dst, dst.Bounds(), img, b.Min, stdDraw.Src)
+	return dst
 }
 
 // aspect比に合わせてcenter-crop
