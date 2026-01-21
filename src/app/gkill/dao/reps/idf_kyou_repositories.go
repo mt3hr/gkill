@@ -10,6 +10,7 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
@@ -673,6 +674,38 @@ func (i IDFKyouRepositories) IDF(ctx context.Context) error {
 
 func (i IDFKyouRepositories) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
 	err := fmt.Errorf("not implements IDFKyouReps.AddIDFKyouInfo")
+	return err
+}
+
+func (i IDFKyouRepositories) GenerateThumbCache(ctx context.Context) error {
+	unwrapedReps, err := i.UnWrapTyped()
+	if err != nil {
+		err = fmt.Errorf("error at generate thumb cache at idf kyou repositories: %w", err)
+		return err
+	}
+	for _, unwrapedRep := range unwrapedReps {
+		err := unwrapedRep.GenerateThumbCache(ctx)
+		if err != nil {
+			err = fmt.Errorf("error at generate thumb cache at idf kyou repositories in rep: %w", err)
+			gkill_log.Error.Println(err.Error())
+		}
+	}
+	return nil
+}
+
+func (i IDFKyouRepositories) ClearThumbCache() error {
+	unwrapedReps, err := i.UnWrapTyped()
+	if err != nil {
+		err = fmt.Errorf("error at clear thumb cache at idf kyou repositories: %w", err)
+		return err
+	}
+	for _, unwrapedRep := range unwrapedReps {
+		err := unwrapedRep.ClearThumbCache()
+		if err != nil {
+			err = fmt.Errorf("error at clear thumb cache at idf kyou repositories in rep: %w", err)
+			return err
+		}
+	}
 	return err
 }
 

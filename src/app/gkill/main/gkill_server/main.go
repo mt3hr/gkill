@@ -31,6 +31,7 @@ func init() {
 	ServerCmd.AddCommand(common.IDFCmd)
 	ServerCmd.AddCommand(common.DVNFCmd)
 	ServerCmd.AddCommand(common.VersionCommand)
+	ServerCmd.AddCommand(common.GenerateThumbCacheCmd)
 }
 
 var (

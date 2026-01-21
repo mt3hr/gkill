@@ -11382,6 +11382,18 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		return
 	}
 
+	err = repositories.IDFKyouReps.ClearThumbCache()
+	if err != nil {
+		err = fmt.Errorf("error at clear thumb cache: %w", err)
+		gkill_log.Debug.Println(err.Error())
+		gkillError := &message.GkillError{
+			ErrorCode:    message.RepositoriesGetError,
+			ErrorMessage: GetLocalizer(request.LocaleName).MustLocalizeMessage(&i18n.Message{ID: "FAILED_RELOAD_MESSAGE"}),
+		}
+		response.Errors = append(response.Errors, gkillError)
+		return
+	}
+
 	_, err = g.GkillDAOManager.CloseUserRepositories(userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
@@ -13044,7 +13056,7 @@ func (g *GkillServerAPI) PrintStartedMessage() {
 
 	port := serverConfig.Address
 	protocol := "http"
-	if serverConfig.EnableTLS {
+	if serverConfig.EnableTLS && !gkill_options.DisableTLSForce {
 		protocol = "https"
 	}
 

@@ -38,6 +38,7 @@ func init() {
 	AppCmd.PersistentFlags().StringArrayVar(&gkill_options.PreLoadUserNames, "pre_load_users", gkill_options.PreLoadUserNames, "")
 	AppCmd.AddCommand(common.DVNFCmd)
 	AppCmd.AddCommand(common.VersionCommand)
+	AppCmd.AddCommand(common.GenerateThumbCacheCmd)
 }
 
 var (
@@ -101,7 +102,7 @@ var (
 			}
 
 			address := ""
-			if serverConfig.EnableTLS {
+			if serverConfig.EnableTLS && !gkill_options.DisableTLSForce {
 				address += "https://localhost"
 			} else {
 				address += "http://localhost"
