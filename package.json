@@ -10,7 +10,7 @@
     "build-only": "vite build",
     "type-check": "npx --max-old-space-size=4096 vue-tsc --build --force",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
-    "go_mod": "rimraf src/app/go.mod && rimraf src/app/go.sum && cd src/app && go mod init github.com/mt3hr/gkill/src/app && cd main/gkill && go mod tidy",
+    "go_mod": "rimraf src/app/go.mod && rimraf src/app/go.sum && cd src/app && go mod init github.com/mt3hr/gkill/src/app && cd gkill/main/gkill_server && go mod tidy",
     "go_install": "cd src/app/gkill/main/gkill_server && go install",
     "clean_app_embed": "rimraf src/app/gkill/api/embed/html && rimraf src/app/gkill/api/embed/i18n && rimraf src/app/gkill/api/embed/version.json",
     "put_version_info_embed": "node -e \"const {execSync}=require('child_process');const fs=require('fs');const path=require('path');const pkg=require(path.resolve('package.json'));const ver=pkg&&pkg.version?String(pkg.version):'unknown';let hash='unknown';try{hash=execSync('git show --format=%H --no-patch',{encoding:'utf8'}).trim()}catch(e){hash=process.env.GITHUB_SHA||process.env.COMMIT_SHA||'unknown'};const d=new Date();const pad=n=>String(n).padStart(2,'0');const tzMin=-d.getTimezoneOffset();const sign=tzMin>=0?'+':'-';const oh=pad(Math.floor(Math.abs(tzMin)/60));const om=pad(Math.abs(tzMin)%60);const bt=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds())+sign+oh+':'+om;const out=path.join('src/app/gkill/api/embed','version.json');fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,JSON.stringify({commit_hash:hash,build_time:bt,version:ver},null,2)+'\\n');\"",
