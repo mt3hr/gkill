@@ -7,5 +7,5 @@ export interface IDFKyouProps extends KyouViewPropsBase {
     idf_kyou: IDFKyou
     height: number | string
     width: number | string
-    is_image_only: boolean
+    is_image_request_to_thumb_size: boolean
 }

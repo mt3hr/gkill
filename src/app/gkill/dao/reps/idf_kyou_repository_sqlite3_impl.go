@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -36,8 +37,9 @@ type idfKyouRepositorySQLite3Impl struct {
 	db *sql.DB
 	m  *sync.Mutex
 
-	fileServer  http.Handler
-	thumbServer http.Handler
+	fileServer     http.Handler
+	thumbServer    http.Handler
+	thumbGenerator ThumbGenerator
 }
 
 const DUIDLayout = "20060102T150405-0700"
@@ -136,6 +138,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	fs := http.FileServer(http.Dir(dir))
 	rep.fileServer = fs
 	rep.thumbServer = NewThumbFileServer(dir, fs)
+	rep.thumbGenerator = rep.thumbServer.(ThumbGenerator)
 
 	return rep, nil
 }
@@ -755,11 +758,6 @@ func (i *idfKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
 			return err
 		}
 	}
-
-	dir := filepath.Clean(os.ExpandEnv(i.contentDir))
-	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "thumb_cache", filepath.Base(dir)))
-
-	os.RemoveAll(cacheDir)
 	return nil
 }
 
@@ -1515,6 +1513,54 @@ func isAudio(filename string) bool {
 		return true
 	}
 	return false
+}
+
+func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) error {
+	repName, err := i.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at generate thumb cache get rep name: %w", err)
+		return err
+	}
+
+	query := &find.FindQuery{}
+	idfKyous, err := i.FindIDFKyou(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at generate thumb cache at %s: %w", repName, err)
+	}
+
+	for _, idfKyou := range idfKyous {
+		if !idfKyou.IsImage {
+			continue
+		}
+
+		rel := filepath.ToSlash(idfKyou.TargetFile)
+		rel = strings.TrimPrefix(rel, "/")
+
+		url := &url.URL{
+			Scheme: "http",
+			Host:   "localhost:9999",
+			Path:   "/" + rel,
+		}
+		query := url.Query()
+		query.Set("thumb", "400x400")
+		url.RawQuery = query.Encode()
+
+		err = i.thumbGenerator.GenerateThumbCache(ctx, url.String())
+		if err != nil {
+			err = fmt.Errorf("error at generate thumb cache %s: %w", url.String(), err)
+			gkill_log.Error.Println(err.Error())
+			continue
+		}
+	}
+	return nil
+}
+
+func (i *idfKyouRepositorySQLite3Impl) ClearThumbCache() error {
+	dir := filepath.Clean(os.ExpandEnv(i.contentDir))
+	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "thumb_cache", filepath.Base(dir)))
+
+	os.RemoveAll(cacheDir)
+	return nil
 }
 
 func (i *idfKyouRepositorySQLite3Impl) UnWrapTyped() ([]IDFKyouRepository, error) {

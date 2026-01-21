@@ -41,6 +41,10 @@ type IDFKyouTempRepository interface {
 
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
 
+	GenerateThumbCache(ctx context.Context) error
+
+	ClearThumbCache() error
+
 	UnWrapTyped() ([]IDFKyouTempRepository, error)
 
 	UnWrap() ([]Repository, error)

@@ -509,6 +509,14 @@ AND DEVICE = ?
 	return nil
 }
 
+func (i *idfKyouRepositoryTempSQLite3Impl) GenerateThumbCache(ctx context.Context) error {
+	return nil
+}
+
+func (i *idfKyouRepositoryTempSQLite3Impl) ClearThumbCache() error {
+	return nil
+}
+
 func (i *idfKyouRepositoryTempSQLite3Impl) UnWrapTyped() ([]IDFKyouTempRepository, error) {
 	return []IDFKyouTempRepository{i}, nil
 }
