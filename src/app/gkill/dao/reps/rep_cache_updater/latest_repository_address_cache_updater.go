@@ -7,7 +7,6 @@ import (
 
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 type latestRepositoryAddressCacheUpdater struct {
@@ -48,9 +47,7 @@ func (l *latestRepositoryAddressCacheUpdater) UpdateCache(ctx context.Context) e
 		ctx, cancelFunc = context.WithCancel(ctx)
 		l.cancelPreFunc = cancelFunc
 	}()
-	done := threads.AllocateThread()
 	go func() {
-		defer done()
 		if l.enableUpdateRepsCache {
 			err := l.repository.UpdateCache(ctx)
 			if err != nil {

@@ -26,19 +26,16 @@ func (t TagRepositories) FindTags(ctx context.Context, query *find.FindQuery) ([
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			matchTagsInRep, err := rep.FindTags(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				matchTagsInRep, err := rep.FindTags(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTagsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -110,18 +107,15 @@ func (t TagRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.Close(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				err = rep.Close(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -155,19 +149,16 @@ func (t TagRepositories) GetTag(ctx context.Context, id string, updateTime *time
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			matchTagInRep, err := rep.GetTag(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				matchTagInRep, err := rep.GetTag(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTagInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -221,19 +212,16 @@ func (t TagRepositories) GetTagsByTagName(ctx context.Context, tagname string) (
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			matchTagsInRep, err := rep.GetTagsByTagName(ctx, tagname)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				matchTagsInRep, err := rep.GetTagsByTagName(ctx, tagname)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTagsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -299,19 +287,16 @@ func (t TagRepositories) GetTagsByTargetID(ctx context.Context, target_id string
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			matchTagsInRep, err := rep.GetTagsByTargetID(ctx, target_id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				matchTagsInRep, err := rep.GetTagsByTargetID(ctx, target_id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTagsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -374,18 +359,15 @@ func (t TagRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				err = rep.UpdateCache(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -449,19 +431,16 @@ func (t TagRepositories) GetTagHistories(ctx context.Context, id string) ([]*Tag
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			matchTagsInRep, err := rep.GetTagHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				matchTagsInRep, err := rep.GetTagHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTagsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -528,32 +507,28 @@ func (t TagRepositories) GetTagHistoriesByRepName(ctx context.Context, id string
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				if repName != nil {
+					// repNameが一致しない場合はスキップ
+					repNameInRep, err := rep.GetRepName(ctx)
+					if err != nil {
+						errch <- fmt.Errorf("error at get rep name: %w", err)
+						return
+					}
+					if repNameInRep != *repName {
+						return
+					}
+				}
 
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-
-			if repName != nil {
-				// repNameが一致しない場合はスキップ
-				repNameInRep, err := rep.GetRepName(ctx)
+				matchTagsInRep, err := rep.GetTagHistories(ctx, id)
 				if err != nil {
-					errch <- fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
 					return
 				}
-				if repNameInRep != *repName {
-					return
-				}
-			}
-
-			matchTagsInRep, err := rep.GetTagHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagsInRep
-		}(rep)
+				ch <- matchTagsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -661,19 +636,16 @@ func (t TagRepositories) GetAllTags(ctx context.Context) ([]*Tag, error) {
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			matchTagsInRep, err := rep.GetAllTags(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				matchTagsInRep, err := rep.GetAllTags(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTagsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 

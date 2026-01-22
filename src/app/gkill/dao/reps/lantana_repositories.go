@@ -26,19 +26,16 @@ func (l LantanaRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 
 	// 並列処理
 	for _, rep := range l {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep LantanaRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep LantanaRepository) {
+				matchKyousInRep, err := rep.FindKyous(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -97,19 +94,16 @@ func (l LantanaRepositories) GetKyou(ctx context.Context, id string, updateTime 
 
 	// 並列処理
 	for _, rep := range l {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep LantanaRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyouInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep LantanaRepository) {
+				matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyouInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -163,19 +157,16 @@ func (l LantanaRepositories) GetKyouHistories(ctx context.Context, id string) ([
 
 	// 並列処理
 	for _, rep := range l {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep LantanaRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep LantanaRepository) {
+				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -266,18 +257,15 @@ func (l LantanaRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range l {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep LantanaRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep LantanaRepository) {
+				err = rep.UpdateCache(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -316,18 +304,15 @@ func (l LantanaRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep LantanaRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.Close(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep LantanaRepository) {
+				err = rep.Close(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -361,19 +346,16 @@ func (l LantanaRepositories) FindLantana(ctx context.Context, query *find.FindQu
 
 	// 並列処理
 	for _, rep := range l {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep LantanaRepository) {
-			defer done()
-			defer wg.Done()
-			matchLantanasInRep, err := rep.FindLantana(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchLantanasInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep LantanaRepository) {
+				matchLantanasInRep, err := rep.FindLantana(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchLantanasInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -440,19 +422,16 @@ func (l LantanaRepositories) GetLantana(ctx context.Context, id string, updateTi
 
 	// 並列処理
 	for _, rep := range l {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep LantanaRepository) {
-			defer done()
-			defer wg.Done()
-			matchLantanaInRep, err := rep.GetLantana(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchLantanaInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep LantanaRepository) {
+				matchLantanaInRep, err := rep.GetLantana(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchLantanaInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -506,19 +485,16 @@ func (l LantanaRepositories) GetLantanaHistories(ctx context.Context, id string)
 
 	// 並列処理
 	for _, rep := range l {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep LantanaRepository) {
-			defer done()
-			defer wg.Done()
-			matchLantanasInRep, err := rep.GetLantanaHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchLantanasInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep LantanaRepository) {
+				matchLantanasInRep, err := rep.GetLantanaHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchLantanasInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -586,32 +562,28 @@ func (l LantanaRepositories) GetLantanaHistoriesByRepName(ctx context.Context, i
 
 	// 並列処理
 	for _, rep := range l {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep LantanaRepository) {
+				if repName != nil {
+					// repNameが一致しない場合はスキップ
+					repNameInRep, err := rep.GetRepName(ctx)
+					if err != nil {
+						errch <- fmt.Errorf("error at get rep name: %w", err)
+						return
+					}
+					if repNameInRep != *repName {
+						return
+					}
+				}
 
-		done := threads.AllocateThread()
-		go func(rep LantanaRepository) {
-			defer done()
-			defer wg.Done()
-
-			if repName != nil {
-				// repNameが一致しない場合はスキップ
-				repNameInRep, err := rep.GetRepName(ctx)
+				matchLantanasInRep, err := rep.GetLantanaHistories(ctx, id)
 				if err != nil {
-					errch <- fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
 					return
 				}
-				if repNameInRep != *repName {
-					return
-				}
-			}
-
-			matchLantanasInRep, err := rep.GetLantanaHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchLantanasInRep
-		}(rep)
+				ch <- matchLantanasInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
