@@ -659,15 +659,16 @@ func (i IDFKyouRepositories) GenerateThumbCache(ctx context.Context) error {
 	wg := &sync.WaitGroup{}
 	for _, unwrapedRep := range unwrapedReps {
 		_ = threads.Go(ctx, wg, func() {
-			func() {
+			func(unwrapedRep IDFKyouRepository) {
 				err := unwrapedRep.GenerateThumbCache(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at generate thumb cache at idf kyou repositories in rep: %w", err)
 					gkill_log.Error.Println(err.Error())
 				}
-			}()
+			}(unwrapedRep)
 		})
 	}
+	wg.Wait()
 	return nil
 }
 
