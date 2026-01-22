@@ -46,6 +46,7 @@ var (
 		Use: "gkill",
 		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			common.InitGkillOptions()
+			threads.Init()
 		},
 		Run: func(_ *cobra.Command, _ []string) {
 			var err error
