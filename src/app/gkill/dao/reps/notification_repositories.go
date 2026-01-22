@@ -26,19 +26,16 @@ func (t NotificationRepositories) FindNotifications(ctx context.Context, query *
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			matchNotificationsInRep, err := rep.FindNotifications(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchNotificationsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				matchNotificationsInRep, err := rep.FindNotifications(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchNotificationsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -111,18 +108,15 @@ func (t NotificationRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.Close(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				err = rep.Close(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -156,19 +150,16 @@ func (t NotificationRepositories) GetNotification(ctx context.Context, id string
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			matchNotificationInRep, err := rep.GetNotification(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchNotificationInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				matchNotificationInRep, err := rep.GetNotification(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchNotificationInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -222,19 +213,16 @@ func (t NotificationRepositories) GetNotificationsByTargetID(ctx context.Context
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			matchNotificationsInRep, err := rep.GetNotificationsByTargetID(ctx, target_id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchNotificationsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				matchNotificationsInRep, err := rep.GetNotificationsByTargetID(ctx, target_id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchNotificationsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -302,19 +290,16 @@ func (t NotificationRepositories) GetNotificationsBetweenNotificationTime(ctx co
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			matchNotificationsInRep, err := rep.GetNotificationsBetweenNotificationTime(ctx, startTime, endTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchNotificationsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				matchNotificationsInRep, err := rep.GetNotificationsBetweenNotificationTime(ctx, startTime, endTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchNotificationsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -379,18 +364,15 @@ func (t NotificationRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				err = rep.UpdateCache(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -454,19 +436,16 @@ func (t NotificationRepositories) GetNotificationHistories(ctx context.Context, 
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchNotificationsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchNotificationsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -534,32 +513,28 @@ func (t NotificationRepositories) GetNotificationHistoriesByRepName(ctx context.
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				if repName != nil {
+					// repNameが一致しない場合はスキップ
+					repNameInRep, err := rep.GetRepName(ctx)
+					if err != nil {
+						errch <- fmt.Errorf("error at get rep name: %w", err)
+						return
+					}
+					if repNameInRep != *repName {
+						return
+					}
+				}
 
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-
-			if repName != nil {
-				// repNameが一致しない場合はスキップ
-				repNameInRep, err := rep.GetRepName(ctx)
+				matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
 				if err != nil {
-					errch <- fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
 					return
 				}
-				if repNameInRep != *repName {
-					return
-				}
-			}
-
-			matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchNotificationsInRep
-		}(rep)
+				ch <- matchNotificationsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 

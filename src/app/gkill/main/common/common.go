@@ -24,7 +24,6 @@ import (
 	dvnf_cmd "github.com/mt3hr/gkill/src/app/gkill/dvnf/cmd"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 	"github.com/spf13/cobra"
 )
 
@@ -127,8 +126,6 @@ func init() {
 	}
 	fixTimezone()
 
-	done := threads.AllocateThread()
-	defer done()
 	go func() {
 		http.ListenAndServe("localhost:6060", nil) // pprof用
 	}()
@@ -176,9 +173,7 @@ func LaunchGkillServerAPI() error {
 	defer gkillServerAPI.Close()
 	interceptCh := make(chan os.Signal, 1)
 	signal.Notify(interceptCh, os.Interrupt)
-	done := threads.AllocateThread()
 	go func() {
-		defer done()
 		<-interceptCh
 		gkillServerAPI.Close()
 		os.Exit(0)

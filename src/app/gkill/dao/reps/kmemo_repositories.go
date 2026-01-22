@@ -26,19 +26,16 @@ func (k KmemoRepositories) FindKyous(ctx context.Context, query *find.FindQuery)
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KmemoRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KmemoRepository) {
+				matchKyousInRep, err := rep.FindKyous(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -97,19 +94,16 @@ func (k KmemoRepositories) GetKyou(ctx context.Context, id string, updateTime *t
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KmemoRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyouInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KmemoRepository) {
+				matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyouInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -163,19 +157,16 @@ func (k KmemoRepositories) GetKyouHistories(ctx context.Context, id string) ([]*
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KmemoRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KmemoRepository) {
+				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -266,18 +257,15 @@ func (k KmemoRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KmemoRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KmemoRepository) {
+				err = rep.UpdateCache(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -316,18 +304,15 @@ func (k KmemoRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KmemoRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.Close(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KmemoRepository) {
+				err = rep.Close(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -361,19 +346,16 @@ func (k KmemoRepositories) FindKmemo(ctx context.Context, query *find.FindQuery)
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KmemoRepository) {
-			defer done()
-			defer wg.Done()
-			matchKmemosInRep, err := rep.FindKmemo(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKmemosInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KmemoRepository) {
+				matchKmemosInRep, err := rep.FindKmemo(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKmemosInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -442,19 +424,16 @@ func (k KmemoRepositories) GetKmemo(ctx context.Context, id string, updateTime *
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KmemoRepository) {
-			defer done()
-			defer wg.Done()
-			matchKmemoInRep, err := rep.GetKmemo(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKmemoInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KmemoRepository) {
+				matchKmemoInRep, err := rep.GetKmemo(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKmemoInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -508,19 +487,16 @@ func (k KmemoRepositories) GetKmemoHistories(ctx context.Context, id string) ([]
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KmemoRepository) {
-			defer done()
-			defer wg.Done()
-			matchKmemosInRep, err := rep.GetKmemoHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKmemosInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KmemoRepository) {
+				matchKmemosInRep, err := rep.GetKmemoHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKmemosInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -588,32 +564,28 @@ func (k KmemoRepositories) GetKmemoHistoriesByRepName(ctx context.Context, id st
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KmemoRepository) {
+				if repName != nil {
+					// repNameが一致しない場合はスキップ
+					repNameInRep, err := rep.GetRepName(ctx)
+					if err != nil {
+						errch <- fmt.Errorf("error at get rep name: %w", err)
+						return
+					}
+					if repNameInRep != *repName {
+						return
+					}
+				}
 
-		done := threads.AllocateThread()
-		go func(rep KmemoRepository) {
-			defer done()
-			defer wg.Done()
-
-			if repName != nil {
-				// repNameが一致しない場合はスキップ
-				repNameInRep, err := rep.GetRepName(ctx)
+				matchKmemosInRep, err := rep.GetKmemoHistories(ctx, id)
 				if err != nil {
-					errch <- fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
 					return
 				}
-				if repNameInRep != *repName {
-					return
-				}
-			}
-
-			matchKmemosInRep, err := rep.GetKmemoHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKmemosInRep
-		}(rep)
+				ch <- matchKmemosInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
