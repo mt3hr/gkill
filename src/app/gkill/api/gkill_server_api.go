@@ -47,7 +47,6 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/twpayne/go-gpx"
 )
@@ -1433,13 +1432,11 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		}
 		// キャッシュに書き込み
 		if len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
-			// go func() {
 			err = repositories.TagReps[0].AddTagInfo(r.Context(), request.Tag)
 			if err != nil {
 				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.TagTempRep.AddTagInfo(r.Context(), request.Tag, *request.TXID, userID, device)
@@ -1602,13 +1599,11 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
-			// go func() {
 			err = repositories.TextReps[0].AddTextInfo(r.Context(), request.Text)
 			if err != nil {
 				err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(r.Context(), request.Text, *request.TXID, userID, device)
@@ -1771,13 +1766,11 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 			return
 		}
 		if len(repositories.NotificationReps) == 1 && *gkill_options.CacheNotificationReps {
-			// go func() {
 			err = repositories.NotificationReps[0].AddNotificationInfo(r.Context(), request.Notification)
 			if err != nil {
 				err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(r.Context(), request.Notification, *request.TXID, userID, device)
@@ -1997,13 +1990,11 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if len(repositories.KmemoReps) == 1 && *gkill_options.CacheKmemoReps {
-			// go func() {
 			err = repositories.KmemoReps[0].AddKmemoInfo(r.Context(), request.Kmemo)
 			if err != nil {
 				err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(r.Context(), request.Kmemo, *request.TXID, userID, device)
@@ -2181,13 +2172,11 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(repositories.KCReps) == 1 && *gkill_options.CacheKCReps {
-			// go func() {
 			err = repositories.KCReps[0].AddKCInfo(r.Context(), request.KC)
 			if err != nil {
 				err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.KCTempRep.AddKCInfo(r.Context(), request.KC, *request.TXID, userID, device)
@@ -2394,13 +2383,11 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
-			// go func() {
 			err = repositories.URLogReps[0].AddURLogInfo(r.Context(), request.URLog)
 			if err != nil {
 				err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(r.Context(), request.URLog, *request.TXID, userID, device)
@@ -2576,13 +2563,11 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
-			// go func() {
 			err = repositories.NlogReps[0].AddNlogInfo(r.Context(), request.Nlog)
 			if err != nil {
 				err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(r.Context(), request.Nlog, *request.TXID, userID, device)
@@ -2758,13 +2743,11 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 			return
 		}
 		if len(repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
-			// go func() {
 			err = repositories.TimeIsReps[0].AddTimeIsInfo(r.Context(), request.TimeIs)
 			if err != nil {
 				err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(r.Context(), request.TimeIs, *request.TXID, userID, device)
@@ -2942,13 +2925,11 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 			return
 		}
 		if len(repositories.LantanaReps) == 1 && *gkill_options.CacheLantanaReps {
-			// go func() {
 			err = repositories.LantanaReps[0].AddLantanaInfo(r.Context(), request.Lantana)
 			if err != nil {
 				err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.LantanaTempRep.AddLantanaInfo(r.Context(), request.Lantana, *request.TXID, userID, device)
@@ -3127,13 +3108,11 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if len(repositories.MiReps) == 1 && *gkill_options.CacheMiReps {
-			// go func() {
 			err = repositories.MiReps[0].AddMiInfo(r.Context(), request.Mi)
 			if err != nil {
 				err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.MiTempRep.AddMiInfo(r.Context(), request.Mi, *request.TXID, userID, device)
@@ -3311,13 +3290,11 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		}
 
 		if len(repositories.ReKyouReps.ReKyouRepositories) == 1 && *gkill_options.CacheReKyouReps {
-			// go func() {
 			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(r.Context(), request.ReKyou)
 			if err != nil {
 				err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(r.Context(), request.ReKyou, *request.TXID, userID, device)
@@ -3486,13 +3463,11 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 
 		// キャッシュに書き込み
 		if len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
-			// go func() {
 			err = repositories.TagReps[0].AddTagInfo(r.Context(), request.Tag)
 			if err != nil {
 				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, request.Tag, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.TagTempRep.AddTagInfo(r.Context(), request.Tag, *request.TXID, userID, device)
@@ -3669,13 +3644,11 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		}
 
 		if len(repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
-			// go func() {
 			err = repositories.TextReps[0].AddTextInfo(r.Context(), request.Text)
 			if err != nil {
 				err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, request.Text, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.TextTempRep.AddTextInfo(r.Context(), request.Text, *request.TXID, userID, device)
@@ -3851,13 +3824,11 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 			return
 		}
 		if len(repositories.NotificationReps) == 1 && *gkill_options.CacheNotificationReps {
-			// go func() {
 			err = repositories.NotificationReps[0].AddNotificationInfo(r.Context(), request.Notification)
 			if err != nil {
 				err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, request.Notification, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.NotificationTempRep.AddNotificationInfo(r.Context(), request.Notification, *request.TXID, userID, device)
@@ -4057,13 +4028,11 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		if len(repositories.KmemoReps) == 1 && *gkill_options.CacheKmemoReps {
-			// go func() {
 			err = repositories.KmemoReps[0].AddKmemoInfo(r.Context(), request.Kmemo)
 			if err != nil {
 				err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, request.Kmemo, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.KmemoTempRep.AddKmemoInfo(r.Context(), request.Kmemo, *request.TXID, userID, device)
@@ -4252,13 +4221,11 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if len(repositories.KCReps) == 1 && *gkill_options.CacheKCReps {
-			// go func() {
 			err = repositories.WriteKCRep.AddKCInfo(r.Context(), request.KC)
 			if err != nil {
 				err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, request.KC, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.KCTempRep.AddKCInfo(r.Context(), request.KC, *request.TXID, userID, device)
@@ -4511,13 +4478,11 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
-			// go func() {
 			err = repositories.URLogReps[0].AddURLogInfo(r.Context(), request.URLog)
 			if err != nil {
 				err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, request.URLog, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.URLogTempRep.AddURLogInfo(r.Context(), request.URLog, *request.TXID, userID, device)
@@ -4705,13 +4670,11 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 			return
 		}
 		if len(repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
-			// go func() {
 			err = repositories.NlogReps[0].AddNlogInfo(r.Context(), request.Nlog)
 			if err != nil {
 				err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, request.Nlog, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.NlogTempRep.AddNlogInfo(r.Context(), request.Nlog, *request.TXID, userID, device)
@@ -4900,13 +4863,11 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 			return
 		}
 		if len(repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
-			// go func() {
 			err = repositories.TimeIsReps[0].AddTimeIsInfo(r.Context(), request.TimeIs)
 			if err != nil {
 				err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, request.TimeIs, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.TimeIsTempRep.AddTimeIsInfo(r.Context(), request.TimeIs, *request.TXID, userID, device)
@@ -5095,13 +5056,11 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 			return
 		}
 		if len(repositories.LantanaReps) == 1 && *gkill_options.CacheLantanaReps {
-			// go func() {
 			err = repositories.LantanaReps[0].AddLantanaInfo(r.Context(), request.Lantana)
 			if err != nil {
 				err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, request.Lantana, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.LantanaTempRep.AddLantanaInfo(r.Context(), request.Lantana, *request.TXID, userID, device)
@@ -5290,13 +5249,11 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 			return
 		}
 		if len(repositories.IDFKyouReps) == 1 && *gkill_options.CacheIDFKyouReps {
-			// go func() {
 			err = repositories.IDFKyouReps[0].AddIDFKyouInfo(r.Context(), request.IDFKyou)
 			if err != nil {
 				err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, request.IDFKyou, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.IDFKyouTempRep.AddIDFKyouInfo(r.Context(), request.IDFKyou, *request.TXID, userID, device)
@@ -5495,13 +5452,11 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if len(repositories.MiReps) == 1 && *gkill_options.CacheMiReps {
-			// go func() {
 			err = repositories.MiReps[0].AddMiInfo(r.Context(), request.Mi)
 			if err != nil {
 				err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, request.Mi, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.MiTempRep.AddMiInfo(r.Context(), request.Mi, *request.TXID, userID, device)
@@ -5667,13 +5622,11 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 			return
 		}
 		if len(repositories.ReKyouReps.ReKyouRepositories) == 1 && *gkill_options.CacheReKyouReps {
-			// go func() {
 			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(r.Context(), request.ReKyou)
 			if err != nil {
 				err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, request.ReKyou, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 	} else {
 		err = repositories.TempReps.ReKyouTempRep.AddReKyouInfo(r.Context(), request.ReKyou, *request.TXID, userID, device)
@@ -7964,10 +7917,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		}
 
 		wg.Add(1)
-		done := threads.AllocateThread()
 		go func(filename string, base64Data string) {
-			defer done()
-			// ファイル書き込み
 			defer wg.Done()
 			var gkillError *message.GkillError
 			parts := strings.SplitN(base64Data, ",", 2)
@@ -8228,9 +8178,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		}
 
 		wg.Add(1)
-		done := threads.AllocateThread()
 		go func(filename string, base64Data string) {
-			defer done()
 			// テンポラリファイル書き込み
 			defer wg.Done()
 			base64Reader := bufio.NewReader(strings.NewReader(strings.SplitN(base64Data, ",", 2)[1]))
@@ -8328,9 +8276,7 @@ loop:
 		}
 
 		wg2.Add(1)
-		done := threads.AllocateThread()
 		go func(filename string, gpsLogs []*reps.GPSLog) {
-			defer done()
 			defer wg2.Done()
 			// Mergeだったら既存のデータも混ぜる
 			if request.ConflictBehavior == req_res.Merge {
@@ -8708,10 +8654,7 @@ func (g *GkillServerAPI) HandleUpdateUserReps(w http.ResponseWriter, r *http.Req
 }
 
 func (g *GkillServerAPI) HandleUpdateServerConfigs(w http.ResponseWriter, r *http.Request) {
-
 	defer func() {
-		done := threads.AllocateThread()
-		defer done()
 		go g.server.Shutdown(context.Background())
 	}()
 	func() {
@@ -11641,13 +11584,11 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 	// defer g.WebPushUpdatedData(r.Context(), userID, device, urlog.ID)
 
 	if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
-		// go func() {
 		err = repositories.URLogReps[0].AddURLogInfo(r.Context(), urlog)
 		if err != nil {
 			err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
 			gkill_log.Debug.Println(err.Error())
 		}
-		// }()
 	}
 
 	repName, err := repositories.WriteURLogRep.GetRepName(r.Context())
@@ -12268,13 +12209,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if len(repositories.IDFKyouReps) == 1 && *gkill_options.CacheIDFKyouReps {
-			// go func() {
 			err = repositories.IDFKyouReps[0].AddIDFKyouInfo(r.Context(), idfKyou)
 			if err != nil {
 				err = fmt.Errorf("error at add idfKyou user id = %s device = %s idfKyou = %#v: %w", userID, device, idfKyou, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 		repositories.LatestDataRepositoryAddresses[idfKyou.ID] = &account_state.LatestDataRepositoryAddress{
 			IsDeleted:                              idfKyou.IsDeleted,
@@ -12305,13 +12244,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.KCReps) == 1 && *gkill_options.CacheKCReps {
-			// go func() {
 			err = repositories.KCReps[0].AddKCInfo(r.Context(), kc)
 			if err != nil {
 				err = fmt.Errorf("error at add kc user id = %s device = %s kc = %#v: %w", userID, device, kc, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteKCRep.GetRepName(r.Context())
@@ -12355,13 +12292,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.KmemoReps) == 1 && *gkill_options.CacheKmemoReps {
-			// go func() {
 			err = repositories.KmemoReps[0].AddKmemoInfo(r.Context(), kmemo)
 			if err != nil {
 				err = fmt.Errorf("error at add kmemo user id = %s device = %s kmemo = %#v: %w", userID, device, kmemo, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteKmemoRep.GetRepName(r.Context())
@@ -12405,13 +12340,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.LantanaReps) == 1 && *gkill_options.CacheLantanaReps {
-			// go func() {
 			err = repositories.LantanaReps[0].AddLantanaInfo(r.Context(), lantana)
 			if err != nil {
 				err = fmt.Errorf("error at add lantana user id = %s device = %s lantana = %#v: %w", userID, device, lantana, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteLantanaRep.GetRepName(r.Context())
@@ -12455,13 +12388,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.MiReps) == 1 && *gkill_options.CacheMiReps {
-			// go func() {
 			err = repositories.MiReps[0].AddMiInfo(r.Context(), mi)
 			if err != nil {
 				err = fmt.Errorf("error at add mi user id = %s device = %s mi = %#v: %w", userID, device, mi, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteMiRep.GetRepName(r.Context())
@@ -12505,13 +12436,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.NlogReps) == 1 && *gkill_options.CacheNlogReps {
-			// go func() {
 			err = repositories.NlogReps[0].AddNlogInfo(r.Context(), nlog)
 			if err != nil {
 				err = fmt.Errorf("error at add nlog user id = %s device = %s nlog = %#v: %w", userID, device, nlog, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteNlogRep.GetRepName(r.Context())
@@ -12555,13 +12484,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.NotificationReps) == 1 && *gkill_options.CacheNotificationReps {
-			// go func() {
 			err = repositories.NotificationReps[0].AddNotificationInfo(r.Context(), notification)
 			if err != nil {
 				err = fmt.Errorf("error at add notification user id = %s device = %s notification = %#v: %w", userID, device, notification, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteNotificationRep.GetRepName(r.Context())
@@ -12606,13 +12533,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.ReKyouReps.ReKyouRepositories) == 1 && *gkill_options.CacheReKyouReps {
-			// go func() {
 			err = repositories.ReKyouReps.ReKyouRepositories[0].AddReKyouInfo(r.Context(), rekyou)
 			if err != nil {
 				err = fmt.Errorf("error at add rekyou user id = %s device = %s rekyou = %#v: %w", userID, device, rekyou, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteReKyouRep.GetRepName(r.Context())
@@ -12658,13 +12583,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 
 		// キャッシュに書き込み
 		if len(repositories.TagReps) == 1 && *gkill_options.CacheTagReps {
-			// go func() {
 			err = repositories.TagReps[0].AddTagInfo(r.Context(), tag)
 			if err != nil {
 				err = fmt.Errorf("error at add tag user id = %s device = %s tag = %#v: %w", userID, device, tag, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteTagRep.GetRepName(r.Context())
@@ -12708,13 +12631,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if len(repositories.TextReps) == 1 && *gkill_options.CacheTextReps {
-			// go func() {
 			err = repositories.TextReps[0].AddTextInfo(r.Context(), text)
 			if err != nil {
 				err = fmt.Errorf("error at add text user id = %s device = %s text = %#v: %w", userID, device, text, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteTextRep.GetRepName(r.Context())
@@ -12759,13 +12680,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.TimeIsReps) == 1 && *gkill_options.CacheTimeIsReps {
-			// go func() {
 			err = repositories.TimeIsReps[0].AddTimeIsInfo(r.Context(), timeis)
 			if err != nil {
 				err = fmt.Errorf("error at add timeis user id = %s device = %s timeis = %#v: %w", userID, device, timeis, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteTimeIsRep.GetRepName(r.Context())
@@ -12809,13 +12728,11 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		}
 
 		if len(repositories.URLogReps) == 1 && *gkill_options.CacheURLogReps {
-			// go func() {
 			err = repositories.URLogReps[0].AddURLogInfo(r.Context(), urlog)
 			if err != nil {
 				err = fmt.Errorf("error at add urlog user id = %s device = %s urlog = %#v: %w", userID, device, urlog, err)
 				gkill_log.Debug.Println(err.Error())
 			}
-			// }()
 		}
 
 		repName, err := repositories.WriteURLogRep.GetRepName(r.Context())

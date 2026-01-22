@@ -72,8 +72,6 @@ var (
 				}
 			}()
 
-			done := threads.AllocateThread()
-			defer done()
 			go common.LaunchGkillServerAPI()
 
 			for ; ; time.Sleep(time.Microsecond * 500) {
