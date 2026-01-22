@@ -10,7 +10,8 @@ var (
 	threadCount = 0
 )
 
-func init() {
+// mainから明示的に呼び出してください
+func Init() {
 	for i := 0; i < gkill_options.GoroutinePool; i++ {
 		threadPool <- struct{}{}
 		threadCount++
