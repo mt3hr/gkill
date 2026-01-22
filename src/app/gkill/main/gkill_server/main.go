@@ -8,6 +8,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 	"github.com/spf13/cobra"
 )
 
@@ -39,6 +40,7 @@ var (
 		Use: "gkill_server",
 		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			common.InitGkillOptions()
+			threads.Init()
 		},
 		Run: func(_ *cobra.Command, _ []string) {
 			var err error
