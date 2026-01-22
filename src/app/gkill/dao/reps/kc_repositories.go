@@ -26,19 +26,16 @@ func (k KCRepositories) FindKyous(ctx context.Context, query *find.FindQuery) (m
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KCRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KCRepository) {
+				matchKyousInRep, err := rep.FindKyous(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -96,19 +93,16 @@ func (k KCRepositories) GetKyou(ctx context.Context, id string, updateTime *time
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KCRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyouInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KCRepository) {
+				matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyouInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -162,19 +156,16 @@ func (k KCRepositories) GetKyouHistories(ctx context.Context, id string) ([]*Kyo
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KCRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KCRepository) {
+				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -265,18 +256,15 @@ func (k KCRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KCRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KCRepository) {
+				err = rep.UpdateCache(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -315,18 +303,15 @@ func (k KCRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KCRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.Close(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KCRepository) {
+				err = rep.Close(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -360,19 +345,16 @@ func (k KCRepositories) FindKC(ctx context.Context, query *find.FindQuery) ([]*K
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KCRepository) {
-			defer done()
-			defer wg.Done()
-			matchKCsInRep, err := rep.FindKC(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKCsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KCRepository) {
+				matchKCsInRep, err := rep.FindKC(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKCsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -439,19 +421,16 @@ func (k KCRepositories) GetKC(ctx context.Context, id string, updateTime *time.T
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KCRepository) {
-			defer done()
-			defer wg.Done()
-			matchKCInRep, err := rep.GetKC(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKCInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KCRepository) {
+				matchKCInRep, err := rep.GetKC(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKCInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -505,19 +484,16 @@ func (k KCRepositories) GetKCHistories(ctx context.Context, id string) ([]*KC, e
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep KCRepository) {
-			defer done()
-			defer wg.Done()
-			matchKCsInRep, err := rep.GetKCHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKCsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KCRepository) {
+				matchKCsInRep, err := rep.GetKCHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKCsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -585,32 +561,28 @@ func (k KCRepositories) GetKCHistoriesByRepName(ctx context.Context, id string, 
 
 	// 並列処理
 	for _, rep := range k {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep KCRepository) {
+				if repName != nil {
+					// repNameが一致しない場合はスキップ
+					repNameInRep, err := rep.GetRepName(ctx)
+					if err != nil {
+						errch <- fmt.Errorf("error at get rep name: %w", err)
+						return
+					}
+					if repNameInRep != *repName {
+						return
+					}
+				}
 
-		done := threads.AllocateThread()
-		go func(rep KCRepository) {
-			defer done()
-			defer wg.Done()
-
-			if repName != nil {
-				// repNameが一致しない場合はスキップ
-				repNameInRep, err := rep.GetRepName(ctx)
+				matchKCsInRep, err := rep.GetKCHistories(ctx, id)
 				if err != nil {
-					errch <- fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
 					return
 				}
-				if repNameInRep != *repName {
-					return
-				}
-			}
-
-			matchKCsInRep, err := rep.GetKCHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKCsInRep
-		}(rep)
+				ch <- matchKCsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 

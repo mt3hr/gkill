@@ -311,50 +311,47 @@ func (g *GkillRepositories) FindKyous(ctx context.Context, query *find.FindQuery
 
 	// 並列処理
 	for _, rep := range matchReps {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep Repository) {
+				// jsonからパースする
+				queryLatestValue := *query
+				queryLatest := &queryLatestValue
 
-		done := threads.AllocateThread()
-		go func(rep Repository) {
-			defer done()
-			defer wg.Done()
-			// jsonからパースする
-			queryLatestValue := *query
-			queryLatest := &queryLatestValue
+				// idsを指定されていなければ、最新であるもののIDのみを対象とする
+				if query.IDs == nil || len(*query.IDs) == 0 {
+					ids := append([]string{}, *query.IDs...)
+					repName, err := rep.GetRepName(ctx)
+					if err != nil {
+						err = fmt.Errorf("error at get rep name: %w", err)
+						errch <- err
+						return
+					}
 
-			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if query.IDs == nil || len(*query.IDs) == 0 {
-				ids := append([]string{}, *query.IDs...)
-				repName, err := rep.GetRepName(ctx)
+					latestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressesByRepName(ctx, repName)
+					if err != nil {
+						err = fmt.Errorf("error at get latest data repository addresses by rep name %s: %w", repName, err)
+						errch <- err
+						return
+					}
+
+					for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
+						ids = append(ids, latestDataRepositoryAddress.TargetID)
+					}
+					trueValue := true
+					queryLatest.IDs = &ids
+					queryLatest.UseIDs = &trueValue
+				}
+
+				matchKyousInRep, err := rep.FindKyous(ctx, queryLatest)
 				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
+					repName, _ := rep.GetRepName(ctx)
+					err = fmt.Errorf("error at %s: %w", repName, err)
 					errch <- err
 					return
 				}
-
-				latestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressesByRepName(ctx, repName)
-				if err != nil {
-					err = fmt.Errorf("error at get latest data repository addresses by rep name %s: %w", repName, err)
-					errch <- err
-					return
-				}
-
-				for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-					ids = append(ids, latestDataRepositoryAddress.TargetID)
-				}
-				trueValue := true
-				queryLatest.IDs = &ids
-				queryLatest.UseIDs = &trueValue
-			}
-
-			matchKyousInRep, err := rep.FindKyous(ctx, queryLatest)
-			if err != nil {
-				repName, _ := rep.GetRepName(ctx)
-				err = fmt.Errorf("error at %s: %w", repName, err)
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
+				ch <- matchKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -489,162 +486,148 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	updateCacheTargets = append(updateCacheTargets, g.TextReps)
 	updateCacheTargets = append(updateCacheTargets, g.NotificationReps)
 	for _, rep := range updateCacheTargets {
-		wg.Add(1)
-		done := threads.AllocateThread()
-		go func(rep interface {
-			UpdateCache(ctx context.Context) error
-		}) {
-			defer done()
-			defer wg.Done()
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep interface {
+				UpdateCache(ctx context.Context) error
+			}) {
+				err = rep.UpdateCache(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
 	// kyouを集める
 	for _, rep := range g.Reps {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep Repository) {
+				select {
+				case <-ctx.Done():
+					e := ctx.Err()
+					if e != nil {
+						err = fmt.Errorf("error at update cache: %w", e)
+						errch <- err
+						return
+					}
+				default:
+					repName, err := rep.GetRepName(ctx)
+					if err != nil {
+						err = fmt.Errorf("error at get rep name: %w", err)
+						errch <- err
+						return
+					}
 
-		done := threads.AllocateThread()
-		go func(rep Repository) {
-			defer done()
-			defer wg.Done()
-			select {
-			case <-ctx.Done():
-				e := ctx.Err()
-				if e != nil {
-					err = fmt.Errorf("error at update cache: %w", e)
-					errch <- err
-					return
+					reps := []string{repName}
+					kyous, err := rep.FindKyous(ctx, &find.FindQuery{Reps: &reps})
+					if err != nil {
+						repName, _ := rep.GetRepName(ctx)
+						err = fmt.Errorf("error at %s: %w", repName, err)
+						errch <- err
+						return
+					}
+					kyousCh <- kyous
 				}
-			default:
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					errch <- err
-					return
-				}
-
-				reps := []string{repName}
-				kyous, err := rep.FindKyous(ctx, &find.FindQuery{Reps: &reps})
-				if err != nil {
-					repName, _ := rep.GetRepName(ctx)
-					err = fmt.Errorf("error at %s: %w", repName, err)
-					errch <- err
-					return
-				}
-				kyousCh <- kyous
-			}
-		}(rep)
+			}(rep)
+		})
 	}
 
 	// tagを集める
 	for _, rep := range g.TagReps {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				select {
+				case <-ctx.Done():
+					e := ctx.Err()
+					if e != nil {
+						err = fmt.Errorf("error at update cache: %w", e)
+						errch <- err
+						return
+					}
+				default:
+					repName, err := rep.GetRepName(ctx)
+					if err != nil {
+						err = fmt.Errorf("error at get rep name: %w", err)
+						errch <- err
+						return
+					}
 
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			select {
-			case <-ctx.Done():
-				e := ctx.Err()
-				if e != nil {
-					err = fmt.Errorf("error at update cache: %w", e)
-					errch <- err
-					return
+					reps := []string{repName}
+					tags, err := rep.FindTags(ctx, &find.FindQuery{Reps: &reps})
+					if err != nil {
+						errch <- err
+						return
+					}
+					tagsCh <- tags
 				}
-			default:
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					errch <- err
-					return
-				}
-
-				reps := []string{repName}
-				tags, err := rep.FindTags(ctx, &find.FindQuery{Reps: &reps})
-				if err != nil {
-					errch <- err
-					return
-				}
-				tagsCh <- tags
-			}
-		}(rep)
+			}(rep)
+		})
 	}
 
 	// textを集める
 	for _, rep := range g.TextReps {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				select {
+				case <-ctx.Done():
+					e := ctx.Err()
+					if e != nil {
+						err = fmt.Errorf("error at update cache: %w", e)
+						errch <- err
+						return
+					}
+				default:
+					repName, err := rep.GetRepName(ctx)
+					if err != nil {
+						err = fmt.Errorf("error at get rep name: %w", err)
+						errch <- err
+						return
+					}
 
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			select {
-			case <-ctx.Done():
-				e := ctx.Err()
-				if e != nil {
-					err = fmt.Errorf("error at update cache: %w", e)
-					errch <- err
-					return
+					reps := []string{repName}
+					texts, err := rep.FindTexts(ctx, &find.FindQuery{Reps: &reps})
+					if err != nil {
+						errch <- err
+						return
+					}
+					textsCh <- texts
 				}
-			default:
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					errch <- err
-					return
-				}
-
-				reps := []string{repName}
-				texts, err := rep.FindTexts(ctx, &find.FindQuery{Reps: &reps})
-				if err != nil {
-					errch <- err
-					return
-				}
-				textsCh <- texts
-			}
-		}(rep)
+			}(rep)
+		})
 	}
 
 	// notificationを集める
 	for _, rep := range g.NotificationReps {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				select {
+				case <-ctx.Done():
+					e := ctx.Err()
+					if e != nil {
+						err = fmt.Errorf("error at update cache: %w", e)
+						errch <- err
+						return
+					}
+				default:
+					repName, err := rep.GetRepName(ctx)
+					if err != nil {
+						err = fmt.Errorf("error at get rep name: %w", err)
+						errch <- err
+						return
+					}
 
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			select {
-			case <-ctx.Done():
-				e := ctx.Err()
-				if e != nil {
-					err = fmt.Errorf("error at update cache: %w", e)
-					errch <- err
-					return
+					reps := []string{repName}
+					notifications, err := rep.FindNotifications(ctx, &find.FindQuery{Reps: &reps})
+					if err != nil {
+						errch <- err
+						return
+					}
+					notificationsCh <- notifications
 				}
-			default:
-				repName, err := rep.GetRepName(ctx)
-				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
-					errch <- err
-					return
-				}
-
-				reps := []string{repName}
-				notifications, err := rep.FindNotifications(ctx, &find.FindQuery{Reps: &reps})
-				if err != nil {
-					errch <- err
-					return
-				}
-				notificationsCh <- notifications
-			}
-		}(rep)
+			}(rep)
+		})
 	}
 
 	wg.Wait()
@@ -871,19 +854,16 @@ func (g *GkillRepositories) GetKyouHistories(ctx context.Context, id string) ([]
 
 	// 並列処理
 	for _, rep := range g.Reps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep Repository) {
-			defer done()
-			defer wg.Done()
-			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep Repository) {
+				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -954,48 +934,45 @@ func (g *GkillRepositories) FindTags(ctx context.Context, query *find.FindQuery)
 
 	// 並列処理
 	for _, rep := range g.TagReps {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				queryLatestValue := *query
+				queryLatest := &queryLatestValue
 
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			queryLatestValue := *query
-			queryLatest := &queryLatestValue
+				// idsを指定されていなければ、最新であるもののIDのみを対象とする
+				if query.IDs == nil || len(*query.IDs) == 0 {
+					repName, err := rep.GetRepName(ctx)
+					if err != nil {
+						err = fmt.Errorf("error at get rep name: %w", err)
+						errch <- err
+						return
+					}
 
-			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if query.IDs == nil || len(*query.IDs) == 0 {
-				repName, err := rep.GetRepName(ctx)
+					latestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressesByRepName(ctx, repName)
+					if err != nil {
+						err = fmt.Errorf("error at get latest data repository addresses by rep name %s: %w", repName, err)
+						errch <- err
+						return
+					}
+
+					ids := []string{}
+					for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
+						ids = append(ids, latestDataRepositoryAddress.TargetID)
+					}
+
+					trueValue := true
+					queryLatest.IDs = &ids
+					queryLatest.UseIDs = &trueValue
+				}
+
+				matchTagsInRep, err := rep.FindTags(ctx, queryLatest)
 				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
 					errch <- err
 					return
 				}
-
-				latestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressesByRepName(ctx, repName)
-				if err != nil {
-					err = fmt.Errorf("error at get latest data repository addresses by rep name %s: %w", repName, err)
-					errch <- err
-					return
-				}
-
-				ids := []string{}
-				for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-					ids = append(ids, latestDataRepositoryAddress.TargetID)
-				}
-
-				trueValue := true
-				queryLatest.IDs = &ids
-				queryLatest.UseIDs = &trueValue
-			}
-
-			matchTagsInRep, err := rep.FindTags(ctx, queryLatest)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagsInRep
-		}(rep)
+				ch <- matchTagsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1069,19 +1046,16 @@ func (g *GkillRepositories) GetTag(ctx context.Context, id string, updateTime *t
 
 	// 並列処理
 	for _, rep := range g.TagReps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			matchTagInRep, err := rep.GetTag(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				matchTagInRep, err := rep.GetTag(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTagInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1135,19 +1109,16 @@ func (g *GkillRepositories) GetTagsByTagName(ctx context.Context, tagname string
 
 	// 並列処理
 	for _, rep := range g.TagReps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			matchTagsInRep, err := rep.GetTagsByTagName(ctx, tagname)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				matchTagsInRep, err := rep.GetTagsByTagName(ctx, tagname)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTagsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1244,19 +1215,16 @@ func (g *GkillRepositories) GetTagHistories(ctx context.Context, id string) ([]*
 
 	// 並列処理
 	for _, rep := range g.TagReps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TagRepository) {
-			defer done()
-			defer wg.Done()
-			matchTagsInRep, err := rep.GetTagHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTagsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				matchTagsInRep, err := rep.GetTagHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTagsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1342,18 +1310,16 @@ func (g *GkillRepositories) GetAllRepNames(ctx context.Context) ([]string, error
 
 	// 並列処理
 	for _, rep := range repImpls {
-		wg.Add(1)
-		done := threads.AllocateThread()
-		go func(rep Repository) {
-			defer done()
-			defer wg.Done()
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- repName
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep Repository) {
+				repName, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- repName
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1407,50 +1373,47 @@ func (g *GkillRepositories) FindTexts(ctx context.Context, query *find.FindQuery
 
 	// 並列処理
 	for _, rep := range g.TextReps {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				// jsonからパースする
+				queryLatest := query
+				ids := []string{}
+				if query.IDs != nil {
+					ids = append([]string{}, *query.IDs...)
+				}
+				// idsを指定されていなければ、最新であるもののIDのみを対象とする
+				if query.IDs == nil || len(ids) == 0 {
+					repName, err := rep.GetRepName(ctx)
+					if err != nil {
+						err = fmt.Errorf("error at get rep name: %w", err)
+						errch <- err
+						return
+					}
 
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			// jsonからパースする
-			queryLatest := query
-			ids := []string{}
-			if query.IDs != nil {
-				ids = append([]string{}, *query.IDs...)
-			}
-			// idsを指定されていなければ、最新であるもののIDのみを対象とする
-			if query.IDs == nil || len(ids) == 0 {
-				repName, err := rep.GetRepName(ctx)
+					latestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressesByRepName(ctx, repName)
+					if err != nil {
+						err = fmt.Errorf("error at get latest data repository addresses by rep name %s: %w", repName, err)
+						errch <- err
+						return
+					}
+
+					for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
+						ids = append(ids, latestDataRepositoryAddress.TargetID)
+					}
+
+					trueValue := true
+					queryLatest.IDs = &ids
+					queryLatest.UseIDs = &trueValue
+				}
+
+				matchTextsInRep, err := rep.FindTexts(ctx, queryLatest)
 				if err != nil {
-					err = fmt.Errorf("error at get rep name: %w", err)
 					errch <- err
 					return
 				}
-
-				latestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressesByRepName(ctx, repName)
-				if err != nil {
-					err = fmt.Errorf("error at get latest data repository addresses by rep name %s: %w", repName, err)
-					errch <- err
-					return
-				}
-
-				for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-					ids = append(ids, latestDataRepositoryAddress.TargetID)
-				}
-
-				trueValue := true
-				queryLatest.IDs = &ids
-				queryLatest.UseIDs = &trueValue
-			}
-
-			matchTextsInRep, err := rep.FindTexts(ctx, queryLatest)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTextsInRep
-		}(rep)
+				ch <- matchTextsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1524,19 +1487,16 @@ func (g *GkillRepositories) GetText(ctx context.Context, id string, updateTime *
 
 	// 並列処理
 	for _, rep := range g.TextReps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			matchTextInRep, err := rep.GetText(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTextInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				matchTextInRep, err := rep.GetText(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTextInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1590,19 +1550,16 @@ func (g *GkillRepositories) GetNotification(ctx context.Context, id string, upda
 
 	// 並列処理
 	for _, rep := range g.NotificationReps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			matchNotificationInRep, err := rep.GetNotification(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchNotificationInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				matchNotificationInRep, err := rep.GetNotification(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchNotificationInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1656,19 +1613,16 @@ func (g *GkillRepositories) GetTextsByTargetID(ctx context.Context, target_id st
 
 	// 並列処理
 	for _, rep := range g.TextReps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			matchTextsInRep, err := rep.GetTextsByTargetID(ctx, target_id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTextsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				matchTextsInRep, err := rep.GetTextsByTargetID(ctx, target_id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTextsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1739,19 +1693,16 @@ func (g *GkillRepositories) GetNotificationsByTargetID(ctx context.Context, targ
 
 	// 並列処理
 	for _, rep := range g.NotificationReps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			matchNotificationsInRep, err := rep.GetNotificationsByTargetID(ctx, target_id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchNotificationsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				matchNotificationsInRep, err := rep.GetNotificationsByTargetID(ctx, target_id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchNotificationsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1822,19 +1773,16 @@ func (g *GkillRepositories) GetTextHistories(ctx context.Context, id string) ([]
 
 	// 並列処理
 	for _, rep := range g.TextReps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			matchTextsInRep, err := rep.GetTextHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTextsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				matchTextsInRep, err := rep.GetTextHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTextsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1905,19 +1853,16 @@ func (g *GkillRepositories) GetNotificationHistories(ctx context.Context, id str
 
 	// 並列処理
 	for _, rep := range g.NotificationReps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep NotificationRepository) {
-			defer done()
-			defer wg.Done()
-			matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchNotificationsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep NotificationRepository) {
+				matchNotificationsInRep, err := rep.GetNotificationHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchNotificationsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -1998,37 +1943,34 @@ func (g *GkillRepositories) selectMatchRepsFromQuery(ctx context.Context, query 
 		return matchReps, nil
 	}
 	for _, rep := range targetReps {
-		wg.Add(1)
-		done := threads.AllocateThread()
-		go func(rep Repository) {
-			defer done()
-			defer wg.Done()
+		_ = threads.Go(ctx, wg, func() {
+			func(rep Repository) {
+				repName, err := rep.GetRepName(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
 
-			repName, err := rep.GetRepName(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-
-			if query.Reps != nil {
-				for _, targetRepName := range *query.Reps {
-					if targetRepName == repName {
-						m.Lock()
-						if _, exist := matchReps[repName]; !exist {
-							matchReps[repName] = rep
+				if query.Reps != nil {
+					for _, targetRepName := range *query.Reps {
+						if targetRepName == repName {
+							m.Lock()
+							if _, exist := matchReps[repName]; !exist {
+								matchReps[repName] = rep
+							}
+							m.Unlock()
 						}
-						m.Unlock()
 					}
+				} else if query.Reps == nil || len(*query.Reps) == 0 {
+					m.Lock()
+					if _, exist := matchReps[repName]; !exist {
+						matchReps[repName] = rep
+					}
+					m.Unlock()
 				}
-			} else if query.Reps == nil || len(*query.Reps) == 0 {
-				m.Lock()
-				if _, exist := matchReps[repName]; !exist {
-					matchReps[repName] = rep
-				}
-				m.Unlock()
-			}
-			errch <- nil
-		}(rep)
+				errch <- nil
+			}(rep)
+		})
 	}
 	wg.Wait()
 	// エラー集約
