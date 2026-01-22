@@ -26,19 +26,16 @@ func (t TextRepositories) FindTexts(ctx context.Context, query *find.FindQuery) 
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			matchTextsInRep, err := rep.FindTexts(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTextsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				matchTextsInRep, err := rep.FindTexts(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTextsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -110,18 +107,15 @@ func (t TextRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.Close(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				err = rep.Close(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -155,19 +149,16 @@ func (t TextRepositories) GetText(ctx context.Context, id string, updateTime *ti
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			matchTextInRep, err := rep.GetText(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTextInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				matchTextInRep, err := rep.GetText(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTextInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -221,19 +212,16 @@ func (t TextRepositories) GetTextsByTargetID(ctx context.Context, target_id stri
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			matchTextsInRep, err := rep.GetTextsByTargetID(ctx, target_id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTextsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				matchTextsInRep, err := rep.GetTextsByTargetID(ctx, target_id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTextsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -298,18 +286,15 @@ func (t TextRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				err = rep.UpdateCache(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -373,19 +358,16 @@ func (t TextRepositories) GetTextHistories(ctx context.Context, id string) ([]*T
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-			matchTextsInRep, err := rep.GetTextHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTextsInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				matchTextsInRep, err := rep.GetTextHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchTextsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -453,32 +435,28 @@ func (t TextRepositories) GetTextHistoriesByRepName(ctx context.Context, id stri
 
 	// 並列処理
 	for _, rep := range t {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TextRepository) {
+				if repName != nil {
+					// repNameが一致しない場合はスキップ
+					repNameInRep, err := rep.GetRepName(ctx)
+					if err != nil {
+						errch <- fmt.Errorf("error at get rep name: %w", err)
+						return
+					}
+					if repNameInRep != *repName {
+						return
+					}
+				}
 
-		done := threads.AllocateThread()
-		go func(rep TextRepository) {
-			defer done()
-			defer wg.Done()
-
-			if repName != nil {
-				// repNameが一致しない場合はスキップ
-				repNameInRep, err := rep.GetRepName(ctx)
+				matchTextsInRep, err := rep.GetTextHistories(ctx, id)
 				if err != nil {
-					errch <- fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
 					return
 				}
-				if repNameInRep != *repName {
-					return
-				}
-			}
-
-			matchTextsInRep, err := rep.GetTextHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchTextsInRep
-		}(rep)
+				ch <- matchTextsInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 

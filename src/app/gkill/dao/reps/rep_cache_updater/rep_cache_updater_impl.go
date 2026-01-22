@@ -10,7 +10,6 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
-	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
 const defaultDebounce = 300 * time.Millisecond
@@ -305,9 +304,7 @@ func (h *watcherHub) scheduleUpdate(key string) {
 }
 
 func (h *watcherHub) triggerUpdate(key string) {
-	done := threads.AllocateThread()
 	go func() {
-		defer done()
 		h.runUpdateCoalesced(key)
 	}()
 }

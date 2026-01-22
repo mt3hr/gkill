@@ -28,19 +28,16 @@ func (i IDFKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 
 	// 並列処理
 	for _, rep := range i {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep IDFKyouRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyousInRep, err := rep.FindKyous(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep IDFKyouRepository) {
+				matchKyousInRep, err := rep.FindKyous(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -98,19 +95,16 @@ func (i IDFKyouRepositories) GetKyou(ctx context.Context, id string, updateTime 
 
 	// 並列処理
 	for _, rep := range i {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep IDFKyouRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyouInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep IDFKyouRepository) {
+				matchKyouInRep, err := rep.GetKyou(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyouInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -164,19 +158,16 @@ func (i IDFKyouRepositories) GetKyouHistories(ctx context.Context, id string) ([
 
 	// 並列処理
 	for _, rep := range i {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep IDFKyouRepository) {
-			defer done()
-			defer wg.Done()
-			matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep IDFKyouRepository) {
+				matchKyousInRep, err := rep.GetKyouHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -262,18 +253,15 @@ func (i IDFKyouRepositories) UpdateCache(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range i {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep IDFKyouRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.UpdateCache(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep IDFKyouRepository) {
+				err = rep.UpdateCache(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -312,18 +300,15 @@ func (i IDFKyouRepositories) Close(ctx context.Context) error {
 
 	// 並列処理
 	for _, rep := range reps {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep IDFKyouRepository) {
-			defer done()
-			defer wg.Done()
-			err = rep.Close(ctx)
-			if err != nil {
-				errch <- err
-				return
-			}
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep IDFKyouRepository) {
+				err = rep.Close(ctx)
+				if err != nil {
+					errch <- err
+					return
+				}
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -357,19 +342,16 @@ func (i IDFKyouRepositories) FindIDFKyou(ctx context.Context, query *find.FindQu
 
 	// 並列処理
 	for _, rep := range i {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep IDFKyouRepository) {
-			defer done()
-			defer wg.Done()
-			matchIDFKyousInRep, err := rep.FindIDFKyou(ctx, query)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchIDFKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep IDFKyouRepository) {
+				matchIDFKyousInRep, err := rep.FindIDFKyou(ctx, query)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchIDFKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -436,19 +418,16 @@ func (i IDFKyouRepositories) GetIDFKyou(ctx context.Context, id string, updateTi
 
 	// 並列処理
 	for _, rep := range i {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep IDFKyouRepository) {
-			defer done()
-			defer wg.Done()
-			matchIDFKyouInRep, err := rep.GetIDFKyou(ctx, id, updateTime)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchIDFKyouInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep IDFKyouRepository) {
+				matchIDFKyouInRep, err := rep.GetIDFKyou(ctx, id, updateTime)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchIDFKyouInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -502,19 +481,16 @@ func (i IDFKyouRepositories) GetIDFKyouHistories(ctx context.Context, id string)
 
 	// 並列処理
 	for _, rep := range i {
-		wg.Add(1)
-
-		done := threads.AllocateThread()
-		go func(rep IDFKyouRepository) {
-			defer done()
-			defer wg.Done()
-			matchIDFKyousInRep, err := rep.GetIDFKyouHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchIDFKyousInRep
-		}(rep)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep IDFKyouRepository) {
+				matchIDFKyousInRep, err := rep.GetIDFKyouHistories(ctx, id)
+				if err != nil {
+					errch <- err
+					return
+				}
+				ch <- matchIDFKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -582,32 +558,28 @@ func (i IDFKyouRepositories) GetIDFKyouHistoriesByRepName(ctx context.Context, i
 
 	// 並列処理
 	for _, rep := range i {
-		wg.Add(1)
+		_ = threads.Go(ctx, wg, func() {
+			func(rep IDFKyouRepository) {
+				if repName != nil {
+					// repNameが一致しない場合はスキップ
+					repNameInRep, err := rep.GetRepName(ctx)
+					if err != nil {
+						errch <- fmt.Errorf("error at get rep name: %w", err)
+						return
+					}
+					if repNameInRep != *repName {
+						return
+					}
+				}
 
-		done := threads.AllocateThread()
-		go func(rep IDFKyouRepository) {
-			defer done()
-			defer wg.Done()
-
-			if repName != nil {
-				// repNameが一致しない場合はスキップ
-				repNameInRep, err := rep.GetRepName(ctx)
+				matchIDFKyousInRep, err := rep.GetIDFKyouHistories(ctx, id)
 				if err != nil {
-					errch <- fmt.Errorf("error at get rep name: %w", err)
+					errch <- err
 					return
 				}
-				if repNameInRep != *repName {
-					return
-				}
-			}
-
-			matchIDFKyousInRep, err := rep.GetIDFKyouHistories(ctx, id)
-			if err != nil {
-				errch <- err
-				return
-			}
-			ch <- matchIDFKyousInRep
-		}(rep)
+				ch <- matchIDFKyousInRep
+			}(rep)
+		})
 	}
 	wg.Wait()
 
@@ -686,17 +658,15 @@ func (i IDFKyouRepositories) GenerateThumbCache(ctx context.Context) error {
 
 	wg := &sync.WaitGroup{}
 	for _, unwrapedRep := range unwrapedReps {
-		wg.Add(1)
-		done := threads.AllocateThread()
-		go func() {
-			defer done()
-			defer wg.Done()
-			err := unwrapedRep.GenerateThumbCache(ctx)
-			if err != nil {
-				err = fmt.Errorf("error at generate thumb cache at idf kyou repositories in rep: %w", err)
-				gkill_log.Error.Println(err.Error())
-			}
-		}()
+		_ = threads.Go(ctx, wg, func() {
+			func() {
+				err := unwrapedRep.GenerateThumbCache(ctx)
+				if err != nil {
+					err = fmt.Errorf("error at generate thumb cache at idf kyou repositories in rep: %w", err)
+					gkill_log.Error.Println(err.Error())
+				}
+			}()
+		})
 	}
 	return nil
 }
