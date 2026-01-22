@@ -15,6 +15,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -35,7 +36,7 @@ var (
 	thumbSF singleflight.Group
 
 	// 生成の同時実行数を制限（CPU/IO暴走防止）
-	thumbSem = make(chan struct{}, 3)
+	thumbSem = make(chan struct{}, runtime.NumCPU())
 )
 
 type ThumbGenerator interface {
@@ -123,13 +124,23 @@ func (t *thumbFileServer) GenerateThumbCache(ctx context.Context, queryURL strin
 	if fileExists(thumbPath) {
 		return nil
 	}
-	if err := os.MkdirAll(filepath.Dir(thumbPath), 0o755); err != nil {
-		return err
-	}
-	err = generateThumbJpeg(abs, thumbPath, tw, th, t.jpegQ)
 
-	if err != nil {
-		return err
+	// 生成（同時生成まとめ + 同時実行制限）
+	_, genErr, _ := thumbSF.Do(thumbPath, func() (any, error) {
+		thumbSem <- struct{}{}
+		defer func() { <-thumbSem }()
+
+		if fileExists(thumbPath) {
+			return nil, nil
+		}
+		if err := os.MkdirAll(filepath.Dir(thumbPath), 0o755); err != nil {
+			return nil, err
+		}
+		return nil, generateThumbJpeg(abs, thumbPath, tw, th, t.jpegQ)
+	})
+
+	if genErr != nil {
+		return genErr
 	}
 	return nil
 }
