@@ -1,6 +1,9 @@
 package gkill_options
 
-import "time"
+import (
+	"runtime"
+	"time"
+)
 
 var (
 	falseValue = false
@@ -44,7 +47,7 @@ var (
 		"id.db-wal",
 	}
 
-	GoroutinePool = 1000
+	GoroutinePool = runtime.NumCPU()
 
 	CacheClearCountLimit int64 = 3000 // int64(9007199254740991) // javascriptのNumber上限値
 	CacheUpdateDuration        = 1 * time.Minute
