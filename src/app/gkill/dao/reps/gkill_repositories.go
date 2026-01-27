@@ -486,17 +486,15 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	updateCacheTargets = append(updateCacheTargets, g.TextReps)
 	updateCacheTargets = append(updateCacheTargets, g.NotificationReps)
 	for _, rep := range updateCacheTargets {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep interface {
-				UpdateCache(ctx context.Context) error
-			}) {
-				err = rep.UpdateCache(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
-		})
+		func(rep interface {
+			UpdateCache(ctx context.Context) error
+		}) {
+			err = rep.UpdateCache(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
+		}(rep)
 	}
 	wg.Wait()
 
