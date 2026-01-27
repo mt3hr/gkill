@@ -82,14 +82,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	}
 
 	if findKyouContext.Repositories.LatestDataRepositoryAddresses == nil {
-		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
+		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(context.Background())
 		if err != nil {
 			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
 			return nil, nil, err
 		}
 		findKyouContext.Repositories.LatestDataRepositoryAddresses = latestDatas
 	} else {
-		updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime, math.MaxInt)
+		updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(context.Background(), findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime, math.MaxInt)
 		if err != nil {
 			err = fmt.Errorf("error at get updated latest data repository addresses: %w", err)
 			return nil, nil, err
@@ -102,9 +102,9 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	gkill_log.Trace.Printf("finish update latest data repository address")
 
 	wg := &sync.WaitGroup{}
-	doneCh := make(chan struct{})
-	errch := make(chan error)
-	gkillErrch := make(chan []*message.GkillError)
+	doneCh := make(chan struct{}, 6 /* chのかず */)
+	errch := make(chan error, 23 /* chのかず */)
+	gkillErrch := make(chan []*message.GkillError, 6 /* chのかず */)
 	defer close(errch)
 	defer close(gkillErrch)
 
@@ -186,7 +186,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	wg.Add(1)
 	go func() {
 		defer func() { doneCh <- struct{}{} }()
-		wg.Done()
+		defer wg.Done()
 		gkillErr, err = f.findTexts(ctx, findKyouContext)
 		if err != nil {
 			err = fmt.Errorf("error at find texts: %w", err)
@@ -198,12 +198,12 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 	}()
 
-	// TimeIs取得
 	if findQuery.UseTimeIs != nil && *(findQuery.UseTimeIs) {
 		wg.Add(1)
 		go func() {
 			defer func() { doneCh <- struct{}{} }()
-			wg.Done()
+			defer wg.Done()
+
 			gkillErr, err = f.findTimeIsTexts(ctx, findKyouContext)
 			if err != nil {
 				err = fmt.Errorf("error at find timeis texts: %w", err)
@@ -218,15 +218,16 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 		wg.Add(1)
 		go func() {
 			defer func() { doneCh <- struct{}{} }()
-			wg.Done()
-			gkillErr, err = f.findTimeIs(ctx, findKyouContext)
+			defer wg.Done()
+
+			gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
 			if err != nil {
-				err = fmt.Errorf("error at find timeis: %w", err)
+				err = fmt.Errorf("error at find timeis tags: %w", err)
 				errch <- err
 				gkillErrch <- gkillErr
 				return
 			}
-			gkill_log.Trace.Printf("finish findTimeIs")
+			gkill_log.Trace.Printf("finish findTimeIsTags")
 			gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 		}()
 	}
@@ -238,13 +239,14 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 	}
 	wg.Wait()
 
+	// TimeIs取得
 	if findQuery.UseTimeIs != nil && *(findQuery.UseTimeIs) {
-		gkillErr, err = f.findTimeIsTags(ctx, findKyouContext)
+		gkillErr, err = f.findTimeIs(ctx, findKyouContext)
 		if err != nil {
-			err = fmt.Errorf("error at find timeis tags: %w", err)
+			err = fmt.Errorf("error at find timeis: %w", err)
 			return nil, gkillErr, err
 		}
-		gkill_log.Trace.Printf("finish findTimeIsTags")
+		gkill_log.Trace.Printf("finish findTimeIs")
 		gkill_log.Trace.Printf("CurrentMatchKyous: %#v", findKyouContext.MatchKyousCurrent)
 
 		if findQuery.UseTimeIsTags == nil || !(*findQuery.UseTimeIsTags) || findQuery.TimeIsTags == nil {
@@ -476,7 +478,7 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 }
 
 func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	err := findCtx.Repositories.UpdateCache(ctx)
+	err := findCtx.Repositories.UpdateCache(context.Background())
 	if err != nil {
 		err = fmt.Errorf("error at update repositories cache: %w", err)
 		return nil, err
@@ -1208,9 +1210,10 @@ func (f *FindFilter) findTimeIs(ctx context.Context, findCtx *FindKyouContext) (
 		Words:             findCtx.ParsedFindQuery.TimeIsWords,
 		NotWords:          findCtx.ParsedFindQuery.TimeIsNotWords,
 		WordsAnd:          findCtx.ParsedFindQuery.TimeIsWordsAnd,
-		UseCalendar:       &trueValue,
+		UseCalendar:       findCtx.ParsedFindQuery.UseCalendar,
 		CalendarStartDate: findCtx.ParsedFindQuery.CalendarStartDate,
 		CalendarEndDate:   findCtx.ParsedFindQuery.CalendarEndDate,
+		IncludeEndTimeIs:  &trueValue,
 	}
 
 	// text検索用クエリ
