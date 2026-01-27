@@ -199,15 +199,13 @@ func (r Repositories) UpdateCache(ctx context.Context) error {
 
 	// UpdateCache並列処理
 	for _, rep := range r {
-		_ = threads.Go(ctx, wg, func() {
-			func(rep Repository) {
-				err = rep.UpdateCache(ctx)
-				if err != nil {
-					errch <- err
-					return
-				}
-			}(rep)
-		})
+		func(rep Repository) {
+			err = rep.UpdateCache(ctx)
+			if err != nil {
+				errch <- err
+				return
+			}
+		}(rep)
 	}
 	wg.Wait()
 
