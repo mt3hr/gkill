@@ -178,14 +178,14 @@
                     <td valign="top" v-if="is_show_kyou_detail_view"
                         :class="(drawer_mode_is_mobile) ? 'scroll_snap_area' : ''">
                         <div class="kyou_detail_view dummy">
-                            <KyouView v-if="focused_kyou && is_show_kyou_detail_view" :is_image_request_to_thumb_size="false"
-                                :application_config="application_config" :gkill_api="gkill_api" :highlight_targets="[]"
-                                :is_image_view="false" :kyou="focused_kyou" :last_added_tag="last_added_tag"
-                                :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
-                                :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
-                                :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
-                                :show_timeis_plaing_end_button="!is_shared_rykv_view" :height="'auto'"
-                                :is_readonly_mi_check="is_shared_rykv_view" :width="'auto'"
+                            <KyouView v-if="focused_kyou && is_show_kyou_detail_view"
+                                :is_image_request_to_thumb_size="false" :application_config="application_config"
+                                :gkill_api="gkill_api" :highlight_targets="[]" :is_image_view="false"
+                                :kyou="focused_kyou" :last_added_tag="last_added_tag" :show_checkbox="false"
+                                :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
+                                :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
+                                :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="!is_shared_rykv_view"
+                                :height="'auto'" :is_readonly_mi_check="is_shared_rykv_view" :width="'auto'"
                                 :enable_context_menu="!is_shared_rykv_view" :enable_dialog="!is_shared_rykv_view"
                                 :show_attached_timeis="true" :show_rep_name="true" :force_show_latest_kyou_info="true"
                                 class="kyou_detail_view" :show_update_time="false" :show_related_time="true"
@@ -509,6 +509,8 @@ import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
 import { Tag } from '@/classes/datas/tag'
+import { GetKyousResponse } from '@/classes/api/req_res/get-kyous-response'
+import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
 
 const enable_context_menu = ref(true)
 const enable_dialog = ref(true)
@@ -846,15 +848,24 @@ async function search(column_index: number, query: FindKyouQuery, force_search?:
             }
         })
 
+        const waitPromises = new Array<Promise<any>>()
+
         const req = new GetKyousRequest()
         abort_controllers.value[column_index] = req.abort_controller
         req.query = query.clone()
         req.query.parse_words_and_not_words()
         if (update_cache) {
+            waitPromises.push(delete_gkill_kyou_cache(null))
             req.query.update_cache = true
+        } else {
+            waitPromises.push(props.gkill_api.delete_updated_gkill_caches())
         }
-        await props.gkill_api.delete_updated_gkill_caches()
-        const res = await props.gkill_api.get_kyous(req)
+
+        let res = new GetKyousResponse()
+        waitPromises.push(props.gkill_api.get_kyous(req).then(response => res = response))
+
+        await Promise.all(waitPromises)
+
         if (res.errors && res.errors.length !== 0) {
             emits('received_errors', res.errors)
             return
