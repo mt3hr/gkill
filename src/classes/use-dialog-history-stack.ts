@@ -1,15 +1,17 @@
-// useDialogBackStack.ts
+// use-dialog-history-stack.ts (improved)
 import { watch, onBeforeUnmount, type Ref } from "vue"
 
 type Entry = { id: string; dialog: Ref<boolean> }
 const stack: Entry[] = []
 
 let listening = false
-let suppressNextPop = 0 // 「掃除でhistory.go/backした popstate」を無視する
-const closingByPop = new Set<string>() // popstate由来のcloseか判定
-const closingByCascade = new Set<string>() // 親closeに巻き込まれたcloseか判定
+let suppressNextPop = 0
+
+const closingByPop = new Set<string>()
+const closingByCascade = new Set<string>()
 
 const KEY = "__gkillDlgDepth"
+const MARK = "__gkillDlg" // これが true の state だけを「ダイアログ履歴」として扱う
 
 function makeId() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,28 +19,63 @@ function makeId() {
     return c?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
+function isObj(v: unknown): v is Record<string, any> {
+    return !!v && typeof v === "object"
+}
+
 function getDepthFromState(state: any): number {
+    if (!state || state[MARK] !== true) return 0
     const n = state?.[KEY]
     return typeof n === "number" && Number.isFinite(n) ? n : 0
 }
 
+function getRouterLocationString(): string {
+    // vue-router が state.current に入れているのは「originなし」の URL 文字列であることが多い
+    return `${location.pathname}${location.search}${location.hash}`
+}
+
+function buildDialogState(depth: number) {
+    const base = isObj(history.state) ? history.state : {}
+    const pos = typeof base.position === "number" ? base.position : 0
+    const current = typeof base.current === "string" ? base.current : getRouterLocationString()
+
+    // 「同一URLへ push された」状態を router にそれっぽく見せる
+    // back は直前 entry の current（= current）にしておくのが一番安全
+    return {
+        ...base,
+        back: current,
+        current,
+        forward: null,
+        position: pos + 1,
+        [MARK]: true,
+        [KEY]: depth,
+    }
+}
+
 function pushDepth(depth: number) {
-    // ★重要：routerが使っているhistory.stateを壊さないように必ずマージする
-    const base =
-        history.state && typeof history.state === "object" ? history.state : {}
-    history.pushState({ ...base, [KEY]: depth }, "")
+    history.pushState(buildDialogState(depth), "")
+}
+
+function clearDialogKeysFromCurrentState() {
+    const base = isObj(history.state) ? { ...history.state } : {}
+    if (base[MARK] !== true && base[KEY] == null) return
+
+    delete base[MARK]
+    delete base[KEY]
+    history.replaceState(base, "")
 }
 
 function ensureListener() {
     if (listening) return
-    window.addEventListener("popstate", onPopState, { passive: true })
+    // capture にして router より先に拾う
+    window.addEventListener("popstate", onPopState, { capture: true })
     listening = true
 }
 
 function maybeRemoveListener() {
     if (!listening) return
     if (stack.length > 0) return
-    window.removeEventListener("popstate", onPopState)
+    window.removeEventListener("popstate", onPopState, { capture: true } as any)
     listening = false
 }
 
@@ -49,8 +86,14 @@ function onPopState(e: PopStateEvent) {
     }
 
     const targetDepth = getDepthFromState(e.state)
+    const curDepth = stack.length
 
-    // 深さが減った分だけ「上から」閉じる（入れ子対応）
+    // ダイアログが開いていて、深さが減る pop は「ダイアログを閉じるための戻る」なので router に渡さない
+    if (curDepth > 0 && targetDepth < curDepth) {
+        e.stopImmediatePropagation()
+    }
+
+    // 深さが減った分だけ「上から」閉じる
     for (let i = stack.length - 1; i >= targetDepth; i--) {
         const top = stack[i]
         if (!top) continue
@@ -58,8 +101,13 @@ function onPopState(e: PopStateEvent) {
         top.dialog.value = false
     }
 
-    // stack自体も合わせる（watch側で見つからなくてもOKな作りにしてる）
     stack.length = Math.min(stack.length, targetDepth)
+
+    if (stack.length === 0) {
+        // 次のルート遷移に KEY が混ざらないように掃除
+        clearDialogKeysFromCurrentState()
+    }
+
     maybeRemoveListener()
 }
 
@@ -68,40 +116,35 @@ export function useDialogHistoryStack(dialog: Ref<boolean>) {
 
     watch(dialog, (open) => {
         if (open) {
-            // 既に登録済みなら二重登録しない
             if (!stack.some((e) => e.id === id)) stack.push({ id, dialog })
-
-            // 開くたびに「戻る1段」を差し込む（URLは変えない）
             pushDepth(stack.length)
-
             ensureListener()
             return
         }
 
         // close
-        const fromPop = closingByPop.has(id)
-        if (fromPop) {
+        if (closingByPop.has(id)) {
             closingByPop.delete(id)
-            // popstate由来のcloseでは履歴操作しない
+            if (stack.length === 0) clearDialogKeysFromCurrentState()
             maybeRemoveListener()
             return
         }
 
-        const fromCascade = closingByCascade.has(id)
-        if (fromCascade) {
+        if (closingByCascade.has(id)) {
             closingByCascade.delete(id)
-            // 親closeに巻き込まれた子は、履歴操作は親側でまとめてやる
+            if (stack.length === 0) clearDialogKeysFromCurrentState()
             maybeRemoveListener()
             return
         }
 
         const idx = stack.findIndex((e) => e.id === id)
         if (idx === -1) {
+            if (stack.length === 0) clearDialogKeysFromCurrentState()
             maybeRemoveListener()
             return
         }
 
-        // もし「下の階層（親）」が閉じられたなら、上の階層（子）もまとめて閉じる
+        // 親が閉じたなら子も閉じる
         if (idx < stack.length - 1) {
             for (let i = stack.length - 1; i > idx; i--) {
                 const top = stack[i]
@@ -110,18 +153,22 @@ export function useDialogHistoryStack(dialog: Ref<boolean>) {
             }
         }
 
-        // スタックから自分と上を削る
         const prevDepth = stack.length
-        stack.length = idx // idxより上は閉じた扱い
+        stack.length = idx
         const newDepth = stack.length
 
-        // 履歴もまとめて戻す（popstate連鎖を無視する）
-        // ※history.stateが自分たちの深さを持っている時だけ戻す（安全策）
-        const curDepth = getDepthFromState(history.state)
         const delta = prevDepth - newDepth
-        if (delta > 0 && curDepth >= prevDepth) {
+        const histDepth = getDepthFromState(history.state)
+
+        // 「いま自分たちが積んだダイアログ履歴の上にいる」場合だけ戻す
+        // (>= ではなく === に寄せて事故を減らす)
+        if (delta > 0 && histDepth === prevDepth) {
             suppressNextPop++
             history.go(-delta)
+        }
+
+        if (stack.length === 0) {
+            clearDialogKeysFromCurrentState()
         }
 
         maybeRemoveListener()
@@ -130,8 +177,14 @@ export function useDialogHistoryStack(dialog: Ref<boolean>) {
     onBeforeUnmount(() => {
         closingByPop.delete(id)
         closingByCascade.delete(id)
+
         const idx = stack.findIndex((e) => e.id === id)
         if (idx !== -1) stack.splice(idx, 1)
+
+        if (stack.length === 0) {
+            clearDialogKeysFromCurrentState()
+        }
+
         maybeRemoveListener()
     })
 }
