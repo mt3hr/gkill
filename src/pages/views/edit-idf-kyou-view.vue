@@ -248,7 +248,12 @@ body::-webkit-scrollbar {
 }
 
 /* メッセージ、エラーメッセージ */
+.alert_container > div {
+    width: fit-content;
+}
+
 .alert_container {
+    justify-items: end;
     position: fixed;
     top: 60px;
     right: 10px;
