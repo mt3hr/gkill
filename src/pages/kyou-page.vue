@@ -34,13 +34,14 @@
                     <v-progress-circular indeterminate color="primary" />
                 </v-overlay>
             </div>
-            <KyouView :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
-                :highlight_targets="hightlight_targets" :is_image_view="is_image_view" :kyou="kyou" :last_added_tag="''"
-                :show_checkbox="false" :show_content_only="false" :show_mi_create_time="true"
-                :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true" :show_mi_limit_time="true"
-                :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true" :height="'fit-content'"
-                :enable_context_menu="enable_context_menu" :enable_dialog="enable_dialog" :show_attached_timeis="true"
-                :show_update_time="false" :show_related_time="true" :width="'fit-content'" :is_readonly_mi_check="false"
+            <KyouView :application_config="application_config" :gkill_api="gkill_api"
+                :is_image_request_to_thumb_size="false" :highlight_targets="hightlight_targets"
+                :is_image_view="is_image_view" :kyou="kyou" :last_added_tag="''" :show_checkbox="false"
+                :show_content_only="false" :show_mi_create_time="true" :show_mi_estimate_end_time="true"
+                :show_mi_estimate_start_time="true" :show_mi_limit_time="true" :show_timeis_elapsed_time="true"
+                :show_timeis_plaing_end_button="true" :height="'fit-content'" :enable_context_menu="enable_context_menu"
+                :enable_dialog="enable_dialog" :show_attached_timeis="true" :show_update_time="false"
+                :show_related_time="true" :width="'fit-content'" :is_readonly_mi_check="false"
                 :show_attached_tags="true" :show_attached_texts="true" :show_attached_notifications="true"
                 :show_rep_name="true" :force_show_latest_kyou_info="true"
                 @received_errors="(...errors: any[]) => write_errors(errors[0] as Array<GkillError>)"
@@ -54,9 +55,15 @@
         </v-main>
         <div class="alert_container">
             <v-slide-y-transition group>
-                <v-alert v-for="message in messages" theme="dark" :key="message.id">
-                    {{ message.message }}
-                </v-alert>
+                <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
+                    v-for="message in messages" :key="message.id">
+                    <template v-slot:activator="{ props }">
+                        <v-alert v-bind="props" :color="message.is_error ? 'error' : 'info'"
+                            :closable="message.closable" @click:close="close_message(message.id)">
+                            {{ message.message }}
+                        </v-alert>
+                    </template>
+                </v-tooltip>
             </v-slide-y-transition>
         </div>
     </div>
@@ -162,44 +169,71 @@ async function resize_content(): Promise<void> {
     app_content_width.value = window.innerWidth
 }
 
-const messages: Ref<Array<{ message: string, id: string, show_snackbar: boolean }>> = ref([])
 
-async function write_errors(errors: Array<GkillError>) {
-    const received_messages = new Array<{ message: string, id: string, show_snackbar: boolean }>()
-    for (let i = 0; i < errors.length; i++) {
-        if (errors[i] && errors[i].error_message) {
-            received_messages.push({
-                message: errors[i].error_message,
+const messages: Ref<Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>> = ref([])
+
+async function write_errors(errors_: Array<GkillError>) {
+    const received_errors = new Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>()
+    for (let i = 0; i < errors_.length; i++) {
+        if (errors_[i] && errors_[i].error_message) {
+            received_errors.push({
+                code: errors_[i].error_code,
+                message: errors_[i].error_message,
                 id: GkillAPI.get_instance().generate_uuid(),
                 show_snackbar: true,
+                closable: errors_[i].show_keep,
+                auto_close_duration_milli_seconds: errors_[i].show_keep ? null : 2500,
+                is_error: true,
             })
         }
     }
-    messages.value.push(...received_messages)
-    sleep(2500).then(() => {
-        for (let i = 0; i < received_messages.length; i++) {
-            messages.value.splice(0, 1)
+    messages.value.push(...received_errors)
+    for (let i = 0; i < received_errors.length; i++) {
+        for (let j = 0; j < received_errors.length; j++) {
+            const auto_close_duration_milli_seconds = received_errors[j].auto_close_duration_milli_seconds
+            if (auto_close_duration_milli_seconds) {
+                sleep(auto_close_duration_milli_seconds).then(() => {
+                    close_message(received_errors[j].id)
+                })
+            }
         }
-    })
+    }
 }
 
 async function write_messages(messages_: Array<GkillMessage>) {
-    const received_messages = new Array<{ message: string, id: string, show_snackbar: boolean }>()
+    const received_messages = new Array<{ code: string, message: string, id: string, show_snackbar: boolean, closable: boolean, auto_close_duration_milli_seconds: number | null, is_error: boolean }>()
     for (let i = 0; i < messages_.length; i++) {
         if (messages_[i] && messages_[i].message) {
             received_messages.push({
+                code: messages_[i].message_code,
                 message: messages_[i].message,
                 id: GkillAPI.get_instance().generate_uuid(),
                 show_snackbar: true,
+                closable: messages_[i].show_keep,
+                auto_close_duration_milli_seconds: messages_[i].show_keep ? null : 2500,
+                is_error: false,
             })
         }
     }
     messages.value.push(...received_messages)
-    sleep(2500).then(() => {
-        for (let i = 0; i < received_messages.length; i++) {
-            messages.value.splice(0, 1)
+    for (let i = 0; i < received_messages.length; i++) {
+        for (let j = 0; j < received_messages.length; j++) {
+            const auto_close_duration_milli_seconds = received_messages[j].auto_close_duration_milli_seconds
+            if (auto_close_duration_milli_seconds) {
+                sleep(auto_close_duration_milli_seconds).then(() => {
+                    close_message(received_messages[j].id)
+                })
+            }
         }
-    })
+    }
+}
+
+function close_message(message_id: string): void {
+    for (let i = 0; i < messages.value.length; i++) {
+        if (messages.value[i].id === message_id) {
+            messages.value.splice(i, 1)
+        }
+    }
 }
 
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
