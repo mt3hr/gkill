@@ -51,7 +51,7 @@
                 <v-tooltip :text="(message.is_error ? 'エラーコード' : 'メッセージコード') + ':' + message.code"
                     v-for="message in messages" :key="message.id">
                     <template v-slot:activator="{ props }">
-                        <v-alert v-bind="props" :color="message.is_error ? 'error' : 'info'"
+                        <v-alert v-bind="props" :color="message.is_error ? 'error' : undefined"
                             :closable="message.closable" @click:close="close_message(message.id)">
                             {{ message.message }}
                         </v-alert>
@@ -304,7 +304,12 @@ body::-webkit-scrollbar {
 }
 
 /* メッセージ、エラーメッセージ */
+.alert_container > div {
+    width: fit-content;
+}
+
 .alert_container {
+    justify-items: end;
     position: fixed;
     top: 60px;
     right: 10px;
