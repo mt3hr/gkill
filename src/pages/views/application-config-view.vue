@@ -490,6 +490,7 @@ async function reload_repositories(clear_thumb_cache: boolean): Promise<void> {
     const requested_reload_message = new GkillMessage()
     requested_reload_message.message = i18n.global.t("REQUESTED_RELOAD_TITLE")
     requested_reload_message.message_code = GkillMessageCodes.requested_reload
+    requested_reload_message.show_keep = true
     emits('received_messages', [requested_reload_message])
 
     is_loading.value = true

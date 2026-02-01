@@ -6,9 +6,12 @@ export class GkillMessage {
 
     message: string
 
+    show_keep: boolean
+
     constructor() {
         this.message_code = ""
         this.message = ""
+        this.show_keep = false
     }
 
 }
