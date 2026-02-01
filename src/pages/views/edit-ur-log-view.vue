@@ -286,4 +286,3 @@ function reset_related_date_time(): void {
 }
 </script>
 
-<style lang="css" scoped></style>

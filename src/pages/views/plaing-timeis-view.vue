@@ -480,7 +480,7 @@ function set_last_added_request_time(time: Date): void {
     last_added_request_time.value = time
 }
 </script>
-<style lang="css">
+<style lang="css" scoped>
 .plaing_timeis_view_table {
     padding-top: 0px;
 }

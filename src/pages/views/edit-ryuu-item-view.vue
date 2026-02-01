@@ -129,4 +129,3 @@ function show_find_query_editor_dialog(): void {
 
 nextTick(() => reset())
 </script>
-<style lang="css" scoped></style>

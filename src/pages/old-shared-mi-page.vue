@@ -10,5 +10,3 @@ import { useRoute } from 'vue-router';
 // redirect
 router.replace("/shared_page?share_id=" + useRoute().query.share_id!.toString())
 </script>
-
-<style lang="css"></style>

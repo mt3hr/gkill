@@ -227,4 +227,3 @@ function reset(): void {
 }
 </script>
 
-<style lang="css" scoped></style>
