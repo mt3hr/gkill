@@ -14,7 +14,8 @@
                         @click="show_server_config_dialog()">{{ i18n.global.t("SERVER_CONFIG_TITLE") }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
-                    <v-btn dark color="primary" @click="reload_repositories()">{{ i18n.global.t("RELOAD_TITLE")
+                    <v-btn dark color="primary" @click="reload_repositories(false)"
+                        v-long-press="() => reload_repositories(true)">{{ i18n.global.t("RELOAD_TITLE")
                         }}</v-btn>
                 </v-col>
                 <v-col cols="auto" class="pa-0 ma-0">
@@ -141,13 +142,13 @@
                     <td>
                         <v-btn dark color="primary" @click="show_edit_tag_dialog">{{
                             i18n.global.t("EDIT_TAG_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_dialog">{{
                             i18n.global.t("EDIT_REP_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_device_dialog">{{
                             i18n.global.t("EDIT_DEVICE_STRUCT_TITLE")
-                            }}</v-btn>
+                        }}</v-btn>
                         <v-btn dark color="primary" @click="show_edit_rep_type_dialog">{{
                             i18n.global.t("EDIT_REP_TYPE_STRUCT_TITLE") }}</v-btn>
                     </td>
@@ -166,7 +167,7 @@
             <a href="https://github.com/mt3hr/gkill" style="color:inherit;text-decoration:none;" target="_blank">
                 <p class="gkill_version_info">gkill v-{{ application_config.version }} ({{
                     application_config.build_time.toLocaleString()
-                }})</p>
+                    }})</p>
                 <p class="gkill_version_info">{{ application_config.commit_hash }}</p>
             </a>
         </v-card>
@@ -174,13 +175,13 @@
             <v-row class="pa-0 ma-0">
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark @click="update_application_config" color="primary">{{ i18n.global.t("APPLY_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
                 <v-spacer />
                 <v-col cols="auto" class="pa-0 ma-0">
                     <v-btn dark color="secondary" @click="emits('requested_close_dialog')">{{
                         i18n.global.t("CANCEL_TITLE")
-                        }}</v-btn>
+                    }}</v-btn>
                 </v-col>
             </v-row>
         </v-card-action>
@@ -194,44 +195,40 @@
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_apply_kftl_template_struct="(...kftl_template_struct_element_data: any[]) => { cloned_application_config.kftl_template_struct = (kftl_template_struct_element_data[0] as KFTLTemplateElementData) }"
-            @requested_reload_application_config="() => () => {}"
-            ref="edit_kftl_template_dialog" />
+            @requested_reload_application_config="() => () => { }" ref="edit_kftl_template_dialog" />
         <EditRepStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_apply_rep_struct="(...rep_struct_element_data: any[]) => { cloned_application_config.rep_struct = (rep_struct_element_data[0] as RepStructElementData) }"
-            @requested_reload_application_config="(...application_config: any) => () => {}"
+            @requested_reload_application_config="(...application_config: any) => () => { }"
             ref="edit_rep_struct_dialog" />
         <EditRepTypeStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_apply_rep_type_struct="(...rep_type_struct_element_data: any[]) => { cloned_application_config.rep_type_struct = (rep_type_struct_element_data[0] as RepTypeStructElementData) }"
-            @requested_reload_application_config="(...application_config: any) => () => {}"
+            @requested_reload_application_config="(...application_config: any) => () => { }"
             ref="edit_rep_type_struct_dialog" />
         <EditTagStructDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_apply_tag_struct="(...tag_struct_element_data: any[]) => { cloned_application_config.tag_struct = (tag_struct_element_data[0] as TagStructElementData) }"
-            @requested_reload_application_config="() => {}"
-            ref="edit_tag_struct_dialog" />
+            @requested_reload_application_config="() => { }" ref="edit_tag_struct_dialog" />
         <EditDnoteDialog :app_content_height="app_content_height" :app_content_width="app_content_width"
             :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_apply_dnote="(...dnote_data: any[]) => { cloned_application_config.dnote_json_data = (dnote_data[0]); }"
-            @requested_reload_application_config="() => {}"
-            ref="edit_dnote_dialog" />
+            @requested_reload_application_config="() => { }" ref="edit_dnote_dialog" />
         <EditRyuuDialog v-model="cloned_application_config" :app_content_height="app_content_height"
             :app_content_width="app_content_width" :application_config="cloned_application_config"
             :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @requested_apply_ryuu_struct="(...ryuu_data: any[]) => { cloned_application_config.ryuu_json_data = (ryuu_data[0]) }"
-            @requested_reload_application_config="() => {}"
-            ref="edit_ryuu_dialog" />
+            @requested_reload_application_config="() => { }" ref="edit_ryuu_dialog" />
         <NewBoardNameDialog :application_config="cloned_application_config" :gkill_api="gkill_api"
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
@@ -489,7 +486,7 @@ function show_server_config_dialog(): void {
     server_config_dialog.value?.show()
 }
 
-async function reload_repositories(): Promise<void> {
+async function reload_repositories(clear_thumb_cache: boolean): Promise<void> {
     const requested_reload_message = new GkillMessage()
     requested_reload_message.message = i18n.global.t("REQUESTED_RELOAD_TITLE")
     requested_reload_message.message_code = GkillMessageCodes.requested_reload
@@ -497,6 +494,7 @@ async function reload_repositories(): Promise<void> {
 
     is_loading.value = true
     const req = new ReloadRepositoriesRequest()
+    req.clear_thumb_cache = clear_thumb_cache
     const res = await props.gkill_api.reload_repositories(req)
     await delete_gkill_config_cache()
     await delete_gkill_kyou_cache(null)
