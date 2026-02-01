@@ -180,14 +180,6 @@ function close_message(message_id: string): void {
 const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
 
 </script>
-
-<style lang="css">
-.gkill_context_menu_list {
-    max-height: 70vh;
-    overflow-y: scroll;
-}
-</style>
-
 <style lang="css" scoped>
 .overlay_target {
     z-index: -10000;

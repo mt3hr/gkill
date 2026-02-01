@@ -117,4 +117,3 @@ function reset_notification_date_time(): void {
 
 </script>
 
-<style lang="css" scoped></style>

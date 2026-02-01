@@ -990,60 +990,11 @@ const sleep = (time: number) => new Promise<void>((r) => setTimeout(r, time))
     width: 100vw;
 }
 </style>
-<style lang="css">
-.rykv_view_table {
-    padding-top: 0px;
-}
-
-.kyou_detail_view .kyou_image {
-    width: -webkit-fill-available !important;
-    height: -webkit-fill-available !important;
-    max-width: -webkit-fill-available !important;
-    max-height: 100vh !important;
-    object-fit: contain;
-}
-
-.kyou_detail_view .kyou_video {
-    width: -webkit-fill-available !important;
-    height: -webkit-fill-available !important;
-    max-width: -webkit-fill-available !important;
-    max-height: 100vh !important;
-    object-fit: contain;
-}
-
-.kyou_dialog .kyou_image {
-    width: unset !important;
-    height: unset !important;
-    max-width: 85vw !important;
-    max-height: 85vh !important;
-}
-
-.kyou_dialog .kyou_video {
-    width: unset !important;
-    height: unset !important;
-    max-width: 85vw !important;
-    max-height: 85vh !important;
-}
-
-.rykv_view_wrap {
-    position: relative;
-}
-
-.v-navigation-drawer {
-    transition: transform 0.3s ease-out !important;
-    will-change: transform;
-}
-</style>
 <style lang="css" scoped>
 .overlay_target {
     z-index: -10000;
     position: absolute;
     min-height: calc(v-bind('app_content_height.toString().concat("px")'));
     min-width: calc(100vw);
-}
-</style>
-<style lang="css">
-.rykv_dnote_wrap {
-    width: fit-content;
 }
 </style>

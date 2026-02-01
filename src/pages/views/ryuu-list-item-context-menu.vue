@@ -59,4 +59,4 @@ async function show_confirm_delete_ryuu_list_item_dialog(): Promise<void> {
     confirm_delete_ryuu_list_item_dialog.value?.show(model_value.value!)
 }
 </script>
-<style lang="css" scoped></style>
+

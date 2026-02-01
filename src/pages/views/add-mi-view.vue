@@ -544,4 +544,3 @@ function delete_notification(index: number): void {
 
 load_mi_board_names()
 </script>
-<style lang="css" scoped></style>

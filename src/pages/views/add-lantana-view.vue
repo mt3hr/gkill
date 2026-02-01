@@ -198,5 +198,3 @@ function reset(): void {
     related_time_string.value = moment().format("HH:mm:ss")
 }
 </script>
-
-<style lang="css" scoped></style>

@@ -140,4 +140,4 @@ async function show_confirm_delete_text_dialog(): Promise<void> {
     confirm_delete_text_dialog.value?.show()
 }
 </script>
-<style lang="css" scoped></style>
+
