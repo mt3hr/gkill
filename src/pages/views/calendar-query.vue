@@ -117,14 +117,3 @@ function get_end_date(): Date | null {
     return null
 }
 </script>
-<style lang="css">
-div.v-sheet.v-picker.v-date-picker.v-date-picker--year>div:nth-child(1),
-div.v-sheet.v-picker.v-date-picker.v-date-picker--month>div:nth-child(1),
-div.v-sheet.v-picker.v-date-picker.v-date-picker--months>div:nth-child(1) {
-    display: none;
-}
-
-.v-date-picker-month {
-    padding-left: 0px !important;
-}
-</style>

@@ -995,36 +995,6 @@ function on_dragover_board_task(e: DragEvent, _find_kyou_query: FindKyouQuery) {
     width: 100vw;
 }
 </style>
-<style lang="css">
-.mi_view_table {
-    padding-top: 0px;
-}
-
-.kyou_detail_view .kyou_image {
-    width: -webkit-fill-available !important;
-    height: -webkit-fill-available !important;
-    max-width: -webkit-fill-available !important;
-    max-height: 100vh !important;
-    object-fit: contain;
-}
-
-.kyou_detail_view .kyou_video {
-    width: -webkit-fill-available !important;
-    height: -webkit-fill-available !important;
-    max-width: -webkit-fill-available !important;
-    max-height: 100vh !important;
-    object-fit: contain;
-}
-
-.mi_view_wrap {
-    position: relative;
-}
-
-.v-navigation-drawer {
-    transition: transform 0.3s ease-out !important;
-    will-change: transform;
-}
-</style>
 <style lang="css" scoped>
 .overlay_target {
     z-index: -10000;

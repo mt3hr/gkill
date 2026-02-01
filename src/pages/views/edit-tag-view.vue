@@ -143,4 +143,3 @@ async function save(): Promise<void> {
 }
 </script>
 
-<style lang="css" scoped></style>

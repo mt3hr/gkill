@@ -354,4 +354,3 @@ function get_checked_rep_types(): Array<string> | null {
 }
 
 </script>
-<style scoped></style>

@@ -144,11 +144,6 @@ window.addEventListener('resize', () => {
 resize_content()
 </script>
 
-<style lang="css">
-html {
-    overflow-y: hidden !important;
-}
-</style>
 <style lang="css" scoped>
 .main {
     height: calc(100vh - v-bind(app_title_bar_height_px));
@@ -161,7 +156,7 @@ html {
     margin-right: 15px;
 }
 
-.alert_container > div {
+.alert_container>div {
     width: fit-content;
 }
 
@@ -178,5 +173,10 @@ html {
 .gkill_context_menu_list {
     max-height: 70vh;
     overflow-y: scroll;
+}
+</style>
+<style scoped>
+:root {
+    --actual_height: v-bind(actual_height)
 }
 </style>
