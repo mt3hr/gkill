@@ -528,4 +528,3 @@ async function save(): Promise<void> {
 load_mi_board_names()
 </script>
 
-<style lang="css" scoped></style>

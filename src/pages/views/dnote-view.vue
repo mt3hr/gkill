@@ -422,108 +422,7 @@ async function streamSaveJsonArray(items: any[], filename: string): Promise<void
 .position-fixed {
     position: relative;
 }
-</style>
-<style lang="css">
-.git_commit_log_message {
-    white-space: pre-line;
-}
 
-.plus_value {
-    color: limegreen;
-}
-
-.minus_value {
-    color: crimson;
-}
-
-.dnote_view {
-    position: relative;
-    width: 625px;
-    min-width: 625px;
-}
-
-.dnote_view .lantana_icon {
-    position: relative;
-    width: 20px !important;
-    height: 20px !important;
-    max-width: 20px !important;
-    min-width: 20px !important;
-    max-height: 20px !important;
-    min-height: 20px !important;
-    display: inline-block;
-}
-
-.dnote_view .lantana_icon_fill {
-    width: 20px !important;
-    height: 20px !important;
-    max-width: 20px !important;
-    min-width: 20px !important;
-    max-height: 20px !important;
-    min-height: 20px !important;
-    display: inline-block;
-    z-index: 10;
-}
-
-.dnote_view .lantana_icon_harf_left {
-    position: absolute;
-    left: 0px;
-    width: 10px !important;
-    height: 20px !important;
-    max-width: 10px !important;
-    min-width: 10px !important;
-    max-height: 20px !important;
-    min-height: 20px !important;
-    object-fit: cover;
-    object-position: 0 0;
-    display: inline-block;
-    z-index: 10;
-}
-
-.dnote_view .lantana_icon_harf_right {
-    position: absolute;
-    left: 0px;
-    width: 20px !important;
-    height: 20px !important;
-    max-width: 20px !important;
-    min-width: 20px !important;
-    max-height: 20px !important;
-    min-height: 20px !important;
-    display: inline-block;
-    z-index: 9;
-}
-
-.dnote_view .lantana_icon_none {
-    width: 20px !important;
-    height: 20px !important;
-    max-width: 20px !important;
-    min-width: 20px !important;
-    max-height: 20px !important;
-    min-height: 20px !important;
-    display: inline-block;
-    z-index: 10;
-}
-
-.dnote_view .gray {
-    filter: grayscale(100%);
-}
-
-.dnote_view .lantana_icon_tr {
-    width: calc(20px * 5);
-    max-width: calc(20px * 5);
-    min-width: calc(20px * 5);
-}
-
-.dnote_view .lantana_icon_td {
-    width: 20px !important;
-    height: 20px !important;
-    max-width: 20px !important;
-    min-width: 20px !important;
-    max-height: 20px !important;
-    min-height: 20px !important;
-    display: inline-block;
-}
-</style>
-<style lang="css" scoped>
 .overlay_target {
     z-index: -10000;
     position: absolute;
@@ -536,12 +435,5 @@ async function streamSaveJsonArray(items: any[], filename: string): Promise<void
 
 .overlay_message {
     text-align: center;
-}
-</style>
-<style lang="css">
-.dnote_progress_overlay {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 </style>

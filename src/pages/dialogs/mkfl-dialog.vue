@@ -45,12 +45,3 @@ async function hide(): Promise<void> {
     is_show_dialog.value = false
 }
 </script>
-<style lang="css">
-.mkfl_dialog.v-dialog .v-card {
-    overflow-y: hidden;
-}
-
-.mkfl_dialog.v-dialog .v-card::-webkit-scrollbar {
-    width: 0px;
-}
-</style>

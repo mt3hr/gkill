@@ -37,4 +37,3 @@ async function hide(): Promise<void> {
     is_show.value = false
 }
 </script>
-<style lang="css" scoped></style>

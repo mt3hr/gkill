@@ -48,4 +48,3 @@ async function hide(): Promise<void> {
     is_show_dialog.value = false
 }
 </script>
-<style scoped></style>

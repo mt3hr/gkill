@@ -320,101 +320,16 @@ function show_application_config_dialog(): void {
     application_config_dialog.value?.show()
 }
 </script>
-<style lang="css">
-/* 不要なスクロールバーを消す */
-body,
-.v-application--wrap,
-.v-navigation-drawer--open {
-    overflow-y: scroll !important;
-    overflow-x: auto !important;
-    height: calc(actual_height) !important;
-    min-height: calc(actual_height) !important;
-    max-height: calc(actual_height) !important;
-}
-
-body {
-    overflow-y: hidden !important;
-}
-
-body::-webkit-scrollbar {
-    display: none;
-}
-
-/* メッセージ、エラーメッセージ */
-.alert_container > div {
-    width: fit-content;
-}
-
-.alert_container {
-    justify-items: end;
-    position: fixed;
-    top: 60px;
-    right: 10px;
-    display: grid;
-    grid-gap: .5em;
-    z-index: 100000000;
-}
-
-/* ダイアログ */
-.kyou_detail_view,
-.kyou_list_view,
-.v-dialog .v-card {
-    overflow-y: scroll;
-}
-
-/* スクロールバー */
-.tag_struct_root::-webkit-scrollbar,
-.rep_struct_root::-webkit-scrollbar,
-.rep_type_struct_root::-webkit-scrollbar,
-.device_struct_root::-webkit-scrollbar,
-.kftl_template_struct_root::-webkit-scrollbar,
-.v-navigation-drawer__content::-webkit-scrollbar,
-.kyou_detail_view::-webkit-scrollbar,
-.kyou_list_view::-webkit-scrollbar,
-.kyou_list_view_image::-webkit-scrollbar,
-.dnote_list_view::-webkit-scrollbar,
-.kftl_text_area::-webkit-scrollbar,
-.v-dialog .v-card::-webkit-scrollbar {
-    margin-left: 1px;
-    width: 8px;
-    height: 8px;
-}
-
-.tag_struct_root::-webkit-scrollbar-thumb,
-.rep_struct_root::-webkit-scrollbar-thumb,
-.rep_type_struct_root::-webkit-scrollbar-thumb,
-.device_struct_root::-webkit-scrollbar-thumb,
-.kftl_template_struct_root::-webkit-scrollbar-thumb,
-.v-navigation-drawer__content::-webkit-scrollbar-thumb,
-.kyou_detail_view::-webkit-scrollbar-thumb,
-.ryuu_view::-webkit-scrollbar-thumb,
-.kyou_list_view::-webkit-scrollbar-thumb,
-.kyou_list_view_image::-webkit-scrollbar-thumb,
-.dnote_list_view::-webkit-scrollbar-thumb,
-.kftl_text_area::-webkit-scrollbar-thumb,
-.v-dialog .v-card::-webkit-scrollbar-thumb {
-    background: rgb(var(--v-theme-primary));
-    width: 6px;
-    border-radius: 5px;
-}
-
-/* テーブルの隙間埋め */
-table,
-tr,
-td {
-    border-spacing: 0 !important;
-}
-
-.gkill_context_menu_list {
-    max-height: 70vh;
-    overflow-y: scroll;
-}
-</style>
 <style lang="css" scoped>
 .overlay_target {
     z-index: -10000;
     position: absolute;
     min-height: calc(v-bind('app_content_height.toString().concat("px")'));
     min-width: calc(100vw);
+}
+</style>
+<style scoped>
+:root {
+    --actual_height: v-bind(actual_height)
 }
 </style>

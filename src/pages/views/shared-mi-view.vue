@@ -164,35 +164,6 @@ watch(() => focused_time.value, () => {
 
 nextTick(() => load_content())
 </script>
-<style lang="css">
-.mi_view_table {
-    padding-top: 0px;
-}
-
-.kyou_detail_view .kyou_image {
-    width: -webkit-fill-available !important;
-    height: -webkit-fill-available !important;
-    max-width: -webkit-fill-available !important;
-    max-height: 100vh !important;
-    object-fit: contain;
-}
-
-.kyou_detail_view .kyou_video {
-    width: -webkit-fill-available !important;
-    height: -webkit-fill-available !important;
-    max-width: -webkit-fill-available !important;
-    max-height: 100vh !important;
-    object-fit: contain;
-}
-
-.mi_view_wrap {
-    position: relative;
-}
-
-.kyou_list_calendar_in_share_mi_view {
-    width: 416px;
-}
-</style>
 <style lang="css" scoped>
 .overlay_target {
     z-index: -10000;

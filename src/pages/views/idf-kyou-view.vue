@@ -5,8 +5,8 @@
             {{ kyou.typed_idf_kyou.file_name }}
         </a>
         <img v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_image"
-            :src="kyou.typed_idf_kyou.file_url.concat(props.is_image_request_to_thumb_size ? '?thumb=400x400' : '')" loading="lazy"
-            decording="async" fetchpriority="low" class="kyou_image" />
+            :src="kyou.typed_idf_kyou.file_url.concat(props.is_image_request_to_thumb_size ? '?thumb=400x400' : '')"
+            loading="lazy" decording="async" fetchpriority="low" class="kyou_image" />
         <video v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_video" :src="kyou.typed_idf_kyou.file_url"
             class="kyou_video" controls></video>
         <audio v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_audio" :src="kyou.typed_idf_kyou.file_url"
@@ -66,7 +66,7 @@ function open_link(): void {
 }
 </script>
 
-<style lang="css">
+<style lang="css" scoped>
 .kyou_image {
     box-sizing: border-box;
     border: 1px solid gray;

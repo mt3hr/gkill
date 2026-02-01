@@ -102,6 +102,3 @@ function show_end_timeis_dialog(): void {
     end_timeis_plaing_dialog.value?.show()
 }
 </script>
-<style scoped>
-.duration {}
-</style>
