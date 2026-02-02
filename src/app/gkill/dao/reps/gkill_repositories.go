@@ -471,7 +471,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 			return err
 		}
 		for _, latestDataRepositoryAddress := range latestDataRepositoryAddressInRep {
-			if _, exist := allLatestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID]; !exist || allLatestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID].DataUpdateTime.After(latestDataRepositoryAddress.DataUpdateTime) {
+			if _, exist := allLatestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID]; !exist || allLatestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID].DataUpdateTime.Before(latestDataRepositoryAddress.DataUpdateTime) {
 				latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime = now
 				allLatestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
 			}
