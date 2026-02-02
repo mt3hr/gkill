@@ -19,6 +19,7 @@ import (
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -34,8 +35,9 @@ type idfKyouRepositorySQLite3Impl struct {
 	autoIDF   *bool
 	idfIgnore *[]string
 
-	db *sql.DB
-	m  *sync.Mutex
+	db          *sql.DB
+	m           *sync.Mutex
+	fullConnect bool
 
 	fileServer     http.Handler
 	thumbServer    http.Handler
@@ -57,12 +59,11 @@ type fileinfo struct {
 // autoIDF: trueにするとGetAllKyous()が呼び出されるたびにidfする
 // idfIgnore: autoIDFが有効なとき、idfの対象にしないファイル名パターン
 // idfRecurse: autoIDFが有効なとき、サブディレクトリなどに対してもidfをする場合はtrueを指定する
-func NewIDFDirRep(ctx context.Context, dir, dbFilename string, r *mux.Router, autoIDF *bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
+func NewIDFDirRep(ctx context.Context, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF *bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
 	filename := dbFilename
 
-	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
-		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
 
@@ -117,10 +118,17 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
 	_, err = stmt.ExecContext(ctx)
-
 	if err != nil {
 		err = fmt.Errorf("error at create IDF table to %s: %w", filename, err)
 		return nil, err
+	}
+
+	if !fullConnect {
+		err = db.Close()
+		if err != nil {
+			return nil, err
+		}
+		db = nil
 	}
 
 	rep := &idfKyouRepositorySQLite3Impl{
@@ -133,6 +141,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		idfIgnore:       idfIgnore,
 		db:              db,
 		m:               &sync.Mutex{},
+		fullConnect:     fullConnect,
 	}
 
 	fs := http.FileServer(http.Dir(dir))
@@ -145,6 +154,17 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 
 func (i *idfKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
 		err = i.UpdateCache(ctx)
@@ -209,7 +229,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyou sql: %w", err)
 		return nil, err
@@ -442,6 +462,16 @@ func (i *idfKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, u
 
 func (i *idfKyouRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 	sql := `
 SELECT 
   IS_DELETED,
@@ -501,7 +531,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
@@ -605,6 +635,16 @@ func (i *idfKyouRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (
 		return i.idDBFile, nil
 	}
 	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return "", err
+		}
+		defer db.Close()
+	}
 	sql := `
 SELECT 
   IS_DELETED,
@@ -662,7 +702,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return "", err
@@ -766,11 +806,24 @@ func (i *idfKyouRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, 
 }
 
 func (i *idfKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
-	return i.db.Close()
+	if i.fullConnect {
+		return i.db.Close()
+	}
+	return nil
 }
 
 func (i *idfKyouRepositorySQLite3Impl) FindIDFKyou(ctx context.Context, query *find.FindQuery) ([]*IDFKyou, error) {
 	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -838,7 +891,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyou sql: %w", err)
 		return nil, err
@@ -1029,6 +1082,16 @@ func (i *idfKyouRepositorySQLite3Impl) GetIDFKyou(ctx context.Context, id string
 
 func (i *idfKyouRepositorySQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
 	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
 	sql := `
 SELECT 
   IS_DELETED,
@@ -1087,7 +1150,7 @@ WHERE
 	sql += commonWhereSQL
 
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get idf histories sql: %w", err)
 		return nil, err
@@ -1310,6 +1373,17 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 }
 
 func (i *idfKyouRepositorySQLite3Impl) AddIDFKyouInfo(ctx context.Context, idfKyou *IDFKyou) error {
+	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+	}
 	i.m.Lock()
 	defer i.m.Unlock()
 	sql := `
@@ -1343,7 +1417,7 @@ INSERT INTO IDF (
   ?
 );`
 	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := i.db.PrepareContext(ctx, sql)
+	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add idf sql %s: %w", idfKyou.ID, err)
 		return err
@@ -1569,4 +1643,99 @@ func (i *idfKyouRepositorySQLite3Impl) UnWrapTyped() ([]IDFKyouRepository, error
 
 func (i *idfKyouRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 	return []Repository{i}, nil
+}
+
+func (i *idfKyouRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
+	dbName := "IDF"
+	var err error
+	var db *sql.DB
+	if i.fullConnect {
+		db = i.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, i.idDBFile)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
+	// update_cacheであればキャッシュを更新する
+	if updateCache {
+		err = i.UpdateCache(ctx)
+		if err != nil {
+			repName, _ := i.GetRepName(ctx)
+			err = fmt.Errorf("error at update cache %s: %w", repName, err)
+			return nil, err
+		}
+	}
+
+	sql := fmt.Sprintf(`
+SELECT 
+  IS_DELETED,
+  ID AS TARGET_ID,
+  NULL AS TARGET_ID_IN_DATA,
+  ? AS LATEST_DATA_REPOSITORY_NAME,
+  UPDATE_TIME AS DATA_UPDATE_TIME
+FROM %s
+WHERE
+UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )
+`,
+		dbName, dbName, dbName)
+
+	repName, err := i.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at %s : %w", i.idDBFile, err)
+		return nil, err
+	}
+
+	queryArgs := []interface{}{
+		repName,
+	}
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get latest data repository address sql: %w", err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from latest data repository address at %s: %w", repName, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	latestDataRepositoryAddresses := []*gkill_cache.LatestDataRepositoryAddress{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{}
+			dataUpdateTimeStr := ""
+
+			err = rows.Scan(
+				&latestDataRepositoryAddress.IsDeleted,
+				&latestDataRepositoryAddress.TargetID,
+				&latestDataRepositoryAddress.TargetIDInData,
+				&latestDataRepositoryAddress.LatestDataRepositoryName,
+				&dataUpdateTimeStr,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan latest data repository address at %s: %w", repName, err)
+				return nil, err
+			}
+			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse data update time %s in %s: %w", dataUpdateTimeStr, repName, err)
+				return nil, err
+			}
+
+			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
+		}
+	}
+	return latestDataRepositoryAddresses, nil
 }

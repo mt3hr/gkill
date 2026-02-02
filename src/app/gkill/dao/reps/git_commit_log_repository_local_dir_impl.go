@@ -12,6 +12,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 )
 
@@ -540,6 +541,53 @@ func (g *gitCommitLogRepositoryLocalImpl) UnWrapTyped() ([]GitCommitLogRepositor
 
 func (g *gitCommitLogRepositoryLocalImpl) UnWrap() ([]Repository, error) {
 	return []Repository{g}, nil
+}
+
+func (g *gitCommitLogRepositoryLocalImpl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
+	var err error
+	// update_cacheであればキャッシュを更新する
+	if updateCache {
+		err = g.UpdateCache(ctx)
+		if err != nil {
+			repName, _ := g.GetRepName(ctx)
+			err = fmt.Errorf("error at update cache %s: %w", repName, err)
+			return nil, err
+		}
+	}
+
+	repName, err := g.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at %s : %w", g.filename, err)
+		return nil, err
+	}
+
+	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
+	if err != nil {
+		return nil, nil
+		// return err
+	}
+	defer logs.Close()
+
+	latestDataRepositoryAddresses := []*gkill_cache.LatestDataRepositoryAddress{}
+	for commit, err := logs.Next(); commit != nil; commit, err = logs.Next() {
+		if err != nil {
+			return nil, err
+		}
+		select {
+		case <-ctx.Done():
+			return nil, nil
+		default:
+			latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{
+				IsDeleted:                false,
+				TargetID:                 commit.Hash.String(),
+				TargetIDInData:           nil,
+				LatestDataRepositoryName: repName,
+				DataUpdateTime:           commit.Committer.When,
+			}
+			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
+		}
+	}
+	return latestDataRepositoryAddresses, nil
 }
 
 func buildPeriodOfTimeSeconds(query *find.FindQuery) (use bool, stOK bool, stSec int, etOK bool, etSec int) {

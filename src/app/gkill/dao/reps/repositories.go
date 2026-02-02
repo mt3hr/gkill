@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
@@ -432,4 +433,17 @@ func (r Repositories) UnWrap() ([]Repository, error) {
 		repositories = append(repositories, unwraped...)
 	}
 	return repositories, nil
+}
+
+func (r Repositories) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
+	// 並列処理はしない（入れ子になってスレッドプール枯渇の可能性があるため）
+	latestDataRepositoryAddresses := []*gkill_cache.LatestDataRepositoryAddress{}
+	for _, rep := range r {
+		latestDataRepositoryAddressInRep, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
+		if err != nil {
+			return nil, err
+		}
+		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddressInRep...)
+	}
+	return latestDataRepositoryAddresses, nil
 }
