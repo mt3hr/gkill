@@ -16,7 +16,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
 
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/reps/rep_cache_updater"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache/rep_cache_updater"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
@@ -697,7 +697,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
-					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, g.router, &autoIDF, &g.IDFIgnore, repositories)
+					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, true, g.router, &autoIDF, &g.IDFIgnore, repositories)
 					if err != nil {
 						return nil, err
 					}
@@ -851,7 +851,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 			repositories.NotificationReps = []reps.NotificationRepository{cachedNotificationRep}
 		}
 		if *gkill_options.CacheReKyouReps {
-			rekyouRepositories := reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{&repositories.ReKyouReps}, GkillRepositories: repositories}
+			rekyouRepositories := repositories.ReKyouReps
 			cachedReKyouRep, err := reps.NewReKyouRepositoryCachedSQLite3Impl(ctx, &rekyouRepositories, repositories, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_REKYOU")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
