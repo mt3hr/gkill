@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 )
 
 type MiTempRepository interface {
@@ -41,4 +42,6 @@ type MiTempRepository interface {
 	UnWrapTyped() ([]MiTempRepository, error)
 
 	UnWrap() ([]Repository, error)
+
+	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error)
 }

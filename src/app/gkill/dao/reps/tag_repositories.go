@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
@@ -710,4 +711,57 @@ func (t TagRepositories) UnWrapTyped() ([]TagRepository, error) {
 		unwraped = append(unwraped, u...)
 	}
 	return unwraped, nil
+}
+
+func (t TagRepositories) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
+	existErr := false
+	var err error
+	wg := &sync.WaitGroup{}
+	latestDataRepositoryAddressCh := make(chan []*gkill_cache.LatestDataRepositoryAddress, len(t))
+	errch := make(chan error, len(t))
+	defer close(latestDataRepositoryAddressCh)
+	defer close(errch)
+
+	// 並列処理
+	for _, rep := range t {
+		_ = threads.Go(ctx, wg, func() {
+			func(rep TagRepository) {
+				latestDataRepositoryAddresses, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
+				if err != nil {
+					errch <- err
+					return
+				}
+				latestDataRepositoryAddressCh <- latestDataRepositoryAddresses
+			}(rep)
+		})
+	}
+	wg.Wait()
+
+	// エラー集約
+errloop:
+	for {
+		select {
+		case e := <-errch:
+			err = fmt.Errorf("error at get latest data repository address: %w", e)
+			existErr = true
+		default:
+			break errloop
+		}
+	}
+	if existErr {
+		return nil, err
+	}
+
+	latestDataRepositoryAddresses := []*gkill_cache.LatestDataRepositoryAddress{}
+loop:
+	for {
+		select {
+		case latestDataRepositoryAddressInRep := <-latestDataRepositoryAddressCh:
+			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddressInRep...)
+		default:
+			break loop
+		}
+	}
+
+	return latestDataRepositoryAddresses, nil
 }
