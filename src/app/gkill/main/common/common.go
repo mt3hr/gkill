@@ -63,7 +63,7 @@ var (
 						continue
 					}
 					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
-					idfKyouRep, err := reps.NewIDFDirRep(context.TODO(), filename, idDBFilename, router, &autoIDF, &idfIgnore, nil)
+					idfKyouRep, err := reps.NewIDFDirRep(context.TODO(), filename, idDBFilename, true, router, &autoIDF, &idfIgnore, nil)
 					if err != nil {
 						err = fmt.Errorf("error at new idf dir rep: %w", err)
 						gkill_log.Debug.Println(err.Error())

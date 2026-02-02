@@ -9,6 +9,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -852,4 +853,9 @@ func (u *urlogRepositoryCachedSQLite3Impl) UnWrapTyped() ([]URLogRepository, err
 
 func (u *urlogRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 	return u.urlogRep.UnWrap()
+}
+
+func (u *urlogRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
+	defer u.UpdateCache(ctx)
+	return u.urlogRep.GetLatestDataRepositoryAddress(ctx, updateCache)
 }
