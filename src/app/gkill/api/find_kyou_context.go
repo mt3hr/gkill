@@ -18,7 +18,7 @@ type FindKyouContext struct {
 	AllHideTagsWhenUnchecked         map[string]*reps.Tag       `json:"all_hide_tags_when_unchecked"`
 	MatchHideTagsWhenUncheckedKyou   map[string]*reps.Tag
 	MatchHideTagsWhenUncheckedTimeIs map[string]*reps.Tag
-	RelatedTagIDs                    map[string]interface{}
+	RelatedTagIDs                    map[string]struct{}
 	MatchTags                        map[string]*reps.Tag    `json:"match_tags"`
 	MatchTexts                       map[string]*reps.Text   `json:"match_texts"`
 	MatchTimeIssAtFindTimeIs         map[string]*reps.TimeIs `json:"match_time_iss_at_find_time_is"`

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 )
 
 type NlogRepository interface {
@@ -33,4 +34,6 @@ type NlogRepository interface {
 	UnWrapTyped() ([]NlogRepository, error)
 
 	UnWrap() ([]Repository, error)
+
+	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error)
 }

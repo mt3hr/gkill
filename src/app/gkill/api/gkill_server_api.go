@@ -41,6 +41,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
@@ -1463,7 +1464,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Tag.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Tag.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Tag.IsDeleted,
 		TargetID:                               request.Tag.ID,
 		TargetIDInData:                         &request.Tag.TargetID,
@@ -1630,7 +1631,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Text.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Text.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Text.IsDeleted,
 		TargetID:                               request.Text.ID,
 		TargetIDInData:                         &request.Text.TargetID,
@@ -1797,7 +1798,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Notification.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Notification.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Notification.IsDeleted,
 		TargetID:                               request.Notification.ID,
 		TargetIDInData:                         &request.Notification.TargetID,
@@ -1866,7 +1867,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Notification.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Notification.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Notification.IsDeleted,
 		TargetID:                               request.Notification.ID,
 		TargetIDInData:                         &request.Notification.TargetID,
@@ -2021,7 +2022,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Kmemo.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Kmemo.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Kmemo.IsDeleted,
 		TargetID:                               request.Kmemo.ID,
 		DataUpdateTime:                         request.Kmemo.UpdateTime,
@@ -2203,7 +2204,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.KC.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.KC.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.KC.IsDeleted,
 		TargetID:                               request.KC.ID,
 		DataUpdateTime:                         request.KC.UpdateTime,
@@ -2414,7 +2415,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.URLog.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.URLog.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.URLog.IsDeleted,
 		TargetID:                               request.URLog.ID,
 		DataUpdateTime:                         request.URLog.UpdateTime,
@@ -2594,7 +2595,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Nlog.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Nlog.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Nlog.IsDeleted,
 		TargetID:                               request.Nlog.ID,
 		DataUpdateTime:                         request.Nlog.UpdateTime,
@@ -2774,7 +2775,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.TimeIs.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.TimeIs.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.TimeIs.IsDeleted,
 		TargetID:                               request.TimeIs.ID,
 		DataUpdateTime:                         request.TimeIs.UpdateTime,
@@ -2957,7 +2958,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Lantana.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Lantana.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Lantana.IsDeleted,
 		TargetID:                               request.Lantana.ID,
 		DataUpdateTime:                         request.Lantana.UpdateTime,
@@ -3139,7 +3140,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Mi.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Mi.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Mi.IsDeleted,
 		TargetID:                               request.Mi.ID,
 		DataUpdateTime:                         request.Mi.UpdateTime,
@@ -3321,7 +3322,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.ReKyou.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.ReKyou.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.ReKyou.IsDeleted,
 		TargetID:                               request.ReKyou.ID,
 		TargetIDInData:                         &request.ReKyou.TargetID,
@@ -3494,7 +3495,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Tag.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Tag.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Tag.IsDeleted,
 		TargetID:                               request.Tag.ID,
 		TargetIDInData:                         &request.Tag.TargetID,
@@ -3675,7 +3676,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Text.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Text.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Text.IsDeleted,
 		TargetID:                               request.Text.ID,
 		TargetIDInData:                         &request.Text.TargetID,
@@ -3855,7 +3856,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Notification.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Notification.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Notification.IsDeleted,
 		TargetID:                               request.Notification.ID,
 		TargetIDInData:                         &request.Notification.TargetID,
@@ -4059,7 +4060,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Kmemo.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Kmemo.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Kmemo.IsDeleted,
 		TargetID:                               request.Kmemo.ID,
 		DataUpdateTime:                         request.Kmemo.UpdateTime,
@@ -4252,7 +4253,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.KC.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.KC.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.KC.IsDeleted,
 		TargetID:                               request.KC.ID,
 		DataUpdateTime:                         request.KC.UpdateTime,
@@ -4509,7 +4510,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.URLog.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.URLog.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.URLog.IsDeleted,
 		TargetID:                               request.URLog.ID,
 		DataUpdateTime:                         request.URLog.UpdateTime,
@@ -4701,7 +4702,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Nlog.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Nlog.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Nlog.IsDeleted,
 		TargetID:                               request.Nlog.ID,
 		DataUpdateTime:                         request.Nlog.UpdateTime,
@@ -4894,7 +4895,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.TimeIs.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.TimeIs.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.TimeIs.IsDeleted,
 		TargetID:                               request.TimeIs.ID,
 		DataUpdateTime:                         request.TimeIs.UpdateTime,
@@ -5087,7 +5088,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Lantana.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Lantana.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Lantana.IsDeleted,
 		TargetID:                               request.Lantana.ID,
 		DataUpdateTime:                         request.Lantana.UpdateTime,
@@ -5280,7 +5281,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.IDFKyou.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.IDFKyou.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.IDFKyou.IsDeleted,
 		TargetID:                               request.IDFKyou.ID,
 		DataUpdateTime:                         request.IDFKyou.UpdateTime,
@@ -5483,7 +5484,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.Mi.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.Mi.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.Mi.IsDeleted,
 		TargetID:                               request.Mi.ID,
 		DataUpdateTime:                         request.Mi.UpdateTime,
@@ -5653,7 +5654,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[request.ReKyou.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[request.ReKyou.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              request.ReKyou.IsDeleted,
 		TargetID:                               request.ReKyou.ID,
 		TargetIDInData:                         &request.ReKyou.TargetID,
@@ -8013,7 +8014,7 @@ loop:
 				}
 
 				// defer g.WebPushUpdatedData(r.Context(), userID, device, idfKyou.ID)
-				repositories.LatestDataRepositoryAddresses[idfKyou.ID] = &account_state.LatestDataRepositoryAddress{
+				repositories.LatestDataRepositoryAddresses[idfKyou.ID] = &gkill_cache.LatestDataRepositoryAddress{
 					IsDeleted:                              idfKyou.IsDeleted,
 					TargetID:                               idfKyou.ID,
 					DataUpdateTime:                         idfKyou.UpdateTime,
@@ -11605,7 +11606,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		// response.Errors = append(response.Errors, gkillError)
 		return
 	}
-	repositories.LatestDataRepositoryAddresses[urlog.ID] = &account_state.LatestDataRepositoryAddress{
+	repositories.LatestDataRepositoryAddresses[urlog.ID] = &gkill_cache.LatestDataRepositoryAddress{
 		IsDeleted:                              urlog.IsDeleted,
 		TargetID:                               urlog.ID,
 		DataUpdateTime:                         urlog.UpdateTime,
@@ -12217,7 +12218,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 				gkill_log.Debug.Println(err.Error())
 			}
 		}
-		repositories.LatestDataRepositoryAddresses[idfKyou.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[idfKyou.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              idfKyou.IsDeleted,
 			TargetID:                               idfKyou.ID,
 			DataUpdateTime:                         idfKyou.UpdateTime,
@@ -12264,7 +12265,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[kc.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[kc.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              kc.IsDeleted,
 			TargetID:                               kc.ID,
 			DataUpdateTime:                         kc.UpdateTime,
@@ -12312,7 +12313,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[kmemo.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[kmemo.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              kmemo.IsDeleted,
 			TargetID:                               kmemo.ID,
 			DataUpdateTime:                         kmemo.UpdateTime,
@@ -12360,7 +12361,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[lantana.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[lantana.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              lantana.IsDeleted,
 			TargetID:                               lantana.ID,
 			DataUpdateTime:                         lantana.UpdateTime,
@@ -12408,7 +12409,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[mi.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[mi.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              mi.IsDeleted,
 			TargetID:                               mi.ID,
 			DataUpdateTime:                         mi.UpdateTime,
@@ -12456,7 +12457,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[nlog.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[nlog.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              nlog.IsDeleted,
 			TargetID:                               nlog.ID,
 			DataUpdateTime:                         nlog.UpdateTime,
@@ -12504,7 +12505,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[notification.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[notification.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              notification.IsDeleted,
 			TargetID:                               notification.ID,
 			TargetIDInData:                         &notification.TargetID,
@@ -12553,7 +12554,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[rekyou.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[rekyou.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              rekyou.IsDeleted,
 			TargetID:                               rekyou.ID,
 			TargetIDInData:                         &rekyou.TargetID,
@@ -12603,7 +12604,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[tag.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[tag.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              tag.IsDeleted,
 			TargetID:                               tag.ID,
 			TargetIDInData:                         &tag.TargetID,
@@ -12651,7 +12652,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[text.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[text.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              text.IsDeleted,
 			TargetID:                               text.ID,
 			TargetIDInData:                         &text.TargetID,
@@ -12700,7 +12701,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[timeis.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[timeis.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              timeis.IsDeleted,
 			TargetID:                               timeis.ID,
 			DataUpdateTime:                         timeis.UpdateTime,
@@ -12748,7 +12749,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			response.Errors = append(response.Errors, gkillError)
 			return
 		}
-		repositories.LatestDataRepositoryAddresses[urlog.ID] = &account_state.LatestDataRepositoryAddress{
+		repositories.LatestDataRepositoryAddresses[urlog.ID] = &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              urlog.IsDeleted,
 			TargetID:                               urlog.ID,
 			DataUpdateTime:                         urlog.UpdateTime,

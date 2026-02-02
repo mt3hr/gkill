@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 )
 
 type NotificationTempRepository interface {
@@ -33,4 +34,6 @@ type NotificationTempRepository interface {
 	DeleteByTXID(ctx context.Context, txID string, userID string, device string) error
 
 	UnWrapTyped() ([]NotificationTempRepository, error)
+
+	GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error)
 }

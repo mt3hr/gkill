@@ -12,6 +12,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
@@ -979,4 +980,99 @@ func (t *timeIsRepositorySQLite3Impl) UnWrapTyped() ([]TimeIsRepository, error) 
 
 func (t *timeIsRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 	return []Repository{t}, nil
+}
+
+func (t *timeIsRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
+	dbName := "TIMEIS"
+	var err error
+	var db *sql.DB
+	if t.fullConnect {
+		db = t.db
+	} else {
+		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, t.filename)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	}
+
+	// update_cacheであればキャッシュを更新する
+	if updateCache {
+		err = t.UpdateCache(ctx)
+		if err != nil {
+			repName, _ := t.GetRepName(ctx)
+			err = fmt.Errorf("error at update cache %s: %w", repName, err)
+			return nil, err
+		}
+	}
+
+	sql := fmt.Sprintf(`
+SELECT 
+  IS_DELETED,
+  ID AS TARGET_ID,
+  NULL AS TARGET_ID_IN_DATA,
+  ? AS LATEST_DATA_REPOSITORY_NAME,
+  UPDATE_TIME AS DATA_UPDATE_TIME
+FROM %s
+WHERE
+UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )
+`,
+		dbName, dbName, dbName)
+
+	repName, err := t.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at get rep name at %s : %w", t.filename, err)
+		return nil, err
+	}
+
+	queryArgs := []interface{}{
+		repName,
+	}
+
+	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	stmt, err := db.PrepareContext(ctx, sql)
+	if err != nil {
+		err = fmt.Errorf("error at get latest data repository address sql: %w", err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	rows, err := stmt.QueryContext(ctx, queryArgs...)
+	if err != nil {
+		err = fmt.Errorf("error at select from latest data repository address at %s: %w", repName, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	latestDataRepositoryAddresses := []*gkill_cache.LatestDataRepositoryAddress{}
+	for rows.Next() {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{}
+			dataUpdateTimeStr := ""
+
+			err = rows.Scan(
+				&latestDataRepositoryAddress.IsDeleted,
+				&latestDataRepositoryAddress.TargetID,
+				&latestDataRepositoryAddress.TargetIDInData,
+				&latestDataRepositoryAddress.LatestDataRepositoryName,
+				&dataUpdateTimeStr,
+			)
+			if err != nil {
+				err = fmt.Errorf("error at scan latest data repository address at %s: %w", repName, err)
+				return nil, err
+			}
+			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
+			if err != nil {
+				err = fmt.Errorf("error at parse data update time %s in %s: %w", dataUpdateTimeStr, repName, err)
+				return nil, err
+			}
+
+			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
+		}
+	}
+	return latestDataRepositoryAddresses, nil
 }
