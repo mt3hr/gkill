@@ -9,7 +9,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
@@ -451,8 +450,4 @@ func (k *kmemoTempRepositorySQLite3Impl) UnWrapTyped() ([]KmemoTempRepository, e
 
 func (k *kmemoTempRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 	return []Repository{k}, nil
-}
-
-func (k *kmemoTempRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	return nil, fmt.Errorf("not implements GetLatestDataRepositoryAddress at temp rep")
 }

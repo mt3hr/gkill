@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
@@ -79,12 +78,12 @@ loop:
 					for i, existKyou := range matchKyous[key] {
 						if existKyou.DataType == "timeis_start" && kyou.DataType == "timeis_start" {
 							existStartTimeIs = true
-							if existKyou.UpdateTime.After(kyou.UpdateTime) {
+							if existKyou.UpdateTime.Before(kyou.UpdateTime) {
 								matchKyous[key][i] = kyou
 							}
 						} else if existKyou.DataType == "timeis_end" && kyou.DataType == "timeis_end" {
 							existEndTimeIs = true
-							if existKyou.UpdateTime.After(kyou.UpdateTime) {
+							if existKyou.UpdateTime.Before(kyou.UpdateTime) {
 								matchKyous[key][i] = kyou
 							}
 						}
@@ -168,7 +167,7 @@ loop:
 				continue loop
 			}
 			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
+				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
 					matchKyou = matchKyouInRep
 				}
 			} else {
@@ -505,7 +504,7 @@ loop:
 				continue loop
 			}
 			if matchTimeIs != nil {
-				if matchTimeIsInRep.UpdateTime.After(matchTimeIs.UpdateTime) {
+				if matchTimeIsInRep.UpdateTime.Before(matchTimeIs.UpdateTime) {
 					matchTimeIs = matchTimeIsInRep
 				}
 			} else {
@@ -712,58 +711,4 @@ func (t TimeIsRepositories) UnWrap() ([]Repository, error) {
 		repositories = append(repositories, unwraped...)
 	}
 	return repositories, nil
-}
-
-func (t TimeIsRepositories) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	existErr := false
-	var err error
-	wg := &sync.WaitGroup{}
-	latestDataRepositoryAddressCh := make(chan []*gkill_cache.LatestDataRepositoryAddress, len(t))
-	errch := make(chan error, len(t))
-	defer close(latestDataRepositoryAddressCh)
-	defer close(errch)
-
-	// 並列処理
-	for _, rep := range t {
-		rep := rep
-		_ = threads.Go(ctx, wg, func() {
-			func(rep TimeIsRepository) {
-				latestDataRepositoryAddresses, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
-				if err != nil {
-					errch <- err
-					return
-				}
-				latestDataRepositoryAddressCh <- latestDataRepositoryAddresses
-			}(rep)
-		})
-	}
-	wg.Wait()
-
-	// エラー集約
-errloop:
-	for {
-		select {
-		case e := <-errch:
-			err = fmt.Errorf("error at get latest data repository address: %w", e)
-			existErr = true
-		default:
-			break errloop
-		}
-	}
-	if existErr {
-		return nil, err
-	}
-
-	latestDataRepositoryAddresses := []*gkill_cache.LatestDataRepositoryAddress{}
-loop:
-	for {
-		select {
-		case latestDataRepositoryAddressInRep := <-latestDataRepositoryAddressCh:
-			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddressInRep...)
-		default:
-			break loop
-		}
-	}
-
-	return latestDataRepositoryAddresses, nil
 }
