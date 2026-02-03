@@ -356,6 +356,7 @@ AND DEVICE = ?
 			kyou.UpdateUser = idf.UpdateUser
 			kyou.UpdateDevice = idf.UpdateDevice
 			kyou.IsImage = idf.IsImage
+			kyou.IsVideo = idf.IsVideo
 
 			kyous = append(kyous, kyou)
 		}

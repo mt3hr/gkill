@@ -30,4 +30,6 @@ type Kyou struct {
 	UpdateDevice string `json:"update_device"`
 
 	IsImage bool `json:"is_image"`
+
+	IsVideo bool `json:"is_video"`
 }
