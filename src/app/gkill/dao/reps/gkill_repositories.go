@@ -22,15 +22,6 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
-var (
-	// 全体で1つだけ起動されるように考慮。
-	updateCacheInAppThreadPool = make(chan interface{}, 1)
-)
-
-func init() {
-	updateCacheInAppThreadPool <- struct{}{}
-}
-
 type GkillRepositories struct {
 	userID string
 
@@ -448,10 +439,6 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	g.cancelPreFunc()
 	ctx, cancelFunc := context.WithCancel(ctx)
 	g.cancelPreFunc = cancelFunc
-
-	// アプリ全体で1本のスレッド
-	<-updateCacheInAppThreadPool
-	defer func() { updateCacheInAppThreadPool <- struct{}{} }()
 
 	allLatestDataRepositoryAddresses := map[string]*gkill_cache.LatestDataRepositoryAddress{}
 
