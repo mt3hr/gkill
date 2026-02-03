@@ -36,7 +36,6 @@ func init() {
 	AppCmd.PersistentFlags().Int64Var(&gkill_options.CacheClearCountLimit, "cache_clear_count_limit", gkill_options.CacheClearCountLimit, "")
 	AppCmd.PersistentFlags().DurationVar(&gkill_options.CacheUpdateDuration, "cache_update_duration", gkill_options.CacheUpdateDuration, "")
 	AppCmd.PersistentFlags().StringArrayVar(&gkill_options.PreLoadUserNames, "pre_load_users", gkill_options.PreLoadUserNames, "")
-	AppCmd.PersistentFlags().BoolVar(&gkill_options.AlwaysConnectDB, "allways_connect_db", gkill_options.AlwaysConnectDB, "")
 	AppCmd.AddCommand(common.DVNFCmd)
 	AppCmd.AddCommand(common.VersionCommand)
 	AppCmd.AddCommand(common.GenerateThumbCacheCmd)
@@ -49,7 +48,7 @@ var (
 			common.InitGkillOptions()
 			threads.Init()
 		},
-		Run: func(cmd *cobra.Command, _ []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			var err error
 
 			err = common.InitGkillServerAPI()
@@ -58,21 +57,22 @@ var (
 			}
 
 			go func() {
-				device, err := common.GetGkillServerAPI().GetDevice()
-				if err != nil {
-					log.Fatal(err)
-				}
 				for _, preLoadUserNames := range gkill_options.PreLoadUserNames {
 					userID := preLoadUserNames
+					device, err := common.GetGkillServerAPI().GetDevice()
+					if err != nil {
+						log.Fatal(err)
+					}
+
 					if err != nil {
 						err = fmt.Errorf("error at get device name: %w", err)
 						gkill_log.Debug.Fatal(err.Error())
 					}
-					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(cmd.Context(), userID, device)
+					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
 				}
 			}()
 
-			go common.LaunchGkillServerAPI(cmd.Context())
+			go common.LaunchGkillServerAPI()
 
 			for ; ; time.Sleep(time.Microsecond * 500) {
 				api := common.GetGkillServerAPI()

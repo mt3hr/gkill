@@ -15,7 +15,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -94,7 +93,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	i.m.Lock()
-	defer i.m.Unlock()
+	i.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -311,7 +310,6 @@ WHERE
 				kyou.UpdateUser = idf.UpdateUser
 				kyou.UpdateDevice = idf.UpdateDevice
 				kyou.IsImage = idf.IsImage
-				kyou.IsVideo = idf.IsVideo
 
 				if _, exist := kyous[kyou.ID]; !exist {
 					kyous[kyou.ID] = []*Kyou{}
@@ -351,7 +349,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id str
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	i.m.Lock()
-	defer i.m.Unlock()
+	i.m.Unlock()
 	var err error
 	sql := `
 SELECT 
@@ -480,7 +478,6 @@ WHERE
 			kyou.UpdateUser = idf.UpdateUser
 			kyou.UpdateDevice = idf.UpdateDevice
 			kyou.IsImage = idf.IsImage
-			kyou.IsVideo = idf.IsVideo
 
 			kyous = append(kyous, kyou)
 		}
@@ -872,7 +869,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyou(ctx context.Context, id 
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
 	i.m.Lock()
-	defer i.m.Unlock()
+	i.m.Unlock()
 	var err error
 	sql := `
 SELECT 
@@ -1084,18 +1081,4 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UnWrapTyped() ([]IDFKyouRepository,
 }
 func (i *idfKyouRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 	return i.idfRep.UnWrap()
-}
-
-func (i *idfKyouRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	latestData, err := i.idfRep.GetLatestDataRepositoryAddress(ctx, updateCache)
-	if err != nil {
-		return nil, err
-	}
-	if updateCache {
-		err = i.UpdateCache(ctx)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return latestData, nil
 }
