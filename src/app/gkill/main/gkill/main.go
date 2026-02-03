@@ -48,7 +48,7 @@ var (
 			common.InitGkillOptions()
 			threads.Init()
 		},
-		Run: func(_ *cobra.Command, _ []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			var err error
 
 			err = common.InitGkillServerAPI()
@@ -57,22 +57,21 @@ var (
 			}
 
 			go func() {
+				device, err := common.GetGkillServerAPI().GetDevice()
+				if err != nil {
+					log.Fatal(err)
+				}
 				for _, preLoadUserNames := range gkill_options.PreLoadUserNames {
 					userID := preLoadUserNames
-					device, err := common.GetGkillServerAPI().GetDevice()
-					if err != nil {
-						log.Fatal(err)
-					}
-
 					if err != nil {
 						err = fmt.Errorf("error at get device name: %w", err)
 						gkill_log.Debug.Fatal(err.Error())
 					}
-					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
+					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(cmd.Context(), userID, device)
 				}
 			}()
 
-			go common.LaunchGkillServerAPI()
+			go common.LaunchGkillServerAPI(cmd.Context())
 
 			for ; ; time.Sleep(time.Microsecond * 500) {
 				api := common.GetGkillServerAPI()
