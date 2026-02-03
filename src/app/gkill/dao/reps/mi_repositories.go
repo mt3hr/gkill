@@ -133,7 +133,7 @@ loop:
 				continue loop
 			}
 			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
+				if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
 					matchKyou = matchKyouInRep
 				}
 			} else {
@@ -461,7 +461,7 @@ loop:
 				continue loop
 			}
 			if matchMi != nil {
-				if matchMiInRep.UpdateTime.Before(matchMi.UpdateTime) {
+				if matchMiInRep.UpdateTime.After(matchMi.UpdateTime) {
 					matchMi = matchMiInRep
 				}
 			} else {
@@ -707,6 +707,7 @@ func (m MiRepositories) GetLatestDataRepositoryAddress(ctx context.Context, upda
 
 	// 並列処理
 	for _, rep := range m {
+		rep := rep
 		_ = threads.Go(ctx, wg, func() {
 			func(rep MiRepository) {
 				latestDataRepositoryAddresses, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)

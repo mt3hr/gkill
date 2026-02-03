@@ -1829,7 +1829,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 	for id, currentKyou := range findCtx.MatchKyousCurrent {
 		if !findCtx.DisableLatestDataRepositoryCache {
 			sort.Slice(currentKyou, func(i, j int) bool { return currentKyou[i].UpdateTime.After(currentKyou[j].UpdateTime) })
-			latestKyousMap[id] = []*reps.Kyou{currentKyou[0]}
+			latestKyousMap[id] = currentKyou
 			continue
 		}
 
@@ -1853,7 +1853,7 @@ func (f *FindFilter) replaceLatestKyouInfos(ctx context.Context, findCtx *FindKy
 		}
 
 		// はい入ってなかったら最新のKyouを取得する
-		latestKyou, err := findCtx.Repositories.Reps.GetKyou(ctx, latestData.TargetID, &latestData.DataUpdateTime)
+		latestKyou, err := findCtx.Repositories.Reps.GetKyou(ctx, latestData.TargetID, nil)
 		if err != nil {
 			return nil, fmt.Errorf("error at get latest kyou: %w", err)
 		}

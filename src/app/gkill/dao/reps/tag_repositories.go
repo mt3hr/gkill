@@ -187,7 +187,7 @@ loop:
 				continue loop
 			}
 			if matchTag != nil {
-				if matchTagInRep.UpdateTime.Before(matchTag.UpdateTime) {
+				if matchTagInRep.UpdateTime.After(matchTag.UpdateTime) {
 					matchTag = matchTagInRep
 				}
 			} else {
@@ -724,6 +724,7 @@ func (t TagRepositories) GetLatestDataRepositoryAddress(ctx context.Context, upd
 
 	// 並列処理
 	for _, rep := range t {
+		rep := rep
 		_ = threads.Go(ctx, wg, func() {
 			func(rep TagRepository) {
 				latestDataRepositoryAddresses, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
