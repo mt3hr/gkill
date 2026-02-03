@@ -32,7 +32,7 @@ type idfKyouRepositorySQLite3Impl struct {
 	rootAddress     string
 	r               *mux.Router
 
-	autoIDF   *bool
+	autoIDF   bool
 	idfIgnore *[]string
 
 	db          *sql.DB
@@ -59,7 +59,7 @@ type fileinfo struct {
 // autoIDF: trueにするとGetAllKyous()が呼び出されるたびにidfする
 // idfIgnore: autoIDFが有効なとき、idfの対象にしないファイル名パターン
 // idfRecurse: autoIDFが有効なとき、サブディレクトリなどに対してもidfをする場合はtrueを指定する
-func NewIDFDirRep(ctx context.Context, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF *bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
+func NewIDFDirRep(ctx context.Context, dir, dbFilename string, fullConnect bool, r *mux.Router, autoIDF bool, idfIgnore *[]string, repositoriesRef *GkillRepositories) (IDFKyouRepository, error) {
 	filename := dbFilename
 
 	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
@@ -116,10 +116,20 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	_, err = stmt.ExecContext(ctx)
+	dbName := "IDF"
+	latestIndexSQL := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS INDEX_FOR_LATEST_DATA_REPOSITORY_ADDRESS ON %s(ID, UPDATE_TIME);`, dbName)
+	gkill_log.TraceSQL.Printf("sql: %s", latestIndexSQL)
+	latestIndexStmt, err := db.PrepareContext(ctx, latestIndexSQL)
 	if err != nil {
-		err = fmt.Errorf("error at create IDF table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create index for latest data repository address at %s index statement %s: %w", dbName, filename, err)
+		return nil, err
+	}
+	defer latestIndexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", latestIndexSQL)
+	_, err = latestIndexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create %s index for latest data repository address to %s: %w", dbName, filename, err)
 		return nil, err
 	}
 
@@ -792,7 +802,7 @@ WHERE
 }
 
 func (i *idfKyouRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
-	if *i.autoIDF {
+	if i.autoIDF {
 		err := i.IDF(ctx)
 		if err != nil {
 			repName, _ := i.GetRepName(ctx)
@@ -1282,17 +1292,14 @@ func (i *idfKyouRepositorySQLite3Impl) IDF(ctx context.Context) error {
 	}
 
 	// まだidfされていないやつをリストアップする
+	existing := map[string]struct{}{}
+	for _, idf := range allIDFKyous {
+		existing[idf.TargetFile] = struct{}{}
+	}
+
 	idfTargetList := map[string]struct{}{}
-	for _, existFileInfo := range existFileInfos {
-		path := existFileInfo.Filename
-		exist := false
-		for _, existIDF := range allIDFKyous {
-			if existIDF.TargetFile == path {
-				exist = true
-				break
-			}
-		}
-		if !exist {
+	for path := range existFileInfos {
+		if _, ok := existing[path]; !ok {
 			idfTargetList[path] = struct{}{}
 		}
 	}
@@ -1672,17 +1679,21 @@ func (i *idfKyouRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx contex
 	}
 
 	sql := fmt.Sprintf(`
-SELECT 
-  IS_DELETED,
-  ID AS TARGET_ID,
+SELECT
+  tbl.IS_DELETED,
+  tbl.ID AS TARGET_ID,
   NULL AS TARGET_ID_IN_DATA,
   ? AS LATEST_DATA_REPOSITORY_NAME,
-  UPDATE_TIME AS DATA_UPDATE_TIME
-FROM %s
-WHERE
-UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )
+  tbl.UPDATE_TIME AS DATA_UPDATE_TIME
+FROM %s tbl
+INNER JOIN (
+  SELECT ID, MAX(UPDATE_TIME) AS UPDATE_TIME
+  FROM %s
+  GROUP BY ID
+) joined
+ON joined.ID = tbl.ID AND joined.UPDATE_TIME = tbl.UPDATE_TIME;
 `,
-		dbName, dbName, dbName)
+		dbName, dbName)
 
 	repName, err := i.GetRepName(ctx)
 	if err != nil {

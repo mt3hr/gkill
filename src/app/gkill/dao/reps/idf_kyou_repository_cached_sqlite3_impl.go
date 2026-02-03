@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	i.m.Lock()
-	i.m.Unlock()
+	defer i.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -351,7 +351,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id str
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	i.m.Lock()
-	i.m.Unlock()
+	defer i.m.Unlock()
 	var err error
 	sql := `
 SELECT 
@@ -872,7 +872,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyou(ctx context.Context, id 
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
 	i.m.Lock()
-	i.m.Unlock()
+	defer i.m.Unlock()
 	var err error
 	sql := `
 SELECT 
@@ -1087,6 +1087,15 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 }
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	defer i.UpdateCache(ctx)
-	return i.idfRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	latestData, err := i.idfRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	if err != nil {
+		return nil, err
+	}
+	if updateCache {
+		err = i.UpdateCache(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return latestData, nil
 }

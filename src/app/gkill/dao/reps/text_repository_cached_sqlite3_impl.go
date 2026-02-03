@@ -155,7 +155,7 @@ ORDER BY TEXT1.UPDATE_TIME_UNIX DESC
 }
 func (t *textRepositoryCachedSQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	if query.UseWords != nil && *query.UseWords {
@@ -516,7 +516,7 @@ func (t *textRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (strin
 
 func (t *textRepositoryCachedSQLite3Impl) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	sql := `
@@ -699,6 +699,15 @@ func (m *textRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TextRepository, error
 }
 
 func (t *textRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	defer t.UpdateCache(ctx)
-	return t.textRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	latestData, err := t.textRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	if err != nil {
+		return nil, err
+	}
+	if updateCache {
+		err = t.UpdateCache(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return latestData, nil
 }

@@ -128,7 +128,7 @@ loop:
 				continue loop
 			}
 			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
+				if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
 					matchKyou = matchKyouInRep
 				}
 			} else {
@@ -447,7 +447,7 @@ loop:
 				continue loop
 			}
 			if matchGitCommitLog != nil {
-				if matchGitCommitLogInRep.UpdateTime.Before(matchGitCommitLog.UpdateTime) {
+				if matchGitCommitLogInRep.UpdateTime.After(matchGitCommitLog.UpdateTime) {
 					matchGitCommitLog = matchGitCommitLogInRep
 				}
 			} else {
@@ -496,6 +496,7 @@ func (g GitCommitLogRepositories) GetLatestDataRepositoryAddress(ctx context.Con
 
 	// 並列処理
 	for _, rep := range g {
+		rep := rep
 		_ = threads.Go(ctx, wg, func() {
 			func(rep GitCommitLogRepository) {
 				latestDataRepositoryAddresses, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)

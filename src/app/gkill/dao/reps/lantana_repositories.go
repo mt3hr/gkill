@@ -132,7 +132,7 @@ loop:
 				continue loop
 			}
 			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
+				if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
 					matchKyou = matchKyouInRep
 				}
 			} else {
@@ -460,7 +460,7 @@ loop:
 				continue loop
 			}
 			if matchLantana != nil {
-				if matchLantanaInRep.UpdateTime.Before(matchLantana.UpdateTime) {
+				if matchLantanaInRep.UpdateTime.After(matchLantana.UpdateTime) {
 					matchLantana = matchLantanaInRep
 				}
 			} else {
@@ -680,6 +680,7 @@ func (l LantanaRepositories) GetLatestDataRepositoryAddress(ctx context.Context,
 
 	// 並列処理
 	for _, rep := range l {
+		rep := rep
 		_ = threads.Go(ctx, wg, func() {
 			func(rep LantanaRepository) {
 				latestDataRepositoryAddresses, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)

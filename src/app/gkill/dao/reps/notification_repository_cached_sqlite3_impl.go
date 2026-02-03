@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (t *notificationRepositoryCachedSQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -606,7 +606,7 @@ func (t *notificationRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context
 
 func (t *notificationRepositoryCachedSQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	sql := `
@@ -805,6 +805,15 @@ func (t *notificationRepositoryCachedSQLite3Impl) UnWrapTyped() ([]NotificationR
 }
 
 func (t *notificationRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	defer t.UpdateCache(ctx)
-	return t.notificationRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	latestData, err := t.notificationRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	if err != nil {
+		return nil, err
+	}
+	if updateCache {
+		err = t.UpdateCache(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return latestData, nil
 }

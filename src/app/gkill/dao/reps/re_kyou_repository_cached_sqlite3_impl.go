@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	r.m.Lock()
-	r.m.Unlock()
+	defer r.m.Unlock()
 	matchKyous := map[string][]*Kyou{}
 
 	// 未削除ReKyouを抽出
@@ -200,7 +200,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id stri
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	r.m.Lock()
-	r.m.Unlock()
+	defer r.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -516,7 +516,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyou(ctx context.Context, id st
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
 	r.m.Lock()
-	r.m.Unlock()
+	defer r.m.Unlock()
 	var err error
 
 	sql := `
@@ -834,6 +834,15 @@ func (r *reKyouRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 }
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	defer r.UpdateCache(ctx)
-	return r.rekyouRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	latestData, err := r.rekyouRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	if err != nil {
+		return nil, err
+	}
+	if updateCache {
+		err = r.UpdateCache(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return latestData, nil
 }

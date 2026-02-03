@@ -33,7 +33,6 @@ type GkillDAOManager struct {
 	ConfigDAOs *ConfigDAOs
 
 	router    *mux.Router
-	autoIDF   *bool
 	IDFIgnore []string
 
 	enableOutputLogs bool
@@ -55,11 +54,8 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		return nil, err
 	}
 
-	autoIDF := true
-
 	ctx := context.Background()
 	gkillDAOManager := &GkillDAOManager{
-		autoIDF:                  &autoIDF,
 		router:                   &mux.Router{},
 		IDFIgnore:                gkill_options.IDFIgnore,
 		fileRepWatchCacheUpdater: fileRepWatchCacheUpdater,
@@ -704,7 +700,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
-					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, rep.UseToWrite, g.router, &autoIDF, &g.IDFIgnore, repositories)
+					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
 					if err != nil {
 						return nil, err
 					}
@@ -1026,7 +1022,6 @@ func (g *GkillDAOManager) Close() error {
 
 	g.ConfigDAOs = nil
 	g.router = nil
-	g.autoIDF = nil
 	g.IDFIgnore = []string{}
 
 	if g.enableOutputLogs {
