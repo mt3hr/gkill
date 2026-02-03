@@ -696,7 +696,7 @@ func (g *GkillDAOManager) GetRepositories(ctx context.Context, userID string, de
 					}
 
 					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
-					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, true, g.router, &autoIDF, &g.IDFIgnore, repositories)
+					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, rep.UseToWrite, g.router, &autoIDF, &g.IDFIgnore, repositories)
 					if err != nil {
 						return nil, err
 					}
