@@ -25,6 +25,7 @@ var (
 	IsCacheInMemory = true
 	IsOutputLog     = false
 	DisableTLSForce = false
+	AlwaysConnectDB = false
 
 	IDFIgnore = []string{
 		".gkill",

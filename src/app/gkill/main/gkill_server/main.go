@@ -29,6 +29,7 @@ func init() {
 	ServerCmd.PersistentFlags().Int64Var(&gkill_options.CacheClearCountLimit, "cache_clear_count_limit", gkill_options.CacheClearCountLimit, "")
 	ServerCmd.PersistentFlags().DurationVar(&gkill_options.CacheUpdateDuration, "cache_update_duration", gkill_options.CacheUpdateDuration, "")
 	ServerCmd.PersistentFlags().StringArrayVar(&gkill_options.PreLoadUserNames, "pre_load_users", gkill_options.PreLoadUserNames, "")
+	ServerCmd.PersistentFlags().BoolVar(&gkill_options.AlwaysConnectDB, "allways_connect_db", gkill_options.AlwaysConnectDB, "")
 	ServerCmd.AddCommand(common.IDFCmd)
 	ServerCmd.AddCommand(common.DVNFCmd)
 	ServerCmd.AddCommand(common.VersionCommand)
