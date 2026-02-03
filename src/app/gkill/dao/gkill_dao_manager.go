@@ -169,13 +169,12 @@ func (g *GkillDAOManager) GetRouter() *mux.Router {
 	return g.router
 }
 
-func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.GkillRepositories, error) {
+func (g *GkillDAOManager) GetRepositories(ctx context.Context, userID string, device string) (*reps.GkillRepositories, error) {
 	if userID == "" || device == "" {
 		err := fmt.Errorf("userID or device is blank. userID=%s device=%s", userID, device)
 		return nil, err
 	}
 
-	ctx := context.Background()
 	var err error
 
 	// nilだったら初期化する
@@ -900,13 +899,13 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 		g.gkillRepositories[userID][device] = repositories
 		repositories = repositoriesInUser[device]
 
-		_, _ = g.GetNotificator(userID, device)
+		_, _ = g.GetNotificator(ctx, userID, device)
 	}
 
 	return repositories, nil
 }
 
-func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNotificator, error) {
+func (g *GkillDAOManager) GetNotificator(ctx context.Context, userID string, device string) (*GkillNotificator, error) {
 	// nilだったら初期化する
 	if g.gkillNotificators == nil {
 		g.gkillNotificators = map[string]map[string]*GkillNotificator{}
@@ -922,13 +921,13 @@ func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNo
 	notificator, existNotificatorsInDevice := notificatorInUser[device]
 	if !existNotificatorsInDevice {
 		// Notificatorの初期化
-		gkillRepositories, err := g.GetRepositories(userID, device)
+		gkillRepositories, err := g.GetRepositories(ctx, userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at get repositories in get notificator: %w", err)
 			return nil, err
 		}
 
-		gkillNotificator, err := NewGkillNotificator(context.Background(), g, gkillRepositories)
+		gkillNotificator, err := NewGkillNotificator(ctx, g, gkillRepositories)
 		if err != nil {
 			err = fmt.Errorf("error at new gkill notificator: %w", err)
 			return nil, err
@@ -1051,7 +1050,7 @@ func (g *GkillDAOManager) SetSkipIDF(skip bool) {
 
 func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (bool, error) {
 	var err error
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	repsInDevices, exist := g.gkillRepositories[userID]
 	if !exist {

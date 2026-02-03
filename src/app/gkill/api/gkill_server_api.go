@@ -1384,7 +1384,7 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -1552,7 +1552,7 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -1719,7 +1719,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -1827,7 +1827,7 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 	}
 
 	// 通知情報を更新する
-	notificator, err := g.GkillDAOManager.GetNotificator(userID, device)
+	notificator, err := g.GkillDAOManager.GetNotificator(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get notificator: %w", err)
 		gkill_log.Debug.Println(err.Error())
@@ -1943,7 +1943,7 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -2124,7 +2124,7 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -2304,7 +2304,7 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -2516,7 +2516,7 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -2696,7 +2696,7 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -2877,7 +2877,7 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -3061,7 +3061,7 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -3242,7 +3242,7 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -3424,7 +3424,7 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -3606,7 +3606,7 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -3787,7 +3787,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -3908,7 +3908,7 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 	}
 
 	// 通知情報を更新する
-	notificator, err := g.GkillDAOManager.GetNotificator(userID, device)
+	notificator, err := g.GkillDAOManager.GetNotificator(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get notificator: %w", err)
 		gkill_log.Debug.Println(err.Error())
@@ -3991,7 +3991,7 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -4184,7 +4184,7 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -4378,7 +4378,7 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -4633,7 +4633,7 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -4826,7 +4826,7 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5019,7 +5019,7 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5212,7 +5212,7 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5405,7 +5405,7 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5585,7 +5585,7 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5851,7 +5851,7 @@ func (g *GkillServerAPI) HandleGetKyou(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -5944,7 +5944,7 @@ func (g *GkillServerAPI) HandleGetKmemo(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6028,7 +6028,7 @@ func (g *GkillServerAPI) HandleGetKC(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6112,7 +6112,7 @@ func (g *GkillServerAPI) HandleGetURLog(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6196,7 +6196,7 @@ func (g *GkillServerAPI) HandleGetNlog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6280,7 +6280,7 @@ func (g *GkillServerAPI) HandleGetTimeis(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6364,7 +6364,7 @@ func (g *GkillServerAPI) HandleGetMi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6448,7 +6448,7 @@ func (g *GkillServerAPI) HandleGetLantana(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6532,7 +6532,7 @@ func (g *GkillServerAPI) HandleGetRekyou(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6616,7 +6616,7 @@ func (g *GkillServerAPI) HandleGetGitCommitLog(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6700,7 +6700,7 @@ func (g *GkillServerAPI) HandleGetIDFKyou(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6784,7 +6784,7 @@ func (g *GkillServerAPI) HandleGetMiBoardList(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6868,7 +6868,7 @@ func (g *GkillServerAPI) HandleGetAllTagNames(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -6952,7 +6952,7 @@ func (g *GkillServerAPI) HandleGetAllRepNames(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -7036,7 +7036,7 @@ func (g *GkillServerAPI) HandleGetTagsByTargetID(w http.ResponseWriter, r *http.
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -7120,7 +7120,7 @@ func (g *GkillServerAPI) HandleGetTagHistoriesByTagID(w http.ResponseWriter, r *
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -7213,7 +7213,7 @@ func (g *GkillServerAPI) HandleGetTextsByTargetID(w http.ResponseWriter, r *http
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -7297,7 +7297,7 @@ func (g *GkillServerAPI) HandleGetNotificationsByTargetID(w http.ResponseWriter,
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -7381,7 +7381,7 @@ func (g *GkillServerAPI) HandleGetTextHistoriesByTextID(w http.ResponseWriter, r
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -7474,7 +7474,7 @@ func (g *GkillServerAPI) HandleGetNotificationHistoriesByNotificationID(w http.R
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -7841,7 +7841,7 @@ func (g *GkillServerAPI) HandleUploadFiles(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -8114,7 +8114,7 @@ func (g *GkillServerAPI) HandleUploadGPSLogFiles(w http.ResponseWriter, r *http.
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -9422,7 +9422,7 @@ func (g *GkillServerAPI) HandleGetGPSLog(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -9985,7 +9985,7 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 	userID := sharedKyouInfo.UserID
 	device := sharedKyouInfo.Device
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -10784,7 +10784,7 @@ func (g *GkillServerAPI) HandleFileServe(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		w.WriteHeader(http.StatusForbidden)
 		err = fmt.Errorf("error at handle file serve: %w", err)
@@ -11061,7 +11061,7 @@ func (g *GkillServerAPI) HandleOpenDirectory(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(session.UserID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), session.UserID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories. userid = %s device = %s: %w", session.UserID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -11195,7 +11195,7 @@ func (g *GkillServerAPI) HandleOpenFile(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(session.UserID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), session.UserID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories. userid = %s device = %s: %w", session.UserID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -11302,7 +11302,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -11352,7 +11352,7 @@ func (g *GkillServerAPI) HandleReloadRepositories(w http.ResponseWriter, r *http
 		return
 	}
 
-	_, err = g.GkillDAOManager.GetRepositories(userID, device)
+	_, err = g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -11468,7 +11468,7 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -11752,7 +11752,7 @@ func (g *GkillServerAPI) HandleGetUpdatedDatasByTime(w http.ResponseWriter, r *h
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -12028,7 +12028,7 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
@@ -12827,7 +12827,7 @@ func (g *GkillServerAPI) HandleDiscardTX(w http.ResponseWriter, r *http.Request)
 	txID := request.TXID
 	ctx := r.Context()
 
-	repositories, err := g.GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := g.GkillDAOManager.GetRepositories(r.Context(), userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories. userid = %s device = %s: %w", userID, device, err)
 		gkill_log.Debug.Println(err.Error())
