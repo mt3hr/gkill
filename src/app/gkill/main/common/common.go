@@ -170,7 +170,7 @@ func InitGkillServerAPI() error {
 	return nil
 }
 
-func LaunchGkillServerAPI() error {
+func LaunchGkillServerAPI(ctx context.Context) error {
 	var err error
 	defer gkillServerAPI.Close()
 	interceptCh := make(chan os.Signal, 1)
@@ -182,6 +182,13 @@ func LaunchGkillServerAPI() error {
 	}()
 
 	for err == nil {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			break
+		}
+
 		err = gkillServerAPI.Serve()
 		if err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
@@ -228,7 +235,7 @@ func GenerateThumbCache(ctx context.Context, userID string) error {
 		err = fmt.Errorf("error at get device: %w", err)
 		return err
 	}
-	repositories, err := GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
+	repositories, err := GetGkillServerAPI().GkillDAOManager.GetRepositories(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get gkill repositories: %w", err)
 		return err
