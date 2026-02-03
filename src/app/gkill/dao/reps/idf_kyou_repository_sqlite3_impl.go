@@ -403,6 +403,7 @@ WHERE
 				kyou.UpdateUser = idf.UpdateUser
 				kyou.UpdateDevice = idf.UpdateDevice
 				kyou.IsImage = idf.IsImage
+				kyou.IsVideo = idf.IsVideo
 
 				if _, exist := kyous[kyou.ID]; !exist {
 					kyous[kyou.ID] = []*Kyou{}
@@ -593,6 +594,7 @@ WHERE
 			kyou.UpdateUser = idf.UpdateUser
 			kyou.UpdateDevice = idf.UpdateDevice
 			kyou.IsImage = idf.IsImage
+			kyou.IsVideo = idf.IsVideo
 
 			kyous = append(kyous, kyou)
 		}
