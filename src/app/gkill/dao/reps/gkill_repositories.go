@@ -434,11 +434,7 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	var err error
 
 	// もし実行中だったら、次に実行予約を入れてそのまま返す。
-	if ok := g.updateCacheMutex.TryLock(); !ok {
-		g.UpdateCacheNextTick()
-		return nil
-	}
-	// 一個前でUpdateCacheしてるやつをキャンセルする
+	g.updateCacheMutex.Lock()
 	defer g.updateCacheMutex.Unlock()
 	g.cancelPreFunc()
 	ctx, cancelFunc := context.WithCancel(ctx)
@@ -449,11 +445,12 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	// UpdateCache並列処理
 	updateCacheTargets := []interface {
 		GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error)
-	}{}
-	updateCacheTargets = append(updateCacheTargets, g.Reps)
-	updateCacheTargets = append(updateCacheTargets, g.TagReps)
-	updateCacheTargets = append(updateCacheTargets, g.TextReps)
-	updateCacheTargets = append(updateCacheTargets, g.NotificationReps)
+	}{
+		g.Reps,
+		g.TagReps,
+		g.TextReps,
+		g.NotificationReps,
+	}
 
 	now := time.Now()
 	for _, rep := range updateCacheTargets {

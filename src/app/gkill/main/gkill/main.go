@@ -36,6 +36,7 @@ func init() {
 	AppCmd.PersistentFlags().Int64Var(&gkill_options.CacheClearCountLimit, "cache_clear_count_limit", gkill_options.CacheClearCountLimit, "")
 	AppCmd.PersistentFlags().DurationVar(&gkill_options.CacheUpdateDuration, "cache_update_duration", gkill_options.CacheUpdateDuration, "")
 	AppCmd.PersistentFlags().StringArrayVar(&gkill_options.PreLoadUserNames, "pre_load_users", gkill_options.PreLoadUserNames, "")
+	AppCmd.PersistentFlags().BoolVar(&gkill_options.AlwaysConnectDB, "allways_connect_db", gkill_options.AlwaysConnectDB, "")
 	AppCmd.AddCommand(common.DVNFCmd)
 	AppCmd.AddCommand(common.VersionCommand)
 	AppCmd.AddCommand(common.GenerateThumbCacheCmd)
