@@ -16,7 +16,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
 
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache/rep_cache_updater"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/reps/rep_cache_updater"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/server_config"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/share_kyou_info"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/user_config"
@@ -33,6 +33,7 @@ type GkillDAOManager struct {
 	ConfigDAOs *ConfigDAOs
 
 	router    *mux.Router
+	autoIDF   *bool
 	IDFIgnore []string
 
 	enableOutputLogs bool
@@ -54,8 +55,11 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		return nil, err
 	}
 
+	autoIDF := true
+
 	ctx := context.Background()
 	gkillDAOManager := &GkillDAOManager{
+		autoIDF:                  &autoIDF,
 		router:                   &mux.Router{},
 		IDFIgnore:                gkill_options.IDFIgnore,
 		fileRepWatchCacheUpdater: fileRepWatchCacheUpdater,
@@ -165,14 +169,14 @@ func (g *GkillDAOManager) GetRouter() *mux.Router {
 	return g.router
 }
 
-func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, device string) (*reps.GkillRepositories, error) {
+func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.GkillRepositories, error) {
 	if userID == "" || device == "" {
 		err := fmt.Errorf("userID or device is blank. userID=%s device=%s", userID, device)
 		return nil, err
 	}
 
-	var err error
 	ctx := context.Background()
+	var err error
 
 	// nilだったら初期化する
 	if g.initializingMutex == nil {
@@ -235,13 +239,6 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 		}
 
 		for _, rep := range repositoriesDefine {
-			select {
-			case <-ctx.Done():
-				return nil, ctx.Err()
-			default:
-				break
-			}
-
 			if !rep.IsEnable {
 				continue
 			}
@@ -271,7 +268,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 
 				switch rep.Type {
 				case "kmemo":
-					kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB)
+					kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -309,7 +306,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 				case "kc":
-					kcRep, err := reps.NewKCRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB)
+					kcRep, err := reps.NewKCRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -347,7 +344,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 				case "urlog":
-					urlogRep, err := reps.NewURLogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB)
+					urlogRep, err := reps.NewURLogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -385,7 +382,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 				case "timeis":
-					timeisRep, err := reps.NewTimeIsRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB)
+					timeisRep, err := reps.NewTimeIsRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -423,7 +420,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 				case "mi":
-					miRep, err := reps.NewMiRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB)
+					miRep, err := reps.NewMiRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -461,7 +458,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 				case "nlog":
-					nlogRep, err := reps.NewNlogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB)
+					nlogRep, err := reps.NewNlogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -499,7 +496,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 				case "lantana":
-					lantanaRep, err := reps.NewLantanaRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB)
+					lantanaRep, err := reps.NewLantanaRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -537,7 +534,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 				case "tag":
-					tagRep, err := reps.NewTagRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB)
+					tagRep, err := reps.NewTagRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -576,7 +573,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 				case "text":
-					textRep, err := reps.NewTextRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB)
+					textRep, err := reps.NewTextRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -615,7 +612,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 				case "notification":
-					notificationRep, err := reps.NewNotificationRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB)
+					notificationRep, err := reps.NewNotificationRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
 					}
@@ -653,7 +650,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 				case "rekyou":
-					reKyouRep, err := reps.NewReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite || gkill_options.AlwaysConnectDB, repositories)
+					reKyouRep, err := reps.NewReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
 					if err != nil {
 						return nil, err
 					}
@@ -700,7 +697,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 					}
 
 					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
-					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
+					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, g.router, &autoIDF, &g.IDFIgnore, repositories)
 					if err != nil {
 						return nil, err
 					}
@@ -854,7 +851,7 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 			repositories.NotificationReps = []reps.NotificationRepository{cachedNotificationRep}
 		}
 		if *gkill_options.CacheReKyouReps {
-			rekyouRepositories := repositories.ReKyouReps
+			rekyouRepositories := reps.ReKyouRepositories{ReKyouRepositories: []reps.ReKyouRepository{&repositories.ReKyouReps}, GkillRepositories: repositories}
 			cachedReKyouRep, err := reps.NewReKyouRepositoryCachedSQLite3Impl(ctx, &rekyouRepositories, repositories, repositories.CacheMemoryDB, repositories.CacheMemoryDBMutex, userID+"_REKYOU")
 			if err != nil {
 				err = fmt.Errorf("error at new cached tag rep: %w", err)
@@ -903,15 +900,13 @@ func (g *GkillDAOManager) GetRepositories(_ context.Context, userID string, devi
 		g.gkillRepositories[userID][device] = repositories
 		repositories = repositoriesInUser[device]
 
-		_, _ = g.GetNotificator(ctx, userID, device)
+		_, _ = g.GetNotificator(userID, device)
 	}
 
 	return repositories, nil
 }
 
-func (g *GkillDAOManager) GetNotificator(_ context.Context, userID string, device string) (*GkillNotificator, error) {
-	ctx := context.Background()
-
+func (g *GkillDAOManager) GetNotificator(userID string, device string) (*GkillNotificator, error) {
 	// nilだったら初期化する
 	if g.gkillNotificators == nil {
 		g.gkillNotificators = map[string]map[string]*GkillNotificator{}
@@ -927,13 +922,13 @@ func (g *GkillDAOManager) GetNotificator(_ context.Context, userID string, devic
 	notificator, existNotificatorsInDevice := notificatorInUser[device]
 	if !existNotificatorsInDevice {
 		// Notificatorの初期化
-		gkillRepositories, err := g.GetRepositories(ctx, userID, device)
+		gkillRepositories, err := g.GetRepositories(userID, device)
 		if err != nil {
 			err = fmt.Errorf("error at get repositories in get notificator: %w", err)
 			return nil, err
 		}
 
-		gkillNotificator, err := NewGkillNotificator(ctx, g, gkillRepositories)
+		gkillNotificator, err := NewGkillNotificator(context.Background(), g, gkillRepositories)
 		if err != nil {
 			err = fmt.Errorf("error at new gkill notificator: %w", err)
 			return nil, err
@@ -1022,6 +1017,7 @@ func (g *GkillDAOManager) Close() error {
 
 	g.ConfigDAOs = nil
 	g.router = nil
+	g.autoIDF = nil
 	g.IDFIgnore = []string{}
 
 	if g.enableOutputLogs {
@@ -1055,7 +1051,7 @@ func (g *GkillDAOManager) SetSkipIDF(skip bool) {
 
 func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (bool, error) {
 	var err error
-	ctx := context.Background()
+	ctx := context.TODO()
 
 	repsInDevices, exist := g.gkillRepositories[userID]
 	if !exist {

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
@@ -177,7 +176,7 @@ loop:
 				continue loop
 			}
 			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
+				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
 					matchKyou = matchKyouInRep
 				}
 			} else {
@@ -198,11 +197,9 @@ func (r Repositories) UpdateCache(ctx context.Context) error {
 	errch := make(chan error, len(r))
 	defer close(errch)
 
-	// UpdateCacheは並列処理しない
+	// UpdateCache並列処理
 	for _, rep := range r {
 		func(rep Repository) {
-			repName, _ := rep.GetRepName(ctx)
-			println(repName) //TODO
 			err = rep.UpdateCache(ctx)
 			if err != nil {
 				errch <- err
@@ -435,20 +432,4 @@ func (r Repositories) UnWrap() ([]Repository, error) {
 		repositories = append(repositories, unwraped...)
 	}
 	return repositories, nil
-}
-
-func (r Repositories) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	// 並列処理はしない（入れ子になってスレッドプール枯渇の可能性があるため）
-	latestDataRepositoryAddresses := []*gkill_cache.LatestDataRepositoryAddress{}
-	for _, rep := range r {
-		rep := rep
-		repName, _ := rep.GetRepName(ctx)
-		println(repName) //TODO
-		latestDataRepositoryAddressInRep, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
-		if err != nil {
-			return nil, err
-		}
-		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddressInRep...)
-	}
-	return latestDataRepositoryAddresses, nil
 }

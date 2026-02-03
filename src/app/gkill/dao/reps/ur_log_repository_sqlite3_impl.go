@@ -10,7 +10,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 )
@@ -76,23 +75,6 @@ CREATE TABLE IF NOT EXISTS "URLOG" (
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create URLOG index to %s: %w", filename, err)
-		return nil, err
-	}
-
-	dbName := "URLOG"
-	latestIndexSQL := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS INDEX_FOR_LATEST_DATA_REPOSITORY_ADDRESS ON %s(ID, UPDATE_TIME);`, dbName)
-	gkill_log.TraceSQL.Printf("sql: %s", latestIndexSQL)
-	latestIndexStmt, err := db.PrepareContext(ctx, latestIndexSQL)
-	if err != nil {
-		err = fmt.Errorf("error at create index for latest data repository address at %s index statement %s: %w", dbName, filename, err)
-		return nil, err
-	}
-	defer latestIndexStmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s", latestIndexSQL)
-	_, err = latestIndexStmt.ExecContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at create %s index for latest data repository address to %s: %w", dbName, filename, err)
 		return nil, err
 	}
 
@@ -868,103 +850,4 @@ func (u *urlogRepositorySQLite3Impl) UnWrapTyped() ([]URLogRepository, error) {
 
 func (u *urlogRepositorySQLite3Impl) UnWrap() ([]Repository, error) {
 	return []Repository{u}, nil
-}
-
-func (u *urlogRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	dbName := "URLOG"
-	var err error
-	var db *sql.DB
-	if u.fullConnect {
-		db = u.db
-	} else {
-		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, u.filename)
-		if err != nil {
-			return nil, err
-		}
-		defer db.Close()
-	}
-
-	// update_cacheであればキャッシュを更新する
-	if updateCache {
-		err = u.UpdateCache(ctx)
-		if err != nil {
-			repName, _ := u.GetRepName(ctx)
-			err = fmt.Errorf("error at update cache %s: %w", repName, err)
-			return nil, err
-		}
-	}
-
-	sql := fmt.Sprintf(`
-SELECT
-  tbl.IS_DELETED,
-  tbl.ID AS TARGET_ID,
-  NULL AS TARGET_ID_IN_DATA,
-  ? AS LATEST_DATA_REPOSITORY_NAME,
-  tbl.UPDATE_TIME AS DATA_UPDATE_TIME
-FROM %s tbl
-INNER JOIN (
-  SELECT ID, MAX(UPDATE_TIME) AS UPDATE_TIME
-  FROM %s
-  GROUP BY ID
-) joined
-ON joined.ID = tbl.ID AND joined.UPDATE_TIME = tbl.UPDATE_TIME;
-`,
-		dbName, dbName)
-
-	repName, err := u.GetRepName(ctx)
-	if err != nil {
-		err = fmt.Errorf("error at get rep name at %s : %w", u.filename, err)
-		return nil, err
-	}
-
-	queryArgs := []interface{}{
-		repName,
-	}
-
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
-	stmt, err := db.PrepareContext(ctx, sql)
-	if err != nil {
-		err = fmt.Errorf("error at get latest data repository address sql: %w", err)
-		return nil, err
-	}
-	defer stmt.Close()
-
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
-	rows, err := stmt.QueryContext(ctx, queryArgs...)
-	if err != nil {
-		err = fmt.Errorf("error at select from latest data repository address at %s: %w", repName, err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	latestDataRepositoryAddresses := []*gkill_cache.LatestDataRepositoryAddress{}
-	for rows.Next() {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-			latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{}
-			dataUpdateTimeStr := ""
-
-			err = rows.Scan(
-				&latestDataRepositoryAddress.IsDeleted,
-				&latestDataRepositoryAddress.TargetID,
-				&latestDataRepositoryAddress.TargetIDInData,
-				&latestDataRepositoryAddress.LatestDataRepositoryName,
-				&dataUpdateTimeStr,
-			)
-			if err != nil {
-				err = fmt.Errorf("error at scan latest data repository address at %s: %w", repName, err)
-				return nil, err
-			}
-			latestDataRepositoryAddress.DataUpdateTime, err = time.Parse(sqlite3impl.TimeLayout, dataUpdateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse data update time %s in %s: %w", dataUpdateTimeStr, repName, err)
-				return nil, err
-			}
-
-			latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
-		}
-	}
-	return latestDataRepositoryAddresses, nil
 }
