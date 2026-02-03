@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (n *nlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	n.m.Lock()
-	n.m.Unlock()
+	defer n.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -239,7 +239,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string
 
 func (n *nlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	n.m.Lock()
-	n.m.Unlock()
+	defer n.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -638,7 +638,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetNlog(ctx context.Context, id string
 
 func (n *nlogRepositoryCachedSQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
 	n.m.Lock()
-	n.m.Unlock()
+	defer n.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -829,6 +829,15 @@ func (n *nlogRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 }
 
 func (n *nlogRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	defer n.UpdateCache(ctx)
-	return n.nlogRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	latestData, err := n.nlogRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	if err != nil {
+		return nil, err
+	}
+	if updateCache {
+		err = n.UpdateCache(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return latestData, nil
 }

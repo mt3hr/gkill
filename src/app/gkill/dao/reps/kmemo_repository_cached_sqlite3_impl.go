@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 
 func (k *kmemoRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	k.m.Lock()
-	k.m.Unlock()
+	defer k.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -226,7 +226,7 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id strin
 
 func (k *kmemoRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	k.m.Lock()
-	k.m.Unlock()
+	defer k.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -617,7 +617,7 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemo(ctx context.Context, id stri
 
 func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
 	k.m.Lock()
-	k.m.Unlock()
+	defer k.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -795,6 +795,15 @@ func (k *kmemoRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	defer k.UpdateCache(ctx)
-	return k.kmemoRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	latestData, err := k.kmemoRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	if err != nil {
+		return nil, err
+	}
+	if updateCache {
+		err = k.UpdateCache(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return latestData, nil
 }

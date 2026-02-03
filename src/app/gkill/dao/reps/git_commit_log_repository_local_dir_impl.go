@@ -563,8 +563,7 @@ func (g *gitCommitLogRepositoryLocalImpl) GetLatestDataRepositoryAddress(ctx con
 
 	logs, err := g.gitrep.Log(&git.LogOptions{All: true})
 	if err != nil {
-		return nil, nil
-		// return err
+		return nil, err
 	}
 	defer logs.Close()
 
@@ -575,7 +574,7 @@ func (g *gitCommitLogRepositoryLocalImpl) GetLatestDataRepositoryAddress(ctx con
 		}
 		select {
 		case <-ctx.Done():
-			return nil, nil
+			return nil, ctx.Err()
 		default:
 			latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{
 				IsDeleted:                false,

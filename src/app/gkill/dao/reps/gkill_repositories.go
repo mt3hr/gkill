@@ -22,6 +22,15 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/threads"
 )
 
+var (
+	// 全体で1つだけ起動されるように考慮。
+	updateCacheThreadPool = make(chan interface{}, 1)
+)
+
+func init() {
+	updateCacheThreadPool <- struct{}{}
+}
+
 type GkillRepositories struct {
 	userID string
 
@@ -145,16 +154,18 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		CacheMemoryDBMutex = &sync.Mutex{}
 		TempMemoryDBMutex = &sync.Mutex{}
 	} else {
-		TempMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_temp_"+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
+		TempMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_temp"+".db?_busy_timeout=6000&_txlock=immediate&_synchronous=NORMAL&_journal_mode=WAL")))
 		if err != nil {
 			err = fmt.Errorf("error at open database: %w", err)
 			return nil, err
 		}
-		CacheMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_cache_"+".db?_timeout=6000&_synchronous=2&_journal=WAL")))
+		CacheMemoryDB, err = sql.Open("sqlite3", os.ExpandEnv(filepath.Join(gkill_options.CacheDir, userID+"_cache"+".db?_busy_timeout=6000&_txlock=immediate&_synchronous=NORMAL&_journal_mode=WAL")))
 		if err != nil {
 			err = fmt.Errorf("error at open database: %w", err)
 			return nil, err
 		}
+		TempMemoryDB.SetMaxOpenConns(1)
+		CacheMemoryDB.SetMaxOpenConns(1)
 
 		CacheMemoryDBMutex = &sync.Mutex{}
 		TempMemoryDBMutex = &sync.Mutex{}
@@ -420,7 +431,7 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 	// Kyou集約。UpdateTimeが最新のものを収める
 	for _, matchKyouInRep := range matchKyousInRep {
 		if matchKyou != nil {
-			if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
+			if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
 				matchKyou = matchKyouInRep
 			}
 		} else {
@@ -431,20 +442,21 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 }
 
 func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
-	var err error
+	<-updateCacheThreadPool
+	defer func() { updateCacheThreadPool <- struct{}{} }()
 
-	// もし実行中だったら、次に実行予約を入れてそのまま返す。
+	// ここは「キャンセルの差し替え」だけをロックして短く終わらせる
 	g.updateCacheMutex.Lock()
-	defer g.updateCacheMutex.Unlock()
 	g.cancelPreFunc()
 	ctx, cancelFunc := context.WithCancel(ctx)
 	g.cancelPreFunc = cancelFunc
+	g.updateCacheMutex.Unlock()
 
-	allLatestDataRepositoryAddresses := map[string]*gkill_cache.LatestDataRepositoryAddress{}
-
-	// UpdateCache並列処理
+	// UpdateCache対象（現状版と同じグルーピング）
 	updateCacheTargets := []interface {
 		GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error)
+		GetRepName(ctx context.Context) (string, error)
+		UpdateCache(ctx context.Context) error
 	}{
 		g.Reps,
 		g.TagReps,
@@ -452,50 +464,67 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 		g.NotificationReps,
 	}
 
+	// 1) 先に各repのUpdateCacheだけ実行（並列）
+	{
+		wg := &sync.WaitGroup{}
+		errCh := make(chan error, len(updateCacheTargets))
+		defer close(errCh)
+
+		for _, t := range updateCacheTargets {
+			t := t
+			_ = threads.Go(ctx, wg, func() {
+				if err := t.UpdateCache(ctx); err != nil {
+					errCh <- err
+				}
+			})
+		}
+		wg.Wait()
+
+		select {
+		case err := <-errCh:
+			return err
+		default:
+		}
+	}
+
+	// 2) 最新アドレスは “読むだけ” にする（updateCache=false）
 	now := time.Now()
-	for _, rep := range updateCacheTargets {
+	allLatest := map[string]*gkill_cache.LatestDataRepositoryAddress{}
+
+	for _, t := range updateCacheTargets {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
-			break
 		}
-		latestDataRepositoryAddressInRep, err := rep.GetLatestDataRepositoryAddress(ctx, true)
+
+		latestInRep, err := t.GetLatestDataRepositoryAddress(ctx, false)
 		if err != nil {
 			return err
 		}
-		for _, latestDataRepositoryAddress := range latestDataRepositoryAddressInRep {
-			if _, exist := allLatestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID]; !exist || allLatestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID].DataUpdateTime.Before(latestDataRepositoryAddress.DataUpdateTime) {
-				latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime = now
-				allLatestDataRepositoryAddresses[latestDataRepositoryAddress.TargetID] = latestDataRepositoryAddress
+		for _, addr := range latestInRep {
+			exist, ok := allLatest[addr.TargetID]
+			if !ok || exist.DataUpdateTime.Before(addr.DataUpdateTime) {
+				addr.LatestDataRepositoryAddressUpdatedTime = now
+				allLatest[addr.TargetID] = addr
 			}
 		}
 	}
 
-	latestDataRepositoryAddresses := make([]*gkill_cache.LatestDataRepositoryAddress, 0, len(allLatestDataRepositoryAddresses))
-	for _, latestDataRepositoryAddress := range allLatestDataRepositoryAddresses {
-		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
+	latestList := make([]*gkill_cache.LatestDataRepositoryAddress, 0, len(allLatest))
+	for _, v := range allLatest {
+		latestList = append(latestList, v)
 	}
 
-	updatedLatestDataRepositoryAddresses, err := g.LatestDataRepositoryAddressDAO.ExtructUpdatedLatestDataRepositoryAddressDatas(ctx, latestDataRepositoryAddresses)
+	// 3) DAO更新（現状版の続きと同じ処理をここに残す）
+	updatedLatest, err := g.LatestDataRepositoryAddressDAO.ExtructUpdatedLatestDataRepositoryAddressDatas(ctx, latestList)
 	if err != nil {
-		err = fmt.Errorf("error at update latest data repository address cache data: %w", err)
+		return err
+	}
+	if _, err := g.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, updatedLatest); err != nil {
 		return err
 	}
 
-	if g.LatestDataRepositoryAddresses == nil {
-		g.LatestDataRepositoryAddresses = map[string]*gkill_cache.LatestDataRepositoryAddress{}
-	}
-	for _, updatedLatestDataRepositoryAddress := range updatedLatestDataRepositoryAddresses {
-		g.LatestDataRepositoryAddresses[updatedLatestDataRepositoryAddress.TargetID] = updatedLatestDataRepositoryAddress
-	}
-
-	_, err = g.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddresses(ctx, updatedLatestDataRepositoryAddresses)
-	if err != nil {
-		err = fmt.Errorf("error at update latest data repository address cache data: %w", err)
-		return err
-	}
-	g.LastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
 	return nil
 }
 
@@ -774,7 +803,7 @@ loop:
 				continue loop
 			}
 			if matchTag != nil {
-				if matchTagInRep.UpdateTime.Before(matchTag.UpdateTime) {
+				if matchTagInRep.UpdateTime.After(matchTag.UpdateTime) {
 					matchTag = matchTagInRep
 				}
 			} else {
@@ -1215,7 +1244,7 @@ loop:
 				continue loop
 			}
 			if matchText != nil {
-				if matchTextInRep.UpdateTime.Before(matchText.UpdateTime) {
+				if matchTextInRep.UpdateTime.After(matchText.UpdateTime) {
 					matchText = matchTextInRep
 				}
 			} else {
@@ -1278,7 +1307,7 @@ loop:
 				continue loop
 			}
 			if matchNotification != nil {
-				if matchNotificationInRep.UpdateTime.Before(matchNotification.UpdateTime) {
+				if matchNotificationInRep.UpdateTime.After(matchNotification.UpdateTime) {
 					matchNotification = matchNotificationInRep
 				}
 			} else {

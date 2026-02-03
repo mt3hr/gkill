@@ -78,6 +78,23 @@ CREATE TABLE IF NOT EXISTS "MI" (
 		return nil, err
 	}
 
+	dbName := "MI"
+	latestIndexSQL := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS INDEX_FOR_LATEST_DATA_REPOSITORY_ADDRESS ON %s(ID, UPDATE_TIME);`, dbName)
+	gkill_log.TraceSQL.Printf("sql: %s", latestIndexSQL)
+	latestIndexStmt, err := db.PrepareContext(ctx, latestIndexSQL)
+	if err != nil {
+		err = fmt.Errorf("error at create index for latest data repository address at %s index statement %s: %w", dbName, filename, err)
+		return nil, err
+	}
+	defer latestIndexStmt.Close()
+
+	gkill_log.TraceSQL.Printf("sql: %s", latestIndexSQL)
+	_, err = latestIndexStmt.ExecContext(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at create %s index for latest data repository address to %s: %w", dbName, filename, err)
+		return nil, err
+	}
+
 	if !fullConnect {
 		err = db.Close()
 		if err != nil {
@@ -1905,17 +1922,21 @@ func (m *miRepositorySQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Con
 	}
 
 	sql := fmt.Sprintf(`
-SELECT 
-  IS_DELETED,
-  ID AS TARGET_ID,
+SELECT
+  tbl.IS_DELETED,
+  tbl.ID AS TARGET_ID,
   NULL AS TARGET_ID_IN_DATA,
   ? AS LATEST_DATA_REPOSITORY_NAME,
-  UPDATE_TIME AS DATA_UPDATE_TIME
-FROM %s
-WHERE
-UPDATE_TIME = ( SELECT MAX(UPDATE_TIME) FROM %s AS INNER_TABLE WHERE ID = %s.ID )
+  tbl.UPDATE_TIME AS DATA_UPDATE_TIME
+FROM %s tbl
+INNER JOIN (
+  SELECT ID, MAX(UPDATE_TIME) AS UPDATE_TIME
+  FROM %s
+  GROUP BY ID
+) joined
+ON joined.ID = tbl.ID AND joined.UPDATE_TIME = tbl.UPDATE_TIME;
 `,
-		dbName, dbName, dbName)
+		dbName, dbName)
 
 	repName, err := m.GetRepName(ctx)
 	if err != nil {

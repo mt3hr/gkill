@@ -177,7 +177,7 @@ loop:
 				continue loop
 			}
 			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
+				if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
 					matchKyou = matchKyouInRep
 				}
 			} else {
@@ -198,9 +198,11 @@ func (r Repositories) UpdateCache(ctx context.Context) error {
 	errch := make(chan error, len(r))
 	defer close(errch)
 
-	// UpdateCache並列処理
+	// UpdateCacheは並列処理しない
 	for _, rep := range r {
 		func(rep Repository) {
+			repName, _ := rep.GetRepName(ctx)
+			println(repName) //TODO
 			err = rep.UpdateCache(ctx)
 			if err != nil {
 				errch <- err
@@ -439,6 +441,9 @@ func (r Repositories) GetLatestDataRepositoryAddress(ctx context.Context, update
 	// 並列処理はしない（入れ子になってスレッドプール枯渇の可能性があるため）
 	latestDataRepositoryAddresses := []*gkill_cache.LatestDataRepositoryAddress{}
 	for _, rep := range r {
+		rep := rep
+		repName, _ := rep.GetRepName(ctx)
+		println(repName) //TODO
 		latestDataRepositoryAddressInRep, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
 		if err != nil {
 			return nil, err

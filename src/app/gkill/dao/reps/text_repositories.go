@@ -187,7 +187,7 @@ loop:
 				continue loop
 			}
 			if matchText != nil {
-				if matchTextInRep.UpdateTime.Before(matchText.UpdateTime) {
+				if matchTextInRep.UpdateTime.After(matchText.UpdateTime) {
 					matchText = matchTextInRep
 				}
 			} else {
@@ -541,6 +541,7 @@ func (t TextRepositories) GetLatestDataRepositoryAddress(ctx context.Context, up
 
 	// 並列処理
 	for _, rep := range t {
+		rep := rep
 		_ = threads.Go(ctx, wg, func() {
 			func(rep TextRepository) {
 				latestDataRepositoryAddresses, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
