@@ -9,7 +9,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -139,7 +138,7 @@ ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 }
 func (t *tagRepositoryCachedSQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -594,7 +593,7 @@ func (t *tagRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string
 
 func (t *tagRepositoryCachedSQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	sql := `
@@ -773,7 +772,7 @@ INSERT INTO ` + t.dbName + ` (
 
 func (t *tagRepositoryCachedSQLite3Impl) GetAllTagNames(ctx context.Context) ([]string, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	sql := `
@@ -829,7 +828,7 @@ FROM ` + t.dbName + `
 
 func (t *tagRepositoryCachedSQLite3Impl) GetAllTags(ctx context.Context) ([]*Tag, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	sql := `
@@ -935,18 +934,4 @@ WHERE
 
 func (t *tagRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TagRepository, error) {
 	return []TagRepository{t.tagRep}, nil
-}
-
-func (t *tagRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	latestData, err := t.tagRep.GetLatestDataRepositoryAddress(ctx, updateCache)
-	if err != nil {
-		return nil, err
-	}
-	if updateCache {
-		err = t.UpdateCache(ctx)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return latestData, nil
 }

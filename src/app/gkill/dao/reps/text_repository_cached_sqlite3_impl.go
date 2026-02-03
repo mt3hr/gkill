@@ -9,7 +9,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -155,7 +154,7 @@ ORDER BY TEXT1.UPDATE_TIME_UNIX DESC
 }
 func (t *textRepositoryCachedSQLite3Impl) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	if query.UseWords != nil && *query.UseWords {
@@ -516,7 +515,7 @@ func (t *textRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (strin
 
 func (t *textRepositoryCachedSQLite3Impl) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	sql := `
@@ -696,18 +695,4 @@ INSERT INTO ` + t.dbName + ` (
 
 func (m *textRepositoryCachedSQLite3Impl) UnWrapTyped() ([]TextRepository, error) {
 	return []TextRepository{m.textRep}, nil
-}
-
-func (t *textRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	latestData, err := t.textRep.GetLatestDataRepositoryAddress(ctx, updateCache)
-	if err != nil {
-		return nil, err
-	}
-	if updateCache {
-		err = t.UpdateCache(ctx)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return latestData, nil
 }
