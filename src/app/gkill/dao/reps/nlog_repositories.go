@@ -132,7 +132,7 @@ loop:
 				continue loop
 			}
 			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
+				if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
 					matchKyou = matchKyouInRep
 				}
 			} else {
@@ -460,7 +460,7 @@ loop:
 				continue loop
 			}
 			if matchNlog != nil {
-				if matchNlogInRep.UpdateTime.Before(matchNlog.UpdateTime) {
+				if matchNlogInRep.UpdateTime.After(matchNlog.UpdateTime) {
 					matchNlog = matchNlogInRep
 				}
 			} else {
@@ -680,6 +680,7 @@ func (n NlogRepositories) GetLatestDataRepositoryAddress(ctx context.Context, up
 
 	// 並列処理
 	for _, rep := range n {
+		rep := rep
 		_ = threads.Go(ctx, wg, func() {
 			func(rep NlogRepository) {
 				latestDataRepositoryAddresses, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)

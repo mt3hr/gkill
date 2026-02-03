@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -290,7 +290,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id stri
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
@@ -556,7 +556,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 
 func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -738,7 +738,7 @@ FROM ` + t.dbName + `
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	// 最新のデータを返す
 	timeisHistories, err := t.GetTimeIsHistories(ctx, id)
 	if err != nil {
@@ -766,7 +766,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id st
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	sql := `
@@ -976,6 +976,15 @@ func (t *timeIsRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 }
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	defer t.UpdateCache(ctx)
-	return t.timeisRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	latestData, err := t.timeisRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	if err != nil {
+		return nil, err
+	}
+	if updateCache {
+		err = t.UpdateCache(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return latestData, nil
 }

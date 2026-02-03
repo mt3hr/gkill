@@ -619,6 +619,7 @@ func (t NotificationRepositories) GetLatestDataRepositoryAddress(ctx context.Con
 
 	// 並列処理
 	for _, rep := range t {
+		rep := rep
 		_ = threads.Go(ctx, wg, func() {
 			func(rep NotificationRepository) {
 				latestDataRepositoryAddresses, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)

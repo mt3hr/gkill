@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (l *lantanaRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	l.m.Lock()
-	l.m.Unlock()
+	defer l.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -227,7 +227,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id str
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	l.m.Lock()
-	l.m.Unlock()
+	defer l.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -622,7 +622,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetLantana(ctx context.Context, id 
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
 	l.m.Lock()
-	l.m.Unlock()
+	defer l.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -802,7 +802,16 @@ func (l *lantanaRepositoryCachedSQLite3Impl) UnWrap() ([]Repository, error) {
 	return l.lantanaRep.UnWrap()
 }
 
-func (k *lantanaRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
-	defer k.UpdateCache(ctx)
-	return k.lantanaRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+func (l *lantanaRepositoryCachedSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, updateCache bool) ([]*gkill_cache.LatestDataRepositoryAddress, error) {
+	latestData, err := l.lantanaRep.GetLatestDataRepositoryAddress(ctx, updateCache)
+	if err != nil {
+		return nil, err
+	}
+	if updateCache {
+		err = l.UpdateCache(ctx)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return latestData, nil
 }

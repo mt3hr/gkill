@@ -440,7 +440,6 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 	}
 
 	dummyRouter := mux.NewRouter()
-	falseValue := false
 	idfIgnore := gkill_options.IDFIgnore
 	repositoriesRefDummy, err := reps.NewGkillRepositories(userName)
 	if err != nil {
@@ -457,7 +456,7 @@ func DataTransfer(srcKyouDir string, transferDestinationDir string, userName str
 			panic(err)
 		}
 
-		idfKyouRep, err := reps.NewIDFDirRep(context.Background(), filepath.Join(transferDestinationDir, idfKyou.RepName), filepath.Join(transferDestinationDir, idfKyou.RepName, ".gkill/gkill_id.db"), true, dummyRouter, &falseValue, &idfIgnore, repositoriesRefDummy)
+		idfKyouRep, err := reps.NewIDFDirRep(context.Background(), filepath.Join(transferDestinationDir, idfKyou.RepName), filepath.Join(transferDestinationDir, idfKyou.RepName, ".gkill/gkill_id.db"), true, dummyRouter, false, &idfIgnore, repositoriesRefDummy)
 		if err != nil {
 			panic(err)
 		}
