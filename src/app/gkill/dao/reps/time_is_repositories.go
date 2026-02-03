@@ -79,12 +79,12 @@ loop:
 					for i, existKyou := range matchKyous[key] {
 						if existKyou.DataType == "timeis_start" && kyou.DataType == "timeis_start" {
 							existStartTimeIs = true
-							if existKyou.UpdateTime.Before(kyou.UpdateTime) {
+							if existKyou.UpdateTime.After(kyou.UpdateTime) {
 								matchKyous[key][i] = kyou
 							}
 						} else if existKyou.DataType == "timeis_end" && kyou.DataType == "timeis_end" {
 							existEndTimeIs = true
-							if existKyou.UpdateTime.Before(kyou.UpdateTime) {
+							if existKyou.UpdateTime.After(kyou.UpdateTime) {
 								matchKyous[key][i] = kyou
 							}
 						}
@@ -168,7 +168,7 @@ loop:
 				continue loop
 			}
 			if matchKyou != nil {
-				if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
+				if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
 					matchKyou = matchKyouInRep
 				}
 			} else {
@@ -505,7 +505,7 @@ loop:
 				continue loop
 			}
 			if matchTimeIs != nil {
-				if matchTimeIsInRep.UpdateTime.Before(matchTimeIs.UpdateTime) {
+				if matchTimeIsInRep.UpdateTime.After(matchTimeIs.UpdateTime) {
 					matchTimeIs = matchTimeIsInRep
 				}
 			} else {
@@ -725,6 +725,7 @@ func (t TimeIsRepositories) GetLatestDataRepositoryAddress(ctx context.Context, 
 
 	// 並列処理
 	for _, rep := range t {
+		rep := rep
 		_ = threads.Go(ctx, wg, func() {
 			func(rep TimeIsRepository) {
 				latestDataRepositoryAddresses, err := rep.GetLatestDataRepositoryAddress(ctx, updateCache)
