@@ -1727,7 +1727,7 @@ func (f *FindFilter) filterImageKyous(ctx context.Context, findCtx *FindKyouCont
 
 	filterdImageKyous := map[string][]*reps.Kyou{}
 	for id, kyous := range findCtx.MatchKyousCurrent {
-		if kyous[0].IsImage {
+		if kyous[0].IsImage || kyous[0].IsVideo {
 			filterdImageKyous[id] = kyous
 		}
 	}
