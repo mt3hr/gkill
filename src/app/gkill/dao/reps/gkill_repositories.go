@@ -433,8 +433,12 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	var err error
 
+	// もし実行中だったら、次に実行予約を入れてそのまま返す。
+	if ok := g.updateCacheMutex.TryLock(); !ok {
+		g.UpdateCacheNextTick()
+		return nil
+	}
 	// 一個前でUpdateCacheしてるやつをキャンセルする
-	g.updateCacheMutex.Lock()
 	defer g.updateCacheMutex.Unlock()
 	g.cancelPreFunc()
 	ctx, cancelFunc := context.WithCancel(ctx)
@@ -453,6 +457,12 @@ func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 
 	now := time.Now()
 	for _, rep := range updateCacheTargets {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			break
+		}
 		latestDataRepositoryAddressInRep, err := rep.GetLatestDataRepositoryAddress(ctx, true)
 		if err != nil {
 			return err

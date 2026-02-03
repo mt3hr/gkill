@@ -416,7 +416,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 func (f *FindFilter) getRepositories(ctx context.Context, userID string, device string, gkillDAOManager *dao.GkillDAOManager, findCtx *FindKyouContext) ([]*message.GkillError, error) {
 	var err error
-	repositories, err := gkillDAOManager.GetRepositories(userID, device)
+	repositories, err := gkillDAOManager.GetRepositories(ctx, userID, device)
 	if err != nil {
 		err = fmt.Errorf("error at get repositories user id = %s device = %s: %w", userID, device, err)
 		return nil, err
