@@ -67,7 +67,7 @@ var (
 
 					if err != nil {
 						err = fmt.Errorf("error at get device name: %w", err)
-						slog.Log(cmd.Context(), gkill_log.Error, "error", err)
+						slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
 					}
 					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
 				}
@@ -135,7 +135,7 @@ var (
 				SkipSetup:          false,
 			})
 			if err != nil {
-				gkill_log.Info.Println("Electronが動かない環境であるかもしれません。その場合gkillは動きませんので変わりにgkill_serverを起動し、ブラウザからのアクセスを試みてください。")
+				fmt.Printf("Electronが動かない環境であるかもしれません。その場合gkillは動きませんので変わりにgkill_serverを起動し、ブラウザからのアクセスを試みてください。")
 				log.Fatal(err)
 			}
 			defer a.Close()

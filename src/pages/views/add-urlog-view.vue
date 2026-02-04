@@ -98,7 +98,6 @@ import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import { VDatePicker } from 'vuetify/components'
 import { VTimePicker } from 'vuetify/components'
 import delete_gkill_kyou_cache from '@/classes/delete-gkill-cache'
-import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
 
 const is_requested_submit = ref(false)
 

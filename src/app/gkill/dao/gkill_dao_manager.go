@@ -1035,7 +1035,7 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 		err = g.fileRepWatchCacheUpdater.RemoveWatchFileRep(filename, userID)
 		if err != nil {
 			err = fmt.Errorf("error at remove watch file rep. filename = %s userID = %s: %w", filename, userID, err)
-			slog.Log(ctx, gkill_log.Debug, "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 		}
 	}
 
@@ -1043,7 +1043,7 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 	err = reps.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close repositories: %w", err)
-		slog.Log(ctx, gkill_log.Debug, "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 	}
 	delete(g.gkillRepositories[userID], device)
 	delete(g.gkillRepositories, userID)

@@ -664,7 +664,7 @@ func (i IDFKyouRepositories) GenerateThumbCache(ctx context.Context) error {
 				err := unwrapedRep.GenerateThumbCache(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at generate thumb cache at idf kyou repositories in rep: %w", err)
-					slog.Log(ctx, gkill_log.Error, "error", err)
+					slog.Log(ctx, gkill_log.Error, "error", "error", err)
 				}
 			}(unwrapedRep)
 		})

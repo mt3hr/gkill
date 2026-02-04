@@ -256,8 +256,6 @@ import generate_get_plaing_timeis_kyous_query from '@/classes/api/generate-get-p
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 import { useDialogHistoryStack } from '@/classes/use-dialog-history-stack'
-import { GetApplicationConfigRequest } from '@/classes/api/req_res/get-application-config-request'
-import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 import { Tag } from '@/classes/datas/tag'
 
 const enable_context_menu = ref(true)

@@ -151,7 +151,7 @@ WHERE
 	tableName := "NLOG"
 	tableNameAlias := "NLOG"
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
@@ -489,7 +489,7 @@ WHERE
 		dataType,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false

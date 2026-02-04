@@ -16,7 +16,7 @@ import { computed, ref, type Ref } from 'vue';
 import type { KFTLTemplateStructContextMenuEmits } from './kftl_template-struct-context-menu-emits';
 import type { KFTLTemplateStructContextMenuProps } from './kftl_template-struct-context-menu-props';
 
-const props = defineProps<KFTLTemplateStructContextMenuProps>()
+defineProps<KFTLTemplateStructContextMenuProps>()
 const emits = defineEmits<KFTLTemplateStructContextMenuEmits>()
 defineExpose({ show, hide })
 

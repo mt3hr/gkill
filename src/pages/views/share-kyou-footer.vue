@@ -27,7 +27,6 @@
     </v-row>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import ManageShareButton from './manage-share-button.vue'
 import ShareButton from './share-button.vue'
 import type { ShareKyouFooterEmits } from './share-kyou-footer-emits'

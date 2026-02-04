@@ -281,7 +281,7 @@ INSERT INTO REPOSITORY (
 	defer insertStmt.Close()
 
 	for _, repository := range repositories {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", insertSQL)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
 
 		queryArgs := []interface{}{
 			repository.ID,
@@ -610,7 +610,7 @@ SELECT DEVICE FROM REPOSITORY WHERE USER_ID = ? GROUP BY DEVICE
 	selectDeviceQueryArgs := []interface{}{
 		userID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", selectDeviceSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectDeviceSQL)
 	stmt, err := tx.PrepareContext(ctx, selectDeviceSQL)
 	if err != nil {
 		return err
@@ -752,7 +752,7 @@ GROUP BY TYPE, DEVICE
 	}
 
 	for _, targetDevice := range devices {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", selectSQL)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSQL)
 
 		queryArgs := []interface{}{
 			userID,
@@ -778,7 +778,7 @@ GROUP BY TYPE, DEVICE
 					&count,
 				)
 				if err != nil {
-					slog.Log(ctx, gkill_log.Error, "error", err)
+					slog.Log(ctx, gkill_log.Error, "error", "error", err)
 					// err = fmt.Errorf("error at get use to write repository count: %w", err)
 					err = fmt.Errorf("書き込み先Rep1つに対してがプロファイルに対して1つとなるようにしてください。対象：「%s」「%s」「%d」", targetDevice, repType, count)
 					return err

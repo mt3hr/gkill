@@ -87,7 +87,7 @@ func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applica
 		err := u.fillFavicon()
 		if err != nil {
 			err = fmt.Errorf("failed to fill favicon: %w", err)
-			slog.Log(ctx, gkill_log.Debug, "error", err)
+			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 		}
 	}
 
@@ -96,14 +96,14 @@ func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applica
 	body, err := getBody(u.URL, serverConfig.URLogTimeout, serverConfig.URLogUserAgent, enableProxy, proxyURL)
 	if err != nil {
 		err = fmt.Errorf("failed to get body: %w", err)
-		slog.Log(ctx, gkill_log.Debug, "error", err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 	} else {
 		// title
 		if u.Title == "" {
 			err := u.fillTitle(body)
 			if err != nil {
 				err = fmt.Errorf("failed to fill title to urlog.: %w", err)
-				slog.Log(ctx, gkill_log.Debug, "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 			}
 		}
 
@@ -112,7 +112,7 @@ func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applica
 			err := u.fillDescription(body)
 			if err != nil {
 				err = fmt.Errorf("failed to fill description to urlog.: %w", err)
-				slog.Log(ctx, gkill_log.Debug, "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 			}
 		}
 
@@ -121,7 +121,7 @@ func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applica
 			err := u.fillImage(body)
 			if err != nil {
 				err = fmt.Errorf("failed to fill image to urlog.: %w", err)
-				slog.Log(ctx, gkill_log.Debug, "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 			}
 		}
 	}

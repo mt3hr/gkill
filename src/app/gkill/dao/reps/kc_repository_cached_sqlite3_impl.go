@@ -3,7 +3,6 @@ package reps
 import (
 	"context"
 	"database/sql"
-	sqllib "database/sql"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -21,7 +20,7 @@ import (
 type kcRepositoryCachedSQLite3Impl struct {
 	dbName   string
 	kcRep    KCRepository
-	cachedDB *sqllib.DB
+	cachedDB *sql.DB
 	m        *sync.Mutex
 }
 
@@ -63,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create KC index unix statement %s: %w", dbName, err)
@@ -71,7 +70,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create KC IDF index unix to %s: %w", dbName, err)
@@ -88,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 
 func (k *kcRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	k.m.Lock()
-	k.m.Unlock()
+	defer k.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -127,7 +126,7 @@ WHERE
 	tableName := k.dbName
 	tableNameAlias := k.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -230,7 +229,7 @@ func (k *kcRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 
 func (k *kcRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	k.m.Lock()
-	k.m.Unlock()
+	defer k.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -624,7 +623,7 @@ func (k *kcRepositoryCachedSQLite3Impl) GetKC(ctx context.Context, id string, up
 
 func (k *kcRepositoryCachedSQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
 	k.m.Lock()
-	k.m.Unlock()
+	defer k.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -660,7 +659,7 @@ WHERE
 	tableName := k.dbName
 	tableNameAlias := k.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false

@@ -54,7 +54,7 @@ func (l *latestRepositoryAddressCacheUpdater) UpdateCache(ctx context.Context) e
 			if err != nil {
 				repName, _ := l.repository.GetRepName(ctx)
 				err = fmt.Errorf("error at update rep. repname = %s: %w", repName, err)
-				slog.Log(ctx, gkill_log.Error, "error", err)
+				slog.Log(ctx, gkill_log.Error, "error", "error", err)
 				return
 			}
 		}

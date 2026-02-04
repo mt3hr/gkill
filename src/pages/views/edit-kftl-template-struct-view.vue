@@ -74,7 +74,6 @@ import AddNewKFTLTemplateStructElementDialog from '../dialogs/add-new-kftl-templ
 import EditKFTLTemplateStructElementDialog from '../dialogs/edit-kftl-template-struct-element-dialog.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import FoldableStruct from './foldable-struct.vue'
-import type { FoldableStructModel } from './foldable-struct-model'
 import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
 import { KFTLTemplateStructElementData } from '@/classes/datas/config/kftl-template-struct-element-data'
 
