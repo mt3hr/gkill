@@ -21,6 +21,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mattn/go-zglob"
 	"github.com/mt3hr/gkill/src/app/gkill/api"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/hide_files"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	dvnf_cmd "github.com/mt3hr/gkill/src/app/gkill/dvnf/cmd"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
@@ -63,6 +64,7 @@ var (
 						fmt.Printf("skip idf: %s\n", filename)
 						continue
 					}
+					hide_files.HideFolder(parentDir)
 					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
 					idfKyouRep, err := reps.NewIDFDirRep(context.TODO(), filename, idDBFilename, true, router, autoIDF, &idfIgnore, nil)
 					if err != nil {
