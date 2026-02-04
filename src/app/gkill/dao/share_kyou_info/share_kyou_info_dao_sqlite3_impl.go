@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -34,7 +35,7 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO" (
   FIND_QUERY_JSON NOT NULL,
   VIEW_TYPE NOT NULL
 );`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO table statement %s: %w", filename, err)
@@ -42,7 +43,7 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO" (
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO table to %s: %w", filename, err)
@@ -56,7 +57,7 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO_OPTIONS" (
   VALUE NOT NULL,
   PRIMARY KEY (SHARE_ID, KEY)
 );`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err = db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO_OPTIONS table statement %s: %w", filename, err)
@@ -64,7 +65,7 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO_OPTIONS" (
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO_OPTIONS table to %s: %w", filename, err)
@@ -165,7 +166,7 @@ FROM SHARE_KYOU_INFO
 		shareKyouInfoDefaultValue["IS_SHARE_WITH_LOCATIONS"],
 	)
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all kyou share infos sql: %w", err)
@@ -173,7 +174,7 @@ FROM SHARE_KYOU_INFO
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -292,7 +293,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		shareKyouInfoDefaultValue["IS_SHARE_WITH_LOCATIONS"],
 	)
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get kyou share infos sql: %w", err)
@@ -304,7 +305,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	gkill_log.TraceSQL.Printf("%#v", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "%#v", queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -423,7 +424,7 @@ WHERE SHARE_ID = ?
 		shareKyouInfoDefaultValue["IS_SHARE_WITH_LOCATIONS"],
 	)
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get kyou share infos sql: %w", err)
@@ -434,7 +435,7 @@ WHERE SHARE_ID = ?
 	queryArgs := []interface{}{
 		sharedID,
 	}
-	gkill_log.TraceSQL.Printf("%#v", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "%#v", queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -502,7 +503,7 @@ INSERT INTO SHARE_KYOU_INFO (
 		return false, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add kyou share info sql: %w", err)
@@ -519,7 +520,7 @@ INSERT INTO SHARE_KYOU_INFO (
 		kyouShareInfo.FindQueryJSON,
 		kyouShareInfo.ViewType,
 	}
-	gkill_log.TraceSQL.Printf("%#v", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "%#v", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -558,13 +559,13 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	defer optionsStmt.Close()
 
 	for key, value := range insertValuesMap {
-		gkill_log.TraceSQL.Printf("sql: %s", optionsSQL)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", optionsSQL)
 		queryArgs := []interface{}{
 			kyouShareInfo.ShareID,
 			key,
 			value,
 		}
-		gkill_log.TraceSQL.Printf("sql: %s query: %#v", optionsSQL, queryArgs)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", optionsSQL, queryArgs)
 		_, err = optionsStmt.ExecContext(ctx, queryArgs...)
 		if err != nil {
 			err = fmt.Errorf("error at add share kyou info options sql: %w", err)
@@ -606,7 +607,7 @@ WHERE SHARE_ID = ?
 		return false, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update kyou share info sql: %w", err)
@@ -623,7 +624,7 @@ WHERE SHARE_ID = ?
 		kyouShareInfo.ViewType,
 		kyouShareInfo.ShareID,
 	}
-	gkill_log.TraceSQL.Printf("%#v", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "%#v", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -699,12 +700,12 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 
 	// レコード自体が存在しなかったらいれる
 	for key, value := range insertValuesMap {
-		gkill_log.TraceSQL.Printf("sql: %s", sql)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 		queryArgs := []interface{}{
 			kyouShareInfo.ShareID,
 			key,
 		}
-		gkill_log.TraceSQL.Printf("sql: %s query: %#v", checkExistSQL, queryArgs)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", checkExistSQL, queryArgs)
 		row := checkExistStmt.QueryRowContext(ctx, queryArgs...)
 		err = row.Err()
 		if err != nil {
@@ -727,13 +728,13 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 			return false, err
 		}
 		if recordCount == 0 {
-			gkill_log.TraceSQL.Printf("sql: %s", insertSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", insertSQL)
 			queryArgs := []interface{}{
 				kyouShareInfo.ShareID,
 				key,
 				value,
 			}
-			gkill_log.TraceSQL.Printf("sql: %s query: %#v", insertSQL, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -746,13 +747,13 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 				return false, err
 			}
 		} else {
-			gkill_log.TraceSQL.Printf("sql: %s", updateOptionsSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", updateOptionsSQL)
 			queryArgs := []interface{}{
 				value,
 				kyouShareInfo.ShareID,
 				key,
 			}
-			gkill_log.TraceSQL.Printf("sql: %s query: %#v", updateOptionsSQL, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", updateOptionsSQL, queryArgs)
 			_, err = updateOptionStmt.ExecContext(ctx, queryArgs...)
 
 			if err != nil {
@@ -768,7 +769,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	}
 
 	// 更新する
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	queryArgs = []interface{}{
 		kyouShareInfo.ID,
 		kyouShareInfo.UserID,
@@ -778,7 +779,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 		kyouShareInfo.ViewType,
 		kyouShareInfo.ShareID,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at update share kyou info options sql: %w", err)
@@ -813,7 +814,7 @@ WHERE SHARE_ID = ?
 		return false, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete kyou share info sql: %w", err)
@@ -824,7 +825,7 @@ WHERE SHARE_ID = ?
 	queryArgs := []interface{}{
 		shareID,
 	}
-	gkill_log.TraceSQL.Printf("%#v", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "%#v", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -835,7 +836,7 @@ WHERE SHARE_ID = ?
 DELETE FROM SHARE_KYOU_INFO_OPTIONS
 WHERE SHARE_ID = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", optionsSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", optionsSQL)
 	stmt, err = tx.PrepareContext(ctx, optionsSQL)
 	if err != nil {
 		err = fmt.Errorf("error at delete share kyou info options sql: %w", err)
@@ -851,7 +852,7 @@ WHERE SHARE_ID = ?
 	queryArgs = []interface{}{
 		shareID,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", optionsSQL, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", optionsSQL, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at delete share kyou info options sql: %w", err)

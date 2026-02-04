@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -35,7 +36,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
   DEVICE NOT NULL,
   TX_ID NOT NULL
 );`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create KMEMO table statement %s: %w", filename, err)
@@ -43,7 +44,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create KMEMO table to %s: %w", filename, err)
@@ -51,7 +52,7 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_KMEMO ON KMEMO (ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create KMEMO index statement %s: %w", filename, err)
@@ -59,14 +60,14 @@ CREATE TABLE IF NOT EXISTS "KMEMO" (
 	}
 	defer indexStmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create KMEMO index to %s: %w", filename, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
 
 	if err != nil {
@@ -166,7 +167,7 @@ INSERT INTO KMEMO (
   ?,
   ?
 )`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add kmemo sql %s: %w", kmemo.ID, err)
@@ -191,7 +192,7 @@ INSERT INTO KMEMO (
 		device,
 		txID,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -240,7 +241,7 @@ AND DEVICE = ?
 		device,
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyous by TXID sql: %w", err)
@@ -248,7 +249,7 @@ AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from kmemo temp: %w", err)
@@ -348,7 +349,7 @@ AND DEVICE = ?
 		device,
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kmemo by tx id sql %s: %w", txID, err)
@@ -356,7 +357,7 @@ AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query ")
@@ -422,7 +423,7 @@ WHERE TX_ID = ?
 AND USER_ID = ?
 AND DEVICE = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp kmemo kyou by TXID sql: %w", err)
@@ -435,7 +436,7 @@ AND DEVICE = ?
 		userID,
 		device,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp kmemo kyou by TXID sql: %w", err)

@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"embed"
+	"log/slog"
 	"path/filepath"
 	"strings"
 
@@ -26,16 +28,17 @@ func GetLocalizer(localeName string) *i18n.Localizer {
 }
 
 func init() {
+	ctx := context.Background()
 	jsonFileNames := []string{}
 	locales, err := EmbedFS.ReadDir("embed/i18n/locales")
 	if err != nil {
-		gkill_log.Error.Println(err.Error())
+		slog.Log(ctx, gkill_log.Error, "error", err)
 		panic(err)
 	}
 	for _, locale := range locales {
 		info, err := locale.Info()
 		if err != nil {
-			gkill_log.Error.Println(err.Error())
+			slog.Log(ctx, gkill_log.Error, "error", err)
 			panic(err)
 		}
 		jsonFileNames = append(jsonFileNames, info.Name())
@@ -49,7 +52,7 @@ func init() {
 
 		jsonFile, err := EmbedFS.ReadFile(fullPath)
 		if err != nil {
-			gkill_log.Error.Println(err.Error())
+			slog.Log(ctx, gkill_log.Error, "error", err)
 			panic(err)
 		}
 		bundle.MustParseMessageFileBytes(jsonFile, base)

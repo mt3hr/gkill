@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -31,7 +32,7 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
   PUBLIC_KEY NOT NULL,
   SUBSCRIPTION NOT NULL
 )`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create NOTIFICATION table statement %s: %w", filename, err)
@@ -39,7 +40,7 @@ CREATE TABLE IF NOT EXISTS "NOTIFICATION" (
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create NOTIFICATION table to %s: %w", filename, err)
@@ -62,7 +63,7 @@ SELECT
   SUBSCRIPTION
 FROM NOTIFICATION
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get all mi notificate target sql: %w", err)
@@ -71,7 +72,7 @@ FROM NOTIFICATION
 	defer stmt.Close()
 
 	queryArgs := []interface{}{}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -112,7 +113,7 @@ SELECT
 FROM NOTIFICATION
 WHERE USER_ID = ? AND PUBLIC_KEY = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get mi notificate target sql: %w", err)
@@ -124,7 +125,7 @@ WHERE USER_ID = ? AND PUBLIC_KEY = ?
 		userID,
 		publicKey,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -170,7 +171,7 @@ VALUES (
   ?
 )
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add mi notificate target sql: %w", err)
@@ -184,7 +185,7 @@ VALUES (
 		gkillNotificateTarget.PublicKey,
 		gkillNotificateTarget.Subscription,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -202,7 +203,7 @@ UPDATE NOTIFICATION
   SUBSCRIPTION = ?
 WHERE ID = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at update mi notificate target sql: %w", err)
@@ -217,7 +218,7 @@ WHERE ID = ?
 		gkillNotificateTarget.Subscription,
 		gkillNotificateTarget.ID,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -231,7 +232,7 @@ func (m *gkillNotificateTargetDAOSQLite3Impl) DeleteGkillNotificationTarget(ctx 
 DELETE FROM NOTIFICATION
 WHERE ID = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete mi notification target sql: %w", err)
@@ -242,7 +243,7 @@ WHERE ID = ?
 	queryArgs := []interface{}{
 		id,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {

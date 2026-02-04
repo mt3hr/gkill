@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -46,7 +47,7 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
   UPDATE_DEVICE NOT NULL,
   UPDATE_USER NOT NULL 
 );`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create NLOG table statement %s: %w", filename, err)
@@ -54,7 +55,7 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create NLOG table to %s: %w", filename, err)
@@ -62,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_NLOG ON NLOG (ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create NLOG index statement %s: %w", filename, err)
@@ -70,7 +71,7 @@ CREATE TABLE IF NOT EXISTS "NLOG" (
 	}
 	defer indexStmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create NLOG index to %s: %w", filename, err)
@@ -168,7 +169,7 @@ WHERE
 		return nil, err
 	}
 	sql += commonWhereSQL
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -176,7 +177,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -332,7 +333,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -340,7 +341,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from NLOG %s: %w", id, err)
@@ -506,7 +507,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
@@ -514,7 +515,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from NLOG: %w", err)
@@ -675,7 +676,7 @@ WHERE
 	}
 	sql += commonWhereSQL
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get nlog histories sql %s: %w", id, err)
@@ -683,7 +684,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query ")
@@ -794,7 +795,7 @@ INSERT INTO NLOG (
   ?,
   ?
 )`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add nlog sql %s: %w", nlog.ID, err)
@@ -818,7 +819,7 @@ INSERT INTO NLOG (
 		nlog.UpdateDevice,
 		nlog.UpdateUser,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
