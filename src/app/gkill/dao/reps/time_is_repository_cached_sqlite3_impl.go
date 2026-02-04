@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -289,7 +289,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id stri
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
@@ -555,7 +555,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 
 func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -737,7 +737,7 @@ FROM ` + t.dbName + `
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	// 最新のデータを返す
 	timeisHistories, err := t.GetTimeIsHistories(ctx, id)
 	if err != nil {
@@ -765,7 +765,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id st
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	sql := `

@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (n *nlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	n.m.Lock()
-	defer n.m.Unlock()
+	n.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -238,7 +238,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string
 
 func (n *nlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	n.m.Lock()
-	defer n.m.Unlock()
+	n.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -637,7 +637,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetNlog(ctx context.Context, id string
 
 func (n *nlogRepositoryCachedSQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
 	n.m.Lock()
-	defer n.m.Unlock()
+	n.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,

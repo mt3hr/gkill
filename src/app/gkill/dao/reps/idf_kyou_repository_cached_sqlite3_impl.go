@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	i.m.Lock()
-	defer i.m.Unlock()
+	i.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -350,7 +350,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id str
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	i.m.Lock()
-	defer i.m.Unlock()
+	i.m.Unlock()
 	var err error
 	sql := `
 SELECT 
@@ -871,7 +871,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyou(ctx context.Context, id 
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
 	i.m.Lock()
-	defer i.m.Unlock()
+	i.m.Unlock()
 	var err error
 	sql := `
 SELECT 
