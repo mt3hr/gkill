@@ -429,7 +429,7 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 	// Kyou集約。UpdateTimeが最新のものを収める
 	for _, matchKyouInRep := range matchKyousInRep {
 		if matchKyou != nil {
-			if matchKyouInRep.UpdateTime.Before(matchKyou.UpdateTime) {
+			if matchKyouInRep.UpdateTime.After(matchKyou.UpdateTime) {
 				matchKyou = matchKyouInRep
 			}
 		} else {
@@ -1081,7 +1081,7 @@ loop:
 				continue loop
 			}
 			if matchTag != nil {
-				if matchTagInRep.UpdateTime.Before(matchTag.UpdateTime) {
+				if matchTagInRep.UpdateTime.After(matchTag.UpdateTime) {
 					matchTag = matchTagInRep
 				}
 			} else {
@@ -1522,7 +1522,7 @@ loop:
 				continue loop
 			}
 			if matchText != nil {
-				if matchTextInRep.UpdateTime.Before(matchText.UpdateTime) {
+				if matchTextInRep.UpdateTime.After(matchText.UpdateTime) {
 					matchText = matchTextInRep
 				}
 			} else {
@@ -1585,7 +1585,7 @@ loop:
 				continue loop
 			}
 			if matchNotification != nil {
-				if matchNotificationInRep.UpdateTime.Before(matchNotification.UpdateTime) {
+				if matchNotificationInRep.UpdateTime.After(matchNotification.UpdateTime) {
 					matchNotification = matchNotificationInRep
 				}
 			} else {
