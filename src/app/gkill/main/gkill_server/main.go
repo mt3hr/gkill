@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/mt3hr/gkill/src/app/gkill/main/common"
@@ -42,7 +43,7 @@ var (
 			common.InitGkillOptions()
 			threads.Init()
 		},
-		Run: func(_ *cobra.Command, _ []string) {
+		Run: func(cmd *cobra.Command, _ []string) {
 			var err error
 
 			err = common.InitGkillServerAPI()
@@ -60,7 +61,7 @@ var (
 
 					if err != nil {
 						err = fmt.Errorf("error at get device name: %w", err)
-						gkill_log.Debug.Fatal(err.Error())
+						slog.Log(cmd.Context(), gkill_log.Error, "error", err)
 					}
 					common.GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
 				}
