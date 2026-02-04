@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
   DEVICE NOT NULL,
   TX_ID NOT NULL
 );`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT table statement %s: %w", filename, err)
@@ -44,7 +45,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT table to %s: %w", filename, err)
@@ -52,7 +53,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT ON TEXT(ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT index statement %s: %w", "TEXT", err)
@@ -60,14 +61,14 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 	defer indexStmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT index to %s: %w", "TEXT", err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT index statement %s: %w", "TEXT", err)
@@ -75,7 +76,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 
 	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT_TARGET_ID ON TEXT(TARGET_ID, UPDATE_TIME DESC);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDSQL)
 	indexTargetIDStmt, err := db.PrepareContext(ctx, indexTargetIDSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_TARGET_ID index statement %s: %w", "TEXT", err)
@@ -83,14 +84,14 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 	defer indexTargetIDStmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDSQL)
 	_, err = indexTargetIDStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_TARGET_ID index to %s: %w", "TEXT", err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index statement %s: %w", "TEXT", err)
@@ -98,7 +99,7 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 
 	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS INDEX_TEXT_ID_UPDATE_TIME ON ` + "TEXT" + `(ID, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexIDUpdateTimeSQL)
 	indexIDUpdateTimeStmt, err := db.PrepareContext(ctx, indexIDUpdateTimeSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index statement %s: %w", "TEXT", err)
@@ -106,14 +107,14 @@ CREATE TABLE IF NOT EXISTS "TEXT" (
 	}
 	defer indexIDUpdateTimeStmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexIDUpdateTimeSQL)
 	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME index to %s: %w", "TEXT", err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TEXT_ID_UPDATE_TIME table to %s: %w", "TEXT", err)
@@ -204,7 +205,7 @@ INSERT INTO TEXT (
   ?,
   ?
 )`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add text sql %s: %w", text.ID, err)
@@ -230,7 +231,7 @@ INSERT INTO TEXT (
 		device,
 		txID,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -281,7 +282,7 @@ AND DEVICE = ?
 		device,
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get text by tx id sql: %w", err)
@@ -289,7 +290,7 @@ AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -357,7 +358,7 @@ WHERE TX_ID = ?
 AND USER_ID = ?
 AND DEVICE = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp text by TXID sql: %w", err)
@@ -370,7 +371,7 @@ AND DEVICE = ?
 		userID,
 		device,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp text by TXID sql: %w", err)

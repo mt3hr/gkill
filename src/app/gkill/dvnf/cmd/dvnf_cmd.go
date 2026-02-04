@@ -3,6 +3,7 @@ package dvnf_cmd
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -34,7 +35,7 @@ func init() {
 		serverConfigDAO, err := server_config.NewServerConfigDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "server_config.db"))
 		if err != nil {
 			err = fmt.Errorf("error at get serverConfig: %w", err)
-			gkill_log.Debug.Println(err.Error())
+			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 			return
 		}
 
@@ -42,7 +43,7 @@ func init() {
 		serverConfigs, err := serverConfigDAO.GetAllServerConfigs(ctx)
 		if err != nil {
 			err = fmt.Errorf("error at get serverConfig: %w", err)
-			gkill_log.Debug.Println(err.Error())
+			slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 			return
 		}
 		for _, serverConfig := range serverConfigs {
