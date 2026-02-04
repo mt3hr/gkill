@@ -474,11 +474,11 @@ func (r *reKyouRepositoryCachedSQLite3Impl) FindReKyou(ctx context.Context, quer
 
 	for _, rekyou := range notDeletedAllReKyous {
 		existInRep := false
-		for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-			if latestDataRepositoryAddress.TargetID == rekyou.TargetID {
-				existInRep = true
-				break
-			}
+		if rekyou == nil || rekyou.IsDeleted {
+			continue
+		}
+		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
+			continue
 		}
 		if existInRep {
 			matchReKyous = append(matchReKyous, rekyou)
