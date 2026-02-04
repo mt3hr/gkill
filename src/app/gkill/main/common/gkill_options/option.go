@@ -6,11 +6,6 @@ import (
 )
 
 var (
-	falseValue = false
-	trueValue  = true
-)
-
-var (
 	GkillHomeDir         = "$HOME/gkill"
 	LibDir               = "$HOME/gkill/lib/base_directory"
 	CacheDir             = "$HOME/gkill/caches"

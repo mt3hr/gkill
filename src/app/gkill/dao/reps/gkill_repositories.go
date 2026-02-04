@@ -136,7 +136,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		CacheMemoryDB, err = sql.Open("sqlite3", "file:gkill_memory_db_"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
 		if err != nil {
 			err = fmt.Errorf("error at open memory database: %w", err)
-			slog.Log(ctx, gkill_log.Error, "error", err)
+			slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		}
 		CacheMemoryDB.SetMaxOpenConns(runtime.NumCPU()) // 読み取り並列を許可
 		CacheMemoryDB.SetMaxIdleConns(1)                // 0にすると最後が閉じて消える
@@ -146,7 +146,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 		TempMemoryDB, err = sql.Open("sqlite3", "file:gkill_temp_db_"+userID+"?mode=memory&cache=shared&_busy_timeout=6000&_txlock=immediate&_journal_mode=MEMORY&_synchronous=OFF")
 		if err != nil {
 			err = fmt.Errorf("error at open memory database: %w", err)
-			slog.Log(ctx, gkill_log.Error, "error", err)
+			slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		}
 		TempMemoryDB.SetMaxOpenConns(runtime.NumCPU()) // 読み取り並列を許可
 		TempMemoryDB.SetMaxIdleConns(1)                // 0にすると最後が閉じて消える
@@ -213,7 +213,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 			if repositories.IsUpdateCacheNextTick {
 				err := repositories.UpdateCache(context.Background())
 				if err != nil {
-					slog.Log(ctx, gkill_log.Error, "error", err)
+					slog.Log(ctx, gkill_log.Error, "error", "error", err)
 					return
 				}
 				repositories.IsUpdateCacheNextTick = false
@@ -231,53 +231,53 @@ func (g *GkillRepositories) Close(ctx context.Context) error {
 	g.isClosed = true
 	g.updateCacheTicker.Stop()
 	if err := g.TagReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	if err := g.TextReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	if err := g.KmemoReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	if err := g.KCReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	if err := g.NlogReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	if err := g.TimeIsReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 
 	if err := g.MiReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	if err := g.IDFKyouReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	if err := g.ReKyouReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	if err := g.GitCommitLogReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	if err := g.LantanaReps.Close(ctx); err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		return err
 	}
 	err := g.LatestDataRepositoryAddressDAO.Close(ctx)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 	}
 
 	g.CacheMemoryDB.Close()

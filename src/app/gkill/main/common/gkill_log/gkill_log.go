@@ -28,13 +28,34 @@ func init() {
 		StaticFields: []any{"app", "gkill"},
 	})
 
-	router.SetSplitFile(TraceSQL, filepath.Join(logRootDir, "gkill_trace_sql.log"))
-	router.SetSplitFile(Trace, filepath.Join(logRootDir, "gkill_trace.log"))
-	router.SetSplitFile(Debug, filepath.Join(logRootDir, "gkill_debug.log"))
-	router.SetSplitFile(Info, filepath.Join(logRootDir, "gkill_info.log"))
-	router.SetSplitFile(Warn, filepath.Join(logRootDir, "gkill_warn.log"))
-	router.SetSplitFile(Error, filepath.Join(logRootDir, "gkill_error.log"))
-	router.SetMergedFile(filepath.Join(logRootDir, "gkill.log"))
+	err = router.SetSplitFile(TraceSQL, filepath.Join(logRootDir, "gkill_trace_sql.log"))
+	if err != nil {
+		panic(err)
+	}
+	err = router.SetSplitFile(Trace, filepath.Join(logRootDir, "gkill_trace.log"))
+	if err != nil {
+		panic(err)
+	}
+	err = router.SetSplitFile(Debug, filepath.Join(logRootDir, "gkill_debug.log"))
+	if err != nil {
+		panic(err)
+	}
+	err = router.SetSplitFile(Info, filepath.Join(logRootDir, "gkill_info.log"))
+	if err != nil {
+		panic(err)
+	}
+	err = router.SetSplitFile(Warn, filepath.Join(logRootDir, "gkill_warn.log"))
+	if err != nil {
+		panic(err)
+	}
+	err = router.SetSplitFile(Error, filepath.Join(logRootDir, "gkill_error.log"))
+	if err != nil {
+		panic(err)
+	}
+	err = router.SetMergedFile(filepath.Join(logRootDir, "gkill.log"))
+	if err != nil {
+		panic(err)
+	}
 
 	slog.SetDefault(router.Logger())
 }

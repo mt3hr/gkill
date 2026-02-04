@@ -10,7 +10,7 @@ export default class NlogShopEqualPredicate implements DnotePredicate {
         const nlog_shop_equal_target = json.value as string
         return new NlogShopEqualPredicate(nlog_shop_equal_target)
     }
-    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
         const nlog_shop = loaded_kyou.typed_nlog?.shop
         if (nlog_shop) {
             if (nlog_shop === this.nlog_shop_equal_target) {

@@ -3,7 +3,7 @@ import type DnotePredicate from "../../dnote-predicate";
 
 export default class EqualDataTypeTargetKyouPredicate implements DnotePredicate {
     constructor() { }
-    static from_json(json: any): DnotePredicate {
+    static from_json(_: any): DnotePredicate {
         return new EqualDataTypeTargetKyouPredicate()
     }
     async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {

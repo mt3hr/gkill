@@ -58,7 +58,6 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import type { DecideRelatedTimeUploadedFileViewProps } from './decide-related-time-uploaded-file-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import EditIDFKyouView from './edit-idf-kyou-view.vue'

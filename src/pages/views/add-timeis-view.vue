@@ -178,11 +178,6 @@ function reset_end_date_time(): void {
     timeis_end_time_string.value = ""
 }
 
-function clear_end_date_time(): void {
-    timeis_end_date_typed.value = null
-    timeis_end_time_string.value = ""
-}
-
 function now_to_start_date_time(): void {
     timeis_start_date_typed.value = moment().toDate()
     timeis_start_time_string.value = moment().format("HH:mm:ss")

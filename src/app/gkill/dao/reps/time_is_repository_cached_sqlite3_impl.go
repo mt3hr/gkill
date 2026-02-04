@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"database/sql"
 	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -24,7 +23,7 @@ type timeIsRepositoryCachedSQLite3Impl struct {
 	m         *sync.Mutex
 }
 
-func NewTimeIsRepositoryCachedSQLite3Impl(ctx context.Context, timeisRep TimeIsRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (TimeIsRepository, error) {
+func NewTimeIsRepositoryCachedSQLite3Impl(ctx context.Context, timeisRep TimeIsRepository, cacheDB *sqllib.DB, m *sync.Mutex, dbName string) (TimeIsRepository, error) {
 	if m == nil {
 		m = &sync.Mutex{}
 	}
@@ -63,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create timeis index unix statement %s: %w", dbName, err)
@@ -71,7 +70,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create timeis index unix to %s: %w", dbName, err)
@@ -87,7 +86,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (t *timeIsRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -148,7 +147,7 @@ FROM ` + t.dbName + `
 	tableName := t.dbName
 	tableNameAlias := t.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -212,7 +211,7 @@ FROM ` + t.dbName + `
 	}
 	defer stmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql, "params", queryArgsForStart, "params", queryArgsForPlaingStart, "params", queryArgsForEnd, "params", queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
@@ -290,7 +289,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id stri
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	repName, err := t.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at TIMEIS: %w", err)
@@ -556,7 +555,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 
 func (t *timeIsRepositoryCachedSQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -622,7 +621,7 @@ FROM ` + t.dbName + `
 	tableName := t.dbName
 	tableNameAlias := t.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -682,7 +681,7 @@ FROM ` + t.dbName + `
 	}
 	defer stmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql, "params", queryArgsForStart, "params", queryArgsForPlaingStart, "params", queryArgsForEnd, "params", queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
@@ -738,7 +737,7 @@ FROM ` + t.dbName + `
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id string, updateTime *time.Time) (*TimeIs, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	// 最新のデータを返す
 	timeisHistories, err := t.GetTimeIsHistories(ctx, id)
 	if err != nil {
@@ -766,7 +765,7 @@ func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIs(ctx context.Context, id st
 
 func (t *timeIsRepositoryCachedSQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	sql := `

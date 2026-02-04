@@ -3,7 +3,6 @@ package reps
 import (
 	"context"
 	"database/sql"
-	sqllib "database/sql"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -19,7 +18,7 @@ import (
 type kmemoRepositoryCachedSQLite3Impl struct {
 	dbName   string
 	kmemoRep KmemoRepository
-	cachedDB *sqllib.DB
+	cachedDB *sql.DB
 	m        *sync.Mutex
 }
 
@@ -60,7 +59,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create kmemo index unix statement %s: %w", dbName, err)
@@ -68,7 +67,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create kmemo index unix to %s: %w", dbName, err)
@@ -85,7 +84,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 
 func (k *kmemoRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	k.m.Lock()
-	k.m.Unlock()
+	defer k.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -124,7 +123,7 @@ WHERE
 	tableName := k.dbName
 	tableNameAlias := k.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
@@ -226,7 +225,7 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id strin
 
 func (k *kmemoRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	k.m.Lock()
-	k.m.Unlock()
+	defer k.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -516,7 +515,7 @@ WHERE
 	tableName := k.dbName
 	tableNameAlias := k.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
@@ -617,7 +616,7 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemo(ctx context.Context, id stri
 
 func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
 	k.m.Lock()
-	k.m.Unlock()
+	defer k.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,

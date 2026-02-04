@@ -152,7 +152,7 @@ WHERE
 		dataType,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
 	ignoreFindWord := false
@@ -495,7 +495,7 @@ WHERE
 		dataType,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
 	ignoreFindWord := false

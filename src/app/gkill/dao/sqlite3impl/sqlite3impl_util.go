@@ -2,7 +2,6 @@ package sqlite3impl
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
 	"time"
@@ -10,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 
-	sqllib "database/sql"
+	"database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -22,7 +21,7 @@ func EscapeSQLite(str string) string {
 }
 
 func GetSQLiteDBConnection(ctx context.Context, filename string) (*sql.DB, error) {
-	db, err := sqllib.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
+	db, err := sql.Open("sqlite3", "file:"+filename+"?_timeout=6000&_synchronous=1&_journal=DELETE")
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err

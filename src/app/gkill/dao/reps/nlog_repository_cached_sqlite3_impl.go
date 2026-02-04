@@ -2,7 +2,6 @@ package reps
 
 import (
 	"context"
-	"database/sql"
 	sqllib "database/sql"
 	"encoding/json"
 	"fmt"
@@ -25,7 +24,7 @@ type nlogRepositoryCachedSQLite3Impl struct {
 	m        *sync.Mutex
 }
 
-func NewNlogRepositoryCachedSQLite3Impl(ctx context.Context, nlogRep NlogRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (NlogRepository, error) {
+func NewNlogRepositoryCachedSQLite3Impl(ctx context.Context, nlogRep NlogRepository, cacheDB *sqllib.DB, m *sync.Mutex, dbName string) (NlogRepository, error) {
 	if m == nil {
 		m = &sync.Mutex{}
 	}
@@ -71,7 +70,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create nlog index unix statement %s: %w", dbName, err)
@@ -79,7 +78,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create nlog index unix to %s: %w", dbName, err)
@@ -95,7 +94,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (n *nlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	n.m.Lock()
-	n.m.Unlock()
+	defer n.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -136,7 +135,7 @@ WHERE
 	tableName := n.dbName
 	tableNameAlias := n.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
@@ -239,7 +238,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string
 
 func (n *nlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	n.m.Lock()
-	n.m.Unlock()
+	defer n.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -537,7 +536,7 @@ WHERE
 	tableName := n.dbName
 	tableNameAlias := n.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE", "SHOP"}
 	ignoreFindWord := false
@@ -638,7 +637,7 @@ func (n *nlogRepositoryCachedSQLite3Impl) GetNlog(ctx context.Context, id string
 
 func (n *nlogRepositoryCachedSQLite3Impl) GetNlogHistories(ctx context.Context, id string) ([]*Nlog, error) {
 	n.m.Lock()
-	n.m.Unlock()
+	defer n.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,

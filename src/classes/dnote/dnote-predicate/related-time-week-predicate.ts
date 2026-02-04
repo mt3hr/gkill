@@ -10,7 +10,7 @@ export default class RelatedTimeWeekPredicate implements DnotePredicate {
         const week = json.value as number
         return new RelatedTimeWeekPredicate(week)
     }
-    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
         const week = this.getISOWeek(loaded_kyou.related_time)
         if (week === this.week) {
             return true

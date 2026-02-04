@@ -33,7 +33,7 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { computed, nextTick, ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 import { type LoginViewProps } from './login-view-props'
 import type LoginViewEmits from './login-view-emits'
 import { LoginRequest } from '@/classes/api/req_res/login-request';

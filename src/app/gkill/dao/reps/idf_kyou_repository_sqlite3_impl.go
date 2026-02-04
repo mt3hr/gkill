@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 
 	dbName := "IDF"
 	latestIndexSQL := fmt.Sprintf(`CREATE INDEX IF NOT EXISTS INDEX_FOR_LATEST_DATA_REPOSITORY_ADDRESS ON %s(ID, UPDATE_TIME);`, dbName)
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", latestIndexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", latestIndexSQL)
 	latestIndexStmt, err := db.PrepareContext(ctx, latestIndexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create index for latest data repository address at %s index statement %s: %w", dbName, filename, err)
@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	}
 	defer latestIndexStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", latestIndexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", latestIndexSQL)
 	_, err = latestIndexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create %s index for latest data repository address to %s: %w", dbName, filename, err)
@@ -220,7 +220,7 @@ WHERE
 	tableName := "IDF"
 	tableNameAlias := "IDF"
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
@@ -699,7 +699,7 @@ WHERE
 	tableName := "IDF"
 	tableNameAlias := "IDF"
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"ID"}
 	ignoreFindWord := false
@@ -882,7 +882,7 @@ WHERE
 	tableName := "IDF"
 	tableNameAlias := "IDF"
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
@@ -1609,6 +1609,7 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 	idfKyous, err := i.FindIDFKyou(ctx, query)
 	if err != nil {
 		err = fmt.Errorf("error at generate thumb cache at %s: %w", repName, err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 	}
 
 	for _, idfKyou := range idfKyous {
@@ -1631,7 +1632,7 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 		err = i.thumbGenerator.GenerateThumbCache(ctx, url.String())
 		if err != nil {
 			err = fmt.Errorf("error at generate thumb cache %s: %w", url.String(), err)
-			slog.Log(ctx, gkill_log.Error, "error", err)
+			slog.Log(ctx, gkill_log.Error, "error", "error", err)
 			continue
 		}
 	}

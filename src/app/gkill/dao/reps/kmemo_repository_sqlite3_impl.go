@@ -147,7 +147,7 @@ WHERE
 	tableName := "KMEMO"
 	tableNameAlias := "KMEMO"
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false

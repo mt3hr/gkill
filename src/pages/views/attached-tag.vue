@@ -27,7 +27,6 @@
     </span>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import type { AttachedTagProps } from './attached-tag-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { computed, ref } from 'vue'

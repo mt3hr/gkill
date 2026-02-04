@@ -41,7 +41,6 @@
 
 <script lang="ts" setup>
 'use strict'
-import { i18n } from '@/i18n'
 import { computed, nextTick, ref, type Ref } from 'vue'
 import { ApplicationConfig } from '@/classes/datas/config/application-config'
 import { GkillAPI } from '@/classes/api/gkill-api'
