@@ -15,6 +15,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/gkill_notification"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/hide_files"
 
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps/rep_cache_updater"
@@ -630,7 +631,7 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 						err = fmt.Errorf("error at make directory %s: %w", parentDir, err)
 						return nil, err
 					}
-
+					hide_files.HideFolder(parentDir)
 					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
 					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
 					if err != nil {
