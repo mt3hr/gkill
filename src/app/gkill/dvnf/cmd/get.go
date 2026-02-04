@@ -16,6 +16,13 @@ func init() {
 	getFs.BoolVarP(&getOpt.all, "all", "a", false, "有効にした場合、最新だけでなくマッチするすべてのdvnfを取得します")
 	getFs.BoolVarP(&getOpt.createSubDir, "create_sub_directory", "s", false, "例えばhoge/fuga/piyoを渡されたときに、fuga/piyoも作成します。")
 	getFs.BoolVarP(&getOpt.ext, "ext", "e", true, "ドットが含まれた場合拡張子として分割する")
+	getCommand.PreRun = func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			getOpt.dvnfName = ""
+		} else if args[0] != "" {
+			getOpt.dvnfName = args[0]
+		}
+	}
 }
 
 var getOpt = struct {
@@ -84,7 +91,7 @@ func runGet(_ *cobra.Command, _ []string) {
 	// childがあろうとなかろうと、createNewならば作る
 	opt := newDVNFOption(dvnfdir, getOpt.ext)
 	if rootOpt.createNew {
-		_, err = dvnf.CreateNewDVNF(opt, true)
+		dvnfdir, err = dvnf.CreateNewDVNF(opt, true)
 		if err != nil {
 			err = fmt.Errorf("failed to create new dvnf %s_%s: %w", opt.Device, opt.Directory, err)
 			log.Fatal(err)
