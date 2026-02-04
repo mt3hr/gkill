@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (l *lantanaRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	l.m.Lock()
-	defer l.m.Unlock()
+	l.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -226,7 +226,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id str
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	l.m.Lock()
-	defer l.m.Unlock()
+	l.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -621,7 +621,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetLantana(ctx context.Context, id 
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
 	l.m.Lock()
-	defer l.m.Unlock()
+	l.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,

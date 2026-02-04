@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (r *reKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	r.m.Lock()
-	defer r.m.Unlock()
+	r.m.Unlock()
 	matchKyous := map[string][]*Kyou{}
 
 	// 未削除ReKyouを抽出
@@ -199,7 +199,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id stri
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	r.m.Lock()
-	defer r.m.Unlock()
+	r.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -515,7 +515,7 @@ func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyou(ctx context.Context, id st
 
 func (r *reKyouRepositoryCachedSQLite3Impl) GetReKyouHistories(ctx context.Context, id string) ([]*ReKyou, error) {
 	r.m.Lock()
-	defer r.m.Unlock()
+	r.m.Unlock()
 	var err error
 
 	sql := `
