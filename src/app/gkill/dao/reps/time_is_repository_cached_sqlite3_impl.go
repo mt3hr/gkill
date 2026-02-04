@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -46,7 +47,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
   CREATE_TIME_UNIX NOT NULL,
   UPDATE_TIME_UNIX NOT NULL
 );`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := cacheDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS table statement %s: %w", dbName, err)
@@ -54,7 +55,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TIMEIS table to %s: %w", dbName, err)
@@ -62,7 +63,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create timeis index unix statement %s: %w", dbName, err)
@@ -70,7 +71,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexUnixStmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create timeis index unix to %s: %w", dbName, err)
@@ -203,7 +204,7 @@ FROM ` + t.dbName + `
 	orderby := " ORDER BY END_TIME_UNIX DESC "
 	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs, orderby)
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous sql: %w", err)
@@ -211,7 +212,7 @@ FROM ` + t.dbName + `
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
@@ -340,7 +341,7 @@ WHERE
 
 	sql += commonWhereSQL
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
@@ -348,7 +349,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 
 	if err != nil {
@@ -469,7 +470,7 @@ INSERT INTO ` + t.dbName + `(
   ?
 )`
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	insertStmt, err := tx.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add timeis sql: %w", err)
@@ -509,7 +510,7 @@ INSERT INTO ` + t.dbName + `(
 				timeis.CreateTime.Unix(),
 				timeis.UpdateTime.Unix(),
 			}
-			gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
 				err = fmt.Errorf("error at insert in to timeis %s: %w", timeis.ID, err)
@@ -673,7 +674,7 @@ FROM ` + t.dbName + `
 
 	sql := fmt.Sprintf("%s WHERE %s %s UNION %s WHERE %s %s AND %s", sqlStartTimeIs, sqlWhereForStart, sqlWhereFilterPlaingTimeisStart, sqlEndTimeIs, sqlWhereForEnd, sqlWhereFilterPlaingTimeisEnd, sqlWhereFilterEndTimeIs)
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at find kyous sql: %w", err)
@@ -681,7 +682,7 @@ FROM ` + t.dbName + `
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
@@ -827,7 +828,7 @@ WHERE
 	}
 
 	sql += commonWhereSQL + sqlWhereFilterPlaingTimeisStart
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get time is histories sql: %w", err)
@@ -835,7 +836,7 @@ WHERE
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, append(queryArgsForPlaingStart, queryArgs...))
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, append(queryArgsForPlaingStart, queryArgs...))
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForPlaingStart, queryArgs...)...)
 
 	if err != nil {
@@ -925,7 +926,7 @@ INSERT INTO ` + t.dbName + `(
   ?,
   ?
 )`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add timeis sql %s: %w", timeis.ID, err)
@@ -956,7 +957,7 @@ INSERT INTO ` + t.dbName + `(
 		timeis.CreateTime.Unix(),
 		timeis.UpdateTime.Unix(),
 	}
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {

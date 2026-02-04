@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -37,7 +38,7 @@ CREATE TABLE IF NOT EXISTS "FILE_UPLOAD_HISTORY" (
   SOURCE_ADDRESS NOT NULL,
   UPLOAD_TIME NOT NULL
 );`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create FILE_UPLOAD_HISTORY table statement %s: %w", filename, err)
@@ -45,7 +46,7 @@ CREATE TABLE IF NOT EXISTS "FILE_UPLOAD_HISTORY" (
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create FILE_UPLOAD_HISTORY table to %s: %w", filename, err)
@@ -71,7 +72,7 @@ SELECT
   UPLOAD_TIME
 FROM FILE_UPLOAD_HISTORY
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := f.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get all file upload histories sql: %w", err)
@@ -79,7 +80,7 @@ FROM FILE_UPLOAD_HISTORY
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	rows, err := stmt.QueryContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -137,7 +138,7 @@ SELECT
 FROM FILE_UPLOAD_HISTORY
 WHERE USER_ID = ? AND DEVICE = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := f.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get get file upload histories sql: %w", err)
@@ -149,7 +150,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -214,7 +215,7 @@ VALUES (
   ?
 )
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := f.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add file upload histories sql: %w", err)
@@ -231,7 +232,7 @@ VALUES (
 		fileUploadHistory.Successed,
 		fileUploadHistory.UploadTime.Format(sqlite3impl.TimeLayout),
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -253,7 +254,7 @@ UPDATE FILE_UPLOAD_HISTORY SET
   UPLOAD_TIME = ?
 WHERE ID = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := f.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add file upload histories sql: %w", err)
@@ -271,7 +272,7 @@ WHERE ID = ?
 		fileUploadHistory.UploadTime.Format(sqlite3impl.TimeLayout),
 		fileUploadHistory.ID,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -285,7 +286,7 @@ func (f *fileUploadHistoryDAOSQLite3Impl) DeleteFileUploadHistory(ctx context.Co
 DELETE FROM FILE_UPLOAD_HISTORY
 WHERE ID = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := f.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete file upload history sql: %w", err)
@@ -296,7 +297,7 @@ WHERE ID = ?
 	queryArgs := []interface{}{
 		id,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {

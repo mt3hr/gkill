@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
   DEVICE NOT NULL,
   TX_ID NOT NULL
 );`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG table statement %s: %w", filename, err)
@@ -44,7 +45,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG table to %s: %w", filename, err)
@@ -52,7 +53,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG ON TAG (ID, RELATED_TIME, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG index statement %s: %w", filename, err)
@@ -60,14 +61,14 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 	defer indexStmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG index to %s: %w", filename, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG index statement %s: %w", filename, err)
@@ -75,7 +76,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 
 	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG_TARGET_ID ON TAG (TARGET_ID, UPDATE_TIME DESC);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDSQL)
 	indexTargetIDStmt, err := db.PrepareContext(ctx, indexTargetIDSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID index statement %s: %w", filename, err)
@@ -83,14 +84,14 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 	defer indexTargetIDStmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDSQL)
 	_, err = indexTargetIDStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID index to %s: %w", filename, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", filename, err)
@@ -98,7 +99,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 
 	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG_ID_UPDATE_TIME ON TAG (ID, UPDATE_TIME);`
-	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexIDUpdateTimeSQL)
 	indexIDUpdateTimeStmt, err := db.PrepareContext(ctx, indexIDUpdateTimeSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", filename, err)
@@ -106,14 +107,14 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 	defer indexIDUpdateTimeStmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s", indexIDUpdateTimeSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexIDUpdateTimeSQL)
 	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index to %s: %w", filename, err)
 		return nil, err
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME table to %s: %w", filename, err)
@@ -208,7 +209,7 @@ INSERT INTO TAG (
   ?,
   ?
 )`
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at add tag sql %s: %w", tag.ID, err)
@@ -234,7 +235,7 @@ INSERT INTO TAG (
 		device,
 		txID,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at insert in to TAG %s: %w", tag.ID, err)
@@ -294,7 +295,7 @@ AND DEVICE = ?
 		device,
 	}
 
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at get tag by tx id sql: %w", err)
@@ -302,7 +303,7 @@ AND DEVICE = ?
 	}
 	defer stmt.Close()
 
-	gkill_log.TraceSQL.Printf("sql: %s params: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TAG: %w", err)
@@ -370,7 +371,7 @@ WHERE TX_ID = ?
 AND USER_ID = ?
 AND DEVICE = ?
 `
-	gkill_log.TraceSQL.Printf("sql: %s", sql)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.db.PrepareContext(ctx, sql)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp tag by TXID sql: %w", err)
@@ -383,7 +384,7 @@ AND DEVICE = ?
 		userID,
 		device,
 	}
-	gkill_log.TraceSQL.Printf("sql: %s query: %#v", sql, queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at delete temp tag by TXID sql: %w", err)

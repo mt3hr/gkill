@@ -2,6 +2,7 @@ package reps
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"image"
@@ -9,6 +10,7 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
@@ -64,6 +66,7 @@ type URLog struct {
 // FillURLogField .
 // 0値なURLogの値を埋めます
 func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applicationConfig *user_config.ApplicationConfig) error {
+	ctx := context.Background()
 	if u.URL == "" {
 		err := fmt.Errorf("url value has not been set")
 		return err
@@ -84,7 +87,7 @@ func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applica
 		err := u.fillFavicon()
 		if err != nil {
 			err = fmt.Errorf("failed to fill favicon: %w", err)
-			gkill_log.Debug.Println(err.Error())
+			slog.Log(ctx, gkill_log.Debug, "error", err)
 		}
 	}
 
@@ -93,14 +96,14 @@ func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applica
 	body, err := getBody(u.URL, serverConfig.URLogTimeout, serverConfig.URLogUserAgent, enableProxy, proxyURL)
 	if err != nil {
 		err = fmt.Errorf("failed to get body: %w", err)
-		gkill_log.Debug.Println(err.Error())
+		slog.Log(ctx, gkill_log.Debug, "error", err)
 	} else {
 		// title
 		if u.Title == "" {
 			err := u.fillTitle(body)
 			if err != nil {
 				err = fmt.Errorf("failed to fill title to urlog.: %w", err)
-				gkill_log.Debug.Println(err.Error())
+				slog.Log(ctx, gkill_log.Debug, "error", err)
 			}
 		}
 
@@ -109,7 +112,7 @@ func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applica
 			err := u.fillDescription(body)
 			if err != nil {
 				err = fmt.Errorf("failed to fill description to urlog.: %w", err)
-				gkill_log.Debug.Println(err.Error())
+				slog.Log(ctx, gkill_log.Debug, "error", err)
 			}
 		}
 
@@ -118,7 +121,7 @@ func (u *URLog) FillURLogField(serverConfig *server_config.ServerConfig, applica
 			err := u.fillImage(body)
 			if err != nil {
 				err = fmt.Errorf("failed to fill image to urlog.: %w", err)
-				gkill_log.Debug.Println(err.Error())
+				slog.Log(ctx, gkill_log.Debug, "error", err)
 			}
 		}
 	}

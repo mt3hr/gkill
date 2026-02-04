@@ -3,6 +3,7 @@ package reps
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"sort"
 	"sync"
@@ -663,7 +664,7 @@ func (i IDFKyouRepositories) GenerateThumbCache(ctx context.Context) error {
 				err := unwrapedRep.GenerateThumbCache(ctx)
 				if err != nil {
 					err = fmt.Errorf("error at generate thumb cache at idf kyou repositories in rep: %w", err)
-					gkill_log.Error.Println(err.Error())
+					slog.Log(ctx, gkill_log.Error, "error", err)
 				}
 			}(unwrapedRep)
 		})
