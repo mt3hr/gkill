@@ -62,7 +62,7 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { computed, nextTick, ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 import router from '@/router';
 import { GkillError } from '@/classes/api/gkill-error';
 import { useRoute } from 'vue-router';

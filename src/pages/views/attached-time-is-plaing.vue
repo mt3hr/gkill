@@ -49,7 +49,6 @@
         ref="kyou_dialog" />
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import type { AttachedTimeIsPlaingProps } from './attached-time-is-plaing-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { computed, ref } from 'vue'

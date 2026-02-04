@@ -48,7 +48,6 @@
     </v-card>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { computed, ref } from 'vue';
 import type AggregatedListItemProps from './aggregated-list-item-props';
 import type AggregatedListItemViewEmits from './aggregated-list-item-view-emits';

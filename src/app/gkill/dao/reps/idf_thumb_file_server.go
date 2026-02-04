@@ -90,7 +90,7 @@ func (t *thumbFileServer) GenerateThumbCache(ctx context.Context, queryURL strin
 	// URL Path（StripPrefix後）を安全に相対化
 	rel, ok := cleanRelURLPath(queryURLObj.Path)
 	if !ok || rel == "" {
-		err := fmt.Errorf("illegal url path %s")
+		err := fmt.Errorf("illegal url path %s", queryURLObj.Path)
 		return err
 	}
 

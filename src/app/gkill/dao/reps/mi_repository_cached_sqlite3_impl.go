@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"database/sql"
 	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -24,7 +23,7 @@ type miRepositoryCachedSQLite3Impl struct {
 	m        *sync.Mutex
 }
 
-func NewMiRepositoryCachedSQLite3Impl(ctx context.Context, miRep MiRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (MiRepository, error) {
+func NewMiRepositoryCachedSQLite3Impl(ctx context.Context, miRep MiRepository, cacheDB *sqllib.DB, m *sync.Mutex, dbName string) (MiRepository, error) {
 	if m == nil {
 		m = &sync.Mutex{}
 	}
@@ -66,7 +65,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create mi index unix statement %s: %w", dbName, err)
@@ -74,7 +73,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create mi index unix to %s: %w", dbName, err)
@@ -90,7 +89,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	m.m.Lock()
-	m.m.Unlock()
+	defer m.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -240,7 +239,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	tableNameAlias := m.dbName
 	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "CREATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -267,7 +266,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	tableNameAlias = m.dbName
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "RELATED_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -294,7 +292,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	tableNameAlias = m.dbName
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "LIMIT_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -321,7 +318,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	tableNameAlias = m.dbName
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -348,7 +344,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 	tableNameAlias = m.dbName
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -465,7 +460,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 
 func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	m.m.Lock()
-	m.m.Unlock()
+	defer m.m.Unlock()
 	var err error
 
 	trueValue := true
@@ -625,7 +620,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	tableNameAlias := m.dbName
 	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "CREATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -652,7 +647,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	tableNameAlias = m.dbName
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "RELATED_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -679,7 +673,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	tableNameAlias = m.dbName
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "LIMIT_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -706,7 +699,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	tableNameAlias = m.dbName
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -733,7 +725,6 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 	tableNameAlias = m.dbName
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1171,7 +1162,7 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	tableNameAlias := m.dbName
 	queryArgsForCreate := []interface{}{}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "CREATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -1198,7 +1189,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	tableNameAlias = m.dbName
 	queryArgsForCheck := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "CREATE_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1225,7 +1215,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	tableNameAlias = m.dbName
 	queryArgsForLimit := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "LIMIT_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1252,7 +1241,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	tableNameAlias = m.dbName
 	queryArgsForStart := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_START_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1279,7 +1267,6 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 	tableNameAlias = m.dbName
 	queryArgsForEnd := []interface{}{}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "ESTIMATE_END_TIME_UNIX"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -1410,7 +1397,7 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 
 func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
 	m.m.Lock()
-	m.m.Unlock()
+	defer m.m.Unlock()
 	var err error
 
 	trueValue := true
@@ -1872,7 +1859,7 @@ INSERT INTO ` + m.dbName + ` (
 
 func (m *miRepositoryCachedSQLite3Impl) GetBoardNames(ctx context.Context) ([]string, error) {
 	m.m.Lock()
-	m.m.Unlock()
+	defer m.m.Unlock()
 	var err error
 
 	sql := `
@@ -1883,7 +1870,7 @@ FROM ` + m.dbName + `
 	tableName := m.dbName
 	tableNameAlias := m.dbName
 	sql += fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
-	sql += fmt.Sprintf(" GROUP BY BOARD_NAME")
+	sql += " GROUP BY BOARD_NAME"
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := m.cachedDB.PrepareContext(ctx, sql)

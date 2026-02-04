@@ -103,7 +103,6 @@
 </template>
 
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import EditRyuuItemDialog from '../dialogs/edit-ryuu-item-dialog.vue'
 import { ref, type Ref } from 'vue';
 import KyouView from './kyou-view.vue';
@@ -125,8 +124,6 @@ import { RelatedTimeMatchType } from '@/classes/dnote/related-time-match-type';
 import moment from 'moment';
 import type RelatedKyouQuery from '../../classes/dnote/related-kyou-query';
 import RyuuListItemContextMenu from './ryuu-list-item-context-menu.vue';
-import type Predicate from '@/classes/dnote/predicate';
-import type PredicateGroupType from '@/classes/dnote/predicate-group-type';
 import type { GkillError } from '@/classes/api/gkill-error';
 import type { GkillMessage } from '@/classes/api/gkill-message';
 import type { Tag } from '@/classes/datas/tag';
@@ -135,7 +132,6 @@ import type { Notification } from '@/classes/datas/notification';
 import EqualTagsTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-tags-target-kyou-predicate';
 import EqualTitleTargetKyouPredicate from '@/classes/dnote/dnote-predicate/target-kyou-predicate/equal-title-target-kyou-predicate';
 import type DnotePredicate from '@/classes/dnote/dnote-predicate';
-import OrPredicate from '@/classes/dnote/dnote-predicate/or-predicate';
 
 const kyou_dialog = ref<InstanceType<typeof KyouDialog> | null>(null);
 const contextmenu = ref<InstanceType<typeof RyuuListItemContextMenu> | null>(null);
@@ -365,21 +361,6 @@ async function load_related_kyou(): Promise<void> {
     if (!match_kyou.value) {
         is_no_data.value = true
     }
-}
-
-function predicate_struct_to_json(group: PredicateGroupType | Predicate): any {
-    if (is_group(group)) {
-        return {
-            logic: group.logic,
-            predicates: group.predicates.map(p => predicate_struct_to_json(p))
-        }
-    } else {
-        return { type: group.type, value: group.value }
-    }
-}
-
-function is_group(p: Predicate | PredicateGroupType): p is PredicateGroupType {
-    return 'logic' in p && Array.isArray(p.predicates)
 }
 
 function show_kyou_dialog(): void {

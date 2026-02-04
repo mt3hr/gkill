@@ -16,22 +16,6 @@ func init() {
 	getFs.BoolVarP(&getOpt.all, "all", "a", false, "有効にした場合、最新だけでなくマッチするすべてのdvnfを取得します")
 	getFs.BoolVarP(&getOpt.createSubDir, "create_sub_directory", "s", false, "例えばhoge/fuga/piyoを渡されたときに、fuga/piyoも作成します。")
 	getFs.BoolVarP(&getOpt.ext, "ext", "e", true, "ドットが含まれた場合拡張子として分割する")
-	getCommand.PreRun = func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			getOpt.dvnfName = ""
-		} else if args[0] != "" {
-			getOpt.dvnfName = args[0]
-		} else {
-			pipeArg, err := pipeInFormatted()
-			if err != nil {
-				log.Fatal(err)
-			}
-			pipeArg = removeNewlineCodes(pipeArg)
-			if pipeArg != "" {
-				getOpt.dvnfName = pipeArg
-			}
-		}
-	}
 }
 
 var getOpt = struct {

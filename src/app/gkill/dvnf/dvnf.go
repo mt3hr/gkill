@@ -108,7 +108,10 @@ func CreateNewDVNF(opt *Option, isDir bool) (string, error) {
 		err = fmt.Errorf("error at create file %s: %w", dvnf, err)
 		return "", err
 	}
-	file.Close()
+	err = file.Close()
+	if err != nil {
+		return "", err
+	}
 	return dvnf, nil
 }
 

@@ -54,7 +54,6 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { ref } from 'vue'
 import type { URLogViewProps } from './ur-log-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'

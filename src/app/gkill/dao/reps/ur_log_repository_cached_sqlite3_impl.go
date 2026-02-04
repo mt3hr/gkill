@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create urlog index unix statement %s: %w", dbName, err)
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create urlog index unix to %s: %w", dbName, err)
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 
 func (u *urlogRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	u.m.Lock()
-	u.m.Unlock()
+	defer u.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -130,7 +130,7 @@ WHERE
 		dataType,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
 	ignoreFindWord := false
@@ -234,7 +234,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id strin
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	u.m.Lock()
-	u.m.Unlock()
+	defer u.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -543,7 +543,7 @@ WHERE
 		dataType,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"URL", "TITLE", "DESCRIPTION"}
 	ignoreFindWord := false
@@ -649,7 +649,7 @@ func (u *urlogRepositoryCachedSQLite3Impl) GetURLog(ctx context.Context, id stri
 
 func (u *urlogRepositoryCachedSQLite3Impl) GetURLogHistories(ctx context.Context, id string) ([]*URLog, error) {
 	u.m.Lock()
-	u.m.Unlock()
+	defer u.m.Unlock()
 	repName, err := u.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at URLOG: %w", err)

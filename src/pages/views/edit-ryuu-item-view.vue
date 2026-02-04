@@ -51,7 +51,7 @@ import type EditRyuuItemViewProps from './edit-ryuu-item-view-props'
 const find_query_editor_dialog = ref<InstanceType<typeof FindQueryEditorDialog> | null>(null);
 
 const model_value = defineModel<RelatedKyouQuery>()
-const props = defineProps<EditRyuuItemViewProps>()
+defineProps<EditRyuuItemViewProps>()
 const emits = defineEmits<EditRyuuItemViewEmits>()
 
 const id = ref("")

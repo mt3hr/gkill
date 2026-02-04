@@ -721,11 +721,11 @@ func (r *ReKyouRepositories) GetRepositoriesWithoutReKyouRep(ctx context.Context
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
 
-	withoutRekyouGkillRepsValue := *r.GkillRepositories
+	withoutRekyouGkillRepsValue := r.GkillRepositories
 	withoutRekyouGkillRepsValue.Reps = withoutRekyouReps
-	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = &withoutRekyouGkillRepsValue
+	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = withoutRekyouGkillRepsValue
 	withoutRekyouGkillRepsValue.ReKyouReps.ReKyouRepositories = nil
-	return &withoutRekyouGkillRepsValue, nil
+	return withoutRekyouGkillRepsValue, nil
 }
 
 func (r *ReKyouRepositories) UnWrapTyped() ([]ReKyouRepository, error) {

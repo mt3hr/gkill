@@ -57,7 +57,7 @@ func (n *notificator) waitAndNotify() {
 	updatedNotification.UpdateUser = "gkill_notificator"
 	err := n.gkillReps.WriteNotificationRep.AddNotificationInfo(notificationCtx, &updatedNotification)
 	if err != nil {
-		slog.Log(n.ctx, gkill_log.Error, "error", err)
+		slog.Log(n.ctx, gkill_log.Error, "error", "error", err)
 		return
 	}
 
@@ -67,7 +67,7 @@ func (n *notificator) waitAndNotify() {
 	var currentServerConfig *server_config.ServerConfig
 	serverConfigs, err := n.gkillDAOManager.ConfigDAOs.ServerConfigDAO.GetAllServerConfigs(notificationCtx)
 	if err != nil {
-		slog.Log(n.ctx, gkill_log.Error, "error", err)
+		slog.Log(n.ctx, gkill_log.Error, "error", "error", err)
 		return
 	}
 	for _, serverConfig := range serverConfigs {
@@ -77,7 +77,7 @@ func (n *notificator) waitAndNotify() {
 	}
 	if currentServerConfig == nil {
 		err = fmt.Errorf("current server config is not found. in gkill notificator")
-		slog.Log(n.ctx, gkill_log.Error, "error", err)
+		slog.Log(n.ctx, gkill_log.Error, "error", "error", err)
 		return
 	}
 
@@ -85,13 +85,13 @@ func (n *notificator) waitAndNotify() {
 	userID, err := n.gkillReps.GetUserID(notificationCtx)
 	if err != nil {
 		err = fmt.Errorf("get user id from gkill reps. in gkill notificator")
-		slog.Log(n.ctx, gkill_log.Error, "error", err)
+		slog.Log(n.ctx, gkill_log.Error, "error", "error", err)
 		return
 	}
 	notificationTargets, err := n.gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.GetGkillNotificationTargets(notificationCtx, userID, currentServerConfig.GkillNotificationPublicKey)
 	if err != nil {
 		err = fmt.Errorf("get notification target. in gkill notificator.: %w", err)
-		slog.Log(n.ctx, gkill_log.Error, "error", err)
+		slog.Log(n.ctx, gkill_log.Error, "error", "error", err)
 		return
 	}
 
@@ -110,7 +110,7 @@ func (n *notificator) waitAndNotify() {
 		contentJSONb, err := json.Marshal(content)
 		if err != nil {
 			err = fmt.Errorf("error at marshal webpush content: %w", err)
-			slog.Log(n.ctx, gkill_log.Error, "error", err)
+			slog.Log(n.ctx, gkill_log.Error, "error", "error", err)
 			return
 		}
 
@@ -125,7 +125,7 @@ func (n *notificator) waitAndNotify() {
 		})
 		if err != nil {
 			err = fmt.Errorf("error at send gkill notification: %w", err)
-			slog.Log(n.ctx, gkill_log.Debug, "error", err)
+			slog.Log(n.ctx, gkill_log.Debug, "error", "error", err)
 		}
 		if resp.Body != nil {
 			defer resp.Body.Close()
@@ -135,7 +135,7 @@ func (n *notificator) waitAndNotify() {
 			_, err := n.gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO.DeleteGkillNotificationTarget(notificationCtx, notificationTarget.ID)
 			if err != nil {
 				err = fmt.Errorf("error at delete gkill notification target after got 410 Gone: %w", err)
-				slog.Log(n.ctx, gkill_log.Debug, "error", err)
+				slog.Log(n.ctx, gkill_log.Debug, "error", "error", err)
 			}
 		}
 	}
@@ -165,7 +165,7 @@ func (g *GkillNotificator) updateLoopWhenTick() {
 	for {
 		err := g.UpdateNotificationTargets(context.Background())
 		if err != nil {
-			slog.Log(g.notificationServiceCtx, gkill_log.Error, "error", err)
+			slog.Log(g.notificationServiceCtx, gkill_log.Error, "error", "error", err)
 		}
 
 		select {

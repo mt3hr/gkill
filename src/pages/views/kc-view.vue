@@ -26,7 +26,6 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { ref } from 'vue'
 import KCContextMenu from './kc-context-menu.vue'
 import type { KCViewProps } from './kc-view-props'

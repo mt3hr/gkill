@@ -152,7 +152,7 @@ WHERE
 	tableName := "NOTIFICATION"
 	tableNameAlias := "NOTIFICATION"
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
@@ -331,7 +331,7 @@ WHERE
 	tableName := "NOTIFICATION"
 	tableNameAlias := "NOTIFICATION"
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{"TARGET_ID"}
 	ignoreFindWord := false
@@ -471,7 +471,7 @@ WHERE
 	tableName := "NOTIFICATION"
 	tableNameAlias := "NOTIFICATION"
 	whereCounter := 1
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "NOTIFICATION_TIME"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false

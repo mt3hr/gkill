@@ -13,7 +13,7 @@ func GetVersion() (*GkillVersionData, error) {
 	assetsFileName := "embed/version.json"
 	versionJSONFile, err := EmbedFS.Open(assetsFileName)
 	if err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 	}
 	defer versionJSONFile.Close()
 

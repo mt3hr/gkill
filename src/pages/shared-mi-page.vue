@@ -22,7 +22,6 @@
 </template>
 
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 'use strict'
 import { computed, ref, type Ref } from 'vue'
 import type { GkillError } from '@/classes/api/gkill-error'
@@ -33,7 +32,7 @@ import { useRoute } from 'vue-router'
 import type { SharedMiPageProps } from './shared-mi-page-props'
 import { GkillAPI } from '@/classes/api/gkill-api'
 
-const props = defineProps<SharedMiPageProps>()
+defineProps<SharedMiPageProps>()
 
 const actual_height: Ref<number> = ref(0)
 const element_height: Ref<number> = ref(0)

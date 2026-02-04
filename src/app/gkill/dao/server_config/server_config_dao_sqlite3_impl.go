@@ -790,7 +790,7 @@ INSERT INTO SERVER_CONFIG (
 				return false, err
 			}
 			if recordCount == 0 {
-				slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", insertSQL)
+				slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
 				queryArgs := []interface{}{
 					serverConfig.Device,
 					key,
@@ -840,7 +840,7 @@ WHERE KEY = 'ENABLE_THIS_DEVICE'
 AND VALUE = ?
 GROUP BY DEVICE
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", checkEnableDeviceCountSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", checkEnableDeviceCountSQL)
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)
@@ -879,7 +879,7 @@ GROUP BY DEVICE
 				&enableCount,
 			)
 			if err != nil {
-				slog.Log(ctx, gkill_log.Debug, "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 				break
 			}
 			enableDeviceCount += enableCount
@@ -1011,7 +1011,7 @@ INSERT INTO SERVER_CONFIG (
 			}
 		}
 		if recordCount == 0 {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", insertSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
 			queryArgs := []interface{}{
 				serverConfig.Device,
 				key,
@@ -1110,7 +1110,7 @@ GROUP BY DEVICE
 				&enableCount,
 			)
 			if err != nil {
-				slog.Log(ctx, gkill_log.Debug, "error", err)
+				slog.Log(ctx, gkill_log.Debug, "error", "error", err)
 				break
 			}
 			enableDeviceCount += enableCount
@@ -1180,7 +1180,7 @@ func (s *serverConfigDAOSQLite3Impl) DeleteWriteServerConfigs(ctx context.Contex
 	deleteSQL := `
 DELETE FROM SERVER_CONFIG 
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", deleteSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", deleteSQL)
 
 	stmt, err := tx.PrepareContext(ctx, deleteSQL)
 	if err != nil {
@@ -1189,7 +1189,7 @@ DELETE FROM SERVER_CONFIG
 	}
 	defer stmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", deleteSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", deleteSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -1242,7 +1242,7 @@ INSERT INTO SERVER_CONFIG (
 				key,
 				value,
 			}
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", insertSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertSQL, queryArgs)
 			_, err = insertStmt.ExecContext(ctx, queryArgs...)
 			if err != nil {
@@ -1260,7 +1260,7 @@ WHERE KEY = 'ENABLE_THIS_DEVICE'
 AND VALUE = ?
 GROUP BY DEVICE
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", checkEnableDeviceCountSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", checkEnableDeviceCountSQL)
 	checkEnableDeviceStmt, err := tx.PrepareContext(ctx, checkEnableDeviceCountSQL)
 	if err != nil {
 		err = fmt.Errorf("error at check enable device server config sql: %w", err)

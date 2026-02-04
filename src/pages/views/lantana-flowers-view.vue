@@ -25,7 +25,6 @@
     </table>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { type Ref, ref, watch } from 'vue'
 import type { LantanaFlowersViewEmits } from './lantana-flowers-view-emits'
 import type { LantanaFlowersViewProps } from './lantana-flowers-view-props'

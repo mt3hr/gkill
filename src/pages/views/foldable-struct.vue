@@ -53,7 +53,6 @@
     </tr>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import FoldableStruct from './foldable-struct.vue'
 import { computed, ref, watch, type Ref } from 'vue'
 import type { FoldableStructEmits } from './foldable-struct-emits'

@@ -40,7 +40,6 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import { ref } from 'vue';
 import kftlView from './kftl-view.vue'
 import PlaingTimeisView from './plaing-timeis-view.vue'

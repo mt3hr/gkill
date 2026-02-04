@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 
 	indexTargetIDSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG_TARGET_ID ON TAG (TARGET_ID, UPDATE_TIME DESC);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDSQL)
 	indexTargetIDStmt, err := db.PrepareContext(ctx, indexTargetIDSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID index statement %s: %w", filename, err)
@@ -84,14 +84,14 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 	defer indexTargetIDStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDSQL)
 	_, err = indexTargetIDStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID index to %s: %w", filename, err)
 		return nil, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDSQL)
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", filename, err)
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 
 	indexIDUpdateTimeSQL := `CREATE INDEX IF NOT EXISTS INDEX_TAG_ID_UPDATE_TIME ON TAG (ID, UPDATE_TIME);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexIDUpdateTimeSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexIDUpdateTimeSQL)
 	indexIDUpdateTimeStmt, err := db.PrepareContext(ctx, indexIDUpdateTimeSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index statement %s: %w", filename, err)
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	}
 	defer indexIDUpdateTimeStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexIDUpdateTimeSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexIDUpdateTimeSQL)
 	_, err = indexIDUpdateTimeStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME index to %s: %w", filename, err)

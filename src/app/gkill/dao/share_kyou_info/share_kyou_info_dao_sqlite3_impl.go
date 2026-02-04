@@ -305,7 +305,7 @@ WHERE USER_ID = ? AND DEVICE = ?
 		userID,
 		device,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "%#v", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "query args", queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -435,7 +435,7 @@ WHERE SHARE_ID = ?
 	queryArgs := []interface{}{
 		sharedID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "%#v", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "query args", queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -520,7 +520,7 @@ INSERT INTO SHARE_KYOU_INFO (
 		kyouShareInfo.FindQueryJSON,
 		kyouShareInfo.ViewType,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "%#v", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -559,7 +559,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 	defer optionsStmt.Close()
 
 	for key, value := range insertValuesMap {
-		slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", optionsSQL)
+		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", optionsSQL)
 		queryArgs := []interface{}{
 			kyouShareInfo.ShareID,
 			key,
@@ -624,7 +624,7 @@ WHERE SHARE_ID = ?
 		kyouShareInfo.ViewType,
 		kyouShareInfo.ShareID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "%#v", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -728,7 +728,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 			return false, err
 		}
 		if recordCount == 0 {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", insertSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
 			queryArgs := []interface{}{
 				kyouShareInfo.ShareID,
 				key,
@@ -747,7 +747,7 @@ INSERT INTO SHARE_KYOU_INFO_OPTIONS (
 				return false, err
 			}
 		} else {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", updateOptionsSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", updateOptionsSQL)
 			queryArgs := []interface{}{
 				value,
 				kyouShareInfo.ShareID,
@@ -825,7 +825,7 @@ WHERE SHARE_ID = ?
 	queryArgs := []interface{}{
 		shareID,
 	}
-	slog.Log(ctx, gkill_log.TraceSQL, "%#v", queryArgs)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", queryArgs)
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 	if err != nil {
 		err = fmt.Errorf("error at query :%w", err)
@@ -836,7 +836,7 @@ WHERE SHARE_ID = ?
 DELETE FROM SHARE_KYOU_INFO_OPTIONS
 WHERE SHARE_ID = ?
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", optionsSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", optionsSQL)
 	stmt, err = tx.PrepareContext(ctx, optionsSQL)
 	if err != nil {
 		err = fmt.Errorf("error at delete share kyou info options sql: %w", err)

@@ -32,13 +32,13 @@ func init() {
 	jsonFileNames := []string{}
 	locales, err := EmbedFS.ReadDir("embed/i18n/locales")
 	if err != nil {
-		slog.Log(ctx, gkill_log.Error, "error", err)
+		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 		panic(err)
 	}
 	for _, locale := range locales {
 		info, err := locale.Info()
 		if err != nil {
-			slog.Log(ctx, gkill_log.Error, "error", err)
+			slog.Log(ctx, gkill_log.Error, "error", "error", err)
 			panic(err)
 		}
 		jsonFileNames = append(jsonFileNames, info.Name())
@@ -52,7 +52,7 @@ func init() {
 
 		jsonFile, err := EmbedFS.ReadFile(fullPath)
 		if err != nil {
-			slog.Log(ctx, gkill_log.Error, "error", err)
+			slog.Log(ctx, gkill_log.Error, "error", "error", err)
 			panic(err)
 		}
 		bundle.MustParseMessageFileBytes(jsonFile, base)

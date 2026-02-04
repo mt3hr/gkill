@@ -10,7 +10,7 @@ export default class MiTitleEqualPredicate implements DnotePredicate {
         const mi_title_equal_target = json.value as string
         return new MiTitleEqualPredicate(mi_title_equal_target)
     }
-    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
         const mi_title = loaded_kyou.typed_mi?.title
         if (mi_title) {
             if (mi_title === this.mi_title_equal_target) {
