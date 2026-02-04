@@ -10,7 +10,7 @@ export default class KmemoContentContainsPredicate implements DnotePredicate {
         const kmemo_content_contains_target = json.value as string
         return new KmemoContentContainsPredicate(kmemo_content_contains_target)
     }
-    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
         const kmemo_content = loaded_kyou.typed_kmemo?.content
         if (kmemo_content) {
             if (kmemo_content?.includes(this.kmemo_content_contains_target)) {

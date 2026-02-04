@@ -15,7 +15,6 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import type { LantanaFlowerEmits } from './lantana-flower-emits'
 import type { LantanaFlowerProps } from './lantana-flower-props'
 import { LantanaFlowerState } from '@/classes/lantana/lantana-flower-state';

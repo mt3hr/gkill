@@ -32,7 +32,7 @@ const edit_related_kyou_query_dialog = ref<InstanceType<typeof EditRyuuItemDialo
 const confirm_delete_ryuu_list_item_dialog = ref<InstanceType<typeof ConfirmDeleteRyuuListItemDialog> | null>(null);
 
 const model_value = defineModel<RelatedKyouQuery>()
-const props = defineProps<RyuuListItemContextMenuProps>()
+defineProps<RyuuListItemContextMenuProps>()
 const emits = defineEmits<RyuuListItemContextMenuEmits>()
 defineExpose({ show, hide })
 

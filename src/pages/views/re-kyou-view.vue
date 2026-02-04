@@ -49,7 +49,6 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import type { ReKyouViewProps } from './re-kyou-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import ReKyouContextMenu from './re-kyou-context-menu.vue'

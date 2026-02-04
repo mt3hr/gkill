@@ -81,7 +81,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import type { SharedMiViewProps } from './shared-mi-view-props'
 
 import { computed, nextTick, type Ref, ref, watch } from 'vue'

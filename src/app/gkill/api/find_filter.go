@@ -82,7 +82,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 	}
 
-	if findKyouContext.Repositories.LatestDataRepositoryAddresses == nil || len(findKyouContext.Repositories.LatestDataRepositoryAddresses) == 0 {
+	if len(findKyouContext.Repositories.LatestDataRepositoryAddresses) == 0 {
 		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
 		if err != nil {
 			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
@@ -121,7 +121,7 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 					errs = append(errs, err)
 				}
 				gkillErr := <-gkillErrch
-				if gkillErr != nil && len(gkillErr) != 0 {
+				if len(gkillErr) == 0 {
 					gkillErrors = append(gkillErrors, gkillErr...)
 				}
 			default:
@@ -547,9 +547,7 @@ func (f *FindFilter) getAllTags(ctx context.Context, findCtx *FindKyouContext) (
 func (f *FindFilter) getAllHideTagsWhenUnChecked(ctx context.Context, findCtx *FindKyouContext, userID string, device string) ([]*message.GkillError, error) {
 	hideTagNames := []string{}
 	if findCtx.ParsedFindQuery.HideTags != nil {
-		for _, hideTagName := range *findCtx.ParsedFindQuery.HideTags {
-			hideTagNames = append(hideTagNames, hideTagName)
-		}
+		hideTagNames = append(hideTagNames, *findCtx.ParsedFindQuery.HideTags...)
 	}
 
 	for _, hideTagName := range hideTagNames {
@@ -1348,7 +1346,7 @@ func (f *FindFilter) filterLocationKyous(ctx context.Context, findCtx *FindKyouC
 		go func(rep reps.GPSLogRepository) {
 			defer wg.Done()
 			// repで検索
-			gpsLogs := []*reps.GPSLog{}
+			var gpsLogs []*reps.GPSLog
 			if isAllDays {
 				gpsLogs, err = rep.GetAllGPSLogs(ctx)
 			} else {

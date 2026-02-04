@@ -37,10 +37,8 @@
     </v-row>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import type { KyouViewEmits } from './kyou-view-emits'
 import type { TagViewProps } from './tag-view-props'
-import moment from 'moment';
 import AttachedTag from './attached-tag.vue';
 import { format_time } from '@/classes/format-date-time'
 import type { Tag } from '@/classes/datas/tag';

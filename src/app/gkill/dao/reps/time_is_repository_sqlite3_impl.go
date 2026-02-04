@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"database/sql"
 	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -95,7 +94,7 @@ CREATE TABLE IF NOT EXISTS "TIMEIS" (
 }
 func (t *timeIsRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if t.fullConnect {
 		db = t.db
 	} else {
@@ -171,7 +170,7 @@ FROM TIMEIS
 		repName,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -206,7 +205,6 @@ FROM TIMEIS
 		repName,
 	}
 	whereCounter = 0
-	onlyLatestData = true
 	relatedTimeColumnName = "RELATED_TIME"
 	findWordTargetColumns = []string{"TITLE"}
 	ignoreFindWord = false
@@ -242,7 +240,7 @@ FROM TIMEIS
 	}
 	defer stmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql, "params", queryArgsForStart, "params", queryArgsForPlaingStart, "params", queryArgsForEnd, "params", queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
@@ -333,7 +331,7 @@ func (t *timeIsRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, up
 
 func (t *timeIsRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if t.fullConnect {
 		db = t.db
 	} else {
@@ -497,7 +495,7 @@ func (t *timeIsRepositorySQLite3Impl) Close(ctx context.Context) error {
 
 func (t *timeIsRepositorySQLite3Impl) FindTimeIs(ctx context.Context, query *find.FindQuery) ([]*TimeIs, error) {
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if t.fullConnect {
 		db = t.db
 	} else {
@@ -579,7 +577,7 @@ FROM TIMEIS
 		repName,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -642,7 +640,7 @@ FROM TIMEIS
 	}
 	defer stmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v %#v %#v %#v", sql, queryArgsForStart, queryArgsForPlaingStart, queryArgsForEnd, queryArgsForPlaingEnd)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql, "params", queryArgsForStart, "params", queryArgsForPlaingStart, "params", queryArgsForEnd, "params", queryArgsForPlaingEnd)
 	rows, err := stmt.QueryContext(ctx, append(queryArgsForStart, append(queryArgsForPlaingStart, append(queryArgsForEnd, queryArgsForPlaingEnd...)...)...)...)
 	if err != nil {
 		err = fmt.Errorf("error at select from TIMEIS: %w", err)
@@ -737,7 +735,7 @@ func (t *timeIsRepositorySQLite3Impl) GetTimeIs(ctx context.Context, id string, 
 
 func (t *timeIsRepositorySQLite3Impl) GetTimeIsHistories(ctx context.Context, id string) ([]*TimeIs, error) {
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if t.fullConnect {
 		db = t.db
 	} else {
@@ -893,7 +891,7 @@ func (t *timeIsRepositorySQLite3Impl) AddTimeIsInfo(ctx context.Context, timeis 
 	t.m.Lock()
 	defer t.m.Unlock()
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if t.fullConnect {
 		db = t.db
 	} else {

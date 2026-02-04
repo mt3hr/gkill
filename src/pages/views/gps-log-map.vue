@@ -17,7 +17,6 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { i18n } from '@/i18n'
 import moment from 'moment';
 import { computed, nextTick, ref, watch, type Ref } from 'vue';
 import { GoogleMap, Polyline, Marker } from 'vue3-google-map';

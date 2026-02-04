@@ -90,7 +90,6 @@ import type { Account } from '@/classes/datas/config/account'
 import { UpdateAccountStatusRequest } from '@/classes/api/req_res/update-account-status-request'
 import { GetServerConfigsRequest } from '@/classes/api/req_res/get-server-configs-request'
 import { GkillError } from '@/classes/api/gkill-error'
-import { GkillErrorCodes } from '@/classes/api/message/gkill_error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 
 const allocate_rep_dialog = ref<InstanceType<typeof AllocateRepDialog> | null>(null);

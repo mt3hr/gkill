@@ -27,7 +27,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import type { AttachedTextProps } from './attached-text-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { computed, ref } from 'vue'

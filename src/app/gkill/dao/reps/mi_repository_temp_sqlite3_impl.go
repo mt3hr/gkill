@@ -2,13 +2,11 @@ package reps
 
 import (
 	"context"
+	sqllib "database/sql"
 	"fmt"
 	"log/slog"
 	"sync"
 	"time"
-
-	"database/sql"
-	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
@@ -18,7 +16,7 @@ import (
 
 type miTempRepositorySQLite3Impl miRepositorySQLite3Impl
 
-func NewMiTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (MiTempRepository, error) {
+func NewMiTempRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB, m *sync.Mutex) (MiTempRepository, error) {
 	filename := "mi_temp"
 
 	sql := `

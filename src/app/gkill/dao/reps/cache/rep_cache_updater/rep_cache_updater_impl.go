@@ -268,7 +268,7 @@ func (h *watcherHub) runEventLoop() {
 			if !ok {
 				return
 			}
-			slog.Log(context.Background(), gkill_log.Debug, "fsnotify error: %v\n", err)
+			slog.Log(context.Background(), gkill_log.Debug, "fsnotify error", "error", err)
 		}
 	}
 }

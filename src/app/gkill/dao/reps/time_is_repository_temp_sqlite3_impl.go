@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"database/sql"
 	sqllib "database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -18,7 +17,7 @@ import (
 
 type timeIsTempRepositorySQLite3Impl timeIsRepositorySQLite3Impl
 
-func NewTimeIsTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (TimeIsTempRepository, error) {
+func NewTimeIsTempRepositorySQLite3Impl(ctx context.Context, db *sqllib.DB, m *sync.Mutex) (TimeIsTempRepository, error) {
 	filename := "time_is_temp"
 	sql := `
 CREATE TABLE IF NOT EXISTS "TIMEIS" (

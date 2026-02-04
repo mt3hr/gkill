@@ -69,7 +69,6 @@ import AddNewTagStructElementDialog from '../dialogs/add-new-tag-struct-element-
 import EditTagStructElementDialog from '../dialogs/edit-tag-struct-element-dialog.vue'
 import type { ApplicationConfig } from '@/classes/datas/config/application-config'
 import FoldableStruct from './foldable-struct.vue'
-import type { FoldableStructModel } from './foldable-struct-model'
 import AddNewFoloderDialog from '../dialogs/add-new-foloder-dialog.vue'
 import { TagStructElementData } from '@/classes/datas/config/tag-struct-element-data'
 

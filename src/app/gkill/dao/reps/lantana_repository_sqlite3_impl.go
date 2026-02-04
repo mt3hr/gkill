@@ -148,7 +148,7 @@ WHERE
 	tableName := "LANTANA"
 	tableNameAlias := "LANTANA"
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
@@ -486,7 +486,7 @@ WHERE
 	tableName := "LANTANA"
 	tableNameAlias := "LANTANA"
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true

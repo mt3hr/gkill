@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexTargetIDUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_TARGET_ID_UNIX" ON "` + dbName + `"(TARGET_ID, UPDATE_TIME_UNIX DESC);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDUnixSQL)
 	indexTargetIDUnixStmt, err := cacheDB.PrepareContext(ctx, indexTargetIDUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID_UNIX index statement %s: %w", dbName, err)
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexTargetIDUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexTargetIDUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexTargetIDUnixSQL)
 	_, err = indexTargetIDUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_TARGET_ID_UNIX index to %s: %w", dbName, err)
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexIDUpdateTimeUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_ID_UPDATE_TIME_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexIDUpdateTimeUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexIDUpdateTimeUnixSQL)
 	indexIDUpdateTimeUnixStmt, err := cacheDB.PrepareContext(ctx, indexIDUpdateTimeUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME_UNIX index statement %s: %w", dbName, err)
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexIDUpdateTimeUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexIDUpdateTimeUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexIDUpdateTimeUnixSQL)
 	_, err = indexIDUpdateTimeUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME_UNIX index to %s: %w", dbName, err)
@@ -120,7 +120,7 @@ WHERE TAG1.TARGET_ID = ?
   )
 ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 `
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", getTagsByTargetIDSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", getTagsByTargetIDSQL)
 	getTagsByTargetIDStmt, err := cacheDB.PrepareContext(ctx, getTagsByTargetIDSQL)
 	if err != nil {
 		err = fmt.Errorf("error at get get target id sql: %w", err)
@@ -139,7 +139,7 @@ ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 }
 func (t *tagRepositoryCachedSQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -180,7 +180,7 @@ WHERE
 	tableName := t.dbName
 	tableNameAlias := t.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TAG"}
 	ignoreFindWord := false
@@ -340,7 +340,7 @@ WHERE
 	tableName := t.dbName
 	tableNameAlias := t.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TAG"}
 	ignoreFindWord := false
@@ -594,7 +594,7 @@ func (t *tagRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string
 
 func (t *tagRepositoryCachedSQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	sql := `
@@ -773,7 +773,7 @@ INSERT INTO ` + t.dbName + ` (
 
 func (t *tagRepositoryCachedSQLite3Impl) GetAllTagNames(ctx context.Context) ([]string, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	sql := `
@@ -784,7 +784,7 @@ FROM ` + t.dbName + `
 	tableName := t.dbName
 	tableNameAlias := t.dbName
 	sql += fmt.Sprintf(" WHERE UPDATE_TIME_UNIX = ( SELECT MAX(UPDATE_TIME_UNIX) FROM %s AS INNER_TABLE WHERE ID = %s.ID )", tableName, tableNameAlias)
-	sql += fmt.Sprintf(" GROUP BY TAG ")
+	sql += " GROUP BY TAG "
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := t.cachedDB.PrepareContext(ctx, sql)
@@ -829,7 +829,7 @@ FROM ` + t.dbName + `
 
 func (t *tagRepositoryCachedSQLite3Impl) GetAllTags(ctx context.Context) ([]*Tag, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	sql := `
@@ -863,7 +863,7 @@ WHERE
 	tableName := t.dbName
 	tableNameAlias := t.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true

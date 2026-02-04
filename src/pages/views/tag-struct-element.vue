@@ -3,7 +3,6 @@
         :folder_name="folder_name" :is_open="is_open" :struct_obj="struct_obj" />
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { type Ref, ref } from 'vue'
 import type { TagStructElementEmits } from './tag-struct-element-emits'
 import type { TagStructElementProps } from './tag-struct-element-props'
