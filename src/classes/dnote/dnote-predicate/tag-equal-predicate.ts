@@ -10,7 +10,7 @@ export default class TagEqualPredicate implements DnotePredicate {
         const tag = json.value as string
         return new TagEqualPredicate(tag)
     }
-    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
         for (let i = 0; i < loaded_kyou.attached_tags.length; i++) {
             const tag = loaded_kyou.attached_tags[i]
             if (tag.tag === this.tag) {

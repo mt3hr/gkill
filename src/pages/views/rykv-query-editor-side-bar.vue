@@ -65,7 +65,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { FindKyouQuery } from '@/classes/api/find_query/find-kyou-query'
 import CalendarQuery from './calendar-query.vue'
 import KeywordQuery from './keyword-query.vue'

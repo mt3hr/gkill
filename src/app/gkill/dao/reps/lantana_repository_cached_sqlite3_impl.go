@@ -3,7 +3,6 @@ package reps
 import (
 	"context"
 	"database/sql"
-	sqllib "database/sql"
 	"fmt"
 	"log/slog"
 	"sync"
@@ -19,7 +18,7 @@ import (
 type lantanaRepositoryCachedSQLite3Impl struct {
 	dbName     string
 	lantanaRep LantanaRepository
-	cachedDB   *sqllib.DB
+	cachedDB   *sql.DB
 	m          *sync.Mutex
 }
 
@@ -60,7 +59,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create lantana index unix statement %s: %w", dbName, err)
@@ -68,7 +67,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create lantana index unix to %s: %w", dbName, err)
@@ -84,7 +83,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (l *lantanaRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	l.m.Lock()
-	l.m.Unlock()
+	defer l.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -124,7 +123,7 @@ WHERE
 	tableName := l.dbName
 	tableNameAlias := l.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
@@ -227,7 +226,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id str
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	l.m.Lock()
-	l.m.Unlock()
+	defer l.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -520,7 +519,7 @@ WHERE
 	tableName := l.dbName
 	tableNameAlias := l.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
@@ -622,7 +621,7 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetLantana(ctx context.Context, id 
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
 	l.m.Lock()
-	l.m.Unlock()
+	defer l.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,

@@ -26,7 +26,7 @@
 </template>
 <script lang="ts" setup>
 import { i18n } from '@/i18n'
-import { computed, nextTick, type Ref, ref, watch } from 'vue';
+import { computed, type Ref, ref } from 'vue';
 import type { ShareKyousLinkViewEmits } from './share-kyou-link-view-emits'
 import type { ShareKyousLinkViewProps } from './share-kyou-link-view-props'
 import { ShareKyousInfo } from '@/classes/datas/share-kyous-info';

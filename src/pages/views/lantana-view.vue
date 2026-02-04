@@ -25,7 +25,6 @@
     </v-card>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import type { LantanaViewProps } from './lantana-view-props'
 import type { KyouViewEmits } from './kyou-view-emits'
 import { ref } from 'vue'

@@ -94,16 +94,6 @@ CREATE TABLE IF NOT EXISTS "REKYOU" (
 }
 func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
-	var db *sql.DB
-	if r.fullConnect {
-		db = r.db
-	} else {
-		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
-		if err != nil {
-			return nil, err
-		}
-		defer db.Close()
-	}
 
 	matchKyous := map[string][]*Kyou{}
 
@@ -185,16 +175,6 @@ func (r *reKyouRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find
 
 func (r *reKyouRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
 	var err error
-	var db *sql.DB
-	if r.fullConnect {
-		db = r.db
-	} else {
-		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
-		if err != nil {
-			return nil, err
-		}
-		defer db.Close()
-	}
 
 	// 最新のデータを返す
 	kyouHistories, err := r.GetKyouHistories(ctx, id)
@@ -386,17 +366,6 @@ func (r *reKyouRepositorySQLite3Impl) Close(ctx context.Context) error {
 
 func (r *reKyouRepositorySQLite3Impl) FindReKyou(ctx context.Context, query *find.FindQuery) ([]*ReKyou, error) {
 	var err error
-	var db *sql.DB
-	if r.fullConnect {
-		db = r.db
-	} else {
-		db, err = sqlite3impl.GetSQLiteDBConnection(ctx, r.filename)
-		if err != nil {
-			return nil, err
-		}
-		defer db.Close()
-	}
-
 	matchReKyous := []*ReKyou{}
 
 	// 未削除ReKyouを抽出
@@ -724,7 +693,7 @@ WHERE
 	tableName := "REKYOU"
 	tableNameAlias := "REKYOU"
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true
@@ -806,39 +775,39 @@ WHERE
 
 func (r *reKyouRepositorySQLite3Impl) GetRepositoriesWithoutReKyouRep(ctx context.Context) (*GkillRepositories, error) {
 	withoutRekyouReps := Repositories{}
-	for _, rep := range *&r.gkillRepositories.KmemoReps {
+	for _, rep := range r.gkillRepositories.KmemoReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
-	for _, rep := range *&r.gkillRepositories.KCReps {
+	for _, rep := range r.gkillRepositories.KCReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
-	for _, rep := range *&r.gkillRepositories.URLogReps {
+	for _, rep := range r.gkillRepositories.URLogReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
-	for _, rep := range *&r.gkillRepositories.NlogReps {
+	for _, rep := range r.gkillRepositories.NlogReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
-	for _, rep := range *&r.gkillRepositories.TimeIsReps {
+	for _, rep := range r.gkillRepositories.TimeIsReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
-	for _, rep := range *&r.gkillRepositories.MiReps {
+	for _, rep := range r.gkillRepositories.MiReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
-	for _, rep := range *&r.gkillRepositories.LantanaReps {
+	for _, rep := range r.gkillRepositories.LantanaReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
-	for _, rep := range *&r.gkillRepositories.IDFKyouReps {
+	for _, rep := range r.gkillRepositories.IDFKyouReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
-	for _, rep := range *&r.gkillRepositories.GitCommitLogReps {
+	for _, rep := range r.gkillRepositories.GitCommitLogReps {
 		withoutRekyouReps = append(withoutRekyouReps, rep)
 	}
 
-	withoutRekyouGkillRepsValue := *r.gkillRepositories
+	withoutRekyouGkillRepsValue := r.gkillRepositories
 	withoutRekyouGkillRepsValue.Reps = withoutRekyouReps
-	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = &withoutRekyouGkillRepsValue
+	withoutRekyouGkillRepsValue.ReKyouReps.GkillRepositories = withoutRekyouGkillRepsValue
 	withoutRekyouGkillRepsValue.ReKyouReps.ReKyouRepositories = nil
-	return &withoutRekyouGkillRepsValue, nil
+	return withoutRekyouGkillRepsValue, nil
 }
 
 func (r *reKyouRepositorySQLite3Impl) UnWrapTyped() ([]ReKyouRepository, error) {

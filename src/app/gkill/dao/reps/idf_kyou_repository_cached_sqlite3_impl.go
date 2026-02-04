@@ -3,7 +3,6 @@ package reps
 import (
 	"context"
 	"database/sql"
-	sqllib "database/sql"
 	"fmt"
 	"io"
 	"log/slog"
@@ -24,7 +23,7 @@ import (
 type idfKyouRepositoryCachedSQLite3Impl struct {
 	dbName   string
 	idfRep   IDFKyouRepository
-	cachedDB *sqllib.DB
+	cachedDB *sql.DB
 	m        *sync.Mutex
 }
 
@@ -68,7 +67,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `" (ID, RELATED_TIME_UNIX, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF index unix statement %s: %w", dbName, err)
@@ -76,7 +75,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create IDF index unix to %s: %w", dbName, err)
@@ -94,7 +93,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	i.m.Lock()
-	i.m.Unlock()
+	defer i.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -135,7 +134,7 @@ WHERE
 	tableName := i.dbName
 	tableNameAlias := i.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
@@ -351,7 +350,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id str
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	i.m.Lock()
-	i.m.Unlock()
+	defer i.m.Unlock()
 	var err error
 	sql := `
 SELECT 
@@ -684,7 +683,7 @@ WHERE
 	tableName := i.dbName
 	tableNameAlias := i.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "RELATED_TIME_UNIX"
 	findWordTargetColumns := []string{"TARGET_FILE"}
 	ignoreFindWord := true
@@ -872,7 +871,7 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyou(ctx context.Context, id 
 
 func (i *idfKyouRepositoryCachedSQLite3Impl) GetIDFKyouHistories(ctx context.Context, id string) ([]*IDFKyou, error) {
 	i.m.Lock()
-	i.m.Unlock()
+	defer i.m.Unlock()
 	var err error
 	sql := `
 SELECT 

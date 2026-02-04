@@ -67,7 +67,7 @@ var (
 					idfKyouRep, err := reps.NewIDFDirRep(context.TODO(), filename, idDBFilename, true, router, autoIDF, &idfIgnore, nil)
 					if err != nil {
 						err = fmt.Errorf("error at new idf dir rep: %w", err)
-						slog.Log(cmd.Context(), gkill_log.Debug, "error", err)
+						slog.Log(cmd.Context(), gkill_log.Debug, "error", "error", err)
 						fmt.Printf("skip idf: %s\n", filename)
 						continue
 					}
@@ -106,14 +106,14 @@ var (
 
 			err := InitGkillServerAPI()
 			if err != nil {
-				slog.Log(cmd.Context(), gkill_log.Error, "error", err)
+				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
 			}
 
 			for _, targetUserID := range targetUserIDs {
 				err := GenerateThumbCache(cmd.Context(), targetUserID)
 				if err != nil {
 					err = fmt.Errorf("error at generate thumb cache user id = %s: %w", targetUserID, err)
-					slog.Log(cmd.Context(), gkill_log.Error, "error", err)
+					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
 				}
 			}
 		},
@@ -186,7 +186,6 @@ func LaunchGkillServerAPI() error {
 		err = gkillServerAPI.Serve()
 		if err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
-				err = nil
 				// サーバが正常に閉じられた場合はスルーして立ち上げ直す
 			} else {
 				slog.Log(context.Background(), gkill_log.Debug, "error at gkill server api serve", "error", err)

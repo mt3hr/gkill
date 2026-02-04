@@ -327,6 +327,9 @@ LIMIT ?
 				&dataUpdateTimeUnix,
 				&latestDataRepositoryAddressUpdatedTimeUnix,
 			)
+			if err != nil {
+				return nil, err
+			}
 
 			latestDataRepositoryAddress.DataUpdateTime = time.Unix(dataUpdateTimeUnix, int64(0))
 			latestDataRepositoryAddress.LatestDataRepositoryAddressUpdatedTime = time.Unix(latestDataRepositoryAddressUpdatedTimeUnix, int64(0))
@@ -362,7 +365,7 @@ INSERT INTO %s (
 )
 `, l.tableName)
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", deleteSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", deleteSQL)
 	deleteStmt, err := l.db.PrepareContext(ctx, deleteSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repoisitory address delete sql: %w", err)
@@ -380,7 +383,7 @@ INSERT INTO %s (
 		return false, err
 	}
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", insertSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
 	insertStmt, err := l.db.PrepareContext(ctx, insertSQL)
 	if err != nil {
 		err = fmt.Errorf("error at add or update latest data repoisitory insert address sql: %w", err)
@@ -460,7 +463,7 @@ INSERT INTO %s (
 
 	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 		_, err := func() (bool, error) {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", deleteSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", deleteSQL)
 			deleteQueryArgs := []interface{}{
 				latestDataRepositoryAddress.TargetID,
 			}
@@ -475,7 +478,7 @@ INSERT INTO %s (
 				return false, err
 			}
 
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", insertSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
 			insertQueryArgs := []interface{}{
 				latestDataRepositoryAddress.IsDeleted,
 				latestDataRepositoryAddress.TargetID,

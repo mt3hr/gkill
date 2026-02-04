@@ -359,7 +359,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import { i18n } from '@/i18n'
 import { computed, watch, type Ref, ref, nextTick, onUnmounted } from 'vue'
 import { format_time } from '@/classes/format-date-time'
 
@@ -388,7 +387,6 @@ import type IdfKyouView from './idf-kyou-view.vue'
 import type { Tag } from '@/classes/datas/tag';
 import type { Text } from '@/classes/datas/text';
 import type { Notification } from '@/classes/datas/notification';
-import moment from 'moment'
 import type { GkillError } from '@/classes/api/gkill-error'
 import type { GkillMessage } from '@/classes/api/gkill-message'
 

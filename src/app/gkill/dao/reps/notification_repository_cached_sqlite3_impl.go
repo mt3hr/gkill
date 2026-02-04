@@ -2,7 +2,6 @@ package reps
 
 import (
 	"context"
-	"database/sql"
 	sqllib "database/sql"
 	"fmt"
 	"log/slog"
@@ -24,7 +23,7 @@ type notificationRepositoryCachedSQLite3Impl struct {
 	m               *sync.Mutex
 }
 
-func NewNotificationRepositoryCachedSQLite3Impl(ctx context.Context, notificationRep NotificationRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (NotificationRepository, error) {
+func NewNotificationRepositoryCachedSQLite3Impl(ctx context.Context, notificationRep NotificationRepository, cacheDB *sqllib.DB, m *sync.Mutex, dbName string) (NotificationRepository, error) {
 	if m == nil {
 		m = &sync.Mutex{}
 	}
@@ -63,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 
 	indexUnixSQL := `CREATE INDEX IF NOT EXISTS "INDEX_` + dbName + `_UNIX" ON "` + dbName + `"(ID, UPDATE_TIME_UNIX);`
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	indexUnixStmt, err := cacheDB.PrepareContext(ctx, indexUnixSQL)
 	if err != nil {
 		err = fmt.Errorf("error at create notification index unix statement %s: %w", dbName, err)
@@ -71,7 +70,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}
 	defer indexUnixStmt.Close()
 
-	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", indexUnixSQL)
+	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at create notification index unix to %s: %w", dbName, err)
@@ -87,7 +86,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 func (t *notificationRepositoryCachedSQLite3Impl) FindNotifications(ctx context.Context, query *find.FindQuery) ([]*Notification, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -131,7 +130,7 @@ WHERE
 	tableName := t.dbName
 	tableNameAlias := t.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
@@ -293,7 +292,7 @@ WHERE
 	tableName := t.dbName
 	tableNameAlias := t.dbName
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "UPDATE_TIME_UNIX"
 	findWordTargetColumns := []string{"TARGET_ID"}
 	ignoreFindWord := false
@@ -405,7 +404,7 @@ WHERE
 	tableName := t.dbName
 	tableNameAlias := t.dbName
 	whereCounter := 1
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "NOTIFICATION_TIME_UNIX"
 	findWordTargetColumns := []string{"CONTENT"}
 	ignoreFindWord := false
@@ -606,7 +605,7 @@ func (t *notificationRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context
 
 func (t *notificationRepositoryCachedSQLite3Impl) GetNotificationHistories(ctx context.Context, id string) ([]*Notification, error) {
 	t.m.Lock()
-	t.m.Unlock()
+	defer t.m.Unlock()
 	var err error
 
 	sql := `

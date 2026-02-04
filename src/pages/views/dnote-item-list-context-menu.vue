@@ -16,7 +16,7 @@ import { computed, ref, type Ref } from 'vue';
 import type { DnoteItemListContextMenuEmits } from './dnote-item-list-context-menu-emits';
 import type { DnoteItemListContextMenuProps } from './dnote-item-list-context-menu-props';
 
-const props = defineProps<DnoteItemListContextMenuProps>()
+defineProps<DnoteItemListContextMenuProps>()
 const emits = defineEmits<DnoteItemListContextMenuEmits>()
 defineExpose({ show, hide })
 

@@ -10,7 +10,7 @@ export default class NlogShopContainsPredicate implements DnotePredicate {
         const nlog_shop_contains_target = json.value as string
         return new NlogShopContainsPredicate(nlog_shop_contains_target)
     }
-    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
         const nlog_shop = loaded_kyou.typed_nlog?.shop
         if (nlog_shop) {
             if (nlog_shop?.includes(this.nlog_shop_contains_target)) {

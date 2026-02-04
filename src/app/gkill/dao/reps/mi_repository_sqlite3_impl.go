@@ -2,7 +2,6 @@ package reps
 
 import (
 	"context"
-	"database/sql"
 	sqllib "database/sql"
 	"fmt"
 	"log/slog"
@@ -96,7 +95,7 @@ CREATE TABLE IF NOT EXISTS "MI" (
 
 func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if m.fullConnect {
 		db = m.db
 	} else {
@@ -263,7 +262,7 @@ func (m *miRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.Fin
 		repName,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -485,7 +484,7 @@ func (m *miRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, update
 
 func (m *miRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if m.fullConnect {
 		db = m.db
 	} else {
@@ -879,7 +878,7 @@ func (m *miRepositorySQLite3Impl) Close(ctx context.Context) error {
 
 func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if m.fullConnect {
 		db = m.db
 	} else {
@@ -1070,7 +1069,7 @@ func (m *miRepositorySQLite3Impl) FindMi(ctx context.Context, query *find.FindQu
 		repName,
 	}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "CREATE_TIME"
 	findWordTargetColumns := []string{"TITLE"}
 	ignoreFindWord := false
@@ -1302,7 +1301,7 @@ func (m *miRepositorySQLite3Impl) GetMi(ctx context.Context, id string, updateTi
 
 func (m *miRepositorySQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if m.fullConnect {
 		db = m.db
 	} else {
@@ -1699,7 +1698,7 @@ func (m *miRepositorySQLite3Impl) AddMiInfo(ctx context.Context, mi *Mi) error {
 	m.m.Lock()
 	defer m.m.Unlock()
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if m.fullConnect {
 		db = m.db
 	} else {
@@ -1802,7 +1801,7 @@ INSERT INTO MI (
 
 func (m *miRepositorySQLite3Impl) GetBoardNames(ctx context.Context) ([]string, error) {
 	var err error
-	var db *sql.DB
+	var db *sqllib.DB
 	if m.fullConnect {
 		db = m.db
 	} else {
@@ -1825,7 +1824,7 @@ WHERE
 	tableNameAlias := "MI"
 	queryArgs := []interface{}{}
 	whereCounter := 0
-	onlyLatestData := true
+	var onlyLatestData bool
 	relatedTimeColumnName := "UPDATE_TIME"
 	findWordTargetColumns := []string{}
 	ignoreFindWord := true

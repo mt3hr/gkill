@@ -10,7 +10,7 @@ export default class KCTitleEqualPredicate implements DnotePredicate {
         const kc_title_equal_target = json.value as string
         return new KCTitleEqualPredicate(kc_title_equal_target)
     }
-    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
         const kc_title = loaded_kyou.typed_kc?.title
         if (kc_title) {
             if (kc_title === this.kc_title_equal_target) {

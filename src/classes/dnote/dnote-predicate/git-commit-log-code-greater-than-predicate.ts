@@ -10,7 +10,7 @@ export default class GitCommitLogCodeGreaterThanPredicate implements DnotePredic
         const git_commit_log_code_count = json.value as number
         return new GitCommitLogCodeGreaterThanPredicate(git_commit_log_code_count)
     }
-    async is_match(loaded_kyou: Kyou, target_kyou: Kyou | null): Promise<boolean> {
+    async is_match(loaded_kyou: Kyou, _: Kyou | null): Promise<boolean> {
         if (loaded_kyou.typed_git_commit_log) {
             const git_commit_log_code_count = loaded_kyou.typed_git_commit_log.addition + loaded_kyou.typed_git_commit_log.deletion
             if (git_commit_log_code_count) {

@@ -1179,7 +1179,7 @@ INSERT INTO APPLICATION_CONFIG (
 			return false, err
 		}
 		if recordCount == 0 {
-			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s", insertSQL)
+			slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
 			device := applicationConfig.Device
 			isIgnoreDeviceNameKey := false
 			for _, ignoreDeviceNameKey := range ignoreDeviceNameConfigKey {
