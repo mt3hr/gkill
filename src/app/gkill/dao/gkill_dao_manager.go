@@ -156,6 +156,12 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 		}
 		gkillDAOManager.traceSQLLogFile = traceSQLLogFile
 		gkill_log.TraceSQL.SetOutput(traceSQLLogFile)
+	} else {
+		gkill_log.Info = nil
+		gkill_log.Error = nil
+		gkill_log.Debug = nil
+		gkill_log.Trace = nil
+		gkill_log.TraceSQL = nil
 	}
 
 	return gkillDAOManager, nil
