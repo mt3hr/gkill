@@ -42,6 +42,11 @@ var (
 		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			common.InitGkillOptions()
 			threads.Init()
+			if gkill_options.IsOutputLog {
+				gkill_log.SetMinLevel(gkill_log.TraceSQL)
+				gkill_log.SetMode(gkill_log.MergedAndSplit)
+				gkill_log.SetStdoutMirror(true)
+			}
 		},
 		Run: func(cmd *cobra.Command, _ []string) {
 			var err error
