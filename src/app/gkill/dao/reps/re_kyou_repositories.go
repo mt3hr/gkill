@@ -47,11 +47,11 @@ func (r *ReKyouRepositories) FindKyous(ctx context.Context, query *find.FindQuer
 
 	for _, rekyou := range notDeletedAllReKyous {
 		existInRep := false
-		for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-			if latestDataRepositoryAddress.TargetID == rekyou.TargetID {
-				existInRep = true
-				break
-			}
+		if rekyou == nil || rekyou.IsDeleted {
+			continue
+		}
+		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
+			continue
 		}
 
 		// 存在すれば検索ヒットとする
@@ -366,11 +366,11 @@ func (r *ReKyouRepositories) FindReKyou(ctx context.Context, query *find.FindQue
 
 	for _, rekyou := range notDeletedAllReKyous {
 		existInRep := false
-		for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
-			if latestDataRepositoryAddress.TargetID == rekyou.TargetID {
-				existInRep = true
-				break
-			}
+		if rekyou == nil || rekyou.IsDeleted {
+			continue
+		}
+		if _, ok := latestDataRepositoryAddresses[rekyou.TargetID]; !ok {
+			continue
 		}
 
 		// 存在すれば検索ヒットとする
