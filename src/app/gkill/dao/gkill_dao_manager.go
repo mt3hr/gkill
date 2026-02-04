@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
@@ -34,13 +35,6 @@ type GkillDAOManager struct {
 
 	router    *mux.Router
 	IDFIgnore []string
-
-	enableOutputLogs bool
-	infoLogFile      *os.File
-	errorLogFile     *os.File
-	debugLogFile     *os.File
-	traceLogFile     *os.File
-	traceSQLLogFile  *os.File
 
 	skipUpdateCache *bool
 }
@@ -101,67 +95,6 @@ func NewGkillDAOManager() (*GkillDAOManager, error) {
 	gkillDAOManager.ConfigDAOs.GkillNotificationTargetDAO, err = gkill_notification.NewGkillNotificateTargetDAOSQLite3Impl(ctx, filepath.Join(configDBRootDir, "gkill_notification_target.db"))
 	if err != nil {
 		return nil, err
-	}
-
-	// ログ出力先設定
-	gkillDAOManager.enableOutputLogs = gkill_options.IsOutputLog
-	if gkillDAOManager.enableOutputLogs {
-		logRootDir := os.ExpandEnv(gkill_options.LogDir)
-		err := os.MkdirAll(logRootDir, os.ModePerm)
-		if err != nil {
-			err = fmt.Errorf("error at mkdir %s: %w", logRootDir, err)
-			return nil, err
-		}
-		infoLogFileName := filepath.Join(logRootDir, "gkill_info.log")
-		infoLogFile, err := os.OpenFile(infoLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
-		if err != nil {
-			err = fmt.Errorf("error at create info log file %s: %w", infoLogFile.Name(), err)
-			return nil, err
-		}
-		gkillDAOManager.infoLogFile = infoLogFile
-		gkill_log.Info.SetOutput(infoLogFile)
-
-		errorLogFileName := filepath.Join(logRootDir, "gkill_error.log")
-		errorLogFile, err := os.OpenFile(errorLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
-		if err != nil {
-			err = fmt.Errorf("error at create error log file %s: %w", errorLogFile.Name(), err)
-			return nil, err
-		}
-		gkillDAOManager.errorLogFile = errorLogFile
-		gkill_log.Error.SetOutput(errorLogFile)
-
-		debugLogFileName := filepath.Join(logRootDir, "gkill_debug.log")
-		debugLogFile, err := os.OpenFile(debugLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
-		if err != nil {
-			err = fmt.Errorf("error at create debug log file %s: %w", debugLogFile.Name(), err)
-			return nil, err
-		}
-		gkillDAOManager.debugLogFile = debugLogFile
-		gkill_log.Debug.SetOutput(debugLogFile)
-
-		traceLogFileName := filepath.Join(logRootDir, "gkill_trage.log")
-		traceLogFile, err := os.OpenFile(traceLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
-		if err != nil {
-			err = fmt.Errorf("error at create trage log file %s: %w", traceLogFile.Name(), err)
-			return nil, err
-		}
-		gkillDAOManager.traceLogFile = traceLogFile
-		gkill_log.Trace.SetOutput(traceLogFile)
-
-		traceSQLLogFileName := filepath.Join(logRootDir, "gkill_traceSQL.log")
-		traceSQLLogFile, err := os.OpenFile(traceSQLLogFileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.ModePerm)
-		if err != nil {
-			err = fmt.Errorf("error at create traceSQL log file %s: %w", traceSQLLogFile.Name(), err)
-			return nil, err
-		}
-		gkillDAOManager.traceSQLLogFile = traceSQLLogFile
-		gkill_log.TraceSQL.SetOutput(traceSQLLogFile)
-	} else {
-		gkill_log.Info = nil
-		gkill_log.Error = nil
-		gkill_log.Debug = nil
-		gkill_log.Trace = nil
-		gkill_log.TraceSQL = nil
 	}
 
 	return gkillDAOManager, nil
@@ -1021,28 +954,6 @@ func (g *GkillDAOManager) Close() error {
 	g.router = nil
 	g.IDFIgnore = []string{}
 
-	if g.enableOutputLogs {
-		if e := g.infoLogFile.Close(); e != nil {
-			err = fmt.Errorf("error at close info log file %s: %w: %w", g.infoLogFile.Name(), e, err)
-		}
-
-		if e := g.errorLogFile.Close(); e != nil {
-			err = fmt.Errorf("error at close error log file %s: %w: %w", g.errorLogFile.Name(), e, err)
-		}
-
-		if e := g.debugLogFile.Close(); e != nil {
-			err = fmt.Errorf("error at close debug log file %s: %w : %w", g.debugLogFile.Name(), e, err)
-		}
-
-		if e := g.traceLogFile.Close(); e != nil {
-			err = fmt.Errorf("error at close trace log file %s: %w : %w", g.traceLogFile.Name(), e, err)
-		}
-
-		if e := g.traceSQLLogFile.Close(); e != nil {
-			err = fmt.Errorf("error at close trace sql log file %s: %w : %w", g.traceSQLLogFile.Name(), e, err)
-		}
-	}
-
 	return err
 }
 
@@ -1124,7 +1035,7 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 		err = g.fileRepWatchCacheUpdater.RemoveWatchFileRep(filename, userID)
 		if err != nil {
 			err = fmt.Errorf("error at remove watch file rep. filename = %s userID = %s: %w", filename, userID, err)
-			gkill_log.Debug.Println(err.Error())
+			slog.Log(ctx, gkill_log.Debug, "error", err)
 		}
 	}
 
@@ -1132,7 +1043,7 @@ func (g *GkillDAOManager) CloseUserRepositories(userID string, device string) (b
 	err = reps.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close repositories: %w", err)
-		gkill_log.Debug.Println(err.Error())
+		slog.Log(ctx, gkill_log.Debug, "error", err)
 	}
 	delete(g.gkillRepositories[userID], device)
 	delete(g.gkillRepositories, userID)

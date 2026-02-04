@@ -3,6 +3,7 @@ package rep_cache_updater
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
@@ -53,7 +54,7 @@ func (l *latestRepositoryAddressCacheUpdater) UpdateCache(ctx context.Context) e
 			if err != nil {
 				repName, _ := l.repository.GetRepName(ctx)
 				err = fmt.Errorf("error at update rep. repname = %s: %w", repName, err)
-				gkill_log.Debug.Print(err)
+				slog.Log(ctx, gkill_log.Error, "error", err)
 				return
 			}
 		}

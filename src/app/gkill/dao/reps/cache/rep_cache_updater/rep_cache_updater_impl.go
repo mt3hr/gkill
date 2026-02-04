@@ -3,6 +3,7 @@ package rep_cache_updater
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"path/filepath"
 	"sync"
 	"sync/atomic"
@@ -267,7 +268,7 @@ func (h *watcherHub) runEventLoop() {
 			if !ok {
 				return
 			}
-			gkill_log.Debug.Printf("fsnotify error: %v\n", err)
+			slog.Log(context.Background(), gkill_log.Debug, "fsnotify error: %v\n", err)
 		}
 	}
 }
@@ -341,7 +342,7 @@ func (h *watcherHub) runUpdateCoalesced(key string) {
 				continue
 			}
 			if err := rep.UpdateCache(context.TODO()); err != nil {
-				gkill_log.Debug.Printf("error at update cache. filename = %s: %v\n", filename, err)
+				slog.Log(context.Background(), gkill_log.Debug, "error at update cache. filename = %s: %v\n", filename, err)
 				// 継続するかは好み。ここは「他repは続ける」運用にしてる
 			}
 		}
