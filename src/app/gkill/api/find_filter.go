@@ -81,15 +81,15 @@ func (f *FindFilter) FindKyous(ctx context.Context, userID string, device string
 
 	}
 
-	if findKyouContext.Repositories.LatestDataRepositoryAddresses == nil {
-		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(context.Background())
+	if findKyouContext.Repositories.LatestDataRepositoryAddresses == nil || len(findKyouContext.Repositories.LatestDataRepositoryAddresses) == 0 {
+		latestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetAllLatestDataRepositoryAddresses(ctx)
 		if err != nil {
 			err = fmt.Errorf("error at get all latest data repository addresses: %w", err)
 			return nil, nil, err
 		}
 		findKyouContext.Repositories.LatestDataRepositoryAddresses = latestDatas
 	} else {
-		updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(context.Background(), findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime, math.MaxInt)
+		updatedLatestDatas, err := findKyouContext.Repositories.LatestDataRepositoryAddressDAO.GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx, findKyouContext.Repositories.LastUpdatedLatestDataRepositoryAddressCacheFindTime, math.MaxInt)
 		if err != nil {
 			err = fmt.Errorf("error at get updated latest data repository addresses: %w", err)
 			return nil, nil, err
@@ -478,7 +478,7 @@ func (f *FindFilter) selectMatchRepsFromQuery(ctx context.Context, findCtx *Find
 }
 
 func (f *FindFilter) updateCache(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	err := findCtx.Repositories.UpdateCache(context.Background())
+	err := findCtx.Repositories.UpdateCache(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at update repositories cache: %w", err)
 		return nil, err
