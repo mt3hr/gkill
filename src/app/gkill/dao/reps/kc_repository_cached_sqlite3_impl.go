@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 
 func (k *kcRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
 	k.m.Lock()
-	defer k.m.Unlock()
+	k.m.Unlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -229,7 +229,7 @@ func (k *kcRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 
 func (k *kcRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
 	k.m.Lock()
-	defer k.m.Unlock()
+	k.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -623,7 +623,7 @@ func (k *kcRepositoryCachedSQLite3Impl) GetKC(ctx context.Context, id string, up
 
 func (k *kcRepositoryCachedSQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
 	k.m.Lock()
-	defer k.m.Unlock()
+	k.m.Unlock()
 	sql := `
 SELECT 
   IS_DELETED,

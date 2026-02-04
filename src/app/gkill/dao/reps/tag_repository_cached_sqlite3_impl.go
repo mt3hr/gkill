@@ -139,7 +139,7 @@ ORDER BY TAG1.UPDATE_TIME_UNIX DESC
 }
 func (t *tagRepositoryCachedSQLite3Impl) FindTags(ctx context.Context, query *find.FindQuery) ([]*Tag, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -594,7 +594,7 @@ func (t *tagRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string
 
 func (t *tagRepositoryCachedSQLite3Impl) GetTagHistories(ctx context.Context, id string) ([]*Tag, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	sql := `
@@ -773,7 +773,7 @@ INSERT INTO ` + t.dbName + ` (
 
 func (t *tagRepositoryCachedSQLite3Impl) GetAllTagNames(ctx context.Context) ([]string, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	sql := `
@@ -829,7 +829,7 @@ FROM ` + t.dbName + `
 
 func (t *tagRepositoryCachedSQLite3Impl) GetAllTags(ctx context.Context) ([]*Tag, error) {
 	t.m.Lock()
-	defer t.m.Unlock()
+	t.m.Unlock()
 	var err error
 
 	sql := `
