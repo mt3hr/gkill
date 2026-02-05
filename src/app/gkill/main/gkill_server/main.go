@@ -23,13 +23,13 @@ func init() {
 	common.AppName = "gkill_server"
 	cobra.MousetrapHelpText = "" // Windowsでマウスから起動しても怒られないようにする
 	ServerCmd.PersistentFlags().StringVar(&gkill_options.GkillHomeDir, "gkill_home_dir", gkill_options.GkillHomeDir, "")
-	ServerCmd.PersistentFlags().BoolVar(&gkill_options.IsOutputLog, "log", gkill_options.IsOutputLog, "")
 	ServerCmd.PersistentFlags().BoolVar(&gkill_options.DisableTLSForce, "disable_tls", gkill_options.DisableTLSForce, "")
 	ServerCmd.PersistentFlags().BoolVar(&gkill_options.IsCacheInMemory, "cache_in_memory", gkill_options.IsCacheInMemory, "")
 	ServerCmd.PersistentFlags().IntVar(&gkill_options.GoroutinePool, "goroutine_pool", gkill_options.GoroutinePool, "")
 	ServerCmd.PersistentFlags().Int64Var(&gkill_options.CacheClearCountLimit, "cache_clear_count_limit", gkill_options.CacheClearCountLimit, "")
 	ServerCmd.PersistentFlags().DurationVar(&gkill_options.CacheUpdateDuration, "cache_update_duration", gkill_options.CacheUpdateDuration, "")
 	ServerCmd.PersistentFlags().StringArrayVar(&gkill_options.PreLoadUserNames, "pre_load_users", gkill_options.PreLoadUserNames, "")
+	ServerCmd.PersistentFlags().StringVar(&gkill_log.LogLevelFromCmd, "log", gkill_log.LogLevelFromCmd, "")
 	ServerCmd.AddCommand(common.IDFCmd)
 	ServerCmd.AddCommand(common.DVNFCmd)
 	ServerCmd.AddCommand(common.VersionCommand)
@@ -42,10 +42,11 @@ var (
 		PersistentPreRun: func(_ *cobra.Command, _ []string) {
 			common.InitGkillOptions()
 			threads.Init()
+			gkill_log.Init()
 			if gkill_options.IsOutputLog {
 				gkill_log.SetMinLevel(gkill_log.TraceSQL)
-				gkill_log.SetMode(gkill_log.MergedAndSplit)
-				gkill_log.SetStdoutMirror(true)
+				gkill_log.SetMode(gkill_log.SplitOnly)
+				gkill_log.SetStdoutMirror(false)
 			}
 		},
 		Run: func(cmd *cobra.Command, _ []string) {
