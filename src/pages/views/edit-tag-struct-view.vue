@@ -138,11 +138,9 @@ function update_tag_struct(tag_struct_obj: TagStructElementData): void {
         } else if (tag_children) {
             for (let i = 0; i < tag_children.length; i++) {
                 const child_tag = tag_children[i]
-                if (child_tag.children) {
-                    if (tag_name_walk(child_tag)) {
-                        tag_children[i] = tag_struct_obj
-                        return false
-                    }
+                if (tag_name_walk(child_tag)) {
+                    tag_children.splice(i, 1, tag_struct_obj)
+                    return false
                 }
             }
         }
@@ -205,11 +203,9 @@ function delete_tag_struct(id: string): void {
         } else if (tag_children) {
             for (let i = 0; i < tag_children.length; i++) {
                 const child_tag = tag_children[i]
-                if (child_tag.children) {
-                    if (tag_name_walk(child_tag)) {
-                        tag_children.splice(i, 1)
-                        return false
-                    }
+                if (tag_name_walk(child_tag)) {
+                    tag_children.splice(i, 1)
+                    return false
                 }
             }
         }

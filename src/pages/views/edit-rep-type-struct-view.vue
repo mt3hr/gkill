@@ -140,11 +140,9 @@ function update_rep_type_struct(rep_type_struct_obj: RepTypeStructElementData): 
         } else if (rep_type_children) {
             for (let i = 0; i < rep_type_children.length; i++) {
                 const child_rep_type = rep_type_children[i]
-                if (child_rep_type.children) {
-                    if (rep_type_name_walk(child_rep_type)) {
-                        rep_type_children[i] = rep_type_struct_obj
-                        return false
-                    }
+                if (rep_type_name_walk(child_rep_type)) {
+                    rep_type_children.splice(i, 1, rep_type_struct_obj)
+                    return false
                 }
             }
         }
@@ -209,11 +207,9 @@ function delete_rep_type_struct(id: string): void {
         } else if (rep_type_children) {
             for (let i = 0; i < rep_type_children.length; i++) {
                 const child_rep_type = rep_type_children[i]
-                if (child_rep_type.children) {
-                    if (rep_type_name_walk(child_rep_type)) {
-                        rep_type_children.splice(i, 1)
-                        return false
-                    }
+                if (rep_type_name_walk(child_rep_type)) {
+                    rep_type_children.splice(i, 1)
+                    return false
                 }
             }
         }
