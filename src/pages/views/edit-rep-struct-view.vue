@@ -126,11 +126,9 @@ function update_rep_struct(rep_struct_obj: RepStructElementData): void {
         } else if (rep_children) {
             for (let i = 0; i < rep_children.length; i++) {
                 const child_rep = rep_children[i]
-                if (child_rep.children) {
-                    if (rep_name_walk(child_rep)) {
-                        rep_children[i] = rep_struct_obj
-                        return false
-                    }
+                if (rep_name_walk(child_rep)) {
+                    rep_children.splice(i, 1, rep_struct_obj)
+                    return false
                 }
             }
         }
@@ -181,11 +179,9 @@ function delete_rep_struct(id: string): void {
         } else if (rep_children) {
             for (let i = 0; i < rep_children.length; i++) {
                 const child_rep = rep_children[i]
-                if (child_rep.children) {
-                    if (rep_name_walk(child_rep)) {
-                        rep_children.splice(i, 1)
-                        return false
-                    }
+                if (rep_name_walk(child_rep)) {
+                    rep_children.splice(i, 1)
+                    return false
                 }
             }
         }
