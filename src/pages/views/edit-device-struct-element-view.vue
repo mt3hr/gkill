@@ -41,5 +41,6 @@ async function apply(): Promise<void> {
     device_struct.device_name = props.struct_obj.device_name
     device_struct.name = props.struct_obj.device_name
     emits('requested_update_device_struct', device_struct)
+    emits('requested_close_dialog')
 }
 </script>

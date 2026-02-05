@@ -138,11 +138,9 @@ function update_device_struct(device_struct_obj: DeviceStructElementData): void 
         } else if (device_children) {
             for (let i = 0; i < device_children.length; i++) {
                 const child_device = device_children[i]
-                if (child_device.children) {
-                    if (device_name_walk(child_device)) {
-                        device_children[i] = device_struct_obj
-                        return false
-                    }
+                if (device_name_walk(child_device)) {
+                    device_children.splice(i, 1, device_struct_obj)
+                    return false
                 }
             }
         }
@@ -205,11 +203,9 @@ function delete_device_struct(id: string): void {
         } else if (device_children) {
             for (let i = 0; i < device_children.length; i++) {
                 const child_device = device_children[i]
-                if (child_device.children) {
-                    if (device_name_walk(child_device)) {
-                        device_children.splice(i, 1)
-                        return false
-                    }
+                if (device_name_walk(child_device)) {
+                    device_children.splice(i, 1)
+                    return false
                 }
             }
         }

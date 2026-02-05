@@ -35,7 +35,7 @@ const is_force_hide: Ref<boolean> = ref(props.struct_obj.is_force_hide)
 
 async function apply(): Promise<void> {
     const tag_struct = new TagStructElementData()
-    tag_struct.id = props.gkill_api.generate_uuid()
+    tag_struct.id = props.struct_obj.id
     tag_struct.check_when_inited = check_when_inited.value
     tag_struct.is_force_hide = is_force_hide.value
     tag_struct.children = null
