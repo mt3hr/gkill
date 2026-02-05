@@ -33,7 +33,7 @@ const check_when_inited: Ref<boolean> = ref(props.struct_obj.check_when_inited)
 
 async function apply(): Promise<void> {
     const rep_type_struct = new RepTypeStructElementData()
-    rep_type_struct.id = props.gkill_api.generate_uuid()
+    rep_type_struct.id = props.struct_obj.id
     rep_type_struct.check_when_inited = check_when_inited.value
     rep_type_struct.children = null
     rep_type_struct.indeterminate = false

@@ -143,11 +143,9 @@ function update_kftl_template_struct(kftl_template_struct_obj: KFTLTemplateStruc
         } else if (kftl_template_children) {
             for (let i = 0; i < kftl_template_children.length; i++) {
                 const child_kftl_template = kftl_template_children[i]
-                if (child_kftl_template.children) {
-                    if (kftl_template_walk(child_kftl_template)) {
-                        kftl_template_children[i] = kftl_template_struct_obj
-                        return false
-                    }
+                if (kftl_template_walk(child_kftl_template)) {
+                    kftl_template_children.splice(i, 1, kftl_template_struct_obj)
+                    return false
                 }
             }
         }
@@ -210,11 +208,9 @@ function delete_kftl_template_struct(id: string): void {
         } else if (kftl_template_children) {
             for (let i = 0; i < kftl_template_children.length; i++) {
                 const child_kftl_template = kftl_template_children[i]
-                if (child_kftl_template.children) {
-                    if (kftl_template_walk(child_kftl_template)) {
-                        kftl_template_children.splice(i, 1)
-                        return false
-                    }
+                if (kftl_template_walk(child_kftl_template)) {
+                    kftl_template_children.splice(i, 1)
+                    return false
                 }
             }
         }
