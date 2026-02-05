@@ -2092,6 +2092,8 @@ export class GkillAPI {
                                 }
                                 response.kyous[i] = kyou
                         }
+                } else {
+                        response.kyous = []
                 }
                 if (json.kmemos) {
                         for (let i = 0; i < json.kmemos.length; i++) {
@@ -2106,6 +2108,8 @@ export class GkillAPI {
                                 }
                                 response.kmemos[i] = kmemo
                         }
+                } else {
+                        response.kmemos = []
                 }
                 if (json.kcs) {
                         for (let i = 0; i < json.kcs.length; i++) {
@@ -2120,6 +2124,8 @@ export class GkillAPI {
                                 }
                                 response.kcs[i] = kc
                         }
+                } else {
+                        response.kcs = []
                 }
                 if (json.timeiss) {
                         for (let i = 0; i < json.timeiss.length; i++) {
@@ -2134,6 +2140,8 @@ export class GkillAPI {
                                 }
                                 response.timeiss[i] = timeis
                         }
+                } else {
+                        response.timeiss = []
                 }
                 if (json.mis) {
                         for (let i = 0; i < json.mis.length; i++) {
@@ -2148,6 +2156,8 @@ export class GkillAPI {
                                 }
                                 response.mis[i] = mi
                         }
+                } else {
+                        response.mis = []
                 }
                 if (json.nlogs) {
                         for (let i = 0; i < json.nlogs.length; i++) {
@@ -2162,6 +2172,8 @@ export class GkillAPI {
                                 }
                                 response.nlogs[i] = nlog
                         }
+                } else {
+                        response.nlogs = []
                 }
                 if (json.lantanas) {
                         for (let i = 0; i < json.lantanas.length; i++) {
@@ -2176,6 +2188,8 @@ export class GkillAPI {
                                 }
                                 response.lantanas[i] = lantana
                         }
+                } else {
+                        response.lantanas = []
                 }
                 if (json.urlogs) {
                         for (let i = 0; i < json.urlogs.length; i++) {
@@ -2190,6 +2204,8 @@ export class GkillAPI {
                                 }
                                 response.urlogs[i] = urlog
                         }
+                } else {
+                        response.urlogs = []
                 }
                 if (json.idf_kyous) {
                         for (let i = 0; i < json.idf_kyous.length; i++) {
@@ -2204,6 +2220,8 @@ export class GkillAPI {
                                 }
                                 response.idf_kyous[i] = idf_kyou
                         }
+                } else {
+                        response.idf_kyous = []
                 }
                 if (json.rekyous) {
                         for (let i = 0; i < json.rekyous.length; i++) {
@@ -2218,6 +2236,8 @@ export class GkillAPI {
                                 }
                                 response.rekyous[i] = rekyou
                         }
+                } else {
+                        response.rekyous = []
                 }
                 if (json.git_commit_logs) {
                         for (let i = 0; i < json.git_commit_logs.length; i++) {
@@ -2232,6 +2252,8 @@ export class GkillAPI {
                                 }
                                 response.git_commit_logs[i] = git_commit_log
                         }
+                } else {
+                        response.git_commit_logs = []
                 }
                 if (json.gps_logs) {
                         for (let i = 0; i < json.gps_logs.length; i++) {
@@ -2246,6 +2268,8 @@ export class GkillAPI {
                                 }
                                 response.gps_logs[i] = gps_log
                         }
+                } else {
+                        response.gps_logs = []
                 }
                 if (json.attached_tags) {
                         for (let i = 0; i < json.attached_tags.length; i++) {
@@ -2260,6 +2284,8 @@ export class GkillAPI {
                                 }
                                 response.attached_tags[i] = tag
                         }
+                } else {
+                        response.attached_tags = []
                 }
                 if (json.attached_texts) {
                         for (let i = 0; i < json.attached_texts.length; i++) {
@@ -2274,6 +2300,8 @@ export class GkillAPI {
                                 }
                                 response.attached_texts[i] = text
                         }
+                } else {
+                        response.attached_texts = []
                 }
                 if (json.attached_timeiss) {
                         for (let i = 0; i < json.attached_timeiss.length; i++) {
@@ -2288,6 +2316,8 @@ export class GkillAPI {
                                 }
                                 response.attached_timeiss[i] = timeis
                         }
+                } else {
+                        response.attached_timeiss = []
                 }
                 if (json.attached_timeis_kyous) {
                         for (let i = 0; i < json.attached_timeis_kyous.length; i++) {
@@ -2302,6 +2332,8 @@ export class GkillAPI {
                                 }
                                 response.attached_timeis_kyous[i] = timeis_kyou
                         }
+                } else {
+                        response.attached_timeis_kyous = []
                 }
                 return response
         }
