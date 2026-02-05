@@ -2,16 +2,40 @@ package gkill_log
 
 import (
 	"fmt"
+	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
+var LogLevelFromCmd = "none"
+
 var router *Router
 
-func init() {
+func Init() {
+	logLevel := None
+	switch strings.ToLower(LogLevelFromCmd) {
+	case "trace_sql":
+		logLevel = TraceSQL
+	case "trace":
+		logLevel = Trace
+	case "debug":
+		logLevel = Debug
+	case "info":
+		logLevel = Info
+	case "warn":
+		logLevel = Warn
+	case "error":
+		logLevel = Error
+	case "none":
+		logLevel = None
+	default:
+		log.Fatal("invalid log level. log level [none, error, warn, info, debug, trace, trace_sql]")
+	}
+
 	logRootDir := os.ExpandEnv(gkill_options.LogDir)
 	err := os.MkdirAll(logRootDir, os.ModePerm)
 	if err != nil {
@@ -22,7 +46,7 @@ func init() {
 	router = NewRouter(Options{
 		JSON:         true,
 		AddSource:    true,
-		MinLevel:     None,
+		MinLevel:     logLevel,
 		Mode:         SplitOnly, // ログファイルをまとめるやつ
 		StdoutMirror: false,     //stdoutにも出す
 		StaticFields: []any{"app", "gkill"},
