@@ -10002,9 +10002,10 @@ func (g *GkillServerAPI) HandleGetSharedKyous(w http.ResponseWriter, r *http.Req
 		response.Errors = append(response.Errors, gkillError)
 		return
 	}
+	useIDs := len(kyous) != 0
 	findQueryValueForKyouInstances := *findQuery
 	findQueryForKyouInstances := &findQueryValueForKyouInstances
-	findQueryForKyouInstances.UseIDs = &trueValue
+	findQueryForKyouInstances.UseIDs = &useIDs
 	findQueryForKyouInstances.IncludeCreateMi = &trueValue
 	findQueryForKyouInstances.IncludeStartMi = &trueValue
 	findQueryForKyouInstances.IncludeCheckMi = &trueValue
