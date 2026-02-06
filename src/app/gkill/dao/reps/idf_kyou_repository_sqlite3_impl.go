@@ -66,6 +66,13 @@ func NewIDFDirRep(ctx context.Context, dir, dbFilename string, fullConnect bool,
 	if err != nil {
 		return nil, err
 	}
+	if gkill_options.Optimize {
+		err = sqlite3impl.DeleteAllIndex(db)
+		if err != nil {
+			err = fmt.Errorf("error at delete all index %w", err)
+			return nil, err
+		}
+	}
 
 	sql := `
 CREATE TABLE IF NOT EXISTS "IDF" (
@@ -131,6 +138,14 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 	if err != nil {
 		err = fmt.Errorf("error at create %s index for latest data repository address to %s: %w", dbName, filename, err)
 		return nil, err
+	}
+
+	if gkill_options.Optimize {
+		err = sqlite3impl.Optimize(db)
+		if err != nil {
+			err = fmt.Errorf("error at optimize db %w", err)
+			return nil, err
+		}
 	}
 
 	if !fullConnect {

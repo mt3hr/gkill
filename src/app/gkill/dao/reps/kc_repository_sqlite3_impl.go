@@ -15,6 +15,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type kcRepositorySQLite3Impl struct {
@@ -29,9 +30,16 @@ func NewKCRepositorySQLite3Impl(ctx context.Context, filename string, fullConnec
 	if err != nil {
 		return nil, err
 	}
+	if gkill_options.Optimize {
+		err = sqlite3impl.DeleteAllIndex(db)
+		if err != nil {
+			err = fmt.Errorf("error at delete all index %w", err)
+			return nil, err
+		}
+	}
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "kc" (
+CREATE TABLE IF NOT EXISTS "KC" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TITLE NOT NULL,
@@ -61,7 +69,7 @@ CREATE TABLE IF NOT EXISTS "kc" (
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_kc ON kc (ID, RELATED_TIME, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_KC ON KC (ID, RELATED_TIME, UPDATE_TIME);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
@@ -75,6 +83,14 @@ CREATE TABLE IF NOT EXISTS "kc" (
 	if err != nil {
 		err = fmt.Errorf("error at create kc index to %s: %w", filename, err)
 		return nil, err
+	}
+
+	if gkill_options.Optimize {
+		err = sqlite3impl.Optimize(db)
+		if err != nil {
+			err = fmt.Errorf("error at optimize db %w", err)
+			return nil, err
+		}
 	}
 
 	if !fullConnect {
@@ -131,7 +147,7 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM KC
 WHERE
 `
 
@@ -298,7 +314,7 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM KC
 WHERE 
 `
 	dataType := "kc"
@@ -468,7 +484,7 @@ SELECT
   NUM_VALUE,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM KC
 WHERE
 `
 
@@ -639,7 +655,7 @@ SELECT
   NUM_VALUE,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM KC
 WHERE 
 `
 	trueValue := true
@@ -759,7 +775,7 @@ func (k *kcRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc *KC) error {
 	}
 
 	sql := `
-INSERT INTO kc (
+INSERT INTO KC (
   IS_DELETED,
   ID,
   TITLE,
