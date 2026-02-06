@@ -21,6 +21,8 @@ var (
 	IsOutputLog     = false
 	DisableTLSForce = false
 
+	Optimize = false
+
 	IDFIgnore = []string{
 		".gkill",
 		"gkill_id.db",
