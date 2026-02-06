@@ -805,6 +805,13 @@ notificationsloop:
 		return err
 	}
 	g.LastUpdatedLatestDataRepositoryAddressCacheFindTime = time.Now()
+
+	if _, err := g.CacheMemoryDB.Exec(`ANALYZE;`); err != nil {
+		return fmt.Errorf("ANALYZE: %w", err)
+	}
+	if _, err := g.CacheMemoryDB.Exec(`PRAGMA optimize;`); err != nil {
+		return fmt.Errorf("PRAGMA optimize: %w", err)
+	}
 	return nil
 }
 
