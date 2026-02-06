@@ -16,7 +16,13 @@ export class KFTLNoneStatementLine extends KFTLStatementLine {
     }
 
     async apply_this_line_to_request_map(_requet_map: KFTLRequestMap): Promise<void> {
-        return
+        const line_content = this.get_context().get_this_statement_line_text()
+        if (!line_content) {
+            return
+        }
+        if (line_content !== "") {
+            throw new Error(i18n.global.t("KFTL_NONE_VALUE_IS_NOT_BLANK_MESSAGE_TITLE"))
+        }
     }
 
     get_label_name(_context: KFTLStatementLineContext): string {
