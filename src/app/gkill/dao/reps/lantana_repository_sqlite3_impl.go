@@ -13,6 +13,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type lantanaRepositorySQLite3Impl struct {
@@ -26,6 +27,13 @@ func NewLantanaRepositorySQLite3Impl(ctx context.Context, filename string, fullC
 	db, err := sqlite3impl.GetSQLiteDBConnection(ctx, filename)
 	if err != nil {
 		return nil, err
+	}
+	if gkill_options.Optimize {
+		err = sqlite3impl.DeleteAllIndex(db)
+		if err != nil {
+			err = fmt.Errorf("error at delete all index %w", err)
+			return nil, err
+		}
 	}
 
 	sql := `
@@ -72,6 +80,14 @@ CREATE TABLE IF NOT EXISTS "LANTANA" (
 	if err != nil {
 		err = fmt.Errorf("error at create LANTANA index to %s: %w", filename, err)
 		return nil, err
+	}
+
+	if gkill_options.Optimize {
+		err = sqlite3impl.Optimize(db)
+		if err != nil {
+			err = fmt.Errorf("error at optimize db %w", err)
+			return nil, err
+		}
 	}
 
 	if !fullConnect {

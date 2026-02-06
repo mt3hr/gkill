@@ -121,6 +121,34 @@ var (
 		},
 		Short: `generate_thumb_cache 'user_id'`,
 	}
+
+	OptimizeCmd = &cobra.Command{
+		Use: "optimize",
+		Run: func(cmd *cobra.Command, args []string) {
+			gkill_options.Optimize = true
+			if len(args) == 0 {
+				cmd.Usage()
+				return
+			}
+
+			targetUserIDs := args
+
+			err := InitGkillServerAPI()
+			if err != nil {
+				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+			}
+			gkillServerAPI := GetGkillServerAPI()
+			device, err := gkillServerAPI.GetDevice()
+			if err != nil {
+				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+			}
+
+			for _, targetUserID := range targetUserIDs {
+				_, err = gkillServerAPI.GkillDAOManager.GetRepositories(targetUserID, device)
+			}
+		},
+		Short: `optimize 'user_id'`,
+	}
 )
 
 func init() {
@@ -224,8 +252,8 @@ func Openbrowser(url string) error {
 }
 
 func GenerateThumbCache(ctx context.Context, userID string) error {
-	gkillkServerAPI := GetGkillServerAPI()
-	device, err := gkillkServerAPI.GetDevice()
+	gkillServerAPI := GetGkillServerAPI()
+	device, err := gkillServerAPI.GetDevice()
 	if err != nil {
 		err = fmt.Errorf("error at get device: %w", err)
 		return err

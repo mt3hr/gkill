@@ -9,6 +9,7 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
@@ -25,6 +26,13 @@ func NewServerConfigDAOSQLite3Impl(ctx context.Context, filename string) (Server
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
+	}
+	if gkill_options.Optimize {
+		err = sqlite3impl.DeleteAllIndex(db)
+		if err != nil {
+			err = fmt.Errorf("error at delete all index %w", err)
+			return nil, err
+		}
 	}
 
 	sql := `
@@ -63,6 +71,14 @@ CREATE TABLE IF NOT EXISTS "SERVER_CONFIG" (
 	if err != nil {
 		err = fmt.Errorf("error at create SERVER_CONFIG index to %s: %w", filename, err)
 		return nil, err
+	}
+
+	if gkill_options.Optimize {
+		err = sqlite3impl.Optimize(db)
+		if err != nil {
+			err = fmt.Errorf("error at optimize db %w", err)
+			return nil, err
+		}
 	}
 
 	return &serverConfigDAOSQLite3Impl{
