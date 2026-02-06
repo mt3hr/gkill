@@ -13,6 +13,7 @@ import (
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type tagRepositorySQLite3Impl struct {
@@ -27,6 +28,13 @@ func NewTagRepositorySQLite3Impl(ctx context.Context, filename string, fullConne
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
+	}
+	if gkill_options.Optimize {
+		err = sqlite3impl.DeleteAllIndex(db)
+		if err != nil {
+			err = fmt.Errorf("error at delete all index %w", err)
+			return nil, err
+		}
 	}
 
 	sql := `
@@ -113,6 +121,14 @@ CREATE TABLE IF NOT EXISTS "TAG" (
 	if err != nil {
 		err = fmt.Errorf("error at create TAG_ID_UPDATE_TIME table to %s: %w", filename, err)
 		return nil, err
+	}
+
+	if gkill_options.Optimize {
+		err = sqlite3impl.Optimize(db)
+		if err != nil {
+			err = fmt.Errorf("error at optimize db %w", err)
+			return nil, err
+		}
 	}
 
 	if !fullConnect {

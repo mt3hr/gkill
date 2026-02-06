@@ -22,7 +22,7 @@ func NewKCTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mut
 	filename := "temp_db"
 
 	sql := `
-CREATE TABLE IF NOT EXISTS "kc" (
+CREATE TABLE IF NOT EXISTS "KC" (
   IS_DELETED NOT NULL,
   ID NOT NULL,
   TITLE NOT NULL,
@@ -55,11 +55,11 @@ CREATE TABLE IF NOT EXISTS "kc" (
 		return nil, err
 	}
 
-	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_kc ON kc (ID, RELATED_TIME, UPDATE_TIME);`
+	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_kc ON KC (ID, RELATED_TIME, UPDATE_TIME);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	indexStmt, err := db.PrepareContext(ctx, indexSQL)
 	if err != nil {
-		err = fmt.Errorf("error at create kc index statement %s: %w", filename, err)
+		err = fmt.Errorf("error at create KC index statement %s: %w", filename, err)
 		return nil, err
 	}
 	defer indexStmt.Close()
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS "kc" (
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at create kc index to %s: %w", filename, err)
+		err = fmt.Errorf("error at create KC index to %s: %w", filename, err)
 		return nil, err
 	}
 
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS "kc" (
 	_, err = stmt.ExecContext(ctx)
 
 	if err != nil {
-		err = fmt.Errorf("error at create kc table to %s: %w", filename, err)
+		err = fmt.Errorf("error at create KC table to %s: %w", filename, err)
 		return nil, err
 	}
 
@@ -138,7 +138,7 @@ func (k *kcTempRepositorySQLite3Impl) AddKCInfo(ctx context.Context, kc *KC, txI
 	k.m.Lock()
 	defer k.m.Unlock()
 	sql := `
-INSERT INTO kc (
+INSERT INTO KC (
   IS_DELETED,
   ID,
   TITLE,
@@ -176,7 +176,7 @@ INSERT INTO kc (
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	stmt, err := k.db.PrepareContext(ctx, sql)
 	if err != nil {
-		err = fmt.Errorf("error at add kc sql %s: %w", kc.ID, err)
+		err = fmt.Errorf("error at add KC sql %s: %w", kc.ID, err)
 		return err
 	}
 	defer stmt.Close()
@@ -203,7 +203,7 @@ INSERT INTO kc (
 	_, err = stmt.ExecContext(ctx, queryArgs...)
 
 	if err != nil {
-		err = fmt.Errorf("error at insert in to kc %s: %w", kc.ID, err)
+		err = fmt.Errorf("error at insert in to KC %s: %w", kc.ID, err)
 		return err
 	}
 	return nil
@@ -227,7 +227,7 @@ SELECT
   UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM KC
 WHERE TX_ID = ?
 AND USER_ID = ?
 AND DEVICE = ?
@@ -235,7 +235,7 @@ AND DEVICE = ?
 
 	repName, err := k.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at kc temp: %w", err)
+		err = fmt.Errorf("error at get rep name at KC temp: %w", err)
 		return nil, err
 	}
 
@@ -259,7 +259,7 @@ AND DEVICE = ?
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
 	if err != nil {
-		err = fmt.Errorf("error at select from kc temp: %w", err)
+		err = fmt.Errorf("error at select from KC temp: %w", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -292,23 +292,23 @@ AND DEVICE = ?
 				&kyou.DataType,
 			)
 			if err != nil {
-				err = fmt.Errorf("error at scan from kc temp: %w", err)
+				err = fmt.Errorf("error at scan from KC temp: %w", err)
 				return nil, err
 			}
 
 			kyou.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in kc temp: %w", relatedTimeStr, err)
+				err = fmt.Errorf("error at parse related time %s in KC temp: %w", relatedTimeStr, err)
 				return nil, err
 			}
 			kyou.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in kc temp: %w", createTimeStr, err)
+				err = fmt.Errorf("error at parse create time %s in KC temp: %w", createTimeStr, err)
 				return nil, err
 			}
 			kyou.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
 			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in kc temp: %w", updateTimeStr, err)
+				err = fmt.Errorf("error at parse update time %s in KC temp: %w", updateTimeStr, err)
 				return nil, err
 			}
 
@@ -321,7 +321,7 @@ AND DEVICE = ?
 func (k *kcTempRepositorySQLite3Impl) GetKCsByTXID(ctx context.Context, txID string, userID string, device string) ([]*KC, error) {
 	repName, err := k.GetRepName(ctx)
 	if err != nil {
-		err = fmt.Errorf("error at get rep name at kc: %w", err)
+		err = fmt.Errorf("error at get rep name at KC: %w", err)
 		return nil, err
 	}
 
@@ -342,7 +342,7 @@ SELECT
   NUM_VALUE,
   ? AS REP_NAME,
   ? AS DATA_TYPE
-FROM kc
+FROM KC
 WHERE TX_ID = ?
 AND USER_ID = ?
 AND DEVICE = ?
@@ -430,7 +430,7 @@ AND DEVICE = ?
 
 func (k *kcTempRepositorySQLite3Impl) DeleteByTXID(ctx context.Context, txID string, userID string, device string) error {
 	sql := `
-DELETE FROM kc
+DELETE FROM KC
 WHERE TX_ID = ?
 AND USER_ID = ?
 AND DEVICE = ?

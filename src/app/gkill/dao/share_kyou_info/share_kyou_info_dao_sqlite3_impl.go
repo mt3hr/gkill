@@ -8,7 +8,9 @@ import (
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
 type shareKyouInfoDAOSQLite3Impl struct {
@@ -23,6 +25,13 @@ func NewShareKyouInfoDAOSQLite3Impl(ctx context.Context, filename string) (Share
 	if err != nil {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
+	}
+	if gkill_options.Optimize {
+		err = sqlite3impl.DeleteAllIndex(db)
+		if err != nil {
+			err = fmt.Errorf("error at delete all index %w", err)
+			return nil, err
+		}
 	}
 
 	sql := `
@@ -70,6 +79,14 @@ CREATE TABLE IF NOT EXISTS "SHARE_KYOU_INFO_OPTIONS" (
 	if err != nil {
 		err = fmt.Errorf("error at create SHARE_KYOU_INFO_OPTIONS table to %s: %w", filename, err)
 		return nil, err
+	}
+
+	if gkill_options.Optimize {
+		err = sqlite3impl.Optimize(db)
+		if err != nil {
+			err = fmt.Errorf("error at optimize db %w", err)
+			return nil, err
+		}
 	}
 
 	return &shareKyouInfoDAOSQLite3Impl{

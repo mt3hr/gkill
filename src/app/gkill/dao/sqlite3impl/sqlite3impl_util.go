@@ -406,3 +406,86 @@ func GenerateFindSQLCommon(query *find.FindQuery, tableName string, tableNameAli
 func GenerateNewID() string {
 	return uuid.New().String()
 }
+
+func DeleteAllIndex(db *sql.DB) error {
+	rows, err := db.Query(`
+SELECT name
+FROM sqlite_master
+WHERE type = 'index'
+  AND name NOT LIKE 'sqlite_%'
+  AND sql IS NOT NULL
+ORDER BY name;
+`)
+	if err != nil {
+		return fmt.Errorf("query indexes: %w", err)
+	}
+	defer rows.Close()
+
+	var names []string
+	for rows.Next() {
+		var n string
+		if err := rows.Scan(&n); err != nil {
+			return fmt.Errorf("scan index name: %w", err)
+		}
+		names = append(names, n)
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate indexes: %w", err)
+	}
+
+	if len(names) == 0 {
+		return nil
+	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("begin: %w", err)
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec(`PRAGMA foreign_keys=OFF;`); err != nil {
+		return fmt.Errorf("pragma foreign_keys: %w", err)
+	}
+	if _, err := tx.Exec(`PRAGMA busy_timeout=5000;`); err != nil {
+		return fmt.Errorf("pragma busy_timeout: %w", err)
+	}
+
+	for _, n := range names {
+		stmt := fmt.Sprintf(`DROP INDEX IF EXISTS %s;`, quoteIdent(n))
+		if _, err := tx.Exec(stmt); err != nil {
+			return fmt.Errorf("drop index %q: %w", n, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit: %w", err)
+	}
+	return nil
+}
+
+func Optimize(db *sql.DB) error {
+	if _, err := db.Exec(`PRAGMA busy_timeout=5000;`); err != nil {
+		return fmt.Errorf("pragma busy_timeout: %w", err)
+	}
+
+	// REINDEX and ANALYZE can be run normally
+	if _, err := db.Exec(`REINDEX;`); err != nil {
+		return fmt.Errorf("REINDEX: %w", err)
+	}
+	if _, err := db.Exec(`ANALYZE;`); err != nil {
+		return fmt.Errorf("ANALYZE: %w", err)
+	}
+	if _, err := db.Exec(`PRAGMA optimize;`); err != nil {
+		return fmt.Errorf("PRAGMA optimize: %w", err)
+	}
+
+	// VACUUM should be outside any transaction
+	if _, err := db.Exec(`VACUUM;`); err != nil {
+		return fmt.Errorf("VACUUM: %w", err)
+	}
+	return nil
+}
+
+func quoteIdent(s string) string {
+	return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
+}
