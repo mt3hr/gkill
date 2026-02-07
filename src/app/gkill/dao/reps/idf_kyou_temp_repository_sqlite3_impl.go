@@ -519,6 +519,14 @@ func (i *idfKyouRepositoryTempSQLite3Impl) ClearThumbCache() error {
 	return nil
 }
 
+func (i *idfKyouRepositoryTempSQLite3Impl) GenerateVideoCache(ctx context.Context) error {
+	return nil
+}
+
+func (i *idfKyouRepositoryTempSQLite3Impl) ClearVideoCache() error {
+	return nil
+}
+
 func (i *idfKyouRepositoryTempSQLite3Impl) UnWrapTyped() ([]IDFKyouTempRepository, error) {
 	return []IDFKyouTempRepository{i}, nil
 }
