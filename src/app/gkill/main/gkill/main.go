@@ -40,6 +40,7 @@ func init() {
 	AppCmd.AddCommand(common.DVNFCmd)
 	AppCmd.AddCommand(common.VersionCommand)
 	AppCmd.AddCommand(common.GenerateThumbCacheCmd)
+	AppCmd.AddCommand(common.GenerateVideoCacheCmd)
 	AppCmd.AddCommand(common.OptimizeCmd)
 }
 
