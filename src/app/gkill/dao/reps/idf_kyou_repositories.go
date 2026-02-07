@@ -689,6 +689,45 @@ func (i IDFKyouRepositories) ClearThumbCache() error {
 	return err
 }
 
+func (i IDFKyouRepositories) GenerateVideoCache(ctx context.Context) error {
+	unwrapedReps, err := i.UnWrapTyped()
+	if err != nil {
+		err = fmt.Errorf("error at generate video cache at idf kyou repositories: %w", err)
+		return err
+	}
+
+	wg := &sync.WaitGroup{}
+	for _, unwrapedRep := range unwrapedReps {
+		_ = threads.Go(ctx, wg, func() {
+			func(unwrapedRep IDFKyouRepository) {
+				err := unwrapedRep.GenerateVideoCache(ctx)
+				if err != nil {
+					err = fmt.Errorf("error at generate video cache at idf kyou repositories in rep: %w", err)
+					slog.Log(ctx, gkill_log.Error, "error", "error", err)
+				}
+			}(unwrapedRep)
+		})
+	}
+	wg.Wait()
+	return nil
+}
+
+func (i IDFKyouRepositories) ClearVideoCache() error {
+	unwrapedReps, err := i.UnWrapTyped()
+	if err != nil {
+		err = fmt.Errorf("error at clear video cache at idf kyou repositories: %w", err)
+		return err
+	}
+	for _, unwrapedRep := range unwrapedReps {
+		err := unwrapedRep.ClearVideoCache()
+		if err != nil {
+			err = fmt.Errorf("error at clear video cache at idf kyou repositories in rep: %w", err)
+			return err
+		}
+	}
+	return err
+}
+
 func (i IDFKyouRepositories) UnWrapTyped() ([]IDFKyouRepository, error) {
 	unwraped := []IDFKyouRepository{}
 	for _, rep := range i {
