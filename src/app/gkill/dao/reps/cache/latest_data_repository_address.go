@@ -2,8 +2,6 @@ package gkill_cache
 
 import (
 	"time"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type LatestDataRepositoryAddress struct {
