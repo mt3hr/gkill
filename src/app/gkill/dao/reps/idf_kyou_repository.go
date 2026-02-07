@@ -39,6 +39,10 @@ type IDFKyouRepository interface {
 
 	ClearThumbCache() error
 
+	GenerateVideoCache(ctx context.Context) error
+
+	ClearVideoCache() error
+
 	UnWrapTyped() ([]IDFKyouRepository, error)
 
 	UnWrap() ([]Repository, error)

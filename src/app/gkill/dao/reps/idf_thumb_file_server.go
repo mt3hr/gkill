@@ -1,6 +1,7 @@
 package reps
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha1"
 	"encoding/hex"
@@ -12,12 +13,14 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "image/gif"
 	_ "image/png"
@@ -28,6 +31,19 @@ import (
 	_ "golang.org/x/image/webp" // webp decode
 	"golang.org/x/sync/singleflight"
 )
+
+var (
+	existFFMPEG  = false
+	existFFPROBE = false
+)
+
+func init() {
+	var err error
+	_, err = exec.LookPath("ffmpeg")
+	existFFMPEG = err == nil
+	_, err = exec.LookPath("ffprobe")
+	existFFPROBE = err == nil
+}
 
 var (
 	thumbParamRe = regexp.MustCompile(`^(\d{1,4})x(\d{1,4})$`)
@@ -94,8 +110,11 @@ func (t *thumbFileServer) GenerateThumbCache(ctx context.Context, queryURL strin
 		return err
 	}
 
-	// デコード対応の拡張子だけサムネ処理（無駄なdecode回避）
-	if !looksLikeDecodableImage(rel) {
+	// 動画サムネのリクエストの場合
+	isVideo := queryURLObj.Query().Get("is_video") == "true"
+
+	// 対象拡張子だけサムネ処理（無駄な処理回避）
+	if !looksLikeThumbTarget(rel, isVideo) {
 		return nil
 	}
 
@@ -136,6 +155,12 @@ func (t *thumbFileServer) GenerateThumbCache(ctx context.Context, queryURL strin
 		if err := os.MkdirAll(filepath.Dir(thumbPath), 0o755); err != nil {
 			return nil, err
 		}
+		if isVideo {
+			if !existFFMPEG || !existFFPROBE {
+				return nil, fmt.Errorf("ffmpeg/ffprobe not available")
+			}
+			return nil, generateVideoThumbJpeg(ctx, abs, thumbPath, tw, th)
+		}
 		return nil, generateThumbJpeg(abs, thumbPath, tw, th, t.jpegQ)
 	})
 
@@ -167,8 +192,11 @@ func (t *thumbFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// デコード対応の拡張子だけサムネ処理（無駄なdecode回避）
-	if !looksLikeDecodableImage(rel) {
+	// 動画サムネのリクエストの場合
+	isVideo := r.URL.Query().Get("is_video") == "true"
+
+	// 対象拡張子だけサムネ処理（無駄な処理回避）
+	if !looksLikeThumbTarget(rel, isVideo) {
 		t.base.ServeHTTP(w, r)
 		return
 	}
@@ -208,11 +236,22 @@ func (t *thumbFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err := os.MkdirAll(filepath.Dir(thumbPath), 0o755); err != nil {
 			return nil, err
 		}
+		if isVideo {
+			if !existFFMPEG || !existFFPROBE {
+				return nil, fmt.Errorf("ffmpeg/ffprobe not available")
+			}
+			return nil, generateVideoThumbJpeg(r.Context(), abs, thumbPath, tw, th)
+		}
 		return nil, generateThumbJpeg(abs, thumbPath, tw, th, t.jpegQ)
 	})
 
 	if genErr != nil {
-		// 生成失敗時は元画像にフォールバック（運用安全）
+		// thumb要求（特に動画poster）は、動画本体へフォールバックすると Content-Type が壊れる。
+		// 画像は既存挙動維持でフォールバックする。
+		if isVideo {
+			http.Error(w, genErr.Error(), http.StatusInternalServerError)
+			return
+		}
 		t.base.ServeHTTP(w, r)
 		return
 	}
@@ -230,14 +269,14 @@ func parseThumb(s string) (int, int, bool) {
 	return w, h, true
 }
 
-func looksLikeDecodableImage(rel string) bool {
-	ext := strings.ToLower(filepath.Ext(rel))
-	switch ext {
-	case ".jpg", ".jpeg", ".png", ".gif", ".webp":
-		return true
-	default:
-		return false
+// looksLikeThumbTarget returns true if the request should be handled as a thumbnail generation.
+// - isVideo=true : allow common video extensions
+// - otherwise    : allow decodable images only
+func looksLikeThumbTarget(rel string, isVideo_ bool) bool {
+	if isVideo_ {
+		return isVideo(rel)
 	}
+	return isImage(rel)
 }
 
 // stripPrefix後のURL pathを安全に正規化して、相対パスを返す
@@ -299,6 +338,83 @@ func serveThumbFile(w http.ResponseWriter, r *http.Request, thumbPath string, et
 	}
 
 	http.ServeFile(w, r, thumbPath)
+}
+
+// generateVideoThumbJpeg creates a JPEG thumbnail for a video using ffmpeg.
+// Policy: take a frame at ~10% of the duration (fallback: 1s), then scale+center-crop to WxH.
+// It writes atomically to dstPath.
+func generateVideoThumbJpeg(ctx context.Context, srcPath, dstPath string, w, h int) error {
+	// Decide timestamp seconds: duration * 0.1
+	sec := 1.0
+	if existFFPROBE {
+		if d, err := ffprobeDurationSeconds(ctx, srcPath); err == nil && d > 0 {
+			sec = d * 0.10
+			if sec < 0 {
+				sec = 0
+			}
+		}
+	}
+
+	// scale while preserving aspect ratio, then crop center
+	// force_original_aspect_ratio=increase ensures both dimensions cover the target, then crop.
+	vf := fmt.Sprintf("scale=%d:%d:force_original_aspect_ratio=increase,crop=%d:%d", w, h, w, h)
+
+	tmp := dstPath + ".tmp"
+	_ = os.Remove(tmp)
+
+	cmd := exec.CommandContext(ctx, "ffmpeg",
+		"-hide_banner",
+		"-loglevel", "error",
+		"-y",
+		"-ss", fmt.Sprintf("%.3f", sec),
+		"-i", srcPath,
+		"-frames:v", "1",
+		"-vf", vf,
+		"-q:v", "2",
+		"-f", "image2",
+		tmp,
+	)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("ffmpeg thumb failed: %w: %s", err, out.String())
+	}
+
+	_ = os.Remove(dstPath)
+	if err := os.Rename(tmp, dstPath); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	return nil
+}
+
+func ffprobeDurationSeconds(ctx context.Context, srcPath string) (float64, error) {
+	probeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(probeCtx, "ffprobe",
+		"-v", "error",
+		"-show_entries", "format=duration",
+		"-of", "default=noprint_wrappers=1:nokey=1",
+		srcPath,
+	)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		return 0, fmt.Errorf("ffprobe failed: %w: %s", err, out.String())
+	}
+	s := strings.TrimSpace(out.String())
+	if s == "" {
+		return 0, fmt.Errorf("duration empty")
+	}
+	d, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0, err
+	}
+	return d, nil
 }
 
 // generateThumbJpeg: center-crop → resize → jpeg保存（atomic write）

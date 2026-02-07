@@ -1078,6 +1078,14 @@ func (i *idfKyouRepositoryCachedSQLite3Impl) ClearThumbCache() error {
 	return i.idfRep.ClearThumbCache()
 }
 
+func (i *idfKyouRepositoryCachedSQLite3Impl) GenerateVideoCache(ctx context.Context) error {
+	return i.idfRep.GenerateVideoCache(ctx)
+}
+
+func (i *idfKyouRepositoryCachedSQLite3Impl) ClearVideoCache() error {
+	return i.idfRep.ClearVideoCache()
+}
+
 func (i *idfKyouRepositoryCachedSQLite3Impl) UnWrapTyped() ([]IDFKyouRepository, error) {
 	return i.idfRep.UnWrapTyped()
 }
