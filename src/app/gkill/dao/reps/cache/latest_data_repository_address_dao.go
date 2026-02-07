@@ -3,8 +3,6 @@ package gkill_cache
 import (
 	"context"
 	"time"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type LatestDataRepositoryAddressDAO interface {

@@ -13,9 +13,8 @@ import (
 	"sync"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
-	"github.com/mt3hr/gkill/src/app/gkill/dao/account_state"
+	gkill_cache "github.com/mt3hr/gkill/src/app/gkill/dao/reps/cache"
 
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
@@ -93,10 +92,10 @@ type GkillRepositories struct {
 
 	WriteGPSLogRep GPSLogRepository
 
-	LatestDataRepositoryAddressDAO account_state.LatestDataRepositoryAddressDAO
+	LatestDataRepositoryAddressDAO gkill_cache.LatestDataRepositoryAddressDAO
 	TempReps                       *TempReps
 
-	LatestDataRepositoryAddresses                       map[string]*account_state.LatestDataRepositoryAddress
+	LatestDataRepositoryAddresses                       map[string]*gkill_cache.LatestDataRepositoryAddress
 	LastUpdatedLatestDataRepositoryAddressCacheFindTime time.Time
 
 	IsUpdateCacheNextTick bool
@@ -172,7 +171,7 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	}
 
 	// メモリ上でやる
-	latestDataRepositoryAddressDAO, err := account_state.NewLatestDataRepositoryAddressSQLite3Impl(userID, CacheMemoryDB, CacheMemoryDBMutex)
+	latestDataRepositoryAddressDAO, err := gkill_cache.NewLatestDataRepositoryAddressSQLite3Impl(userID, CacheMemoryDB, CacheMemoryDBMutex)
 	if err != nil {
 		err = fmt.Errorf("error at get latest data repository address dao. user id = %s: %w", userID, err)
 		return nil, err
@@ -741,9 +740,9 @@ notificationsloop:
 	}
 
 	// 最新のKyou, Tag, Text, Notificationの状態をLatestDataRepositoryAddressにいれる
-	latestDataRepositoryAddresses := make([]*account_state.LatestDataRepositoryAddress, 0, len(latestKyousMap)+len(latestTagsMap)+len(latestTextsMap)+len(latestNotificationsMap))
+	latestDataRepositoryAddresses := make([]*gkill_cache.LatestDataRepositoryAddress, 0, len(latestKyousMap)+len(latestTagsMap)+len(latestTextsMap)+len(latestNotificationsMap))
 	for _, kyou := range latestKyousMap {
-		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              kyou.IsDeleted,
 			TargetID:                               kyou.ID,
 			LatestDataRepositoryName:               kyou.RepName,
@@ -753,7 +752,7 @@ notificationsloop:
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 	for _, tag := range latestTagsMap {
-		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              tag.IsDeleted,
 			TargetID:                               tag.ID,
 			TargetIDInData:                         &tag.TargetID,
@@ -764,7 +763,7 @@ notificationsloop:
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 	for _, text := range latestTextsMap {
-		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              text.IsDeleted,
 			TargetID:                               text.ID,
 			TargetIDInData:                         &text.TargetID,
@@ -775,7 +774,7 @@ notificationsloop:
 		latestDataRepositoryAddresses = append(latestDataRepositoryAddresses, latestDataRepositoryAddress)
 	}
 	for _, notification := range latestNotificationsMap {
-		latestDataRepositoryAddress := &account_state.LatestDataRepositoryAddress{
+		latestDataRepositoryAddress := &gkill_cache.LatestDataRepositoryAddress{
 			IsDeleted:                              notification.IsDeleted,
 			TargetID:                               notification.ID,
 			TargetIDInData:                         &notification.TargetID,
@@ -793,7 +792,7 @@ notificationsloop:
 	}
 
 	if g.LatestDataRepositoryAddresses == nil {
-		g.LatestDataRepositoryAddresses = map[string]*account_state.LatestDataRepositoryAddress{}
+		g.LatestDataRepositoryAddresses = map[string]*gkill_cache.LatestDataRepositoryAddress{}
 	}
 	for _, updatedLatestDataRepositoryAddress := range updatedLatestDataRepositoryAddresses {
 		g.LatestDataRepositoryAddresses[updatedLatestDataRepositoryAddress.TargetID] = updatedLatestDataRepositoryAddress
