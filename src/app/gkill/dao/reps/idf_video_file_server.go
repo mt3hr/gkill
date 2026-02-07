@@ -196,10 +196,8 @@ func ffprobeVideoCodec(ctx context.Context, inputPath string) (string, error) {
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("%#v", out.String())
 		return "", fmt.Errorf("ffprobe failed: %w: %s", err, out.String())
 	}
-	fmt.Printf("%#v", out.String())
 	// Minimal parse without new dependencies: look for \"codec_type\":\"video\" then \"codec_name\":\"...\".
 	// This is robust enough for ffprobe output and avoids pulling in a struct here.
 	// (thumb server already parses duration via json; here we keep it lean.)
@@ -282,11 +280,9 @@ func transcodeToCompatMP4(ctx context.Context, srcPath, dstPath string, maxHeigh
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("%#v", out.String())
 		_ = os.Remove(tmp)
 		return fmt.Errorf("ffmpeg failed: %w: %s", err, out.String())
 	}
-	fmt.Printf("%#v", out.String())
 
 	_ = os.Remove(dstPath)
 	if err := os.Rename(tmp, dstPath); err != nil {
