@@ -122,6 +122,32 @@ var (
 		Short: `generate_thumb_cache 'user_id'`,
 	}
 
+	GenerateVideoCacheCmd = &cobra.Command{
+		Use: "generate_video_cache",
+		Run: func(cmd *cobra.Command, args []string) {
+			if len(args) == 0 {
+				cmd.Usage()
+				return
+			}
+
+			targetUserIDs := args
+
+			err := InitGkillServerAPI()
+			if err != nil {
+				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+			}
+
+			for _, targetUserID := range targetUserIDs {
+				err := GenerateVideoCache(cmd.Context(), targetUserID)
+				if err != nil {
+					err = fmt.Errorf("error at generate video cache user id = %s: %w", targetUserID, err)
+					slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
+				}
+			}
+		},
+		Short: `generate_video_cache 'user_id'`,
+	}
+
 	OptimizeCmd = &cobra.Command{
 		Use: "optimize",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -153,7 +179,7 @@ var (
 
 func init() {
 	if os.Getenv("HOME") == "" {
-		os.Setenv("HOME", os.Getenv("HOMEPATH"))
+		os.Setenv("HOME", os.Getenv("HOMEDRIVE")+os.Getenv("HOMEPATH"))
 	}
 	fixTimezone()
 
@@ -264,6 +290,26 @@ func GenerateThumbCache(ctx context.Context, userID string) error {
 		return err
 	}
 	err = repositories.IDFKyouReps.GenerateThumbCache(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at generate thumb cache: %w", err)
+		return err
+	}
+	return nil
+}
+
+func GenerateVideoCache(ctx context.Context, userID string) error {
+	gkillServerAPI := GetGkillServerAPI()
+	device, err := gkillServerAPI.GetDevice()
+	if err != nil {
+		err = fmt.Errorf("error at get device: %w", err)
+		return err
+	}
+	repositories, err := GetGkillServerAPI().GkillDAOManager.GetRepositories(userID, device)
+	if err != nil {
+		err = fmt.Errorf("error at get gkill repositories: %w", err)
+		return err
+	}
+	err = repositories.IDFKyouReps.GenerateVideoCache(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at generate thumb cache: %w", err)
 		return err

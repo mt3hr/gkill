@@ -45,6 +45,8 @@ type idfKyouRepositorySQLite3Impl struct {
 	fileServer     http.Handler
 	thumbServer    http.Handler
 	thumbGenerator ThumbGenerator
+	videoServer    http.Handler
+	videoGenerator VideoCacheGenerator
 }
 
 const DUIDLayout = "20060102T150405-0700"
@@ -186,8 +188,12 @@ CREATE TABLE IF NOT EXISTS "IDF" (
 
 	fs := http.FileServer(http.Dir(dir))
 	rep.fileServer = fs
+	// thumb server wraps the base file server
 	rep.thumbServer = NewThumbFileServer(dir, fs)
 	rep.thumbGenerator = rep.thumbServer.(ThumbGenerator)
+	// video server wraps thumb server so that thumb requests keep working
+	rep.videoServer = NewVideoFileServer(dir, rep.thumbServer)
+	rep.videoGenerator = rep.videoServer.(VideoCacheGenerator)
 
 	return rep, nil
 }
@@ -1518,10 +1524,27 @@ func (i *idfKyouRepositorySQLite3Impl) parseDUID(str string) (id uuid.UUID, t ti
 }
 
 func (i *idfKyouRepositorySQLite3Impl) HandleFileServe(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	thumb := q.Get("thumb")
+
+	// 1) thumb クエリがある場合は必ず thumbServer（画像サムネ/動画poster）
+	if thumb != "" && i.thumbServer != nil {
+		i.thumbServer.ServeHTTP(w, r)
+		return
+	}
+
+	// 2) それ以外は videoServer（互換動画キャッシュの生成＆配信）
+	if i.videoServer != nil {
+		i.videoServer.ServeHTTP(w, r)
+		return
+	}
+
+	// 3) fallback
 	if i.thumbServer != nil {
 		i.thumbServer.ServeHTTP(w, r)
 		return
 	}
+
 	http.FileServer(http.Dir(i.contentDir)).ServeHTTP(w, r)
 }
 
@@ -1669,9 +1692,62 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 	return nil
 }
 
+// GenerateVideoCache generates browser-compatible video cache files (e.g., HEVC -> H.264 MP4)
+// by delegating the real work to IDFVideoFileServer.
+// This is intended for CLI use (batch pre-generation).
+func (i *idfKyouRepositorySQLite3Impl) GenerateVideoCache(ctx context.Context) error {
+	repName, err := i.GetRepName(ctx)
+	if err != nil {
+		err = fmt.Errorf("error at generate video cache get rep name: %w", err)
+		return err
+	}
+	if i.videoGenerator == nil {
+		// video cache feature not initialized; keep compatibility
+		return nil
+	}
+
+	query := &find.FindQuery{}
+	idfKyous, err := i.FindIDFKyou(ctx, query)
+	if err != nil {
+		err = fmt.Errorf("error at generate video cache at %s: %w", repName, err)
+		slog.Log(ctx, gkill_log.Debug, "error", "error", err)
+	}
+
+	for _, idfKyou := range idfKyous {
+		if !idfKyou.IsVideo {
+			continue
+		}
+
+		rel := filepath.ToSlash(idfKyou.TargetFile)
+		rel = strings.TrimPrefix(rel, "/")
+
+		u := &url.URL{
+			Scheme: "http",
+			Host:   "localhost:9999",
+			Path:   "/" + rel,
+		}
+
+		err = i.videoGenerator.GenerateVideoCache(ctx, u.String())
+		if err != nil {
+			err = fmt.Errorf("error at generate video cache %s: %w", u.String(), err)
+			slog.Log(ctx, gkill_log.Error, "error", "error", err)
+			continue
+		}
+	}
+	return nil
+}
+
 func (i *idfKyouRepositorySQLite3Impl) ClearThumbCache() error {
 	dir := filepath.Clean(os.ExpandEnv(i.contentDir))
 	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "thumb_cache", filepath.Base(dir)))
+
+	os.RemoveAll(cacheDir)
+	return nil
+}
+
+func (i *idfKyouRepositorySQLite3Impl) ClearVideoCache() error {
+	dir := filepath.Clean(os.ExpandEnv(i.contentDir))
+	cacheDir := os.ExpandEnv(filepath.Join(gkill_options.CacheDir, "video_cache", filepath.Base(dir)))
 
 	os.RemoveAll(cacheDir)
 	return nil

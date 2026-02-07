@@ -5,10 +5,11 @@
             {{ kyou.typed_idf_kyou.file_name }}
         </a>
         <img v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_image"
-            :src="kyou.typed_idf_kyou.file_url.concat(props.is_image_request_to_thumb_size ? '?thumb=400x400' : '')"
-            loading="lazy" decording="async" fetchpriority="low" class="kyou_image" />
-         <video v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_video" :src="kyou.typed_idf_kyou.file_url" preload="none"
-            class="kyou_video" controls></video>
+            :src="buildMediaUrl(kyou.typed_idf_kyou.file_url, false)" loading="lazy" decording="async"
+            fetchpriority="low" class="kyou_image" />
+        <video v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_video" :src="kyou.typed_idf_kyou.file_url"
+            preload="none" :poster="buildMediaUrl(kyou.typed_idf_kyou.file_url, true)" class="kyou_video"
+            controls></video>
         <audio v-if="kyou.typed_idf_kyou && kyou.typed_idf_kyou.is_audio" :src="kyou.typed_idf_kyou.file_url"
             class="kyou_audio" controls></audio>
         <IDFKyouContextMenu :application_config="application_config" :gkill_api="gkill_api"
@@ -62,6 +63,38 @@ function open_link(): void {
     if (url) {
         window.open(url, "_blank")
     }
+}
+
+function buildMediaUrl(fileUrl: string, isVideoThumb: boolean): string {
+    let is_added_query = false
+    if (isVideoThumb) {
+        if (!is_added_query) {
+            fileUrl += "?"
+        } else {
+            fileUrl += "&"
+        }
+        fileUrl += "is_video=true"
+        is_added_query = true
+
+        if (!is_added_query) {
+            fileUrl += "?"
+        } else {
+            fileUrl += "&"
+        }
+        fileUrl += "thumb=400x400"
+        is_added_query = true
+        return fileUrl
+    }
+    if (props.is_image_request_to_thumb_size) {
+        if (!is_added_query) {
+            fileUrl += "?"
+        } else {
+            fileUrl += "&"
+        }
+        fileUrl += "thumb=400x400"
+        is_added_query = true
+    }
+    return fileUrl
 }
 </script>
 
