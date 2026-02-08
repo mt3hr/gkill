@@ -6,6 +6,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -293,51 +294,126 @@ func detectFFMPEGCaps(ctx context.Context) (ffmpegCaps, error) {
 
 func runFFMPEGText(ctx context.Context, bin string, args ...string) (string, error) {
 	cmd := exec.CommandContext(ctx, bin, args...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &out
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("%s failed: %w: %s", bin, err, out.String())
+		// ffmpegはstderrに重要情報が出がち
+		msg := strings.TrimSpace(stderr.String())
+		if msg == "" {
+			msg = strings.TrimSpace(stdout.String())
+		}
+		return "", fmt.Errorf("%s failed: %w: %s", bin, err, msg)
 	}
-	return out.String(), nil
+	// 念のためstderrも含めて返す（環境によりstdout/stderrが揺れるため）
+	return stdout.String() + stderr.String(), nil
 }
 
-// 優先エンコーダ選択（「動く」優先）
-func chooseH264Encoder(c ffmpegCaps) string {
+// --- encoder health cache ---
+// 「ffmpeg -encoders に出る」だけでは動かないケースがある（特にNVENCはドライバ/API差分で落ちる）ため、
+// 小さなテストエンコードで "本当に動く" を判定してキャッシュする。
+var (
+	encHealthMu sync.Mutex
+	encHealth   = map[string]struct {
+		ok  bool
+		err error
+	}{}
+)
+
+func encoderWorks(ctx context.Context, encoder string) (bool, error) {
+	encHealthMu.Lock()
+	if v, ok := encHealth[encoder]; ok {
+		encHealthMu.Unlock()
+		return v.ok, v.err
+	}
+	encHealthMu.Unlock()
+
+	// 1秒のダミー動画を "null" 出力へ。成功すれば採用してよい。
+	// 失敗したらそのエンコーダは使わずフォールバックする。
+	tctx, cancel := context.WithTimeout(ctx, 12*time.Second)
+	defer cancel()
+	args := []string{
+		"-hide_banner",
+		"-loglevel", "error",
+		"-f", "lavfi",
+		"-i", "testsrc2=size=1280x720:rate=30",
+		"-t", "1",
+		"-c:v", encoder,
+		"-f", "null",
+		"-",
+	}
+	err := runFFMPEG(tctx, args)
+	ok := (err == nil)
+
+	encHealthMu.Lock()
+	encHealth[encoder] = struct {
+		ok  bool
+		err error
+	}{ok: ok, err: err}
+	encHealthMu.Unlock()
+
+	return ok, err
+}
+
+// 優先エンコーダ選択（GPUを使えるなら使う／使えないなら確実なx264へ）
+func chooseCandidateEncoders(c ffmpegCaps) []string {
+	// OS別の「まず試す」順序。
+	// Windows + RTX などは NVENC を最優先にするのが体感に合う。
 	switch runtime.GOOS {
 	case "darwin":
+		out := []string{}
 		if c.HasH264VideoToolbox {
-			return "h264_videotoolbox"
+			out = append(out, "h264_videotoolbox")
 		}
+		if c.HasLibx264 {
+			out = append(out, "libx264")
+		}
+		return out
 	case "windows":
-		// Windows は AMF/QSV/NVENC の順で試す例（好みで変えてOK）
+		out := []string{}
+		if c.HasH264NVENC {
+			out = append(out, "h264_nvenc")
+		}
+		if c.HasH264QSV {
+			out = append(out, "h264_qsv")
+		}
 		if c.HasH264AMF {
-			return "h264_amf"
+			out = append(out, "h264_amf")
 		}
-		if c.HasH264QSV {
-			return "h264_qsv"
+		if c.HasLibx264 {
+			out = append(out, "libx264")
 		}
-		if c.HasH264NVENC {
-			return "h264_nvenc"
-		}
+		return out
 	default: // linux etc
+		out := []string{}
 		if c.HasH264NVENC {
-			return "h264_nvenc"
+			out = append(out, "h264_nvenc")
 		}
 		if c.HasH264QSV {
-			return "h264_qsv"
+			out = append(out, "h264_qsv")
+		}
+		if c.HasLibx264 {
+			out = append(out, "libx264")
+		}
+		return out
+	}
+}
+
+func chooseVerifiedH264Encoder(ctx context.Context, c ffmpegCaps) string {
+	for _, enc := range chooseCandidateEncoders(c) {
+		// libx264 は「動く」前提でよいが、一応判定関数を通して統一
+		ok, _ := encoderWorks(ctx, enc)
+		if ok {
+			return enc
 		}
 	}
-
-	if c.HasLibx264 {
-		return "libx264"
-	}
-	// 最後の手段：エンコーダ名指定なし（ffmpeg の既定に任せる）
+	// 最後の手段：エンコーダ名指定なし（ffmpegの既定に任せる）
 	return ""
 }
 
 // 「最適」args（環境に合わせて組む）
-func buildFFMPEGArgsPreferred(srcPath, tmpOut string, maxHeight, crf int, preset string, caps ffmpegCaps) []string {
+func buildFFMPEGArgsPreferred(ctx context.Context, srcPath, tmpOut string, maxHeight, crf int, preset string, caps ffmpegCaps) []string {
 	if maxHeight <= 0 {
 		maxHeight = 720
 	}
@@ -349,7 +425,7 @@ func buildFFMPEGArgsPreferred(srcPath, tmpOut string, maxHeight, crf int, preset
 	}
 
 	filter := fmt.Sprintf("scale=-2:min(%d\\,ih)", maxHeight)
-	enc := chooseH264Encoder(caps)
+	enc := chooseVerifiedH264Encoder(ctx, caps)
 
 	args := []string{
 		"-hide_banner",
@@ -438,7 +514,7 @@ func transcodeToCompatMP4(ctx context.Context, srcPath, dstPath string, maxHeigh
 	caps, _ := getFFMPEGCaps(ffCtx) // err は無視してもOK：検出失敗なら prefer が弱くなるだけ
 
 	// ② args 構築（preferred）
-	args := buildFFMPEGArgsPreferred(srcPath, tmp, maxHeight, crf, preset, caps)
+	args := buildFFMPEGArgsPreferred(ffCtx, srcPath, tmp, maxHeight, crf, preset, caps)
 
 	// ③ 実行 → 失敗なら fallback
 	if err := runFFMPEG(ffCtx, args); err != nil {
@@ -458,13 +534,38 @@ func transcodeToCompatMP4(ctx context.Context, srcPath, dstPath string, maxHeigh
 	return nil
 }
 
+// runFFMPEG executes ffmpeg and captures stdout/stderr separately.
+// FFmpeg typically logs important diagnostics to stderr.
 func runFFMPEG(ctx context.Context, args []string) error {
 	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &out
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%w: %s", err, out.String())
+		msg := strings.TrimSpace(stderr.String())
+		if msg == "" {
+			msg = strings.TrimSpace(stdout.String())
+		}
+		return fmt.Errorf("%w: %s", err, msg)
+	}
+	return nil
+}
+
+// Optional helper: run ffmpeg and stream stdout somewhere (e.g. progress), while still capturing stderr.
+// Not used by default, but handy if you later want progress logging.
+func runFFMPEGWithStdout(ctx context.Context, args []string, stdoutW io.Writer) error {
+	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
+	var stderr bytes.Buffer
+	if stdoutW != nil {
+		cmd.Stdout = stdoutW
+	} else {
+		cmd.Stdout = io.Discard
+	}
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		msg := strings.TrimSpace(stderr.String())
+		return fmt.Errorf("%w: %s", err, msg)
 	}
 	return nil
 }
