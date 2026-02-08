@@ -14,6 +14,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
@@ -230,7 +231,113 @@ func (v *IDFVideoFileServer) compatPathFor(rel string, st os.FileInfo) (string, 
 	return filepath.Join(v.cacheDir, name), nil
 }
 
-func transcodeToCompatMP4(ctx context.Context, srcPath, dstPath string, maxHeight, crf int, preset string) error {
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+type ffmpegCaps struct {
+	// encoders
+	HasLibx264          bool
+	HasH264NVENC        bool
+	HasH264QSV          bool
+	HasH264AMF          bool
+	HasH264VideoToolbox bool
+
+	// filters
+	HasScale bool
+}
+
+var (
+	ffCapsOnce      sync.Once
+	ffCapsCached    ffmpegCaps
+	ffCapsCachedErr error
+)
+
+func getFFMPEGCaps(ctx context.Context) (ffmpegCaps, error) {
+	ffCapsOnce.Do(func() {
+		// 検出が重いので短めタイムアウト（初回だけ）
+		dctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		ffCapsCached, ffCapsCachedErr = detectFFMPEGCaps(dctx)
+	})
+	return ffCapsCached, ffCapsCachedErr
+}
+
+func detectFFMPEGCaps(ctx context.Context) (ffmpegCaps, error) {
+	var caps ffmpegCaps
+
+	encOut, err := runFFMPEGText(ctx, "ffmpeg", "-hide_banner", "-encoders")
+	if err != nil {
+		return caps, err
+	}
+	caps.HasLibx264 = strings.Contains(encOut, "libx264")
+	caps.HasH264NVENC = strings.Contains(encOut, "h264_nvenc")
+	caps.HasH264QSV = strings.Contains(encOut, "h264_qsv")
+	caps.HasH264AMF = strings.Contains(encOut, "h264_amf")
+	caps.HasH264VideoToolbox = strings.Contains(encOut, "h264_videotoolbox")
+
+	fOut, err := runFFMPEGText(ctx, "ffmpeg", "-hide_banner", "-filters")
+	if err != nil {
+		// filters は必須じゃないので失敗しても続行（安全寄り）
+		caps.HasScale = true
+		return caps, nil
+	}
+	// " scale " のように空白区切りで出る想定（雑でも十分）
+	caps.HasScale = strings.Contains(fOut, " scale ")
+
+	return caps, nil
+}
+
+func runFFMPEGText(ctx context.Context, bin string, args ...string) (string, error) {
+	cmd := exec.CommandContext(ctx, bin, args...)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("%s failed: %w: %s", bin, err, out.String())
+	}
+	return out.String(), nil
+}
+
+// 優先エンコーダ選択（「動く」優先）
+func chooseH264Encoder(c ffmpegCaps) string {
+	switch runtime.GOOS {
+	case "darwin":
+		if c.HasH264VideoToolbox {
+			return "h264_videotoolbox"
+		}
+	case "windows":
+		// Windows は AMF/QSV/NVENC の順で試す例（好みで変えてOK）
+		if c.HasH264AMF {
+			return "h264_amf"
+		}
+		if c.HasH264QSV {
+			return "h264_qsv"
+		}
+		if c.HasH264NVENC {
+			return "h264_nvenc"
+		}
+	default: // linux etc
+		if c.HasH264NVENC {
+			return "h264_nvenc"
+		}
+		if c.HasH264QSV {
+			return "h264_qsv"
+		}
+	}
+
+	if c.HasLibx264 {
+		return "libx264"
+	}
+	// 最後の手段：エンコーダ名指定なし（ffmpeg の既定に任せる）
+	return ""
+}
+
+// 「最適」args（環境に合わせて組む）
+func buildFFMPEGArgsPreferred(srcPath, tmpOut string, maxHeight, crf int, preset string, caps ffmpegCaps) []string {
 	if maxHeight <= 0 {
 		maxHeight = 720
 	}
@@ -241,26 +348,69 @@ func transcodeToCompatMP4(ctx context.Context, srcPath, dstPath string, maxHeigh
 		preset = "veryfast"
 	}
 
-	// scale to at most maxHeight without upscaling
-	// scale=-2:min(720\,ih) keeps aspect ratio; -2 ensures even width.
 	filter := fmt.Sprintf("scale=-2:min(%d\\,ih)", maxHeight)
-
-	// NOTE: ffmpeg chooses container format from the output filename extension when -f is not specified.
-	// If we use ".tmp" it can't infer mp4 and fails with:
-	//   Unable to choose an output format ... use a standard extension...
-	// So we keep ".mp4" as the final extension for the temporary file.
-	tmp := dstPath + ".tmp.mp4"
-	_ = os.Remove(tmp)
-
-	ffCtx, cancel := context.WithTimeout(ctx, 60*time.Minute)
-	defer cancel()
+	enc := chooseH264Encoder(caps)
 
 	args := []string{
 		"-hide_banner",
 		"-loglevel", "error",
 		"-y",
 		"-i", srcPath,
-		// map: first video, optional audio
+		"-map", "0:v:0",
+		"-map", "0:a?",
+	}
+
+	// video
+	if enc != "" {
+		args = append(args, "-c:v", enc)
+	}
+	// 互換性（ブラウザ向け）
+	args = append(args, "-pix_fmt", "yuv420p")
+
+	// libx264 のときだけ crf/preset を使う（HW は効かない/挙動が違うことが多い）
+	if enc == "libx264" || enc == "" {
+		args = append(args,
+			"-crf", strconv.Itoa(crf),
+			"-preset", preset,
+		)
+	}
+
+	// filters
+	if caps.HasScale {
+		args = append(args, "-vf", filter)
+	} else {
+		// scale が無いのは稀だが、無いなら無理に付けない（フォールバック側で再挑戦）
+	}
+
+	// audio（AACがなければフォールバックで落ちるので、ここは固定でもOK）
+	args = append(args,
+		"-c:a", "aac",
+		"-b:a", "128k",
+		"-movflags", "+faststart",
+		"-f", "mp4",
+		tmpOut,
+	)
+	return args
+}
+
+// 「堅牢デフォルト」args（失敗時フォールバック用：libx264固定）
+func buildFFMPEGArgsFallback(srcPath, tmpOut string, maxHeight, crf int, preset string) []string {
+	if maxHeight <= 0 {
+		maxHeight = 720
+	}
+	if crf <= 0 {
+		crf = 23
+	}
+	if preset == "" {
+		preset = "veryfast"
+	}
+	filter := fmt.Sprintf("scale=-2:min(%d\\,ih)", maxHeight)
+
+	return []string{
+		"-hide_banner",
+		"-loglevel", "error",
+		"-y",
+		"-i", srcPath,
 		"-map", "0:v:0",
 		"-map", "0:a?",
 		"-c:v", "libx264",
@@ -271,17 +421,33 @@ func transcodeToCompatMP4(ctx context.Context, srcPath, dstPath string, maxHeigh
 		"-c:a", "aac",
 		"-b:a", "128k",
 		"-movflags", "+faststart",
-		// Be explicit about container too (defensive; helps if someone changes tmp naming later).
 		"-f", "mp4",
-		tmp,
+		tmpOut,
 	}
-	cmd := exec.CommandContext(ffCtx, "ffmpeg", args...)
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &out
-	if err := cmd.Run(); err != nil {
-		_ = os.Remove(tmp)
-		return fmt.Errorf("ffmpeg failed: %w: %s", err, out.String())
+}
+
+func transcodeToCompatMP4(ctx context.Context, srcPath, dstPath string, maxHeight, crf int, preset string) error {
+	// NOTE: tmp は ".mp4" じゃないと -f mp4 指定してても失敗する環境があるので mp4 で統一
+	tmp := dstPath + ".tmp.mp4"
+	_ = os.Remove(tmp)
+
+	ffCtx, cancel := context.WithTimeout(ctx, 60*time.Minute)
+	defer cancel()
+
+	// ① capabilities（初回だけ）
+	caps, _ := getFFMPEGCaps(ffCtx) // err は無視してもOK：検出失敗なら prefer が弱くなるだけ
+
+	// ② args 構築（preferred）
+	args := buildFFMPEGArgsPreferred(srcPath, tmp, maxHeight, crf, preset, caps)
+
+	// ③ 実行 → 失敗なら fallback
+	if err := runFFMPEG(ffCtx, args); err != nil {
+		// fallback
+		fb := buildFFMPEGArgsFallback(srcPath, tmp, maxHeight, crf, preset)
+		if err2 := runFFMPEG(ffCtx, fb); err2 != nil {
+			_ = os.Remove(tmp)
+			return fmt.Errorf("ffmpeg failed (preferred): %v; (fallback): %w", err, err2)
+		}
 	}
 
 	_ = os.Remove(dstPath)
@@ -292,9 +458,13 @@ func transcodeToCompatMP4(ctx context.Context, srcPath, dstPath string, maxHeigh
 	return nil
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
+func runFFMPEG(ctx context.Context, args []string) error {
+	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%w: %s", err, out.String())
 	}
-	return b
+	return nil
 }
