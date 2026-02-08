@@ -209,7 +209,7 @@ export class FindKyouQuery {
         this.timeis_words_and = false
         this.timeis_words = new Array<string>()
         this.timeis_not_words = new Array<string>()
-        this.use_timeis_tags = false
+        this.use_timeis_tags = true
         this.timeis_tags = new Array<string>()
         this.timeis_tags_and = false
         this.tags = new Array<string>()

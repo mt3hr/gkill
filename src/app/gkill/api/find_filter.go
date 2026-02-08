@@ -611,11 +611,8 @@ func (f *FindFilter) getMatchHideTagsWhenUnckedTimeIs(ctx context.Context, findC
 }
 
 func (f *FindFilter) findTimeIsTags(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	// タグを使わない場合は全タグを使う
+	// タグを使わない場合はnil
 	if findCtx.ParsedFindQuery.UseTimeIsTags == nil || !(*findCtx.ParsedFindQuery.UseTimeIsTags) {
-		for _, tag := range findCtx.AllTags {
-			findCtx.MatchTimeIsTags[tag.Tag] = tag
-		}
 		return nil, nil
 	}
 
@@ -1024,7 +1021,16 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 }
 
 func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.TimeIsTags != nil && findCtx.ParsedFindQuery.TimeIsTagsAnd != nil && !(*findCtx.ParsedFindQuery.TimeIsTagsAnd) || (findCtx.ParsedFindQuery.UseTimeIsTags == nil || *(findCtx.ParsedFindQuery.UseTimeIsTags)) {
+	if findCtx.ParsedFindQuery.UseTimeIsTags == nil || !(*findCtx.ParsedFindQuery.UseTimeIsTags) {
+		for _, timeis := range findCtx.MatchTimeIssAtFindTimeIs {
+			if timeis.IsDeleted {
+				continue
+			}
+			findCtx.MatchTimeIssAtFilterTags[timeis.ID] = timeis
+		}
+		return nil, nil
+	}
+	if findCtx.ParsedFindQuery.TimeIsTags != nil && findCtx.ParsedFindQuery.TimeIsTagsAnd != nil && !(*findCtx.ParsedFindQuery.TimeIsTagsAnd) {
 		// ORの場合のフィルタリング処理
 
 		// タグ対象Kyouリスト
