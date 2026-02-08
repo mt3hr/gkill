@@ -198,6 +198,10 @@ async function submit(): Promise<void> {
             const error = new GkillError()
             error.error_code = GkillErrorCodes.kftl_has_invalid_line
             error.error_message = i18n.global.t("KFTL_FOUND_INVALID_LINE_MESSAGE")
+            text_area_content.value = text_area_content.value.replace(
+                "\n" + i18n.global.t("KFTL_SAVE_CHARACTOR") + "\n",
+                "\n",
+            )
             emits('received_errors', [error])
             return
         }
