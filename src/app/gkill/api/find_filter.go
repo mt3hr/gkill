@@ -1024,7 +1024,7 @@ func (f *FindFilter) filterTagsKyous(ctx context.Context, findCtx *FindKyouConte
 }
 
 func (f *FindFilter) filterTagsTimeIs(ctx context.Context, findCtx *FindKyouContext) ([]*message.GkillError, error) {
-	if findCtx.ParsedFindQuery.TimeIsTags != nil && findCtx.ParsedFindQuery.TimeIsTagsAnd != nil && !(*findCtx.ParsedFindQuery.TimeIsTagsAnd) {
+	if findCtx.ParsedFindQuery.TimeIsTags != nil && findCtx.ParsedFindQuery.TimeIsTagsAnd != nil && !(*findCtx.ParsedFindQuery.TimeIsTagsAnd) || (findCtx.ParsedFindQuery.UseTimeIsTags == nil || *(findCtx.ParsedFindQuery.UseTimeIsTags)) {
 		// ORの場合のフィルタリング処理
 
 		// タグ対象Kyouリスト
