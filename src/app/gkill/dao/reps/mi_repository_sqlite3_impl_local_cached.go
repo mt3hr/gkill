@@ -36,7 +36,7 @@ func NewMiRepositorySQLite3ImplLocalCached(ctx context.Context, filename string,
 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(filename)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
 	if updateCache {
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
@@ -131,7 +131,7 @@ func (m *miRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) er
 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(m.originalDBFileName)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
 	if updateCache {
 		originalDBFile, err := os.Open(m.originalDBFileName)
 		if err != nil {

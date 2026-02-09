@@ -28,7 +28,7 @@ func NewIDFDirRepLocalCached(ctx context.Context, dir, dbFilename string, fullCo
 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(dbFilename)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
 	if updateCache {
 		originalDBFile, err := os.Open(dbFilename)
 		if err != nil {
@@ -143,7 +143,7 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(i.originalDBFileName)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
 	if updateCache {
 		originalDBFile, err := os.Open(i.originalDBFileName)
 		if err != nil {
