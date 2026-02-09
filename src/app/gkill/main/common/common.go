@@ -99,6 +99,7 @@ var (
 	GenerateThumbCacheCmd = &cobra.Command{
 		Use: "generate_thumb_cache",
 		Run: func(cmd *cobra.Command, args []string) {
+			gkill_options.LoadIDFRepOnly = true
 			if len(args) == 0 {
 				cmd.Usage()
 				return
@@ -125,6 +126,7 @@ var (
 	GenerateVideoCacheCmd = &cobra.Command{
 		Use: "generate_video_cache",
 		Run: func(cmd *cobra.Command, args []string) {
+			gkill_options.LoadIDFRepOnly = true
 			if len(args) == 0 {
 				cmd.Usage()
 				return
