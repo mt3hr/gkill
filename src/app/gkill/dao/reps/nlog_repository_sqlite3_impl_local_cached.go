@@ -36,7 +36,7 @@ func NewNlogRepositorySQLite3ImplLocalCached(ctx context.Context, filename strin
 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(filename)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
 	if updateCache {
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
@@ -130,7 +130,7 @@ func (n *nlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(n.originalDBFileName)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
 	if updateCache {
 		originalDBFile, err := os.Open(n.originalDBFileName)
 		if err != nil {
