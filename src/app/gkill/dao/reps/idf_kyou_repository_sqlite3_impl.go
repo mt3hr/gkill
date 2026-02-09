@@ -326,7 +326,7 @@ WHERE
 				targetRepName = repName
 			}
 
-			idf.ContentPath, err = i.GetPath(ctx, idf.ID)
+			idf.ContentPath = filepath.Join(i.contentDir, idf.TargetFile)
 			if err != nil {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
@@ -626,7 +626,7 @@ WHERE
 				return nil, err
 			}
 
-			idf.ContentPath, err = i.GetPath(ctx, idf.ID)
+			idf.ContentPath = filepath.Join(i.contentDir, idf.TargetFile)
 			if err != nil {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
@@ -699,15 +699,6 @@ SELECT
   ID,
   TARGET_REP_NAME,
   TARGET_FILE,
-  RELATED_TIME,
-  CREATE_TIME,
-  CREATE_APP,
-  CREATE_DEVICE,
-  CREATE_USER,
-  UPDATE_TIME,
-  UPDATE_APP,
-  UPDATE_DEVICE,
-  UPDATE_USER,
   ? AS REP_NAME,
   ? AS DATA_TYPE
 FROM IDF
@@ -773,22 +764,11 @@ WHERE
 		default:
 			idf := &IDFKyou{}
 			idf.RepName = repName
-			relatedTimeStr, createTimeStr, updateTimeStr := "", "", ""
-			targetRepName := ""
 
 			err = rows.Scan(&idf.IsDeleted,
 				&idf.ID,
-				&targetRepName,
+				&idf.TargetRepName,
 				&idf.TargetFile,
-				&relatedTimeStr,
-				&createTimeStr,
-				&idf.CreateApp,
-				&idf.CreateDevice,
-				&idf.CreateUser,
-				&updateTimeStr,
-				&idf.UpdateApp,
-				&idf.UpdateDevice,
-				&idf.UpdateUser,
 				&idf.RepName,
 				&idf.DataType,
 			)
@@ -798,29 +778,12 @@ WHERE
 				return "", nil
 			}
 
-			idf.FileURL = fmt.Sprintf("/files/%s/%s", targetRepName, filepath.Base(idf.TargetFile))
+			idf.FileURL = fmt.Sprintf("/files/%s/%s", idf.TargetRepName, filepath.Base(idf.TargetFile))
 
 			// 画像であるか判定
 			idf.IsImage = isImage(idf.TargetFile)
 			idf.IsVideo = isVideo(idf.TargetFile)
 			idf.IsAudio = isAudio(idf.TargetFile)
-
-			idf.RelatedTime, err = time.Parse(sqlite3impl.TimeLayout, relatedTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse related time %s in idf: %w", relatedTimeStr, err)
-				return "", err
-			}
-			idf.CreateTime, err = time.Parse(sqlite3impl.TimeLayout, createTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse create time %s in idf: %w", createTimeStr, err)
-				return "", err
-			}
-			idf.UpdateTime, err = time.Parse(sqlite3impl.TimeLayout, updateTimeStr)
-			if err != nil {
-				err = fmt.Errorf("error at parse update time %s in idf: %w", updateTimeStr, err)
-				return "", err
-			}
-
 			idfKyous = append(idfKyous, idf)
 		}
 	}
@@ -1017,7 +980,7 @@ WHERE
 				continue
 			}
 
-			idf.ContentPath, err = i.GetPath(ctx, idf.ID)
+			idf.ContentPath = filepath.Join(i.contentDir, idf.TargetFile)
 			if err != nil {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
@@ -1025,7 +988,7 @@ WHERE
 
 			fileContentText := ""
 
-			filename, err := i.GetPath(ctx, idf.ID)
+			filename := filepath.Join(i.contentDir, idf.TargetFile)
 			if err != nil {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
@@ -1246,7 +1209,7 @@ WHERE
 				return nil, err
 			}
 
-			idf.ContentPath, err = i.GetPath(ctx, idf.ID)
+			idf.ContentPath = filepath.Join(i.contentDir, idf.TargetFile)
 			if err != nil {
 				err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
 				return nil, err
