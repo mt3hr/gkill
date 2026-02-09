@@ -36,7 +36,7 @@ func NewURLogRepositorySQLite3ImplLocalCached(ctx context.Context, filename stri
 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(filename)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
 	if updateCache {
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
@@ -131,7 +131,7 @@ func (u *urlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context)
 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(u.originalDBFileName)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
 	if updateCache {
 		originalDBFile, err := os.Open(u.originalDBFileName)
 		if err != nil {
