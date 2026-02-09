@@ -36,7 +36,7 @@ func NewLantanaRepositorySQLite3ImplLocalCached(ctx context.Context, filename st
 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(filename)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
 	if updateCache {
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
@@ -131,7 +131,7 @@ func (l *lantanaRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 
 	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
 	originalStat, originalStatErr := os.Stat(l.originalDBFileName)
-	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	updateCache := originalStatErr != nil || cacheStatErr != nil || !originalStat.ModTime().Equal(cacheStat.ModTime()) || originalStat.Size() != cacheStat.Size()
 	if updateCache {
 		originalDBFile, err := os.Open(l.originalDBFileName)
 		if err != nil {
