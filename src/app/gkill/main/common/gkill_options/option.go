@@ -23,6 +23,8 @@ var (
 
 	Optimize = false
 
+	LoadIDFRepOnly = false
+
 	IDFIgnore = []string{
 		".gkill",
 		"gkill_id.db",
