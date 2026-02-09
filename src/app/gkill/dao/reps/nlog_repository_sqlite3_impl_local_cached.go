@@ -53,6 +53,7 @@ func NewNlogRepositorySQLite3ImplLocalCached(ctx context.Context, filename strin
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
 			return nil, err
 		}
+		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
 	}
 
 	originalRep, err := NewNlogRepositorySQLite3Impl(ctx, filename, false)
@@ -134,12 +135,12 @@ func (n *nlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 	if updateCache {
 		originalDBFile, err := os.Open(n.originalDBFileName)
 		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", n.originalDBFileName)
+			err = fmt.Errorf("error at open file %s: %w", n.originalDBFileName, err)
 		}
 		defer originalDBFile.Close()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
+			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
 		}
 		defer cacheDBFile.Close()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
@@ -147,6 +148,7 @@ func (n *nlogRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", n.originalDBFileName, localCacheDBFileName, err)
 			return err
 		}
+		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
 	}
 
 	newLocalCachedRep, err := NewNlogRepositorySQLite3Impl(ctx, localCacheDBFileName, n.fullConnect)
