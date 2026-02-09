@@ -1631,7 +1631,7 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 	}
 
 	for _, idfKyou := range idfKyous {
-		if !idfKyou.IsImage {
+		if !idfKyou.IsImage && !idfKyou.IsVideo {
 			continue
 		}
 
