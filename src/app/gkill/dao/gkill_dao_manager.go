@@ -204,6 +204,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 
 				switch rep.Type {
 				case "kmemo":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
@@ -242,6 +245,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "kc":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					kcRep, err := reps.NewKCRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
@@ -280,6 +286,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "urlog":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					urlogRep, err := reps.NewURLogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
@@ -318,6 +327,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "timeis":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					timeisRep, err := reps.NewTimeIsRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
@@ -356,6 +368,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "mi":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					miRep, err := reps.NewMiRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
@@ -394,6 +409,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "nlog":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					nlogRep, err := reps.NewNlogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
@@ -432,6 +450,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "lantana":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					lantanaRep, err := reps.NewLantanaRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
@@ -470,6 +491,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "tag":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					tagRep, err := reps.NewTagRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
@@ -509,6 +533,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "text":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					textRep, err := reps.NewTextRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
@@ -548,6 +575,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "notification":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					notificationRep, err := reps.NewNotificationRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
 					if err != nil {
 						return nil, err
@@ -586,6 +616,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "rekyou":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					reKyouRep, err := reps.NewReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
 					if err != nil {
 						return nil, err
@@ -665,6 +698,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "gpslog":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					err := os.MkdirAll(os.ExpandEnv(filename), os.ModePerm)
 					if err != nil {
 						err = fmt.Errorf("error at make directory %s: %w", filename, err)
@@ -678,6 +714,9 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 
 				case "git_commit_log":
+					if gkill_options.LoadIDFRepOnly {
+						continue
+					}
 					gitCommitLogRep, err := reps.NewGitRep(filename)
 					if err != nil {
 						return nil, err
