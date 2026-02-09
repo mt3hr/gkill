@@ -1475,13 +1475,12 @@ func (g *GkillServerAPI) HandleAddTag(w http.ResponseWriter, r *http.Request) {
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Tag.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Tag.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	tag, err := repositories.GetTag(r.Context(), request.Tag.ID, nil)
 	if err != nil {
@@ -1642,13 +1641,12 @@ func (g *GkillServerAPI) HandleAddText(w http.ResponseWriter, r *http.Request) {
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Text.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Text.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	text, err := repositories.GetText(r.Context(), request.Text.ID, nil)
 	if err != nil {
@@ -1809,13 +1807,12 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	notification, err := repositories.GetNotification(r.Context(), request.Notification.ID, nil)
 	if err != nil {
@@ -1878,13 +1875,12 @@ func (g *GkillServerAPI) HandleAddNotification(w http.ResponseWriter, r *http.Re
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	response.AddedNotification = notification
 	response.Messages = append(response.Messages, &message.GkillMessage{
@@ -2032,13 +2028,12 @@ func (g *GkillServerAPI) HandleAddKmemo(w http.ResponseWriter, r *http.Request) 
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Kmemo.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Kmemo.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	if request.WantResponseKyou {
 		kmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID, nil)
@@ -2214,13 +2209,12 @@ func (g *GkillServerAPI) HandleAddKC(w http.ResponseWriter, r *http.Request) {
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.KC.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.KC.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	if request.WantResponseKyou {
 		kc, err := repositories.KCReps.GetKC(r.Context(), request.KC.ID, nil)
@@ -2425,13 +2419,12 @@ func (g *GkillServerAPI) HandleAddURLog(w http.ResponseWriter, r *http.Request) 
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.URLog.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.URLog.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	if request.WantResponseKyou {
 		urlog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID, nil)
@@ -2605,13 +2598,12 @@ func (g *GkillServerAPI) HandleAddNlog(w http.ResponseWriter, r *http.Request) {
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Nlog.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Nlog.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	if request.WantResponseKyou {
 		nlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID, nil)
@@ -2785,13 +2777,12 @@ func (g *GkillServerAPI) HandleAddTimeis(w http.ResponseWriter, r *http.Request)
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.TimeIs.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.TimeIs.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	if request.WantResponseKyou {
 		timeis, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID, nil)
@@ -2968,13 +2959,12 @@ func (g *GkillServerAPI) HandleAddLantana(w http.ResponseWriter, r *http.Request
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Lantana.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Lantana.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	if request.WantResponseKyou {
 		lantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
@@ -3150,13 +3140,12 @@ func (g *GkillServerAPI) HandleAddMi(w http.ResponseWriter, r *http.Request) {
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Mi.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Mi.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	if request.WantResponseKyou {
 		mi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
@@ -3333,13 +3322,12 @@ func (g *GkillServerAPI) HandleAddRekyou(w http.ResponseWriter, r *http.Request)
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.ReKyou.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.ReKyou.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	if request.WantResponseKyou {
 		rekyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID, nil)
@@ -3506,13 +3494,12 @@ func (g *GkillServerAPI) HandleUpdateTag(w http.ResponseWriter, r *http.Request)
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Tag.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Tag.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, request.Tag.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	tag, err := repositories.GetTag(r.Context(), request.Tag.ID, nil)
 	if err != nil {
@@ -3687,13 +3674,12 @@ func (g *GkillServerAPI) HandleUpdateText(w http.ResponseWriter, r *http.Request
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Text.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Text.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, request.Text.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	text, err := repositories.GetText(r.Context(), request.Text.ID, nil)
 	if err != nil {
@@ -3867,13 +3853,12 @@ func (g *GkillServerAPI) HandleUpdateNotification(w http.ResponseWriter, r *http
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Notification.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, request.Notification.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	notification, err := repositories.GetNotification(r.Context(), request.Notification.ID, nil)
 	if err != nil {
@@ -4070,13 +4055,12 @@ func (g *GkillServerAPI) HandleUpdateKmemo(w http.ResponseWriter, r *http.Reques
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Kmemo.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Kmemo.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, request.Kmemo.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	kmemo, err := repositories.KmemoReps.GetKmemo(r.Context(), request.Kmemo.ID, nil)
 	if err != nil {
@@ -4263,13 +4247,12 @@ func (g *GkillServerAPI) HandleUpdateKC(w http.ResponseWriter, r *http.Request) 
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.KC.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.KC.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, request.KC.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	kc, err := repositories.KCReps.GetKC(r.Context(), request.KC.ID, nil)
 	if err != nil {
@@ -4520,13 +4503,12 @@ func (g *GkillServerAPI) HandleUpdateURLog(w http.ResponseWriter, r *http.Reques
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.URLog.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.URLog.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, request.URLog.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	urlog, err := repositories.URLogReps.GetURLog(r.Context(), request.URLog.ID, nil)
 	if err != nil {
@@ -4712,13 +4694,12 @@ func (g *GkillServerAPI) HandleUpdateNlog(w http.ResponseWriter, r *http.Request
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Nlog.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Nlog.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, request.Nlog.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	nlog, err := repositories.NlogReps.GetNlog(r.Context(), request.Nlog.ID, nil)
 	if err != nil {
@@ -4905,13 +4886,12 @@ func (g *GkillServerAPI) HandleUpdateTimeis(w http.ResponseWriter, r *http.Reque
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.TimeIs.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.TimeIs.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, request.TimeIs.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	timeis, err := repositories.TimeIsReps.GetTimeIs(r.Context(), request.TimeIs.ID, nil)
 	if err != nil {
@@ -5085,13 +5065,12 @@ func (g *GkillServerAPI) HandleUpdateLantana(w http.ResponseWriter, r *http.Requ
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Lantana.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Lantana.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, request.Lantana.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	lantana, err := repositories.LantanaReps.GetLantana(r.Context(), request.Lantana.ID, nil)
 	if err != nil {
@@ -5265,13 +5244,12 @@ func (g *GkillServerAPI) HandleUpdateIDFKyou(w http.ResponseWriter, r *http.Requ
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.IDFKyou.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.IDFKyou.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, request.IDFKyou.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	idfKyou, err := repositories.IDFKyouReps.GetIDFKyou(r.Context(), request.IDFKyou.ID, nil)
 	if err != nil {
@@ -5468,13 +5446,12 @@ func (g *GkillServerAPI) HandleUpdateMi(w http.ResponseWriter, r *http.Request) 
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Mi.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.Mi.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, request.Mi.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	mi, err := repositories.MiReps.GetMi(r.Context(), request.Mi.ID, nil)
 	if err != nil {
@@ -5639,13 +5616,12 @@ func (g *GkillServerAPI) HandleUpdateRekyou(w http.ResponseWriter, r *http.Reque
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.ReKyou.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[request.ReKyou.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, request.ReKyou.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	rekyou, err := repositories.ReKyouReps.GetReKyou(r.Context(), request.ReKyou.ID, nil)
 	if err != nil {
@@ -7998,13 +7974,12 @@ loop:
 					LatestDataRepositoryName:               repName,
 					LatestDataRepositoryAddressUpdatedTime: time.Now(),
 				}
-				go func() {
-					_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
-					if err != nil {
-						err = fmt.Errorf("error at update or add latest data repository address: %w", err)
-						slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-					}
-				}()
+
+				_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
+				if err != nil {
+					err = fmt.Errorf("error at update or add latest data repository address: %w", err)
+					slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+				}
 			}
 		default:
 			break loop
@@ -11592,13 +11567,12 @@ func (g *GkillServerAPI) HandleURLogBookmarkletAddress(w http.ResponseWriter, r 
 		LatestDataRepositoryName:               repName,
 		LatestDataRepositoryAddressUpdatedTime: time.Now(),
 	}
-	go func() {
-		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
-		if err != nil {
-			err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-		}
-	}()
+
+	_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
+	if err != nil {
+		err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+		slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+	}
 
 	// 通知する
 	// 現在のServerConfigを取得する
@@ -12204,13 +12178,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[idfKyou.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get idfKyou user id = %s device = %s id = %s: %w", userID, device, idfKyou.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 	for _, kc := range kcs {
 		err = repositories.WriteKCRep.AddKCInfo(r.Context(), kc)
@@ -12251,13 +12224,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kc.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kc.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get kc user id = %s device = %s id = %s: %w", userID, device, kc.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	for _, kmemo := range kmemos {
@@ -12299,13 +12271,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kmemo.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[kmemo.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get kmemo user id = %s device = %s id = %s: %w", userID, device, kmemo.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	for _, lantana := range lantanas {
@@ -12347,13 +12318,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[lantana.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[lantana.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get lantana user id = %s device = %s id = %s: %w", userID, device, lantana.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	for _, mi := range mis {
@@ -12395,13 +12365,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[mi.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[mi.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get mi user id = %s device = %s id = %s: %w", userID, device, mi.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	for _, nlog := range nlogs {
@@ -12443,13 +12412,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[nlog.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[nlog.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get nlog user id = %s device = %s id = %s: %w", userID, device, nlog.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	for _, notification := range notifications {
@@ -12492,13 +12460,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[notification.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[notification.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get notification user id = %s device = %s id = %s: %w", userID, device, notification.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	for _, rekyou := range rekyous {
@@ -12541,13 +12508,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[rekyou.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[rekyou.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get rekyou user id = %s device = %s id = %s: %w", userID, device, rekyou.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	for _, tag := range tags {
@@ -12591,13 +12557,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[tag.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[tag.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get tag user id = %s device = %s id = %s: %w", userID, device, tag.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	for _, text := range texts {
@@ -12639,13 +12604,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[text.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[text.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get text user id = %s device = %s id = %s: %w", userID, device, text.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	for _, timeis := range timeiss {
@@ -12687,13 +12651,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[timeis.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[timeis.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get timeis user id = %s device = %s id = %s: %w", userID, device, timeis.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	for _, urlog := range urlogs {
@@ -12735,13 +12698,12 @@ func (g *GkillServerAPI) HandleCommitTx(w http.ResponseWriter, r *http.Request) 
 			LatestDataRepositoryName:               repName,
 			LatestDataRepositoryAddressUpdatedTime: time.Now(),
 		}
-		go func() {
-			_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
-			if err != nil {
-				err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
-				slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
-			}
-		}()
+
+		_, err = repositories.LatestDataRepositoryAddressDAO.AddOrUpdateLatestDataRepositoryAddress(r.Context(), repositories.LatestDataRepositoryAddresses[urlog.ID])
+		if err != nil {
+			err = fmt.Errorf("error at get urlog user id = %s device = %s id = %s: %w", userID, device, urlog.ID, err)
+			slog.Log(r.Context(), gkill_log.Debug, "error", "error", err)
+		}
 	}
 
 	response.Messages = append(response.Messages, &message.GkillMessage{
