@@ -207,7 +207,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					kmemoRep, err := reps.NewKmemoRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					var kmemoRep reps.KmemoRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						kmemoRep, err = reps.NewKmemoRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+					} else {
+						kmemoRep, err = reps.NewKmemoRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -248,7 +253,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					kcRep, err := reps.NewKCRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					var kcRep reps.KCRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						kcRep, err = reps.NewKCRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+					} else {
+						kcRep, err = reps.NewKCRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -289,7 +299,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					urlogRep, err := reps.NewURLogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					var urlogRep reps.URLogRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						urlogRep, err = reps.NewURLogRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+					} else {
+						urlogRep, err = reps.NewURLogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -330,7 +345,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					timeisRep, err := reps.NewTimeIsRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					var timeisRep reps.TimeIsRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						timeisRep, err = reps.NewTimeIsRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+					} else {
+						timeisRep, err = reps.NewTimeIsRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -371,7 +391,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					miRep, err := reps.NewMiRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					var miRep reps.MiRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						miRep, err = reps.NewMiRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+					} else {
+						miRep, err = reps.NewMiRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -412,7 +437,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					nlogRep, err := reps.NewNlogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					var nlogRep reps.NlogRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						nlogRep, err = reps.NewNlogRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+					} else {
+						nlogRep, err = reps.NewNlogRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -453,7 +483,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					lantanaRep, err := reps.NewLantanaRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					var lantanaRep reps.LantanaRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						lantanaRep, err = reps.NewLantanaRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+					} else {
+						lantanaRep, err = reps.NewLantanaRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -494,7 +529,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					tagRep, err := reps.NewTagRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					var tagRep reps.TagRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						tagRep, err = reps.NewTagRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+					} else {
+						tagRep, err = reps.NewTagRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -536,7 +576,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					textRep, err := reps.NewTextRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					var textRep reps.TextRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						textRep, err = reps.NewTextRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+					} else {
+						textRep, err = reps.NewTextRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -578,7 +623,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					notificationRep, err := reps.NewNotificationRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					var notificationRep reps.NotificationRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						notificationRep, err = reps.NewNotificationRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite)
+					} else {
+						notificationRep, err = reps.NewNotificationRepositorySQLite3Impl(ctx, filename, rep.UseToWrite)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -619,7 +669,12 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					if gkill_options.LoadIDFRepOnly {
 						continue
 					}
-					reKyouRep, err := reps.NewReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
+					var reKyouRep reps.ReKyouRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						reKyouRep, err = reps.NewReKyouRepositorySQLite3ImplLocalCached(ctx, filename, rep.UseToWrite, repositories)
+					} else {
+						reKyouRep, err = reps.NewReKyouRepositorySQLite3Impl(ctx, filename, rep.UseToWrite, repositories)
+					}
 					if err != nil {
 						return nil, err
 					}
@@ -666,7 +721,13 @@ func (g *GkillDAOManager) GetRepositories(userID string, device string) (*reps.G
 					}
 					hide_files.HideFolder(parentDir)
 					idDBFilename := filepath.Join(parentDir, "gkill_id.db")
-					idfKyouRep, err := reps.NewIDFDirRep(ctx, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
+
+					var idfKyouRep reps.IDFKyouRepository
+					if !rep.UseToWrite && gkill_options.CacheRepsLocalStorage {
+						idfKyouRep, err = reps.NewIDFDirRepLocalCached(ctx, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
+					} else {
+						idfKyouRep, err = reps.NewIDFDirRep(ctx, filename, idDBFilename, rep.UseToWrite, g.router, autoIDF, &g.IDFIgnore, repositories)
+					}
 					if err != nil {
 						return nil, err
 					}
