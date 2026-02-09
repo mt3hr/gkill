@@ -359,8 +359,10 @@ WHERE
 			// 判定OKであれば追加する
 			// ファイルの内容を取得する
 			var targetRep Repository
+			var filename string
 			if targetRepName == "" || targetRepName == repName {
 				targetRep = i
+				filename = filepath.Join(i.contentDir, idf.TargetFile)
 			} else {
 				for _, rep := range i.repositoriesRef.Reps {
 					repName, err := rep.GetRepName(ctx)
@@ -372,17 +374,17 @@ WHERE
 						targetRep = rep
 					}
 				}
+				filename, err = targetRep.GetPath(ctx, idf.ID)
+				if err != nil {
+					// err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
+					// return nil, err
+
+					// 接続されていないRepのIDがあったときは無視する
+					continue
+				}
 			}
+
 			fileContentText := ""
-			filename, err := targetRep.GetPath(ctx, idf.ID)
-			if err != nil {
-				// err = fmt.Errorf("error at get path %s: %w", idf.ID, err)
-				// return nil, err
-
-				// 接続されていないRepのIDがあったときは無視する
-				continue
-			}
-
 			if query.UseWords != nil && *query.UseWords {
 				fileContentText += strings.ToLower(filename)
 				switch filepath.Ext(idf.TargetFile) {
