@@ -106,8 +106,6 @@ var (
 
 			targetUserIDs := args
 
-			gkill_options.IsCacheInMemory = false
-			gkill_options.LoadIDFRepOnly = true
 			err := InitGkillServerAPI()
 			if err != nil {
 				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
@@ -134,8 +132,6 @@ var (
 
 			targetUserIDs := args
 
-			gkill_options.IsCacheInMemory = false
-			gkill_options.LoadIDFRepOnly = true
 			err := InitGkillServerAPI()
 			if err != nil {
 				slog.Log(cmd.Context(), gkill_log.Error, "error", "error", err)
