@@ -6,7 +6,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"io"
+	"mime"
 	"net/http"
 	"net/url"
 	"os"
@@ -160,7 +160,9 @@ func (v *IDFVideoFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Serve compat (or original decided by ensure) with correct content-type.
 	// We keep Range support via http.ServeFile.
-	w.Header().Set("Content-Type", "video/mp4")
+	if ct := mime.TypeByExtension(strings.ToLower(filepath.Ext(res.servePath))); ct != "" {
+		w.Header().Set("Content-Type", ct)
+	}
 	http.ServeFile(w, r, res.servePath)
 }
 
@@ -251,16 +253,21 @@ type ffmpegCaps struct {
 	HasH264MediaCodec   bool
 	HasH264OMX          bool
 
-	// hwaccels (availability only; actual usability is checked per-file via a quick decode test)
+	// hwaccels (availability only; actual usability is checked per-file)
 	HasHWAccelAuto         bool
 	HasHWAccelCUDA         bool
 	HasHWAccelQSV          bool
 	HasHWAccelD3D11VA      bool
 	HasHWAccelDXVA2        bool
+	HasHWAccelVAAPI        bool
 	HasHWAccelVideoToolbox bool
+	HasHWAccelMediaCodec   bool
 
 	// filters
-	HasScale bool
+	HasScale      bool // CPU scale
+	HasScaleCUDA  bool // scale_cuda
+	HasScaleVAAPI bool // scale_vaapi
+	HasVPPQSV     bool // vpp_qsv (QSV resize)
 }
 
 var (
@@ -296,17 +303,20 @@ func detectFFMPEGCaps(ctx context.Context) (ffmpegCaps, error) {
 	caps.HasH264MediaCodec = strings.Contains(encOut, "h264_mediacodec")
 	caps.HasH264OMX = strings.Contains(encOut, "h264_omx")
 
+	// hwaccels are optional; if this fails we still can transcode (CPU).
 	hwOut, err := runFFMPEGText(ctx, "ffmpeg", "-hide_banner", "-hwaccels")
 	if err == nil {
-		caps.HasHWAccelAuto = true // "auto" is an ffmpeg option; treat as present if ffmpeg runs
 		h := strings.ToLower(hwOut)
-		caps.HasHWAccelCUDA = strings.Contains(h, "\\ncuda") || strings.Contains(h, " cuda")
-		caps.HasHWAccelQSV = strings.Contains(h, "\\nqsv") || strings.Contains(h, " qsv")
-		caps.HasHWAccelD3D11VA = strings.Contains(h, "\\nd3d11va") || strings.Contains(h, " d3d11va")
-		caps.HasHWAccelDXVA2 = strings.Contains(h, "\\ndxva2") || strings.Contains(h, " dxva2")
-		caps.HasHWAccelVideoToolbox = strings.Contains(h, "\\nvideotoolbox") || strings.Contains(h, " videotoolbox")
+		// "auto" is not listed, but ffmpeg accepts it. If ffmpeg runs, we treat it as available.
+		caps.HasHWAccelAuto = true
+		caps.HasHWAccelCUDA = strings.Contains(h, "\ncuda") || strings.Contains(h, " cuda")
+		caps.HasHWAccelQSV = strings.Contains(h, "\nqsv") || strings.Contains(h, " qsv")
+		caps.HasHWAccelD3D11VA = strings.Contains(h, "\nd3d11va") || strings.Contains(h, " d3d11va")
+		caps.HasHWAccelDXVA2 = strings.Contains(h, "\ndxva2") || strings.Contains(h, " dxva2")
+		caps.HasHWAccelVAAPI = strings.Contains(h, "\nvaapi") || strings.Contains(h, " vaapi")
+		caps.HasHWAccelVideoToolbox = strings.Contains(h, "\nvideotoolbox") || strings.Contains(h, " videotoolbox")
+		caps.HasHWAccelMediaCodec = strings.Contains(h, "\nmediacodec") || strings.Contains(h, " mediacodec")
 	} else {
-		// hwaccels は必須じゃないので失敗しても続行（安全寄り）
 		caps.HasHWAccelAuto = true
 	}
 
@@ -314,10 +324,14 @@ func detectFFMPEGCaps(ctx context.Context) (ffmpegCaps, error) {
 	if err != nil {
 		// filters は必須じゃないので失敗しても続行（安全寄り）
 		caps.HasScale = true
+		caps.HasScaleCUDA = false
 		return caps, nil
 	}
 	// " scale " のように空白区切りで出る想定（雑でも十分）
 	caps.HasScale = strings.Contains(fOut, " scale ")
+	caps.HasScaleCUDA = strings.Contains(fOut, " scale_cuda ")
+	caps.HasScaleVAAPI = strings.Contains(fOut, " scale_vaapi ")
+	caps.HasVPPQSV = strings.Contains(fOut, " vpp_qsv ")
 
 	return caps, nil
 }
@@ -351,85 +365,34 @@ var (
 	}{}
 )
 
-func chooseVAAPIDeviceCandidates() []string {
-	// 一般的なVAAPIデバイス（render node優先）
-	return []string{"/dev/dri/renderD128", "/dev/dri/card0"}
-}
-
-func chooseExistingVAAPIDevice() string {
-	for _, dev := range chooseVAAPIDeviceCandidates() {
-		if _, err := os.Stat(dev); err == nil {
-			return dev
-		}
-	}
-	return ""
-}
-
 func encoderWorks(ctx context.Context, encoder string) (bool, error) {
-	// VAAPIはデバイス依存なのでキーに含める
-	key := encoder
-	vaapiDev := ""
-	if encoder == "h264_vaapi" {
-		vaapiDev = chooseExistingVAAPIDevice()
-		if vaapiDev == "" {
-			// 使えるデバイスが無いなら即NG（後でlibx264へ）
-			encHealthMu.Lock()
-			encHealth[encoder+"|<no_vaapi_dev>"] = struct {
-				ok  bool
-				err error
-			}{ok: false, err: fmt.Errorf("vaapi device not found")}
-			encHealthMu.Unlock()
-			return false, fmt.Errorf("vaapi device not found")
-		}
-		key = encoder + "|" + vaapiDev
-	}
-
 	encHealthMu.Lock()
-	if v, ok := encHealth[key]; ok {
+	if v, ok := encHealth[encoder]; ok {
 		encHealthMu.Unlock()
 		return v.ok, v.err
 	}
 	encHealthMu.Unlock()
 
 	// 1秒のダミー動画を "null" 出力へ。成功すれば採用してよい。
+	// 失敗したらそのエンコーダは使わずフォールバックする。
 	tctx, cancel := context.WithTimeout(ctx, 12*time.Second)
 	defer cancel()
-
-	var args []string
-	switch encoder {
-	case "h264_vaapi":
-		// VAAPI: hwupload が必要。scaleはテストでは不要（アップロードだけ確認）
-		args = []string{
-			"-hide_banner",
-			"-loglevel", "error",
-			"-vaapi_device", vaapiDev,
-			"-f", "lavfi",
-			"-i", "testsrc2=size=1280x720:rate=30",
-			"-t", "1",
-			"-vf", "format=nv12,hwupload",
-			"-c:v", encoder,
-			"-f", "null",
-			"-",
-		}
-	default:
-		// それ以外は従来通り
-		args = []string{
-			"-hide_banner",
-			"-loglevel", "error",
-			"-f", "lavfi",
-			"-i", "testsrc2=size=1280x720:rate=30",
-			"-t", "1",
-			"-c:v", encoder,
-			"-f", "null",
-			"-",
-		}
+	args := []string{
+		"-hide_banner",
+		"-loglevel", "error",
+		"-f", "lavfi",
+		"-i", "testsrc2=size=1280x720:rate=30",
+		"-vf", "format=yuv420p",
+		"-t", "1",
+		"-c:v", encoder,
+		"-f", "null",
+		"-",
 	}
-
 	err := runFFMPEG(tctx, args)
 	ok := (err == nil)
 
 	encHealthMu.Lock()
-	encHealth[key] = struct {
+	encHealth[encoder] = struct {
 		ok  bool
 		err error
 	}{ok: ok, err: err}
@@ -438,151 +401,6 @@ func encoderWorks(ctx context.Context, encoder string) (bool, error) {
 	return ok, err
 }
 
-// 優先エンコーダ選択（GPUを使えるなら使う／使えないなら確実なx264へ）
-func chooseCandidateEncoders(c ffmpegCaps) []string {
-	// OS別の「まず試す」順序。
-	// 目的は「可能ならHWエンコード」「ダメなら確実なlibx264」。
-	switch runtime.GOOS {
-	case "android":
-		out := []string{}
-		// Android: 端末依存だが、ffmpegビルドによっては h264_mediacodec が使える
-		if c.HasH264MediaCodec {
-			out = append(out, "h264_mediacodec")
-		}
-		// 一部環境では v4l2m2m/omx が入っていることもあるが、Androidでは稀なので後ろへ
-		if c.HasLibx264 {
-			out = append(out, "libx264")
-		}
-		return out
-
-	case "darwin":
-		out := []string{}
-		if c.HasH264VideoToolbox {
-			out = append(out, "h264_videotoolbox")
-		}
-		if c.HasLibx264 {
-			out = append(out, "libx264")
-		}
-		return out
-
-	case "windows":
-		out := []string{}
-		if c.HasH264NVENC {
-			out = append(out, "h264_nvenc")
-		}
-		if c.HasH264QSV {
-			out = append(out, "h264_qsv")
-		}
-		if c.HasH264AMF {
-			out = append(out, "h264_amf")
-		}
-		if c.HasLibx264 {
-			out = append(out, "libx264")
-		}
-		return out
-
-	default: // linux / unix
-		out := []string{}
-		// Linux: NVENC/QSV/VAAPI が有力候補。環境により存在しない/動かないので実動作で判定する。
-		if c.HasH264NVENC {
-			out = append(out, "h264_nvenc")
-		}
-		if c.HasH264QSV {
-			out = append(out, "h264_qsv")
-		}
-		if c.HasH264VAAPI {
-			out = append(out, "h264_vaapi")
-		}
-		// ARM系や一部SoCでは v4l2m2m / omx が有効なことがある（入っていれば試す）
-		if c.HasH264V4L2M2M {
-			out = append(out, "h264_v4l2m2m")
-		}
-		if c.HasH264OMX {
-			out = append(out, "h264_omx")
-		}
-		if c.HasLibx264 {
-			out = append(out, "libx264")
-		}
-		return out
-	}
-}
-
-func chooseVerifiedH264Encoder(ctx context.Context, c ffmpegCaps) string {
-	for _, enc := range chooseCandidateEncoders(c) {
-		// libx264 は「動く」前提でよいが、一応判定関数を通して統一
-		ok, _ := encoderWorks(ctx, enc)
-		if ok {
-			return enc
-		}
-	}
-	// 最後の手段：エンコーダ名指定なし（ffmpegの既定に任せる）
-	return ""
-}
-
-// --- hwaccel health cache ---
-// ハードウェアデコードは「存在する」だけでは動かないケースがあるため、
-// 入力ファイルを使って小さなデコード試験を行い、使えるものをキャッシュする。
-var (
-	hwHealthMu sync.Mutex
-	hwHealth   = map[string]struct {
-		ok  bool
-		err error
-	}{}
-)
-
-func hwaccelWorksForFile(ctx context.Context, hwaccel string, srcPath string) (bool, error) {
-	// キーは hw + srcPath にする（ファイルによってはHWデコード不可があり得る）
-	key := hwaccel + "|" + srcPath
-	hwHealthMu.Lock()
-	if v, ok := hwHealth[key]; ok {
-		hwHealthMu.Unlock()
-		return v.ok, v.err
-	}
-	hwHealthMu.Unlock()
-
-	// 1フレームだけデコードして null へ。
-	// 成功すればその hwaccel は少なくともこのファイルに対しては使える。
-	tctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-	defer cancel()
-
-	args := []string{
-		"-hide_banner",
-		"-loglevel", "error",
-		"-hwaccel", hwaccel,
-		"-i", srcPath,
-		"-map", "0:v:0",
-		"-an",
-		"-frames:v", "1",
-		"-f", "null",
-		"-",
-	}
-
-	err := runFFMPEG(tctx, args)
-	if err != nil {
-		switch hwaccel {
-		case "cuda":
-			args2 := append([]string{}, args...)
-			args2 = insertAfter(args2, []string{"-hwaccel", hwaccel}, []string{"-hwaccel_output_format", "cuda"})
-			err = runFFMPEG(tctx, args2)
-		case "qsv":
-			args2 := append([]string{}, args...)
-			args2 = insertAfter(args2, []string{"-hwaccel", hwaccel}, []string{"-hwaccel_output_format", "qsv"})
-			err = runFFMPEG(tctx, args2)
-		}
-	}
-	ok := (err == nil)
-
-	hwHealthMu.Lock()
-	hwHealth[key] = struct {
-		ok  bool
-		err error
-	}{ok: ok, err: err}
-	hwHealthMu.Unlock()
-
-	return ok, err
-}
-
-// insertAfter inserts add immediately after the first occurrence of needle (as a contiguous subsequence).
 func insertAfter(args []string, needle []string, add []string) []string {
 	if len(needle) == 0 || len(add) == 0 {
 		return args
@@ -606,68 +424,378 @@ func insertAfter(args []string, needle []string, add []string) []string {
 	return args
 }
 
-// --- hw decode selection ---
-// デコードも「GPU優先、ダメなら自動/CPUへフォールバック」したいので、
-// 入力ファイルに対して使える hwaccel を短いデコード試験で選ぶ。
-func chooseCandidateHWAccels(c ffmpegCaps) []string {
-	switch runtime.GOOS {
-	case "darwin":
-		out := []string{}
-		if c.HasHWAccelVideoToolbox {
-			out = append(out, "videotoolbox")
-		}
-		if c.HasHWAccelAuto {
-			out = append(out, "auto")
-		}
-		return out
-	case "windows":
-		out := []string{}
-		if c.HasHWAccelCUDA {
-			out = append(out, "cuda")
-		}
-		if c.HasHWAccelD3D11VA {
-			out = append(out, "d3d11va")
-		}
-		if c.HasHWAccelDXVA2 {
-			out = append(out, "dxva2")
-		}
-		if c.HasHWAccelQSV {
-			out = append(out, "qsv")
-		}
-		if c.HasHWAccelAuto {
-			out = append(out, "auto")
-		}
-		return out
-	default:
-		out := []string{}
-		if c.HasHWAccelCUDA {
-			out = append(out, "cuda")
-		}
-		if c.HasHWAccelQSV {
-			out = append(out, "qsv")
-		}
-		if c.HasHWAccelAuto {
-			out = append(out, "auto")
-		}
-		return out
-	}
-}
-
-func chooseVerifiedHWAccelForFile(ctx context.Context, c ffmpegCaps, srcPath string) string {
-	for _, hw := range chooseCandidateHWAccels(c) {
-		if hw == "auto" {
-			return hw
-		}
-		ok, _ := hwaccelWorksForFile(ctx, hw, srcPath)
-		if ok {
-			return hw
+func extractArgValue(args []string, key string) string {
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == key {
+			return args[i+1]
 		}
 	}
 	return ""
 }
 
-// 「最適」args（環境に合わせて組む）
-func buildFFMPEGArgsPreferred(ctx context.Context, srcPath, tmpOut string, maxHeight, crf int, preset string, caps ffmpegCaps) []string {
+// 優先エンコーダ選択（GPUを使えるなら使う／使えないなら確実なx264へ）
+func chooseCandidateEncoders(c ffmpegCaps) []string {
+	// OS別の「まず試す」順序。
+	switch runtime.GOOS {
+	case "darwin":
+		out := []string{}
+		if c.HasH264VideoToolbox {
+			out = append(out, "h264_videotoolbox")
+		}
+		if c.HasLibx264 {
+			out = append(out, "libx264")
+		}
+		return out
+	case "windows":
+		out := []string{}
+		if c.HasH264NVENC {
+			out = append(out, "h264_nvenc")
+		}
+		if c.HasH264QSV {
+			out = append(out, "h264_qsv")
+		}
+		if c.HasH264AMF {
+			out = append(out, "h264_amf")
+		}
+		if c.HasLibx264 {
+			out = append(out, "libx264")
+		}
+		return out
+	case "android":
+		out := []string{}
+		if c.HasH264MediaCodec {
+			out = append(out, "h264_mediacodec")
+		}
+		if c.HasLibx264 {
+			out = append(out, "libx264")
+		}
+		return out
+	default: // linux, bsd, etc
+		out := []string{}
+		if c.HasH264NVENC {
+			out = append(out, "h264_nvenc")
+		}
+		if c.HasH264QSV {
+			out = append(out, "h264_qsv")
+		}
+		if c.HasH264VAAPI {
+			out = append(out, "h264_vaapi")
+		}
+		if c.HasH264V4L2M2M {
+			out = append(out, "h264_v4l2m2m")
+		}
+		if c.HasH264OMX {
+			out = append(out, "h264_omx")
+		}
+		if c.HasLibx264 {
+			out = append(out, "libx264")
+		}
+		return out
+	}
+}
+
+func chooseVerifiedH264Encoder(ctx context.Context, c ffmpegCaps) string {
+	list := listVerifiedH264Encoders(ctx, c)
+	if len(list) > 0 {
+		return list[0]
+	}
+	// 最後の手段：エンコーダ名指定なし（ffmpegの既定に任せる）
+	return ""
+}
+
+// listHWDecodeChoicesForFile returns multiple working HW decode choices in priority order.
+// This is used for runtime fallback when a chosen HW decode works for "one frame" but fails
+// with the full filter/encode pipeline.
+func listHWDecodeChoicesForFile(ctx context.Context, c ffmpegCaps, srcPath string) []hwDecodeChoice {
+	choices := make([]hwDecodeChoice, 0, 4)
+	addIfWorks := func(hw string, extra []string) {
+		if hw == "" {
+			return
+		}
+		if ok, _ := hwaccelWorksForFile(ctx, hw, extra, srcPath); ok {
+			choices = append(choices, hwDecodeChoice{hw: hw, extraArgs: extra})
+		}
+	}
+
+	switch runtime.GOOS {
+	case "windows":
+		if c.HasHWAccelCUDA {
+			addIfWorks("cuda", []string{"-hwaccel_output_format", "cuda"})
+		}
+		if c.HasHWAccelD3D11VA {
+			addIfWorks("d3d11va", nil)
+		}
+		if c.HasHWAccelDXVA2 {
+			addIfWorks("dxva2", nil)
+		}
+		if c.HasHWAccelQSV {
+			addIfWorks("qsv", []string{"-hwaccel_output_format", "qsv"})
+		}
+	case "android":
+		if c.HasHWAccelMediaCodec {
+			addIfWorks("mediacodec", nil)
+		}
+	case "darwin":
+		if c.HasHWAccelVideoToolbox {
+			addIfWorks("videotoolbox", nil)
+		}
+	default: // linux, bsd, etc
+		if c.HasHWAccelCUDA {
+			addIfWorks("cuda", []string{"-hwaccel_output_format", "cuda"})
+		}
+		if c.HasHWAccelQSV {
+			addIfWorks("qsv", []string{"-hwaccel_output_format", "qsv"})
+		}
+		if c.HasHWAccelVAAPI {
+			if dev, okDev := detectVAAPIDevice(); okDev {
+				addIfWorks("vaapi", []string{"-vaapi_device", dev})
+			}
+		}
+	}
+
+	// "auto" is accepted by ffmpeg and can still use HW paths internally, but it's harder to reason about.
+	// We keep it as a last resort choice so we can try it when explicit hwaccels fail.
+	if c.HasHWAccelAuto {
+		choices = append(choices, hwDecodeChoice{hw: "auto"})
+	}
+	return choices
+}
+
+// --- hw decode selection ---
+// デコードも「GPU優先、ダメなら自動/CPUへフォールバック」したいので、
+// 入力ファイルに対して使える hwaccel を短いデコード試験で選ぶ。
+
+// --- hw decode health cache ---
+// 「-hwaccel が使える」だけでは、入力ファイルや環境（ドライバ/デバイス）によって失敗することがあるため、
+// 実ファイルで "1フレームだけデコード" を試して使えるものをキャッシュする。
+var (
+	hwHealthMu sync.Mutex
+	hwHealth   = map[string]struct {
+		ok  bool
+		err error
+	}{}
+)
+
+// key is "hw|extra|srcPath" so we can cache per file + variant.
+func hwaccelWorksForFile(ctx context.Context, hw string, extraArgs []string, srcPath string) (bool, error) {
+	key := hw + "|" + strings.Join(extraArgs, ",") + "|" + srcPath
+	hwHealthMu.Lock()
+	if v, ok := hwHealth[key]; ok {
+		hwHealthMu.Unlock()
+		return v.ok, v.err
+	}
+	hwHealthMu.Unlock()
+
+	tctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
+	args := []string{
+		"-hide_banner",
+		"-loglevel", "error",
+		"-hwaccel", hw,
+	}
+	args = append(args, extraArgs...)
+	args = append(args,
+		"-i", srcPath,
+		"-map", "0:v:0",
+		"-an",
+		"-frames:v", "1",
+		"-f", "null",
+		"-",
+	)
+
+	err := runFFMPEG(tctx, args)
+	ok := (err == nil)
+
+	hwHealthMu.Lock()
+	hwHealth[key] = struct {
+		ok  bool
+		err error
+	}{ok: ok, err: err}
+	hwHealthMu.Unlock()
+
+	return ok, err
+}
+
+// linux VAAPI needs a device node in most setups
+func detectVAAPIDevice() (string, bool) {
+	candidates := []string{"/dev/dri/renderD128", "/dev/dri/card0"}
+	for _, p := range candidates {
+		if _, err := os.Stat(p); err == nil {
+			return p, true
+		}
+	}
+	return "", false
+}
+
+type hwDecodeChoice struct {
+	hw        string
+	extraArgs []string
+}
+
+// Choose a hardware decode method for this OS/file.
+// Important: this is ONLY about decode. Encode selection is handled separately.
+func chooseHWDecodeForFile(ctx context.Context, c ffmpegCaps, srcPath string) hwDecodeChoice {
+	switch runtime.GOOS {
+	case "windows":
+		// NVIDIA: prefer CUDA. If it doesn't work, fall back to "auto" (or no hw).
+		if c.HasHWAccelCUDA {
+			if ok, _ := hwaccelWorksForFile(ctx, "cuda", []string{"-hwaccel_output_format", "cuda"}, srcPath); ok {
+				return hwDecodeChoice{hw: "cuda", extraArgs: []string{"-hwaccel_output_format", "cuda"}}
+			}
+		}
+		if c.HasHWAccelD3D11VA {
+			if ok, _ := hwaccelWorksForFile(ctx, "d3d11va", nil, srcPath); ok {
+				return hwDecodeChoice{hw: "d3d11va"}
+			}
+		}
+		if c.HasHWAccelDXVA2 {
+			if ok, _ := hwaccelWorksForFile(ctx, "dxva2", nil, srcPath); ok {
+				return hwDecodeChoice{hw: "dxva2"}
+			}
+		}
+		if c.HasHWAccelQSV {
+			if ok, _ := hwaccelWorksForFile(ctx, "qsv", []string{"-hwaccel_output_format", "qsv"}, srcPath); ok {
+				return hwDecodeChoice{hw: "qsv", extraArgs: []string{"-hwaccel_output_format", "qsv"}}
+			}
+		}
+		if c.HasHWAccelAuto {
+			return hwDecodeChoice{hw: "auto"}
+		}
+		return hwDecodeChoice{}
+	case "android":
+		if c.HasHWAccelMediaCodec {
+			if ok, _ := hwaccelWorksForFile(ctx, "mediacodec", nil, srcPath); ok {
+				return hwDecodeChoice{hw: "mediacodec"}
+			}
+		}
+		if c.HasHWAccelAuto {
+			return hwDecodeChoice{hw: "auto"}
+		}
+		return hwDecodeChoice{}
+	case "darwin":
+		if c.HasHWAccelVideoToolbox {
+			if ok, _ := hwaccelWorksForFile(ctx, "videotoolbox", nil, srcPath); ok {
+				return hwDecodeChoice{hw: "videotoolbox"}
+			}
+		}
+		if c.HasHWAccelAuto {
+			return hwDecodeChoice{hw: "auto"}
+		}
+		return hwDecodeChoice{}
+	default: // linux, bsd, etc
+		if c.HasHWAccelCUDA {
+			if ok, _ := hwaccelWorksForFile(ctx, "cuda", []string{"-hwaccel_output_format", "cuda"}, srcPath); ok {
+				return hwDecodeChoice{hw: "cuda", extraArgs: []string{"-hwaccel_output_format", "cuda"}}
+			}
+		}
+		if c.HasHWAccelQSV {
+			if ok, _ := hwaccelWorksForFile(ctx, "qsv", []string{"-hwaccel_output_format", "qsv"}, srcPath); ok {
+				return hwDecodeChoice{hw: "qsv", extraArgs: []string{"-hwaccel_output_format", "qsv"}}
+			}
+		}
+		if c.HasHWAccelVAAPI {
+			if dev, okDev := detectVAAPIDevice(); okDev {
+				extra := []string{"-vaapi_device", dev}
+				if ok, _ := hwaccelWorksForFile(ctx, "vaapi", extra, srcPath); ok {
+					return hwDecodeChoice{hw: "vaapi", extraArgs: extra}
+				}
+			}
+		}
+		if c.HasHWAccelAuto {
+			return hwDecodeChoice{hw: "auto"}
+		}
+		return hwDecodeChoice{}
+	}
+}
+
+func isGPUEncoder(enc string) bool {
+	switch enc {
+	case "h264_nvenc", "h264_qsv", "h264_amf", "h264_videotoolbox", "h264_vaapi", "h264_v4l2m2m", "h264_mediacodec", "h264_omx":
+		return true
+	default:
+		return false
+	}
+}
+
+func cloneArgs(a []string) []string {
+	out := make([]string, len(a))
+	copy(out, a)
+	return out
+}
+
+// listVerifiedH264Encoders returns encoders in priority order that pass encoderWorks().
+// This improves robustness: some encoders may pass a synthetic test but still fail on
+// certain real inputs, and the reverse also happens. We therefore try multiple candidates.
+func listVerifiedH264Encoders(ctx context.Context, c ffmpegCaps) []string {
+	out := make([]string, 0, 4)
+	for _, enc := range chooseCandidateEncoders(c) {
+		ok, _ := encoderWorks(ctx, enc)
+		if ok {
+			out = append(out, enc)
+		}
+	}
+	// Always ensure libx264 is present as the last resort when available.
+	if c.HasLibx264 {
+		found := false
+		for _, e := range out {
+			if e == "libx264" {
+				found = true
+				break
+			}
+		}
+		if !found {
+			out = append(out, "libx264")
+		}
+	}
+	return out
+}
+
+// chooseOutputPixFmt decides whether to force an output pixel format.
+//   - libx264: force yuv420p for maximum browser compatibility.
+//   - GPU encoders: prefer nv12 when frames are in system memory, but avoid forcing when
+//     staying on GPU frames (forcing can trigger implicit downloads).
+func chooseOutputPixFmt(enc string, usingGPUFrames bool) (pixFmt string, ok bool) {
+	if usingGPUFrames {
+		return "", false
+	}
+	if enc == "libx264" || enc == "" {
+		return "yuv420p", true
+	}
+	if isGPUEncoder(enc) {
+		// nv12 is broadly supported and usually the preferred input for hardware encoders.
+		return "nv12", true
+	}
+	return "", false
+}
+
+func defaultBitrateForHeight(maxHeight int) (b, max, buf string) {
+	// Conservative-ish defaults; tuned for 720p targets.
+	// We keep them strings to avoid unnecessary strconv calls at call sites.
+	if maxHeight <= 480 {
+		return "2M", "3M", "4M"
+	}
+	if maxHeight <= 720 {
+		return "5M", "7M", "10M"
+	}
+	if maxHeight <= 1080 {
+		return "8M", "12M", "16M"
+	}
+	return "12M", "18M", "24M"
+}
+
+// buildFFMPEGArgsPreferredVariants returns multiple candidate argument sets.
+//
+// We try them in order until one succeeds, to achieve **independent fallback**:
+// - Prefer GPU encode when available.
+// - Prefer GPU decode when available.
+// - If GPU decode doesn't work with the chosen filter chain, fall back to CPU decode *without* downgrading encode.
+// - If GPU encode doesn't work, fall back to CPU encode.
+//
+// NOTE:
+// We keep a conservative "all-GPU" path (GPU frames throughout) when it is known to be compatible.
+// Otherwise, we still may try HW decode but download to system memory before CPU filters/encode.
+func buildFFMPEGArgsPreferredVariants(ctx context.Context, srcPath, tmpOut string, maxHeight, crf int, preset string, caps ffmpegCaps) [][]string {
 	if maxHeight <= 0 {
 		maxHeight = 720
 	}
@@ -678,80 +806,201 @@ func buildFFMPEGArgsPreferred(ctx context.Context, srcPath, tmpOut string, maxHe
 		preset = "veryfast"
 	}
 
-	cpuFilter := fmt.Sprintf("scale=-2:min(%d\\,ih)", maxHeight)
-	vaapiFilter := fmt.Sprintf("format=nv12,hwupload,scale_vaapi=w=-2:h=%d:force_original_aspect_ratio=decrease", maxHeight)
-	enc := chooseVerifiedH264Encoder(ctx, caps)
-	hw := chooseVerifiedHWAccelForFile(ctx, caps, srcPath)
+	// Encode / Decode are decided independently, but we keep multiple fallbacks.
+	encoders := listVerifiedH264Encoders(ctx, caps)
+	if len(encoders) == 0 {
+		encoders = []string{""}
+	}
+	decs := listHWDecodeChoicesForFile(ctx, caps, srcPath)
+	if len(decs) == 0 {
+		decs = []hwDecodeChoice{{}}
+	}
 
-	args := []string{
+	// Default: CPU scale (safe everywhere)
+	cpuScale := fmt.Sprintf("scale=-2:min(%d\\,ih)", maxHeight)
+
+	// Build base args (shared prefix)
+	base := []string{
 		"-hide_banner",
 		"-loglevel", "error",
 		"-y",
+		"-fflags", "+genpts",
+		"-avoid_negative_ts", "make_zero",
+		"-vsync", "vfr",
 	}
 
-	// Prefer HW decode when available; if it fails later, transcodeToCompatMP4 will fall back.
-	if hw != "" {
-		args = append(args, "-hwaccel", hw)
-		// Some environments are more stable with an explicit output format.
-		switch hw {
-		case "cuda":
-			args = append(args, "-hwaccel_output_format", "cuda")
-		case "qsv":
-			args = append(args, "-hwaccel_output_format", "qsv")
+	buildOne := func(encName string, enableHW bool, hw hwDecodeChoice, vf string, usingGPUFrames bool) []string {
+		args := cloneArgs(base)
+		if enableHW && hw.hw != "" {
+			args = append(args, "-hwaccel", hw.hw)
+			args = append(args, hw.extraArgs...)
 		}
-	}
-
-	// VAAPI はデバイス指定が必要なことが多いので、必要なら追加する（decode/encode共通）
-	if hw == "vaapi" || enc == "h264_vaapi" {
-		if dev := chooseExistingVAAPIDevice(); dev != "" {
-			args = append(args, "-vaapi_device", dev)
-		}
-	}
-
-	args = append(args,
-		"-i", srcPath,
-		"-map", "0:v:0",
-		"-map", "0:a?",
-	)
-
-	// video
-	if enc != "" {
-		args = append(args, "-c:v", enc)
-	}
-	// 互換性（ブラウザ向け）
-	// HWエンコードでは -pix_fmt 指定がCPU変換を引き起こすことがあるため、基本はlibx264のときだけ指定する。
-	if enc == "libx264" || enc == "" {
-		args = append(args, "-pix_fmt", "yuv420p")
-	}
-
-	// libx264 のときだけ crf/preset を使う（HW は効かない/挙動が違うことが多い）
-	if enc == "libx264" || enc == "" {
 		args = append(args,
-			"-crf", strconv.Itoa(crf),
-			"-preset", preset,
+			"-i", srcPath,
+			"-map", "0:v:0",
+			"-map", "0:a?",
 		)
-	}
-
-	// filters
-	if caps.HasScale {
-		if enc == "h264_vaapi" {
-			args = append(args, "-vf", vaapiFilter)
-		} else {
-			args = append(args, "-vf", cpuFilter)
+		if vf != "" {
+			args = append(args, "-vf", vf)
 		}
-	} else {
-		// scale が無いのは稀だが、無いなら無理に付けない（フォールバック側で再挑戦）
+		if encName != "" {
+			args = append(args, "-c:v", encName)
+		}
+		if pix, ok := chooseOutputPixFmt(encName, usingGPUFrames); ok {
+			args = append(args, "-pix_fmt", pix)
+		}
+		// Some HW encoders benefit from explicit bitrate control (not CRF-based).
+		if encName == "h264_videotoolbox" || encName == "h264_mediacodec" {
+			b, mx, buf := defaultBitrateForHeight(maxHeight)
+			args = append(args, "-b:v", b, "-maxrate", mx, "-bufsize", buf)
+		}
+		if encName == "libx264" || encName == "" {
+			args = append(args, "-crf", strconv.Itoa(crf), "-preset", preset)
+		}
+		args = append(args,
+			"-c:a", "aac",
+			"-b:a", "128k",
+			"-movflags", "+faststart",
+			"-f", "mp4",
+			tmpOut,
+		)
+		return args
 	}
 
-	// audio（AACがなければフォールバックで落ちるので、ここは固定でもOK）
-	args = append(args,
-		"-c:a", "aac",
-		"-b:a", "128k",
-		"-movflags", "+faststart",
-		"-f", "mp4",
-		tmpOut,
-	)
-	return args
+	// Prepare CPU scale filter (used by several variants)
+	cpuVF := ""
+	if caps.HasScale {
+		cpuVF = cpuScale
+	}
+
+	// Variant list in priority order. We build OS-tuned sequences that emphasize
+	// "GPU encode if possible" and make HW decode optional and independently fall back.
+	variants := make([][]string, 0, 12)
+
+	// Helper to append a set of decode variants for a given encoder.
+	appendVariantsForEnc := func(enc string) {
+		// OS-specific preference: on android/darwin, GPU decode is often less stable; favor encode-only first.
+		preferEncodeOnlyFirst := (runtime.GOOS == "android" || runtime.GOOS == "darwin")
+
+		// 1) CPU decode + (possibly GPU) encode (most robust while still benefiting from GPU encode)
+		if preferEncodeOnlyFirst {
+			variants = append(variants, buildOne(enc, false, hwDecodeChoice{}, cpuVF, false))
+		}
+
+		// 2) All-GPU pipeline where we know the full chain is compatible.
+		for _, dec := range decs {
+			useGPUFrames := false
+			gpuVF := ""
+			switch runtime.GOOS {
+			case "windows":
+				// CUDA pipeline: NVDEC(CUDA) -> scale_cuda -> NVENC
+				if dec.hw == "cuda" && enc == "h264_nvenc" && caps.HasScaleCUDA {
+					useGPUFrames = true
+					gpuVF = fmt.Sprintf("scale_cuda=-2:%d:format=nv12", maxHeight)
+				}
+				// QSV pipeline: QSV decode -> vpp_qsv -> QSV encode
+				if !useGPUFrames && dec.hw == "qsv" && enc == "h264_qsv" && caps.HasVPPQSV {
+					useGPUFrames = true
+					gpuVF = fmt.Sprintf("vpp_qsv=w=-2:h=%d", maxHeight)
+				}
+			case "darwin":
+				// Keep all-GPU conservative; VideoToolbox decode+filter chains vary widely.
+			case "android":
+				// Keep all-GPU conservative; mediacodec decode+filters vary by device.
+			default: // linux/bsd/etc
+				// VAAPI all-GPU: vaapi decode -> scale_vaapi -> vaapi encode
+				if dec.hw == "vaapi" && enc == "h264_vaapi" && caps.HasScaleVAAPI {
+					useGPUFrames = true
+					gpuVF = fmt.Sprintf("scale_vaapi=w=-2:h=%d", maxHeight)
+				}
+				// QSV all-GPU
+				if !useGPUFrames && dec.hw == "qsv" && enc == "h264_qsv" && caps.HasVPPQSV {
+					useGPUFrames = true
+					gpuVF = fmt.Sprintf("vpp_qsv=w=-2:h=%d", maxHeight)
+				}
+				// CUDA all-GPU
+				if !useGPUFrames && dec.hw == "cuda" && enc == "h264_nvenc" && caps.HasScaleCUDA {
+					useGPUFrames = true
+					gpuVF = fmt.Sprintf("scale_cuda=-2:%d:format=nv12", maxHeight)
+				}
+			}
+
+			if useGPUFrames && dec.hw != "" && dec.hw != "auto" {
+				variants = append(variants, buildOne(enc, true, dec, gpuVF, true))
+			}
+		}
+
+		// 3) HW decode only (download to system memory) + keep encoder.
+		//    We may try both "hwdownload" and "no hwdownload" flavors for unstable platforms.
+		for _, dec := range decs {
+			if dec.hw == "" {
+				continue
+			}
+			// Skip explicit "auto" here; it is less predictable and will be tried last.
+			if dec.hw == "auto" {
+				continue
+			}
+			vf := cpuVF
+			switch dec.hw {
+			case "cuda", "qsv", "vaapi":
+				// HW frames -> download to system mem before CPU scale.
+				if vf != "" {
+					vf = "hwdownload,format=nv12," + vf
+				} else {
+					vf = "hwdownload,format=nv12"
+				}
+			case "videotoolbox", "mediacodec":
+				// Try without hwdownload first (some builds auto-convert), then with hwdownload.
+				variants = append(variants, buildOne(enc, true, dec, cpuVF, false))
+				if vf != "" {
+					vf = "hwdownload,format=nv12," + vf
+				} else {
+					vf = "hwdownload,format=nv12"
+				}
+			}
+			variants = append(variants, buildOne(enc, true, dec, vf, false))
+		}
+
+		// 4) CPU decode + keep encoder (if we didn't already prefer it first)
+		if !preferEncodeOnlyFirst {
+			variants = append(variants, buildOne(enc, false, hwDecodeChoice{}, cpuVF, false))
+		}
+
+		// 5) Encoder-specific CPU decode + GPU upload filter chains for VAAPI/QSV encoders.
+		//    These can be faster than CPU encode even without HW decode.
+		if cpuVF != "" {
+			switch enc {
+			case "h264_vaapi":
+				if caps.HasScaleVAAPI {
+					vf := fmt.Sprintf("format=nv12,hwupload,scale_vaapi=w=-2:h=%d", maxHeight)
+					variants = append(variants, buildOne(enc, false, hwDecodeChoice{}, vf, true))
+				}
+			case "h264_qsv":
+				if caps.HasVPPQSV {
+					vf := fmt.Sprintf("format=nv12,hwupload=extra_hw_frames=16,vpp_qsv=w=-2:h=%d", maxHeight)
+					variants = append(variants, buildOne(enc, false, hwDecodeChoice{}, vf, true))
+				}
+			}
+		}
+
+		// 6) As a last resort, try explicit hwaccel auto with the same encoder.
+		for _, dec := range decs {
+			if dec.hw == "auto" {
+				variants = append(variants, buildOne(enc, true, dec, cpuVF, false))
+				break
+			}
+		}
+	}
+
+	for _, enc := range encoders {
+		appendVariantsForEnc(enc)
+	}
+
+	// Ensure we always have a deterministic libx264 CPU variant at the very end.
+	if caps.HasLibx264 {
+		variants = append(variants, buildOne("libx264", false, hwDecodeChoice{}, cpuVF, false))
+	}
+	return variants
 }
 
 // 「堅牢デフォルト」args（失敗時フォールバック用：libx264固定）
@@ -765,12 +1014,15 @@ func buildFFMPEGArgsFallback(srcPath, tmpOut string, maxHeight, crf int, preset 
 	if preset == "" {
 		preset = "veryfast"
 	}
-	filter := fmt.Sprintf("scale=-2:min(%d\\,ih)", maxHeight)
+	cpuFilter := fmt.Sprintf("scale=-2:min(%d\\,ih)", maxHeight)
 
 	return []string{
 		"-hide_banner",
 		"-loglevel", "error",
 		"-y",
+		"-fflags", "+genpts",
+		"-avoid_negative_ts", "make_zero",
+		"-vsync", "vfr",
 		"-i", srcPath,
 		"-map", "0:v:0",
 		"-map", "0:a?",
@@ -778,7 +1030,7 @@ func buildFFMPEGArgsFallback(srcPath, tmpOut string, maxHeight, crf int, preset 
 		"-pix_fmt", "yuv420p",
 		"-crf", strconv.Itoa(crf),
 		"-preset", preset,
-		"-vf", filter,
+		"-vf", cpuFilter,
 		"-c:a", "aac",
 		"-b:a", "128k",
 		"-movflags", "+faststart",
@@ -798,16 +1050,56 @@ func transcodeToCompatMP4(ctx context.Context, srcPath, dstPath string, maxHeigh
 	// ① capabilities（初回だけ）
 	caps, _ := getFFMPEGCaps(ffCtx) // err は無視してもOK：検出失敗なら prefer が弱くなるだけ
 
-	// ② args 構築（preferred）
-	args := buildFFMPEGArgsPreferred(ffCtx, srcPath, tmp, maxHeight, crf, preset, caps)
+	// ② args 構築（preferred variants）
+	variants := buildFFMPEGArgsPreferredVariants(ffCtx, srcPath, tmp, maxHeight, crf, preset, caps)
 
-	// ③ 実行 → 失敗なら fallback
-	if err := runFFMPEG(ffCtx, args); err != nil {
-		// fallback
+	// ③ 実行：上から順に試す。失敗しても次へ（独立フォールバック）。
+	//    Also apply lightweight error-based skipping so we don't repeatedly try impossible paths.
+	skipEnc := map[string]bool{}
+	skipHW := map[string]bool{}
+	var lastErr error
+	for i, a := range variants {
+		enc := extractArgValue(a, "-c:v")
+		if enc != "" && skipEnc[enc] {
+			continue
+		}
+		hw := extractArgValue(a, "-hwaccel")
+		if hw != "" && skipHW[hw] {
+			continue
+		}
+
+		err := runFFMPEG(ffCtx, a)
+		if err == nil {
+			lastErr = nil
+			break
+		}
+		lastErr = fmt.Errorf("variant[%d] failed: %w", i, err)
+
+		// Error-based skip heuristics
+		emsg := strings.ToLower(err.Error())
+		if strings.Contains(emsg, "unknown encoder") || strings.Contains(emsg, "encoder '"+strings.ToLower(enc)+"' not found") || strings.Contains(emsg, "invalid encoder") {
+			if enc != "" {
+				skipEnc[enc] = true
+			}
+		}
+		if strings.Contains(emsg, "unknown hwaccel") || strings.Contains(emsg, "hardware accelerator not found") || strings.Contains(emsg, "no device") || strings.Contains(emsg, "device creation failed") || strings.Contains(emsg, "failed to open") || strings.Contains(emsg, "vaapi") && strings.Contains(emsg, "device") {
+			if hw != "" {
+				skipHW[hw] = true
+			}
+		}
+		// If the error is clearly filter-chain related, we only skip HW for this variant and let CPU decode proceed.
+		if strings.Contains(emsg, "hwdownload") || strings.Contains(emsg, "hwupload") || strings.Contains(emsg, "scale_cuda") || strings.Contains(emsg, "scale_vaapi") || strings.Contains(emsg, "vpp_qsv") {
+			if hw != "" {
+				skipHW[hw] = true
+			}
+		}
+	}
+	if lastErr != nil {
+		// fallback（堅牢デフォルト）
 		fb := buildFFMPEGArgsFallback(srcPath, tmp, maxHeight, crf, preset)
 		if err2 := runFFMPEG(ffCtx, fb); err2 != nil {
 			_ = os.Remove(tmp)
-			return fmt.Errorf("ffmpeg failed (preferred): %v; (fallback): %w", err, err2)
+			return fmt.Errorf("ffmpeg failed (preferred variants): %v; (fallback): %w", lastErr, err2)
 		}
 	}
 
@@ -832,25 +1124,7 @@ func runFFMPEG(ctx context.Context, args []string) error {
 		if msg == "" {
 			msg = strings.TrimSpace(stdout.String())
 		}
-		return fmt.Errorf("%w: %s", err, msg)
-	}
-	return nil
-}
-
-// Optional helper: run ffmpeg and stream stdout somewhere (e.g. progress), while still capturing stderr.
-// Not used by default, but handy if you later want progress logging.
-func runFFMPEGWithStdout(ctx context.Context, args []string, stdoutW io.Writer) error {
-	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
-	var stderr bytes.Buffer
-	if stdoutW != nil {
-		cmd.Stdout = stdoutW
-	} else {
-		cmd.Stdout = io.Discard
-	}
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
-		msg := strings.TrimSpace(stderr.String())
-		return fmt.Errorf("%w: %s", err, msg)
+		return fmt.Errorf("%w: %s\nargs: %s", err, msg, strings.Join(args, " "))
 	}
 	return nil
 }
