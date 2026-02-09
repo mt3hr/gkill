@@ -35,20 +35,25 @@ func NewReKyouRepositorySQLite3ImplLocalCached(ctx context.Context, filename str
 		return nil, err
 	}
 
-	originalDBFile, err := os.Open(filename)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", filename, err)
-	}
-	defer originalDBFile.Close()
-	cacheDBFile, err := os.Create(localCacheDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
-	}
-	defer cacheDBFile.Close()
-	_, err = io.Copy(cacheDBFile, originalDBFile)
-	if err != nil {
-		err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
-		return nil, err
+	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
+	originalStat, originalStatErr := os.Stat(filename)
+	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	if updateCache {
+		originalDBFile, err := os.Open(filename)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", filename, err)
+		}
+		defer originalDBFile.Close()
+		cacheDBFile, err := os.Create(localCacheDBFileName)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+		}
+		defer cacheDBFile.Close()
+		_, err = io.Copy(cacheDBFile, originalDBFile)
+		if err != nil {
+			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
+			return nil, err
+		}
 	}
 
 	originalRep, err := NewReKyouRepositorySQLite3Impl(ctx, filename, false, reps)
@@ -126,20 +131,25 @@ func (r *reKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context
 		return err
 	}
 
-	originalDBFile, err := os.Open(r.originalDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", r.originalDBFileName)
-	}
-	defer originalDBFile.Close()
-	cacheDBFile, err := os.Create(localCacheDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
-	}
-	defer cacheDBFile.Close()
-	_, err = io.Copy(cacheDBFile, originalDBFile)
-	if err != nil {
-		err = fmt.Errorf("error at copy local cache db %s to %s: %w", r.originalDBFileName, localCacheDBFileName, err)
-		return err
+	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
+	originalStat, originalStatErr := os.Stat(r.originalDBFileName)
+	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	if updateCache {
+		originalDBFile, err := os.Open(r.originalDBFileName)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", r.originalDBFileName)
+		}
+		defer originalDBFile.Close()
+		cacheDBFile, err := os.Create(localCacheDBFileName)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
+		}
+		defer cacheDBFile.Close()
+		_, err = io.Copy(cacheDBFile, originalDBFile)
+		if err != nil {
+			err = fmt.Errorf("error at copy local cache db %s to %s: %w", r.originalDBFileName, localCacheDBFileName, err)
+			return err
+		}
 	}
 
 	newLocalCachedRep, err := NewReKyouRepositorySQLite3Impl(ctx, localCacheDBFileName, r.fullConnect, r.reps)
