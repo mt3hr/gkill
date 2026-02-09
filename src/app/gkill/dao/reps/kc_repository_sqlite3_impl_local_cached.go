@@ -53,6 +53,7 @@ func NewKCRepositorySQLite3ImplLocalCached(ctx context.Context, filename string,
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
 			return nil, err
 		}
+		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
 	}
 
 	originalRep, err := NewKCRepositorySQLite3Impl(ctx, filename, false)
@@ -148,6 +149,7 @@ func (k *kcRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) er
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", k.originalDBFileName, localCacheDBFileName, err)
 			return err
 		}
+		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
 	}
 
 	newLocalCachedRep, err := NewKCRepositorySQLite3Impl(ctx, localCacheDBFileName, k.fullConnect)
