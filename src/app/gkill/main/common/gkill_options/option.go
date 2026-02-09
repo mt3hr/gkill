@@ -25,6 +25,8 @@ var (
 
 	LoadIDFRepOnly = false
 
+	CacheRepsLocalStorage = false
+
 	IDFIgnore = []string{
 		".gkill",
 		"gkill_id.db",
