@@ -34,20 +34,25 @@ func NewMiRepositorySQLite3ImplLocalCached(ctx context.Context, filename string,
 		return nil, err
 	}
 
-	originalDBFile, err := os.Open(filename)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", filename, err)
-	}
-	defer originalDBFile.Close()
-	cacheDBFile, err := os.Create(localCacheDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
-	}
-	defer cacheDBFile.Close()
-	_, err = io.Copy(cacheDBFile, originalDBFile)
-	if err != nil {
-		err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
-		return nil, err
+	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
+	originalStat, originalStatErr := os.Stat(filename)
+	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	if updateCache {
+		originalDBFile, err := os.Open(filename)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", filename, err)
+		}
+		defer originalDBFile.Close()
+		cacheDBFile, err := os.Create(localCacheDBFileName)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+		}
+		defer cacheDBFile.Close()
+		_, err = io.Copy(cacheDBFile, originalDBFile)
+		if err != nil {
+			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
+			return nil, err
+		}
 	}
 
 	originalRep, err := NewMiRepositorySQLite3Impl(ctx, filename, false)
@@ -75,47 +80,47 @@ func NewMiRepositorySQLite3ImplLocalCached(ctx context.Context, filename string,
 	return cachedRep, nil
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	k.m.Lock()
-	k.m.Unlock()
-	return k.localCachedRep.FindKyous(ctx, query)
+func (m *miRepositorySQLite3ImplLocalCached) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	m.m.Lock()
+	m.m.Unlock()
+	return m.localCachedRep.FindKyous(ctx, query)
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
-	k.m.Lock()
-	k.m.Unlock()
-	return k.localCachedRep.GetKyou(ctx, id, updateTime)
+func (m *miRepositorySQLite3ImplLocalCached) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	m.m.Lock()
+	m.m.Unlock()
+	return m.localCachedRep.GetKyou(ctx, id, updateTime)
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	k.m.Lock()
-	k.m.Unlock()
-	return k.localCachedRep.GetKyouHistories(ctx, id)
+func (m *miRepositorySQLite3ImplLocalCached) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	m.m.Lock()
+	m.m.Unlock()
+	return m.localCachedRep.GetKyouHistories(ctx, id)
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id string) (string, error) {
-	k.m.Lock()
-	k.m.Unlock()
-	return k.originalRep.GetPath(ctx, id)
+func (m *miRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id string) (string, error) {
+	m.m.Lock()
+	m.m.Unlock()
+	return m.originalRep.GetPath(ctx, id)
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) error {
-	k.m.Lock()
-	defer k.m.Unlock()
+func (m *miRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 
-	err := k.localCachedRep.Close(ctx)
+	err := m.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at update cache %s", err)
 		return err
 	}
 
-	err = os.Remove(k.localCacheDBFileName)
+	err = os.Remove(m.localCacheDBFileName)
 	if err != nil {
-		err = fmt.Errorf("error at remove %s: %w", k.localCacheDBFileName, err)
+		err = fmt.Errorf("error at remove %s: %w", m.localCacheDBFileName, err)
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.Replace(k.originalDBFileName, ":", "", -1))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.Replace(m.originalDBFileName, ":", "", -1))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -124,42 +129,47 @@ func (k *miRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) er
 		return err
 	}
 
-	originalDBFile, err := os.Open(k.originalDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", k.originalDBFileName)
-	}
-	defer originalDBFile.Close()
-	cacheDBFile, err := os.Create(localCacheDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
-	}
-	defer cacheDBFile.Close()
-	_, err = io.Copy(cacheDBFile, originalDBFile)
-	if err != nil {
-		err = fmt.Errorf("error at copy local cache db %s to %s: %w", k.originalDBFileName, localCacheDBFileName, err)
-		return err
+	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
+	originalStat, originalStatErr := os.Stat(m.originalDBFileName)
+	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	if updateCache {
+		originalDBFile, err := os.Open(m.originalDBFileName)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", m.originalDBFileName)
+		}
+		defer originalDBFile.Close()
+		cacheDBFile, err := os.Create(localCacheDBFileName)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
+		}
+		defer cacheDBFile.Close()
+		_, err = io.Copy(cacheDBFile, originalDBFile)
+		if err != nil {
+			err = fmt.Errorf("error at copy local cache db %s to %s: %w", m.originalDBFileName, localCacheDBFileName, err)
+			return err
+		}
 	}
 
-	newLocalCachedRep, err := NewMiRepositorySQLite3Impl(ctx, localCacheDBFileName, k.fullConnect)
+	newLocalCachedRep, err := NewMiRepositorySQLite3Impl(ctx, localCacheDBFileName, m.fullConnect)
 	if err != nil {
 		err = fmt.Errorf("error at new mi rep: %w", err)
 		return err
 	}
-	k.localCachedRep = newLocalCachedRep
+	m.localCachedRep = newLocalCachedRep
 	return nil
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {
-	return k.originalRep.GetRepName(ctx)
+func (m *miRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (string, error) {
+	return m.originalRep.GetRepName(ctx)
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
-	err := k.localCachedRep.Close(ctx)
+func (m *miRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
+	err := m.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close %s", err)
 		return err
 	}
-	err = k.originalRep.Close(ctx)
+	err = m.originalRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close %s", err)
 		return err
@@ -167,44 +177,44 @@ func (k *miRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
 	return nil
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
-	k.m.Lock()
-	k.m.Unlock()
-	return k.localCachedRep.FindMi(ctx, query)
+func (m *miRepositorySQLite3ImplLocalCached) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
+	m.m.Lock()
+	m.m.Unlock()
+	return m.localCachedRep.FindMi(ctx, query)
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) GetMi(ctx context.Context, id string, updateTime *time.Time) (*Mi, error) {
-	k.m.Lock()
-	k.m.Unlock()
-	return k.localCachedRep.GetMi(ctx, id, updateTime)
+func (m *miRepositorySQLite3ImplLocalCached) GetMi(ctx context.Context, id string, updateTime *time.Time) (*Mi, error) {
+	m.m.Lock()
+	m.m.Unlock()
+	return m.localCachedRep.GetMi(ctx, id, updateTime)
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
-	k.m.Lock()
-	k.m.Unlock()
-	return k.localCachedRep.GetMiHistories(ctx, id)
+func (m *miRepositorySQLite3ImplLocalCached) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
+	m.m.Lock()
+	m.m.Unlock()
+	return m.localCachedRep.GetMiHistories(ctx, id)
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) AddMiInfo(ctx context.Context, mi *Mi) error {
-	k.m.Lock()
-	defer k.m.Unlock()
-	err := k.originalRep.AddMiInfo(ctx, mi)
+func (m *miRepositorySQLite3ImplLocalCached) AddMiInfo(ctx context.Context, mi *Mi) error {
+	m.m.Lock()
+	defer m.m.Unlock()
+	err := m.originalRep.AddMiInfo(ctx, mi)
 	if err != nil {
 		return err
 	}
-	return k.UpdateCache(ctx)
+	return m.UpdateCache(ctx)
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) GetBoardNames(ctx context.Context) ([]string, error) {
-	k.m.Lock()
-	k.m.Unlock()
-	return k.GetBoardNames(ctx)
+func (m *miRepositorySQLite3ImplLocalCached) GetBoardNames(ctx context.Context) ([]string, error) {
+	m.m.Lock()
+	m.m.Unlock()
+	return m.GetBoardNames(ctx)
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) UnWrapTyped() ([]MiRepository, error) {
-	return []MiRepository{k.originalRep}, nil
+func (m *miRepositorySQLite3ImplLocalCached) UnWrapTyped() ([]MiRepository, error) {
+	return []MiRepository{m.originalRep}, nil
 }
 
-func (k *miRepositorySQLite3ImplLocalCached) UnWrap() ([]Repository, error) {
-	return []Repository{k.originalRep}, nil
+func (m *miRepositorySQLite3ImplLocalCached) UnWrap() ([]Repository, error) {
+	return []Repository{m.originalRep}, nil
 }
