@@ -26,20 +26,25 @@ func NewIDFDirRepLocalCached(ctx context.Context, dir, dbFilename string, fullCo
 		return nil, err
 	}
 
-	originalDBFile, err := os.Open(dbFilename)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", dbFilename)
-	}
-	defer originalDBFile.Close()
-	cacheDBFile, err := os.Create(localCacheDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
-	}
-	defer cacheDBFile.Close()
-	_, err = io.Copy(cacheDBFile, originalDBFile)
-	if err != nil {
-		err = fmt.Errorf("error at copy local cache db %s to %s: %w", dbFilename, localCacheDBFileName, err)
-		return nil, err
+	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
+	originalStat, originalStatErr := os.Stat(dbFilename)
+	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	if updateCache {
+		originalDBFile, err := os.Open(dbFilename)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", dbFilename)
+		}
+		defer originalDBFile.Close()
+		cacheDBFile, err := os.Create(localCacheDBFileName)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
+		}
+		defer cacheDBFile.Close()
+		_, err = io.Copy(cacheDBFile, originalDBFile)
+		if err != nil {
+			err = fmt.Errorf("error at copy local cache db %s to %s: %w", dbFilename, localCacheDBFileName, err)
+			return nil, err
+		}
 	}
 
 	originalRep, err := NewIDFDirRep(ctx, dir, dbFilename, false, r, autoIDF, idfIgnore, repositoriesRef)
@@ -136,20 +141,25 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 		return err
 	}
 
-	originalDBFile, err := os.Open(i.originalDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", i.originalDBFileName)
-	}
-	defer originalDBFile.Close()
-	cacheDBFile, err := os.Create(localCacheDBFileName)
-	if err != nil {
-		err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
-	}
-	defer cacheDBFile.Close()
-	_, err = io.Copy(cacheDBFile, originalDBFile)
-	if err != nil {
-		err = fmt.Errorf("error at copy local cache db %s to %s: %w", i.originalDBFileName, localCacheDBFileName, err)
-		return err
+	cacheStat, cacheStatErr := os.Stat(localCacheDBFileName)
+	originalStat, originalStatErr := os.Stat(i.originalDBFileName)
+	updateCache := originalStatErr != nil || cacheStatErr != nil || originalStat.ModTime().Equal(cacheStat.ModTime())
+	if updateCache {
+		originalDBFile, err := os.Open(i.originalDBFileName)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", i.originalDBFileName)
+		}
+		defer originalDBFile.Close()
+		cacheDBFile, err := os.Create(localCacheDBFileName)
+		if err != nil {
+			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
+		}
+		defer cacheDBFile.Close()
+		_, err = io.Copy(cacheDBFile, originalDBFile)
+		if err != nil {
+			err = fmt.Errorf("error at copy local cache db %s to %s: %w", i.originalDBFileName, localCacheDBFileName, err)
+			return err
+		}
 	}
 
 	newLocalCachedRep, err := NewIDFDirRep(ctx, i.contentDir, localCacheDBFileName, i.fullConnect, i.r, i.autoIDF, i.idfIgnore, i.repositoriesRef)
