@@ -32,12 +32,12 @@ func NewIDFDirRepLocalCached(ctx context.Context, dir, dbFilename string, fullCo
 	if updateCache {
 		originalDBFile, err := os.Open(dbFilename)
 		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", dbFilename)
+			err = fmt.Errorf("error at open file %s: %w", dbFilename, err)
 		}
 		defer originalDBFile.Close()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
+			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
 		}
 		defer cacheDBFile.Close()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
@@ -45,6 +45,7 @@ func NewIDFDirRepLocalCached(ctx context.Context, dir, dbFilename string, fullCo
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", dbFilename, localCacheDBFileName, err)
 			return nil, err
 		}
+		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
 	}
 
 	originalRep, err := NewIDFDirRep(ctx, dir, dbFilename, false, r, autoIDF, idfIgnore, repositoriesRef)
@@ -147,12 +148,12 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 	if updateCache {
 		originalDBFile, err := os.Open(i.originalDBFileName)
 		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", i.originalDBFileName)
+			err = fmt.Errorf("error at open file %s: %w", i.originalDBFileName, err)
 		}
 		defer originalDBFile.Close()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
-			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName)
+			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
 		}
 		defer cacheDBFile.Close()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
@@ -160,6 +161,7 @@ func (i *idfKyouRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Contex
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", i.originalDBFileName, localCacheDBFileName, err)
 			return err
 		}
+		os.Chtimes(localCacheDBFileName, originalStat.ModTime(), originalStat.ModTime())
 	}
 
 	newLocalCachedRep, err := NewIDFDirRep(ctx, i.contentDir, localCacheDBFileName, i.fullConnect, i.r, i.autoIDF, i.idfIgnore, i.repositoriesRef)
