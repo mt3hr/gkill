@@ -19,13 +19,13 @@
             <v-col cols="auto" class="pa-0 ma-0">
                 <v-btn dark color="primary" @click="() => save()" :disabled="is_requested_submit">{{
                     i18n.global.t('SAVE_TITLE')
-                    }}</v-btn>
+                }}</v-btn>
             </v-col>
         </v-row>
         <v-card v-if="show_kyou">
-            <KyouView :application_config="application_config" :gkill_api="gkill_api" :is_image_request_to_thumb_size="false"
-                :highlight_targets="highlight_targets" :is_image_view="false" :kyou="kyou"
-                :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
+            <KyouView :application_config="application_config" :gkill_api="gkill_api"
+                :is_image_request_to_thumb_size="false" :highlight_targets="highlight_targets" :is_image_view="false"
+                :kyou="kyou" :last_added_tag="last_added_tag" :show_checkbox="false" :show_content_only="false"
                 :show_mi_create_time="true" :show_mi_estimate_end_time="true" :show_mi_estimate_start_time="true"
                 :show_mi_limit_time="true" :show_timeis_elapsed_time="true" :show_timeis_plaing_end_button="true"
                 :height="'100%'" :width="'100%'" :enable_context_menu="enable_context_menu"
@@ -125,8 +125,8 @@ async function save(): Promise<void> {
                 emits('received_messages', res.messages)
             }
             emits('registered_tag', res.added_tag)
-            emits('requested_reload_kyou', props.kyou)
         }
+        emits('requested_reload_kyou', props.kyou)
         props.gkill_api.set_saved_last_added_tag(tag_name.value)
         emits('requested_close_dialog')
         return
