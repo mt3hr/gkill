@@ -17,7 +17,7 @@
             @received_errors="(...errors: any[]) => emits('received_errors', errors[0] as Array<GkillError>)"
             @received_messages="(...messages: any[]) => emits('received_messages', messages[0] as Array<GkillMessage>)"
             @saved_kyou_by_kftl="(last_added_request_time: Date) => {
-                plaing_timeis_view?.set_last_added_request_time(last_added_request_time)
+                plaing_timeis_view?.set_last_added_request_time(new Date(Math.max(last_added_request_time.getTime(), Date.now())))
                 reload_plaing_timeis_view()
             }" ref="kftl_view" />
         <PlaingTimeisView :application_config="application_config" :gkill_api="gkill_api"
