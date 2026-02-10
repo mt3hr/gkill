@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
@@ -104,6 +105,9 @@ type GkillRepositories struct {
 
 	cancelPreFunc    context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
 	updateCacheMutex sync.Mutex
+
+	updateReqGen atomic.Uint64
+	lastHandled  atomic.Uint64
 
 	CacheMemoryDBMutex *sync.Mutex
 	CacheMemoryDB      *sql.DB
@@ -207,15 +211,22 @@ func NewGkillRepositories(userID string) (*GkillRepositories, error) {
 	}
 
 	go func() {
+		defer ticker.Stop()
 		for !repositories.isClosed {
 			<-ticker.C
+			currentGen := repositories.updateReqGen.Load()
+			lastGen := repositories.lastHandled.Load()
+			if currentGen == lastGen {
+				continue
+			}
 			if repositories.IsUpdateCacheNextTick {
 				err := repositories.UpdateCache(context.Background())
 				if err != nil {
 					slog.Log(ctx, gkill_log.Error, "error", "error", err)
-					return
+					continue
 				}
 				repositories.IsUpdateCacheNextTick = false
+				repositories.lastHandled.Store(currentGen)
 			}
 		}
 	}()
@@ -442,18 +453,16 @@ func (g *GkillRepositories) GetKyou(ctx context.Context, id string, updateTime *
 
 func (g *GkillRepositories) UpdateCache(ctx context.Context) error {
 	<-updateCacheThreadPool
-	func() {
-		defer func() { updateCacheThreadPool <- struct{}{} }()
-		g.updateCacheMutex.Lock()
-		defer g.updateCacheMutex.Unlock()
+	defer func() { updateCacheThreadPool <- struct{}{} }()
+	g.updateCacheMutex.Lock()
+	defer g.updateCacheMutex.Unlock()
 
-		var cancelFunc context.CancelFunc
+	var cancelFunc context.CancelFunc
 
-		// 一個前でUpdateCacheしてるやつをキャンセルする
-		g.cancelPreFunc()
-		ctx, cancelFunc = context.WithCancel(ctx)
-		g.cancelPreFunc = cancelFunc
-	}()
+	// 一個前でUpdateCacheしてるやつをキャンセルする
+	g.cancelPreFunc()
+	ctx, cancelFunc = context.WithCancel(ctx)
+	g.cancelPreFunc = cancelFunc
 
 	existErr := false
 	var err error
@@ -815,6 +824,7 @@ notificationsloop:
 }
 
 func (g *GkillRepositories) UpdateCacheNextTick() {
+	g.updateReqGen.Add(1)
 	g.IsUpdateCacheNextTick = true
 }
 
