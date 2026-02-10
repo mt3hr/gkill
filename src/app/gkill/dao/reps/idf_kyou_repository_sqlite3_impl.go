@@ -1645,6 +1645,9 @@ func (i *idfKyouRepositorySQLite3Impl) GenerateThumbCache(ctx context.Context) e
 		}
 		query := url.Query()
 		query.Set("thumb", "400x400")
+		if idfKyou.IsVideo {
+			query.Set("is_video", "true")
+		}
 		url.RawQuery = query.Encode()
 
 		err = i.thumbGenerator.GenerateThumbCache(ctx, url.String())
