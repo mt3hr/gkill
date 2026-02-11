@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 )
 
@@ -19,7 +21,7 @@ type textRepositorySQLite3ImplLocalCached struct {
 	localCacheDBFileName string
 	originalRep          TextRepository
 	localCachedRep       TextRepository
-	m                    sync.Mutex
+	m                    sync.RWMutex
 
 	fullConnect bool
 }
@@ -41,13 +43,25 @@ func NewTextRepositorySQLite3ImplLocalCached(ctx context.Context, filename strin
 		originalDBFile, err := os.Open(filename)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", filename, err)
+			return nil, err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return nil, err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", filename, localCacheDBFileName, err)
@@ -76,17 +90,19 @@ func NewTextRepositorySQLite3ImplLocalCached(ctx context.Context, filename strin
 
 		fullConnect: fullConnect,
 
-		m: sync.Mutex{},
+		m: sync.RWMutex{},
 	}
 	return cachedRep, nil
 }
 func (t *textRepositorySQLite3ImplLocalCached) FindTexts(ctx context.Context, query *find.FindQuery) ([]*Text, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.FindTexts(ctx, query)
 }
 
 func (t *textRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error {
+	t.m.Lock()
+	defer t.m.Unlock()
 	err := t.localCachedRep.Close(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at close %s", err)
@@ -101,14 +117,14 @@ func (t *textRepositorySQLite3ImplLocalCached) Close(ctx context.Context) error 
 }
 
 func (t *textRepositorySQLite3ImplLocalCached) GetText(ctx context.Context, id string, updateTime *time.Time) (*Text, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.GetText(ctx, id, updateTime)
 }
 
 func (t *textRepositorySQLite3ImplLocalCached) GetTextsByTargetID(ctx context.Context, target_id string) ([]*Text, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.GetTextsByTargetID(ctx, target_id)
 }
 
@@ -128,7 +144,7 @@ func (t *textRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 		return err
 	}
 
-	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.Replace(t.originalDBFileName, ":", "", -1))
+	localCacheDBFileName := filepath.Join(os.ExpandEnv(gkill_options.CacheDir), "local_cache_rep", strings.ReplaceAll(t.originalDBFileName, ":", ""))
 	localCacheDBParentDirName, _ := filepath.Split(localCacheDBFileName)
 
 	err = os.MkdirAll(localCacheDBParentDirName, os.ModePerm)
@@ -144,13 +160,25 @@ func (t *textRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 		originalDBFile, err := os.Open(t.originalDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", t.originalDBFileName, err)
+			return err
 		}
-		defer originalDBFile.Close()
+		defer func() {
+			err := originalDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		cacheDBFile, err := os.Create(localCacheDBFileName)
 		if err != nil {
 			err = fmt.Errorf("error at open file %s: %w", localCacheDBFileName, err)
+			return err
 		}
-		defer cacheDBFile.Close()
+		defer func() {
+			err := cacheDBFile.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 		_, err = io.Copy(cacheDBFile, originalDBFile)
 		if err != nil {
 			err = fmt.Errorf("error at copy local cache db %s to %s: %w", t.originalDBFileName, localCacheDBFileName, err)
@@ -169,8 +197,8 @@ func (t *textRepositorySQLite3ImplLocalCached) UpdateCache(ctx context.Context) 
 }
 
 func (t *textRepositorySQLite3ImplLocalCached) GetPath(ctx context.Context, id string) (string, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.originalRep.GetPath(ctx, id)
 }
 
@@ -179,8 +207,8 @@ func (t *textRepositorySQLite3ImplLocalCached) GetRepName(ctx context.Context) (
 }
 
 func (t *textRepositorySQLite3ImplLocalCached) GetTextHistories(ctx context.Context, id string) ([]*Text, error) {
-	t.m.Lock()
-	t.m.Unlock()
+	t.m.RLock()
+	defer t.m.RUnlock()
 	return t.localCachedRep.GetTextHistories(ctx, id)
 }
 

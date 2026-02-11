@@ -16,7 +16,7 @@ import (
 type repositoryDAOSQLite3Impl struct {
 	filename string
 	db       *sql.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
 func NewRepositoryDAOSQLite3Impl(ctx context.Context, filename string) (RepositoryDAO, error) {
@@ -52,7 +52,12 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
 		err = fmt.Errorf("error at create REPOSITORY table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -68,7 +73,12 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
 		err = fmt.Errorf("error at create REPOSITORY index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -96,11 +106,13 @@ CREATE TABLE IF NOT EXISTS "REPOSITORY" (
 	return &repositoryDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        &sync.RWMutex{},
 	}, nil
 }
 
 func (r *repositoryDAOSQLite3Impl) GetAllRepositories(ctx context.Context) ([]*Repository, error) {
+	r.m.RLock()
+	defer r.m.RUnlock()
 	sql := `
 SELECT 
   ID,
@@ -120,7 +132,12 @@ FROM REPOSITORY
 		err = fmt.Errorf("error at get get all repositories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	rows, err := stmt.QueryContext(ctx)
@@ -128,7 +145,12 @@ FROM REPOSITORY
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	repositories := []*Repository{}
 	for rows.Next() {
@@ -162,6 +184,8 @@ FROM REPOSITORY
 }
 
 func (r *repositoryDAOSQLite3Impl) GetRepositories(ctx context.Context, userID string, device string) ([]*Repository, error) {
+	r.m.RLock()
+	defer r.m.RUnlock()
 	sql := `
 SELECT 
   ID,
@@ -182,7 +206,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at get get repositories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		userID,
@@ -195,7 +224,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	repositories := []*Repository{}
 	for rows.Next() {
@@ -231,6 +265,8 @@ WHERE USER_ID = ? AND DEVICE = ?
 }
 
 func (r *repositoryDAOSQLite3Impl) DeleteWriteRepositories(ctx context.Context, userID string, repositories []*Repository) (bool, error) {
+	r.m.Lock()
+	defer r.m.Unlock()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
@@ -247,7 +283,12 @@ WHERE USER_ID = ?
 		err = fmt.Errorf("error at delete repository sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		userID,
@@ -295,7 +336,12 @@ INSERT INTO REPOSITORY (
 		}
 		return false, err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, repository := range repositories {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", insertSQL)
@@ -346,6 +392,8 @@ INSERT INTO REPOSITORY (
 }
 
 func (r *repositoryDAOSQLite3Impl) AddRepository(ctx context.Context, repository *Repository) (bool, error) {
+	r.m.Lock()
+	defer r.m.Unlock()
 	sql := `
 INSERT INTO REPOSITORY (
   ID,
@@ -380,7 +428,12 @@ INSERT INTO REPOSITORY (
 		err = fmt.Errorf("error at add repository sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		repository.ID,
@@ -417,6 +470,8 @@ INSERT INTO REPOSITORY (
 }
 
 func (r *repositoryDAOSQLite3Impl) AddRepositories(ctx context.Context, repositories []*Repository) (bool, error) {
+	r.m.Lock()
+	defer r.m.Unlock()
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("error at begin: %w", err)
@@ -456,7 +511,12 @@ INSERT INTO REPOSITORY (
 		}
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, repository := range repositories {
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
@@ -508,6 +568,8 @@ INSERT INTO REPOSITORY (
 }
 
 func (r *repositoryDAOSQLite3Impl) UpdateRepository(ctx context.Context, repository *Repository) (bool, error) {
+	r.m.Lock()
+	defer r.m.Unlock()
 	sql := `
 UPDATE REPOSITORY SET
   ID = ?,
@@ -530,7 +592,12 @@ WHERE ID = ?
 		err = fmt.Errorf("error at update repository sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		repository.ID,
@@ -566,6 +633,8 @@ WHERE ID = ?
 }
 
 func (r *repositoryDAOSQLite3Impl) DeleteRepository(ctx context.Context, id string) (bool, error) {
+	r.m.Lock()
+	defer r.m.Unlock()
 	sql := `
 DELETE FROM REPOSITORY
 WHERE ID = ?
@@ -576,7 +645,12 @@ WHERE ID = ?
 		err = fmt.Errorf("error at delete repository sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		id,
@@ -591,6 +665,8 @@ WHERE ID = ?
 }
 
 func (r *repositoryDAOSQLite3Impl) DeleteAllRepositoriesByUser(ctx context.Context, userID string, device string) (bool, error) {
+	r.m.Lock()
+	defer r.m.Unlock()
 	sql := `
 DELETE FROM REPOSITORY
 WHERE USER_ID = ?
@@ -601,7 +677,12 @@ WHERE USER_ID = ?
 		err = fmt.Errorf("error at delete repository sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		userID,
@@ -617,6 +698,8 @@ WHERE USER_ID = ?
 }
 
 func (r *repositoryDAOSQLite3Impl) Close(ctx context.Context) error {
+	r.m.Lock()
+	defer r.m.Unlock()
 	return r.db.Close()
 }
 
@@ -632,13 +715,23 @@ SELECT DEVICE FROM REPOSITORY WHERE USER_ID = ? GROUP BY DEVICE
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", selectDeviceSQL, selectDeviceQueryArgs)
 	rows, err := stmt.QueryContext(ctx, selectDeviceQueryArgs...)
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	selectSQL := `
 WITH TYPE_AND_DEVICE AS (SELECT ? AS USER_ID, ? AS DEVICE)
@@ -754,7 +847,12 @@ GROUP BY TYPE, DEVICE
 		err = fmt.Errorf("error at get use to write repository count sql: %w", err)
 		return err
 	}
-	defer selectStmt.Close()
+	defer func() {
+		err := selectStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	devices := []string{}
 	for rows.Next() {
@@ -781,7 +879,12 @@ GROUP BY TYPE, DEVICE
 			err = fmt.Errorf("error at query :%w", err)
 			return err
 		}
-		defer rows.Close()
+		defer func() {
+			err := rows.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 
 		for rows.Next() {
 			select {

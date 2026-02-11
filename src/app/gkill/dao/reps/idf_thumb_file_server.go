@@ -10,6 +10,7 @@ import (
 	stdDraw "image/draw"
 	"image/jpeg"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,6 +26,7 @@ import (
 	_ "image/gif"
 	_ "image/png"
 
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/rwcarlsen/goexif/exif"
 	xdraw "golang.org/x/image/draw"
@@ -423,7 +425,12 @@ func generateThumbJpeg(srcPath, dstPath string, w, h int, quality int) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	// 1) EXIF Orientation を読む（失敗したら 1 扱い）
 	orient := 1

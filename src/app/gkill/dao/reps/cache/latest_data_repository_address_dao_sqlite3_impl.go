@@ -19,12 +19,12 @@ const CURRENT_SCHEMA_VERSION_LATEST_DATA_REPOSITORY_ADDRESS_DAO = "1.0.0"
 
 type latestDataRepositoryAddressSQLite3Impl struct {
 	db        *sql.DB
-	m         *sync.Mutex
+	m         *sync.RWMutex
 	userID    string
 	tableName string
 }
 
-func NewLatestDataRepositoryAddressSQLite3Impl(userID string, db *sql.DB, mutex *sync.Mutex) (LatestDataRepositoryAddressDAO, error) {
+func NewLatestDataRepositoryAddressSQLite3Impl(userID string, db *sql.DB, mutex *sync.RWMutex) (LatestDataRepositoryAddressDAO, error) {
 	var err error
 
 	latestDataRepositoryAddress := &latestDataRepositoryAddressSQLite3Impl{
@@ -63,7 +63,12 @@ CREATE TABLE IF NOT EXISTS %s (
 		err = fmt.Errorf("error at CREATE TABLE LATEST_DATA_REPOSITORY_ADDRESS statement: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -86,7 +91,12 @@ CREATE TABLE IF NOT EXISTS %s (
 		err = fmt.Errorf("error at create %s index statement: %w", latestDataRepositoryAddress.tableName, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -99,8 +109,8 @@ CREATE TABLE IF NOT EXISTS %s (
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetAllLatestDataRepositoryAddresses(ctx context.Context) (map[string]*LatestDataRepositoryAddress, error) {
-	// l.m.Lock()
-	// defer l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -117,7 +127,12 @@ FROM %s
 		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	rows, err := stmt.QueryContext(ctx)
@@ -125,7 +140,12 @@ FROM %s
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	latestDataRepositoryAddresses := map[string]*LatestDataRepositoryAddress{}
 	for rows.Next() {
@@ -159,8 +179,8 @@ FROM %s
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressesByRepName(ctx context.Context, repName string) (map[string]*LatestDataRepositoryAddress, error) {
-	// l.m.Lock()
-	// defer l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -178,7 +198,12 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 		err = fmt.Errorf("error at get all data repository by rep name addresses sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		repName,
@@ -189,7 +214,12 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	latestDataRepositoryAddresses := map[string]*LatestDataRepositoryAddress{}
 	for rows.Next() {
@@ -223,8 +253,8 @@ WHERE LATEST_DATA_REPOSITORY_NAME = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddress(ctx context.Context, targetID string) (*LatestDataRepositoryAddress, error) {
-	// l.m.Lock()
-	// defer l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -242,7 +272,12 @@ WHERE TARGET_ID = ?
 		err = fmt.Errorf("error at get latest data repository addresses sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		targetID,
@@ -253,7 +288,12 @@ WHERE TARGET_ID = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	latestDataRepositoryAddresses := []*LatestDataRepositoryAddress{}
 	for rows.Next() {
@@ -290,8 +330,8 @@ WHERE TARGET_ID = ?
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) GetLatestDataRepositoryAddressByUpdateTimeAfter(ctx context.Context, updateTime time.Time, limit int64) (map[string]*LatestDataRepositoryAddress, error) {
-	// l.m.Lock()
-	// defer l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	sql := fmt.Sprintf(`
 SELECT 
   IS_DELETED,
@@ -310,7 +350,12 @@ LIMIT ?
 		err = fmt.Errorf("error at get all latest data repository addresses sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		updateTime.Unix(),
@@ -322,7 +367,12 @@ LIMIT ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	latestDataRepositoryAddresses := map[string]*LatestDataRepositoryAddress{}
 	for rows.Next() {
@@ -385,7 +435,12 @@ INSERT INTO %s (
 		err = fmt.Errorf("error at add or update latest data repoisitory address delete sql: %w", err)
 		return false, err
 	}
-	defer deleteStmt.Close()
+	defer func() {
+		err := deleteStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	deleteQueryArgs := []interface{}{
 		latestDataRepositoryAddress.TargetID,
@@ -403,7 +458,12 @@ INSERT INTO %s (
 		err = fmt.Errorf("error at add or update latest data repoisitory insert address sql: %w", err)
 		return false, err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	insertQueryArgs := []interface{}{
 		latestDataRepositoryAddress.IsDeleted,
@@ -445,7 +505,12 @@ WHERE TARGET_ID = ?`, l.tableName)
 		}
 		return false, err
 	}
-	defer deleteStmt.Close()
+	defer func() {
+		err := deleteStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	insertSQL := fmt.Sprintf(`
 INSERT INTO %s (
@@ -473,7 +538,12 @@ INSERT INTO %s (
 		}
 		return false, err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, latestDataRepositoryAddress := range latestDataRepositoryAddresses {
 		_, err := func() (bool, error) {
@@ -540,7 +610,12 @@ WHERE TARGET_ID = ?
 		err = fmt.Errorf("error at delete latest data repository address sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		latestDataRepositoryAddress.TargetID,
@@ -566,7 +641,12 @@ DELETE FROM %s
 		err = fmt.Errorf("error at delete all latest data repository address sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -590,7 +670,12 @@ WHERE LATEST_DATA_REPOSITORY_NAME  = ?
 		err = fmt.Errorf("error at delete all latest data repository address sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		repName,
@@ -646,6 +731,8 @@ func (l *latestDataRepositoryAddressSQLite3Impl) UpdateLatestDataRepositoryAddre
 }
 
 func (l *latestDataRepositoryAddressSQLite3Impl) Close(ctx context.Context) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	if gkill_options.IsCacheInMemory {
 		sql := fmt.Sprintf(`DROP TABLE %s `, l.tableName)
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
@@ -654,7 +741,12 @@ func (l *latestDataRepositoryAddressSQLite3Impl) Close(ctx context.Context) erro
 			err = fmt.Errorf("error at DROP TABLE LATEST_DATA_REPOSITORY_ADDRESS statement: %w", err)
 			return err
 		}
-		defer stmt.Close()
+		defer func() {
+			err := stmt.Close()
+			if err != nil {
+				slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+			}
+		}()
 
 		slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 		_, err = stmt.ExecContext(ctx)
@@ -685,7 +777,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
 	_, err = stmt.ExecContext(ctx)
@@ -693,7 +790,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -702,7 +804,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
 		return false, nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -724,7 +831,12 @@ WHERE KEY = ?
 		err = fmt.Errorf("error at get schema version sql: %w", err)
 		return false, nil, err
 	}
-	defer selectSchemaVersionStmt.Close()
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	dbSchemaVersion := ""
 	queryArgs := []interface{}{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
@@ -742,7 +854,12 @@ VALUES(?, ?)`
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
 				return false, nil, err
 			}
-			defer insertCurrentVersionStmt.Close()
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)

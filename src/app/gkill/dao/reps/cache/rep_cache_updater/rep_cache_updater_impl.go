@@ -28,7 +28,7 @@ var (
 type watcherHub struct {
 	w *fsnotify.Watcher
 
-	m       sync.Mutex
+	m       sync.RWMutex
 	targets map[string]*watchTargetEntry // keySlash -> entry
 	states  map[string]*targetState      // keySlash -> state
 
@@ -89,7 +89,7 @@ func NewFileRepCacheUpdater(skip *bool) (FileRepCacheUpdater, error) {
 // --- updater instance (thin wrapper over global hub) ---
 
 type fileRepCacheUpdaterImpl struct {
-	m sync.Mutex
+	m sync.RWMutex
 
 	hub    *watcherHub
 	skip   *bool

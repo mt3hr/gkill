@@ -1,14 +1,17 @@
 package dvnf_cmd
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
 
 	"github.com/mt3hr/gkill/src/app/gkill/dvnf"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 	"github.com/spf13/cobra"
 )
@@ -235,19 +238,29 @@ func copyFile(src, target string) error {
 		err = fmt.Errorf("error at open file %s: %w", src, err)
 		return err
 	}
-	defer srcFile.Close()
+	defer func() {
+		err := srcFile.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	targetFile, err := os.OpenFile(target, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {
 		err = fmt.Errorf("error at open file %s: %w", target, err)
 		return err
 	}
-	defer targetFile.Close()
+	defer func() {
+		err := targetFile.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = io.Copy(targetFile, srcFile)
 	if err != nil {
 		err = fmt.Errorf("error at copy data from %s to %s: %w", src, target, err)
 		return err
 	}
-	targetFile.Close() // Closeしてから出ないとchtimesが適用されないケースがあったため
+	_ = targetFile.Close() // Closeしてから出ないとchtimesが適用されないケースがあったため
 
 	// 最終更新時刻をコピー
 	if copyOpt.copyLastMod {

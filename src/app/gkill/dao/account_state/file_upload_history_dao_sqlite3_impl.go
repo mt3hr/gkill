@@ -20,7 +20,7 @@ const CURRENT_SCHEMA_VERSION_FILE_UPLOAD_HISTORY_DAO = "1.0.0"
 type fileUploadHistoryDAOSQLite3Impl struct {
 	filename string
 	db       *sql.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
 func NewFileUploadHistoryDAOSQLite3Impl(ctx context.Context, filename string) (FileUploadHistoryDAO, error) {
@@ -67,7 +67,12 @@ CREATE TABLE IF NOT EXISTS "FILE_UPLOAD_HISTORY" (
 		err = fmt.Errorf("error at create FILE_UPLOAD_HISTORY table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -87,10 +92,12 @@ CREATE TABLE IF NOT EXISTS "FILE_UPLOAD_HISTORY" (
 	return &fileUploadHistoryDAOSQLite3Impl{
 		filename: filename,
 		db:       db,
-		m:        &sync.Mutex{},
+		m:        &sync.RWMutex{},
 	}, nil
 }
 func (f *fileUploadHistoryDAOSQLite3Impl) GetAllFileUploadHistories(ctx context.Context) ([]*FileUploadHistory, error) {
+	f.m.RLock()
+	defer f.m.RUnlock()
 	sql := `
 SELECT 
   ID,
@@ -109,7 +116,12 @@ FROM FILE_UPLOAD_HISTORY
 		err = fmt.Errorf("error at get get all file upload histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	rows, err := stmt.QueryContext(ctx)
@@ -117,7 +129,12 @@ FROM FILE_UPLOAD_HISTORY
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	fileUploadHistories := []*FileUploadHistory{}
 	for rows.Next() {
@@ -156,6 +173,8 @@ FROM FILE_UPLOAD_HISTORY
 }
 
 func (f *fileUploadHistoryDAOSQLite3Impl) GetFileUploadHistories(ctx context.Context, userID string, device string) ([]*FileUploadHistory, error) {
+	f.m.RLock()
+	defer f.m.RUnlock()
 	sql := `
 SELECT 
   ID,
@@ -175,7 +194,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at get get file upload histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		userID,
@@ -187,7 +211,12 @@ WHERE USER_ID = ? AND DEVICE = ?
 		err = fmt.Errorf("error at query :%w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	fileUploadHistories := []*FileUploadHistory{}
 	for rows.Next() {
@@ -224,6 +253,8 @@ WHERE USER_ID = ? AND DEVICE = ?
 }
 
 func (f *fileUploadHistoryDAOSQLite3Impl) AddFileUploadHistory(ctx context.Context, fileUploadHistory *FileUploadHistory) (bool, error) {
+	f.m.Lock()
+	defer f.m.Unlock()
 	sql := `
 INSERT INTO FILE_UPLOAD_HISTORY (
   ID,
@@ -252,7 +283,12 @@ VALUES (
 		err = fmt.Errorf("error at add file upload histories sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		fileUploadHistory.ID,
@@ -273,6 +309,8 @@ VALUES (
 }
 
 func (f *fileUploadHistoryDAOSQLite3Impl) UpdateFileUploadHistory(ctx context.Context, fileUploadHistory *FileUploadHistory) (bool, error) {
+	f.m.Lock()
+	defer f.m.Unlock()
 	sql := `
 UPDATE FILE_UPLOAD_HISTORY SET
   ID = ?,
@@ -291,7 +329,12 @@ WHERE ID = ?
 		err = fmt.Errorf("error at add file upload histories sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		fileUploadHistory.ID,
@@ -313,6 +356,8 @@ WHERE ID = ?
 }
 
 func (f *fileUploadHistoryDAOSQLite3Impl) DeleteFileUploadHistory(ctx context.Context, id string) (bool, error) {
+	f.m.Lock()
+	defer f.m.Unlock()
 	sql := `
 DELETE FROM FILE_UPLOAD_HISTORY
 WHERE ID = ?
@@ -323,7 +368,12 @@ WHERE ID = ?
 		err = fmt.Errorf("error at delete file upload history sql: %w", err)
 		return false, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		id,
@@ -339,6 +389,8 @@ WHERE ID = ?
 }
 
 func (f *fileUploadHistoryDAOSQLite3Impl) Close(ctx context.Context) error {
+	f.m.Lock()
+	defer f.m.Unlock()
 	return f.db.Close()
 }
 
@@ -359,7 +411,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table statement: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", createTableSQL)
 	_, err = stmt.ExecContext(ctx)
@@ -367,7 +424,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info table: %w", err)
 		return false, nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	indexSQL := `CREATE INDEX IF NOT EXISTS INDEX_GKILL_META_INFO ON GKILL_META_INFO (KEY);`
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
@@ -376,7 +438,12 @@ CREATE TABLE IF NOT EXISTS GKILL_META_INFO (
 		err = fmt.Errorf("error at create gkill meta info index statement: %w", err)
 		return false, nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -398,7 +465,12 @@ WHERE KEY = ?
 		err = fmt.Errorf("error at get schema version sql: %w", err)
 		return false, nil, err
 	}
-	defer selectSchemaVersionStmt.Close()
+	defer func() {
+		err := selectSchemaVersionStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	dbSchemaVersion := ""
 	queryArgs := []interface{}{schemaVersionKey}
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", selectSchemaVersionSQL, "query", queryArgs)
@@ -416,7 +488,12 @@ VALUES(?, ?)`
 				err = fmt.Errorf("error at insert schema version sql: %w", err)
 				return false, nil, err
 			}
-			defer insertCurrentVersionStmt.Close()
+			defer func() {
+				err := insertCurrentVersionStmt.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 			queryArgs := []interface{}{schemaVersionKey, currentSchemaVersion}
 			slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", insertCurrentVersionSQL, queryArgs)
 			_, err = insertCurrentVersionStmt.ExecContext(ctx, queryArgs...)

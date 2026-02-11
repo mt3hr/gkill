@@ -19,12 +19,12 @@ type kmemoRepositoryCachedSQLite3Impl struct {
 	dbName   string
 	kmemoRep KmemoRepository
 	cachedDB *sql.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
-func NewKmemoRepositoryCachedSQLite3Impl(ctx context.Context, kmemoRep KmemoRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (KmemoRepository, error) {
+func NewKmemoRepositoryCachedSQLite3Impl(ctx context.Context, kmemoRep KmemoRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (KmemoRepository, error) {
 	if m == nil {
-		m = &sync.Mutex{}
+		m = &sync.RWMutex{}
 	}
 	var err error
 	sql := `
@@ -49,7 +49,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create KMEMO table statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -65,7 +70,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create kmemo index unix statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexUnixStmt.Close()
+	defer func() {
+		err := indexUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
@@ -83,8 +93,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -147,7 +157,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -155,7 +170,12 @@ WHERE
 		err = fmt.Errorf("error at select from KMEMO: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := map[string][]*Kyou{}
 	for rows.Next() {
@@ -198,6 +218,8 @@ WHERE
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := k.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -224,8 +246,8 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id strin
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -279,7 +301,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -287,7 +314,12 @@ WHERE
 		err = fmt.Errorf("error at select from KMEMO %s: %w", id, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -331,6 +363,8 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id strin
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -359,7 +393,12 @@ func (k *kmemoRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) erro
 		err = fmt.Errorf("error at create KMEMO table statement %s: %w", "memory", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at delete KMEMO table: %w", err)
@@ -402,7 +441,12 @@ INSERT INTO ` + k.dbName + ` (
 		err = fmt.Errorf("error at add kmemo sql: %w", err)
 		return err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, kmemo := range allKmemos {
 		select {
@@ -454,6 +498,8 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (stri
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	err := k.kmemoRep.Close(ctx)
 	if err != nil {
 		return err
@@ -473,6 +519,8 @@ func (k *kmemoRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) FindKmemo(ctx context.Context, query *find.FindQuery) ([]*Kmemo, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -540,7 +588,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -548,7 +601,12 @@ WHERE
 		err = fmt.Errorf("error at select from KMEMO: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kmemos := []*Kmemo{}
 	for rows.Next() {
@@ -589,6 +647,8 @@ WHERE
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemo(ctx context.Context, id string, updateTime *time.Time) (*Kmemo, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	// 最新のデータを返す
 	kmemoHistories, err := k.GetKmemoHistories(ctx, id)
 	if err != nil {
@@ -615,8 +675,8 @@ func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemo(ctx context.Context, id stri
 }
 
 func (k *kmemoRepositoryCachedSQLite3Impl) GetKmemoHistories(ctx context.Context, id string) ([]*Kmemo, error) {
-	k.m.Lock()
-	k.m.Unlock()
+	k.m.RLock()
+	defer k.m.RUnlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -671,7 +731,12 @@ WHERE
 		err = fmt.Errorf("error at get kmemo histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -679,7 +744,12 @@ WHERE
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kmemos := []*Kmemo{}
 	for rows.Next() {
@@ -758,7 +828,12 @@ INSERT INTO ` + k.dbName + ` (
 		err = fmt.Errorf("error at add kmemo sql %s: %w", kmemo.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		kmemo.IsDeleted,

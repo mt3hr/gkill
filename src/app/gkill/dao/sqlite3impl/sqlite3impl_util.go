@@ -3,11 +3,13 @@ package sqlite3impl
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/mt3hr/gkill/src/app/gkill/api/find"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 
 	"database/sql"
 
@@ -419,7 +421,12 @@ ORDER BY name;
 	if err != nil {
 		return fmt.Errorf("query indexes: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	var names []string
 	for rows.Next() {
@@ -441,7 +448,12 @@ ORDER BY name;
 	if err != nil {
 		return fmt.Errorf("begin: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	if _, err := tx.Exec(`PRAGMA foreign_keys=OFF;`); err != nil {
 		return fmt.Errorf("pragma foreign_keys: %w", err)

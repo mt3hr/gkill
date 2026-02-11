@@ -20,12 +20,12 @@ type miRepositoryCachedSQLite3Impl struct {
 	dbName   string
 	miRep    MiRepository
 	cachedDB *sqllib.DB
-	m        *sync.Mutex
+	m        *sync.RWMutex
 }
 
-func NewMiRepositoryCachedSQLite3Impl(ctx context.Context, miRep MiRepository, cacheDB *sqllib.DB, m *sync.Mutex, dbName string) (MiRepository, error) {
+func NewMiRepositoryCachedSQLite3Impl(ctx context.Context, miRep MiRepository, cacheDB *sqllib.DB, m *sync.RWMutex, dbName string) (MiRepository, error) {
 	if m == nil {
-		m = &sync.Mutex{}
+		m = &sync.RWMutex{}
 	}
 	var err error
 
@@ -55,7 +55,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create MI table statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -71,7 +76,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create mi index unix statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexUnixStmt.Close()
+	defer func() {
+		err := indexUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
@@ -88,8 +98,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	m.m.Lock()
-	m.m.Unlock()
+	m.m.RLock()
+	defer m.m.RUnlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -374,7 +384,12 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
@@ -389,7 +404,12 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 		err = fmt.Errorf("error at select from MI: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := map[string][]*Kyou{}
 	for rows.Next() {
@@ -433,6 +453,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *fi
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := m.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -459,8 +481,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, 
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	m.m.Lock()
-	m.m.Unlock()
+	m.m.RLock()
+	defer m.m.RUnlock()
 	var err error
 
 	trueValue := true
@@ -755,7 +777,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
@@ -770,7 +797,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id
 		err = fmt.Errorf("error at select from MI: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -815,6 +847,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id string) 
 }
 
 func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -843,7 +877,12 @@ func (m *miRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
 		err = fmt.Errorf("error at create MI table statement %s: %w", "memory", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at delete MI table: %w", err)
@@ -895,7 +934,12 @@ INSERT INTO ` + m.dbName + ` (
 		err = fmt.Errorf("error at add mi sql: %w", err)
 		return err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, mi := range allMis {
 		select {
@@ -970,6 +1014,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (string,
 }
 
 func (m *miRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	m.m.Lock()
+	defer m.m.Unlock()
 	err := m.miRep.Close(ctx)
 	if err != nil {
 		return err
@@ -989,6 +1035,8 @@ func (m *miRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.FindQuery) ([]*Mi, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	var err error
 	if query.UpdateCache != nil && *query.UpdateCache {
 		err = m.UpdateCache(ctx)
@@ -1297,7 +1345,12 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
@@ -1312,7 +1365,12 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 		err = fmt.Errorf("error at select from MI: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	mis := []*Mi{}
 	for rows.Next() {
@@ -1370,6 +1428,8 @@ func (m *miRepositoryCachedSQLite3Impl) FindMi(ctx context.Context, query *find.
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, updateTime *time.Time) (*Mi, error) {
+	m.m.RLock()
+	defer m.m.RUnlock()
 	// 最新のデータを返す
 	miHistories, err := m.GetMiHistories(ctx, id)
 	if err != nil {
@@ -1396,8 +1456,8 @@ func (m *miRepositoryCachedSQLite3Impl) GetMi(ctx context.Context, id string, up
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id string) ([]*Mi, error) {
-	m.m.Lock()
-	m.m.Unlock()
+	m.m.RLock()
+	defer m.m.RUnlock()
 	var err error
 
 	trueValue := true
@@ -1688,7 +1748,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		err = fmt.Errorf("error at get find kyous sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{}
 	queryArgs = append(queryArgs, queryArgsForCreate...)
@@ -1703,7 +1768,12 @@ func (m *miRepositoryCachedSQLite3Impl) GetMiHistories(ctx context.Context, id s
 		err = fmt.Errorf("error at select from MI: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	mis := []*Mi{}
 	for rows.Next() {
@@ -1808,7 +1878,12 @@ INSERT INTO ` + m.dbName + ` (
 		err = fmt.Errorf("error at add mi sql %s: %w", mi.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	var limitTimeUnix interface{}
 	if mi.LimitTime == nil {
@@ -1858,8 +1933,8 @@ INSERT INTO ` + m.dbName + ` (
 }
 
 func (m *miRepositoryCachedSQLite3Impl) GetBoardNames(ctx context.Context) ([]string, error) {
-	m.m.Lock()
-	m.m.Unlock()
+	m.m.RLock()
+	defer m.m.RUnlock()
 	var err error
 
 	sql := `
@@ -1878,7 +1953,12 @@ FROM ` + m.dbName + `
 		err = fmt.Errorf("error at get board names sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	rows, err := stmt.QueryContext(ctx)
@@ -1886,7 +1966,12 @@ FROM ` + m.dbName + `
 		err = fmt.Errorf("error at select board names from MI: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	boardNames := []string{}
 	for rows.Next() {

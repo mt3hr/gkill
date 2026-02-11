@@ -136,7 +136,12 @@ func (u *URLog) fillFavicon() error {
 		err = fmt.Errorf("failed to getFavicon: %w", err)
 		return err
 	}
-	defer favicon.Close()
+	defer func() {
+		err := favicon.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	b, err := io.ReadAll(favicon)
 	if err != nil {
 		err = fmt.Errorf("failed to readFavicon: %w", err)
@@ -220,7 +225,12 @@ func getBody(targeturl string, timeout time.Duration, useragent string, enablePr
 		err = fmt.Errorf("failed to http get request: %w", err)
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func() {
+		err := res.Body.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	return io.ReadAll(res.Body)
 }
 
@@ -235,14 +245,24 @@ func (u *URLog) fillImage(body []byte) error {
 		var e error
 		imgSrc, e = getAmazonImage(body)
 		if imgSrc != nil {
-			defer imgSrc.Close()
+			defer func() {
+				err := imgSrc.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 		}
 		if e != nil {
 			err = fmt.Errorf("error at get amazon image: %s: %w", e, err)
 			return err
 		}
 	}
-	defer imgSrc.Close()
+	defer func() {
+		err := imgSrc.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	img, imgType, err := image.Decode(imgSrc)
 	if err != nil {
 		err = fmt.Errorf("failed to decodeImage: %w", err)

@@ -19,7 +19,7 @@ type latestRepositoryAddressCacheUpdater struct {
 
 	cancelPreFunc context.CancelFunc // 一回前で実行されたコンテキスト。キャンセル用
 
-	m sync.Mutex
+	m sync.RWMutex
 }
 
 func NewLatestRepositoryAddressCacheUpdater(rep CacheUpdatable, gkillRepoisitory *reps.GkillRepositories, enableUpdateRepsCache bool, enableUpdateLatestDataRepositoryCache bool) CacheUpdatable {
@@ -32,7 +32,7 @@ func NewLatestRepositoryAddressCacheUpdater(rep CacheUpdatable, gkillRepoisitory
 
 		cancelPreFunc: context.CancelFunc(func() {}),
 
-		m: sync.Mutex{},
+		m: sync.RWMutex{},
 	}
 }
 

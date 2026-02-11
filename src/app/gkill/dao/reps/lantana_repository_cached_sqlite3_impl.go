@@ -19,12 +19,12 @@ type lantanaRepositoryCachedSQLite3Impl struct {
 	dbName     string
 	lantanaRep LantanaRepository
 	cachedDB   *sql.DB
-	m          *sync.Mutex
+	m          *sync.RWMutex
 }
 
-func NewLantanaRepositoryCachedSQLite3Impl(ctx context.Context, lantanaRep LantanaRepository, cacheDB *sql.DB, m *sync.Mutex, dbName string) (LantanaRepository, error) {
+func NewLantanaRepositoryCachedSQLite3Impl(ctx context.Context, lantanaRep LantanaRepository, cacheDB *sql.DB, m *sync.RWMutex, dbName string) (LantanaRepository, error) {
 	if m == nil {
-		m = &sync.Mutex{}
+		m = &sync.RWMutex{}
 	}
 	var err error
 	sql := `
@@ -49,7 +49,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create LANTANA table statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -65,7 +70,12 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 		err = fmt.Errorf("error at create lantana index unix statement %s: %w", dbName, err)
 		return nil, err
 	}
-	defer indexUnixStmt.Close()
+	defer func() {
+		err := indexUnixStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", indexUnixSQL)
 	_, err = indexUnixStmt.ExecContext(ctx)
@@ -82,8 +92,8 @@ CREATE TABLE IF NOT EXISTS "` + dbName + `" (
 	}, nil
 }
 func (l *lantanaRepositoryCachedSQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
-	l.m.Lock()
-	l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	var err error
 	// update_cacheであればキャッシュを更新する
 	if query.UpdateCache != nil && *query.UpdateCache {
@@ -147,7 +157,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -155,7 +170,12 @@ WHERE
 		err = fmt.Errorf("error at select from LANTANA: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := map[string][]*Kyou{}
 	for rows.Next() {
@@ -199,6 +219,8 @@ WHERE
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	// 最新のデータを返す
 	kyouHistories, err := l.GetKyouHistories(ctx, id)
 	if err != nil {
@@ -225,8 +247,8 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetKyou(ctx context.Context, id str
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
-	l.m.Lock()
-	l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -282,7 +304,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -290,7 +317,12 @@ WHERE
 		err = fmt.Errorf("error at select from LANTANA %s: %w", id, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -334,6 +366,8 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetPath(ctx context.Context, id str
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	trueValue := true
 	falseValue := false
 	query := &find.FindQuery{
@@ -362,7 +396,12 @@ func (l *lantanaRepositoryCachedSQLite3Impl) UpdateCache(ctx context.Context) er
 		err = fmt.Errorf("error at create LANTANA table statement %s: %w", "memory", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 	_, err = stmt.ExecContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at delete LANTANA table: %w", err)
@@ -406,7 +445,12 @@ INSERT INTO ` + l.dbName + ` (
 		err = fmt.Errorf("error at add lantana sql: %w", err)
 		return err
 	}
-	defer insertStmt.Close()
+	defer func() {
+		err := insertStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for _, lantana := range allLantanas {
 		select {
@@ -459,6 +503,8 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetRepName(ctx context.Context) (st
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
+	l.m.Lock()
+	defer l.m.Unlock()
 	err := l.lantanaRep.Close(ctx)
 	if err != nil {
 		return err
@@ -478,6 +524,8 @@ func (l *lantanaRepositoryCachedSQLite3Impl) Close(ctx context.Context) error {
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) FindLantana(ctx context.Context, query *find.FindQuery) ([]*Lantana, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	var err error
 
 	// update_cacheであればキャッシュを更新する
@@ -544,7 +592,12 @@ WHERE
 		err = fmt.Errorf("error at get kyou histories sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -553,7 +606,12 @@ WHERE
 		err = fmt.Errorf("error at select from LANTANA: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	lantanas := []*Lantana{}
 	for rows.Next() {
@@ -594,6 +652,8 @@ WHERE
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetLantana(ctx context.Context, id string, updateTime *time.Time) (*Lantana, error) {
+	l.m.RLock()
+	defer l.m.RUnlock()
 	// 最新のデータを返す
 	lantanaHistories, err := l.GetLantanaHistories(ctx, id)
 	if err != nil {
@@ -620,8 +680,8 @@ func (l *lantanaRepositoryCachedSQLite3Impl) GetLantana(ctx context.Context, id 
 }
 
 func (l *lantanaRepositoryCachedSQLite3Impl) GetLantanaHistories(ctx context.Context, id string) ([]*Lantana, error) {
-	l.m.Lock()
-	l.m.Unlock()
+	l.m.RLock()
+	defer l.m.RUnlock()
 	sql := `
 SELECT 
   IS_DELETED,
@@ -678,7 +738,12 @@ WHERE
 		err = fmt.Errorf("error at get lantana histories sql %s: %w", id, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -687,7 +752,12 @@ WHERE
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	lantanas := []*Lantana{}
 	for rows.Next() {
@@ -766,7 +836,12 @@ INSERT INTO ` + l.dbName + ` (
 		err = fmt.Errorf("error at add lantana sql %s: %w", lantana.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		lantana.IsDeleted,

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,6 +17,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/reps"
 	"github.com/mt3hr/gkill/src/app/gkill/dao/sqlite3impl"
+	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_log"
 	"github.com/mt3hr/gkill/src/app/gkill/main/common/gkill_options"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -747,7 +749,12 @@ func getNlogsFromOldDB(filename string) ([]*Nlog, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `SELECT ID, Time, Amount, ShopName, Memo FROM "nlog";`
 	rows, err := db.Query(statement)
@@ -755,7 +762,12 @@ func getNlogsFromOldDB(filename string) ([]*Nlog, error) {
 		err = fmt.Errorf("error at Get from database: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	nlogs := []*Nlog{}
 	repName := RepName(filename)
@@ -784,7 +796,12 @@ func getKmemosFromOldDB(filename string) ([]*Kmemo, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -797,7 +814,12 @@ FROM "kmemo";`
 		err = fmt.Errorf("error at get all kmemos from %s: %w", filename, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	repName := RepName(filename)
 	kmemos := []*Kmemo{}
@@ -827,7 +849,12 @@ func getURLogsFromOldDB(filename string) ([]*URLog, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -844,7 +871,12 @@ FROM "urlog";`
 		err = fmt.Errorf("error at get all urlogs from %s: %w", filename, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	urlogs := []*URLog{}
 	repName := RepName(filename)
@@ -873,7 +905,12 @@ func getLantanasFromOldDB(filename string) ([]*Lantana, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	lantanas := []*Lantana{}
 	statement := `
@@ -889,7 +926,12 @@ FROM
 		err = fmt.Errorf("error at get all lantanas: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	repName := RepName(filename)
 	for rows.Next() {
@@ -916,7 +958,12 @@ func getIDFKyousFromOldDB(filename string) ([]*IDFKyou, error) {
 		err = fmt.Errorf("error at open database %s: %w", filename, err)
 		return nil, err
 	}
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	fileMetadatas := []*IDFKyou{}
 	statement := `SELECT Target, ID, Time, LastMod FROM "id";`
@@ -925,7 +972,12 @@ func getIDFKyousFromOldDB(filename string) ([]*IDFKyou, error) {
 		err = fmt.Errorf("error at get all file metadatas from database %s: %w", filename, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	repName := RepName(filename)
 	// tagを取り出して収める
@@ -960,7 +1012,12 @@ func getTagsFromOldDB(filename string) ([]*Tag, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	tags := []*Tag{}
 
@@ -970,7 +1027,12 @@ func getTagsFromOldDB(filename string) ([]*Tag, error) {
 		err = fmt.Errorf("error at get all tags from %s: %w", filename, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	repName := RepName(filename)
 	for rows.Next() {
@@ -998,7 +1060,12 @@ func getTextsFromOldDB(filename string) ([]*Text, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	texts := []*Text{}
 
@@ -1008,7 +1075,12 @@ func getTextsFromOldDB(filename string) ([]*Text, error) {
 		err = fmt.Errorf("error at get all texts from %s: %w", filename, err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	repName := RepName(filename)
 	for rows.Next() {
@@ -1036,7 +1108,12 @@ func getTimeisStartsFromOldDB(filename string) ([]*TimeIsStart, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	rows, err := db.Query(`
 SELECT start.ID, start.Title, start.StartTime
@@ -1073,7 +1150,12 @@ func getTimeisEndsFromOldDB(filename string) ([]*TimeIsEnd, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	rows, err := db.Query(`
 SELECT end.StartID, end.ID, end.EndTime
@@ -1082,7 +1164,12 @@ FROM end;`)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	ends := []*TimeIsEnd{}
 	repName := RepName(filename)
@@ -1118,7 +1205,12 @@ func getMiTasksFromOldDB(filename string) ([]*MiTask, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	tasks := []*MiTask{}
 	statement := `
@@ -1133,7 +1225,12 @@ FROM
 		err = fmt.Errorf("error at get all tasks: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	repName := RepName(filename)
 	for rows.Next() {
@@ -1161,7 +1258,12 @@ func getMiCheckStatesFromOldDB(filename string) ([]*MiCheckStateInfo, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -1177,7 +1279,12 @@ FROM
 		err = fmt.Errorf("error at get all check state infos: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	checkStateInfos := []*MiCheckStateInfo{}
 
@@ -1216,7 +1323,12 @@ func getMiTaskTitlesFromOldDB(filename string) ([]*MiTaskTitleInfo, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -1232,7 +1344,12 @@ FROM
 		err = fmt.Errorf("error at get all task titles: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	taskTitleInfos := []*MiTaskTitleInfo{}
 
@@ -1265,7 +1382,12 @@ func getMiLimitsFromOldDB(filename string) ([]*MiLimitInfo, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -1281,7 +1403,12 @@ FROM
 		err = fmt.Errorf("error at get all limits: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	limitInfos := []*MiLimitInfo{}
 	for rows.Next() {
@@ -1323,7 +1450,12 @@ func getMiStartsFromOldDB(filename string) ([]*MiStartInfo, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -1339,7 +1471,12 @@ FROM
 		err = fmt.Errorf("error at get all mi starts: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	startInfos := []*MiStartInfo{}
 
@@ -1382,7 +1519,12 @@ func getMiEndsFromOldDB(filename string) ([]*MiEndInfo, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -1398,7 +1540,12 @@ FROM
 		err = fmt.Errorf("error at get all mi starts: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	endInfos := []*MiEndInfo{}
 
@@ -1441,7 +1588,12 @@ func getMiBoardsFromOldDB(filename string) ([]*MiBoardInfo, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -1457,7 +1609,12 @@ FROM
 		err = fmt.Errorf("error at get all mi starts: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	boardInfos := []*MiBoardInfo{}
 
@@ -1785,7 +1942,12 @@ func getBarometricPressuresFromOldDB(filename string) ([]*BarometricPressure, er
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -1800,7 +1962,12 @@ FROM
 		err = fmt.Errorf("error at get barometric pressures: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	barometricPressures := []*BarometricPressure{}
 
@@ -1842,7 +2009,12 @@ func getCO2ConcentrationsFromOldDB(filename string) ([]*CO2Concentration, error)
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -1857,7 +2029,12 @@ FROM
 		err = fmt.Errorf("error at get co2 concentration: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	co2Concentrations := []*CO2Concentration{}
 
@@ -1892,7 +2069,12 @@ func getHumiditysFromOldDB(filename string) ([]*Humidity, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -1907,7 +2089,12 @@ FROM
 		err = fmt.Errorf("error at get humidity: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	humiditys := []*Humidity{}
 
@@ -1942,7 +2129,12 @@ func getTVOCsFromOldDB(filename string) ([]*TVOC, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -1957,7 +2149,12 @@ FROM
 		err = fmt.Errorf("error at get tvocs: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	tvocs := []*TVOC{}
 
@@ -1992,7 +2189,12 @@ func getTemperaturesFromOldDB(filename string) ([]*Temperature, error) {
 		return nil, err
 	}
 
-	defer db.Close()
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	statement := `
 SELECT
@@ -2007,7 +2209,12 @@ FROM
 		err = fmt.Errorf("error at get temperature: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	temperatures := []*Temperature{}
 
@@ -3036,7 +3243,12 @@ FROM "nlog";`
 		err = fmt.Errorf("error at get all nlogs: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for rows.Next() {
 		nlog := &reps.Nlog{}
@@ -3083,7 +3295,12 @@ FROM "kmemo";`
 		err = fmt.Errorf("error at get all kmemos: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for rows.Next() {
 		kmemo := &reps.Kmemo{}
@@ -3136,7 +3353,12 @@ FROM "kc";`
 		err = fmt.Errorf("error at get all kcs: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for rows.Next() {
 		kc := &reps.KC{}
@@ -3198,7 +3420,12 @@ FROM "urlog";`
 		err = fmt.Errorf("error at get all urlogs: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	urlogs := []*reps.URLog{}
 	for rows.Next() {
@@ -3245,7 +3472,12 @@ FROM
 		err = fmt.Errorf("error at get all lantanas: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for rows.Next() {
 		lantana := &reps.Lantana{}
@@ -3284,7 +3516,12 @@ func (a *allDataDB) getGkillIDFKyous() ([]*reps.IDFKyou, error) {
 		err = fmt.Errorf("error at get all file metadatas from database: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	// tagを取り出して収める
 	for rows.Next() {
@@ -3329,7 +3566,12 @@ func (a *allDataDB) getGkillTags() ([]*reps.Tag, error) {
 		err = fmt.Errorf("error at get all tags: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for rows.Next() {
 		tag := &reps.Tag{}
@@ -3368,7 +3610,12 @@ func (a *allDataDB) getGkillTexts() ([]*reps.Text, error) {
 		err = fmt.Errorf("error at get all texts from: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for rows.Next() {
 		text := &reps.Text{}
@@ -3413,7 +3660,12 @@ LEFT OUTER JOIN timeis_end ON timeis_start.ID = timeis_end.StartID
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	timeiss := []*reps.TimeIs{}
 	for rows.Next() {
@@ -3552,7 +3804,12 @@ OR UpdateTime = MAX(datetime(CheckStateInfo.UpdatedTime, 'localtime'))
 		err = fmt.Errorf("error at get all tasks: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	for rows.Next() {
 		mi := &reps.Mi{}

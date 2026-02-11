@@ -15,7 +15,12 @@ func GetVersion() (*GkillVersionData, error) {
 	if err != nil {
 		slog.Log(ctx, gkill_log.Error, "error", "error", err)
 	}
-	defer versionJSONFile.Close()
+	defer func() {
+		err := versionJSONFile.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	versionData := &GkillVersionData{}
 	err = json.NewDecoder(versionJSONFile).Decode(versionData)

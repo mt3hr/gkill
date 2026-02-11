@@ -18,7 +18,7 @@ import (
 
 type kcTempRepositorySQLite3Impl kcRepositorySQLite3Impl
 
-func NewKCTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.Mutex) (KCTempRepository, error) {
+func NewKCTempRepositorySQLite3Impl(ctx context.Context, db *sql.DB, m *sync.RWMutex) (KCTempRepository, error) {
 	filename := "temp_db"
 
 	sql := `
@@ -46,7 +46,12 @@ CREATE TABLE IF NOT EXISTS "KC" (
 		err = fmt.Errorf("error at create kc table statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql", "sql", sql)
 	_, err = stmt.ExecContext(ctx)
@@ -62,7 +67,12 @@ CREATE TABLE IF NOT EXISTS "KC" (
 		err = fmt.Errorf("error at create KC index statement %s: %w", filename, err)
 		return nil, err
 	}
-	defer indexStmt.Close()
+	defer func() {
+		err := indexStmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "index sql", "sql", indexSQL)
 	_, err = indexStmt.ExecContext(ctx)
@@ -87,16 +97,22 @@ CREATE TABLE IF NOT EXISTS "KC" (
 }
 
 func (k *kcTempRepositorySQLite3Impl) FindKyous(ctx context.Context, query *find.FindQuery) (map[string][]*Kyou, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kcRepositorySQLite3Impl(*k)
 	return impl.FindKyous(ctx, query)
 }
 
 func (k *kcTempRepositorySQLite3Impl) GetKyou(ctx context.Context, id string, updateTime *time.Time) (*Kyou, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kcRepositorySQLite3Impl(*k)
 	return impl.GetKyou(ctx, id, updateTime)
 }
 
 func (k *kcTempRepositorySQLite3Impl) GetKyouHistories(ctx context.Context, id string) ([]*Kyou, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kcRepositorySQLite3Impl(*k)
 	return impl.GetKyouHistories(ctx, id)
 }
@@ -106,6 +122,8 @@ func (k *kcTempRepositorySQLite3Impl) GetPath(ctx context.Context, id string) (s
 }
 
 func (k *kcTempRepositorySQLite3Impl) UpdateCache(ctx context.Context) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	impl := kcRepositorySQLite3Impl(*k)
 	return impl.UpdateCache(ctx)
 }
@@ -115,21 +133,29 @@ func (k *kcTempRepositorySQLite3Impl) GetRepName(ctx context.Context) (string, e
 }
 
 func (k *kcTempRepositorySQLite3Impl) Close(ctx context.Context) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	impl := kcRepositorySQLite3Impl(*k)
 	return impl.Close(ctx)
 }
 
 func (k *kcTempRepositorySQLite3Impl) FindKC(ctx context.Context, query *find.FindQuery) ([]*KC, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kcRepositorySQLite3Impl(*k)
 	return impl.FindKC(ctx, query)
 }
 
 func (k *kcTempRepositorySQLite3Impl) GetKC(ctx context.Context, id string, updateTime *time.Time) (*KC, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kcRepositorySQLite3Impl(*k)
 	return impl.GetKC(ctx, id, updateTime)
 }
 
 func (k *kcTempRepositorySQLite3Impl) GetKCHistories(ctx context.Context, id string) ([]*KC, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	impl := kcRepositorySQLite3Impl(*k)
 	return impl.GetKCHistories(ctx, id)
 }
@@ -179,7 +205,12 @@ INSERT INTO KC (
 		err = fmt.Errorf("error at add KC sql %s: %w", kc.ID, err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		kc.IsDeleted,
@@ -210,6 +241,8 @@ INSERT INTO KC (
 }
 
 func (k *kcTempRepositorySQLite3Impl) GetKyousByTXID(ctx context.Context, txID string, userID string, device string) ([]*Kyou, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	var err error
 	sql := `
 SELECT 
@@ -254,7 +287,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get kyous by TXID sql: %w", err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s query: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -262,7 +300,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at select from KC temp: %w", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kyous := []*Kyou{}
 	for rows.Next() {
@@ -319,6 +362,8 @@ AND DEVICE = ?
 }
 
 func (k *kcTempRepositorySQLite3Impl) GetKCsByTXID(ctx context.Context, txID string, userID string, device string) ([]*KC, error) {
+	k.m.RLock()
+	defer k.m.RUnlock()
 	repName, err := k.GetRepName(ctx)
 	if err != nil {
 		err = fmt.Errorf("error at get rep name at KC: %w", err)
@@ -363,7 +408,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at get kcs by tx id sql %s: %w", txID, err)
 		return nil, err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	slog.Log(ctx, gkill_log.TraceSQL, "sql: %s params: %#v", sql, queryArgs)
 	rows, err := stmt.QueryContext(ctx, queryArgs...)
@@ -371,7 +421,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at query ")
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		err := rows.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	kcs := []*KC{}
 	for rows.Next() {
@@ -429,6 +484,8 @@ AND DEVICE = ?
 }
 
 func (k *kcTempRepositorySQLite3Impl) DeleteByTXID(ctx context.Context, txID string, userID string, device string) error {
+	k.m.Lock()
+	defer k.m.Unlock()
 	sql := `
 DELETE FROM KC
 WHERE TX_ID = ?
@@ -441,7 +498,12 @@ AND DEVICE = ?
 		err = fmt.Errorf("error at delete temp kc kyou by TXID sql: %w", err)
 		return err
 	}
-	defer stmt.Close()
+	defer func() {
+		err := stmt.Close()
+		if err != nil {
+			slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+		}
+	}()
 
 	queryArgs := []interface{}{
 		txID,

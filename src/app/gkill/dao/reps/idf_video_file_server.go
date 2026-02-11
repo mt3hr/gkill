@@ -168,7 +168,8 @@ func (v *IDFVideoFileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // needsCompatVideoByProbe returns true if we should transcode to a browser-friendly MP4.
 // Policy: only H.264 is considered "safe"; anything else -> compat.
-func needsCompatVideoByProbe(ctx context.Context, inputPath string) (bool, error) {
+// func needsCompatVideoByProbe(ctx context.Context, inputPath string) (bool, error) {
+func needsCompatVideoByProbe(_ context.Context, _ string) (bool, error) {
 	return true, nil
 	/*
 		probeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
@@ -187,6 +188,7 @@ func needsCompatVideoByProbe(ctx context.Context, inputPath string) (bool, error
 	*/
 }
 
+/*
 // ffprobeVideoCodec extracts the first video codec_name.
 func ffprobeVideoCodec(ctx context.Context, inputPath string) (string, error) {
 	// ffprobe -v error -print_format json -show_streams <input>
@@ -224,6 +226,7 @@ func ffprobeVideoCodec(ctx context.Context, inputPath string) (string, error) {
 	}
 	return seg2[:k], nil
 }
+*/
 
 func (v *IDFVideoFileServer) compatPathFor(rel string, st os.FileInfo) (string, error) {
 	hh := sha1.Sum([]byte(rel))
@@ -358,7 +361,7 @@ func runFFMPEGText(ctx context.Context, bin string, args ...string) (string, err
 // 「ffmpeg -encoders に出る」だけでは動かないケースがある（特にNVENCはドライバ/API差分で落ちる）ため、
 // 小さなテストエンコードで "本当に動く" を判定してキャッシュする。
 var (
-	encHealthMu sync.Mutex
+	encHealthMu sync.RWMutex
 	encHealth   = map[string]struct {
 		ok  bool
 		err error
@@ -401,6 +404,7 @@ func encoderWorks(ctx context.Context, encoder string) (bool, error) {
 	return ok, err
 }
 
+/*
 func insertAfter(args []string, needle []string, add []string) []string {
 	if len(needle) == 0 || len(add) == 0 {
 		return args
@@ -423,6 +427,7 @@ func insertAfter(args []string, needle []string, add []string) []string {
 	}
 	return args
 }
+*/
 
 func extractArgValue(args []string, key string) string {
 	for i := 0; i < len(args)-1; i++ {
@@ -494,6 +499,7 @@ func chooseCandidateEncoders(c ffmpegCaps) []string {
 	}
 }
 
+/*
 func chooseVerifiedH264Encoder(ctx context.Context, c ffmpegCaps) string {
 	list := listVerifiedH264Encoders(ctx, c)
 	if len(list) > 0 {
@@ -502,6 +508,7 @@ func chooseVerifiedH264Encoder(ctx context.Context, c ffmpegCaps) string {
 	// 最後の手段：エンコーダ名指定なし（ffmpegの既定に任せる）
 	return ""
 }
+*/
 
 // listHWDecodeChoicesForFile returns multiple working HW decode choices in priority order.
 // This is used for runtime fallback when a chosen HW decode works for "one frame" but fails
@@ -569,7 +576,7 @@ func listHWDecodeChoicesForFile(ctx context.Context, c ffmpegCaps, srcPath strin
 // 「-hwaccel が使える」だけでは、入力ファイルや環境（ドライバ/デバイス）によって失敗することがあるため、
 // 実ファイルで "1フレームだけデコード" を試して使えるものをキャッシュする。
 var (
-	hwHealthMu sync.Mutex
+	hwHealthMu sync.RWMutex
 	hwHealth   = map[string]struct {
 		ok  bool
 		err error
@@ -633,6 +640,7 @@ type hwDecodeChoice struct {
 	extraArgs []string
 }
 
+/*
 // Choose a hardware decode method for this OS/file.
 // Important: this is ONLY about decode. Encode selection is handled separately.
 func chooseHWDecodeForFile(ctx context.Context, c ffmpegCaps, srcPath string) hwDecodeChoice {
@@ -708,6 +716,7 @@ func chooseHWDecodeForFile(ctx context.Context, c ffmpegCaps, srcPath string) hw
 		return hwDecodeChoice{}
 	}
 }
+*/
 
 func isGPUEncoder(enc string) bool {
 	switch enc {

@@ -128,7 +128,12 @@ func (n *notificator) waitAndNotify() {
 			slog.Log(n.ctx, gkill_log.Debug, "error", "error", err)
 		}
 		if resp.Body != nil {
-			defer resp.Body.Close()
+			defer func() {
+				err := resp.Body.Close()
+				if err != nil {
+					slog.Log(context.Background(), gkill_log.Debug, "error at defer close", "error", err)
+				}
+			}()
 		}
 		// 登録解除されていたらDBから消す
 		if resp.Status == "410 Gone" {
